@@ -1,0 +1,47 @@
+name: "Build and deploy Github pages"
+
+# triggering event
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # Tasks to perform
+    steps:
+
+      # 1. getting the repository
+
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      # 2. Sphinx stuff
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: "Install Python dependencies"
+        working-directory: ./docs
+        run: |
+          pip3 install -r requirements.txt
+
+      - name: "Build Sphinx Doc"
+        working-directory: ./docs
+        run: |
+          make html
+
+      # 3. Deploy on GutHub pages
+
+      - name: "Deploy Github Pages"
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages # branch on which files are commited
+          folder: ./docs/_build/html/ # directory containing index.html
