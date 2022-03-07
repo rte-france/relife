@@ -1,0 +1,50 @@
+relife.regression.ProportionalHazards
+=====================================
+
+.. currentmodule:: relife.regression
+
+.. autoclass:: ProportionalHazards
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ProportionalHazards.cdf
+      ~ProportionalHazards.chf
+      ~ProportionalHazards.fit
+      ~ProportionalHazards.hf
+      ~ProportionalHazards.ichf
+      ~ProportionalHazards.isf
+      ~ProportionalHazards.ls_integrate
+      ~ProportionalHazards.mean
+      ~ProportionalHazards.median
+      ~ProportionalHazards.moment
+      ~ProportionalHazards.mrl
+      ~ProportionalHazards.pdf
+      ~ProportionalHazards.ppf
+      ~ProportionalHazards.rvs
+      ~ProportionalHazards.sf
+      ~ProportionalHazards.support_upper_bound
+      ~ProportionalHazards.var
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ProportionalHazards.beta
+      ~ProportionalHazards.n_params
+      ~ProportionalHazards.params
+      ~ProportionalHazards.baseline
+   
+   

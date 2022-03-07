@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>relife.renewal_process.RenewalRewardProcess &mdash; ReLife 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="relife.replacement_policy" href="relife.replacement_policy.html" />
+    <link rel="prev" title="relife.renewal_process.RenewalProcess" href="relife.renewal_process.RenewalProcess.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ReLife
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">README</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">ReLife</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#getting-started">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citing">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#authors">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#credits">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="relife.html">ReLife API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="relife.data.html">relife.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.datasets.html">relife.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.discounting.html">relife.discounting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.distribution.html">relife.distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.model.html">relife.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.nonparametric.html">relife.nonparametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.parametric.html">relife.parametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.regression.html">relife.regression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="relife.renewal_process.html">relife.renewal_process</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="relife.renewal_process.delayed_renewal.html">relife.renewal_process.delayed_renewal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.renewal_process.renewal_equation_solver.html">relife.renewal_process.renewal_equation_solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.renewal_process.RenewalProcess.html">relife.renewal_process.RenewalProcess</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">relife.renewal_process.RenewalRewardProcess</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="relife.replacement_policy.html">relife.replacement_policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.reward.html">relife.reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.utils.html">relife.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ReLife</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="relife.html">relife</a> &raquo;</li>
+          <li><a href="relife.renewal_process.html">relife.renewal_process</a> &raquo;</li>
+      <li>relife.renewal_process.RenewalRewardProcess</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/relife.renewal_process.RenewalRewardProcess.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="relife-renewal-process-renewalrewardprocess">
+<h1>relife.renewal_process.RenewalRewardProcess<a class="headerlink" href="#relife-renewal-process-renewalrewardprocess" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.renewal_process.</span></span><span class="sig-name descname"><span class="pre">RenewalRewardProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model:</span> <span class="pre">relife.model.LifetimeModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward:</span> <span class="pre">relife.reward.Reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1:</span> <span class="pre">typing.Optional[relife.model.LifetimeModel]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward1:</span> <span class="pre">typing.Optional[relife.reward.Reward]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount:</span> <span class="pre">relife.discounting.Discount</span> <span class="pre">=</span> <span class="pre">&lt;relife.discounting.ExponentialDiscounting</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="relife.renewal_process.RenewalProcess.html#relife.renewal_process.RenewalProcess" title="relife.renewal_process.RenewalProcess"><code class="xref py py-class docutils literal notranslate"><span class="pre">relife.renewal_process.RenewalProcess</span></code></a></p>
+<p>Renewal reward process.</p>
+<p>Creates a renewal reward process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="relife.model.LifetimeModel.html#relife.model.LifetimeModel" title="relife.model.LifetimeModel"><em>LifetimeModel</em></a>) – A lifetime model representing the durations between events.</p></li>
+<li><p><strong>reward</strong> (<a class="reference internal" href="relife.reward.Reward.html#relife.reward.Reward" title="relife.reward.Reward"><em>Reward</em></a>) – A reward associated to the interarrival time.</p></li>
+<li><p><strong>model1</strong> (<a class="reference internal" href="relife.model.LifetimeModel.html#relife.model.LifetimeModel" title="relife.model.LifetimeModel"><em>LifetimeModel</em></a><em>, </em><em>optional</em>) – A lifetime model for the first renewal (delayed renewal process), by
+default None.</p></li>
+<li><p><strong>reward1</strong> (<a class="reference internal" href="relife.reward.Reward.html#relife.reward.Reward" title="relife.reward.Reward"><em>Reward</em></a><em>, </em><em>optional</em>) – A reward associated to the first renewal, by default None</p></li>
+<li><p><strong>discount</strong> (<a class="reference internal" href="relife.discounting.Discount.html#relife.discounting.Discount" title="relife.discounting.Discount"><em>Discount</em></a><em>, </em><em>optional</em>) – A discount function related to the rewards, by default
+ExponentialDiscounting()</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.renewal_process.RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth" title="relife.renewal_process.RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_worth</span></code></a></p></td>
+<td><p>Asymptotic expected equivalent annual worth.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.renewal_process.RenewalRewardProcess.asymptotic_expected_total_reward" title="relife.renewal_process.RenewalRewardProcess.asymptotic_expected_total_reward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_reward</span></code></a></p></td>
+<td><p>Asymptotic expected total reward.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.renewal_process.RenewalRewardProcess.expected_equivalent_annual_worth" title="relife.renewal_process.RenewalRewardProcess.expected_equivalent_annual_worth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_worth</span></code></a></p></td>
+<td><p>Expected equivalent annual worth.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.renewal_process.RenewalRewardProcess.expected_total_reward" title="relife.renewal_process.RenewalRewardProcess.expected_total_reward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_reward</span></code></a></p></td>
+<td><p>The expected total reward.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.renewal_process.RenewalRewardProcess.renewal_density" title="relife.renewal_process.RenewalRewardProcess.renewal_density"><code class="xref py py-obj docutils literal notranslate"><span class="pre">renewal_density</span></code></a></p></td>
+<td><p>The renewal density.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.renewal_process.RenewalRewardProcess.renewal_function" title="relife.renewal_process.RenewalRewardProcess.renewal_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">renewal_function</span></code></a></p></td>
+<td><p>The renewal function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.renewal_process.RenewalRewardProcess.sample" title="relife.renewal_process.RenewalRewardProcess.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
+<td><p>Renewal reward data sampling.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess.expected_total_reward">
+<span class="sig-name descname"><span class="pre">expected_total_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess.expected_total_reward" title="Permalink to this definition"></a></dt>
+<dd><p>The expected total reward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>1D array</em>) – Timeline.</p></li>
+<li><p><strong>model_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the underlying lifetime model, by
+default ().</p></li>
+<li><p><strong>reward_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward, by default ().</p></li>
+<li><p><strong>model1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model of the first renewal,
+by default ().</p></li>
+<li><p><strong>reward1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward of the first renewal, by default ().</p></li>
+<li><p><strong>discount_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the discount function, by default ().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expected total reward of process evaluated at each point of the
+timeline.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the discount function is not exponential.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The renewal equation solved by the expected reward is:</p>
+<div class="math notranslate nohighlight">
+\[z(t) = \int_0^t E[Y | X = x] D(x) \mathrm{d}F(x) + \int_0^t z(t-x)
+D(x)\mathrm{d}F(x)\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(z\)</span> is the expected total reward,</p></li>
+<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
+lifetime model,</p></li>
+<li><p><span class="math notranslate nohighlight">\(X\)</span> the interarrival random variable,</p></li>
+<li><p><span class="math notranslate nohighlight">\(Y\)</span> the associated reward,</p></li>
+<li><p><span class="math notranslate nohighlight">\(D\)</span> the exponential discount factor.</p></li>
+</ul>
+<p>If the renewal reward process is delayed, the expected total reward is
+modified as:</p>
+<div class="math notranslate nohighlight">
+\[z_1(t) = \int_0^t E[Y_1 | X_1 = x] D(x) \mathrm{d}F_1(x) + \int_0^t
+z(t-x) D(x) \mathrm{d}F_1(x)\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(z_1\)</span> is the expected total reward with delay,</p></li>
+<li><p><span class="math notranslate nohighlight">\(F_1\)</span> is the cumulative distribution function of the lifetime
+model for the first renewal,</p></li>
+<li><p><span class="math notranslate nohighlight">\(X_1\)</span> the interarrival random variable of the first renewal,</p></li>
+<li><p><span class="math notranslate nohighlight">\(Y_1\)</span> the associated reward of the first renewal,</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess.expected_equivalent_annual_worth">
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_worth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess.expected_equivalent_annual_worth" title="Permalink to this definition"></a></dt>
+<dd><p>Expected equivalent annual worth.</p>
+<p>Gives the equivalent annual worth of the expected total reward of the
+process at each point of the timeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>1D array</em>) – Timeline.</p></li>
+<li><p><strong>model_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the underlying lifetime model, by
+default ().</p></li>
+<li><p><strong>reward_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward, by default ().</p></li>
+<li><p><strong>model1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model of the first renewal,
+by default ().</p></li>
+<li><p><strong>reward1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward of the first
+renewal, by default ().</p></li>
+<li><p><strong>discount_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the discount function, by default ().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The expected equivalent annual worth evaluated at each point of the
+timeline.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The equivalent annual worth at time <span class="math notranslate nohighlight">\(t\)</span> is equal to the expected
+total reward <span class="math notranslate nohighlight">\(z\)</span> divided by the annuity factor <span class="math notranslate nohighlight">\(AF(t)\)</span>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess.asymptotic_expected_total_reward">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_total_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess.asymptotic_expected_total_reward" title="Permalink to this definition"></a></dt>
+<dd><p>Asymptotic expected total reward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the underlying lifetime model, by
+default ().</p></li>
+<li><p><strong>reward_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward, by default ().</p></li>
+<li><p><strong>model1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model of the first renewal,
+by default ().</p></li>
+<li><p><strong>reward1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward of the first
+renewal, by default ().</p></li>
+<li><p><strong>discount_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the discount function, by default ().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The assymptotic expected total reward of the process.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the discount function is not exponential.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The asymptotic expected total reward is:</p>
+<div class="math notranslate nohighlight">
+\[z^\infty = \lim_{t\to \infty} z(t) = \dfrac{E[Y D(X)]}{1-E[D(X)]}\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(X\)</span> the interarrival random variable,</p></li>
+<li><p><span class="math notranslate nohighlight">\(Y\)</span> the associated reward,</p></li>
+<li><p><span class="math notranslate nohighlight">\(D\)</span> the exponential discount factor.</p></li>
+</ul>
+<p>If the renewal reward process is delayed, the asymptotic expected total
+reward is modified as:</p>
+<div class="math notranslate nohighlight">
+\[z_1^\infty = E[Y_1 D(X_1)] + z^\infty E[D(X_1)]\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(X_1\)</span> the interarrival random variable of the first renewal,</p></li>
+<li><p><span class="math notranslate nohighlight">\(Y_1\)</span> the associated reward of the first renewal,</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_worth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth" title="Permalink to this definition"></a></dt>
+<dd><p>Asymptotic expected equivalent annual worth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the underlying lifetime model, by
+default ().</p></li>
+<li><p><strong>reward_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward, by default ().</p></li>
+<li><p><strong>model1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model of the first renewal,
+by default ().</p></li>
+<li><p><strong>reward1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward of the first
+renewal, by default ().</p></li>
+<li><p><strong>discount_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the discount function, by default ().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The asymptotic expected equivalent annual worth of the process.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the discount function is not exponential.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="relife.data.RenewalRewardData.html#relife.data.RenewalRewardData" title="relife.data.RenewalRewardData"><span class="pre">relife.data.RenewalRewardData</span></a></span></span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Renewal reward data sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> (<em>float</em>) – Time at the end of the observation.</p></li>
+<li><p><strong>model_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the underlying lifetime model, by
+default ().</p></li>
+<li><p><strong>reward_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward, by default ().</p></li>
+<li><p><strong>model1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model of the first renewal,
+by default ().</p></li>
+<li><p><strong>reward1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the associated reward of the first
+renewal, by default ().</p></li>
+<li><p><strong>discount_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the discount function, by default ().</p></li>
+<li><p><strong>n_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of samples, by default 1.</p></li>
+<li><p><strong>random_state</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Samples of replacement times, durations and rewards.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="relife.data.RenewalRewardData.html#relife.data.RenewalRewardData" title="relife.data.RenewalRewardData">RenewalRewardData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess.renewal_density">
+<span class="sig-name descname"><span class="pre">renewal_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess.renewal_density" title="Permalink to this definition"></a></dt>
+<dd><p>The renewal density.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>1D array</em>) – Timeline.</p></li>
+<li><p><strong>model_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the underlying lifetime model, by
+default ().</p></li>
+<li><p><strong>model1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model of the first renewal,
+by default ().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Renewal density evaluated at each point of the timeline.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the lifetime model is not absolutely continuous.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The renewal density is the derivative of the renewal function with
+respect to time. It is computed by solving the renewal equation:</p>
+<div class="math notranslate nohighlight">
+\[\mu(t) = f_1(t) + \int_0^t \mu(t-x) \mathrm{d}F(x)\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mu\)</span> is the renewal function,</p></li>
+<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
+lifetime model,</p></li>
+<li><p><span class="math notranslate nohighlight">\(f_1\)</span> is the probability density function of the underlying
+lifetime model for the fist renewal in the case of a delayed renewal
+process.</p></li>
+</ul>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>Rausand, M., Barros, A., &amp; Hoyland, A. (2020). System Reliability
+Theory: Models, Statistical Methods, and Applications. John Wiley &amp;
+Sons.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.renewal_process.RenewalRewardProcess.renewal_function">
+<span class="sig-name descname"><span class="pre">renewal_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model1_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.renewal_process.RenewalRewardProcess.renewal_function" title="Permalink to this definition"></a></dt>
+<dd><p>The renewal function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>1D array</em>) – Timeline.</p></li>
+<li><p><strong>model_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the underlying lifetime model, by
+default ().</p></li>
+<li><p><strong>model1_args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model of the first renewal,
+by default ().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The renewal function evaluated at each point of the timeline.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The expected total number of renewals is computed  by solving the
+renewal equation:</p>
+<div class="math notranslate nohighlight">
+\[m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(m\)</span> is the renewal function,</p></li>
+<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
+lifetime model,</p></li>
+<li><p><span class="math notranslate nohighlight">\(F_1\)</span> is the cumulative distribution function of the underlying
+lifetime model for the fist renewal in the case of a delayed renewal
+process.</p></li>
+</ul>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets">1</span></dt>
+<dd><p>Rausand, M., Barros, A., &amp; Hoyland, A. (2020). System Reliability
+Theory: Models, Statistical Methods, and Applications. John Wiley &amp;
+Sons.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="relife.renewal_process.RenewalProcess.html" class="btn btn-neutral float-left" title="relife.renewal_process.RenewalProcess" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relife.replacement_policy.html" class="btn btn-neutral float-right" title="relife.replacement_policy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, RTE (https://www.rte-france.com) except where otherwise noted and licensed under a CC-BY-4.0 license (https://creativecommons.org/licenses/by/4.0/).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+relife.distribution.Gompertz
+============================
+
+.. currentmodule:: relife.distribution
+
+.. autoclass:: Gompertz
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Gompertz.cdf
+      ~Gompertz.chf
+      ~Gompertz.fit
+      ~Gompertz.hf
+      ~Gompertz.ichf
+      ~Gompertz.isf
+      ~Gompertz.ls_integrate
+      ~Gompertz.mean
+      ~Gompertz.median
+      ~Gompertz.moment
+      ~Gompertz.mrl
+      ~Gompertz.pdf
+      ~Gompertz.plot
+      ~Gompertz.ppf
+      ~Gompertz.rvs
+      ~Gompertz.sf
+      ~Gompertz.support_upper_bound
+      ~Gompertz.var
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Gompertz.c
+      ~Gompertz.n_params
+      ~Gompertz.params
+      ~Gompertz.rate
+   
+   

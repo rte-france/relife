@@ -1,0 +1,51 @@
+relife.distribution.Gamma
+=========================
+
+.. currentmodule:: relife.distribution
+
+.. autoclass:: Gamma
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Gamma.cdf
+      ~Gamma.chf
+      ~Gamma.fit
+      ~Gamma.hf
+      ~Gamma.ichf
+      ~Gamma.isf
+      ~Gamma.ls_integrate
+      ~Gamma.mean
+      ~Gamma.median
+      ~Gamma.moment
+      ~Gamma.mrl
+      ~Gamma.pdf
+      ~Gamma.plot
+      ~Gamma.ppf
+      ~Gamma.rvs
+      ~Gamma.sf
+      ~Gamma.support_upper_bound
+      ~Gamma.var
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Gamma.c
+      ~Gamma.n_params
+      ~Gamma.params
+      ~Gamma.rate
+   
+   

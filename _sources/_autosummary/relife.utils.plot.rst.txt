@@ -1,0 +1,6 @@
+relife.utils.plot
+=================
+
+.. currentmodule:: relife.utils
+
+.. autofunction:: plot

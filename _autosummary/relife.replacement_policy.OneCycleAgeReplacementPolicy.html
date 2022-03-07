@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>relife.replacement_policy.OneCycleAgeReplacementPolicy &mdash; ReLife 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="relife.replacement_policy.OneCycleRunToFailure" href="relife.replacement_policy.OneCycleRunToFailure.html" />
+    <link rel="prev" title="relife.replacement_policy.AgeReplacementPolicy" href="relife.replacement_policy.AgeReplacementPolicy.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ReLife
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">README</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">ReLife</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#getting-started">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citing">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#authors">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#credits">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="relife.html">ReLife API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="relife.data.html">relife.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.datasets.html">relife.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.discounting.html">relife.discounting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.distribution.html">relife.distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.model.html">relife.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.nonparametric.html">relife.nonparametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.parametric.html">relife.parametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.regression.html">relife.regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.renewal_process.html">relife.renewal_process</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="relife.replacement_policy.html">relife.replacement_policy</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="relife.replacement_policy.AgeReplacementPolicy.html">relife.replacement_policy.AgeReplacementPolicy</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">relife.replacement_policy.OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.replacement_policy.OneCycleRunToFailure.html">relife.replacement_policy.OneCycleRunToFailure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.replacement_policy.RunToFailure.html">relife.replacement_policy.RunToFailure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="relife.reward.html">relife.reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.utils.html">relife.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ReLife</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="relife.html">relife</a> &raquo;</li>
+          <li><a href="relife.replacement_policy.html">relife.replacement_policy</a> &raquo;</li>
+      <li>relife.replacement_policy.OneCycleAgeReplacementPolicy</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="relife-replacement-policy-onecycleagereplacementpolicy">
+<h1>relife.replacement_policy.OneCycleAgeReplacementPolicy<a class="headerlink" href="#relife-replacement-policy-onecycleagereplacementpolicy" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.replacement_policy.</span></span><span class="sig-name descname"><span class="pre">OneCycleAgeReplacementPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel" title="relife.model.AbsolutelyContinuousLifetimeModel"><span class="pre">relife.model.AbsolutelyContinuousLifetimeModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>One-cyle age replacement policy.</p>
+<p>The asset is disposed at a fixed age <cite>ar</cite> with costs <cite>cp</cite> or upon failure
+with costs <cite>cf</cite> if earlier.</p>
+<p>One-cyle age replacement policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel" title="relife.model.AbsolutelyContinuousLifetimeModel"><em>AbsolutelyContinuousLifetimeModel</em></a>) – Absolutely continuous lifetime model of the asset.</p></li>
+<li><p><strong>args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model, by default ().</p></li>
+<li><p><strong>a0</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Current ages of the assets, by default 0 for each asset.</p></li>
+<li><p><strong>ar</strong> (<em>float</em><em>, </em><em>2D array</em><em>, </em><em>optional</em>) – Ages of preventive replacements, by default None.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default 0.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>ar</cite>, <cite>cf</cite> or <cite>cp</cite> is set to None, the argument should be defined
+when using methods to compute costs.</p>
+<p>If <cite>cf</cite>, <cite>cp</cite> and <cite>rate</cite> are 2D or 3D array, then:</p>
+<ul class="simple">
+<li><p>axis=-2 represents the indices of each asset,</p></li>
+<li><p>axis=-3 represents the indices of each component of the cost vector.</p></li>
+</ul>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>Coolen-Schrijner, P., &amp; Coolen, F. P. A. (2006). On optimality
+criteria for age replacement. Proceedings of the Institution of
+Mechanical Engineers, Part O: Journal of Risk and Reliability,
+220(1), 21-29</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
+<td><p>The asymptotic expected equivalent annual cost.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_cost</span></code></a></p></td>
+<td><p>The asymptotic expected total cost.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
+<td><p>The expected equivalent annual cost.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_total_cost" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
+<td><p>The expected total discounted cost.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.fit" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Computes and sets the optimal age of replacement for each asset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.optimal_replacement_age" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.optimal_replacement_age"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimal_replacement_age</span></code></a></p></td>
+<td><p>Compute the optimal age of preventive replacement for each asset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.rrp_args" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.rrp_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rrp_args</span></code></a></p></td>
+<td><p>Arguments of the underlying renewal reward process.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.sample" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
+<td><p>One-cycle age replacement policy sampling.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.discount" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.discount"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discount</span></code></a></p></td>
+<td><p>Exponential discounting.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.reward" title="relife.replacement_policy.OneCycleAgeReplacementPolicy.reward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reward</span></code></a></p></td>
+<td><p>Costs of the replacement.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.reward">
+<span class="sig-name descname"><span class="pre">reward</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="relife.reward.AgeReplacementCost.html#relife.reward.AgeReplacementCost" title="relife.reward.AgeReplacementCost"><span class="pre">relife.reward.AgeReplacementCost</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;relife.reward.AgeReplacementCost</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.reward" title="Permalink to this definition"></a></dt>
+<dd><p>Costs of the replacement.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.discount">
+<span class="sig-name descname"><span class="pre">discount</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="relife.discounting.ExponentialDiscounting.html#relife.discounting.ExponentialDiscounting" title="relife.discounting.ExponentialDiscounting"><span class="pre">relife.discounting.ExponentialDiscounting</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;relife.discounting.ExponentialDiscounting</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.discount" title="Permalink to this definition"></a></dt>
+<dd><p>Exponential discounting.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.rrp_args">
+<span class="sig-name descname"><span class="pre">rrp_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.rrp_args" title="Permalink to this definition"></a></dt>
+<dd><p>Arguments of the underlying renewal reward process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ar</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Ages of preventive replacements, by default None.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>(model_args, reaward_args, discount_args)</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[Tuple[ndarray,…],…]</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If an argument is None, the value of the class attribute is taken.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.optimal_replacement_age">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimal_replacement_age</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel" title="relife.model.AbsolutelyContinuousLifetimeModel"><span class="pre">relife.model.AbsolutelyContinuousLifetimeModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.optimal_replacement_age" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the optimal age of preventive replacement for each asset.</p>
+<p>The optimal age of preventive replacement is computed by minimizing the
+asymptotic expected equivalent annual cost on one-cycle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel" title="relife.model.AbsolutelyContinuousLifetimeModel"><em>AbsolutelyContinuousLifetimeModel</em></a>) – Absolutely continuous lifetime model.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em>) – Costs of failures.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em>) – Costs of preventive replacements.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default 0.</p></li>
+<li><p><strong>args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>,</em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model, by default ().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The optimal age of preventive replacement.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optimal age of replacement minimizes the asymptotic expected
+equivalent annual cost:</p>
+<div class="math notranslate nohighlight">
+\[EEAC_\infty(a) = \sum_i {c_f}_i \int_0^a \dfrac{\delta_i e^{-\delta_i
+t}}{1 - e^{-\delta_i t}} f(t) \mathrm{d}t + {c_p}_i S(a)\dfrac{\delta_i
+e^{-\delta_i a}}{1 - e^{-\delta_i a}}\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(a\)</span> is the age of replacement,</p></li>
+<li><p><span class="math notranslate nohighlight">\({c_f}_i, {c_p}_i, \delta_i\)</span> are respectively the components of
+the failures costs, preventive costs and the associated discount rate,</p></li>
+<li><p><span class="math notranslate nohighlight">\(S, f, h\)</span> are respectively the survival function, the
+probability density function and the hazard function of the underlying
+lifetime model.</p></li>
+</ul>
+<p>The optimal age of replacement is then solution of the equation:</p>
+<div class="math notranslate nohighlight">
+\[\sum_i \dfrac{\delta_i e^{-\delta_i a}}{1 - e^{-\delta_i a}} \left(
+({c_f}_i - {c_p}_i) h(a) - \dfrac{\delta_i {c_p}_i}{1 - e^{-\delta_i
+a}} \right) = 0\]</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy" title="relife.replacement_policy.OneCycleAgeReplacementPolicy"><span class="pre">relife.replacement_policy.OneCycleAgeReplacementPolicy</span></a></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Computes and sets the optimal age of replacement for each asset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The fitted policy as the current object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If an argument is None, the value of the class attribute is taken.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_total_cost">
+<span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_total_cost" title="Permalink to this definition"></a></dt>
+<dd><p>The expected total discounted cost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>1D array</em>) – Timeline.</p></li>
+<li><p><strong>ar</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Ages of replacement, by default None.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The cumulative expected total cost for each asset along the
+timeline.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If an argument is None, the value of the class attribute is taken.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost" title="Permalink to this definition"></a></dt>
+<dd><p>The asymptotic expected total cost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ar</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Ages of preventive replacement, by default None.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The asymptotic expected total cost for each asset.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If an argument is None, the value of the class attribute is taken.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost">
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="Permalink to this definition"></a></dt>
+<dd><p>The expected equivalent annual cost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>1D array</em>) – Timeline.</p></li>
+<li><p><strong>ar</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Ages of preventive replacement, by default None.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default None.</p></li>
+<li><p><strong>dt</strong> (<em>float</em><em>, </em><em>optional</em>) – The length of the first period before discounting, by default 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The cumulative expected equivalent annual cost until time t.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If an argument is None, the value of the class attribute is taken.</p>
+<p>The expected equivalent annual cost until time <span class="math notranslate nohighlight">\(t\)</span> is:</p>
+<div class="math notranslate nohighlight">
+\[EEAC(t) = \int_0^t \frac{\delta c_f e^{-\delta x}}{1 - e^{-\delta
+x}} \mathrm{d}F(x)\]</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Permalink to this definition"></a></dt>
+<dd><p>The asymptotic expected equivalent annual cost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ar</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Ages of preventive replacement, by default None.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default None.</p></li>
+<li><p><strong>dt</strong> (<em>float</em><em>, </em><em>optional</em>) – The length of the first period before discounting, by default 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The asymptotic expected equivalent annual cost.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If an argument is None, the value of the class attribute is taken.</p>
+<p>The asymptotic expected equivalent annual cost is:</p>
+<div class="math notranslate nohighlight">
+\[EEAC_\infty = \int_0^\infty \frac{\delta c_f e^{-\delta x}}{1 -
+e^{-\delta x}} \mathrm{d}F(x)\]</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.replacement_policy.OneCycleAgeReplacementPolicy.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData" title="relife.data.ReplacementPolicyData"><span class="pre">relife.data.ReplacementPolicyData</span></a></span></span><a class="headerlink" href="#relife.replacement_policy.OneCycleAgeReplacementPolicy.sample" title="Permalink to this definition"></a></dt>
+<dd><p>One-cycle age replacement policy sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ar</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Ages of preventive replacement, by default None.</p></li>
+<li><p><strong>cf</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of failures, by default None.</p></li>
+<li><p><strong>cp</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Costs of preventive replacements, by default None.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>2D array</em><em> or </em><em>3D array</em><em>, </em><em>optional</em>) – Discount rate, by default None.</p></li>
+<li><p><strong>n_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of samples, by default 1.</p></li>
+<li><p><strong>random_state</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Samples of replacement times, durations, costs and events for each asset.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData" title="relife.data.ReplacementPolicyData">ReplacementPolicyData</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If an argument is None, the value of the class attribute is taken.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="relife.replacement_policy.AgeReplacementPolicy.html" class="btn btn-neutral float-left" title="relife.replacement_policy.AgeReplacementPolicy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relife.replacement_policy.OneCycleRunToFailure.html" class="btn btn-neutral float-right" title="relife.replacement_policy.OneCycleRunToFailure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, RTE (https://www.rte-france.com) except where otherwise noted and licensed under a CC-BY-4.0 license (https://creativecommons.org/licenses/by/4.0/).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

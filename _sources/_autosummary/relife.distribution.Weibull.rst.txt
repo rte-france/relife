@@ -1,0 +1,51 @@
+relife.distribution.Weibull
+===========================
+
+.. currentmodule:: relife.distribution
+
+.. autoclass:: Weibull
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Weibull.cdf
+      ~Weibull.chf
+      ~Weibull.fit
+      ~Weibull.hf
+      ~Weibull.ichf
+      ~Weibull.isf
+      ~Weibull.ls_integrate
+      ~Weibull.mean
+      ~Weibull.median
+      ~Weibull.moment
+      ~Weibull.mrl
+      ~Weibull.pdf
+      ~Weibull.plot
+      ~Weibull.ppf
+      ~Weibull.rvs
+      ~Weibull.sf
+      ~Weibull.support_upper_bound
+      ~Weibull.var
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Weibull.c
+      ~Weibull.n_params
+      ~Weibull.params
+      ~Weibull.rate
+   
+   

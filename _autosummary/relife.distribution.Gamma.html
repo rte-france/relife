@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>relife.distribution.Gamma &mdash; ReLife 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="relife.distribution.Gompertz" href="relife.distribution.Gompertz.html" />
+    <link rel="prev" title="relife.distribution.Exponential" href="relife.distribution.Exponential.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ReLife
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">README</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">ReLife</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#getting-started">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citing">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#authors">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#credits">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="relife.html">ReLife API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="relife.data.html">relife.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.datasets.html">relife.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.discounting.html">relife.discounting</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="relife.distribution.html">relife.distribution</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="relife.distribution.Exponential.html">relife.distribution.Exponential</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">relife.distribution.Gamma</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.distribution.Gompertz.html">relife.distribution.Gompertz</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.distribution.LogLogistic.html">relife.distribution.LogLogistic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.distribution.MinimumDistribution.html">relife.distribution.MinimumDistribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.distribution.ParametricLifetimeDistribution.html">relife.distribution.ParametricLifetimeDistribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.distribution.Weibull.html">relife.distribution.Weibull</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="relife.model.html">relife.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.nonparametric.html">relife.nonparametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.parametric.html">relife.parametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.regression.html">relife.regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.renewal_process.html">relife.renewal_process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.replacement_policy.html">relife.replacement_policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.reward.html">relife.reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.utils.html">relife.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ReLife</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="relife.html">relife</a> &raquo;</li>
+          <li><a href="relife.distribution.html">relife.distribution</a> &raquo;</li>
+      <li>relife.distribution.Gamma</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/relife.distribution.Gamma.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="relife-distribution-gamma">
+<h1>relife.distribution.Gamma<a class="headerlink" href="#relife-distribution-gamma" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="relife.distribution.Gamma">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.distribution.</span></span><span class="sig-name descname"><span class="pre">Gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.distribution.Gamma" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution" title="relife.distribution.ParametricLifetimeDistribution"><code class="xref py py-class docutils literal notranslate"><span class="pre">relife.distribution.ParametricLifetimeDistribution</span></code></a></p>
+<p>Gamma parametric lifetime distribution.</p>
+<p>The Gamma distribution is a 2-parameter distribution with
+<span class="math notranslate nohighlight">\((c,\lambda)\)</span>. The probability density function is:</p>
+<div class="math notranslate nohighlight">
+\[f(t) = \frac{\lambda^c t^{c-1} e^{-\lambda t}}{\Gamma(c)}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(c &gt; 0\)</span>, the shape parameter,</p></li>
+<li><p><span class="math notranslate nohighlight">\(\lambda &gt; 0\)</span>, the rate parameter,</p></li>
+<li><p><span class="math notranslate nohighlight">\(t\geq 0\)</span>, the operating time, age, cycles, etc.</p></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.cdf" title="relife.distribution.Gamma.cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></a></p></td>
+<td><p>Cumulative distribution function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.chf" title="relife.distribution.Gamma.chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></a></p></td>
+<td><p>Cumulative hazard function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.fit" title="relife.distribution.Gamma.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Fit the parametric lifetime distribution to lifetime data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.hf" title="relife.distribution.Gamma.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
+<td><p>Hazard function (or hazard rate).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.ichf" title="relife.distribution.Gamma.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
+<td><p>Inverse cumulative hazard function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.isf" title="relife.distribution.Gamma.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<td><p>Inverse survival function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.ls_integrate" title="relife.distribution.Gamma.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<td><p>Lebesgue-Stieltjes integration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.mean" title="relife.distribution.Gamma.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<td><p>Mean of the distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.median" title="relife.distribution.Gamma.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
+<td><p>Median of the distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.moment" title="relife.distribution.Gamma.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<td><p>N-th order moment of the distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.mrl" title="relife.distribution.Gamma.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
+<td><p>Mean residual life.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.pdf" title="relife.distribution.Gamma.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<td><p>Probability density function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.plot" title="relife.distribution.Gamma.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></p></td>
+<td><p>Plot functions of the distribution model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.ppf" title="relife.distribution.Gamma.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
+<td><p>Percent point function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.rvs" title="relife.distribution.Gamma.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<td><p>Random variable sampling.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.sf" title="relife.distribution.Gamma.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<td><p>Survival (or reliability) function of the lifetime model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.support_upper_bound" title="relife.distribution.Gamma.support_upper_bound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">support_upper_bound</span></code></a></p></td>
+<td><p>Support upper bound of the lifetime model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.var" title="relife.distribution.Gamma.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
+<td><p>Variance of the distribution.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">c</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.n_params" title="relife.distribution.Gamma.n_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_params</span></code></a></p></td>
+<td><p>Number of parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.distribution.Gamma.params" title="relife.distribution.Gamma.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></p></td>
+<td><p>Parameters of the hazard functions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.distribution.Gamma.rate" title="relife.distribution.Gamma.rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rate</span></code></a></p></td>
+<td><p>rate parameter (inverse of scale)</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.rate">
+<span class="sig-name descname"><span class="pre">rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#relife.distribution.Gamma.rate" title="Permalink to this definition"></a></dt>
+<dd><p>rate parameter (inverse of scale)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#relife.distribution.Gamma.params" title="Permalink to this definition"></a></dt>
+<dd><p>Parameters of the hazard functions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the distribution.</p>
+<p>The mean of a distribution is the moment of the first order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Mean of the distribution.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.var">
+<span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.var" title="Permalink to this definition"></a></dt>
+<dd><p>Variance of the distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Variance of the distribution.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.cdf">
+<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.cdf" title="Permalink to this definition"></a></dt>
+<dd><p>Cumulative distribution function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em><em> or </em><em>1D array</em>) – Elapsed time.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Cumulative distribution function at <cite>t</cite> with extra <cite>args</cite> .</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.chf">
+<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.chf" title="Permalink to this definition"></a></dt>
+<dd><p>Cumulative hazard function.</p>
+<p>The cumulative hazard function is the integral of the hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em><em> or </em><em>1D array</em>) – Elapsed time.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the hazard function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Cumulative hazard function at <cite>t</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution" title="relife.distribution.ParametricLifetimeDistribution"><span class="pre">relife.distribution.ParametricLifetimeDistribution</span></a></span></span><a class="headerlink" href="#relife.distribution.Gamma.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit the parametric lifetime distribution to lifetime data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>1D array</em>) – Array of time-to-event or durations.</p></li>
+<li><p><strong>event</strong> (<em>1D array</em><em>, </em><em>optional</em>) – <p>Array of event types coded as follows:</p>
+<ul>
+<li><p>0 if observation ends before the event has occurred (right censoring)</p></li>
+<li><p>1 if the event has occured</p></li>
+<li><p>2 if observation starts after the event has occurred (left censoring)</p></li>
+</ul>
+<p>by default the event has occured for each asset.</p>
+</p></li>
+<li><p><strong>entry</strong> (<em>1D array</em><em>, </em><em>optional</em>) – Array of delayed entry times (left truncation),
+by default None.</p></li>
+<li><p><strong>args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the parametric lifetime model.</p></li>
+<li><p><strong>params0</strong> (<em>1D array</em><em>, </em><em>optional</em>) – Initial guess, by default None.</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of solver (see scipy.optimize.minimize documentation), by
+default None.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to pass to the minimize method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Return the fitted distribution as the current object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.hf">
+<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.hf" title="Permalink to this definition"></a></dt>
+<dd><p>Hazard function (or hazard rate).</p>
+<p>The hazard function is the derivative of the cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em><em> or </em><em>1D array</em>) – Elapsed time.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the hazard function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hazard rate at <cite>t</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or 1D array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.ichf">
+<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.ichf" title="Permalink to this definition"></a></dt>
+<dd><p>Inverse cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v</strong> (<em>float</em><em> or </em><em>1D array</em>) – Cumulative hazard rate</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the hazard function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.isf">
+<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.isf" title="Permalink to this definition"></a></dt>
+<dd><p>Inverse survival function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> (<em>float</em><em> or </em><em>1D array</em>) – Probability.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Complement quantile corresponding to <cite>p</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">p</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.ls_integrate">
+<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.ls_integrate" title="Permalink to this definition"></a></dt>
+<dd><p>Lebesgue-Stieltjes integration.</p>
+<p>The Lebesgue-Stieljes intregration of a function with respect to the
+lifetime model taking into account the probability density function and
+jumps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>Callable</em>) – Function or method to integrate on interval [a,b] integrated with
+respect to the lifetime model.</p></li>
+<li><p><strong>a</strong> (<em>float</em><em> or </em><em>1D array</em>) – Lower bound of integration.</p></li>
+<li><p><strong>b</strong> (<em>float</em><em> or </em><em>1D array</em>) – Upper bound of integration (use numpy.inf for +infinity).</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+<li><p><strong>**kwargs</strong> (<em>int</em><em> or </em><em>float</em>) – Extra keyword arguments required for the Lebesgue-Stieljes
+integration.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Lebesgue-Stieltjes integral of func with respect to <cite>cdf</cite> from <cite>a</cite>
+to <cite>b</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Lebesgue-Stieltjes integral is:</p>
+<div class="math notranslate nohighlight">
+\[\int_a^b g(x) \mathrm{d}F(x) = \int_a^b g(x) f(x)\mathrm{d}x +
+\sum_i g(a_i) w_i\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function,</p></li>
+<li><p><span class="math notranslate nohighlight">\(f\)</span> the probability density function of the lifetime model,</p></li>
+<li><p><span class="math notranslate nohighlight">\(a_i\)</span> and <span class="math notranslate nohighlight">\(w_i\)</span> are the points and weights of the jumps.</p></li>
+</ul>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>Resnick, S. I. (1992). Adventures in stochastic processes.
+Springer Science &amp; Business Media. p176.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.median">
+<span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.median" title="Permalink to this definition"></a></dt>
+<dd><p>Median of the distribution.</p>
+<p>The median is the <cite>ppf</cite> evaluated at 0.5.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The median of the distribution.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.moment">
+<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.moment" title="Permalink to this definition"></a></dt>
+<dd><p>N-th order moment of the distribution.</p>
+<p>The n-th order moment is the Lebegue-Stieljes integral of x**n with
+respect to the <cite>cdf</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em><em>, </em><em>n &gt;=1</em>) – Order of moment.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>N-th order moment of the distribution.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.mrl">
+<span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.mrl" title="Permalink to this definition"></a></dt>
+<dd><p>Mean residual life.</p>
+<p>The mean residual life for an asset aged <cite>t</cite> is the mean of the lifetime
+distribution truncated at <cite>t</cite> on the interval <cite>[t,ub)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em><em> or </em><em>1D array</em>) – Age of the asset</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The mean residual life of assets at age <cite>t</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">),)</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The mean residual life is:</p>
+<div class="math notranslate nohighlight">
+\[\mu(t) = \dfrac{\int_t^{\infty} (x - t) \mathrm{d}F(x)}{S(t)}\]</div>
+<p>where
+<span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function and
+<span class="math notranslate nohighlight">\(S\)</span> is the survival function.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.n_params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#relife.distribution.Gamma.n_params" title="Permalink to this definition"></a></dt>
+<dd><p>Number of parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.pdf">
+<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.pdf" title="Permalink to this definition"></a></dt>
+<dd><p>Probability density function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em><em> or </em><em>1D array</em>) – Elapsed time.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The probability density function evaluated at <cite>t</cite> with extra arguments <cite>args</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sf'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.plot" title="Permalink to this definition"></a></dt>
+<dd><p>Plot functions of the distribution model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeline</strong> (<em>1D array</em><em>, </em><em>optional</em>) – Timeline of the plot (x-axis), by default guessed by the millile.</p></li>
+<li><p><strong>args</strong> (<em>Tuple</em><em>[</em><em>ndarray</em><em>]</em><em>, </em><em>optional</em>) – Extra arguments required by the parametric lifetime model, by
+default ().</p></li>
+<li><p><strong>alpha_ci</strong> (<em>float</em><em>, </em><em>optional</em>) – <span class="math notranslate nohighlight">\(\alpha\)</span>-value to define the <span class="math notranslate nohighlight">\(100(1-\alpha)\%\)</span>
+confidence interval, by default 0.05 corresponding to the 95%
+confidence interval. If set to None or if the model has not been
+fitted, no confidence interval is plotted.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Name of the function to be plotted, by default ‘sf’. Should be one
+of:</p>
+<ul>
+<li><p>’sf’: survival function,</p></li>
+<li><p>’cdf’: cumulative distribution function,</p></li>
+<li><p>’chf’: cumulative hazard function,</p></li>
+<li><p>’hf’: hazard function,</p></li>
+<li><p>’pdf’: probability density function.</p></li>
+</ul>
+</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to specify the plot properties (see
+matplotlib.pyplot.plot documentation).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>fname</cite> value is not among ‘sf’, ‘cdf’, ‘chf’, ‘hf’ or ‘pdf’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.ppf">
+<span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.ppf" title="Permalink to this definition"></a></dt>
+<dd><p>Percent point function.</p>
+<p>The <cite>ppf</cite> is the inverse of <cite>cdf</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> (<em>float</em><em> or </em><em>1D array</em>) – Probability.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Quantile corresponding to <cite>p</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">p</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.rvs">
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.rvs" title="Permalink to this definition"></a></dt>
+<dd><p>Random variable sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+<li><p><strong>size</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of sample, by default 1.</p></li>
+<li><p><strong>random_state</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed, by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Sample of random variates with shape[-1]=size.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">size</span><span class="p">,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.sf">
+<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.sf" title="Permalink to this definition"></a></dt>
+<dd><p>Survival (or reliability) function of the lifetime model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em><em> or </em><em>1D array</em>) – Elapsed time.</p></li>
+<li><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The survival function evaluated at <cite>t</cite> with extra arguments <cite>args</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If <cite>args</cite> are of type ndarray, the arrays should be broadcastable with <code class="code docutils literal notranslate"><span class="pre">shape[-1]=1</span></code>.</p>
+<p>The shape of the result will be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">t</span><span class="p">),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.distribution.Gamma.support_upper_bound">
+<span class="sig-name descname"><span class="pre">support_upper_bound</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#relife.distribution.Gamma.support_upper_bound" title="Permalink to this definition"></a></dt>
+<dd><p>Support upper bound of the lifetime model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>*args</strong> (<em>float</em><em> or </em><em>2D array</em><em>, </em><em>optional</em>) – Extra arguments required by the lifetime model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The support upper bound of the lifetime model with respect to the extra arguments.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float or ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="relife.distribution.Exponential.html" class="btn btn-neutral float-left" title="relife.distribution.Exponential" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relife.distribution.Gompertz.html" class="btn btn-neutral float-right" title="relife.distribution.Gompertz" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, RTE (https://www.rte-france.com) except where otherwise noted and licensed under a CC-BY-4.0 license (https://creativecommons.org/licenses/by/4.0/).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

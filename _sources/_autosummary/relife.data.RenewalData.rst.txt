@@ -1,0 +1,40 @@
+relife.data.RenewalData
+=======================
+
+.. currentmodule:: relife.data
+
+.. autoclass:: RenewalData
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~RenewalData.astuple
+      ~RenewalData.mean_number_of_events
+      ~RenewalData.number_of_events
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RenewalData.size
+      ~RenewalData.durations
+      ~RenewalData.T
+      ~RenewalData.n_indices
+      ~RenewalData.n_samples
+      ~RenewalData.indices
+      ~RenewalData.samples
+      ~RenewalData.times
+   
+   

@@ -1,0 +1,6 @@
+relife.utils.quad\_laguerre
+===========================
+
+.. currentmodule:: relife.utils
+
+.. autofunction:: quad_laguerre

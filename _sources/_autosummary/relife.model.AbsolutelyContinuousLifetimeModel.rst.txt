@@ -1,0 +1,40 @@
+relife.model.AbsolutelyContinuousLifetimeModel
+==============================================
+
+.. currentmodule:: relife.model
+
+.. autoclass:: AbsolutelyContinuousLifetimeModel
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AbsolutelyContinuousLifetimeModel.cdf
+      ~AbsolutelyContinuousLifetimeModel.chf
+      ~AbsolutelyContinuousLifetimeModel.hf
+      ~AbsolutelyContinuousLifetimeModel.ichf
+      ~AbsolutelyContinuousLifetimeModel.isf
+      ~AbsolutelyContinuousLifetimeModel.ls_integrate
+      ~AbsolutelyContinuousLifetimeModel.mean
+      ~AbsolutelyContinuousLifetimeModel.median
+      ~AbsolutelyContinuousLifetimeModel.moment
+      ~AbsolutelyContinuousLifetimeModel.mrl
+      ~AbsolutelyContinuousLifetimeModel.pdf
+      ~AbsolutelyContinuousLifetimeModel.ppf
+      ~AbsolutelyContinuousLifetimeModel.rvs
+      ~AbsolutelyContinuousLifetimeModel.sf
+      ~AbsolutelyContinuousLifetimeModel.support_upper_bound
+      ~AbsolutelyContinuousLifetimeModel.var
+   
+   
+
+   
+   
+   

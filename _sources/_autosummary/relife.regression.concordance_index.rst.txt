@@ -1,0 +1,6 @@
+relife.regression.concordance\_index
+====================================
+
+.. currentmodule:: relife.regression
+
+.. autofunction:: concordance_index

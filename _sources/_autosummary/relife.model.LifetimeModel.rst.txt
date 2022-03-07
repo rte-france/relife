@@ -1,0 +1,37 @@
+relife.model.LifetimeModel
+==========================
+
+.. currentmodule:: relife.model
+
+.. autoclass:: LifetimeModel
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LifetimeModel.cdf
+      ~LifetimeModel.isf
+      ~LifetimeModel.ls_integrate
+      ~LifetimeModel.mean
+      ~LifetimeModel.median
+      ~LifetimeModel.moment
+      ~LifetimeModel.mrl
+      ~LifetimeModel.pdf
+      ~LifetimeModel.ppf
+      ~LifetimeModel.rvs
+      ~LifetimeModel.sf
+      ~LifetimeModel.support_upper_bound
+      ~LifetimeModel.var
+   
+   
+
+   
+   
+   

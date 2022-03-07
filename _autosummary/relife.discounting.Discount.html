@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>relife.discounting.Discount &mdash; ReLife 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="relife.discounting.ExponentialDiscounting" href="relife.discounting.ExponentialDiscounting.html" />
+    <link rel="prev" title="relife.discounting" href="relife.discounting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ReLife
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">README</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">ReLife</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#getting-started">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citing">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#authors">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#credits">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="relife.html">ReLife API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="relife.data.html">relife.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.datasets.html">relife.datasets</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="relife.discounting.html">relife.discounting</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">relife.discounting.Discount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.discounting.ExponentialDiscounting.html">relife.discounting.ExponentialDiscounting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.discounting.GeneralizedHyperbolicDiscounting.html">relife.discounting.GeneralizedHyperbolicDiscounting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.discounting.HyperbolicDiscounting.html">relife.discounting.HyperbolicDiscounting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="relife.distribution.html">relife.distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.model.html">relife.model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.nonparametric.html">relife.nonparametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.parametric.html">relife.parametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.regression.html">relife.regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.renewal_process.html">relife.renewal_process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.replacement_policy.html">relife.replacement_policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.reward.html">relife.reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.utils.html">relife.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ReLife</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="relife.html">relife</a> &raquo;</li>
+          <li><a href="relife.discounting.html">relife.discounting</a> &raquo;</li>
+      <li>relife.discounting.Discount</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/relife.discounting.Discount.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="relife-discounting-discount">
+<h1>relife.discounting.Discount<a class="headerlink" href="#relife-discounting-discount" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="relife.discounting.Discount">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.discounting.</span></span><span class="sig-name descname"><span class="pre">Discount</span></span><a class="headerlink" href="#relife.discounting.Discount" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Generic discount function.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>Van der Weide, J. A. M., &amp; Van Noortwijk, J. M. (2008). Renewal
+theory with exponential and hyperbolic discounting. Probability in the
+Engineering and Informational Sciences, 22(1), 53-74.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.discounting.Discount.annuity_factor" title="relife.discounting.Discount.annuity_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annuity_factor</span></code></a></p></td>
+<td><p>The annuity factor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.discounting.Discount.factor" title="relife.discounting.Discount.factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">factor</span></code></a></p></td>
+<td><p>The discount factor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.discounting.Discount.rate" title="relife.discounting.Discount.rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rate</span></code></a></p></td>
+<td><p>The discount rate.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.discounting.Discount.factor">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.discounting.Discount.factor" title="Permalink to this definition"></a></dt>
+<dd><p>The discount factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>ndarray</em>) – Time.</p></li>
+<li><p><strong>*discount_args</strong> (<em>ndarray</em>) – Extra arguments required by the discount model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The discount factor evaluated at <cite>t</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The discount factor evaluated at <span class="math notranslate nohighlight">\(t\)</span> that multiplies the reward to get the
+discounted reward <span class="math notranslate nohighlight">\(D(t) \cdot y\)</span>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.discounting.Discount.rate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.discounting.Discount.rate" title="Permalink to this definition"></a></dt>
+<dd><p>The discount rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>ndarray</em>) – Time.</p></li>
+<li><p><strong>*discount_args</strong> (<em>ndarray</em>) – Extra arguments required by the discount model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The discount rate evaluated at <cite>t</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The discount rate evaluated at <span class="math notranslate nohighlight">\(t\)</span> is defined by:</p>
+<div class="math notranslate nohighlight">
+\[r(t) = -\dfrac{D'(t)}{D(t)}\]</div>
+<p>where <span class="math notranslate nohighlight">\(D\)</span> is the discount factor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.discounting.Discount.annuity_factor">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">annuity_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">discount_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#relife.discounting.Discount.annuity_factor" title="Permalink to this definition"></a></dt>
+<dd><p>The annuity factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>ndarray</em>) – Time.</p></li>
+<li><p><strong>*discount_args</strong> (<em>ndarray</em>) – Extra arguments required by the discount model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The annuity factor evaluated at <cite>t</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The annuity factor at time <span class="math notranslate nohighlight">\(t\)</span> is defined by:</p>
+<div class="math notranslate nohighlight">
+\[AF(t) = \int_0^t D(x) \mathrm{d}x\]</div>
+<p>where <span class="math notranslate nohighlight">\(D\)</span> is the discount factor.</p>
+<p>It is used to compute the equivalent annual cost of continuous
+discounted cash flows over the period <span class="math notranslate nohighlight">\([0, t]\)</span>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="relife.discounting.html" class="btn btn-neutral float-left" title="relife.discounting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relife.discounting.ExponentialDiscounting.html" class="btn btn-neutral float-right" title="relife.discounting.ExponentialDiscounting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, RTE (https://www.rte-france.com) except where otherwise noted and licensed under a CC-BY-4.0 license (https://creativecommons.org/licenses/by/4.0/).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

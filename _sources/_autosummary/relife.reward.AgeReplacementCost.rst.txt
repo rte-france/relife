@@ -1,0 +1,26 @@
+relife.reward.AgeReplacementCost
+================================
+
+.. currentmodule:: relife.reward
+
+.. autoclass:: AgeReplacementCost
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AgeReplacementCost.conditional_expectation
+      ~AgeReplacementCost.sample
+   
+   
+
+   
+   
+   

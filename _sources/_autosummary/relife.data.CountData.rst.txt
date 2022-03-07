@@ -1,0 +1,39 @@
+relife.data.CountData
+=====================
+
+.. currentmodule:: relife.data
+
+.. autoclass:: CountData
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~CountData.astuple
+      ~CountData.mean_number_of_events
+      ~CountData.number_of_events
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CountData.size
+      ~CountData.T
+      ~CountData.n_indices
+      ~CountData.n_samples
+      ~CountData.indices
+      ~CountData.samples
+      ~CountData.times
+   
+   

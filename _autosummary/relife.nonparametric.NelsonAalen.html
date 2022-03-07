@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>relife.nonparametric.NelsonAalen &mdash; ReLife 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="relife.parametric" href="relife.parametric.html" />
+    <link rel="prev" title="relife.nonparametric.KaplanMeier" href="relife.nonparametric.KaplanMeier.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ReLife
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">README</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">ReLife</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#getting-started">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citing">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#authors">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#credits">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="relife.html">ReLife API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="relife.data.html">relife.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.datasets.html">relife.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.discounting.html">relife.discounting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.distribution.html">relife.distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.model.html">relife.model</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="relife.nonparametric.html">relife.nonparametric</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="relife.nonparametric.ECDF.html">relife.nonparametric.ECDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relife.nonparametric.KaplanMeier.html">relife.nonparametric.KaplanMeier</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">relife.nonparametric.NelsonAalen</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="relife.parametric.html">relife.parametric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.regression.html">relife.regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.renewal_process.html">relife.renewal_process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.replacement_policy.html">relife.replacement_policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.reward.html">relife.reward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.utils.html">relife.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ReLife</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="relife.html">relife</a> &raquo;</li>
+          <li><a href="relife.nonparametric.html">relife.nonparametric</a> &raquo;</li>
+      <li>relife.nonparametric.NelsonAalen</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/relife.nonparametric.NelsonAalen.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="relife-nonparametric-nelsonaalen">
+<h1>relife.nonparametric.NelsonAalen<a class="headerlink" href="#relife-nonparametric-nelsonaalen" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="relife.nonparametric.NelsonAalen">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.nonparametric.</span></span><span class="sig-name descname"><span class="pre">NelsonAalen</span></span><a class="headerlink" href="#relife.nonparametric.NelsonAalen" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Nelson-Aalen Estimator.</p>
+<p>Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
+function from lifetime data.</p>
+<p class="rubric">Notes</p>
+<p>For a given time instant <span class="math notranslate nohighlight">\(t\)</span> and <span class="math notranslate nohighlight">\(n\)</span> total observations, this
+estimator is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\hat{H}(t) = \sum_{i: t_i \leq t} \frac{d_i}{n_i}\]</div>
+<p>where <span class="math notranslate nohighlight">\(d_i\)</span> is the number of failures until <span class="math notranslate nohighlight">\(t_i\)</span> and
+<span class="math notranslate nohighlight">\(n_i\)</span> is the number of assets at risk just prior to <span class="math notranslate nohighlight">\(t_i\)</span>.</p>
+<p>The variance estimation is obtained by:</p>
+<div class="math notranslate nohighlight">
+\[\widehat{Var}[\hat{H}(t)] = \sum_{i: t_i \leq t} \frac{d_i}{n_i^2}\]</div>
+<p>Note that the alternative survivor function estimate:</p>
+<div class="math notranslate nohighlight">
+\[\tilde{S}(t) = \exp{(-\hat{H}(t))}\]</div>
+<p>is sometimes suggested for the continuous-time case.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>Lawless, J. F. (2011). Statistical models and methods for lifetime
+data. John Wiley &amp; Sons.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.nonparametric.NelsonAalen.fit" title="relife.nonparametric.NelsonAalen.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Fit the Nelson-Aalen estimator to lifetime data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.nonparametric.NelsonAalen.plot" title="relife.nonparametric.NelsonAalen.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></p></td>
+<td><p>Plot the Nelson-Aalen estimator of the cumulative hazard function.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.nonparametric.NelsonAalen.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#relife.nonparametric.NelsonAalen" title="relife.nonparametric.NelsonAalen"><span class="pre">relife.nonparametric.NelsonAalen</span></a></span></span><a class="headerlink" href="#relife.nonparametric.NelsonAalen.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit the Nelson-Aalen estimator to lifetime data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>1D array</em>) – Array of time-to-event or durations.</p></li>
+<li><p><strong>event</strong> (<em>1D array</em><em>, </em><em>optional</em>) – <p>Array of event types coded as follows:</p>
+<ul>
+<li><p>0 if observation ends before the event has occurred (right censoring)</p></li>
+<li><p>1 if the event has occured</p></li>
+<li><p>2 if observation starts after the event has occurred (left censoring)</p></li>
+</ul>
+<p>by default the event has occured for each asset.</p>
+</p></li>
+<li><p><strong>entry</strong> (<em>1D array</em><em>, </em><em>optional</em>) – Array of delayed entry times (left truncation),
+by default None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The fitted Nelson-Aalen estimator as the current object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#relife.nonparametric.NelsonAalen" title="relife.nonparametric.NelsonAalen">NelsonAalen</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.nonparametric.NelsonAalen.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#relife.nonparametric.NelsonAalen.plot" title="Permalink to this definition"></a></dt>
+<dd><p>Plot the Nelson-Aalen estimator of the cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha_ci</strong> (<em>float</em><em>, </em><em>optional</em>) – <span class="math notranslate nohighlight">\(\alpha\)</span>-value to define the <span class="math notranslate nohighlight">\(100(1-\alpha)\%\)</span>
+confidence interval, by default 0.05 corresponding to the 95%
+confidence interval. If set to None or if the model has not been
+fitted, no confidence interval is plotted.</p></li>
+<li><p><strong>**kwargs</strong> – Extra arguments to specify the plot properties (see
+matplotlib.pyplot.plot documentation).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="relife.nonparametric.KaplanMeier.html" class="btn btn-neutral float-left" title="relife.nonparametric.KaplanMeier" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="relife.parametric.html" class="btn btn-neutral float-right" title="relife.parametric" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, RTE (https://www.rte-france.com) except where otherwise noted and licensed under a CC-BY-4.0 license (https://creativecommons.org/licenses/by/4.0/).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
