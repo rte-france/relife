@@ -1,0 +1,36 @@
+relife.replacement\_policy
+==========================
+
+.. automodule:: relife.replacement_policy
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      AgeReplacementPolicy
+      OneCycleAgeReplacementPolicy
+      OneCycleRunToFailure
+      RunToFailure
+   
+   
+
+   
+   
+   
+
+
+
+

@@ -1,0 +1,50 @@
+relife.regression.AFT
+=====================
+
+.. currentmodule:: relife.regression
+
+.. autoclass:: AFT
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AFT.cdf
+      ~AFT.chf
+      ~AFT.fit
+      ~AFT.hf
+      ~AFT.ichf
+      ~AFT.isf
+      ~AFT.ls_integrate
+      ~AFT.mean
+      ~AFT.median
+      ~AFT.moment
+      ~AFT.mrl
+      ~AFT.pdf
+      ~AFT.ppf
+      ~AFT.rvs
+      ~AFT.sf
+      ~AFT.support_upper_bound
+      ~AFT.var
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AFT.beta
+      ~AFT.n_params
+      ~AFT.params
+      ~AFT.baseline
+   
+   

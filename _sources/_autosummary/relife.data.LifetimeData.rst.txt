@@ -1,0 +1,34 @@
+relife.data.LifetimeData
+========================
+
+.. currentmodule:: relife.data
+
+.. autoclass:: LifetimeData
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LifetimeData.astuple
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LifetimeData.args
+      ~LifetimeData.entry
+      ~LifetimeData.event
+      ~LifetimeData.time
+   
+   

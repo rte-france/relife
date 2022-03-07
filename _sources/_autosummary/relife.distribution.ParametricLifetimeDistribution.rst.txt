@@ -1,0 +1,49 @@
+relife.distribution.ParametricLifetimeDistribution
+==================================================
+
+.. currentmodule:: relife.distribution
+
+.. autoclass:: ParametricLifetimeDistribution
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ParametricLifetimeDistribution.cdf
+      ~ParametricLifetimeDistribution.chf
+      ~ParametricLifetimeDistribution.fit
+      ~ParametricLifetimeDistribution.hf
+      ~ParametricLifetimeDistribution.ichf
+      ~ParametricLifetimeDistribution.isf
+      ~ParametricLifetimeDistribution.ls_integrate
+      ~ParametricLifetimeDistribution.mean
+      ~ParametricLifetimeDistribution.median
+      ~ParametricLifetimeDistribution.moment
+      ~ParametricLifetimeDistribution.mrl
+      ~ParametricLifetimeDistribution.pdf
+      ~ParametricLifetimeDistribution.plot
+      ~ParametricLifetimeDistribution.ppf
+      ~ParametricLifetimeDistribution.rvs
+      ~ParametricLifetimeDistribution.sf
+      ~ParametricLifetimeDistribution.support_upper_bound
+      ~ParametricLifetimeDistribution.var
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ParametricLifetimeDistribution.n_params
+      ~ParametricLifetimeDistribution.params
+   
+   

@@ -1,0 +1,27 @@
+relife.discounting.Discount
+===========================
+
+.. currentmodule:: relife.discounting
+
+.. autoclass:: Discount
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Discount.annuity_factor
+      ~Discount.factor
+      ~Discount.rate
+   
+   
+
+   
+   
+   

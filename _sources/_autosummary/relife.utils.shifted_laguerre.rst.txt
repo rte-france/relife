@@ -1,0 +1,6 @@
+relife.utils.shifted\_laguerre
+==============================
+
+.. currentmodule:: relife.utils
+
+.. autofunction:: shifted_laguerre

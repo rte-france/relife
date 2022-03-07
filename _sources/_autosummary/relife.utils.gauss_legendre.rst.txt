@@ -1,0 +1,6 @@
+relife.utils.gauss\_legendre
+============================
+
+.. currentmodule:: relife.utils
+
+.. autofunction:: gauss_legendre

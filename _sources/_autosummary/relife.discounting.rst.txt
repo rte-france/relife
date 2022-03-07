@@ -1,0 +1,36 @@
+relife.discounting
+==================
+
+.. automodule:: relife.discounting
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      Discount
+      ExponentialDiscounting
+      GeneralizedHyperbolicDiscounting
+      HyperbolicDiscounting
+   
+   
+
+   
+   
+   
+
+
+
+

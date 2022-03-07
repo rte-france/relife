@@ -1,0 +1,46 @@
+relife.model.LeftTruncated
+==========================
+
+.. currentmodule:: relife.model
+
+.. autoclass:: LeftTruncated
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LeftTruncated.cdf
+      ~LeftTruncated.chf
+      ~LeftTruncated.hf
+      ~LeftTruncated.ichf
+      ~LeftTruncated.isf
+      ~LeftTruncated.ls_integrate
+      ~LeftTruncated.mean
+      ~LeftTruncated.median
+      ~LeftTruncated.moment
+      ~LeftTruncated.mrl
+      ~LeftTruncated.pdf
+      ~LeftTruncated.ppf
+      ~LeftTruncated.rvs
+      ~LeftTruncated.sf
+      ~LeftTruncated.support_upper_bound
+      ~LeftTruncated.var
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LeftTruncated.baseline
+   
+   

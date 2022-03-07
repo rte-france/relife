@@ -4,8 +4,6 @@ ReLife
 ReLife is an open source Python library for asset management based on
 reliability theory and lifetime data analysis.
 
-It includes:
-
 - **Survival analysis**: non-parametric estimator (Kaplan-Meier), parametric
   estimator (Maximum Likelihood) and regression models (Accelerated Failure Time
   and Parametric Proportional Hazards) on left-truncated, right-censored and
@@ -20,7 +18,7 @@ It includes:
 Installation
 ============
 
-From PyPi:
+From PyPI:
 
 .. code-block:: console
 

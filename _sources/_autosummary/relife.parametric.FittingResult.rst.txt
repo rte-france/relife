@@ -1,0 +1,40 @@
+relife.parametric.FittingResult
+===============================
+
+.. currentmodule:: relife.parametric
+
+.. autoclass:: FittingResult
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FittingResult.asdict
+      ~FittingResult.standard_error
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FittingResult.opt
+      ~FittingResult.jac
+      ~FittingResult.var
+      ~FittingResult.se
+      ~FittingResult.n_samples
+      ~FittingResult.n_params
+      ~FittingResult.AIC
+      ~FittingResult.AICc
+      ~FittingResult.BIC
+   
+   
