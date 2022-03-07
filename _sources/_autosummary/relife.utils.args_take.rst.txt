@@ -1,6 +1,0 @@
-relife.utils.args\_take
-=======================
-
-.. currentmodule:: relife.utils
-
-.. autofunction:: args_take

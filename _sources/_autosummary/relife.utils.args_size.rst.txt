@@ -1,6 +1,0 @@
-relife.utils.args\_size
-=======================
-
-.. currentmodule:: relife.utils
-
-.. autofunction:: args_size

@@ -1,6 +1,0 @@
-relife.utils.args\_ndim
-=======================
-
-.. currentmodule:: relife.utils
-
-.. autofunction:: args_ndim
