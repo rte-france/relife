@@ -1,0 +1,1213 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>relife.distribution &#8212; ReLife 1.0.0 documentation</title>
+    
+  <link href="../../_static/css/theme.css" rel="stylesheet">
+  <link href="../../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    
+  <link rel="preload" as="script" href="../../_static/js/index.be7d3bbb2ef33a8344ce.js">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">ReLife 1.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  API documentation
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../_autosummary/relife.html">
+   relife
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.data.html">
+     relife.data
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.data.CountData.html">
+       relife.data.CountData
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.data.LifetimeData.html">
+       relife.data.LifetimeData
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.data.RenewalData.html">
+       relife.data.RenewalData
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.data.RenewalRewardData.html">
+       relife.data.RenewalRewardData
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.data.ReplacementPolicyData.html">
+       relife.data.ReplacementPolicyData
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.datasets.html">
+     relife.datasets
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+    <label for="toctree-checkbox-3">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.datasets.load_circuit_breaker.html">
+       relife.datasets.load_circuit_breaker
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.datasets.load_insulator_string.html">
+       relife.datasets.load_insulator_string
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.datasets.load_power_transformer.html">
+       relife.datasets.load_power_transformer
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.discounting.html">
+     relife.discounting
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.discounting.Discount.html">
+       relife.discounting.Discount
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.discounting.ExponentialDiscounting.html">
+       relife.discounting.ExponentialDiscounting
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.discounting.GeneralizedHyperbolicDiscounting.html">
+       relife.discounting.GeneralizedHyperbolicDiscounting
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.discounting.HyperbolicDiscounting.html">
+       relife.discounting.HyperbolicDiscounting
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.distribution.html">
+     relife.distribution
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.distribution.Exponential.html">
+       relife.distribution.Exponential
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.distribution.Gamma.html">
+       relife.distribution.Gamma
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.distribution.Gompertz.html">
+       relife.distribution.Gompertz
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.distribution.LogLogistic.html">
+       relife.distribution.LogLogistic
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.distribution.MinimumDistribution.html">
+       relife.distribution.MinimumDistribution
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.distribution.ParametricLifetimeDistribution.html">
+       relife.distribution.ParametricLifetimeDistribution
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.distribution.Weibull.html">
+       relife.distribution.Weibull
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.model.html">
+     relife.model
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+    <label for="toctree-checkbox-6">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html">
+       relife.model.AbsolutelyContinuousLifetimeModel
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.model.AgeReplacementModel.html">
+       relife.model.AgeReplacementModel
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.model.EquilibriumDistribution.html">
+       relife.model.EquilibriumDistribution
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.model.HazardFunctions.html">
+       relife.model.HazardFunctions
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.model.LeftTruncated.html">
+       relife.model.LeftTruncated
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.model.LifetimeModel.html">
+       relife.model.LifetimeModel
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.nonparametric.html">
+     relife.nonparametric
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+    <label for="toctree-checkbox-7">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.nonparametric.ECDF.html">
+       relife.nonparametric.ECDF
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.nonparametric.KaplanMeier.html">
+       relife.nonparametric.KaplanMeier
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.nonparametric.NelsonAalen.html">
+       relife.nonparametric.NelsonAalen
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.parametric.html">
+     relife.parametric
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+    <label for="toctree-checkbox-8">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.parametric.FittingResult.html">
+       relife.parametric.FittingResult
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.parametric.ParametricHazardFunctions.html">
+       relife.parametric.ParametricHazardFunctions
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.parametric.ParametricLifetimeModel.html">
+       relife.parametric.ParametricLifetimeModel
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.regression.html">
+     relife.regression
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+    <label for="toctree-checkbox-9">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.regression.concordance_index.html">
+       relife.regression.concordance_index
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.regression.AFT.html">
+       relife.regression.AFT
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.regression.ProportionalHazards.html">
+       relife.regression.ProportionalHazards
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.regression.Regression.html">
+       relife.regression.Regression
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.regression.RegressionFittingResult.html">
+       relife.regression.RegressionFittingResult
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.renewal_process.html">
+     relife.renewal_process
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+    <label for="toctree-checkbox-10">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.renewal_process.delayed_renewal.html">
+       relife.renewal_process.delayed_renewal
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.renewal_process.renewal_equation_solver.html">
+       relife.renewal_process.renewal_equation_solver
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.renewal_process.RenewalProcess.html">
+       relife.renewal_process.RenewalProcess
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.renewal_process.RenewalRewardProcess.html">
+       relife.renewal_process.RenewalRewardProcess
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.replacement_policy.html">
+     relife.replacement_policy
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.replacement_policy.AgeReplacementPolicy.html">
+       relife.replacement_policy.AgeReplacementPolicy
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html">
+       relife.replacement_policy.OneCycleAgeReplacementPolicy
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.replacement_policy.OneCycleRunToFailure.html">
+       relife.replacement_policy.OneCycleRunToFailure
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.replacement_policy.RunToFailure.html">
+       relife.replacement_policy.RunToFailure
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.reward.html">
+     relife.reward
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+    <label for="toctree-checkbox-12">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.reward.AgeReplacementCost.html">
+       relife.reward.AgeReplacementCost
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.reward.FailureCost.html">
+       relife.reward.FailureCost
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.reward.Reward.html">
+       relife.reward.Reward
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../_autosummary/relife.utils.html">
+     relife.utils
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+    <label for="toctree-checkbox-13">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.args_ndim.html">
+       relife.utils.args_ndim
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.args_size.html">
+       relife.utils.args_size
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.args_take.html">
+       relife.utils.args_take
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.gauss_laguerre.html">
+       relife.utils.gauss_laguerre
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.gauss_legendre.html">
+       relife.utils.gauss_legendre
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.plot.html">
+       relife.utils.plot
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.quad_laguerre.html">
+       relife.utils.quad_laguerre
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../_autosummary/relife.utils.shifted_laguerre.html">
+       relife.utils.shifted_laguerre
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<div class="sbt-scroll-pixel-helper"></div>
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            <div class="topbar-left">
+                
+                <label class="nav-toggle-button" for="__navigation">
+                    <div class="visually-hidden">Toggle navigation</div>
+                    <i class="fas fa-bars"></i>
+                </label>
+                
+            </div>
+            
+            <!-- Source interaction buttons -->
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
+            
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1></h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                    </div>
+                </div>
+            </div>
+            
+              <div>
+                
+  <h1>Source code for relife.distribution</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Parametric lifetime distribution.&quot;&quot;&quot;</span>
+
+<span class="c1"># Copyright (c) 2022, RTE (https://www.rte-france.com)</span>
+<span class="c1"># See AUTHORS.txt</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)</span>
+<span class="c1"># This file is part of ReLife, an open source Python library for asset</span>
+<span class="c1"># management based on reliability theory and lifetime data analysis.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">fields</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">Bounds</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">exp1</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">gammaincc</span><span class="p">,</span> <span class="n">gammainccinv</span><span class="p">,</span> <span class="n">digamma</span>
+
+<span class="kn">from</span> <span class="nn">.data</span> <span class="kn">import</span> <span class="n">LifetimeData</span>
+<span class="kn">from</span> <span class="nn">.parametric</span> <span class="kn">import</span> <span class="n">ParametricLifetimeModel</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">MIN_POSITIVE_FLOAT</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">shifted_laguerre</span>
+
+
+<div class="viewcode-block" id="ParametricLifetimeDistribution"><a class="viewcode-back" href="../../relife.html#relife.distribution.ParametricLifetimeDistribution">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ParametricLifetimeDistribution</span><span class="p">(</span><span class="n">ParametricLifetimeModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generic class for parametric lifetime distribution.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_param_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
+        <span class="c1"># return Bounds(*[(MIN_POSITIVE_FLOAT, None)] * len(fields(self)))</span>
+        <span class="k">return</span> <span class="n">Bounds</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">,</span> <span class="n">MIN_POSITIVE_FLOAT</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LifetimeData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">params0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_params</span><span class="p">)</span>
+        <span class="n">params0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">params0</span>
+
+    <span class="k">def</span> <span class="nf">_set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+<div class="viewcode-block" id="ParametricLifetimeDistribution.fit"><a class="viewcode-back" href="../../relife.html#relife.distribution.ParametricLifetimeDistribution.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">event</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">entry</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">args</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">params0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParametricLifetimeDistribution</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Fit the parametric lifetime distribution to lifetime data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : 1D array</span>
+<span class="sd">            Array of time-to-event or durations.</span>
+<span class="sd">        event : 1D array, optional</span>
+<span class="sd">            Array of event types coded as follows:</span>
+
+<span class="sd">            - 0 if observation ends before the event has occurred (right censoring)</span>
+<span class="sd">            - 1 if the event has occured</span>
+<span class="sd">            - 2 if observation starts after the event has occurred (left censoring)</span>
+
+<span class="sd">            by default the event has occured for each asset.</span>
+<span class="sd">        entry : 1D array, optional</span>
+<span class="sd">            Array of delayed entry times (left truncation),</span>
+<span class="sd">            by default None.</span>
+<span class="sd">        args : float or 2D array, optional</span>
+<span class="sd">            Extra arguments required by the parametric lifetime model.</span>
+<span class="sd">        params0 : 1D array, optional</span>
+<span class="sd">            Initial guess, by default None.</span>
+<span class="sd">        method : str, optional</span>
+<span class="sd">            Type of solver (see scipy.optimize.minimize documentation), by</span>
+<span class="sd">            default None.</span>
+<span class="sd">        **kwargs: dict, optional</span>
+<span class="sd">            Extra arguments to pass to the minimize method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self</span>
+<span class="sd">            Return the fitted distribution as the current object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">LifetimeData</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">params0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="ParametricLifetimeDistribution.plot"><a class="viewcode-back" href="../../relife.html#relife.distribution.ParametricLifetimeDistribution.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">timeline</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">alpha_ci</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sf&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Plot functions of the distribution model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timeline : 1D array, optional</span>
+<span class="sd">            Timeline of the plot (x-axis), by default guessed by the millile.</span>
+<span class="sd">        args : Tuple[ndarray], optional</span>
+<span class="sd">            Extra arguments required by the parametric lifetime model, by</span>
+<span class="sd">            default ().</span>
+<span class="sd">        alpha_ci : float, optional</span>
+<span class="sd">            :math:`\alpha`-value to define the :math:`100(1-\alpha)\%`</span>
+<span class="sd">            confidence interval, by default 0.05 corresponding to the 95\%</span>
+<span class="sd">            confidence interval. If set to None or if the model has not been</span>
+<span class="sd">            fitted, no confidence interval is plotted.</span>
+<span class="sd">        fname : str, optional</span>
+<span class="sd">            Name of the function to be plotted, by default &#39;sf&#39;. Should be one</span>
+<span class="sd">            of:</span>
+
+<span class="sd">            - &#39;sf&#39;: survival function,</span>
+<span class="sd">            - &#39;cdf&#39;: cumulative distribution function,</span>
+<span class="sd">            - &#39;chf&#39;: cumulative hazard function,</span>
+<span class="sd">            - &#39;hf&#39;: hazard function,</span>
+<span class="sd">            - &#39;pdf&#39;: probability density function.</span>
+
+<span class="sd">        **kwargs : dict, optional</span>
+<span class="sd">            Extra arguments to specify the plot properties (see</span>
+<span class="sd">            matplotlib.pyplot.plot documentation).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `fname` value is not among &#39;sf&#39;, &#39;cdf&#39;, &#39;chf&#39;, &#39;hf&#39; or &#39;pdf&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flist</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sf&quot;</span><span class="p">,</span> <span class="s2">&quot;cdf&quot;</span><span class="p">,</span> <span class="s2">&quot;chf&quot;</span><span class="p">,</span> <span class="s2">&quot;hf&quot;</span><span class="p">,</span> <span class="s2">&quot;pdf&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">fname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">flist</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Function name &#39;</span><span class="si">{}</span><span class="s2">&#39; is not supported for plotting, `fname` must be in </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">fname</span><span class="p">,</span> <span class="n">flist</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">timeline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">fname</span><span class="p">)</span>
+        <span class="n">jac_f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_jac_&quot;</span> <span class="o">+</span> <span class="n">fname</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">alpha_ci</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">):</span>
+            <span class="n">i0</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">timeline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i0</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">se</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">se</span><span class="p">[</span><span class="n">i0</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">standard_error</span><span class="p">(</span>
+                <span class="n">jac_f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">timeline</span><span class="p">[</span><span class="n">i0</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">se</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">fname</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;sf&quot;</span><span class="p">,</span> <span class="s2">&quot;cdf&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">plot</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">se</span><span class="p">,</span> <span class="n">alpha_ci</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Exponential"><a class="viewcode-back" href="../../relife.html#relife.distribution.Exponential">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Exponential</span><span class="p">(</span><span class="n">ParametricLifetimeDistribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Exponential parametric lifetime distribution.</span>
+
+<span class="sd">    The exponential distribution is a 1-parameter distribution with</span>
+<span class="sd">    :math:`(\lambda)`. The probability density function is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f(t) = \lambda e^{-\lambda t}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`\lambda &gt; 0`, the rate parameter,</span>
+<span class="sd">        - :math:`t\geq 0`, the operating time, age, cycles, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: rate parameter (inverse of scale)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+
+    <span class="k">def</span> <span class="nf">_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">t</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">t</span>
+
+    <span class="k">def</span> <span class="nf">_jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">t</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">v</span> <span class="o">/</span> <span class="n">rate</span>
+
+<div class="viewcode-block" id="Exponential.mean"><a class="viewcode-back" href="../../relife.html#relife.distribution.Exponential.mean">[docs]</a>    <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">rate</span></div>
+
+<div class="viewcode-block" id="Exponential.var"><a class="viewcode-back" href="../../relife.html#relife.distribution.Exponential.var">[docs]</a>    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">rate</span><span class="o">**</span><span class="mi">2</span></div>
+
+<div class="viewcode-block" id="Exponential.mrl"><a class="viewcode-back" href="../../relife.html#relife.distribution.Exponential.mrl">[docs]</a>    <span class="k">def</span> <span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Weibull"><a class="viewcode-back" href="../../relife.html#relife.distribution.Weibull">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Weibull</span><span class="p">(</span><span class="n">ParametricLifetimeDistribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Weibull parametric lifetime distribution.</span>
+
+<span class="sd">    The Weibull distribution is a 2-parameter distribution with</span>
+<span class="sd">    :math:`(c,\lambda)`. The probability density function is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f(t) = c \lambda^c t^{c-1} e^{-(\lambda t)^c}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`c &gt; 0`, the shape parameter,</span>
+<span class="sd">        - :math:`\lambda &gt; 0`, the rate parameter,</span>
+<span class="sd">        - :math:`t\geq 0`, the operating time, age, cycles, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: shape parameter</span>
+    <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: rate parameter (inverse of scale)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="n">c</span>
+
+    <span class="k">def</span> <span class="nf">_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="n">rate</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">rate</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="n">c</span><span class="p">,</span> <span class="n">c</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">rate</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)),</span>
+                <span class="n">c</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">v</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="n">rate</span>
+
+<div class="viewcode-block" id="Weibull.mean"><a class="viewcode-back" href="../../relife.html#relife.distribution.Weibull.mean">[docs]</a>    <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">return</span> <span class="n">gamma</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="n">rate</span></div>
+
+<div class="viewcode-block" id="Weibull.mrl"><a class="viewcode-back" href="../../relife.html#relife.distribution.Weibull.mrl">[docs]</a>    <span class="k">def</span> <span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">gamma</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">c</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="o">*</span> <span class="n">gammaincc</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="n">c</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Weibull.var"><a class="viewcode-back" href="../../relife.html#relife.distribution.Weibull.var">[docs]</a>    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">return</span> <span class="n">gamma</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="n">rate</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span></div></div>
+
+
+<div class="viewcode-block" id="Gompertz"><a class="viewcode-back" href="../../relife.html#relife.distribution.Gompertz">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Gompertz</span><span class="p">(</span><span class="n">ParametricLifetimeDistribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gompertz parametric lifetime distribution.</span>
+
+<span class="sd">    The Gompertz distribution is a 2-parameter distribution with</span>
+<span class="sd">    :math:`(c,\lambda)`. The probability density function is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f(t) = c \lambda e^{\lambda t} e^{ -c \left( e^{\lambda t}-1 \right) }</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`c &gt; 0`, the shape parameter,</span>
+<span class="sd">        - :math:`\lambda &gt; 0`, the rate parameter,</span>
+<span class="sd">        - :math:`t\geq 0`, the operating time, age, cycles, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: shape parameter</span>
+    <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: rate parameter (inverse of scale)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_init_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LifetimeData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">c</span><span class="p">,</span> <span class="n">rate</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">expm1</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">expm1</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span> <span class="n">c</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">v</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Gompertz.mean"><a class="viewcode-back" href="../../relife.html#relife.distribution.Gompertz.mean">[docs]</a>    <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp1</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="n">rate</span></div>
+
+<div class="viewcode-block" id="Gompertz.mrl"><a class="viewcode-back" href="../../relife.html#relife.distribution.Gompertz.mrl">[docs]</a>    <span class="k">def</span> <span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp1</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">/</span> <span class="n">rate</span></div></div>
+
+
+<div class="viewcode-block" id="Gamma"><a class="viewcode-back" href="../../relife.html#relife.distribution.Gamma">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Gamma</span><span class="p">(</span><span class="n">ParametricLifetimeDistribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gamma parametric lifetime distribution.</span>
+
+<span class="sd">    The Gamma distribution is a 2-parameter distribution with</span>
+<span class="sd">    :math:`(c,\lambda)`. The probability density function is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f(t) = \frac{\lambda^c t^{c-1} e^{-\lambda t}}{\Gamma(c)}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`c &gt; 0`, the shape parameter,</span>
+<span class="sd">        - :math:`\lambda &gt; 0`, the rate parameter,</span>
+<span class="sd">        - :math:`t\geq 0`, the operating time, age, cycles, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># shape parameter</span>
+    <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: rate parameter (inverse of scale)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gammaincc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_jac_uppergamma_c</span><span class="p">(</span><span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">shifted_laguerre</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_default_hess_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;2-point&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span> <span class="o">-</span> <span class="n">rate</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">digamma</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac_uppergamma_c</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span>
+                <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                    <span class="o">-</span> <span class="n">rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac_uppergamma_c</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uppergamma</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">gammainccinv</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">v</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Gamma.mean"><a class="viewcode-back" href="../../relife.html#relife.distribution.Gamma.mean">[docs]</a>    <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">/</span> <span class="n">rate</span></div>
+
+<div class="viewcode-block" id="Gamma.var"><a class="viewcode-back" href="../../relife.html#relife.distribution.Gamma.var">[docs]</a>    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">/</span> <span class="p">(</span><span class="n">rate</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="LogLogistic"><a class="viewcode-back" href="../../relife.html#relife.distribution.LogLogistic">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">LogLogistic</span><span class="p">(</span><span class="n">ParametricLifetimeDistribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Log-logistic parametric lifetime distribution.</span>
+
+<span class="sd">    The Log-logistic distribution is defined as a 2-parameter distribution</span>
+<span class="sd">    :math:`(c, \lambda)`. The probability density function is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f(t) = \frac{c \lambda^c t^{c-1}}{(1+(\lambda t)^{c})^2}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`c &gt; 0`, the shape parameter,</span>
+<span class="sd">        - :math:`\lambda &gt; 0`, the rate parameter,</span>
+<span class="sd">        - :math:`t\geq 0`, the operating time, age, cycles, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: shape parameter</span>
+    <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#: rate parameter (inverse of scale)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="n">rate</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">_jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">c</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">c</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">/</span> <span class="n">rate</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">t</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t</span><span class="p">)),</span>
+                <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">rate</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">c</span><span class="p">))</span> <span class="o">/</span> <span class="n">rate</span>
+
+<div class="viewcode-block" id="LogLogistic.mean"><a class="viewcode-back" href="../../relife.html#relife.distribution.LogLogistic.mean">[docs]</a>    <span class="k">def</span> <span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">c</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">b</span> <span class="o">/</span> <span class="p">(</span><span class="n">rate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expectancy only defined for c &gt; 1: c = </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LogLogistic.var"><a class="viewcode-back" href="../../relife.html#relife.distribution.LogLogistic.var">[docs]</a>    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">c</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">rate</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">b</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variance only defined for c &gt; 2: c = </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MinimumDistribution"><a class="viewcode-back" href="../../relife.html#relife.distribution.MinimumDistribution">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">MinimumDistribution</span><span class="p">(</span><span class="n">ParametricLifetimeDistribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Series structure of n identical and independent components.</span>
+
+<span class="sd">    The hazard function of the system is given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        h(t) = n \cdot  h_0(t)</span>
+
+<span class="sd">    where :math:`h_0` is the baseline hazard function of the components.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    Computing the survival (or reliability) function for 3 structures of 3,6 and</span>
+<span class="sd">    9 identical and idependent components:</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        model = MinimumDistribution(Weibull(2, 0.05))</span>
+<span class="sd">        t = np.arange(0, 10, 0.1)</span>
+<span class="sd">        n = np.array([3, 6, 9]).reshape(-1, 1)</span>
+<span class="sd">        model.sf(t, n)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">baseline</span><span class="p">:</span> <span class="n">ParametricLifetimeDistribution</span>  <span class="c1">#: Underlying lifetime model of the components.</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_default_hess_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_default_hess_scheme</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">params</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">n_params</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_param_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_param_bounds</span>
+
+    <span class="k">def</span> <span class="nf">_set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_set_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_chf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_chf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_hf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_hf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dhf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_dhf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_chf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_jac_chf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jac_hf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_jac_hf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ichf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_ichf</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">v</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+</pre></div>
+
+              </div>
+              
+            
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            
+        </div>
+    </div>
+    <footer class="footer">
+  <p>
+    
+      By Thomas Guillon, Michaël Boulade, Laura Cohen, Lionel Figueroa, Jovana Krstevska, Sami Tazi.<br/>
+    
+        &copy; Copyright 2022, RTE (https://www.rte-france.com) except where otherwise noted and licensed under a CC-BY-4.0 license (https://creativecommons.org/licenses/by/4.0/).<br/>
+  </p>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+
+  </body>
+</html>
