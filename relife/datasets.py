@@ -18,6 +18,7 @@ DATA_PATH = Path(__file__).parent / "datasets"
 def load_power_transformer() -> LifetimeData:
     """Load and return the power transformer lifetime data.
 
+    Add a missing comment in the function
     The data were simulated from a real estimate:
 
     - `time`: time-to-event or durations in years,
