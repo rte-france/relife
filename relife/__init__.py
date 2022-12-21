@@ -24,6 +24,7 @@ from .replacement_policy import (
     OneCycleAgeReplacementPolicy,
     AgeReplacementPolicy,
 )
+from .poisson_process import NonHomogeneousPoissonProcess, NonParametricCumulativeIntensityFunction
 
 __version__ = "1.0.0"
 
@@ -48,4 +49,6 @@ __all__ = [
     "RunToFailure",
     "OneCycleAgeReplacementPolicy",
     "AgeReplacementPolicy",
+    "NonHomogeneousPoissonProcess",
+    "NonParametricCumulativeIntensityFunction",
 ]
