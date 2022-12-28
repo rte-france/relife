@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from .data import LifetimeData, CountData
 from .parametric import ParametricHazardFunctions
 from .nonparametric import NelsonAalen
-from .utils import plot
+from .utils import plot, args_take
 
 
 
@@ -31,7 +31,9 @@ class NonHomogeneousPoissonProcessData:
     tf: np.ndarray #: Final observations age of the assets.
     times_indices: np.ndarray #: Times' Events asset corresponding indices (in the same order than times).
     assets_indices: np.ndarray #: Assets indices
+    #args: np.ndarray
     args: Tuple[np.ndarray] = ()  #: Extra arguments required by the NHPP model.
+    #args = ()  #: Extra arguments required by the NHPP model.
 
     def to_lifetime_data(self):
         entry = np.concatenate((self.times,self.t0))
@@ -46,8 +48,29 @@ class NonHomogeneousPoissonProcessData:
         entry = entry[entry_ordered_ind]
         time = time[time_ordered_ind]
         event = event[time_ordered_ind]
-        return LifetimeData(time,event,entry)
 
+        #args_LD_format = args_take(indices[entry_ordered_ind].astype(int), self.args)
+
+        
+        #args = (covar, *args) if covar is not None else args
+
+        #num_to_repeat = np.histogram(self.times_indices,np.insert(self.assets_indices,self.assets_indices.shape[0],self.assets_indices.shape[0]))[0]+1
+        #args_LD_format = np.repeat(self.args,num_to_repeat,axis=0)
+
+
+        args_LD_format = [self.args] if type(self.args) is not tuple else self.args
+        args_LD_format =args_take(indices[entry_ordered_ind].astype(int), *args_LD_format)
+
+        return LifetimeData(time,event,entry,args_LD_format)
+        #return LifetimeData(time,event,entry,args_LD_format)
+        #return LifetimeData(time,event,entry,*args_take(indices[entry_ordered_ind].astype(int), *self.args)) if type(self.args) is tuple else LifetimeData(time,event,entry,*args_take(indices[entry_ordered_ind].astype(int), self.args))
+        #return LifetimeData(time,event,entry,*args_take(indices[entry_ordered_ind].astype(int), *self.args)) if not tuple(map(tuple, self.args)) else LifetimeData(time,event,entry,*args_take(indices[entry_ordered_ind].astype(int), self.args))
+              
+
+
+        #np.take(arg, indices, axis=-2)
+        #if np.ndim(arg) > 0
+        #else np.tile(arg, (np.size(indices), 1))
 
 
 @dataclass
@@ -105,9 +128,9 @@ class NonHomogeneousPoissonProcess(ParametricHazardFunctions):
         return self.model._ichf(params, t, *args)
 
     def fit(self, times, times_indices=None, assets_indices=None, t0=None, tf=None, params0: np.ndarray = None,
-        method: str = None,**kwargs):
+        method: str = None, args: Tuple[np.ndarray] = (), **kwargs):
         
-        data = NonHomogeneousPoissonProcessData(times=times, times_indices=times_indices, assets_indices=assets_indices, t0=t0, tf=tf).to_lifetime_data()
+        data = NonHomogeneousPoissonProcessData(times=times, times_indices=times_indices, assets_indices=assets_indices, t0=t0, tf=tf,args=args).to_lifetime_data()
         self._fit(data, params0, method=method, **kwargs)
         return self
 
