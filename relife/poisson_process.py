@@ -59,7 +59,7 @@ class NonHomogeneousPoissonProcessData:
 
 
         args_LD_format = [self.args] if type(self.args) is not tuple else self.args
-        args_LD_format =args_take(indices[entry_ordered_ind].astype(int), *args_LD_format)
+        args_LD_format = args_take(indices[entry_ordered_ind].astype(int), *args_LD_format)
 
         return LifetimeData(time,event,entry,args_LD_format)
         #return LifetimeData(time,event,entry,args_LD_format)
