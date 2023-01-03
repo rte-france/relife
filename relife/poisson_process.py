@@ -160,8 +160,43 @@ class NonHomogeneousPoissonProcess(ParametricHazardFunctions):
     #    **kwargs,
     #) -> None:
 
-    def sample(self, t0, tf):
-        pass
+
+    def sample(number_of_sample,model_nhpp,T0,TF):
+        event_per_sample = 50
+        n_while = 1
+        expo_times = np.random.exponential(scale=1.0, size=(number_of_sample, event_per_sample))
+    
+        cs_expo_times = np.cumsum(expo_times,axis=1)
+        max_expo = np.max(cs_expo_times,axis=1)
+    
+        nhpp_times = model_nhpp.ichf(cs_expo_times)
+        maxNHPPtime = np.max(nhpp_times,axis=1)
+
+        while any(maxNHPPtime.reshape(-1,1)<TF):
+
+            n_while = n_while + 1      
+            expo_times = np.random.exponential(scale=1.0, size=(number_of_sample, event_per_sample))
+            expo_times[:,0] = expo_times[:,0]+max_expo
+            to_append = np.cumsum(expo_times,axis=1)
+            cs_expo_times = np.append(cs_expo_times,to_append,axis=1)
+            max_expo = np.max(cs_expo_times,axis=1)
+            nhpp_times = model_nhpp.ichf(cs_expo_times)
+            maxNHPPtime = np.max(nhpp_times,axis=1)#à comparer avec le TF en vue d'une boucle while
+
+
+        numbers = np.hstack([np.arange(0, number_of_sample)[:, None]]*event_per_sample*n_while)
+        mask = (nhpp_times < TF) & (nhpp_times > T0)
+        nhpp_times = nhpp_times[mask]
+        no_observation = np.all(np.invert(mask),axis=1)
+
+
+        numbers = numbers[mask]
+        sample_informations = np.insert(np.concatenate((T0,TF),axis=1), 0, np.arange(0, number_of_sample), axis=1)
+
+        return(sample_informations,numbers,nhpp_times)
+
+    #def sample(self, t0, tf):
+    #    pass
 
 
 class NonParametricCumulativeIntensityFunction(NelsonAalen):
