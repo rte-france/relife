@@ -31,11 +31,17 @@ class NonHomogeneousPoissonProcessData:
     tf: np.ndarray #: Final observations age of the assets.
     times_indices: np.ndarray #: Times' Events asset corresponding indices (in the same order than times).
     assets_indices: np.ndarray #: Assets indices
-    #args: np.ndarray
     args: Tuple[np.ndarray] = ()  #: Extra arguments required by the NHPP model.
     #args = ()  #: Extra arguments required by the NHPP model.
 
+
+
     def to_lifetime_data(self):
+
+        ar  = np.column_stack((self.times_indices,self.times))
+        if len(np.vstack({tuple(e) for e in ar})) < len(ar):
+            raise ValueError("A process can have only one event at the same time")
+
         entry = np.concatenate((self.times,self.t0))
         time = np.concatenate((self.times,self.tf))
         indices = np.concatenate((self.times_indices,self.assets_indices))
@@ -48,18 +54,35 @@ class NonHomogeneousPoissonProcessData:
         entry = entry[entry_ordered_ind]
         time = time[time_ordered_ind]
         event = event[time_ordered_ind]
+        
+
 
         #args_LD_format = args_take(indices[entry_ordered_ind].astype(int), self.args)
 
-        
+        condition = ((entry==time)&(event==0))
+
         #args = (covar, *args) if covar is not None else args
+        if type(self.args) is not tuple:
+            num_to_repeat = np.histogram(self.times_indices,np.insert(self.assets_indices,self.assets_indices.shape[0],self.assets_indices.shape[0]))[0]+1
+            args_LD_format = np.repeat(self.args,num_to_repeat,axis=0)
+            if any(condition):
+                args_LD_format = args_LD_format[~condition] 
+            args_LD_format = [args_LD_format]
+        else:
+            args_LD_format = self.args
 
-        #num_to_repeat = np.histogram(self.times_indices,np.insert(self.assets_indices,self.assets_indices.shape[0],self.assets_indices.shape[0]))[0]+1
-        #args_LD_format = np.repeat(self.args,num_to_repeat,axis=0)
 
 
-        args_LD_format = [self.args] if type(self.args) is not tuple else self.args
-        args_LD_format = args_take(indices[entry_ordered_ind].astype(int), *args_LD_format)
+
+        #args_LD_format = [self.args] if type(self.args) is not tuple else self.args
+        #args_LD_format = args_take(indices[entry_ordered_ind].astype(int), *args_LD_format)
+
+        
+
+        if any(condition):
+            entry = entry[~condition]
+            time = time[~condition]
+            event = event[~condition]
 
         return LifetimeData(time,event,entry,args_LD_format)
         #return LifetimeData(time,event,entry,args_LD_format)
