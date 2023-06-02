@@ -11,8 +11,9 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.optimize as optimize
 from typing import Callable
+import scipy.special as sc
+from .utils import args_size, args_ndim, gauss_legendre, quad_laguerre, moore_jac_uppergamma_c
 
-from .utils import args_size, args_ndim, gauss_legendre, quad_laguerre
 
 
 class LifetimeModel(ABC):
@@ -124,7 +125,7 @@ class LifetimeModel(ABC):
 
     @abstractmethod
     def ls_integrate(
-        self, func: Callable, a: np.ndarray, b: np.ndarray, *args: np.ndarray, **kwargs
+            self, func: Callable, a: np.ndarray, b: np.ndarray, *args: np.ndarray, **kwargs
     ) -> np.ndarray:
         r"""Lebesgue-Stieltjes integration.
 
@@ -201,7 +202,7 @@ class LifetimeModel(ABC):
         return 1 - self.sf(t, *args)
 
     def rvs(
-        self, *args: np.ndarray, size: int = 1, random_state: int = None
+            self, *args: np.ndarray, size: int = 1, random_state: int = None
     ) -> np.ndarray:
         """Random variable sampling.
 
@@ -319,7 +320,7 @@ class LifetimeModel(ABC):
             np.broadcast_shapes(*(np.shape(arg) for arg in args))[:-1] + (1,)
         """
         ub = self.support_upper_bound(*args)
-        return self.ls_integrate(lambda x: x**n, 0, ub, *args, ndim=args_ndim(*args))
+        return self.ls_integrate(lambda x: x ** n, 0, ub, *args, ndim=args_ndim(*args))
 
     def mean(self, *args: np.ndarray) -> np.ndarray:
         """Mean of the distribution.
@@ -452,14 +453,14 @@ class AgeReplacementModel(LifetimeModel):
         return np.minimum(self.baseline.isf(p, *args), ar)
 
     def ls_integrate(
-        self,
-        func: Callable,
-        a: np.ndarray,
-        b: np.ndarray,
-        ar: np.ndarray,
-        *args: np.ndarray,
-        ndim: int = 0,
-        deg: int = 100
+            self,
+            func: Callable,
+            a: np.ndarray,
+            b: np.ndarray,
+            ar: np.ndarray,
+            *args: np.ndarray,
+            ndim: int = 0,
+            deg: int = 100
     ) -> np.ndarray:
         ub = self.support_upper_bound(ar, *args)
         b = np.minimum(ub, b)
@@ -563,6 +564,9 @@ class HazardFunctions(ABC):
         pass
 
 
+# model = GammaProcessLiftimeModel(r0, l0)
+
+
 class AbsolutelyContinuousLifetimeModel(LifetimeModel, HazardFunctions):
     """Absolutely continuous lifetime model.
 
@@ -582,14 +586,69 @@ class AbsolutelyContinuousLifetimeModel(LifetimeModel, HazardFunctions):
         return self.ichf(-np.log(p), *args)
 
     def ls_integrate(
-        self,
-        func: Callable,
-        a: np.ndarray,
-        b: np.ndarray,
-        *args: np.ndarray,
-        ndim: int = 0,
-        deg: int = 100,
-        q0: float = 1e-4
+            self,
+            func: Callable,
+            a: np.ndarray,
+            b: np.ndarray,
+            *args: np.ndarray,
+            ndim: int = 0,
+            deg: int = 100,
+            q0: float = 1e-4
+    ) -> np.ndarray:
+        ub = self.support_upper_bound(*args)
+        b = np.minimum(ub, b)
+        f = lambda x, *args: func(x) * self.pdf(x, *args)
+        if np.all(np.isinf(b)):
+            b = self.isf(q0, *args)
+            res = quad_laguerre(f, b, *args, ndim=ndim, deg=deg)
+        else:
+            res = 0
+        return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + res
+
+
+class GammaProcessLifetimeModel(AbsolutelyContinuousLifetimeModel):
+
+    def __init__(self, r0, l0, scale, c, b):
+        self.r0 = r0
+        self.l0 = l0
+        self.scale = scale
+        self.c = c
+        self.b = b
+
+    def v(self, t):
+        return self.c * t ** self.b
+
+    def support_upper_bound(self, *args: np.ndarray) -> float:
+        return np.inf
+
+    def sf(self, t):
+        return sc.gammainc(self.v(t), (self.r0-self.l0)*self.scale)
+
+    def pdf(self, t):
+        return self.b/t * self.v(t) * (moore_jac_uppergamma_c(self.v(t), (self.r0-self.l0)*self.scale)/sc.gamma(self.v(t)) - sc.digamma(self.v(t))*(1-sc.gammainc(self.v(t),(self.r0-self.l0)*self.scale)))
+
+    def hf(self, t):
+        return self.pdf(t)/self.sf(t)
+
+    def chf(self, t):
+        return -np.log(self.sf(t))
+
+    def ichf(self, v: np.ndarray, *args: np.ndarray) -> np.ndarray:
+        return
+
+    def isf(self, p: np.ndarray, *args: np.ndarray) -> np.ndarray:
+        return self.ichf(-np.log(p), *args)
+
+
+    def ls_integrate(
+            self,
+            func: Callable,
+            a: np.ndarray,
+            b: np.ndarray,
+            *args: np.ndarray,
+            ndim: int = 0,
+            deg: int = 100,
+            q0: float = 1e-4
     ) -> np.ndarray:
         ub = self.support_upper_bound(*args)
         b = np.minimum(ub, b)

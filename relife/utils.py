@@ -8,21 +8,24 @@
 
 import numpy as np
 import scipy.stats as stats
+from scipy.special import gamma as gamma_func, digamma as digamma_func, lambertw as lambertw_func, \
+    gammainc as lower_gamma_func
 import matplotlib.pyplot as plt
 from typing import Callable, Tuple
 
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
 
+
 # numerical integration
 
 
 def gauss_legendre(
-    func: Callable,
-    a: np.ndarray,
-    b: np.ndarray,
-    *args: np.ndarray,
-    ndim: int = 0,
-    deg: int = 100
+        func: Callable,
+        a: np.ndarray,
+        b: np.ndarray,
+        *args: np.ndarray,
+        ndim: int = 0,
+        deg: int = 100
 ) -> np.ndarray:
     r"""Gauss-Legendre integration.
 
@@ -66,7 +69,7 @@ def gauss_legendre(
 
 
 def gauss_laguerre(
-    func: Callable, *args: np.ndarray, ndim: int = 0, deg: int = 100
+        func: Callable, *args: np.ndarray, ndim: int = 0, deg: int = 100
 ) -> np.ndarray:
     r"""Gauss-Laguerre integration.
 
@@ -102,7 +105,7 @@ def gauss_laguerre(
 
 
 def shifted_laguerre(
-    func: Callable, a: np.ndarray, *args: np.ndarray, ndim: int = 0, deg: int = 100
+        func: Callable, a: np.ndarray, *args: np.ndarray, ndim: int = 0, deg: int = 100
 ) -> np.ndarray:
     r"""Shifted Gauss-Laguerre integration.
 
@@ -138,7 +141,7 @@ def shifted_laguerre(
 
 
 def quad_laguerre(
-    func: Callable, a: np.ndarray, *args: np.ndarray, ndim: int = 0, deg: int = 100
+        func: Callable, a: np.ndarray, *args: np.ndarray, ndim: int = 0, deg: int = 100
 ) -> np.ndarray:
     r"""Numerical integration over the interval `[a,inf]`.
 
@@ -250,12 +253,12 @@ def args_take(indices: np.ndarray, *args) -> Tuple[np.ndarray, ...]:
 
 
 def plot(
-    x: np.ndarray,
-    y: np.ndarray,
-    se: np.ndarray = None,
-    alpha_ci: float = 0.05,
-    bounds=(-np.inf, np.inf),
-    **kwargs
+        x: np.ndarray,
+        y: np.ndarray,
+        se: np.ndarray = None,
+        alpha_ci: float = 0.05,
+        bounds=(-np.inf, np.inf),
+        **kwargs
 ) -> None:
     r"""Plot a function with a confidence interval.
 
@@ -290,3 +293,98 @@ def plot(
         step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
         ax.fill_between(x, yl, yu, facecolor=lines.get_color(), step=step, alpha=0.25)
     ax.legend()
+
+
+def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
+
+    series_indices = np.where(np.array(([q <= x <= 1 for q in P]) | np.array([x < q for q in P])))[0]
+
+    # if((p<=x<=1) | (x<p)): # On this case we use the series expansion of the incomplete gamma
+    result = []
+    for i in range(len(P)):
+        p = P[i]
+        if i in series_indices:
+
+            # Initialization of parameters
+            R = x / (1 + p)
+
+            f = (x ** p) / (p * np.exp(x))
+            d_f = np.exp(-x) * x ** p * (p * np.log(x) - 1) / (p ** 2)
+            epsilon = tol / (abs(f) + abs(d_f))
+            delta = (1 - R) * epsilon / 2
+
+            # determining stopping criteria for the infinite series S and dS:
+            n1 = np.ceil(
+                (np.log(epsilon) + np.log(1 - R)) / np.log(R)
+            ).astype(int)
+
+            n2 = np.ceil(1 + R / (1 - R)).astype(int)
+
+            if np.log(R) * delta >= -1 / np.exp(1):
+                n3 = np.ceil(np.real(
+                    lambertw_func(np.log(R) * delta, k=-1) / np.log(R)
+                )).astype(int)
+                n = max(n1, n2, n3)
+            else:
+                n = max(n1, n2)
+
+            # Computing the coefficients C_n and their derivatives
+
+            cn = [1]
+            for k in range(1, n + 1):
+                cn.append(x / (p + k) * cn[k - 1])
+
+            harmonic = [1 / (p + k) for k in range(1, n + 1)]
+            harmonic.insert(0, 0)
+            harmonic = np.cumsum(harmonic)
+
+            cn_derivative = [-cn[k] * harmonic[k] for k in range(1, n + 1)]
+
+            S = sum(cn)
+            d_S = sum(cn_derivative)
+
+            if print_feedback:
+                print(f"Series expansion was used. Convergence happened after {n} steps")
+
+            result.append(gamma_func(p) * digamma_func(p) - S * d_f - f * d_S)
+
+        else:  # On this case we use the conitnued fraction expansion of the incomplete gamma
+
+            # Parameter initialization
+            A = [1, 1 + x]
+            B = [x, x * (2 - p + x)]
+            d_A = [0, 0]
+            d_B = [0, -x]
+
+            f = np.exp(-x) * x ** p
+            d_f = np.exp(-x) * np.log(x) * x ** p
+
+            S = []
+            res = 2 * tol
+            k = 2
+            while res > tol:
+
+                ak = (k - 1) * (p - k)
+                bk = 2 * k - p + x
+
+                A.append(bk * A[k - 1] + ak * A[k - 2])
+                B.append(bk * B[k - 1] + ak * B[k - 2])
+
+                d_A.append(bk * d_A[k - 1] - A[k - 1] + ak * d_A[k - 2] + (k - 1) * A[k - 2])
+                d_B.append(bk * d_B[k - 1] - B[k - 1] + ak * d_B[k - 2] + (k - 1) * B[k - 2])
+
+                S.append(A[-1] / B[-1])
+
+                if len(S) > 1:
+                    res = abs(S[-1] - S[-2]) / S[-1]
+                k += 1
+
+            S = S[-1]
+            d_S = B[-1] ** (-2) * (B[-1] * d_A[-1] - A[-1] * d_B[-1])
+
+            if print_feedback:
+                print(f"Continued fraction expansion was used. Convergence happened after {k - 1} steps")
+
+            result.append(f * d_S + S * d_f)
+
+    return np.array(result)
