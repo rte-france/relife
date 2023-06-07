@@ -15,7 +15,6 @@ import scipy.special as sc
 from .utils import args_size, args_ndim, gauss_legendre, quad_laguerre, moore_jac_uppergamma_c
 
 
-
 class LifetimeModel(ABC):
     """Generic lifetime model.
 
@@ -584,61 +583,6 @@ class AbsolutelyContinuousLifetimeModel(LifetimeModel, HazardFunctions):
 
     def isf(self, p: np.ndarray, *args: np.ndarray) -> np.ndarray:
         return self.ichf(-np.log(p), *args)
-
-    def ls_integrate(
-            self,
-            func: Callable,
-            a: np.ndarray,
-            b: np.ndarray,
-            *args: np.ndarray,
-            ndim: int = 0,
-            deg: int = 100,
-            q0: float = 1e-4
-    ) -> np.ndarray:
-        ub = self.support_upper_bound(*args)
-        b = np.minimum(ub, b)
-        f = lambda x, *args: func(x) * self.pdf(x, *args)
-        if np.all(np.isinf(b)):
-            b = self.isf(q0, *args)
-            res = quad_laguerre(f, b, *args, ndim=ndim, deg=deg)
-        else:
-            res = 0
-        return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + res
-
-
-class GammaProcessLifetimeModel(AbsolutelyContinuousLifetimeModel):
-
-    def __init__(self, r0, l0, scale, c, b):
-        self.r0 = r0
-        self.l0 = l0
-        self.scale = scale
-        self.c = c
-        self.b = b
-
-    def v(self, t):
-        return self.c * t ** self.b
-
-    def support_upper_bound(self, *args: np.ndarray) -> float:
-        return np.inf
-
-    def sf(self, t):
-        return sc.gammainc(self.v(t), (self.r0-self.l0)*self.scale)
-
-    def pdf(self, t):
-        return self.b/t * self.v(t) * (moore_jac_uppergamma_c(self.v(t), (self.r0-self.l0)*self.scale)/sc.gamma(self.v(t)) - sc.digamma(self.v(t))*(1-sc.gammainc(self.v(t),(self.r0-self.l0)*self.scale)))
-
-    def hf(self, t):
-        return self.pdf(t)/self.sf(t)
-
-    def chf(self, t):
-        return -np.log(self.sf(t))
-
-    def ichf(self, v: np.ndarray, *args: np.ndarray) -> np.ndarray:
-        return
-
-    def isf(self, p: np.ndarray, *args: np.ndarray) -> np.ndarray:
-        return self.ichf(-np.log(p), *args)
-
 
     def ls_integrate(
             self,
