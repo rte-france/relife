@@ -295,16 +295,22 @@ def plot(
     ax.legend()
 
 
+
+
+
 def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
 
-    series_indices = np.where(np.array(([q <= x <= 1 for q in P]) | np.array([x < q for q in P])))[0]
+    P_ravel = np.ravel(P)
+    logic_one = np.logical_and(P_ravel <= x, x <= 1)
+    logic_two = x < P_ravel
+
+    series_indices = np.where(np.logical_or(logic_one, logic_two))[0]
 
     # if((p<=x<=1) | (x<p)): # On this case we use the series expansion of the incomplete gamma
     result = []
-    for i in range(len(P)):
-        p = P[i]
+    for i in range(len(P_ravel)):
+        p = P_ravel[i]
         if i in series_indices:
-
             # Initialization of parameters
             R = x / (1 + p)
 
@@ -387,4 +393,4 @@ def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
 
             result.append(f * d_S + S * d_f)
 
-    return np.array(result)
+    return np.array(result).reshape(P.shape)
