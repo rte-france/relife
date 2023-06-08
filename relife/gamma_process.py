@@ -1,46 +1,135 @@
-import numpy as np
-import scipy.special as sc
-from scipy.special import gamma, gammainc
-from scipy.optimize import minimize, newton
+from dataclasses import dataclass
+from typing import Callable
+
 import matplotlib
 import matplotlib.pyplot as plt
-from relife.model import HazardFunctions, AbsolutelyContinuousLifetimeModel
-from typing import Callable
+import numpy as np
+import scipy.special as sc
+from scipy.optimize import minimize
+from scipy.special import gamma, gammainc
+
+from relife.model import AbsolutelyContinuousLifetimeModel
 from .utils import gauss_legendre, quad_laguerre, moore_jac_uppergamma_c
 
 matplotlib.use('Qt5Agg', force=True)
 
 
-class GammaProcessData:
+@dataclass
+class GammaProcessData:  # stock les données réelles ou en simule
 
-    def __init__(self, inspection_times, increments, paths, nb_sample):
-        self.inspection_times = inspection_times
-        self.increments = increments
-        self.paths = paths
-        self.nb_sample = nb_sample
+    path: np.array = None
+    increments: np.array = None
+    inspection_times: np.array = None
+    r0: float = None
+    l0: float = None
+    scale: float = None
+    shape_scaling: float = None
+    shape_power: float = None
+    nb_sample: int = 1
+    declared_data: bool = None
+    simulated_data: bool = None
+
+    def valid_inputs(self) -> None:
+
+        simulation_params = (self.r0, self.l0, self.scale, self.shape_scaling, self.shape_power)
+
+        if self.inspection_times is None:
+            raise ValueError("'Inspection times' is required")
+
+        if (self.path is None) and all(x is None for x in simulation_params):
+            raise ValueError("'Path' xor simulation parameters are required")
+
+        if (self.path is not None) and not all(x is None for x in simulation_params):
+            raise ValueError("'Path' and simulation parameters must not be both declared")
+
+        if (self.path is None) and any(x is None for x in simulation_params):
+            raise ValueError("All simulation parameters must be declared")
+
+        if all(x is None for x in simulation_params) and any(x is None for x in self.path):
+            raise ValueError("'Inspection times' and 'path' must be declared")
+
+        if all(x is None for x in simulation_params) and (np.size(self.inspection_times) != np.size(self.path)):
+            raise ValueError("'Inspection times' and 'path' must have the same length")
+
+        if all(x is None for x in simulation_params) and (np.size(self.inspection_times) == 1):
+            raise ValueError("'Inspection times' and 'path' must contain at least two data points")
+
+        if all(x is None for x in simulation_params) and any(self.inspection_times < 0):
+            raise ValueError("'Inspection times' must be positive")
+
+        if all(x is None for x in simulation_params) and any(np.diff(self.path) < 0):
+            raise ValueError("'Path' must contain increasing values")
+
+        if all(x is None for x in simulation_params) and any(np.diff(self.inspection_times) < 0):
+            raise ValueError("'Inspection times' must contain increasing values")
+
+        if (self.path is None) and any([np.size(x) > 1 for x in simulation_params]):
+            raise ValueError("Simulation parameters must have length 1")
+
+        if (self.path is None) and any([x < 0 for x in simulation_params]):
+            raise ValueError("Simulation parameters must be positive")
+
+        if self.path is not None:
+            self.declared_data = True
+            self.simulated_data = False
+            self.increments = np.diff(self.path)
+
+        if all(x is not None for x in simulation_params):
+            self.declared_data = False
+            self.simulated_data = True
+
+    def sample_path(self):
+        self.valid_inputs()
+        if self.declared_data:
+            raise ValueError("No sample path to generate because 'path' is already declared.")
+
+        def v(t):
+            return self.shape_scaling * t ** self.shape_power
+
+        n = len(self.inspection_times) - 1
+        h = np.diff(self.inspection_times)
+        shape = np.repeat((v(self.inspection_times[:-1] + h) - v(self.inspection_times[:-1])).reshape(1, -1),
+                          self.nb_sample,
+                          axis=0)
+        inc = np.random.gamma(shape, 1 / self.scale, (self.nb_sample, n))
+        X = np.insert(np.cumsum(inc, axis=1), 0, 0, axis=1)
+        self.path = X
+        self.increments = inc
+
+    def __post_init__(self):
+        self.valid_inputs()
+        print('valid_input() was executed')
+        if self.simulated_data:
+            self.sample_path()
+            print('sample_path() was executed')
+
+
+        # return GammaProcessData(self.nb_sample, self.inspection_times, inc, X)
 
 
 class GammaProcessLifetimeModel(AbsolutelyContinuousLifetimeModel):
 
-    def __init__(self, r0, l0, scale, c, b):
+    def __init__(self, r0, l0, scale, shape_scaling, shape_power):
         self.r0 = r0
         self.l0 = l0
         self.scale = scale
-        self.c = c
-        self.b = b
+        self.shape_scaling = shape_scaling
+        self.shape_power = shape_power
 
-    def v(self, t):
-        return self.c * t ** self.b
+    def shape_function(self, t):
+        return self.shape_scaling * t ** self.shape_power
 
     def support_upper_bound(self, *args: np.ndarray) -> float:
         return np.inf
 
     def sf(self, t):
-        return sc.gammainc(self.v(t), (self.r0 - self.l0) * self.scale)
+        return sc.gammainc(self.shape_function(t), (self.r0 - self.l0) * self.scale)
 
     def pdf(self, t):
-        return self.b / t * self.v(t) * (moore_jac_uppergamma_c(self.v(t), (self.r0 - self.l0) * self.scale) / sc.gamma(
-            self.v(t)) - sc.digamma(self.v(t)) * (1 - sc.gammainc(self.v(t), (self.r0 - self.l0) * self.scale)))
+        return self.shape_power / t * self.shape_function(t) * (
+                moore_jac_uppergamma_c(self.shape_function(t), (self.r0 - self.l0) * self.scale) / sc.gamma(
+            self.shape_function(t)) - sc.digamma(self.shape_function(t)) * (
+                        1 - sc.gammainc(self.shape_function(t), (self.r0 - self.l0) * self.scale)))
 
     def hf(self, t):
         return self.pdf(t) / self.sf(t)
@@ -76,7 +165,7 @@ class GammaProcessLifetimeModel(AbsolutelyContinuousLifetimeModel):
         return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + res
 
 
-class GammaProcess(HazardFunctions):
+class GammaProcess():
 
     def __init__(self, scale_parameter, shape_scaling, shape_power):
         self.shape_power = shape_power
