@@ -6,12 +6,12 @@
 # This file is part of ReLife, an open source Python library for asset
 # management based on reliability theory and lifetime data analysis.
 
+from typing import Callable, Tuple
+
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
-from scipy.special import gamma as gamma_func, digamma as digamma_func, lambertw as lambertw_func, \
-    gammainc as lower_gamma_func
-import matplotlib.pyplot as plt
-from typing import Callable, Tuple
+from scipy.special import gamma as gamma_func, digamma as digamma_func, lambertw as lambertw_func
 
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
 
@@ -295,12 +295,10 @@ def plot(
     ax.legend()
 
 
-
-
-
 def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
-
-    P_ravel = np.ravel(P)
+    # TODO: critère d'arrêt calculé pour une intégrale voisine, et non cible. Ne devrait pas changer grand chose mais
+    #  à modifier
+    P_ravel = np.ravel(P).astype(float)
     logic_one = np.logical_and(P_ravel <= x, x <= 1)
     logic_two = x < P_ravel
 
@@ -311,50 +309,59 @@ def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
     for i in range(len(P_ravel)):
         p = P_ravel[i]
         if i in series_indices:
-            # Initialization of parameters
-            R = x / (1 + p)
 
-            f = (x ** p) / (p * np.exp(x))
-            d_f = np.exp(-x) * x ** p * (p * np.log(x) - 1) / (p ** 2)
-            epsilon = tol / (abs(f) + abs(d_f))
-            delta = (1 - R) * epsilon / 2
-
-            # determining stopping criteria for the infinite series S and dS:
-            n1 = np.ceil(
-                (np.log(epsilon) + np.log(1 - R)) / np.log(R)
-            ).astype(int)
-
-            n2 = np.ceil(1 + R / (1 - R)).astype(int)
-
-            if np.log(R) * delta >= -1 / np.exp(1):
-                n3 = np.ceil(np.real(
-                    lambertw_func(np.log(R) * delta, k=-1) / np.log(R)
-                )).astype(int)
-                n = max(n1, n2, n3)
+            # overflow testing
+            if np.exp(-x) * (x * np.exp(1) / (p + 1)) ** p < MIN_POSITIVE_FLOAT:
+                result.append(0)
             else:
-                n = max(n1, n2)
 
-            # Computing the coefficients C_n and their derivatives
+                # Initialization of parameters
+                R = x / (1 + p)
 
-            cn = [1]
-            for k in range(1, n + 1):
-                cn.append(x / (p + k) * cn[k - 1])
+                # f = (x ** p) / (p * np.exp(x))
+                # d_f = np.exp(-x) * x ** p * (p * np.log(x) - 1) / (p ** 2)
+                f = np.exp(-x) * (x ** p) / gamma_func(p + 1)
+                d_f = np.exp(-x) * x ** p * (np.log(x) - digamma_func(p + 1)) / gamma_func(p + 1)
+                epsilon = tol / (abs(f) + abs(d_f))
+                delta = (1 - R) * epsilon / 2
 
-            harmonic = [1 / (p + k) for k in range(1, n + 1)]
-            harmonic.insert(0, 0)
-            harmonic = np.cumsum(harmonic)
+                # determining stopping criteria for the infinite series S and dS:
+                n1 = np.ceil(
+                    (np.log(epsilon) + np.log(1 - R)) / np.log(R)
+                ).astype(int)
 
-            cn_derivative = [-cn[k] * harmonic[k] for k in range(1, n + 1)]
+                n2 = np.ceil(1 + R / (1 - R)).astype(int)
 
-            S = sum(cn)
-            d_S = sum(cn_derivative)
+                if np.log(R) * delta >= -1 / np.exp(1):
+                    n3 = np.ceil(np.real(
+                        lambertw_func(np.log(R) * delta, k=-1) / np.log(R)
+                    )).astype(int)
+                    n = max(n1, n2, n3)
+                else:
+                    n = max(n1, n2)
 
-            if print_feedback:
-                print(f"Series expansion was used. Convergence happened after {n} steps")
+                # Computing the coefficients C_n and their derivatives
 
-            result.append(gamma_func(p) * digamma_func(p) - S * d_f - f * d_S)
+                cn = [1]
+                for k in range(1, n + 1):
+                    cn.append(x / (p + k) * cn[k - 1])
 
-        else:  # On this case we use the conitnued fraction expansion of the incomplete gamma
+                harmonic = [1 / (p + k) for k in range(1, n + 1)]
+                harmonic.insert(0, 0)
+                harmonic = np.cumsum(harmonic)
+
+                cn_derivative = [-cn[k] * harmonic[k] for k in range(1, n + 1)]
+
+                S = sum(cn)
+                d_S = sum(cn_derivative)
+
+                if print_feedback:
+                    print(f"Series expansion was used. Convergence happened after {n} steps")
+
+                # result.append(gamma_func(p) * digamma_func(p) - S * d_f - f * d_S)
+                result.append(S * d_f + f * d_S)
+
+        else:  # On this case we use the continued fraction expansion of the incomplete gamma
 
             # Parameter initialization
             A = [1, 1 + x]
@@ -362,8 +369,10 @@ def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
             d_A = [0, 0]
             d_B = [0, -x]
 
-            f = np.exp(-x) * x ** p
-            d_f = np.exp(-x) * np.log(x) * x ** p
+            # f = np.exp(-x) * x ** p
+            # d_f = np.exp(-x) * np.log(x) * x ** p
+            f = np.exp(-x) * x ** p / gamma_func(p)
+            d_f = np.exp(-x) * x ** p * (np.log(x) - digamma_func(p)) / gamma_func(p)
 
             S = []
             res = 2 * tol
@@ -391,6 +400,7 @@ def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
             if print_feedback:
                 print(f"Continued fraction expansion was used. Convergence happened after {k - 1} steps")
 
-            result.append(f * d_S + S * d_f)
+            # result.append(f * d_S + S * d_f)
+            result.append(-f * d_S - S * d_f)
 
     return np.array(result).reshape(P.shape)
