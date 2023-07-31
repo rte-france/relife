@@ -16,16 +16,15 @@ from .utils import gauss_legendre, quad_laguerre, moore_jac_uppergamma_c
 
 matplotlib.use('Qt5Agg', force=True)
 
-
 @dataclass
 class GammaProcessData:
     inspection_times: np.array
     deterioration_measurements: np.array
     ids: np.array = None
-    censor: np.float = None  # niveau de la censure, par ex : precision de l'instrument de mesure
-    event: np.array = None  # 0: pas de censure, 1 : censure
+    censor: float = 0  # niveau de la censure, par ex : precision de l'instrument de mesure
     increments: np.array = None
     log_increments: np.array = None
+    _event: np.array = None
 
     def __post_init__(self):
         # TODO: parse.data() beaucoup trop longue à s'exécuter: énorme bottleneck
@@ -34,13 +33,6 @@ class GammaProcessData:
         self.unique_ids = np.unique(self.ids)
         self.increments = np.diff(self.deterioration_measurements)
         self.parse_data()
-        self.event = self.increments == 0
-
-    def set_log_increments(self, log_increments):
-        self.log_increments = log_increments
-
-    def get_log_increments(self):
-        return self.log_increments
 
     def plot(self):
         for i in self.unique_ids:
@@ -121,6 +113,11 @@ class GammaProcessData:
             incorrect_ids = self.unique_ids[np.where(check_deterioration_measurements_per_id)[0]]
             raise ValueError(f"'ids' {incorrect_ids} have non increasing 'deterioration_measurements'")
 
+        self.increments[self.increments <= self.censor] = 0
+        self._event = self.increments == 0
+
+        if self.log_increments is None:
+            self.log_increments = np.log(self.increments, where=self.increments != 0)
 
 @dataclass
 class GammaProcess(AbsolutelyContinuousLifetimeModel):
@@ -156,10 +153,11 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         increments = np.exp(log_increments)
         deterioration_measurements = np.cumsum(increments, axis=1)
         ids = np.repeat(np.arange(nb_sample), n)
+        log_increments = np.concatenate((np.zeros(nb_sample)[:, np.newaxis], log_increments), axis=1).ravel()
         gp_data = GammaProcessData(np.tile(inspection_times[1:], nb_sample),
                                    deterioration_measurements.ravel(),
-                                   ids)
-        gp_data.set_log_increments(np.concatenate((np.zeros(nb_sample)[:, np.newaxis], log_increments), axis=1).ravel())
+                                   ids,
+                                   log_increments=log_increments)
 
         return gp_data
 
@@ -197,45 +195,16 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
     def isf(self, p: np.ndarray, *args: np.ndarray) -> np.ndarray:
         return self.ichf(-np.log(p), *args)
 
-    def ls_integrate(
-            self,
-            func: Callable,
-            a: np.ndarray,
-            b: np.ndarray,
-            *args: np.ndarray,
-            ndim: int = 0,
-            deg: int = 100,
-            q0: float = 1e-4
-    ) -> np.ndarray:
-        ub = self.support_upper_bound(*args)
-        b = np.minimum(ub, b)
-        f = lambda x, *args: func(x) * self.pdf(x, *args)
-        if np.all(np.isinf(b)):
-            b = self.isf(q0, *args)
-            res = quad_laguerre(f, b, *args, ndim=ndim, deg=deg)
-        else:
-            res = 0
-        return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + res
-
     def _negative_log_likelihood(self, params, data):
         shape_rate, shape_power, rate = params
         censor = data.censor
-
-        if data.log_increments is not None:
-            log_increments = data.log_increments
-        else:
-            log_increments = np.log(data.increments, where=data.increments != 0)
 
         negative_log_likelihood_ids = []
         for i in data.unique_ids:
             inspection_times_id = data.inspection_times[data.ids == i]
             increments_id = data.increments[data.ids == i][1:]
-            log_increments_id = log_increments[data.ids == i][1:]
-            # TODO: changer event_id ?
-            if data.log_increments is None:
-                event_id = data.event[data.ids == i][1:]
-            else:
-                event_id = (data.log_increments == 0)[data.ids == i][1:]
+            log_increments_id = data.log_increments[data.ids == i][1:]
+            event_id = data._event[data.ids == i][1:]
 
             # contribution of uncensored measurements to likelihood
             exact_contribution = - np.sum(
@@ -325,29 +294,29 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         shape_rate = rate * moment1
         return shape_rate, shape_power, rate
 
-    def fit(self, inspection_times, deterioration_measurements, ids, log_increments=None, censor=None):
+    def fit(self, inspection_times, deterioration_measurements, ids, log_increments=None, censor=0):
         data = GammaProcessData(inspection_times=inspection_times,
                                 deterioration_measurements=deterioration_measurements,
                                 ids=ids,
                                 log_increments=log_increments,
                                 censor=censor)
-        if data.censor is None:
-            data.censor = 0
 
-        if log_increments is not None:
-            data.set_log_increments(log_increments)
-            if (any(data.increments[data.inspection_times != 0] == 0) and any(
-                    data.log_increments[data.inspection_times != 0] == 0)):
-                method = 'mom'
-            else:
-                method = 'likelihood'
+        #MOM
+        if (any(data.log_increments[data.inspection_times != 0] == 0) or any(
+                data.increments[data.inspection_times != 0] == 0)):
+
+            opt = minimize(
+                fun=self._method_of_moments,
+                x0=np.array([1]),
+                args=(data,),
+                method='Nelder-Mead',
+                bounds=((0.1, 3),),
+                options={'maxiter': 1000},
+            )
+            return self.return_param(opt.x[0], data)
+
+        ## Likelihood
         else:
-            if any(data.increments[data.inspection_times != 0] == 0):
-                method = 'mom'
-            else:
-                method = 'likelihood'
-
-        if method == 'likelihood':
             opt = minimize(
                 fun=self._negative_log_likelihood,
                 x0=np.array([1, 1, 1]),
@@ -359,16 +328,6 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             )
 
             return opt.x
-        else:
-            opt = minimize(
-                fun=self._method_of_moments,
-                x0=np.array([1]),
-                args=(data,),
-                method='Nelder-Mead',
-                bounds=((0.1, 3),),
-                options={'maxiter': 1000},
-            )
-            return self.return_param(opt.x[0], data)
 
     def resistance_sample(self, inspection_times, nb_sample=1):
         data = self.sample(inspection_times=inspection_times, nb_sample=nb_sample)
