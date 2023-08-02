@@ -4,13 +4,15 @@ import numpy as np
 
 from typing import Tuple
 
-
-from scipy.optimize import Bounds
+from scipy.optimize import Bounds, newton, fsolve
+import scipy.integrate as integrate
+from .model import AbsolutelyContinuousLifetimeModel
 from dataclasses import dataclass
 from .data import LifetimeData, CountData
 from .parametric import ParametricHazardFunctions
 from .nonparametric import NelsonAalen
 from .utils import plot, args_take
+from .utils import gauss_legendre,args_ndim
 
 
 
@@ -239,3 +241,353 @@ class NonParametricCumulativeIntensityFunction(NelsonAalen):
         label = kwargs.pop("label", "Non-parametric cumulative intensity function")
         return super().plot(alpha_ci,label=label,**kwargs)
 
+
+@dataclass
+class TPolicy_reduced:
+    r"Time based replacement policy"
+
+    def __init__(
+        self,
+        model: ParametricLifetimeModel,
+        cr: np.ndarray = None,
+        c0: np.ndarray = None,
+        rate: np.ndarray = 0,
+        ar: np.ndarray = 0,
+        args: Tuple[np.ndarray,...]=(),
+    ) -> None:
+        """Optimal T policy
+
+        Parameters
+        ----------
+        model : ParametricLifetimeModel
+            Parametric lifetime model of the asset.
+        cr : np.ndarray, optional
+            Reparation cost, by default None.
+        c0 : np.ndarray, optional
+            Replacement cost, by default None.
+        rate : float, 2D array or 3D array, optional
+            Discount rate, by default 0.
+        ar : float, 2D array, optional
+            Ages of preventive replacements, by default None.
+        args : Tuple[np.ndarray,...], optional
+            Extra arguments required by the lifetime model.
+        """
+
+        self.model = model
+        self.args = args
+        self.cr = cr
+        self.c0 = c0
+        self.ar = ar
+        self.rate = rate
+
+    #@classmethod
+    def optimal_replacement_age(
+        self,
+        model: AbsolutelyContinuousLifetimeModel,
+        cr: np.ndarray,
+        c0: np.ndarray,
+        rate: np.ndarray = 0,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> np.ndarray:
+        x0 = model.mean()
+        if rate!=0:
+            def dcost(a,model,cr,c0,rate):
+                return (rate*np.exp(-rate*a))*(cr*model.hf(a)-np.exp(-rate*model.mrl(a))*model.hf(a)*model.mrl(a)*(rate*c0+self.asymptotic_expected_equivalent_annual_cost(ar=a,model=model,cr=cr,c0=c0,rate=rate)))/(1-np.exp(-rate*(a+model.mrl(a))))
+        else:
+            def dcost(a,model,cr,c0,rate):
+                return (1/a)*(cr*model.hf(a)-self.asymptotic_expected_equivalent_annual_cost(ar=a,model=model,cr=cr,c0=c0,rate=rate))
+                
+
+        ar = newton(dcost,x0,args=(model,cr,c0,rate))
+        #ar = fsolve(dcost,x0,args=(model,cr,c0,rate))
+        #
+        #
+        #
+        #if rate==0.0:
+        #    def cost(ar):
+        #        return (c0+cr*integrate.quad(lambda t:model.hf(t),0,ar)[0])/ar 
+        #else:
+        #    def cost(ar):
+        #        return rate*(c0+cr*integrate.quad(lambda t: np.exp(-rate*t)*model.hf(t),0,ar)[0])/(1-np.exp(-rate*ar)) 
+        #return fsolve(eq,x0)
+        return ar.squeeze() if np.size(ar) == 1 else ar
+
+    def _parse_policy_args(
+        self, 
+        model: AbsolutelyContinuousLifetimeModel, 
+        ar: np.ndarray, 
+        cr: np.ndarray, 
+        c0: np.ndarray, 
+        rate: np.ndarray,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> Tuple[np.ndarray, ...]:
+        """Parse the arguments of the policy.
+
+        Parameters
+        ----------
+        model : ParametricLifetimeModel
+            Parametric lifetime model of the asset.
+        ar : float or 2D array
+            Ages of preventive replacements.
+        cr : np.ndarray, optional
+            Reparation cost, by default None.
+        c0 : np.ndarray, optional
+            Replacement cost, by default None.
+        rate : float, 2D array or 3D array
+            Discount rate.
+        args : Tuple[np.ndarray,...], optional
+            Extra arguments required by the lifetime model.
+        Returns
+        -------
+        Tuple[ndarray,...]
+            `(ar, cr, c0, rate)`
+
+        Notes
+        -----
+        If an argument is None, the value of the class attribute is taken.
+        """
+        if model is None:
+            model = self.model
+        if ar is None:
+            ar = self.ar
+        if cr is None:
+            cr = self.cr
+        if c0 is None:
+            c0 = self.c0
+        if rate is None:
+            rate = self.rate
+        return model, ar, cr, c0, rate
+
+    def fit(
+        self,
+        model: AbsolutelyContinuousLifetimeModel,
+        cr: np.ndarray,
+        c0: np.ndarray,
+        rate: np.ndarray = 0,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> TPolicy:
+        model, _, cr, c0, rate = self._parse_policy_args(model, None, cr, c0, rate)
+        self.ar = self.optimal_replacement_age(
+            model=self.model, cr=cr, c0=c0, rate=rate, args=self.args
+        )            
+        return self
+
+    #@classmethod
+    def asymptotic_expected_equivalent_annual_cost(
+        self,
+        ar: np.ndarray = None, 
+        model: AbsolutelyContinuousLifetimeModel = None,
+        cr: np.ndarray = None,
+        c0: np.ndarray = None,
+        rate: np.ndarray = None,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> np.ndarray:
+        """The asymptotic expected total cost.
+
+        Parameters
+        ----------
+        ar : float or 2D array
+            Ages of preventive replacements.
+        cr : np.ndarray, optional
+            Reparation cost, by default None.
+        c0 : np.ndarray, optional
+            Replacement cost, by default None.
+        rate : float, 2D array or 3D array
+            Discount rate.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost for each asset.
+
+        Notes
+        -----
+        If an argument is None, the value of the class attribute is taken.
+        """
+        model, ar, cr, c0, rate = self._parse_policy_args(model=model,ar=ar,cr=cr,c0=c0,rate=rate)
+        ndim = args_ndim(ar, cr, c0, rate, *args)
+        
+        if rate==0.0:
+            def cost(a):
+                f = lambda t:model.hf(t)
+                return (c0+cr*gauss_legendre(f, 0, a, ndim=ndim))/a 
+        else:
+            def cost(a):
+                f = lambda t: np.exp(-rate*t)*model.hf(t)
+                return rate*(c0*np.exp(-rate*a)+cr*gauss_legendre(f, 0, a, ndim=ndim))/(1-np.exp(-rate*a)) 
+        return cost(ar)
+
+
+@dataclass
+class TPolicy:
+    r"Time based replacement policy"
+
+    def __init__(
+        self,
+        model: ParametricLifetimeModel,
+        cr: np.ndarray = None,
+        c0: np.ndarray = None,
+        rate: np.ndarray = 0,
+        ar: np.ndarray = 0,
+        args: Tuple[np.ndarray,...]=(),
+    ) -> None:
+        """Optimal T policy
+
+        Parameters
+        ----------
+        model : ParametricLifetimeModel
+            Parametric lifetime model of the asset.
+        cr : np.ndarray, optional
+            Reparation cost, by default None.
+        c0 : np.ndarray, optional
+            Replacement cost, by default None.
+        rate : float, 2D array or 3D array, optional
+            Discount rate, by default 0.
+        ar : float, 2D array, optional
+            Ages of preventive replacements, by default None.
+        args : Tuple[np.ndarray,...], optional
+            Extra arguments required by the lifetime model.
+        """
+
+        self.model = model
+        self.args = args
+        self.cr = cr
+        self.c0 = c0
+        self.ar = ar
+        self.rate = rate
+
+    #@classmethod
+    def optimal_replacement_age(
+        self,
+        model: AbsolutelyContinuousLifetimeModel,
+        cr: np.ndarray,
+        c0: np.ndarray,
+        rate: np.ndarray = 0,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> np.ndarray:
+        x0 = model.mean()
+        if rate!=0:
+            def dcost(a,model,cr,c0,rate):
+                return (rate*np.exp(-rate*a))*(cr*model.hf(a)-np.exp(-rate*model.mrl(a))*model.hf(a)*model.mrl(a)*(rate*c0+self.asymptotic_expected_equivalent_annual_cost(ar=a,model=model,cr=cr,c0=c0,rate=rate)))/(1-np.exp(-rate*(a+model.mrl(a))))
+        else:
+            def dcost(a,model,cr,c0,rate):
+                return (model.hf(a)/(a+model.mrl(a)))*(cr-self.asymptotic_expected_equivalent_annual_cost(ar=a,model=model,cr=cr,c0=c0,rate=rate)*model.mrl(a))
+
+        ar = newton(dcost,x0,args=(model,cr,c0,rate))
+        #ar = fsolve(dcost,x0,args=(model,cr,c0,rate))
+        #
+        #
+        #
+        #if rate==0.0:
+        #    def cost(ar):
+        #        return (c0+cr*integrate.quad(lambda t:model.hf(t),0,ar)[0])/ar 
+        #else:
+        #    def cost(ar):
+        #        return rate*(c0+cr*integrate.quad(lambda t: np.exp(-rate*t)*model.hf(t),0,ar)[0])/(1-np.exp(-rate*ar)) 
+        #return fsolve(eq,x0)
+        return ar.squeeze() if np.size(ar) == 1 else ar
+
+    def _parse_policy_args(
+        self, 
+        model: AbsolutelyContinuousLifetimeModel, 
+        ar: np.ndarray, 
+        cr: np.ndarray, 
+        c0: np.ndarray, 
+        rate: np.ndarray,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> Tuple[np.ndarray, ...]:
+        """Parse the arguments of the policy.
+
+        Parameters
+        ----------
+        model : ParametricLifetimeModel
+            Parametric lifetime model of the asset.
+        ar : float or 2D array
+            Ages of preventive replacements.
+        cr : np.ndarray, optional
+            Reparation cost, by default None.
+        c0 : np.ndarray, optional
+            Replacement cost, by default None.
+        rate : float, 2D array or 3D array
+            Discount rate.
+        args : Tuple[np.ndarray,...], optional
+            Extra arguments required by the lifetime model.
+        Returns
+        -------
+        Tuple[ndarray,...]
+            `(ar, cr, c0, rate)`
+
+        Notes
+        -----
+        If an argument is None, the value of the class attribute is taken.
+        """
+        if model is None:
+            model = self.model
+        if ar is None:
+            ar = self.ar
+        if cr is None:
+            cr = self.cr
+        if c0 is None:
+            c0 = self.c0
+        if rate is None:
+            rate = self.rate
+        return model, ar, cr, c0, rate
+
+    def fit(
+        self,
+        model: AbsolutelyContinuousLifetimeModel,
+        cr: np.ndarray,
+        c0: np.ndarray,
+        rate: np.ndarray = 0,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> TPolicy:
+        model, _, cr, c0, rate = self._parse_policy_args(model, None, cr, c0, rate)
+        self.ar = self.optimal_replacement_age(
+            model=self.model, cr=cr, c0=c0, rate=rate, args=self.args
+        )            
+        return self
+
+    #@classmethod
+    def asymptotic_expected_equivalent_annual_cost(
+        self,
+        ar: np.ndarray = None, 
+        model: AbsolutelyContinuousLifetimeModel = None,
+        cr: np.ndarray = None,
+        c0: np.ndarray = None,
+        rate: np.ndarray = None,
+        args:Tuple[np.ndarray,...]=(),
+    ) -> np.ndarray:
+        """The asymptotic expected total cost.
+
+        Parameters
+        ----------
+        ar : float or 2D array
+            Ages of preventive replacements.
+        cr : np.ndarray, optional
+            Reparation cost, by default None.
+        c0 : np.ndarray, optional
+            Replacement cost, by default None.
+        rate : float, 2D array or 3D array
+            Discount rate.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost for each asset.
+
+        Notes
+        -----
+        If an argument is None, the value of the class attribute is taken.
+        """
+        model, ar, cr, c0, rate = self._parse_policy_args(model=model,ar=ar,cr=cr,c0=c0,rate=rate)
+        ndim = args_ndim(ar, cr, c0, rate, *args)
+        
+        if rate==0.0:
+            def cost(a):
+                f = lambda t:model.hf(t)
+                return (c0+cr*gauss_legendre(f, 0, a, ndim=ndim))/(a+model.mrl(a)) 
+        else:
+            def cost(a):
+                f = lambda t: np.exp(-rate*t)*model.hf(t)
+                return rate*(c0*np.exp(-rate*(a+model.mrl(a)))+cr*gauss_legendre(f, 0, a, ndim=ndim))/(1-np.exp(-rate*(a+model.mrl(a)))) 
+        return cost(ar)
