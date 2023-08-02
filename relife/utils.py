@@ -296,6 +296,7 @@ def plot(
 
 
 def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
+    
     # TODO: critère d'arrêt calculé pour une intégrale voisine, et non cible. Ne devrait pas changer grand chose mais
     #  à modifier
     P_ravel = np.ravel(P).astype(float)
@@ -341,16 +342,15 @@ def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
                     n = max(n1, n2)
 
                 # Computing the coefficients C_n and their derivatives
-
-                cn = [1]
-                for k in range(1, n + 1):
-                    cn.append(x / (p + k) * cn[k - 1])
-
-                harmonic = [1 / (p + k) for k in range(1, n + 1)]
-                harmonic.insert(0, 0)
+                cn = x / (p + np.array(list(range(1, n + 1))))
+                cn = np.insert(cn, 0, 1)
+                cn = cn.cumprod()
+                                
+                harmonic = 1 / (p + list(range(1, n+1)))
+                harmonic = np.insert(harmonic,0, 0)
                 harmonic = np.cumsum(harmonic)
 
-                cn_derivative = [-cn[k] * harmonic[k] for k in range(1, n + 1)]
+                cn_derivative = -cn * harmonic
 
                 S = sum(cn)
                 d_S = sum(cn_derivative)
@@ -369,8 +369,6 @@ def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
             d_A = [0, 0]
             d_B = [0, -x]
 
-            # f = np.exp(-x) * x ** p
-            # d_f = np.exp(-x) * np.log(x) * x ** p
             f = np.exp(-x) * x ** p / gamma_func(p)
             d_f = np.exp(-x) * x ** p * (np.log(x) - digamma_func(p)) / gamma_func(p)
 
@@ -400,7 +398,6 @@ def moore_jac_uppergamma_c(P, x, tol=1e-6, print_feedback=False):
             if print_feedback:
                 print(f"Continued fraction expansion was used. Convergence happened after {k - 1} steps")
 
-            # result.append(f * d_S + S * d_f)
             result.append(-f * d_S - S * d_f)
 
     return np.array(result).reshape(P.shape)
