@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Callable
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -12,9 +11,11 @@ from scipy.stats import gamma
 from scipy.stats import loggamma
 
 from relife.model import AbsolutelyContinuousLifetimeModel
-from .utils import gauss_legendre, quad_laguerre, moore_jac_uppergamma_c
+from .utils import moore_jac_uppergamma_c
 
-matplotlib.use('Qt5Agg', force=True)
+
+# matplotlib.use('Qt5Agg', force=True)
+
 
 @dataclass
 class GammaProcessData:
@@ -119,6 +120,7 @@ class GammaProcessData:
         if self.log_increments is None:
             self.log_increments = np.log(self.increments, where=self.increments != 0)
 
+
 @dataclass
 class GammaProcess(AbsolutelyContinuousLifetimeModel):
     r0: float = None
@@ -172,6 +174,9 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
     def sf(self, t):
         return sc.gammainc(self.shape_function(t), (self.r0 - self.l0) * self.rate)
+
+    def conditional_sf(self, t, s, x):
+        return sc.gammainc(self.shape_function(t) - self.shape_function(s), (x - self.l0) * self.rate)
 
     def _sf(self, params, t):
         shape_rate, shape_power, rate = params
@@ -260,7 +265,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
         rate = moment1 * moment2_scaling / moment2
         shape_rate = moment1 * rate
-        return (2 * shape_rate / rate ** 3 * moment3_scaling - moment3) ** 2  # la fonction carrée est une pénalité
+        return np.abs(
+            2 * shape_rate / rate ** 3 * moment3_scaling - moment3) ** 2  # la fonction carrée est une pénalité
 
     @staticmethod
     def return_param(shape_power, data):
@@ -301,9 +307,9 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                                 log_increments=log_increments,
                                 censor=censor)
 
-        #MOM
-        if (any(data.log_increments[data.inspection_times != 0] == 0) or any(
-                data.increments[data.inspection_times != 0] == 0)):
+        # MOM
+        if any(data.log_increments[data.inspection_times != 0] == 0) or any(
+                data.increments[data.inspection_times != 0] == 0):
 
             opt = minimize(
                 fun=self._method_of_moments,
@@ -313,6 +319,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                 bounds=((0.1, 3),),
                 options={'maxiter': 1000},
             )
+            print("MOM")
             return self.return_param(opt.x[0], data)
 
         ## Likelihood
@@ -327,6 +334,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                         (1e-3, np.inf))
             )
 
+            print("Likelihood")
             return opt.x
 
     def resistance_sample(self, inspection_times, nb_sample=1):
@@ -335,10 +343,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
         if any([np.min(data.deterioration_measurements[data.ids == i]) > self.l0 for i in data.unique_ids]):
             raise Exception("Some assets did not hit load threshold. Consider increasing the time horizon.")
-
         ind_failure = [np.argmax(data.deterioration_measurements[data.ids == i] < self.l0) for i in data.unique_ids]
         failure_times = inspection_times[ind_failure]
-
         return failure_times
 
     def resistance_plot(self, inspection_times, nb_sample=1):
@@ -352,10 +358,10 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         failure_times = inspection_times[ind_failure]
 
         nb_sample_max = nb_sample
-        if nb_sample > 1000:
-            nb_sample_max = 1000
+        if nb_sample > 100:
+            nb_sample_max = 100
 
-        fig, ax1 = plt.subplots()
+        fig, ax1 = plt.subplots(dpi=160)
         color = 'tab:grey'
         ax1.set_xlabel('t')
         ax1.set_ylabel('Asset resistance', color=color)
@@ -369,7 +375,9 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             else:
                 ax1.plot(inspection_times_nb, resistance_nb, color=color, alpha=0.2)
 
-        plt.ylim(0, 1.075 * (self.l0 + self.r0))
+        b = 1.025
+        a = 1-self.r0*(b-1)/self.l0
+        plt.ylim(a*self.l0, b * self.r0)
         # TODO: ne pas enlever la première valeur et intégrer dans self.pdf la valeur en 0
         ax1.axhline(y=self.r0, color='green', linestyle='--', label='Initial resistance $R_0$')
         ax1.axhline(y=self.l0, color='red', linestyle='--', label='Load threshold $l_0$')
@@ -377,8 +385,9 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         t_max = inspection_times[0:ind_max + 1]
         mean_resistance = (self.r0 - self.shape_function(t_max) / self.rate)
         mean_resistance[-1] = self.l0
-        ax1.plot(t_max, mean_resistance, color='black', linewidth=2, label='True mean resistance')
-        ax1.legend(loc=2)
+        ax1.plot(t_max, mean_resistance, color='black', linewidth=2, label='Mean resistance')
+        # ax1.legend(loc=2)
+        ax1.legend(loc='center left', bbox_to_anchor=(1.2, 0.8), frameon=False)
 
         ax2 = ax1.twinx()
         color = 'tab:blue'
@@ -387,9 +396,10 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                  label='True density of failure times')
         ax2.hist(failure_times, color=color, density=True, alpha=0.3, label='Empirical distribution of failure times')
         ax2.tick_params(axis='y', labelcolor=color)
-        ax2.legend(loc=1)
+        # ax2.legend(loc=3)
+        ax2.legend(loc='center left', bbox_to_anchor=(1.2, 0.6), frameon=False)
 
-        fig.tight_layout()
+        # fig.tight_layout()
         plt.show()
 
     @staticmethod
