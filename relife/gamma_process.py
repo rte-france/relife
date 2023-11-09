@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.special as sc
 from scipy import integrate
 from scipy.optimize import minimize, newton
-from scipy.special import gamma as gamma_function
-from scipy.stats import gamma
-from scipy.stats import loggamma
+from scipy.stats import gamma, loggamma
 
 from relife.model import AbsolutelyContinuousLifetimeModel
 from .utils import moore_jac_uppergamma_c
@@ -183,8 +180,14 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         return sc.gammainc(self._shape_function(params, t), (self.r0 - self.l0) * rate)
 
     def pdf(self, t):
-        return -self.shape_power / t * self.shape_function(t) \
-               * moore_jac_uppergamma_c(P=self.shape_function(t), x=(self.r0 - self.l0) * self.rate)
+        ind0 = np.where(t == 0)[0]
+        res = -self.shape_power / np.delete(t, ind0) * self.shape_function(np.delete(t, ind0)) \
+               * moore_jac_uppergamma_c(P=self.shape_function(np.delete(t, ind0)), x=(self.r0 - self.l0) * self.rate)
+
+        if self.shape_power == 1:
+            return np.insert(res, ind0, -self.shape_rate * sc.expi(-(self.r0 - self.l0) * self.rate))
+        else:
+            return np.insert(res, ind0, 0)
 
     def hf(self, t):
         return self.pdf(t) / self.sf(t)
@@ -214,16 +217,19 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             # contribution of uncensored measurements to likelihood
             exact_contribution = - np.sum(
                 np.diff(self._shape_function(params, inspection_times_id))[~event_id] * np.log(rate)
-                - np.log(gamma_function(shape_rate * (np.diff(inspection_times_id ** shape_power))[~event_id]))
+                - np.log(sc.gamma(shape_rate * (np.diff(inspection_times_id ** shape_power))[~event_id]))
                 + (shape_rate * (np.diff(inspection_times_id ** shape_power))[~event_id] - 1)
                 * log_increments_id[~event_id] - rate * increments_id[~event_id]
             )
 
             # contributution of censored measurements to likelihood
-            censored_contribution = - np.sum(
-                np.log(gamma.cdf(censor, a=np.diff(self._shape_function(params, inspection_times_id))[event_id],
-                                 scale=1 / rate))
-            )
+            if censor != 0:
+                censored_contribution = - np.sum(
+                    np.log(gamma.cdf(censor, a=np.diff(self._shape_function(params, inspection_times_id))[event_id],
+                                     scale=1 / rate))
+                )
+            else:
+                censored_contribution = 0
 
             negative_log_likelihood_ids.append(exact_contribution + censored_contribution)
 
@@ -308,9 +314,9 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                                 censor=censor)
 
         # MOM
-        if any(data.log_increments[data.inspection_times != 0] == 0) or any(
-                data.increments[data.inspection_times != 0] == 0):
-
+        # if any(data.log_increments[data.inspection_times != 0] == 0) or any(
+        #         data.increments[data.inspection_times != 0] == 0):
+        if False:
             opt = minimize(
                 fun=self._method_of_moments,
                 x0=np.array([1]),
@@ -376,8 +382,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                 ax1.plot(inspection_times_nb, resistance_nb, color=color, alpha=0.2)
 
         b = 1.025
-        a = 1-self.r0*(b-1)/self.l0
-        plt.ylim(a*self.l0, b * self.r0)
+        a = 1 - self.r0 * (b - 1) / self.l0
+        plt.ylim(a * self.l0, b * self.r0)
         # TODO: ne pas enlever la première valeur et intégrer dans self.pdf la valeur en 0
         ax1.axhline(y=self.r0, color='green', linestyle='--', label='Initial resistance $R_0$')
         ax1.axhline(y=self.l0, color='red', linestyle='--', label='Load threshold $l_0$')
