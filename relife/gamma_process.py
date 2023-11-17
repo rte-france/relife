@@ -181,8 +181,9 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
     def pdf(self, t):
         ind0 = np.where(t == 0)[0]
-        res = -self.shape_power / np.delete(t, ind0) * self.shape_function(np.delete(t, ind0)) \
-               * moore_jac_uppergamma_c(P=self.shape_function(np.delete(t, ind0)), x=(self.r0 - self.l0) * self.rate)
+        non0_times = np.delete(t, ind0)
+        res = -self.shape_power / non0_times * self.shape_function(non0_times) \
+               * moore_jac_uppergamma_c(P=self.shape_function(non0_times), x=(self.r0 - self.l0) * self.rate)
 
         if self.shape_power == 1:
             return np.insert(res, ind0, -self.shape_rate * sc.expi(-(self.r0 - self.l0) * self.rate))
