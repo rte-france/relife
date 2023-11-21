@@ -1,7 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
 
-# from scipy.optimize import minimize
+from scipy.optimize import minimize
 
 
 @dataclass
@@ -71,7 +71,7 @@ class Cox:
 
         risk_gz_sum = np.dot(self.risk_set, Cox._g(self.z_i, beta))
         # print("risk_gz_sum [d, 1]:", risk_gz_sum.shape)
-        return risk_gz_sum
+        return risk_gz_sum + 1e-6
 
     def _risk_covar_gz_sum(self, beta):
         """ \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i) """
@@ -100,7 +100,7 @@ class Cox:
             np.log(Cox._g(self.z_j, beta)).sum() - np.log(self._risk_gz_sum(beta)).sum()
         )
 
-    def _jac_negative_log__partial_likelihood(self, beta):
+    def _jac_negative_log_partial_likelihood(self, beta):
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
 
@@ -109,7 +109,7 @@ class Cox:
             - (self._risk_covar_gz_sum(beta) / self._risk_gz_sum(beta)).sum(axis=0)
         )
 
-    def _hess_negative_log__partial_likelihood(self, beta):
+    def _hess_negative_log_partial_likelihood(self, beta):
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
 
@@ -128,3 +128,23 @@ class Cox:
         # print("hessian [p, p]:", hessian.shape)
 
         return hessian
+    
+    def fit(self, use_hessian=True):
+
+        if use_hessian:
+            opt = minimize(
+                fun=self._negative_log_partial_likelihood,
+                x0=np.random.random(self.z_i.shape[1]),
+                method="Newton-CG",
+                jac=self._jac_negative_log_partial_likelihood,
+                hess=self._hess_negative_log_partial_likelihood,
+            )
+        else:
+            opt = minimize(
+                fun=self._negative_log_partial_likelihood,
+                x0=np.random.random(self.z_i.shape[1]),
+                method="L-BFGS-B",
+                jac=self._jac_negative_log_partial_likelihood,
+            )
+    
+        return opt.x
