@@ -16,6 +16,7 @@ from .distribution import (
     MinimumDistribution,
 )
 from .regression import AFT, ProportionalHazards
+from .semiparametric import Cox
 from .nonparametric import ECDF, KaplanMeier, NelsonAalen
 from .renewal_process import RenewalProcess, RenewalRewardProcess
 from .replacement_policy import (
@@ -48,4 +49,5 @@ __all__ = [
     "RunToFailure",
     "OneCycleAgeReplacementPolicy",
     "AgeReplacementPolicy",
+    "Cox",
 ]
