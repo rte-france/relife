@@ -1,7 +1,9 @@
 import numpy as np
 from dataclasses import dataclass
 
-from scipy.optimize import minimize
+from scipy.optimize import minimize, newton
+from scipy.stats import chi2
+from scipy import linalg
 
 
 @dataclass
@@ -31,15 +33,19 @@ class Cox:
     def parse_data(
         self,
     ):
-        sorted_i = np.argsort(self.time)
+        # sorted_i = np.argsort(self.time)
 
-        self.v_j, event_count = np.unique(
-            self.time[sorted_i][self.event[sorted_i] == 1],  # uncensored sorted times
+        self.v_j, sorted_uncensored_i, self.event_count = np.unique(
+            self.time[self.event == 1],  # uncensored sorted times
+            return_index=True,
             return_counts=True,
         )  # T, N
 
-        self.z_j = self.covar[sorted_i][
-            self.event[sorted_i] == 1
+        # if True use Efron approximation for likelihood, otherwise, Breslow
+        self.Efron_approx = (self.event_count > 3).any()
+
+        self.z_j = self.covar[self.event == 1][
+            sorted_uncensored_i
         ]  # Y, using sorted_i avoids for loop
 
         # here risk_set is mask array on time
@@ -54,43 +60,113 @@ class Cox:
             <= np.vstack([self.time] * len(self.v_j))
         )
 
+        self.death_set = (
+            np.vstack([self.time] * len(self.v_j)) 
+            == np.hstack([self.v_j[:, None]] * len(self.time))
+        )
+
+        self.s_j = np.dot(self.death_set, self.z_i)
+
     @property
     def z_i(self):
-        """ alias name of covar """
+        """alias name of covar"""
 
         return self.covar
 
+    @property
+    def d_j(self):
+        """alias name of event_count"""
+
+        return self.event_count
+
+    @property
+    def tied_events(self):
+        """are some events tied ?"""
+
+        return (self.event_count > 1).any()
+
+    @property
+    def is_Efron_used(self):
+
+        return self.Efron_approx
+
+    @property
+    def is_Breslow_used(self):
+        """are some events tied ?"""
+
+        return not self.Efron_approx
+
+
     @staticmethod
     def _g(z, beta):
-        """ e^{\vec{\beta}^\intercal \cdot \vec{z}} """
+        """e^{\vec{\beta}^\intercal \cdot \vec{z}}"""
 
         return np.exp(np.dot(z, beta[:, None]))
 
     def _risk_gz_sum(self, beta):
-        """ \sum_{i\in \mathbf{R}(v_j)} g(\vec{z}_i) """
+        """\sum_{i\in \mathbf{R}(v_j)} g(\vec{z}_i)
+        
+        or
 
-        risk_gz_sum = np.dot(self.risk_set, Cox._g(self.z_i, beta))
-        # print("risk_gz_sum [d, 1]:", risk_gz_sum.shape)
-        return risk_gz_sum + 1e-6
+        \psi_{\mathbf{R}_j}(\vec{z}_i)
+        """
+
+        if (not self.tied_events) or self.is_Breslow_used :
+
+            risk_gz_sum = np.dot(self.risk_set, Cox._g(self.z_i, beta))
+            # print("risk_gz_sum [d, 1]:", risk_gz_sum.shape)
+            return risk_gz_sum
+        
+        else:
+
+            # psi for Efron
+            pass
 
     def _risk_covar_gz_sum(self, beta):
-        """ \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i) """
+        """
+        \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i)
+        
+        or 
 
-        risk_covar_gz_sum = np.dot(self.risk_set, self.z_i * Cox._g(self.z_i, beta))
-        # print("risk_covar_gz_sum [d, p]:", risk_covar_gz_sum.shape)
-        return risk_covar_gz_sum
+
+        \psi_{\mathbf{R}_j}(k,~\vec{z}_i)
+        """
+
+        if (not self.tied_events) or self.is_Breslow_used :
+
+            risk_covar_gz_sum = np.dot(self.risk_set, self.z_i * Cox._g(self.z_i, beta))
+            # print("risk_covar_gz_sum [d, p]:", risk_covar_gz_sum.shape)
+            return risk_covar_gz_sum
+
+        else:
+
+            # psi for Efron
+            pass
 
     def _risk_covar_matrix_gz_sum(self, beta):
-        """ \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot z_{ih} \cdot g(\vec{z}_i) """
-        risk_covar_matrix_gz_sum = np.tensordot(
-            self.risk_set[:, :None],
-            self.z_i[:, None]
-            * self.z_i[:, :, None]
-            * Cox._g(self.z_i, beta)[:, :, None],
-            axes=1,
-        )
-        # print("risk_covar_matrix_gz_sum [d, p, p]:", risk_covar_matrix_gz_sum.shape)
-        return risk_covar_matrix_gz_sum
+        """
+        \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot z_{ih} \cdot g(\vec{z}_i)
+
+        or
+
+        \psi_{\mathbf{R}_j}(h,~k,~\vec{z}_i)
+        """
+
+        if (not self.tied_events) or self.is_Breslow_used :
+            risk_covar_matrix_gz_sum = np.tensordot(
+                self.risk_set[:, :None],
+                self.z_i[:, None]
+                * self.z_i[:, :, None]
+                * Cox._g(self.z_i, beta)[:, :, None],
+                axes=1,
+            )
+            # print("risk_covar_matrix_gz_sum [d, p, p]:", risk_covar_matrix_gz_sum.shape)
+            return risk_covar_matrix_gz_sum
+        
+        else:
+
+            # psi for Efron
+            pass
 
     def _negative_log_partial_likelihood(self, beta):
         assert len(beta.shape) == 1, "beta must be 1d array"
@@ -130,7 +206,6 @@ class Cox:
         return hessian
     
     def fit(self, use_hessian=True):
-
         if use_hessian:
             opt = minimize(
                 fun=self._negative_log_partial_likelihood,
@@ -148,3 +223,40 @@ class Cox:
             )
     
         return opt.x
+    
+
+    # def fit_newton(self):
+    #     return newton(
+    #         func=self._negative_log_partial_likelihood,
+    #         x0=np.random.random(self.z_i.shape[1]),
+    #         fprime=self._jac_negative_log_partial_likelihood,
+    #         fprime2=self._hess_negative_log_partial_likelihood,
+    #     )
+
+
+    # def _wald_test(self, beta, beta_0):
+    #     assert beta.shape == beta_0.shape
+    #     information_matrix = self._hess_negative_log_partial_likelihood(beta)
+    #     ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
+    #     pval = 1 - chi2.cdf(ch2, df=len(beta))
+    #     print(f"chi2 = {ch2} pvalue = {pval}")
+    #     return ch2, pval
+
+    # def _likelihood_ratio_test(self, beta, beta_0):
+    #     assert beta.shape == beta_0.shape
+    #     neg_pl_beta = self._negative_log_partial_likelihood(beta)
+    #     neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
+    #     ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
+    #     pval = 1 - chi2.cdf(ch2, df=len(beta))
+    #     print(f"chi2 = {ch2} pvalue = {pval}")
+    #     return ch2, pval
+
+    # def _scores_test(self, beta, beta_0):
+    #     assert beta.shape == beta_0.shape
+    #     information_matrix = self._hess_negative_log_partial_likelihood(beta_0)
+    #     inverse_information_matrix = linalg.inv(information_matrix)
+    #     jac = -self._jac_negative_log_partial_likelihood(beta_0)
+    #     ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
+    #     pval = 1 - chi2.cdf(ch2, df=len(beta))
+    #     print(f"chi2 = {ch2} pvalue = {pval}")
+    #     return ch2, pval
