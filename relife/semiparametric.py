@@ -60,13 +60,6 @@ class Cox:
             return_counts=True,
         )  # T, N
 
-        self.method = "cox"
-        # if True use Efron approximation for likelihood, otherwise, Breslow
-        if (self.event_count > 3).any():
-            self.method = "efron"
-        else:
-            self.method = "breslow"
-
         self.z_j = self.covar[self.event == 1][
             sorted_uncensored_i
         ]  # Y, using sorted_i avoids for loop
@@ -117,7 +110,13 @@ class Cox:
 
     @property
     def method(self):
-        return self.method
+        # if True use Efron approximation for likelihood, otherwise, Breslow
+        if (self.event_count > 3).any():
+            return "efron"
+        elif (self.event_count > 1 and self.event_count <= 3).any():
+            return "breslow"
+        else:
+            "cox"
 
     @staticmethod
     def _g(z, beta):
@@ -160,6 +159,9 @@ class Cox:
         order 0 : [m, max(d_j)]
         order 1 : [m, max(d_j), p]
         order 2 : [m, max(d_j), p, p]
+
+        discount_rates : [m, max(d_j)]
+        discount_rates_mask : [m, max(d_j)]
         """
 
         if order == 0:
