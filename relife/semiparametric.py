@@ -76,10 +76,12 @@ class Cox:
             <= np.vstack([self.time] * len(self.v_j))
         )
 
-        self.death_set = np.vstack([self.time] * len(self.v_j)) == np.hstack(
-            [self.v_j[:, None]] * len(self.time)
-        )
-
+        if (self.event_count > 3).any():
+            self.set_method("efron")
+        elif (self.event_count <= 3).all() and (2 in self.event_count):
+            self.set_method("breslow")
+        else:
+            self.set_method("cox")
 
     @property
     def z_i(self):
@@ -99,24 +101,40 @@ class Cox:
 
         return (self.event_count > 1).any()
 
-    @property
-    def method(self):
-        # if True use Efron approximation for likelihood, otherwise, Breslow
-        if (self.event_count > 3).any():
+    def set_method(self, method):
+    
+        if method.lower() == "efron" :
+            self.method = method
+            self._compute_death_set()
             self._compute_s_j()
             self._compute_efron_discount_rates()
-            return "efron"
-        elif (self.event_count > 1 and self.event_count <= 3).any():
+        elif method.lower() == "breslow" :
+            self.method = method
+            self._compute_death_set()
             self._compute_s_j()
-            return "breslow"
+        elif method.lower() == "cox":
+            self.method = method
+            pass
         else:
-            "cox"
+            raise ValueError(f"method allowed are efron, breslow or cox. Not {method}")
 
     @staticmethod
     def _g(z, beta):
         """e^{\vec{\beta}^\intercal \cdot \vec{z}}"""
 
         return np.exp(np.dot(z, beta[:, None]))
+
+    @staticmethod
+    def _log_g(z, beta):
+        """\vec{\beta}^\intercal \cdot \vec{z}"""
+
+        return np.dot(z, beta[:, None])
+
+
+    def _compute_death_set(self):
+        self.death_set = np.vstack([self.time] * len(self.v_j)) == np.hstack(
+            [self.v_j[:, None]] * len(self.time)
+        )
 
     def _compute_s_j(self):
         """s_j : [m, p]"""
@@ -133,7 +151,7 @@ class Cox:
             / self.event_count[:, None]
         )
         self.discount_rates_mask = np.where(self.discount_rates < 1, 1, 0)
-
+    
 
     def _psi(self, beta, on="risk", order=0):
         """
@@ -175,9 +193,6 @@ class Cox:
         discount_rates_mask : [m, max(d_j)]
         """
     
-        if not hasattr(self, "discount_rates"):
-            self._compute_efron_discount_rates()
-
         if order == 0:
             # shape [m, max(d_j)]
             return (
@@ -203,62 +218,50 @@ class Cox:
                 * (self.discount_rates * self.discount_rates_mask)[:, :, None, None]
             )
 
-    def _negative_log_partial_likelihood(self, beta, method=None):
+    def _negative_log_partial_likelihood(self, beta):
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
-        if not method:
-            method = self.method
 
         # neg_L_cox == neg_L_breslow == neg_L_efron if (not self.tied_events)
-        if method == "cox":
+        if self.method == "cox":
             return -(
-                np.log(Cox._g(self.z_j, beta)).sum() - np.log(self._psi(beta)).sum()
+                (Cox._log_g(self.z_j, beta)).sum() - np.log(self._psi(beta)).sum()
             )
-        elif method == "breslow":
-            if not hasattr(self, "s_j"):
-                self._compute_s_j()
+        elif self.method == "breslow":
             return -(
-                np.log(Cox._g(self.s_j, beta)).sum()
+                (Cox._log_g(self.s_j, beta)).sum()
                 - (self.d_j[:, None] * np.log(self._psi(beta))).sum()
             )
-        elif method == "efron":
-            if not hasattr(self, "s_j"):
-                self._compute_s_j()
+        elif self.method == "efron":
             # .sum(axis=1, keepdims=True) --> sum on alpha to d_j
             # .sum() --> sum on j
             # using where in np.log allows to avoid 0. masked elements
             m = self._psi_efron(beta)
             neg_L_efron = -(
-                np.log(Cox._g(self.s_j, beta)).sum()
+                (Cox._log_g(self.s_j, beta)).sum()
                 - np.log(m, out=np.zeros_like(m), where=(m != 0))
                 .sum(axis=1, keepdims=True)
                 .sum()
             )
             return neg_L_efron
 
-    def _jac_negative_log_partial_likelihood(self, beta, method=None):
+    def _jac_negative_log_partial_likelihood(self, beta):
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
-        if not method:
-            method = self.method
 
-        if method == "cox":
+        if self.method == "cox":
             return -(
                 self.z_j.sum(axis=0)
                 - (self._psi(beta, order=1) / self._psi(beta)).sum(axis=0)
             )
-        elif method == "breslow":
-            if not hasattr(self, "s_j"):
-                self._compute_s_j()
+        elif self.method == "breslow":
             return -(
                 self.s_j.sum(axis=0)
                 - (
                     self.d_j[:, None] * (self._psi(beta, order=1) / self._psi(beta))
                 ).sum(axis=0)
             )
-        elif method == "efron":
-            if not hasattr(self, "s_j"):
-                self._compute_s_j()
+        elif self.method == "efron":
             # .sum(axis=1) --> sum on alpha to d_j
             # .sum(axis=0) --> sum on j
             # using where in np.divide allows to avoid 0. masked elements
@@ -271,13 +274,11 @@ class Cox:
                 .sum(axis=0)
             )
 
-    def _hess_negative_log_partial_likelihood(self, beta, method=None):
+    def _hess_negative_log_partial_likelihood(self, beta):
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
-        if not method:
-            method = self.method
 
-        if method == "cox" or method == "breslow":
+        if self.method == "cox" or self.method == "breslow":
             psi_order_0 = self._psi(beta)
             psi_order_1 = self._psi(beta, order=1)
 
@@ -289,14 +290,14 @@ class Cox:
             )[:, :, None]
             # print("hessian_part_2 [d, p, p]:", hessian_part_2.shape)
 
-            if method == "cox":
+            if self.method == "cox":
                 return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
-            elif method == "breslow":
+            elif self.method == "breslow":
                 return (self.d_j[:, None, None] * hessian_part_1).sum(axis=0) - (
                     self.d_j[:, None, None] * hessian_part_2
                 ).sum(axis=0)
 
-        elif method == "efron":
+        elif self.method == "efron":
             psi_order_0 = self._psi_efron(beta)
             psi_order_1 = self._psi_efron(beta, order=1)
 
