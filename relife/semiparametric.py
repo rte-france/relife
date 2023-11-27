@@ -68,13 +68,13 @@ class Cox:
         # right censored
         # risk_set = np.vstack([time] * len(v_j)) >= np.hstack([v_j[:, None]] * len(time))
         # left truncated & right censored
-        self.risk_set = (
+        self.risk_set = np.logical_and((
             np.vstack([self.entry] * len(self.v_j))
-            <= np.hstack([self.v_j[:, None]] * len(self.time))
-        ) & (
+            < np.hstack([self.v_j[:, None]] * len(self.time))
+        ) , (
             np.hstack([self.v_j[:, None]] * len(self.time))
             <= np.vstack([self.time] * len(self.v_j))
-        )
+        ))
 
         if (self.event_count > 3).any():
             self.set_method("efron")
