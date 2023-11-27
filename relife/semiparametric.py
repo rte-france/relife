@@ -52,7 +52,6 @@ class Cox:
         s_j : [m, p]
         discount_rates : [m, max(event_count)] or [m, max(event_count)]
         """
-        # sorted_i = np.argsort(self.time)
 
         self.v_j, sorted_uncensored_i, self.event_count = np.unique(
             self.time[self.event == 1],  # uncensored sorted times
@@ -68,13 +67,16 @@ class Cox:
         # right censored
         # risk_set = np.vstack([time] * len(v_j)) >= np.hstack([v_j[:, None]] * len(time))
         # left truncated & right censored
-        self.risk_set = np.logical_and((
-            np.vstack([self.entry] * len(self.v_j))
-            < np.hstack([self.v_j[:, None]] * len(self.time))
-        ) , (
-            np.hstack([self.v_j[:, None]] * len(self.time))
-            <= np.vstack([self.time] * len(self.v_j))
-        ))
+        self.risk_set = np.logical_and(
+            (
+                np.vstack([self.entry] * len(self.v_j))
+                < np.hstack([self.v_j[:, None]] * len(self.time))
+            ),
+            (
+                np.hstack([self.v_j[:, None]] * len(self.time))
+                <= np.vstack([self.time] * len(self.v_j))
+            ),
+        )
 
         if (self.event_count > 3).any():
             self.set_method("efron")
@@ -102,13 +104,12 @@ class Cox:
         return (self.event_count > 1).any()
 
     def set_method(self, method):
-    
-        if method.lower() == "efron" :
+        if method.lower() == "efron":
             self.method = method
             self._compute_death_set()
             self._compute_s_j()
             self._compute_efron_discount_rates()
-        elif method.lower() == "breslow" :
+        elif method.lower() == "breslow":
             self.method = method
             self._compute_death_set()
             self._compute_s_j()
@@ -130,11 +131,10 @@ class Cox:
 
         return np.dot(z, beta[:, None])
 
-
     def _compute_death_set(self):
-        self.death_set = np.vstack([self.time*self.event] * len(self.v_j)) == np.hstack(
-            [self.v_j[:, None]] * len(self.time)
-        )
+        self.death_set = np.vstack(
+            [self.time * self.event] * len(self.v_j)
+        ) == np.hstack([self.v_j[:, None]] * len(self.time))
 
     def _compute_s_j(self):
         """s_j : [m, p]"""
@@ -147,11 +147,9 @@ class Cox:
         """
 
         self.discount_rates = (
-            np.vstack([np.arange(self.d_j.max())] * len(self.d_j))
-            / self.d_j[:, None]
+            np.vstack([np.arange(self.d_j.max())] * len(self.d_j)) / self.d_j[:, None]
         )
         self.discount_rates_mask = np.where(self.discount_rates < 1, 1, 0)
-    
 
     def _psi(self, beta, on="risk", order=0):
         """
@@ -192,7 +190,7 @@ class Cox:
         discount_rates : [m, max(d_j)]
         discount_rates_mask : [m, max(d_j)]
         """
-    
+
         if order == 0:
             # shape [m, max(d_j)]
             return (
@@ -224,9 +222,7 @@ class Cox:
 
         # neg_L_cox == neg_L_breslow == neg_L_efron if (not self.tied_events)
         if self.method == "cox":
-            return -(
-                (Cox._log_g(self.z_j, beta)).sum() - np.log(self._psi(beta)).sum()
-            )
+            return -((Cox._log_g(self.z_j, beta)).sum() - np.log(self._psi(beta)).sum())
         elif self.method == "breslow":
             return -(
                 (Cox._log_g(self.s_j, beta)).sum()
@@ -345,37 +341,38 @@ class Cox:
 
         return opt.x
 
-    # def fit_newton(self):
-    #     return newton(
-    #         func=self._negative_log_partial_likelihood,
-    #         x0=np.random.random(self.z_i.shape[1]),
-    #         fprime=self._jac_negative_log_partial_likelihood,
-    #         fprime2=self._hess_negative_log_partial_likelihood,
-    #     )
+    def chf(self, beta):
+        return np.cumsum(self.d_j[:, None] / self._psi(beta))
 
-    # def _wald_test(self, beta, beta_0):
-    #     assert beta.shape == beta_0.shape
-    #     information_matrix = self._hess_negative_log_partial_likelihood(beta)
-    #     ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
-    #     pval = 1 - chi2.cdf(ch2, df=len(beta))
-    #     print(f"chi2 = {ch2} pvalue = {pval}")
-    #     return ch2, pval
+    def sf(self, beta, covar):
+        return np.exp(-self.chf(beta)) ** Cox._g(covar, beta)
 
-    # def _likelihood_ratio_test(self, beta, beta_0):
-    #     assert beta.shape == beta_0.shape
-    #     neg_pl_beta = self._negative_log_partial_likelihood(beta)
-    #     neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
-    #     ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
-    #     pval = 1 - chi2.cdf(ch2, df=len(beta))
-    #     print(f"chi2 = {ch2} pvalue = {pval}")
-    #     return ch2, pval
+    def cox_snell_residuals(self, beta):
+        return self.chf(beta) * np.squeeze(Cox._g(self.z_j, beta))
 
-    # def _scores_test(self, beta, beta_0):
-    #     assert beta.shape == beta_0.shape
-    #     information_matrix = self._hess_negative_log_partial_likelihood(beta_0)
-    #     inverse_information_matrix = linalg.inv(information_matrix)
-    #     jac = -self._jac_negative_log_partial_likelihood(beta_0)
-    #     ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
-    #     pval = 1 - chi2.cdf(ch2, df=len(beta))
-    #     print(f"chi2 = {ch2} pvalue = {pval}")
-    #     return ch2, pval
+    def wald_test(self, beta, beta_0):
+        assert beta.shape == beta_0.shape
+        information_matrix = self._hess_negative_log_partial_likelihood(beta)
+        ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
+        pval = 1 - chi2.cdf(ch2, df=len(beta))
+        print(f"chi2 = {ch2} pvalue = {pval}")
+        return ch2, pval
+
+    def likelihood_ratio_test(self, beta, beta_0):
+        assert beta.shape == beta_0.shape
+        neg_pl_beta = self._negative_log_partial_likelihood(beta)
+        neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
+        ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
+        pval = 1 - chi2.cdf(ch2, df=len(beta))
+        print(f"chi2 = {ch2} pvalue = {pval}")
+        return ch2, pval
+
+    def scores_test(self, beta, beta_0):
+        assert beta.shape == beta_0.shape
+        information_matrix = self._hess_negative_log_partial_likelihood(beta_0)
+        inverse_information_matrix = linalg.inv(information_matrix)
+        jac = -self._jac_negative_log_partial_likelihood(beta_0)
+        ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
+        pval = 1 - chi2.cdf(ch2, df=len(beta))
+        print(f"chi2 = {ch2} pvalue = {pval}")
+        return ch2, pval
