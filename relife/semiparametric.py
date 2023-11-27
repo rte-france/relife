@@ -132,7 +132,7 @@ class Cox:
 
 
     def _compute_death_set(self):
-        self.death_set = np.vstack([self.time] * len(self.v_j)) == np.hstack(
+        self.death_set = np.vstack([self.time*self.event] * len(self.v_j)) == np.hstack(
             [self.v_j[:, None]] * len(self.time)
         )
 
@@ -147,8 +147,8 @@ class Cox:
         """
 
         self.discount_rates = (
-            np.vstack([np.arange(self.event_count.max())] * len(self.d_j))
-            / self.event_count[:, None]
+            np.vstack([np.arange(self.d_j.max())] * len(self.d_j))
+            / self.d_j[:, None]
         )
         self.discount_rates_mask = np.where(self.discount_rates < 1, 1, 0)
     
