@@ -1,7 +1,8 @@
 import numpy as np
 from dataclasses import dataclass
+from typing import Tuple
 
-from scipy.optimize import minimize, newton
+from scipy.optimize import minimize
 from scipy.stats import chi2
 from scipy import linalg
 
@@ -424,35 +425,45 @@ class Cox:
 
             return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
 
-    def fit(self, use_hessian=True):
-        if use_hessian:
-            opt = minimize(
-                fun=self._negative_log_partial_likelihood,
-                x0=np.random.random(self.z_i.shape[1]),
-                method="Newton-CG",
-                jac=self._jac_negative_log_partial_likelihood,
-                hess=self._hess_negative_log_partial_likelihood,
-            )
-        else:
-            opt = minimize(
-                fun=self._negative_log_partial_likelihood,
-                x0=np.random.random(self.z_i.shape[1]),
-                method="L-BFGS-B",
-                jac=self._jac_negative_log_partial_likelihood,
-            )
-
+    def fit(self, method: str = "trust-exact") -> np.ndarray:
+        """
+        see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
+        """
+        opt = minimize(
+            fun=self._negative_log_partial_likelihood,
+            x0=np.random.random(self.z_i.shape[1]),
+            method=method,
+            jac=self._jac,
+            hess=self._hess,
+        )
         return opt.x
 
-    def chf(self, beta):
+    def chf(self, beta: np.ndarray) -> np.ndarray:
         return np.cumsum(self.d_j[:, None] / self._psi(beta))
 
-    def sf(self, beta, covar):
+    def hr(self, beta: np.ndarray, covar_1: np.ndarray, covar_2: np.ndarray) -> float:
+        """Compute the hazard ratio of two covariates
+
+        Args:
+            beta (np.ndarray): parameter vector
+            covar_1 (np.ndarray): first covariate value
+            covar_2 (np.ndarray): second covariate value
+
+        Returns:
+            float: hazard ratio
+        """
+        return Cox._g(covar_1 - covar_2, beta)
+
+    def sf(self, beta: np.ndarray, covar: np.ndarray) -> np.ndarray:
         return np.exp(-self.chf(beta)) ** Cox._g(covar, beta)
 
-    def _cox_snell_residuals(self, beta):
+    def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
         return self.chf(beta) * np.squeeze(Cox._g(self.z_j, beta))
 
-    def _wald_test(self, beta, beta_0):
+    def _wald(self, beta: np.ndarray, beta_0: np.ndarray = None) -> Tuple[float, float]:
+        """wald test"""
+        if beta_0 is None:
+            beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
         information_matrix = self._hess_negative_log_partial_likelihood(beta)
         ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
@@ -460,7 +471,10 @@ class Cox:
         print(f"chi2 = {ch2} pvalue = {pval}")
         return ch2, pval
 
-    def _likelihood_ratio_test(self, beta, beta_0):
+    def _lrt(self, beta: np.ndarray, beta_0: np.ndarray = None) -> Tuple[float, float]:
+        """likelihood ratio test"""
+        if beta_0 is None:
+            beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
         neg_pl_beta = self._negative_log_partial_likelihood(beta)
         neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
@@ -469,7 +483,12 @@ class Cox:
         print(f"chi2 = {ch2} pvalue = {pval}")
         return ch2, pval
 
-    def _scores_test(self, beta, beta_0):
+    def _scores_test(
+        self, beta: np.ndarray, beta_0: np.ndarray = None
+    ) -> Tuple[float, float]:
+        """scores test"""
+        if beta_0 is None:
+            beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
         information_matrix = self._hess_negative_log_partial_likelihood(beta_0)
         inverse_information_matrix = linalg.inv(information_matrix)
