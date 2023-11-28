@@ -19,7 +19,7 @@ class GammaProcessData:
     inspection_times: np.array
     deterioration_measurements: np.array
     ids: np.array = None
-    censor: float = 0  # niveau de la censure, par ex : precision de l'instrument de mesure
+    censor: float = 0  # niveau de la censure par ex : precision de l'instrument de mesure
     increments: np.array = None
     log_increments: np.array = None
     _event: np.array = None
