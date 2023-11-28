@@ -9,6 +9,8 @@ from scipy import linalg
 @dataclass
 class Cox:
     """Cox regression model
+    Only right censored and left truncated data
+    Ties allowed
 
     time : [n]
     covar, z_i : [n, p]
