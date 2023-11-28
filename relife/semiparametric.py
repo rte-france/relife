@@ -8,24 +8,70 @@ from scipy import linalg
 
 @dataclass
 class Cox:
-    """Cox regression model
-    Only right censored and left truncated data
-    Ties allowed
+    r"""Cox regression model
 
-    time : [n]
-    covar, z_i : [n, p]
-    event : [n]
-    entry : [n]
+    :math:`h(t,~\vec{z}) = h_0(t)\times e^{\vec{\beta}^\intercal\cdot\vec{z}} = h_0(t) \times g(\vec{z})`
 
-    m : nb of uncensored data
+    Only right censored and left truncated times are allowed.
+    In case of tied events, two partial likelihood approximations
+    are implemented : Breslow and Efron. The baseline is Cox partial likelihood.
+    Specific likelihood usage can be set with :code:`.set_method(*arg)`. Otherwise, method is set automatically.
+
+    Attributes:
+        time (np.ndarray, shape :math:`n`)
+            Age of the assets, :math:`u_i`.
+        covar (np.ndarray, shape :math:`(n, p)`)
+            Covariates, :math:`\vec{z}_i`. Equivalent of :code:`z_i`.
+        event (np.ndarray, shape :math:`n`)
+            Type of event, by default None.
+        entry (np.ndarray, shape :math:`n`)
+            Age of assets at the beginning of the observation period (left truncation), by default None.
+        v_j (np.ndarray, shape :math:`m`)
+            Ordered distinct ages of the assets, :math:`v_j`.
+        event_count (np.ndarray, shape :math:`m`)
+            Number of deaths at :math:`v_j`. Equivalent of :code:`d_j`.
+        z_j (np.ndarray, shape :math:`(m, p)`)
+            Ordered distinct covariates :math:`\vec{z}_j` at :math:`v_j` when they are no ties (:math:`\vec{s}_j` is used for tied events)
+        risk_set (np.ndarray, shape :math:`(m, n)`)
+            Set of all assets :math:`i` at risk just prior to :math:`v_j`. It corresponds to :math:`\mathbf{R}_j`
+        death_set (np.ndarray, shape :math:`(m, n)`)
+            Set of all assets :math:`i` who die at :math:`v_j`. Only used for Breslow and Efron method when events are tied. It corresponds to :math:`\mathbf{D}_j`
+        s_j (np.ndarray, shape :math:`(m, p)`)
+            Sum of ordered distinct covariates :math:`\vec{z}_i` at each :math:`v_j` when events are tied.
+        discount_rates (np.ndarray, shape :math:`(m, \text{max}~d_j)`)
+            Discount rates applied in Efron method for each set of simultaneous deaths.
+        mask_discount_rates (np.ndarray, shape :math:`(m, \text{max}~d_j)`)
+            Mask discount rates applied in Efron method for each set of simultaneous deaths.
+        method (str, "cox", "breslow" or "efron")
+            Method used to compute negative log partial likelihood.
+             - If "cox", :math:`\sum_j^{m}\ln\left( \psi_{\mathbf{R}_j}(\vec{z}_i)\right) - \sum_j^{m}\ln(g(\vec{z}_{(j)}))`
+             - If "breslow", :math:`\sum_j^{m} d_j \ln\left( \psi\right) - \sum_j^{m}\ln(g(\vec{s}_j))`
+             - If "efron", :math:`\sum_j^{m} \sum_{\alpha}^{d_j} \ln\left( \psi_{\mathbf{R}_j} - \frac{\alpha -1}{d_j} \psi_{\mathbf{D}_j}\right) - \sum_j^{m}\ln(g(\vec{s}_j))`
+    Notes:
+        When Cox or Breslow methods are used, psi is defined as followed :
+            - Order 0 derivative, :math:`\psi_{\mathbf{R}_j}(\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)}g(\vec{z}_i)`
+            - Order 1 derivative, :math:`\psi_{\mathbf{R}_j}(k, \vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i)`
+            - Order 2 derivative, :math:`\psi_{\mathbf{R}_j}(h,~k,~\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot z_{ih} \cdot g(\vec{z}_i)`
+        See :code:`Cox(*args)._psi(*args)`
+
+        When Efron method is used, psi is defined as followed :
+            - Order 0 derivative, :math:`\psi_{\mathbf{R}_j}(\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)}g(\vec{z}_i)`
+            - Order 1 derivative, :math:`\psi_{\mathbf{R}_j}(k, \vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i)`
+            - Order 2 derivative, :math:`\psi_{\mathbf{R}_j}(h,~k,~\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot z_{ih} \cdot g(\vec{z}_i)`
+        See :code:`Cox(*args)._psi_efron(*args)`
+
+
+    Examples:
+        >>> cox = Cox()
+
     """
 
     time: np.ndarray
     covar: np.ndarray
-    event: np.ndarray
-    entry: np.ndarray
+    event: np.ndarray = None
+    entry: np.ndarray = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.event is None:
             self.event = np.ones_like(self.time)
         if self.entry is None:
@@ -40,26 +86,37 @@ class Cox:
             len(self.time) == len(self.covar) == len(self.event)
         ), "conflicting input data dimensions"
 
-        self.parse_data()
+        self._parse_data()
 
-    def parse_data(
+    def _parse_data(
         self,
-    ):
+    ) -> None:
+        r"""Parse lifetime data and compute Cox usefull variables
+
+        :code:`v_j`
+        :code:`event_count`
+        :code:`z_j`
+        :code:`risk_set`
+        :code:`death_set`
+        :code:`s_j`
+        :code:`discount_rates`
+
+        Notes
+        -----
+        Default value for `event` is 1 (no right censoring), default value for `entry` is
+        0 (no left truncation).
         """
-        v_j : [m]
-        event_count, d_j : [m]
-        z_j : [m, p]
-        risk_set : [m, n] -> nb of alive at v_j
-        death_set : [m, n] -> i who died at v_j
-        s_j : [m, p]
-        discount_rates : [m, max(event_count)] or [m, max(event_count)]
-        """
+
+        if self.event is None:
+            self.event = np.ones_like(self.time, int)
+        if self.entry is None:
+            self.entry = np.zeros_like(self.time, float)
 
         self.v_j, sorted_uncensored_i, self.event_count = np.unique(
             self.time[self.event == 1],  # uncensored sorted times
             return_index=True,
             return_counts=True,
-        )  # T, N
+        )  #: shape :math:`m` - Ordered distinct ages of the assets, :math:`v_j`.
 
         self.z_j = self.covar[self.event == 1][
             sorted_uncensored_i
@@ -88,24 +145,29 @@ class Cox:
             self.set_method("cox")
 
     @property
-    def z_i(self):
-        """alias name of covar"""
+    def z_i(self) -> np.ndarray:
+        """Alias name of :code:`covar`"""
 
         return self.covar
 
     @property
-    def d_j(self):
-        """alias name of event_count"""
+    def d_j(self) -> np.ndarray:
+        """Alias name of :code:`event_count`"""
 
         return self.event_count
 
     @property
-    def tied_events(self):
-        """are some events tied ?"""
+    def tied_events(self) -> bool:
+        """:Boolean: True if events are tied"""
 
         return (self.event_count > 1).any()
 
-    def set_method(self, method):
+    def set_method(self, method: str) -> None:
+        """Specify method used to compute partial likelihood and its derivates
+
+        Args:
+            method (str): "cox", "breslow" or "efron"
+        """
         if method.lower() == "efron":
             self.method = method
             self._compute_death_set()
@@ -115,34 +177,39 @@ class Cox:
             self.method = method
             self._compute_death_set()
             self._compute_s_j()
+            self.discount_rates = None
+            self.discount_rates_mask = None
         elif method.lower() == "cox":
             self.method = method
-            pass
+            self.death_set = None
+            self.s_j = None
+            self.discount_rates = None
+            self.discount_rates_mask = None
         else:
             raise ValueError(f"method allowed are efron, breslow or cox. Not {method}")
 
     @staticmethod
-    def _g(z, beta):
-        """e^{\vec{\beta}^\intercal \cdot \vec{z}}"""
+    def _g(z: np.ndarray, beta: np.ndarray) -> np.ndarray:
+        """:math:`e^{\vec{\beta}^\intercal \cdot \vec{z}}`"""
 
         return np.exp(np.dot(z, beta[:, None]))
 
     @staticmethod
-    def _log_g(z, beta):
-        """\vec{\beta}^\intercal \cdot \vec{z}"""
+    def _log_g(z: np.ndarray, beta: np.ndarray) -> np.ndarray:
+        """math:`\vec{\beta}^\intercal \cdot \vec{z}`"""
 
         return np.dot(z, beta[:, None])
 
-    def _compute_death_set(self):
+    def _compute_death_set(self) -> None:
         self.death_set = np.vstack(
             [self.time * self.event] * len(self.v_j)
         ) == np.hstack([self.v_j[:, None]] * len(self.time))
 
-    def _compute_s_j(self):
+    def _compute_s_j(self) -> None:
         """s_j : [m, p]"""
         self.s_j = np.dot(self.death_set, self.z_i)
 
-    def _compute_efron_discount_rates(self):
+    def _compute_efron_discount_rates(self) -> None:
         """
         discount_rates : [m, max(event_count)] or [m, max(event_count)]
         discount_rates_mask : [m, max(event_count)] or [m, max(event_count)]
@@ -153,11 +220,19 @@ class Cox:
         )
         self.discount_rates_mask = np.where(self.discount_rates < 1, 1, 0)
 
-    def _psi(self, beta, on="risk", order=0):
-        """
-        order 0 : [m]
-        order 1 : [m, p]
-        order 2 : [m, p, p]
+    def _psi(self, beta: np.ndarray, on: str = "risk", order: int = 0) -> np.ndarray:
+        r"""Psi formula used for likelihood computations
+
+        Args:
+            beta (np.ndarray): parameter vector
+            on (str, optional): "risk" or "death". Defaults to "risk". If "death", sum is applied on death set.
+            order (int, optional): order derivatives with respect to beta. Defaults to 0.
+
+        Returns:
+            np.ndarray: psi formulation
+            If order 0, shape m
+            If order 1, shape [m, p]
+            If order 2, shape [m, p, p]
         """
         if on == "risk":
             i_set = self.risk_set
@@ -180,17 +255,18 @@ class Cox:
                 axes=1,
             )
 
-    def _psi_efron(self, beta, order=0):
-        """
-        psi for efron formula
-        the sum on alpha implies one more dimension
+    def _psi_efron(self, beta: np.ndarray, order: int = 0) -> np.ndarray:
+        """Psi formula for Efron method
 
-        order 0 : [m, max(d_j)]
-        order 1 : [m, max(d_j), p]
-        order 2 : [m, max(d_j), p, p]
+        Args:
+            beta (np.ndarray): parameter vector
+            order (int, optional): order derivatives with respect to beta. Defaults to 0.
 
-        discount_rates : [m, max(d_j)]
-        discount_rates_mask : [m, max(d_j)]
+        Returns:
+            np.ndarray: psi formulation for Efron method
+            If order 0, shape [m, max(d_j)]
+            If order 1, shape [m, max(d_j), p]
+            If order 2, shape [m, max(d_j), p, p]
         """
 
         if order == 0:
@@ -218,7 +294,15 @@ class Cox:
                 * (self.discount_rates * self.discount_rates_mask)[:, :, None, None]
             )
 
-    def _negative_log_partial_likelihood(self, beta):
+    def _negative_log_partial_likelihood(self, beta: np.ndarray) -> float:
+        """Compute negative log partial likelihood depending on method used (cox, breslow or efron)
+
+        Args:
+            beta (np.ndarray): parameter vector
+
+        Returns:
+            float : negative log partial likelihood at beta
+        """
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
 
@@ -243,7 +327,15 @@ class Cox:
             )
             return neg_L_efron
 
-    def _jac_negative_log_partial_likelihood(self, beta):
+    def _jac(self, beta: np.ndarray) -> np.ndarray:
+        """Compute Jacobian of the negative log partial likelihood depending on method used (cox, breslow or efron)
+
+        Args:
+            beta (np.ndarray): parameter vector
+
+        Returns:
+            np.ndarray: jacobian vector
+        """
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
 
@@ -272,7 +364,15 @@ class Cox:
                 .sum(axis=0)
             )
 
-    def _hess_negative_log_partial_likelihood(self, beta):
+    def _hess(self, beta: np.ndarray) -> np.ndarray:
+        """Compute Hessian of the negative log partial likelihood depending on method used (cox, breslow or efron)
+
+        Args:
+            beta (np.ndarray): parameter vector
+
+        Returns:
+            np.ndarray: hessian matrix
+        """
         assert len(beta.shape) == 1, "beta must be 1d array"
         assert len(beta) == self.z_i.shape[1], "conflicting beta dimension with covar"
 
@@ -349,10 +449,10 @@ class Cox:
     def sf(self, beta, covar):
         return np.exp(-self.chf(beta)) ** Cox._g(covar, beta)
 
-    def cox_snell_residuals(self, beta):
+    def _cox_snell_residuals(self, beta):
         return self.chf(beta) * np.squeeze(Cox._g(self.z_j, beta))
 
-    def wald_test(self, beta, beta_0):
+    def _wald_test(self, beta, beta_0):
         assert beta.shape == beta_0.shape
         information_matrix = self._hess_negative_log_partial_likelihood(beta)
         ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
@@ -360,7 +460,7 @@ class Cox:
         print(f"chi2 = {ch2} pvalue = {pval}")
         return ch2, pval
 
-    def likelihood_ratio_test(self, beta, beta_0):
+    def _likelihood_ratio_test(self, beta, beta_0):
         assert beta.shape == beta_0.shape
         neg_pl_beta = self._negative_log_partial_likelihood(beta)
         neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
@@ -369,7 +469,7 @@ class Cox:
         print(f"chi2 = {ch2} pvalue = {pval}")
         return ch2, pval
 
-    def scores_test(self, beta, beta_0):
+    def _scores_test(self, beta, beta_0):
         assert beta.shape == beta_0.shape
         information_matrix = self._hess_negative_log_partial_likelihood(beta_0)
         inverse_information_matrix = linalg.inv(information_matrix)
