@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from scipy.optimize import minimize
-from scipy.stats import chi2
+from scipy.stats import chi2, norm
 from scipy import linalg
 
 
@@ -231,7 +231,7 @@ class Cox:
 
         Returns:
             np.ndarray: psi formulation
-            If order 0, shape m
+            If order 0, shape [m, 1]
             If order 1, shape [m, p]
             If order 2, shape [m, p, p]
         """
@@ -438,8 +438,34 @@ class Cox:
         )
         return opt.x
 
-    def chf(self, beta: np.ndarray) -> np.ndarray:
-        return np.cumsum(self.d_j[:, None] / self._psi(beta))
+    def chf(self, beta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Knowing estimates of beta, computes the chf estimator and confidence interval
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: values of chf estimator and its confidence interval
+            at 95% level
+
+        Examples:
+            >>> beta = my_cox.fit()
+            >>> chf_values, conf_int = my_cox.chf(beta)
+            >>> plt.step(my_cox.v_j, chf_values)
+            >>> plt.fill_between(my_cox.v_j, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
+            >>> plt.show()
+        """
+        values = np.cumsum(self.d_j[:, None] / self._psi(beta))
+        var = np.cumsum(self.d_j[:, None] / self._psi(beta) ** 2)
+        conf_int = np.hstack(
+            [
+                values[:, None]
+                + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                values[:, None]
+                - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+            ]
+        )
+        return values, conf_int
 
     def hr(self, beta: np.ndarray, covar_1: np.ndarray, covar_2: np.ndarray) -> float:
         """Compute the hazard ratio of two covariates
@@ -454,8 +480,54 @@ class Cox:
         """
         return Cox._g(covar_1 - covar_2, beta)
 
-    def sf(self, beta: np.ndarray, covar: np.ndarray) -> np.ndarray:
-        return np.exp(-self.chf(beta)) ** Cox._g(covar, beta)
+    def sf(self, beta: np.ndarray, covar: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Knowing estimates of beta, computes the sf estimator and confidence interval
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p, shape p
+            covar (np.ndarray): one vector of covariate values, shape p
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]:  values of sf estimator and its confidence interval
+            at 95% level
+
+        Examples:
+            >>> beta = my_cox.fit()
+            >>> sf_values, conf_int = my_cox.sf(beta, my_cox.covar[21]) # sf of the 22th asset
+            >>> plt.step(my_cox.v_j, sf_values)
+            >>> plt.fill_between(my_cox.v_j, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
+            >>> plt.show()
+        """
+        psi = self._psi(beta)
+        psi_order_1 = self._psi(beta, order=1)
+        d_j_on_psi = self.d_j[:, None] / psi
+        information_matrix = self._hess(beta)
+        inverse_information_matrix = linalg.inv(information_matrix)
+
+        chf_estimates = np.cumsum(self.d_j[:, None] / self._psi(beta))
+        values = np.exp(-chf_estimates) ** Cox._g(covar, beta)
+
+        q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
+        q2 = np.squeeze(
+            np.matmul(
+                q3[:, None, :],
+                np.matmul(inverse_information_matrix[None, :, :], q3[:, :, None]),
+            )
+        )  # m
+        q1 = np.cumsum(d_j_on_psi * (1 / psi))
+
+        var = (values**2) * (q1 + q2)
+
+        conf_int = np.hstack(
+            [
+                values[:, None]
+                + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                values[:, None]
+                - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+            ]
+        )
+
+        return values, conf_int
 
     def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
         return self.chf(beta) * np.squeeze(Cox._g(self.z_j, beta))
