@@ -520,7 +520,7 @@ class Cox:
         if beta_0 is None:
             beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
-        information_matrix = self._hess_negative_log_partial_likelihood(beta)
+        information_matrix = self._hess(beta)
         ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
         pval = 1 - chi2.cdf(ch2, df=len(beta))
         print(f"chi2 = {ch2} pvalue = {pval}")
@@ -545,9 +545,9 @@ class Cox:
         if beta_0 is None:
             beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
-        information_matrix = self._hess_negative_log_partial_likelihood(beta_0)
+        information_matrix = self._hess(beta_0)
         inverse_information_matrix = linalg.inv(information_matrix)
-        jac = -self._jac_negative_log_partial_likelihood(beta_0)
+        jac = -self._jac(beta_0)
         ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
         pval = 1 - chi2.cdf(ch2, df=len(beta))
         print(f"chi2 = {ch2} pvalue = {pval}")
