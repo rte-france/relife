@@ -438,11 +438,31 @@ class Cox:
         )
         return opt.x
 
-    def chf(self, beta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Knowing estimates of beta, computes the chf estimator and confidence interval
+    def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
+        """Returns x nearest interpolation based on xp and yp data points
+        xp has to be monotonically increasing
+
+        Args:
+            x (np.ndarray): 1d x coordinates to interpolate
+            xp (np.ndarray): 1d known x coordinates
+            yp (np.ndarray): 1d known y coordinates
+
+        Returns:
+            np.ndarray: interpolation values of x
+        """
+        spacing = np.diff(xp) / 2
+        xp = xp + np.hstack([spacing, spacing[-1]])
+        yp = np.hstack([yp, yp[-1]])
+        return yp[np.searchsorted(xp, x)]
+
+    def chf(
+        self, beta: np.ndarray, conf_int: bool = False
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Knowing estimates of beta, computes the chf estimator and confidence interval (optional)
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p
+            conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: values of chf estimator and its confidence interval
@@ -450,22 +470,25 @@ class Cox:
 
         Examples:
             >>> beta = my_cox.fit()
-            >>> chf_values, conf_int = my_cox.chf(beta)
+            >>> chf_values, conf_int = my_cox.chf(beta, conf_int=True)
             >>> plt.step(my_cox.v_j, chf_values)
             >>> plt.fill_between(my_cox.v_j, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
         values = np.cumsum(self.d_j[:, None] / self._psi(beta))
-        var = np.cumsum(self.d_j[:, None] / self._psi(beta) ** 2)
-        conf_int = np.hstack(
-            [
-                values[:, None]
-                + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
-                values[:, None]
-                - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
-            ]
-        )
-        return values, conf_int
+        if conf_int:
+            var = np.cumsum(self.d_j[:, None] / self._psi(beta) ** 2)
+            conf_int = np.hstack(
+                [
+                    values[:, None]
+                    + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                    values[:, None]
+                    - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                ]
+            )
+            return values, conf_int
+        else:
+            return values, None
 
     def hr(self, beta: np.ndarray, covar_1: np.ndarray, covar_2: np.ndarray) -> float:
         """Compute the hazard ratio of two covariates
@@ -480,12 +503,15 @@ class Cox:
         """
         return Cox._g(covar_1 - covar_2, beta)
 
-    def sf(self, beta: np.ndarray, covar: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Knowing estimates of beta, computes the sf estimator and confidence interval
+    def sf(
+        self, beta: np.ndarray, covar: np.ndarray, conf_int: bool = False
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Knowing estimates of beta, computes the sf estimator and confidence interval (optional)
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p, shape p
             covar (np.ndarray): one vector of covariate values, shape p
+            conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]:  values of sf estimator and its confidence interval
@@ -498,36 +524,37 @@ class Cox:
             >>> plt.fill_between(my_cox.v_j, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
-        psi = self._psi(beta)
-        psi_order_1 = self._psi(beta, order=1)
-        d_j_on_psi = self.d_j[:, None] / psi
-        information_matrix = self._hess(beta)
-        inverse_information_matrix = linalg.inv(information_matrix)
+        values = np.exp(-self.chf(beta)[0]) ** Cox._g(covar, beta)
+        if conf_int:
+            psi = self._psi(beta)
+            psi_order_1 = self._psi(beta, order=1)
+            d_j_on_psi = self.d_j[:, None] / psi
+            information_matrix = self._hess(beta)
+            inverse_information_matrix = linalg.inv(information_matrix)
 
-        chf_estimates = np.cumsum(self.d_j[:, None] / self._psi(beta))
-        values = np.exp(-chf_estimates) ** Cox._g(covar, beta)
+            q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
+            q2 = np.squeeze(
+                np.matmul(
+                    q3[:, None, :],
+                    np.matmul(inverse_information_matrix[None, :, :], q3[:, :, None]),
+                )
+            )  # m
+            q1 = np.cumsum(d_j_on_psi * (1 / psi))
 
-        q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
-        q2 = np.squeeze(
-            np.matmul(
-                q3[:, None, :],
-                np.matmul(inverse_information_matrix[None, :, :], q3[:, :, None]),
+            var = (values**2) * (q1 + q2)
+
+            conf_int = np.hstack(
+                [
+                    values[:, None]
+                    + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                    values[:, None]
+                    - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                ]
             )
-        )  # m
-        q1 = np.cumsum(d_j_on_psi * (1 / psi))
 
-        var = (values**2) * (q1 + q2)
-
-        conf_int = np.hstack(
-            [
-                values[:, None]
-                + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
-                values[:, None]
-                - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
-            ]
-        )
-
-        return values, conf_int
+            return values, conf_int
+        else:
+            return values, conf_int
 
     def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
         return self.chf(beta) * np.squeeze(Cox._g(self.z_j, beta))
