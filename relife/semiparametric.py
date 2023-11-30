@@ -465,7 +465,7 @@ class Cox:
         """Knowing estimates of beta, computes the sf estimator and confidence interval (optional)
 
         Args:
-            beta (np.ndarray): estimates of parameter vector, shape p, shape p
+            beta (np.ndarray): estimates of parameter vector, shape p
             covar (np.ndarray): one vector of covariate values, shape p
             conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
 
@@ -511,6 +511,17 @@ class Cox:
             return values, conf_int
         else:
             return values, conf_int
+
+    def var(self, beta: np.ndarray) -> np.ndarray:
+        """Return estimated covariance matrix of beta
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+
+        Returns:
+            np.ndarray: covariance matrix, shape (p,p)
+        """
+        return self._hess(beta)
 
     def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
         return self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))
