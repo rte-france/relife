@@ -39,9 +39,9 @@ class Cox:
         event: np.ndarray = None,
         entry: np.ndarray = None,
     ):
-        self.time = time  
+        self.time = time
         self.covar = covar
-        self.event = event 
+        self.event = event
         self.entry = entry
 
         if self.event is None:
@@ -68,9 +68,7 @@ class Cox:
             return_counts=True,
         )
 
-        self.ordered_event_covar = self.covar[self.event == 1][
-            sorted_uncensored_i
-        ]  
+        self.ordered_event_covar = self.covar[self.event == 1][sorted_uncensored_i]
 
         # here risk_set is mask array on time
         # left truncated & right censored
@@ -87,9 +85,7 @@ class Cox:
 
         self.death_set = np.vstack(
             [self.time * self.event] * len(self.ordered_event_times)
-        ) == np.hstack(
-            [self.ordered_event_times[:, None]] * len(self.time)
-        )
+        ) == np.hstack([self.ordered_event_times[:, None]] * len(self.time))
 
         if (self.event_count > 3).any():
             self.set_method("efron")
@@ -97,22 +93,20 @@ class Cox:
             self.set_method("breslow")
         else:
             self.set_method("cox")
-        self.tied_event = (
-            self.event_count > 1
-        ).any()
+        self.tied_event = (self.event_count > 1).any()
 
     def set_method(self, method: str) -> None:
         r"""Manually specify method used to compute partial likelihood and its derivates. By default :code:`method` is set automatically.
 
         Args:
             method (str): "cox", "breslow" or "efron"
-        
+
         Notes:
             Based on :code:`method` value, the computation of the partial negative log partial likelihood differs :
                 - If "cox", :math:`\sum_j^{m}\ln\left( \psi_{\mathbf{R}_j}(\vec{z}_i)\right) - \sum_j^{m}\ln(g(\vec{z}_{(j)}))`
                 - If "breslow", :math:`\sum_j^{m} d_j \ln\left( \psi\right) - \sum_j^{m}\ln(g(\vec{s}_j))`
                 - If "efron", :math:`\sum_j^{m} \sum_{\alpha}^{d_j} \ln\left( \psi_{\mathbf{R}_j} - \frac{\alpha -1}{d_j} \psi_{\mathbf{D}_j}\right) - \sum_j^{m}\ln(g(\vec{s}_j))`
-            
+
             When Cox or Breslow methods are used, psi is defined as followed :
                 - Order 0 derivative, :math:`\psi_{\mathbf{R}_j}(\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)}g(\vec{z}_i)`
                 - Order 1 derivative, :math:`\psi_{\mathbf{R}_j}(k, \vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i)`
@@ -526,19 +520,38 @@ class Cox:
     def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
         return self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))
 
-    def _wald(self, beta: np.ndarray, beta_0: np.ndarray = None) -> Tuple[float, float]:
-        """wald test"""
+    def wald_test(
+        self, beta: np.ndarray, beta_0: np.ndarray = None
+    ) -> Tuple[float, float]:
+        """Perform Wald's test of the null hypothesis beta_0
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+            beta_0 (np.ndarray, optional): null hypothesis on beta values. Defaults to None, then beta_0 = 0
+
+        Returns:
+            Tuple[float, float]: test value and its corresponding pvalue
+        """
         if beta_0 is None:
             beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
         information_matrix = self._hess(beta)
         ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
         pval = 1 - chi2.cdf(ch2, df=len(beta))
-        print(f"chi2 = {ch2} pvalue = {pval}")
-        return ch2, pval
+        return round(ch2, 3), round(pval, 3)
 
-    def _lrt(self, beta: np.ndarray, beta_0: np.ndarray = None) -> Tuple[float, float]:
-        """likelihood ratio test"""
+    def likelihood_ratio_test(
+        self, beta: np.ndarray, beta_0: np.ndarray = None
+    ) -> Tuple[float, float]:
+        """Perform likelihood ratio test of the null hypothesis beta_0
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+            beta_0 (np.ndarray, optional): null hypothesis on beta values. Defaults to None, then beta_0 = 0
+
+        Returns:
+            Tuple[float, float]: test value and its corresponding pvalue
+        """
         if beta_0 is None:
             beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
@@ -546,13 +559,20 @@ class Cox:
         neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
         ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
         pval = 1 - chi2.cdf(ch2, df=len(beta))
-        print(f"chi2 = {ch2} pvalue = {pval}")
-        return ch2, pval
+        return round(ch2, 3), round(pval, 3)
 
-    def _scores_test(
+    def scores_test(
         self, beta: np.ndarray, beta_0: np.ndarray = None
     ) -> Tuple[float, float]:
-        """scores test"""
+        """Perform scores test of the null hypothesis beta_0
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+            beta_0 (np.ndarray, optional): null hypothesis on beta values. Defaults to None, then beta_0 = 0
+
+        Returns:
+            Tuple[float, float]: test value and its corresponding pvalue
+        """
         if beta_0 is None:
             beta_0 = np.zeros_like(beta)
         assert beta.shape == beta_0.shape
@@ -561,5 +581,4 @@ class Cox:
         jac = -self._jac(beta_0)
         ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
         pval = 1 - chi2.cdf(ch2, df=len(beta))
-        print(f"chi2 = {ch2} pvalue = {pval}")
-        return ch2, pval
+        return round(ch2, 3), round(pval, 3)
