@@ -440,19 +440,6 @@ class Cox:
         else:
             return values, None
 
-    def hr(self, beta: np.ndarray, covar_1: np.ndarray, covar_2: np.ndarray) -> float:
-        """Compute the hazard ratio of two covariates
-
-        Args:
-            beta (np.ndarray): parameter vector
-            covar_1 (np.ndarray): first covariate value
-            covar_2 (np.ndarray): second covariate value
-
-        Returns:
-            float: hazard ratio
-        """
-        return Cox._g(covar_1 - covar_2, beta)
-
     def sf(
         self, beta: np.ndarray, covar: np.ndarray, conf_int: bool = False
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -515,70 +502,172 @@ class Cox:
         Returns:
             np.ndarray: covariance matrix, shape (p,p)
         """
-        return self._hess(beta)
+        return linalg.inv(self._hess(beta))
+
+    def std(self, beta: np.ndarray) -> np.ndarray:
+        """Return estimated standard error of beta
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+
+        Returns:
+            np.ndarray: standard error, shape p
+        """
+        return np.sqrt(np.diag(self.var(beta)))
+
+    def rr(self, beta: np.ndarray) -> np.ndarray:
+        """Return the relative risks
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+
+        Returns:
+            np.ndarray: relative risks, shape (p,p)
+        """
+        return np.dot(np.exp(beta)[:, None], (1 / np.exp(beta))[None, :])
 
     def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
         return self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))
 
-    def wald_test(
-        self, beta: np.ndarray, beta_0: np.ndarray = None
-    ) -> Tuple[float, float]:
-        """Perform Wald's test of the null hypothesis beta_0
+    def wald_test(self, beta: np.ndarray, c: np.ndarray = None) -> Tuple[float, float]:
+        """Perform Wald's test
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p
-            beta_0 (np.ndarray, optional): null hypothesis on beta values. Defaults to None, then beta_0 = 0
+            c (np.ndarray, optional): combination vector of 0 and 1 indicating which covar coordinates has to be tested in the null hypothesis
+            Defaults to None, then the null hypothesis corresponds to null effect of all covariates
 
         Returns:
             Tuple[float, float]: test value and its corresponding pvalue
         """
-        if beta_0 is None:
-            beta_0 = np.zeros_like(beta)
-        assert beta.shape == beta_0.shape
-        information_matrix = self._hess(beta)
-        ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
-        pval = 1 - chi2.cdf(ch2, df=len(beta))
-        return round(ch2, 3), round(pval, 3)
+        if c is None:
+            c = np.ones_like(beta)
+        
+        if isinstance(c, list):
+            assert len(beta) == len(c)
+            c = np.array(c)
+        elif isinstance(c, np.ndarray):
+            assert beta.shape == c.shape
+
+        beta_0 = np.where(c != 0, 0, 1)
+
+        if not np.any(beta_0):
+            # null hypothesis is beta = 0
+            information_matrix = self._hess(beta)
+            ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
+            pval = 1 - chi2.cdf(ch2, df=len(beta))
+            return round(ch2, 6), round(pval, 6)
+        else:
+            # local test
+            ind = np.where(beta_0 == 0)[0]
+            information_matrix = self._hess(beta)
+            local_inverse_information_matrix = linalg.inv(information_matrix)[
+                np.ix_(ind, ind)
+            ]
+            ch2 = np.dot(
+                beta[ind],
+                np.dot(linalg.inv(local_inverse_information_matrix), beta[ind]),
+            )
+            pval = 1 - chi2.cdf(ch2, df=len(ind))
+            return round(ch2, 6), round(pval, 6)
 
     def likelihood_ratio_test(
-        self, beta: np.ndarray, beta_0: np.ndarray = None
+        self, beta: np.ndarray, c: np.ndarray = None
     ) -> Tuple[float, float]:
         """Perform likelihood ratio test of the null hypothesis beta_0
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p
-            beta_0 (np.ndarray, optional): null hypothesis on beta values. Defaults to None, then beta_0 = 0
+            c (np.ndarray, optional): combination vector of 0 and 1 indicating which covar coordinates has to be tested in the null hypothesis
+            Defaults to None, then the null hypothesis corresponds to null effect of all covariates
 
         Returns:
             Tuple[float, float]: test value and its corresponding pvalue
         """
-        if beta_0 is None:
-            beta_0 = np.zeros_like(beta)
-        assert beta.shape == beta_0.shape
-        neg_pl_beta = self._negative_log_partial_likelihood(beta)
-        neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
-        ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
-        pval = 1 - chi2.cdf(ch2, df=len(beta))
-        return round(ch2, 3), round(pval, 3)
+        if c is None:
+            c = np.ones_like(beta)
+        
+        if isinstance(c, list):
+            assert len(beta) == len(c)
+            c = np.array(c)
+        elif isinstance(c, np.ndarray):
+            assert beta.shape == c.shape
+
+        beta_0 = np.where(c != 0, 0, 1)
+
+        if not np.any(beta_0):
+            # null hypothesis is beta = 0
+            neg_pl_beta = self._negative_log_partial_likelihood(beta)
+            neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
+            ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
+            pval = 1 - chi2.cdf(ch2, df=len(beta))
+            return round(ch2, 6), round(pval, 6)
+        else:
+            # local test
+            neg_pl_beta = self._negative_log_partial_likelihood(beta)
+            cox_under_h0 = Cox(
+                self.time,
+                self.covar[:, np.where(beta_0 != 0)[0]],
+                self.event,
+                self.entry,
+            )
+            beta_under_h0 = cox_under_h0.fit()
+            neg_pl_beta_under_h0 = cox_under_h0._negative_log_partial_likelihood(
+                beta_under_h0
+            )
+            ch2 = 2 * (neg_pl_beta_under_h0 - neg_pl_beta)
+            pval = 1 - chi2.cdf(ch2, df=len(np.where(beta_0 == 0)[0]))
+            return round(ch2, 6), round(pval, 6)
 
     def scores_test(
-        self, beta: np.ndarray, beta_0: np.ndarray = None
+        self, beta: np.ndarray, c: np.ndarray = None
     ) -> Tuple[float, float]:
         """Perform scores test of the null hypothesis beta_0
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p
-            beta_0 (np.ndarray, optional): null hypothesis on beta values. Defaults to None, then beta_0 = 0
+            c (np.ndarray, optional): combination vector of 0 and 1 indicating which covar coordinates has to be tested in the null hypothesis
+            Defaults to None, then the null hypothesis corresponds to null effect of all covariates
 
         Returns:
             Tuple[float, float]: test value and its corresponding pvalue
         """
-        if beta_0 is None:
-            beta_0 = np.zeros_like(beta)
-        assert beta.shape == beta_0.shape
-        information_matrix = self._hess(beta_0)
-        inverse_information_matrix = linalg.inv(information_matrix)
-        jac = -self._jac(beta_0)
-        ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
-        pval = 1 - chi2.cdf(ch2, df=len(beta))
-        return round(ch2, 3), round(pval, 3)
+        if c is None:
+            c = np.ones_like(beta)
+        
+        if isinstance(c, list):
+            assert len(beta) == len(c)
+            c = np.array(c)
+        elif isinstance(c, np.ndarray):
+            assert beta.shape == c.shape
+
+        beta_0 = np.where(c != 0, 0, 1)
+
+        if not np.any(beta_0):
+            # null hypothesis is beta = 0
+            information_matrix = self._hess(beta_0)
+            inverse_information_matrix = linalg.inv(information_matrix)
+            jac = -self._jac(beta_0)
+            ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
+            pval = 1 - chi2.cdf(ch2, df=len(beta))
+            return round(ch2, 3), round(pval, 3)
+        else:
+            # local test
+            cox_under_h0 = Cox(
+                self.time,
+                self.covar[:, np.where(beta_0 != 0)[0]],
+                self.event,
+                self.entry,
+            )
+            beta_under_h0 = np.zeros_like(beta)
+            beta_under_h0[np.where(beta_0 != 0)[0]] = cox_under_h0.fit()
+            ind = np.where(beta_0 == 0)[0]
+            ch2 = np.dot(
+                self._jac(beta_under_h0)[ind],
+                np.dot(
+                    linalg.inv(self._hess(beta_under_h0))[np.ix_(ind, ind)],
+                    self._jac(beta_under_h0)[ind],
+                ),
+            )
+            pval = 1 - chi2.cdf(ch2, df=len(ind))
+            return round(ch2, 6), round(pval, 6)
