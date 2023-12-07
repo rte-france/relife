@@ -530,144 +530,162 @@ class Cox:
         return self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))
 
     def wald_test(self, beta: np.ndarray, c: np.ndarray = None) -> Tuple[float, float]:
-        """Perform Wald's test
+        """Perform Wald's test (testing nullity of covariate effect)
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p
-            c (np.ndarray, optional): combination vector of 0 and 1 indicating which covar coordinates has to be tested in the null hypothesis
+            c (np.ndarray, optional): combination vector of 0 (beta is 0) and 1 (beta is not 0) indicating which covar coordinate is 0 in the null hypothesis
             Defaults to None, then the null hypothesis corresponds to null effect of all covariates
 
         Returns:
             Tuple[float, float]: test value and its corresponding pvalue
+
+        Examples:
+            >>> beta = my_cox.fit() # beta is of shape (4,)
+            >>> chi-square, pvalue = my_cox.wald_test(beta, [0, 1, 1, 1]) # only the first covariate is tested as 0
+            >>> chi-square, pvalue = my_cox.wald_test(beta, [0, 0, 0, 1]) # the first three covariates are tested as 0
         """
-        if c is None:
-            c = np.ones_like(beta)
-        
+
+        assert beta.shape[-1] == self.covar.shape[-1]
         if isinstance(c, list):
-            assert len(beta) == len(c)
+            assert self.covar.shape[-1] == len(c)
             c = np.array(c)
         elif isinstance(c, np.ndarray):
-            assert beta.shape == c.shape
+            assert len(c.shape) == 1
+            assert self.covar.shape[-1] == c.shape[-1]
 
-        beta_0 = np.where(c != 0, 0, 1)
-
-        if not np.any(beta_0):
+        if c is None:
             # null hypothesis is beta = 0
             information_matrix = self._hess(beta)
-            ch2 = np.dot((beta - beta_0), np.dot(information_matrix, (beta - beta_0)))
-            pval = 1 - chi2.cdf(ch2, df=len(beta))
+            ch2 = np.dot(beta, np.dot(information_matrix, beta))
+            pval = chi2.sf(ch2, df=self.covar.shape[-1])
             return round(ch2, 6), round(pval, 6)
         else:
             # local test
-            ind = np.where(beta_0 == 0)[0]
-            information_matrix = self._hess(beta)
-            local_inverse_information_matrix = linalg.inv(information_matrix)[
-                np.ix_(ind, ind)
-            ]
+            other_covar = np.where(c == 0)[0]
+
             ch2 = np.dot(
-                beta[ind],
-                np.dot(linalg.inv(local_inverse_information_matrix), beta[ind]),
+                beta[other_covar],
+                np.dot(
+                    linalg.inv(
+                        linalg.inv(self._hess(beta))[np.ix_(other_covar, other_covar)]
+                    ),
+                    beta[other_covar],
+                ),
             )
-            pval = 1 - chi2.cdf(ch2, df=len(ind))
+            pval = chi2.sf(ch2, df=len(other_covar))
             return round(ch2, 6), round(pval, 6)
 
     def likelihood_ratio_test(
         self, beta: np.ndarray, c: np.ndarray = None
     ) -> Tuple[float, float]:
-        """Perform likelihood ratio test of the null hypothesis beta_0
+        """Perform likelihood ratio test (testing nullity of covariate effect)
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p
-            c (np.ndarray, optional): combination vector of 0 and 1 indicating which covar coordinates has to be tested in the null hypothesis
+            c (np.ndarray, optional): combination vector of 0 (beta is 0) and 1 (beta is not 0) indicating which covar coordinate is 0 in the null hypothesis
             Defaults to None, then the null hypothesis corresponds to null effect of all covariates
 
         Returns:
             Tuple[float, float]: test value and its corresponding pvalue
+
+        Examples:
+            >>> beta = my_cox.fit() # beta is of shape (4,)
+            >>> chi-square, pvalue = my_cox.likelihood_ratio_test(beta, [0, 1, 1, 1]) # only the first covariate is tested as 0
+            >>> chi-square, pvalue = my_cox.likelihood_ratio_test(beta, [0, 0, 0, 1]) # the first three covariates are tested as 0
         """
-        if c is None:
-            c = np.ones_like(beta)
-        
+
+        assert beta.shape[-1] == self.covar.shape[-1]
         if isinstance(c, list):
-            assert len(beta) == len(c)
+            assert self.covar.shape[-1] == len(c)
             c = np.array(c)
         elif isinstance(c, np.ndarray):
-            assert beta.shape == c.shape
+            assert len(c.shape) == 1
+            assert self.covar.shape[-1] == c.shape[-1]
 
-        beta_0 = np.where(c != 0, 0, 1)
-
-        if not np.any(beta_0):
+        if c is None:
             # null hypothesis is beta = 0
             neg_pl_beta = self._negative_log_partial_likelihood(beta)
-            neg_pl_beta_0 = self._negative_log_partial_likelihood(beta_0)
+            neg_pl_beta_0 = self._negative_log_partial_likelihood(np.zeros_like(beta))
             ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
-            pval = 1 - chi2.cdf(ch2, df=len(beta))
+            pval = chi2.sf(ch2, df=self.covar.shape[-1])
             return round(ch2, 6), round(pval, 6)
         else:
             # local test
+            tested_covar = np.where(c != 0)[0]
+            other_covar = np.where(c == 0)[0]
+
             neg_pl_beta = self._negative_log_partial_likelihood(beta)
             cox_under_h0 = Cox(
                 self.time,
-                self.covar[:, np.where(beta_0 != 0)[0]],
+                self.covar[:, tested_covar],
                 self.event,
                 self.entry,
             )
-            beta_under_h0 = cox_under_h0.fit()
             neg_pl_beta_under_h0 = cox_under_h0._negative_log_partial_likelihood(
-                beta_under_h0
+                cox_under_h0.fit()
             )
             ch2 = 2 * (neg_pl_beta_under_h0 - neg_pl_beta)
-            pval = 1 - chi2.cdf(ch2, df=len(np.where(beta_0 == 0)[0]))
+            pval = chi2.sf(ch2, df=len(other_covar))
             return round(ch2, 6), round(pval, 6)
 
-    def scores_test(
-        self, beta: np.ndarray, c: np.ndarray = None
-    ) -> Tuple[float, float]:
-        """Perform scores test of the null hypothesis beta_0
+    def scores_test(self, c: np.ndarray = None) -> Tuple[float, float]:
+        """Perform scores test (testing nullity of covariate effect)
 
         Args:
-            beta (np.ndarray): estimates of parameter vector, shape p
-            c (np.ndarray, optional): combination vector of 0 and 1 indicating which covar coordinates has to be tested in the null hypothesis
+            c (np.ndarray, optional): combination vector of 0 (beta is 0) and 1 (beta is not 0) indicating which covar coordinate is 0 in the null hypothesis
             Defaults to None, then the null hypothesis corresponds to null effect of all covariates
 
         Returns:
             Tuple[float, float]: test value and its corresponding pvalue
+
+        Examples:
+            >>> beta = my_cox.fit() # beta is of shape (4,)
+            >>> chi-square, pvalue = my_cox.scores_test(beta, [0, 1, 1, 1]) # only the first covariate is tested as 0
+            >>> chi-square, pvalue = my_cox.scores_ratio_test(beta, [0, 0, 0, 1]) # the first three covariates are tested as 0
         """
-        if c is None:
-            c = np.ones_like(beta)
-        
+
         if isinstance(c, list):
-            assert len(beta) == len(c)
+            assert self.covar.shape[-1] == len(c)
             c = np.array(c)
         elif isinstance(c, np.ndarray):
-            assert beta.shape == c.shape
+            assert len(c.shape) == 1
+            assert self.covar.shape[-1] == c.shape[-1]
 
-        beta_0 = np.where(c != 0, 0, 1)
-
-        if not np.any(beta_0):
+        if c is None:
             # null hypothesis is beta = 0
-            information_matrix = self._hess(beta_0)
-            inverse_information_matrix = linalg.inv(information_matrix)
-            jac = -self._jac(beta_0)
-            ch2 = np.dot(jac, np.dot(inverse_information_matrix, jac))
-            pval = 1 - chi2.cdf(ch2, df=len(beta))
+            ch2 = np.dot(
+                -self._jac(np.zeros(self.covar.shape[-1])),
+                np.dot(
+                    linalg.inv(self._hess(np.zeros(self.covar.shape[-1]))),
+                    -self._jac(np.zeros(self.covar.shape[-1])),
+                ),
+            )
+            pval = chi2.sf(ch2, df=self.covar.shape[-1])
             return round(ch2, 3), round(pval, 3)
         else:
             # local test
+
+            tested_covar = np.where(c != 0)[0]
+            other_covar = np.where(c == 0)[0]
+
             cox_under_h0 = Cox(
                 self.time,
-                self.covar[:, np.where(beta_0 != 0)[0]],
+                self.covar[:, tested_covar],
                 self.event,
                 self.entry,
             )
-            beta_under_h0 = np.zeros_like(beta)
-            beta_under_h0[np.where(beta_0 != 0)[0]] = cox_under_h0.fit()
-            ind = np.where(beta_0 == 0)[0]
+            beta_under_h0 = np.zeros(self.covar.shape[-1])
+            beta_under_h0[tested_covar] = cox_under_h0.fit()
+
             ch2 = np.dot(
-                self._jac(beta_under_h0)[ind],
+                self._jac(beta_under_h0)[other_covar],
                 np.dot(
-                    linalg.inv(self._hess(beta_under_h0))[np.ix_(ind, ind)],
-                    self._jac(beta_under_h0)[ind],
+                    linalg.inv(self._hess(beta_under_h0))[
+                        np.ix_(other_covar, other_covar)
+                    ],
+                    self._jac(beta_under_h0)[other_covar],
                 ),
             )
-            pval = 1 - chi2.cdf(ch2, df=len(ind))
+            pval = chi2.sf(ch2, df=len(other_covar))
             return round(ch2, 6), round(pval, 6)
