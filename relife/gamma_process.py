@@ -10,6 +10,7 @@ from scipy.stats import gamma, loggamma
 from relife.model import AbsolutelyContinuousLifetimeModel
 from .utils import moore_jac_uppergamma_c
 
+import pandas as pd
 
 # matplotlib.use('Qt5Agg', force=True)
 
@@ -111,11 +112,11 @@ class GammaProcessData:
             incorrect_ids = self.unique_ids[np.where(check_deterioration_measurements_per_id)[0]]
             raise ValueError(f"'ids' {incorrect_ids} have non increasing 'deterioration_measurements'")
 
-        self.increments[self.increments <= self.censor] = 0
+        #self.increments[self.increments <= self.censor] = 0
         self._event = self.increments == 0
 
         if self.log_increments is None:
-            self.log_increments = np.log(self.increments, where=self.increments != 0)
+            self.log_increments = np.log(self.increments, where=self.increments > 0, out=np.zeros_like(self.increments))
 
 
 @dataclass
@@ -183,7 +184,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         ind0 = np.where(t == 0)[0]
         non0_times = np.delete(t, ind0)
         res = -self.shape_power / non0_times * self.shape_function(non0_times) \
-               * moore_jac_uppergamma_c(P=self.shape_function(non0_times), x=(self.r0 - self.l0) * self.rate)
+              * moore_jac_uppergamma_c(P=self.shape_function(non0_times), x=(self.r0 - self.l0) * self.rate)
 
         if self.shape_power == 1:
             return np.insert(res, ind0, -self.shape_rate * sc.expi(-(self.r0 - self.l0) * self.rate))
@@ -204,6 +205,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
     def isf(self, p: np.ndarray, *args: np.ndarray) -> np.ndarray:
         return self.ichf(-np.log(p), *args)
 
+
+
     def _negative_log_likelihood(self, params, data):
         shape_rate, shape_power, rate = params
         censor = data.censor
@@ -218,8 +221,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             # contribution of uncensored measurements to likelihood
             exact_contribution = - np.sum(
                 np.diff(self._shape_function(params, inspection_times_id))[~event_id] * np.log(rate)
-                - np.log(sc.gamma(shape_rate * (np.diff(inspection_times_id ** shape_power))[~event_id]))
-                + (shape_rate * (np.diff(inspection_times_id ** shape_power))[~event_id] - 1)
+                - np.log(sc.gamma(np.diff(self._shape_function(params, inspection_times_id))[~event_id]))
+                + (np.diff(self._shape_function(params, inspection_times_id))[~event_id] - 1)
                 * log_increments_id[~event_id] - rate * increments_id[~event_id]
             )
 
@@ -272,8 +275,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
         rate = moment1 * moment2_scaling / moment2
         shape_rate = moment1 * rate
-        return np.abs(
-            2 * shape_rate / rate ** 3 * moment3_scaling - moment3) ** 2  # la fonction carrée est une pénalité
+        #return np.abs(2 * shape_rate / rate ** 3 * moment3_scaling - moment3)  # la fonction carrée est une pénalité
+        return np.abs(2 * moment2 / moment2_scaling * moment3_scaling / moment3 - rate)  # la fonction carrée est une pénalité
 
     @staticmethod
     def return_param(shape_power, data):
@@ -307,7 +310,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         shape_rate = rate * moment1
         return shape_rate, shape_power, rate
 
-    def fit(self, inspection_times, deterioration_measurements, ids, log_increments=None, censor=0):
+    def fit(self, inspection_times, deterioration_measurements, ids, log_increments=None, censor=0,
+            method='likelihood'):
         data = GammaProcessData(inspection_times=inspection_times,
                                 deterioration_measurements=deterioration_measurements,
                                 ids=ids,
@@ -315,9 +319,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                                 censor=censor)
 
         # MOM
-        # if any(data.log_increments[data.inspection_times != 0] == 0) or any(
-        #         data.increments[data.inspection_times != 0] == 0):
-        if False:
+        if method == 'mom':
             opt = minimize(
                 fun=self._method_of_moments,
                 x0=np.array([1]),
@@ -326,14 +328,13 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                 bounds=((0.1, 3),),
                 options={'maxiter': 1000},
             )
-            print("MOM")
             return self.return_param(opt.x[0], data)
 
         ## Likelihood
-        else:
+        if method == 'likelihood':
             opt = minimize(
                 fun=self._negative_log_likelihood,
-                x0=np.array([1, 1, 1]),
+                x0=np.array([2, 2, 2]),
                 args=(data,),
                 method='Nelder-Mead',
                 bounds=((1e-3, np.inf),
@@ -341,7 +342,6 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                         (1e-3, np.inf))
             )
 
-            print("Likelihood")
             return opt.x
 
     def resistance_sample(self, inspection_times, nb_sample=1):
