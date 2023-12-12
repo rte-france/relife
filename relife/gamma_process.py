@@ -10,10 +10,10 @@ from scipy.stats import gamma, loggamma
 from relife.model import AbsolutelyContinuousLifetimeModel
 from .utils import moore_jac_uppergamma_c
 
-import pandas as pd
 
 # matplotlib.use('Qt5Agg', force=True)
 
+MIN_POSITIVE_FLOAT = np.finfo(float).resolution
 
 @dataclass
 class GammaProcessData:
@@ -112,7 +112,7 @@ class GammaProcessData:
             incorrect_ids = self.unique_ids[np.where(check_deterioration_measurements_per_id)[0]]
             raise ValueError(f"'ids' {incorrect_ids} have non increasing 'deterioration_measurements'")
 
-        #self.increments[self.increments <= self.censor] = 0
+        # self.increments[self.increments <= self.censor] = 0
         self._event = self.increments == 0
 
         if self.log_increments is None:
@@ -151,6 +151,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             self.rate)  # generate loggamma distribution to avoid underflow. Useful for optimizing log likelihood
 
         increments = np.exp(log_increments)
+        increments = np.where(increments<MIN_POSITIVE_FLOAT, 0, increments)
         deterioration_measurements = np.cumsum(increments, axis=1)
         ids = np.repeat(np.arange(nb_sample), n)
         log_increments = np.concatenate((np.zeros(nb_sample)[:, np.newaxis], log_increments), axis=1).ravel()
@@ -205,8 +206,6 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
     def isf(self, p: np.ndarray, *args: np.ndarray) -> np.ndarray:
         return self.ichf(-np.log(p), *args)
 
-
-
     def _negative_log_likelihood(self, params, data):
         shape_rate, shape_power, rate = params
         censor = data.censor
@@ -228,10 +227,14 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
             # contributution of censored measurements to likelihood
             if censor != 0:
-                censored_contribution = - np.sum(
-                    np.log(gamma.cdf(censor, a=np.diff(self._shape_function(params, inspection_times_id))[event_id],
-                                     scale=1 / rate))
-                )
+                censored_contribution = - np.sum(np.log(
+                    gamma.cdf(increments_id + censor, a=np.diff(self._shape_function(params, inspection_times_id)),
+                              scale=1 / rate)[event_id] -
+                    gamma.cdf(increments_id - censor, a=np.diff(self._shape_function(params, inspection_times_id)),
+                              scale=1 / rate)[event_id]
+                                                        )
+                                                )
+
             else:
                 censored_contribution = 0
 
@@ -275,8 +278,9 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
         rate = moment1 * moment2_scaling / moment2
         shape_rate = moment1 * rate
-        #return np.abs(2 * shape_rate / rate ** 3 * moment3_scaling - moment3)  # la fonction carrée est une pénalité
-        return np.abs(2 * moment2 / moment2_scaling * moment3_scaling / moment3 - rate)  # la fonction carrée est une pénalité
+        # return np.abs(2 * shape_rate / rate ** 3 * moment3_scaling - moment3)  # la fonction carrée est une pénalité
+        return np.abs(
+            2 * moment2 / moment2_scaling * moment3_scaling / moment3 - rate)  # la fonction carrée est une pénalité
 
     @staticmethod
     def return_param(shape_power, data):
