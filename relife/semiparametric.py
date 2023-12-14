@@ -21,7 +21,7 @@ class Cox:
         entry (np.ndarray): shape :math:`n` - Age of assets at the beginning of the observation period (left truncation), by default None.
 
     Attributes:
-        ordered_event_times (np.ndarray): shape :math:`m` - Ordered distinct ages of the assets, :math:`v_j`.
+        ordered_event_time (np.ndarray): shape :math:`m` - Ordered distinct ages of the assets, :math:`v_j`.
         event_count (np.ndarray): shape :math:`m` - Number of death at each ordered distinct ages, :math:`d_j`.
         ordered_event_covar (np.ndarray) shape :math:`(m, p)` - Ordered distinct covariates :math:`\vec{z}_j` at :math:`v_j` when they are no ties (:math:`\vec{s}_j` is used for tied events)
         risk_set (np.ndarray) shape :math:`(m, n)` - Set of all assets :math:`i` at risk just prior to :math:`v_j`. It corresponds to :math:`\mathbf{R}_j`
@@ -59,7 +59,7 @@ class Cox:
         ), "conflicting input data dimensions"
 
         (
-            self.ordered_event_times,
+            self.ordered_event_time,
             sorted_uncensored_i,
             self.event_count,
         ) = np.unique(
@@ -74,18 +74,18 @@ class Cox:
         # left truncated & right censored
         self.risk_set = np.logical_and(
             (
-                np.vstack([self.entry] * len(self.ordered_event_times))
-                < np.hstack([self.ordered_event_times[:, None]] * len(self.time))
+                np.vstack([self.entry] * len(self.ordered_event_time))
+                < np.hstack([self.ordered_event_time[:, None]] * len(self.time))
             ),
             (
-                np.hstack([self.ordered_event_times[:, None]] * len(self.time))
-                <= np.vstack([self.time] * len(self.ordered_event_times))
+                np.hstack([self.ordered_event_time[:, None]] * len(self.time))
+                <= np.vstack([self.time] * len(self.ordered_event_time))
             ),
         )
 
         self.death_set = np.vstack(
-            [self.time * self.event] * len(self.ordered_event_times)
-        ) == np.hstack([self.ordered_event_times[:, None]] * len(self.time))
+            [self.time * self.event] * len(self.ordered_event_time)
+        ) == np.hstack([self.ordered_event_time[:, None]] * len(self.time))
 
         if (self.event_count > 3).any():
             self.set_method("efron")
@@ -438,7 +438,7 @@ class Cox:
             )
             return values, conf_int
         else:
-            return values, None
+            return values
 
     def sf(
         self, beta: np.ndarray, covar: np.ndarray, conf_int: bool = False
@@ -461,7 +461,7 @@ class Cox:
             >>> plt.fill_between(my_cox.v_j, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
-        values = np.exp(-self.chf(beta)[0]) ** Cox._g(covar, beta)
+        values = np.exp(-self.chf(beta)) ** Cox._g(covar, beta)
         if conf_int:
             psi = self._psi(beta)
             psi_order_1 = self._psi(beta, order=1)
@@ -491,7 +491,7 @@ class Cox:
 
             return values, conf_int
         else:
-            return values, conf_int
+            return values
 
     def var(self, beta: np.ndarray) -> np.ndarray:
         """Return estimated covariance matrix of beta
@@ -527,7 +527,13 @@ class Cox:
         return np.dot(np.exp(beta)[:, None], (1 / np.exp(beta))[None, :])
 
     def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
-        return self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))
+        # needs to recompute some variables as residuals are computed on all data.
+        residuals = np.zeros_like(self.time)
+        print(residuals.shape)
+        print(np.nonzero(self.event)[0].shape)
+        print((self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))).shape)
+        residuals[np.nonzero(self.event)[0]] = self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))
+        return residuals
 
     def wald_test(self, beta: np.ndarray, c: np.ndarray = None) -> Tuple[float, float]:
         """Perform Wald's test (testing nullity of covariate effect)
@@ -689,3 +695,14 @@ class Cox:
             )
             pval = chi2.sf(ch2, df=len(other_covar))
             return round(ch2, 6), round(pval, 6)
+
+    def AIC(self, beta : np.ndarray) -> float:
+        """Return AIC value divided by 2
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+
+        Returns:
+            float: AIC value divided by 2
+        """
+        return self._negative_log_partial_likelihood(beta) + len(beta)
