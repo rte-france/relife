@@ -463,7 +463,7 @@ class AgeReplacementModel(LifetimeModel):
     ) -> np.ndarray:
         ub = self.support_upper_bound(ar, *args)
         b = np.minimum(ub, b)
-        f = lambda x, *args: func(x) * self.baseline.pdf(x, *args)
+        f = lambda x, *args: func(x) * self.baseline.pdf(x, *args) # [ qst Aya ] : pourquoi pas self.pdf(x, *args) ?
         w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
         return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + w
 

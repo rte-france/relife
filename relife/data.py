@@ -20,10 +20,12 @@ class LifetimeData:
     Dataclass of lifetime data required by the maximum likelihood estimation.
     """
 
-    time: np.ndarray  #: Age of the assets.
+    time: np.ndarray  #: Age of the assets. 
+        # [ qst Aya ] shape (n, ) alors que _time a shape (n, 1), prq ne pas homogénéiser ?
+        # Soit forcer l'utilisateur, soit le fr en interne (check len(shape) == 1, si True => reshape)
     event: np.ndarray = None  #: Type of event, by default None.
     entry: np.ndarray = None  #: Age of assets at the beginning of the observation period (left truncation), by default None.
-    args: Tuple[np.ndarray] = ()  #: Extra arguments required by the lifetime model.
+    args: Tuple[np.ndarray] = ()  #: Extra arguments required by the lifetime model. # [ qst Aya ] : use ?
 
     def __post_init__(self) -> None:
         self._parse_data()
@@ -35,28 +37,56 @@ class LifetimeData:
 
         Notes
         -----
-        Default value for `event` is 1 (no censoring), default value for `entry` is
-        0 (no truncation).
+        If `time` is a 1D array : 
+            Default value for `event` is 1 (no censoring), default value for `entry` is
+            0 (no truncation).
+        If `time` is a 2D array :
+            Default value for `event` is 1 if `xl` and `xr` are equal (up to self.tolerance), 0 otherwise.
+            Default value for `entry` is 0 (no truncation).
+
         """
-        if self.event is None:
-            self.event = np.ones_like(self.time, int)
-        if self.entry is None:
-            self.entry = np.zeros_like(self.time, float)
-        if np.any(self.time <= 0):
-            raise ValueError("time values must be strictly positive")
-        if not np.all(np.isin(self.event, [0, 1, 2])):
-            raise ValueError("event values must be in [0,1,2]")
-        if np.any(self.entry < 0):
-            raise ValueError("entry values must be positive")
-        if np.any(self.time <= self.entry):
-            raise ValueError("entry must be strictly lower than the time to event")
-        s = args_size(*self.args)
-        if s > 0 and s != np.size(self.time):
-            raise ValueError(
-                "dimension mismatch for optional args: expected {} got {}".format(
-                    np.size(self.time), s
+        
+        if len(self.time.shape) == 1 : 
+            if self.event is None:
+                self.event = np.ones_like(self.time, int)
+            if self.entry is None:
+                self.entry = np.zeros_like(self.time, float)
+            if np.any(self.time <= 0):
+                raise ValueError("time values must be strictly positive")
+            if not np.all(np.isin(self.event, [0, 1])):
+                raise ValueError("event values must be in [0,1]") # censure à gauche sera traitée qd len(time.shape) == 2
+            if np.any(self.entry < 0):
+                raise ValueError("entry values must be positive")
+            if np.any(self.time <= self.entry):
+                raise ValueError("entry must be strictly lower than the time to event")
+            s = args_size(*self.args) # [ to do Aya]
+            if s > 0 and s != np.size(self.time): # [ to do Aya]
+                raise ValueError(
+                    "dimension mismatch for optional args: expected {} got {}".format(
+                        np.size(self.time), s
+                    )
                 )
-            )
+        if len(self.time.shape) == 2 :
+            if self.time.shape[1] == 2 :
+                self.xl = np.array(self.time[:, 0])
+                self.xr = np.array(self.time[:, 1])
+                if self.event is None:
+                    self.event = np.array([1 if np.isclose(self.xl[i], self.xr[i]) else 0 for i in range(self.time.shape[0])])
+                if self.entry is None:
+                    self.entry = np.zeros_like(self.xl, float)
+                
+                if np.any(self.xl < 0) or np.any(self.xr <= 0):
+                    raise ValueError("lower bound of time values must be positive, and lower bound of time values must be strictly positive")
+                if not np.all(np.isin(self.event, [0, 1])):
+                    raise ValueError("event values must be in [0,1]")
+                if np.any(self.entry < 0):
+                    raise ValueError("entry values must be positive")
+                if np.any(self.xl < self.entry): # rajouter condition de <= ET egalité xl xr ()
+                    raise ValueError("entry must be lower than the lower bound of time to event")
+                if np.any(self.xl > self.xr):
+                    raise ValueError("lower bound of time to event must be strictly lower than the upper bound of time to event")
+            # s = args_size(*self.args) # [ to do Aya] 
+            
 
     class DataByEvent(NamedTuple):
         """Group data by type of event."""
@@ -66,6 +96,15 @@ class LifetimeData:
         LC: np.ndarray  #: left-censored data.
         LT: np.ndarray  #: left-truncated data.
 
+    class DataByEvent2D(NamedTuple):    
+        """Group data by type of event for 2d time input."""
+
+        D: np.ndarray  #: observed event.
+        D_RC: np.ndarray  #: union of observed events and right-censored data.
+        LC: np.ndarray  #: left-censored data.
+        LT: np.ndarray  #: left-truncated data.
+        IC: np.ndarray  #: interval-censored data.
+    
     def _format_data(self) -> None:
         """Format data according to DataByEvent categories.
 
@@ -74,22 +113,52 @@ class LifetimeData:
         Used in negative log-likelihood calculation in parametric.py.
         """
         # Event Observed, Event Observed + Right Censoring, Left Censoring, Left Truncation
-        D, D_RC, LC, LT = map(
-            np.nonzero,
-            [
-                self.event == 1,
-                (self.event == 1) + (self.event == 0),
-                self.event == 2,
-                self.entry > 0,
-            ],
-        )
-        self._time = self.DataByEvent(
-            *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC, LC]],
-            self.entry[LT].reshape(-1, 1),
-        )
-        self._args = self.DataByEvent(
-            *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT]]
-        )
+        if len(self.time.shape) == 1 : # si len(time.shape) == 1 on garde xl == None
+
+            D, D_RC, LC, LT = map(
+                np.nonzero,
+                [
+                    self.event == 1,
+                    (self.event == 1) + (self.event == 0),
+                    self.event == 2,
+                    self.entry > 0,
+                ],
+            )
+            self._time = self.DataByEvent(
+                *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC, LC]],
+                self.entry[LT].reshape(-1, 1),
+            )
+                # [ qst Aya ] shape (n, ) alors que _time a shape (n, 1), prq ne pas homogénéiser ?
+                # Soit forcer l'utilisateur, soit le fr en interne (check len(shape) == 1, si True => reshape)
+            
+            self._args = self.DataByEvent( # [ qst Aya ] + [ TODO ]: use ? à intégrer
+                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT]] 
+            )
+
+        elif len(self.time.shape) != 1 :
+            self.xl = np.array(self.xl)
+            self.xr = np.array(self.xr) 
+            D, D_RC, LC, IC, LT = map(
+                np.nonzero,
+                [
+                    self.event == 1,
+                    (self.event == 1) + (self.xr == np.inf), # observation exacte (indiquée par event ==1) ET censure à droite qd upper bound = +inf
+                    self.xl == 0, # censure à gauche qd lower bound = 0 
+                    self.entry > 0,
+                    (self.xl > 0) & (self.event == 0) &  (self.xr < np.inf), # censure par intervalle
+                ],
+            )
+            
+            self._time = self.DataByEvent2D(
+                *[self.xl[ind].reshape(-1, 1) for ind in [D, D_RC]],
+                self.xr[LC], 
+                self.entry[LT].reshape(-1, 1),
+                self.time[IC],
+            )
+
+            self._args = self.DataByEvent2D( # [ qst Aya ] + [ TODO ]: use ? à intégrer
+                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT, LC, IC]] # j'ai au hasard intégré IC pour pas avoir d'erreur, mais je ne sais pas si c'est correct, ni l'utilité
+            )
 
     def __getitem__(self, key):
         return LifetimeData(
