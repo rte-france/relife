@@ -52,8 +52,8 @@ def _estimate(data: LifetimeData) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     if not np.all(np.isin(data.event, [0, 1])):
         raise ValueError("event values must be in [0,1]")
-    # if data.xl is not None: 
-    #     raise NotImplementedError("did not yet adapt _estimate to handle 2d time data for KM and Nelson-A") # [ TODO ] 
+    if len(data.time.shape) != 1: 
+        raise NotImplementedError("did not yet adapt _estimate to handle 2d time data for KM and Nelson-A") # [ TODO ] 
     timeline, inv, counts = np.unique(
         data.time, return_inverse=True, return_counts=True
     )

@@ -66,7 +66,7 @@ class LifetimeData:
                         np.size(self.time), s
                     )
                 )
-        if len(self.time.shape) == 2 :
+        elif len(self.time.shape) == 2 :
             if self.time.shape[1] == 2 :
                 self.xl = np.array(self.time[:, 0])
                 self.xr = np.array(self.time[:, 1])
@@ -136,9 +136,9 @@ class LifetimeData:
             )
 
         elif len(self.time.shape) != 1 :
-            self.xl = np.array(self.xl)
-            self.xr = np.array(self.xr) 
-            D, D_RC, LC, IC, LT = map(
+            # self.xl = np.array(self.xl)
+            # self.xr = np.array(self.xr) 
+            D, D_RC, LC, LT, IC = map(
                 np.nonzero,
                 [
                     self.event == 1,
@@ -151,9 +151,9 @@ class LifetimeData:
             
             self._time = self.DataByEvent2D(
                 *[self.xl[ind].reshape(-1, 1) for ind in [D, D_RC]],
-                self.xr[LC], 
+                self.xr[LC].reshape(-1, 1), 
                 self.entry[LT].reshape(-1, 1),
-                self.time[IC],
+                self.time[IC].reshape(-1, 1),
             )
 
             self._args = self.DataByEvent2D( # [ qst Aya ] + [ TODO ]: use ? à intégrer
