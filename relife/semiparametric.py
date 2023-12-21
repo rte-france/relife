@@ -5,6 +5,26 @@ from typing import Tuple
 from scipy.optimize import minimize
 from scipy.stats import chi2, norm
 from scipy import linalg
+from .nonparametric import NelsonAalen
+import matplotlib.pyplot as plt
+
+
+def nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
+    """Returns x nearest interpolation based on xp and yp data points
+    xp has to be monotonically increasing
+
+    Args:
+        x (np.ndarray): 1d x coordinates to interpolate
+        xp (np.ndarray): 1d known x coordinates
+        yp (np.ndarray): 1d known y coordinates
+
+    Returns:
+        np.ndarray: interpolation values of x
+    """
+    spacing = np.diff(xp) / 2
+    xp = xp + np.hstack([spacing, spacing[-1]])
+    yp = np.concatenate([yp, yp[-1, None]])
+    return yp[np.searchsorted(xp, x)]
 
 
 class Cox:
@@ -388,41 +408,24 @@ class Cox:
         )
         return opt.x
 
-    def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
-        """Returns x nearest interpolation based on xp and yp data points
-        xp has to be monotonically increasing
-
-        Args:
-            x (np.ndarray): 1d x coordinates to interpolate
-            xp (np.ndarray): 1d known x coordinates
-            yp (np.ndarray): 1d known y coordinates
-
-        Returns:
-            np.ndarray: interpolation values of x
-        """
-        spacing = np.diff(xp) / 2
-        xp = xp + np.hstack([spacing, spacing[-1]])
-        yp = np.hstack([yp, yp[-1]])
-        return yp[np.searchsorted(xp, x)]
-
-    def chf(
+    def chf0(
         self, beta: np.ndarray, conf_int: bool = False
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Knowing estimates of beta, computes the chf estimator and confidence interval (optional)
+        """Knowing estimates of beta, computes the cumulative baseline hazard rate estimator and its confidence interval (optional)
 
         Args:
             beta (np.ndarray): estimates of parameter vector, shape p
             conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
 
         Returns:
-            Tuple[np.ndarray, np.ndarray]: values of chf estimator and its confidence interval
-            at 95% level
+            Tuple[np.ndarray, np.ndarray]: values of chf0 estimator and its confidence interval
+            at 95% level. Arrays are of size :math:`m`
 
         Examples:
             >>> beta = my_cox.fit()
-            >>> chf_values, conf_int = my_cox.chf(beta, conf_int=True)
-            >>> plt.step(my_cox.v_j, chf_values)
-            >>> plt.fill_between(my_cox.v_j, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
+            >>> chf0_values, conf_int = my_cox.chf0(beta, conf_int=True)
+            >>> plt.step(my_cox.ordered_event_time, chf0_values, where="post")
+            >>> plt.fill_between(my_cox.ordered_event_time, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
         values = np.cumsum(self.event_count[:, None] / self._psi(beta))
@@ -440,6 +443,32 @@ class Cox:
         else:
             return values
 
+    def sf0(
+        self, beta: np.ndarray, conf_int: bool = False
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Knowing estimates of beta, computes the baseline survival function and its confidence interval (optional)
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+            conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: values of chf0 estimator and its confidence interval
+            at 95% level. Arrays are of size :math:`m`
+
+        Examples:
+            >>> beta = my_cox.fit()
+            >>> sf0_values, conf_int = my_cox.sf0(beta, conf_int=True)
+            >>> plt.step(my_cox.ordered_event_time, sf0_values, where="post")
+            >>> plt.fill_between(my_cox.ordered_event_time, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
+            >>> plt.show()
+        """
+        if conf_int:
+            chf0, chf0_conf_int = -self.chf(beta, conf_int=True)
+            return np.exp(-chf0), np.exp(-chf0_conf_int)
+        else:
+            return np.exp(-self.chf(beta))
+
     def sf(
         self, beta: np.ndarray, covar: np.ndarray, conf_int: bool = False
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -452,13 +481,13 @@ class Cox:
 
         Returns:
             Tuple[np.ndarray, np.ndarray]:  values of sf estimator and its confidence interval
-            at 95% level
+            at 95% level. Arrays are of size :math:`m`
 
         Examples:
             >>> beta = my_cox.fit()
             >>> sf_values, conf_int = my_cox.sf(beta, my_cox.covar[21]) # sf of the 22th asset
-            >>> plt.step(my_cox.v_j, sf_values)
-            >>> plt.fill_between(my_cox.v_j, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
+            >>> plt.step(my_cox.ordered_event_time, sf_values, where="post")
+            >>> plt.fill_between(my_cox.ordered_event_time, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
         values = np.exp(-self.chf(beta)) ** Cox._g(covar, beta)
@@ -526,14 +555,45 @@ class Cox:
         """
         return np.dot(np.exp(beta)[:, None], (1 / np.exp(beta))[None, :])
 
-    def _cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
-        # needs to recompute some variables as residuals are computed on all data.
-        residuals = np.zeros_like(self.time)
-        print(residuals.shape)
-        print(np.nonzero(self.event)[0].shape)
-        print((self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))).shape)
-        residuals[np.nonzero(self.event)[0]] = self.chf(beta) * np.squeeze(Cox._g(self.ordered_event_covar, beta))
-        return residuals
+    def plot_cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
+        ordered_time_index = np.argsort(self.time)
+        # residual are defined for all observed times, chf0_values are computed for all observed times
+        chf0_values = nearest_1dinterp(
+            self.time[ordered_time_index], self.ordered_event_time, self.chf0(beta)
+        )
+        # returned residuals are in the same order as the orginal time array
+        residuals = (
+            chf0_values * np.squeeze(Cox._g(self.covar[ordered_time_index], beta))
+        )[np.argsort(ordered_time_index)]
+
+        nelson_aalen_estimator = NelsonAalen()
+        nelson_aalen_estimator.fit(residuals, self.event, self.entry)
+
+        # print(nelson_aalen_estimator.chf)
+        # print(len(nelson_aalen_estimator.chf))
+
+        chf_of_residuals = nearest_1dinterp(
+            residuals, nelson_aalen_estimator.timeline, nelson_aalen_estimator.chf
+        )
+
+        ordered_residuals_index = np.argsort(residuals)
+
+        fig, ax = plt.subplots()
+        ax.step(
+            residuals[ordered_residuals_index],
+            chf_of_residuals[ordered_residuals_index],
+            where="post",
+        )
+        ax.plot(
+            [0, np.max(residuals)],
+            [0, np.max(chf_of_residuals)],
+            c="black",
+            linestyle="--",
+        )
+        ax.set_xlabel("Residual")
+        ax.set_ylabel("Estimated Cumulative Hazard Rates")
+        fig.tight_layout()
+        plt.show()
 
     def wald_test(self, beta: np.ndarray, c: np.ndarray = None) -> Tuple[float, float]:
         """Perform Wald's test (testing nullity of covariate effect)
@@ -696,7 +756,7 @@ class Cox:
             pval = chi2.sf(ch2, df=len(other_covar))
             return round(ch2, 6), round(pval, 6)
 
-    def AIC(self, beta : np.ndarray) -> float:
+    def AIC(self, beta: np.ndarray) -> float:
         """Return AIC value divided by 2
 
         Args:
