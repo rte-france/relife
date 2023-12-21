@@ -354,7 +354,7 @@ class NelsonAalen:
         )
 
 class Turnbull:
-    r"""Turnbull Estimator.
+    r"""[Aya : TODO Complete code and doc] Turnbull Estimator.
     
     Compute the non-parametric Turnbull estimator of the survival function 
     from interval censored lifetime data.  
@@ -363,17 +363,19 @@ class Turnbull:
     def fit(
             self, time: np.ndarray, event: np.ndarray = None, entry: np.ndarray = None
     ) -> Turnbull:
-        """Fit the Turnbull estimator to interval censored lifetime data.
+        """[Aya : TODO / Complete code and doc] Fit the Turnbull estimator to interval censored lifetime data.
 
         Parameters
         ----------
 
         """
-        data = LifetimeData(time, event, entry)
-        self.timeline, self.sf = Turnbull(data).values().T
+        data = LifetimeData(time, event, entry) # on aura self.xl, self.xr, et self.entry aussi
+        data = np.array([data.xl, data.xr, data.entry])
+        print(data.shape, data)
+        # self.timeline, self.sf = Turnbull(data).values().T
         return self
 
-def Turnbull(data, tol=1e-4, lowmem=False):
+def turnbull(data, tol=1e-4, lowmem=False):
     """Computation of the Turnbull estimator on interval censored data.
 
                 Parameters

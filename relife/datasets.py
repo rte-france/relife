@@ -105,3 +105,5 @@ def load_insulator_string() -> LifetimeData:
     )
     covar = np.column_stack(args)
     return LifetimeData(time, event, entry, (covar,))
+
+# TODO : add load_input_turnbull() function
