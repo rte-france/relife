@@ -59,8 +59,8 @@ class LifetimeData:
                 raise ValueError("entry values must be positive")
             if np.any(self.time <= self.entry):
                 raise ValueError("entry must be strictly lower than the time to event")
-            s = args_size(*self.args) # [ to do Aya]
-            if s > 0 and s != np.size(self.time): # [ to do Aya]
+            s = args_size(*self.args) # [ TODO Aya]
+            if s > 0 and s != np.size(self.time): # [ TODO Aya]
                 raise ValueError(
                     "dimension mismatch for optional args: expected {} got {}".format(
                         np.size(self.time), s
@@ -85,7 +85,7 @@ class LifetimeData:
                     raise ValueError("entry must be lower than the lower bound of time to event")
                 if np.any(self.xl > self.xr):
                     raise ValueError("lower bound of time to event must be strictly lower than the upper bound of time to event")
-            # s = args_size(*self.args) # [ to do Aya] 
+            # s = args_size(*self.args) # [ TODO Aya] 
             
 
     class DataByEvent(NamedTuple):
