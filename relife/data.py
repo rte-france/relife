@@ -385,3 +385,4 @@ class ReplacementPolicyData(RenewalRewardData):
             np.concatenate((arg0, arg1), axis=0) for arg0, arg1 in zip(args0, args1)
         )
         return LifetimeData(time, event, entry, args)
+

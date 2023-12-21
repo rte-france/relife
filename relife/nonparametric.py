@@ -352,3 +352,116 @@ class NelsonAalen:
             drawstyle="steps-post",
             **kwargs,
         )
+
+class Turnbull:
+    r"""Turnbull Estimator.
+    
+    Compute the non-parametric Turnbull estimator of the survival function 
+    from interval censored lifetime data.  
+    """
+
+    def fit(
+            self, time: np.ndarray, event: np.ndarray = None, entry: np.ndarray = None
+    ) -> Turnbull:
+        """Fit the Turnbull estimator to interval censored lifetime data.
+
+        Parameters
+        ----------
+
+        """
+        data = LifetimeData(time, event, entry)
+        self.timeline, self.sf = Turnbull(data).values().T
+        return self
+
+def Turnbull(data, tol=1e-4, lowmem=False):
+    """Computation of the Turnbull estimator on interval censored data.
+
+                Parameters
+                ----------
+                data : data set of generalized interval censored measurements (can  be left, right, interval, exact)
+                tol : stopping criteria for convergence. Algorithm stops when the infinite norm of the difference
+                between the current and updated estimates for the survival function is less than tol.
+
+                Returns
+                -------
+                Estimates of the survival function
+    """
+
+    data = data[['L', 'U', 'T']].values
+    censorship = (data[:, 0] < data[:, 1])
+    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0))
+    # tau = np.unique(np.append(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0),np.inf))
+    k = len(tau)
+
+    # Let alpha_{i,j} be 1 if the interval (tau_{j−1}, tau_{j}] is contained in the interval (Li, Ui]
+    # and 0 otherwise. alpha_{i,j} indicates whether the event which occurs in the
+    # interval (L_i, U_i] could have occurred at tau_j.
+
+    data_censored = data[censorship == True]
+
+    if not lowmem:
+        alpha = (np.logical_not(np.less.outer(tau[:-1], data_censored[:, 0])) * np.logical_not(
+            np.greater.outer(tau[1:], data_censored[:, 1]))).T
+        print(sys.getsizeof(alpha))
+
+    else:
+        ###
+        alpha_bis = []
+        for i in range(data_censored.shape[0]):
+            alpha_bis.append(
+                np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
+        alpha_bis = np.array(alpha_bis)
+        print(sys.getsizeof(alpha_bis))
+        ###
+
+    # count number of exact survival times falling in the intervall (tau_{j-1} ; tau_j]
+    exact_survival_times = data[censorship == False][:, 0]
+    d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(len(tau) + 1))[0][1:]
+
+    # Survival function initialization
+    S = np.linspace(1, 0, k)
+
+    res = 1
+    count = 1
+
+    while res > tol:
+        # Step 1 : estimation of probability of an event occuring at times tau_j:
+        p = -np.diff(S)
+        if np.sum(p == 0) > 0:  # prevents alpha * p.T from having a row of 0's which prevents d from updating
+            p = np.where(p == 0, 1e-5 / np.sum(p == 0), p - 1e-5 / ((k - 1) - np.sum(p == 0)))
+
+        # Step 2 + 2.5 : estimation of number of events which occured at time tau_j +
+        # add number of exact survival times falling in (tau_{j-1} ; tau_j] to d
+
+        if not lowmem:
+            if np.any(alpha):
+                alpha_p = alpha * p.T
+                d = (alpha_p.T / alpha_p.sum(axis=1)).T.sum(axis=0)
+                d += d_tilde
+            else:
+                d = d_tilde
+        else:
+            #####
+            x = [p[alpha_bis[i, 0]:(alpha_bis[i, 1] + 1)] for i in range(alpha_bis.shape[0])]
+            d = np.repeat(0, len(tau) - 1)
+
+            for i in range(data_censored.shape[0]):
+                d = d + (np.append(np.insert(x[i] / x[i].sum(), 0, np.repeat(0, alpha_bis[i][0])),
+                                   np.repeat(0, len(tau) - alpha_bis[i][1] - 2)))
+            d = d + d_tilde
+            #####
+
+        # Step 3 : estimation of number of individuals at risk at tau_j:
+        y = np.cumsum(d[::-1])[::-1]
+        y -= len(data[:, 2]) - np.searchsorted(np.sort(data[:, 2]), tau[1:], side='left')  # add truncation effect
+
+        # Step 4 : Compute the Product-Limit estimator using the data found in Steps 2 and 3.
+        S_updated = np.array(np.cumprod(1 - d / y))
+        S_updated = np.insert(S_updated, 0, 1)
+        res = max(abs(S - S_updated))
+        S = S_updated
+        count += 1
+    ind_del = np.where(tau == np.inf)
+    tau = np.delete(tau, ind_del)
+    S = np.delete(S, ind_del)
+    return pd.DataFrame({'tau': tau, 'S': S})
