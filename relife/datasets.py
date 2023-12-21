@@ -107,3 +107,30 @@ def load_insulator_string() -> LifetimeData:
     return LifetimeData(time, event, entry, (covar,))
 
 # TODO : add load_input_turnbull() function
+def load_input_turnbull() -> LifetimeData:
+    """Load and return the input data for the Turnbull estimator.
+
+    The data were simulated from a real estimate: # TODO : describe the process of simulation ?
+
+    - `L`: lower bound of the interval censoring,
+    - `U`: upper bound of the interval censoring,
+    - `T`: age of the asset in months at the beginning of the
+      observation period.
+
+    Returns
+    -------
+    LifetimeData
+        The lifetime data as a dataclass instance.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        from relife.datasets import load_input_turnbull
+        time, event, entry = load_input_turnbull().astuple()
+    """
+    data = np.loadtxt(
+        DATA_PATH / "input_turnbull.csv", delimiter=",", skiprows=1, unpack=True, usecols=range(1, 4)
+    )
+    return LifetimeData(data.T[:,:-1], entry=data.T[:,-1])

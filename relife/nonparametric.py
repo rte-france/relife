@@ -369,9 +369,9 @@ class Turnbull:
         ----------
 
         """
-        data = LifetimeData(time, event, entry) # on aura self.xl, self.xr, et self.entry aussi
-        data = np.array([data.xl, data.xr, data.entry])
-        print(data.shape, data)
+        _data = LifetimeData(time, event, entry) # on aura self.xl, self.xr, et self.entry aussi
+        data = np.column_stack((_data.time, _data.entry))
+        # TODO : now that i've defined data, continue (frm censorship and all)
         # self.timeline, self.sf = Turnbull(data).values().T
         return self
 
