@@ -1,6 +1,7 @@
 import numpy as np
+import warnings
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Union
 
 from scipy.optimize import minimize
 from scipy.stats import chi2, norm
@@ -55,12 +56,25 @@ class Cox:
     def __init__(
         self,
         time: np.ndarray,
-        covar: np.ndarray,
+        covar: Union[np.ndarray, list, tuple],
         event: np.ndarray = None,
         entry: np.ndarray = None,
     ):
+        assert isinstance(time, np.ndarray), "time must be np.ndarray"
+        assert (
+            isinstance(event, np.ndarray) or event is None
+        ), "event must be np.ndarray or None"
+        assert (
+            isinstance(entry, np.ndarray) or entry is None
+        ), "entry must be np.ndarray or None"
+        assert (
+            isinstance(covar, np.ndarray)
+            or isinstance(covar, list)
+            or isinstance(covar, tuple)
+        ), "covar must be np.ndarray, list or tuple"
+
         self.time = time
-        self.covar = covar
+        # self.covar = covar
         self.event = event
         self.entry = entry
 
@@ -68,6 +82,34 @@ class Cox:
             self.event = np.ones_like(self.time, int)
         if self.entry is None:
             self.entry = np.zeros_like(self.time, float)
+
+        if isinstance(covar, tuple) or isinstance(covar, list):
+            self.covar_set = []
+            for c in covar:
+                assert (
+                    len(c.shape) <= 2
+                ), f"covar {c} has shape {c.shape} but must be 1d or 2d"
+                if len(c.shape) == 1:
+                    c = c[:, None]
+                assert c.shape[0] == len(
+                    self.time
+                ), f"covar {c} must have the same length than time"
+                self.covar_set.append(c)
+            self.covar = np.hstack(self.covar_set)
+        elif isinstance(covar, np.ndarray):
+            assert (
+                len(covar.shape) <= 2
+            ), f"covar has shape {covar.shape} but must be 1d or 2d"
+            if len(covar.shape) == 1:
+                covar = covar[:, None]
+            assert covar.shape[0] == len(
+                self.time
+            ), f"covar must have the same length than time"
+            self.covar = covar
+            self.covar_set = None
+            warnings.warn(
+                "covar are not seperated from each other, covar_set is None and proportional assumption won't be tested for each covar"
+            )
 
         assert (
             len(self.time.shape) == 1
