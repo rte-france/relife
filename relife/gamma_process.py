@@ -279,8 +279,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         rate = moment1 * moment2_scaling / moment2
         shape_rate = moment1 * rate
         # return np.abs(2 * shape_rate / rate ** 3 * moment3_scaling - moment3)  # la fonction carrée est une pénalité
-        return np.abs(
-            2 * moment2 / moment2_scaling * moment3_scaling / moment3 - rate)  # la fonction carrée est une pénalité
+        return np.abs(2 * moment2 / moment2_scaling * moment3_scaling / moment3 - rate)
 
     @staticmethod
     def return_param(shape_power, data):
@@ -338,7 +337,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         if method == 'likelihood':
             opt = minimize(
                 fun=self._negative_log_likelihood,
-                x0=np.array([2, 2, 2]),
+                x0=np.array([1, 1, 1]),
                 args=(data,),
                 method='Nelder-Mead',
                 bounds=((1e-3, np.inf),
