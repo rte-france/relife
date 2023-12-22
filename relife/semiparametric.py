@@ -635,7 +635,7 @@ class Cox:
     #     return np.dot(np.exp(beta)[:, None], (1 / np.exp(beta))[None, :])
 
 
-def cox_snell_residuals_plot(cox: Cox) -> np.ndarray:
+def cox_snell_residuals_plot(cox: Cox) -> None:
     ordered_time_index = np.argsort(cox.time)
     # residual are defined for all observed times, chf0_values are computed for all observed times
     chf0_values = _nearest_1dinterp(
@@ -674,6 +674,52 @@ def cox_snell_residuals_plot(cox: Cox) -> np.ndarray:
     ax.set_ylabel("Estimated Cumulative Hazard Rates")
     fig.tight_layout()
     plt.show()
+
+
+def cox_proportionality_effect_plot(cox : Cox, nb_strata = 10, continuous_covar=None) -> None:
+
+    nb_plots = cox.covar.shape[1]
+    fig, ax = plt.subplots(1, nb_plots)
+    is_continuous = np.zeros(nb_plots)
+    time_on_study = np.sort(cox.time)
+
+    if continuous_covar is not None:
+        is_continuous[continuous_covar] = 1
+    for covar_number in range(nb_plots):
+        if is_continuous[covar_number] == 1:
+            # stratify continuous covar into categorical values
+            bins = np.quantile(cox.covar[:, covar_number], np.cumsum(np.ones(nb_strata)/nb_strata))
+            values = np.digitize(cox.covar[:, covar_number], bins, right=True) + 1
+        else:
+            values = cox.covar[:, covar_number]
+        covar = cox.covar
+        covar[:, covar_number] = values
+        log_chf0 = []
+        for value in np.unique(values):
+            value_indices = np.where(values == value)[0]
+            cox_at_value = Cox(
+                cox.time[value_indices],
+                covar[value_indices, :],
+                cox.event[value_indices],
+                cox.entry[value_indices],
+            )
+            cox_at_value.fit()
+            chf0_at_values = _nearest_1dinterp(time_on_study, cox_at_value.ordered_event_time, cox_at_value.chf0())
+            log_chf0.append(np.log(chf0_at_values))
+        log_chf0_diff = np.vstack(log_chf0[1:]) - np.repeat(log_chf0[0][None, :], len(log_chf0) - 1, axis=0)
+
+        if nb_plots > 1:
+            ax[0, covar_number].step(np.repeat(time_on_study, log_chf0_diff.shape[0], axis=0).T, log_chf0_diff.T, where="post")
+            ax[0, covar_number].plot([0, np.max(time_on_study)], [0, 0], c="black")
+            ax[0, covar_number].set_xlabel("Time on study")
+            ax[0, covar_number].set_ylabel("Difference in log cumulative hazard rates")
+        else:
+            ax.step(np.repeat(time_on_study, log_chf0_diff.shape[0], axis=0).T, log_chf0_diff.T, where="post")
+            ax.plot([0, np.max(time_on_study)], [0, 0], c="black")
+            ax.set_xlabel("Time on study")
+            ax.set_ylabel("Difference in log cumulative hazard rates")
+
+    fig.show()
 
 
 def cox_wald_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
