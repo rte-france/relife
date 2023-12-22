@@ -40,5 +40,19 @@ def test_turnbull(data_turnbull):
     print(data_turnbull.time)
     data = np.column_stack((data_turnbull.time, data_turnbull.entry))
     print(data)
+    time2d = np.array([[1,2],[0,4],[5,5],[7,np.inf],[10,10], [2,10], [10,11]])
+    l = LifetimeData(time2d)
+    print(l.xl)
+    timeline, inv, counts = np.unique(
+        l.xl, return_inverse=True, return_counts=True
+    )
+    print(timeline, inv, counts)
+    print(l.event)
+    d = np.zeros_like(timeline, int)
+    print(d)
+    np.add.at(d, inv, l.event)
+    print(d)
+    # d = np.zeros_like(timeline, int)
+    # np.add.at(d, inv, data.event)
     assert False # TODO : remove when done
 
