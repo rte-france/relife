@@ -10,7 +10,7 @@ from .nonparametric import NelsonAalen
 import matplotlib.pyplot as plt
 
 
-def nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
+def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
     """Returns x nearest interpolation based on xp and yp data points
     xp has to be monotonically increasing
 
@@ -77,6 +77,7 @@ class Cox:
         # self.covar = covar
         self.event = event
         self.entry = entry
+        self.param = None
 
         if self.event is None:
             self.event = np.ones_like(self.time, int)
@@ -197,6 +198,7 @@ class Cox:
             self.discount_rates_mask = None
         else:
             raise ValueError(f"method allowed are efron, breslow or cox. Not {method}")
+
 
     @staticmethod
     def _g(covar: np.ndarray, beta: np.ndarray) -> np.ndarray:
@@ -448,11 +450,60 @@ class Cox:
             jac=self._jac,
             hess=self._hess,
         )
-        return opt.x
+        self.param = opt.x
 
-    def chf0(
-        self, beta: np.ndarray, conf_int: bool = False
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    @property
+    def AIC(self) -> float:
+        """Return AIC value divided by 2
+
+        Args:
+            beta (np.ndarray): estimates of parameter vector, shape p
+
+        Returns:
+            float: AIC value divided by 2
+        """
+        if self.param is None:
+            warnings.warn("cox model has to be fitted before calling AIC")
+            return None
+        return self._negative_log_partial_likelihood(self.param) + len(self.param)
+
+    @property
+    def information(self) -> np.ndarray:
+        """Return Fisher information matrix
+
+        Returns:
+            np.ndarray: Fisher information matrix
+        """
+        if self.param is None:
+            warnings.warn("cox model has to be fitted before calling information")
+            return None
+        return self._hess(self.param)
+
+    @property
+    def var(self) -> np.ndarray:
+        """Return estimated covariance matrix of estimated parameters
+
+        Returns:
+            np.ndarray: covariance matrix, shape (p,p)
+        """
+        if self.param is None:
+            warnings.warn("cox model has to be fitted before calling var")
+            return None
+        return linalg.inv(self.information())
+
+    @property
+    def std(self) -> np.ndarray:
+        """Return estimated standard error of estimated parameters
+
+        Returns:
+            np.ndarray: standard error, shape p
+        """
+        if self.param is None:
+            warnings.warn("cox model has to be fitted before calling std")
+            return None
+        return np.sqrt(np.diag(self.var()))
+
+    def chf0(self, conf_int: bool = False) -> Tuple[np.ndarray, np.ndarray]:
         """Knowing estimates of beta, computes the cumulative baseline hazard rate estimator and its confidence interval (optional)
 
         Args:
@@ -470,9 +521,12 @@ class Cox:
             >>> plt.fill_between(my_cox.ordered_event_time, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
-        values = np.cumsum(self.event_count[:, None] / self._psi(beta))
+        if self.param is None:
+            warnings.warn("cox model has to be fitted before calling chf0")
+            return None
+        values = np.cumsum(self.event_count[:, None] / self._psi(self.param))
         if conf_int:
-            var = np.cumsum(self.event_count[:, None] / self._psi(beta) ** 2)
+            var = np.cumsum(self.event_count[:, None] / self._psi(self.param) ** 2)
             conf_int = np.hstack(
                 [
                     values[:, None]
@@ -485,9 +539,7 @@ class Cox:
         else:
             return values
 
-    def sf0(
-        self, beta: np.ndarray, conf_int: bool = False
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def sf0(self, conf_int: bool = False) -> Tuple[np.ndarray, np.ndarray]:
         """Knowing estimates of beta, computes the baseline survival function and its confidence interval (optional)
 
         Args:
@@ -505,19 +557,21 @@ class Cox:
             >>> plt.fill_between(my_cox.ordered_event_time, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
-        if conf_int:
-            chf0, chf0_conf_int = -self.chf(beta, conf_int=True)
+        if self.param is None:
+            warnings.warn("cox model has to be fitted before calling sf0")
+            return None
+        elif conf_int:
+            chf0, chf0_conf_int = -self.chf(conf_int=True)
             return np.exp(-chf0), np.exp(-chf0_conf_int)
         else:
-            return np.exp(-self.chf(beta))
+            return np.exp(-self.chf())
 
     def sf(
-        self, beta: np.ndarray, covar: np.ndarray, conf_int: bool = False
+        self, covar: np.ndarray, conf_int: bool = False
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Knowing estimates of beta, computes the sf estimator and confidence interval (optional)
 
         Args:
-            beta (np.ndarray): estimates of parameter vector, shape p
             covar (np.ndarray): one vector of covariate values, shape p
             conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
 
@@ -532,12 +586,15 @@ class Cox:
             >>> plt.fill_between(my_cox.ordered_event_time, conf_int[:, 0], conf_int[:, 1], alpha=0.25, step="post")
             >>> plt.show()
         """
-        values = np.exp(-self.chf(beta)) ** Cox._g(covar, beta)
+        if self.param is None:
+            warnings.warn("cox model has to be fitted before calling sf")
+            return None
+        values = np.exp(-self.chf()) ** Cox._g(covar, self.param)
         if conf_int:
-            psi = self._psi(beta)
-            psi_order_1 = self._psi(beta, order=1)
+            psi = self._psi(self.param)
+            psi_order_1 = self._psi(self.param, order=1)
             d_j_on_psi = self.event_count[:, None] / psi
-            information_matrix = self._hess(beta)
+            information_matrix = self._hess(self.param)
             inverse_information_matrix = linalg.inv(information_matrix)
 
             q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
@@ -564,43 +621,24 @@ class Cox:
         else:
             return values
 
-    def var(self, beta: np.ndarray) -> np.ndarray:
-        """Return estimated covariance matrix of beta
+    # def rr(self, beta: np.ndarray) -> np.ndarray:
+    #     """Return the relative risks
 
-        Args:
-            beta (np.ndarray): estimates of parameter vector, shape p
+    #     Args:
+    #         beta (np.ndarray): estimates of parameter vector, shape p
 
-        Returns:
-            np.ndarray: covariance matrix, shape (p,p)
-        """
-        return linalg.inv(self._hess(beta))
-
-    def std(self, beta: np.ndarray) -> np.ndarray:
-        """Return estimated standard error of beta
-
-        Args:
-            beta (np.ndarray): estimates of parameter vector, shape p
-
-        Returns:
-            np.ndarray: standard error, shape p
-        """
-        return np.sqrt(np.diag(self.var(beta)))
-
-    def rr(self, beta: np.ndarray) -> np.ndarray:
-        """Return the relative risks
-
-        Args:
-            beta (np.ndarray): estimates of parameter vector, shape p
-
-        Returns:
-            np.ndarray: relative risks, shape (p,p)
-        """
-        return np.dot(np.exp(beta)[:, None], (1 / np.exp(beta))[None, :])
+    #     Returns:
+    #         np.ndarray: relative risks, shape (p,p)
+    #     """
+    #     if self.param is None:
+    #         warnings.warn("cox model has to be fitted before calling sf0")
+    #         return None
+    #     return np.dot(np.exp(beta)[:, None], (1 / np.exp(beta))[None, :])
 
     def plot_cox_snell_residuals(self, beta: np.ndarray) -> np.ndarray:
         ordered_time_index = np.argsort(self.time)
         # residual are defined for all observed times, chf0_values are computed for all observed times
-        chf0_values = nearest_1dinterp(
+        chf0_values = _nearest_1dinterp(
             self.time[ordered_time_index], self.ordered_event_time, self.chf0(beta)
         )
         # returned residuals are in the same order as the orginal time array
@@ -614,7 +652,7 @@ class Cox:
         # print(nelson_aalen_estimator.chf)
         # print(len(nelson_aalen_estimator.chf))
 
-        chf_of_residuals = nearest_1dinterp(
+        chf_of_residuals = _nearest_1dinterp(
             residuals, nelson_aalen_estimator.timeline, nelson_aalen_estimator.chf
         )
 
@@ -797,14 +835,3 @@ class Cox:
             )
             pval = chi2.sf(ch2, df=len(other_covar))
             return round(ch2, 6), round(pval, 6)
-
-    def AIC(self, beta: np.ndarray) -> float:
-        """Return AIC value divided by 2
-
-        Args:
-            beta (np.ndarray): estimates of parameter vector, shape p
-
-        Returns:
-            float: AIC value divided by 2
-        """
-        return self._negative_log_partial_likelihood(beta) + len(beta)
