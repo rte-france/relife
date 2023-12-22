@@ -62,6 +62,7 @@ def test_mrl(model):
 
 def test_fit(model, data):
     params = model.params.copy()
+    print(data.astuple())
     model.fit(*data.astuple())
     assert model.params == pytest.approx(params, rel=1e-3)
 
