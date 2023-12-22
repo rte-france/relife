@@ -109,7 +109,8 @@ class LifetimeData:
         Used in negative log-likelihood calculation in parametric.py.
         """
         # Event Observed, Event Observed + Right Censoring, Left Censoring, Left Truncation
-        if len(self.time.shape) == 1 : # si len(time.shape) == 1 on garde xl == None
+        self.LC = np.zeros_like(self.time, float) 
+        if len(self.time.shape) == 1 :
 
             D, D_RC, LT = map(
                 np.nonzero,
@@ -117,6 +118,7 @@ class LifetimeData:
                     self.event == 1,
                     (self.event == 1) + (self.event == 0),
                     self.entry > 0,
+
                 ],
             )
             self._time = self.DataByEvent(
@@ -131,9 +133,7 @@ class LifetimeData:
             )
 
         elif len(self.time.shape) != 1 :
-            # self.xl = np.array(self.xl)
-            # self.xr = np.array(self.xr) 
-            D, D_RC, LC, LT, IC = map(
+            D, D_RC, LT, LC, IC = map(
                 np.nonzero,
                 [
                     self.event == 1,
@@ -152,7 +152,7 @@ class LifetimeData:
             )
 
             self._args = self.DataByEvent( # [ qst Aya ] + [ TODO ]: use ? à intégrer
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT,  IC]] # j'ai au hasard intégré IC pour pas avoir d'erreur, mais je ne sais pas si c'est correct, ni l'utilité
+                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT, LC, IC]] # j'ai au hasard intégré IC pour pas avoir d'erreur, mais je ne sais pas si c'est correct, ni l'utilité
             )
 
     def __getitem__(self, key):
