@@ -129,6 +129,8 @@ class LifetimeData:
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC, LC]],
                 self.entry[LT].reshape(-1, 1),
             )
+            # print(self._time)
+            # self._time.LC = 2
                 # [ qst Aya ] shape (n, ) alors que _time a shape (n, 1), prq ne pas homogénéiser ?
                 # Soit forcer l'utilisateur, soit le fr en interne (check len(shape) == 1, si True => reshape)
             
