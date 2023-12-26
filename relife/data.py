@@ -143,21 +143,21 @@ class LifetimeData:
                 [
                     self.event == 1,
                     (self.event == 1) + (self.xr == np.inf), # observation exacte (indiquée par event ==1) ET censure à droite qd upper bound = +inf
-                    self.entry > 0,
                     self.xl == 0, # censure à gauche qd lower bound = 0 
+                    self.entry > 0,
                     (self.xl > 0) & (self.event == 0) &  (self.xr < np.inf), # censure par intervalle
                 ],
             )
             
             self._time = self.DataByEvent(
                 *[self.xl[ind].reshape(-1, 1) for ind in [D, D_RC]], 
-                self.entry[LT].reshape(-1, 1),
                 self.xr[LC].reshape(-1, 1),
+                self.entry[LT].reshape(-1, 1),
                 self.time[IC].reshape(-1, 1),
             )
 
-            self._args = self.DataByEvent( # [ qst Aya ] + [ TODO ]: use ? à intégrer
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT, LC, IC]] # j'ai au hasard intégré IC pour pas avoir d'erreur, mais je ne sais pas si c'est correct, ni l'utilité
+            self._args = self.DataByEvent( 
+                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT, IC]] 
             )
 
     def __getitem__(self, key):
