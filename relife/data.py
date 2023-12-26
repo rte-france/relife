@@ -98,8 +98,8 @@ class LifetimeData:
         D: np.ndarray  #: observed event.
         D_RC: np.ndarray  #: union of observed events and right-censored data.
         LT: np.ndarray  #: left-truncated data.
-        LC: np.ndarray = (np.ndarray([], dtype = np.int64)) #: left-censored data. # TODO : rendre en array(zeros) de taille self.time
-        IC: np.ndarray = None  #: interval-censored data.
+        LC: np.ndarray  # (np.ndarray([], dtype = np.int64)) #: left-censored data. # TODO : rendre en array(zeros) de taille self.time
+        IC: np.ndarray  #: interval-censored data.
     
     def _format_data(self) -> None:
         """Format data according to DataByEvent categories.
@@ -109,7 +109,6 @@ class LifetimeData:
         Used in negative log-likelihood calculation in parametric.py.
         """
         # Event Observed, Event Observed + Right Censoring, Left Censoring, Left Truncation
-        self.LC = np.zeros_like(self.time, float) 
         if len(self.time.shape) == 1 :
 
             D, D_RC, LT = map(
@@ -125,14 +124,17 @@ class LifetimeData:
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC]],
                 self.entry[LT].reshape(-1, 1),
+                np.ndarray([], dtype = np.int64) ,
+                np.ndarray([], dtype = np.int64) ,
             )
-            print(self._time.LC)
-            print(type(self._time.LC))
-            print(self._time.LC.shape)
-            self._args = self.DataByEvent( # [ qst Aya ] + [ TODO ]: use ? à intégrer
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT]] 
+            
+            self._args = self.DataByEvent( 
+                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT]],
+                (), 
+                (), 
             )
-            print(self._args)
+            print('here')
+            print(self._time.D)
 
         elif len(self.time.shape) != 1 :
             D, D_RC, LT, LC, IC = map(
