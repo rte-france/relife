@@ -98,7 +98,7 @@ class LifetimeData:
         D: np.ndarray  #: observed event.
         D_RC: np.ndarray  #: union of observed events and right-censored data.
         LT: np.ndarray  #: left-truncated data.
-        LC: np.ndarray = None #: left-censored data. # TODO : rendre en array(zeros) de taille self.time
+        LC: np.ndarray = (np.ndarray([], dtype = np.int64)) #: left-censored data. # TODO : rendre en array(zeros) de taille self.time
         IC: np.ndarray = None  #: interval-censored data.
     
     def _format_data(self) -> None:
@@ -121,16 +121,18 @@ class LifetimeData:
 
                 ],
             )
+            
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC]],
                 self.entry[LT].reshape(-1, 1),
             )
-                # [ qst Aya ] shape (n, ) alors que _time a shape (n, 1), prq ne pas homogénéiser ?
-                # Soit forcer l'utilisateur, soit le fr en interne (check len(shape) == 1, si True => reshape)
-            
+            print(self._time.LC)
+            print(type(self._time.LC))
+            print(self._time.LC.shape)
             self._args = self.DataByEvent( # [ qst Aya ] + [ TODO ]: use ? à intégrer
                 *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT]] 
             )
+            print(self._args)
 
         elif len(self.time.shape) != 1 :
             D, D_RC, LT, LC, IC = map(
