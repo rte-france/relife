@@ -97,8 +97,8 @@ class LifetimeData:
 
         D: np.ndarray  #: observed event.
         D_RC: np.ndarray  #: union of observed events and right-censored data.
-        LT: np.ndarray  #: left-truncated data.
         LC: np.ndarray  # (np.ndarray([], dtype = np.int64)) #: left-censored data. # TODO : rendre en array(zeros) de taille self.time
+        LT: np.ndarray  #: left-truncated data.
         IC: np.ndarray  #: interval-censored data.
     
     def _format_data(self) -> None:
@@ -123,14 +123,15 @@ class LifetimeData:
             
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC]],
+                np.ndarray([], dtype = np.float64).reshape(-1, 1) ,
                 self.entry[LT].reshape(-1, 1),
-                np.ndarray([], dtype = np.int64) ,
-                np.ndarray([], dtype = np.int64) ,
+                np.ndarray([], dtype = np.float64).reshape(-1, 1) ,
             )
             
             self._args = self.DataByEvent( 
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT]],
+                *[args_take(ind[0], *self.args) for ind in [D, D_RC]],
                 (), 
+                *[args_take(ind[0], *self.args) for ind in [LT]],
                 (), 
             )
             print('here')
