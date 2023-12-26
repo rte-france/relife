@@ -124,6 +124,7 @@ class LifetimeData:
                     self.entry > 0,
                 ],
             )
+            
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC, LC]],
                 self.entry[LT].reshape(-1, 1),
@@ -136,8 +137,6 @@ class LifetimeData:
             )
 
         elif len(self.time.shape) != 1 :
-            # self.xl = np.array(self.xl)
-            # self.xr = np.array(self.xr) 
             D, D_RC, LC, LT, IC = map(
                 np.nonzero,
                 [
