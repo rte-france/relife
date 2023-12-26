@@ -67,12 +67,20 @@ def test_fit(model, data):
     name = os.path.join('..', filename)
     
     f = open(name, "w")
-    for i in range(len(data.time)):
-        f.write(str(data.time[i]))
-        f.write(",")
-        f.write(str(data.event[i]))
-        f.write(",")
-        f.write(str(data.entry[i]))
+    for i in range(len(data._time.D)) : 
+        f.write(str(data._time.D[i]))
+        f.write("\n")
+    
+    for i in range(len(data._time.D_RC)) :
+        f.write(str(data._time.D_RC[i]))
+        f.write("\n")
+    
+    for i in range(len(data._time.LT)) :
+        f.write(str(data._time.LT[i]))
+        f.write("\n")
+
+    for i in range(len(data._time.LC)) :
+        f.write(str(data._time.LC[i]))
         f.write("\n")
     f.close()
     print(name)
