@@ -178,14 +178,17 @@ class Exponential(ParametricLifetimeDistribution):
 
     @property
     def params(self) -> np.ndarray:
+        # print(self.rate)
         return np.array([self.rate])
 
     def _chf(self, params: np.ndarray, t: np.ndarray) -> np.ndarray:
         rate = params[0]
+        # print(rate)
         return rate * t
 
     def _hf(self, params: np.ndarray, t: np.ndarray) -> np.ndarray:
         rate = params[0]
+        print(rate)
         return rate * np.ones_like(t)
 
     def _dhf(self, params: np.ndarray, t: np.ndarray) -> np.ndarray:
