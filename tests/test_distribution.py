@@ -85,9 +85,12 @@ def test_fit(model, data):
     f.close()
     print(name)
     print(model)
+    print(model.params)
     print(data.astuple())
     model.fit(*data.astuple())
-    print(model)
+    i = 1 / np.median(data.time)
+    print('here')
+    print(i)
     assert False
     assert model.params == pytest.approx(params, rel=1e-3)
 
