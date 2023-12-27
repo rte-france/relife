@@ -84,10 +84,10 @@ def test_fit(model, data):
         f.write("\n")
     f.close()
 
-    print(model)
-    print(data.astuple())
+    # print(model)
+    # print(data.astuple())
     model.fit(*data.astuple())
-    print(model)
+    # print(model)
     fDF = open(name, "r")
     filenameTB = "output_debugTB.txt"
     nameTB = os.path.join('..', filenameTB)
@@ -101,7 +101,7 @@ def test_fit(model, data):
             print("Error in line ", i)
         assert line == lineTB
     i = 1 / np.median(data.time)
-    print(i)
+    # print(i)
     assert model.params == pytest.approx(params, rel=1e-3)
 
 
