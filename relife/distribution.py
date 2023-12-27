@@ -86,6 +86,9 @@ class ParametricLifetimeDistribution(ParametricLifetimeModel):
         """
         data = LifetimeData(time, event, entry, args)
         self._fit(data, params0, method=method, **kwargs)
+        print(params0)
+        print(method)
+        print(kwargs)
         return self
 
     def plot(
