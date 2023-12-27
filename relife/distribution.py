@@ -36,6 +36,7 @@ class ParametricLifetimeDistribution(ParametricLifetimeModel):
     def _init_params(self, data: LifetimeData) -> np.ndarray:
         params0 = np.ones(self.n_params)
         params0[-1] = 1 / np.median(data.time)
+        print(params0)
         return params0
 
     def _set_params(self, params: np.ndarray) -> None:
@@ -86,9 +87,6 @@ class ParametricLifetimeDistribution(ParametricLifetimeModel):
         """
         data = LifetimeData(time, event, entry, args)
         self._fit(data, params0, method=method, **kwargs)
-        print(params0)
-        print(method)
-        print(kwargs)
         return self
 
     def plot(
