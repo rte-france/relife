@@ -88,17 +88,19 @@ def test_fit(model, data):
     print(data.astuple())
     model.fit(*data.astuple())
     print(model)
-    # fDF = open(name, "r")
-    # filenameTB = "output_debugTB.txt"
-    # nameTB = os.path.join('..', filenameTB)
-    # fTB = open(nameTB, "r")
-    # for i in range(len(data.time)):
-    #     line = fDF.readline()
-    #     lineTB = fTB.readline()
-    #     # print(line)
-    #     # print(lineTB)
-    #     if line != lineTB :
-    #         print("Error in line ", i)
+    fDF = open(name, "r")
+    filenameTB = "output_debugTB.txt"
+    nameTB = os.path.join('..', filenameTB)
+    fTB = open(nameTB, "r")
+    for i in range(len(data.time)):
+        line = fDF.readline()
+        lineTB = fTB.readline()
+        # print(line)
+        # print(lineTB)
+        if line != lineTB :
+            print("Error in line ", i)
+        assert line == lineTB
+    print(data.time)
     assert model.params == pytest.approx(params, rel=1e-3)
 
 
