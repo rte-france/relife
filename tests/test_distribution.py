@@ -100,7 +100,8 @@ def test_fit(model, data):
         if line != lineTB :
             print("Error in line ", i)
         assert line == lineTB
-    print(data.time)
+    i = 1 / np.median(data.time)
+    print(i)
     assert model.params == pytest.approx(params, rel=1e-3)
 
 
