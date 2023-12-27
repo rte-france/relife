@@ -66,23 +66,23 @@ def test_fit(model, data):
     filename = "output_debugDF.txt"
     name = os.path.join('..', filename)
     
-    f = open(name, "w")
-    for i in range(len(data._time.D)) : 
-        f.write(str(data._time.D[i]))
-        f.write("\n")
+    # f = open(name, "w")
+    # for i in range(len(data._time.D)) : 
+    #     f.write(str(data._time.D[i]))
+    #     f.write("\n")
     
-    for i in range(len(data._time.D_RC)) :
-        f.write(str(data._time.D_RC[i]))
-        f.write("\n")
+    # for i in range(len(data._time.D_RC)) :
+    #     f.write(str(data._time.D_RC[i]))
+    #     f.write("\n")
     
-    for i in range(len(data._time.LT)) :
-        f.write(str(data._time.LT[i]))
-        f.write("\n")
+    # for i in range(len(data._time.LT)) :
+    #     f.write(str(data._time.LT[i]))
+    #     f.write("\n")
 
-    for i in range(len(data._time.LC)) :
-        f.write(str(data._time.LC[i]))
-        f.write("\n")
-    f.close()
+    # for i in range(len(data._time.LC)) :
+    #     f.write(str(data._time.LC[i]))
+    #     f.write("\n")
+    # f.close()
 
     # print(model)
     # print(data.astuple())
@@ -103,6 +103,7 @@ def test_fit(model, data):
     i = 1 / np.median(data.time)
     # print(i)
     assert model.params == pytest.approx(params, rel=1e-3)
+    # assert False
 
 
 def test_minimum_distribution(model, data):

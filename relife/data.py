@@ -111,6 +111,7 @@ class LifetimeData:
         # Event Observed, Event Observed + Right Censoring, Left Censoring, Left Truncation
         if len(self.time.shape) == 1 :
 
+            # DOES NOT WORK : 
             D, D_RC, LT = map(
                 np.nonzero,
                 [
@@ -123,9 +124,9 @@ class LifetimeData:
             
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC]],
-                np.ndarray([], dtype = np.float64) ,
+                np.array([], dtype = np.float64).reshape(-1, 1),
                 self.entry[LT].reshape(-1, 1),
-                np.ndarray([], dtype = np.float64) ,
+                np.array([], dtype = np.float64).reshape(-1, 1) ,
             )
             
             self._args = self.DataByEvent( 
@@ -134,8 +135,102 @@ class LifetimeData:
                 *[args_take(ind[0], *self.args) for ind in [LT]],
                 (), 
             )
-            # print('here')
-            # print(self._time.D)
+            
+            # WORKS : 
+            D, D_RC, LC, LT = map(
+                np.nonzero,
+                [
+                    self.event == 1,
+                    (self.event == 1) + (self.event == 0),
+                    self.event == 2,
+                    self.entry > 0,
+
+                ],
+            )
+            
+            self._time_ = self.DataByEvent(
+                *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC, LC]],
+                self.entry[LT].reshape(-1, 1),
+                np.ndarray([], dtype = np.float64).reshape(-1, 1) ,
+            )
+            
+            self._args_ = self.DataByEvent( 
+                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT]],
+                (), 
+            )
+            
+            print("For _args_ : ")
+            print(self._args_)
+            print("For _args : ")
+            print(self._args)
+
+
+            #Exploring : 
+            # print("For _time : ")
+            # print("Types")
+            # print("- _time.D : ")
+            # print(type(self._time.D))
+            # print("- _time.D_RC : ")
+            # print(type(self._time.D_RC))
+            # print("- _time.LC : ")
+            # print(type(self._time.LC))
+            # print("- _time.LT : ")
+            # print(type(self._time.LT))
+            # print("- _time.IC : ")
+            # print(type(self._time.IC))
+
+            # print("Shapes")
+            # print("- _time.D : ")
+            # print(self._time.D.shape)
+            # print("- _time.D_RC : ")
+            # print(self._time.D_RC.shape)
+            # print("- _time.LC : ")
+            # print(self._time.LC.shape)
+            # print("- _time.LT : ")
+            # print(self._time.LT.shape)
+            # print("- _time.IC : ")
+            # print(self._time.IC.shape)
+            
+            # print("Means")
+            # print("- _time.D : ")
+            # print(np.mean(self._time.D))
+            # print("- _time.D_RC : ")
+            # print(np.mean(self._time.D_RC))
+            # print("- _time.LC : ")
+            # print(np.mean(self._time.LC))
+            # print("- _time.LT : ")
+            # print(np.mean(self._time.LT))
+            # print("- _time.IC : ")
+            # print(np.mean(self._time.IC))
+
+            # print("Values")
+            # print("- _time.LC : ")
+            # print(self._time.LC)
+            # print("- _time.IC : ")
+            # print(self._time.IC)
+            
+            print("For _args : ")
+            print("Types")
+            print("- _args.D : ")
+            print(type(self._args.D))
+            print("- _args.D_RC : ")
+            print(type(self._args.D_RC))
+            print("- _args.LC : ")
+            print(type(self._args.LC))
+            print("- _args.LT : ")
+            print(type(self._args.LT))
+            print("- _args.IC : ")
+            print(type(self._args.IC))
+            
+
+            print("Values")
+            print("- _args.LC : ")
+            print(self._args.LC)
+            print("- _args.IC : ")
+            print(self._args.IC)
+
+
+
 
         elif len(self.time.shape) != 1 :
             D, D_RC, LT, LC, IC = map(

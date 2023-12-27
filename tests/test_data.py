@@ -9,15 +9,15 @@ import numpy as np
 
 from relife.data import LifetimeData
 
-def test_data_format_1D():
-    """
-    Test the formatting of 1D time data in LifetimeData class.
-    """
-    time = np.array([1,2,4,5,5,7,10,10,2,10,10,11])
-    event = np.array([0,0,0,1,1,0,0,1,0,0,1,0])
-    assert len(time) == len(event), "Time and event arrays must have the same length"
-    l = LifetimeData(time)
-    assert False 
+# def test_data_format_1D():
+#     """
+#     Test the formatting of 1D time data in LifetimeData class.
+#     """
+#     time = np.array([1,2,4,5,5,7,10,10,2,10,10,11])
+#     event = np.array([0,0,0,1,1,0,0,1,0,0,1,0])
+#     assert len(time) == len(event), "Time and event arrays must have the same length"
+#     l = LifetimeData(time)
+#     assert False 
 
 
 def test_data_format_2D():
@@ -55,4 +55,4 @@ def test_data_format_2D():
     assert l.entry.shape == (7,), "Unexpected shape for entry attribute"
     assert l.event.shape == (7,), "Unexpected shape for event attribute"
     assert l._time.D.shape == (2, 1), "Unexpected shape for D attribute"
-    assert l._time.LC.shape == (1,1), "Unexpected shape for LC attribute"
+    assert l._time.LC.shape == (1,1), f"Unexpected shape for LC attribute, got {l._time.LC}"
