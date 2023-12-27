@@ -123,9 +123,9 @@ class LifetimeData:
             
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC]],
-                np.ndarray([], dtype = np.float64).reshape(-1, 1) ,
+                np.ndarray([], dtype = np.float64) ,
                 self.entry[LT].reshape(-1, 1),
-                np.ndarray([], dtype = np.float64).reshape(-1, 1) ,
+                np.ndarray([], dtype = np.float64) ,
             )
             
             self._args = self.DataByEvent( 
