@@ -25,7 +25,7 @@ def data_turnbull():
 
 
 def test_fit_ecdf_kaplan_meier(data):
-    print(data) # TODO : check what's the return of this
+    # print(data) # TODO : check what's the return of this
     time = data.time[data.event == 1]
     ecdf = ECDF().fit(time)
     km = KaplanMeier().fit(time)
@@ -36,22 +36,22 @@ def test_turnbull(data_turnbull):
     # tb = Turnbull().fit
     # TODO : after implementing load_input_turnbull(), checking what data of test_fit_ecdf_kaplan_meier() is, implement same for test_turnbull()
     
-    print(data_turnbull.entry)
-    print(data_turnbull.time)
+    # print(data_turnbull.entry)
+    # print(data_turnbull._time)
     data = np.column_stack((data_turnbull.time, data_turnbull.entry))
-    print(data)
+    # print(data)
     time2d = np.array([[1,2],[0,4],[5,5],[7,np.inf],[10,10], [2,10], [10,11]])
     l = LifetimeData(time2d)
-    print(l.xl)
+    # print(l.xl)
     timeline, inv, counts = np.unique(
         l.xl, return_inverse=True, return_counts=True
     )
-    print(timeline, inv, counts)
-    print(l.event)
-    d = np.zeros_like(timeline, int)
-    print(d)
-    np.add.at(d, inv, l.event)
-    print(d)
+    # print(timeline, inv, counts)
+    # print(l.event)
+    # d = np.zeros_like(timeline, int)
+    # print(d)
+    # np.add.at(d, inv, l.event)
+    # print(d)
     # d = np.zeros_like(timeline, int)
     # np.add.at(d, inv, data.event)
     assert False # TODO : remove when done
