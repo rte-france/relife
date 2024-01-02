@@ -9,17 +9,6 @@ import numpy as np
 
 from relife.data import LifetimeData
 
-# def test_data_format_1D():
-#     """
-#     Test the formatting of 1D time data in LifetimeData class.
-#     """
-#     time = np.array([1,2,4,5,5,7,10,10,2,10,10,11])
-#     event = np.array([0,0,0,1,1,0,0,1,0,0,1,0])
-#     assert len(time) == len(event), "Time and event arrays must have the same length"
-#     l = LifetimeData(time)
-#     assert False 
-
-
 def test_data_format_2D():
     """
     Test the formatting of 2D time data in LifetimeData class.
