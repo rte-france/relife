@@ -111,13 +111,14 @@ class LifetimeData:
         # Event Observed, Event Observed + Right Censoring, Left Censoring, Left Truncation
         if len(self.time.shape) == 1 :
  
-            D, D_RC, LC, LT = map(
+            D, D_RC, LC, LT, IC = map(
                 np.nonzero,
                 [
                     self.event == 1,
                     (self.event == 1) + (self.event == 0),
                     np.zeros_like(self.time, dtype = bool),
-                    self.entry > 0
+                    self.entry > 0, 
+                    np.zeros_like(self.time, dtype = bool),
 
                 ]
             )
@@ -125,12 +126,7 @@ class LifetimeData:
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC, LC]],
                 self.entry[LT].reshape(-1, 1),
-                np.ndarray([], dtype = np.float64).reshape(-1, 1) 
-            )
-            
-            self._args = self.DataByEvent( 
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT]],
-                ()
+                self.time[IC].reshape(-1, 1) 
             )
            
         else :
@@ -152,9 +148,9 @@ class LifetimeData:
                 self.time[IC].reshape(-1, 1),
             )
 
-            self._args = self.DataByEvent( 
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT, IC]] 
-            )
+        self._args = self.DataByEvent( 
+            *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT, IC]] 
+        )
 
     def __getitem__(self, key):
         return LifetimeData(
