@@ -138,6 +138,7 @@ class LifetimeData:
                 *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT]] 
             )
             # print(self._args)
+            # print(self._args)
 
         elif len(self.time.shape) != 1 :
             D, D_RC, LC, LT, IC = map(
