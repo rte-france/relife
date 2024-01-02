@@ -93,15 +93,7 @@ class LifetimeData:
 
         D: np.ndarray  #: observed event.
         D_RC: np.ndarray  #: union of observed events and right-censored data.
-        LC: np.ndarray  #: left-censored data.
-        LT: np.ndarray  #: left-truncated data.
-
-    class DataByEvent2D(NamedTuple):    
-        """Group data by type of event for 2d time input."""
-
-        D: np.ndarray  #: observed event.
-        D_RC: np.ndarray  #: union of observed events and right-censored data.
-        LC: np.ndarray  #: left-censored data.
+        LC: np.ndarray  # left-censored data.
         LT: np.ndarray  #: left-truncated data.
         IC: np.ndarray  #: interval-censored data.
     
@@ -113,34 +105,27 @@ class LifetimeData:
         Used in negative log-likelihood calculation in parametric.py.
         """
         # Event Observed, Event Observed + Right Censoring, Left Censoring, Left Truncation
-        if len(self.time.shape) == 1 : # si len(time.shape) == 1 on garde xl == None
-
-            D, D_RC, LC, LT = map(
+        if len(self.time.shape) == 1 :
+ 
+            D, D_RC, LC, LT, IC = map(
                 np.nonzero,
                 [
                     self.event == 1,
                     (self.event == 1) + (self.event == 0),
-                    self.event == 2,
-                    self.entry > 0,
-                ],
+                    np.zeros_like(self.time, dtype = bool),
+                    self.entry > 0, 
+                    np.zeros_like(self.time, dtype = bool),
+
+                ]
             )
             
             self._time = self.DataByEvent(
                 *[self.time[ind].reshape(-1, 1) for ind in [D, D_RC, LC]],
                 self.entry[LT].reshape(-1, 1),
+                self.time[IC].reshape(-1, 1) 
             )
-            # print(self._time)
-            # self._time.LC = 2
-                # [ qst Aya ] shape (n, ) alors que _time a shape (n, 1), prq ne pas homogénéiser ?
-                # Soit forcer l'utilisateur, soit le fr en interne (check len(shape) == 1, si True => reshape)
-            
-            self._args = self.DataByEvent( # [ qst Aya ] + [ TODO ]: use ? à intégrer
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT]] 
-            )
-            # print(self._args)
-            # print(self._args)
-
-        elif len(self.time.shape) != 1 :
+           
+        else :
             D, D_RC, LC, LT, IC = map(
                 np.nonzero,
                 [
@@ -152,16 +137,16 @@ class LifetimeData:
                 ],
             )
             
-            self._time = self.DataByEvent2D(
-                *[self.xl[ind].reshape(-1, 1) for ind in [D, D_RC]],
-                self.xr[LC].reshape(-1, 1), 
+            self._time = self.DataByEvent(
+                *[self.xl[ind].reshape(-1, 1) for ind in [D, D_RC]], 
+                self.xr[LC].reshape(-1, 1),
                 self.entry[LT].reshape(-1, 1),
                 self.time[IC].reshape(-1, 1),
             )
 
-            self._args = self.DataByEvent2D( # [ qst Aya ] + [ TODO ]: use ? à intégrer
-                *[args_take(ind[0], *self.args) for ind in [D, D_RC, LT, LC, IC]] # j'ai au hasard intégré IC pour pas avoir d'erreur, mais je ne sais pas si c'est correct, ni l'utilité
-            )
+        self._args = self.DataByEvent( 
+            *[args_take(ind[0], *self.args) for ind in [D, D_RC, LC, LT, IC]] 
+        )
 
     def __getitem__(self, key):
         return LifetimeData(

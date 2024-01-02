@@ -62,36 +62,7 @@ def test_mrl(model):
 
 def test_fit(model, data):
     params = model.params.copy()
-    import os 
-    filename = "output_debugTB.txt"
-    name = os.path.join('..', filename)
-    
-    f = open(name, "w")
-    for i in range(len(data._time.D)) : 
-        f.write(str(data._time.D[i]))
-        f.write("\n")
-    
-    for i in range(len(data._time.D_RC)) :
-        f.write(str(data._time.D_RC[i]))
-        f.write("\n")
-    
-    for i in range(len(data._time.LT)) :
-        f.write(str(data._time.LT[i]))
-        f.write("\n")
-
-    for i in range(len(data._time.LC)) :
-        f.write(str(data._time.LC[i]))
-        f.write("\n")
-    f.close()
-    # print(name)
-    # print(model)
-    # print(model.params)
-    # print(data.astuple())
     model.fit(*data.astuple())
-    i = 1 / np.median(data.time)
-    # print('here')
-    # print(i)
-    assert False
     assert model.params == pytest.approx(params, rel=1e-3)
 
 
