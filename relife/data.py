@@ -59,8 +59,8 @@ class LifetimeData:
                 raise ValueError("entry values must be positive")
             if np.any(self.time <= self.entry):
                 raise ValueError("entry must be strictly lower than the time to event")
-            s = args_size(*self.args) # [ TODO Aya]
-            if s > 0 and s != np.size(self.time): # [ TODO Aya]
+            s = args_size(*self.args) 
+            if s > 0 and s != np.size(self.time): 
                 raise ValueError(
                     "dimension mismatch for optional args: expected {} got {}".format(
                         np.size(self.time), s
