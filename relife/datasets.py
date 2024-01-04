@@ -38,6 +38,8 @@ def load_power_transformer() -> LifetimeData:
         from relife.datasets import load_power_transformer
         time, event, entry = load_power_transformer().astuple()
     """
+    print(DATA_PATH)
+
     data = np.loadtxt(
         DATA_PATH / "power_transformer.csv", delimiter=",", skiprows=1, unpack=True
     )

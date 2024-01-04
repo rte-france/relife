@@ -6,6 +6,7 @@
 
 import pytest
 import numpy as np
+from pathlib import Path
 
 from relife.datasets import load_power_transformer
 from relife.distribution import (
@@ -16,7 +17,7 @@ from relife.distribution import (
     Gamma,
     LogLogistic,
 )
-
+from relife.data import LifetimeData
 # fixtures
 
 
@@ -59,52 +60,6 @@ def test_mrl(model):
     t = np.arange(10)
     assert model.mrl(t).shape == (t.size,)
 
-
-# def test_fit(model, data):
-#     params = model.params.copy()
-#     import os 
-#     filename = "output_debugDF.txt"
-#     name = os.path.join('..', filename)
-    
-#     # f = open(name, "w")
-#     # for i in range(len(data._time.D)) : 
-#     #     f.write(str(data._time.D[i]))
-#     #     f.write("\n")
-    
-#     # for i in range(len(data._time.D_RC)) :
-#     #     f.write(str(data._time.D_RC[i]))
-#     #     f.write("\n")
-    
-#     # for i in range(len(data._time.LT)) :
-#     #     f.write(str(data._time.LT[i]))
-#     #     f.write("\n")
-
-#     # for i in range(len(data._time.LC)) :
-#     #     f.write(str(data._time.LC[i]))
-#     #     f.write("\n")
-#     # f.close()
-
-#     # print(model)
-#     # print(data.astuple())
-#     model.fit(*data.astuple())
-#     # print(model)
-#     fDF = open(name, "r")
-#     filenameTB = "output_debugTB.txt"
-#     nameTB = os.path.join('..', filenameTB)
-#     fTB = open(nameTB, "r")
-#     for i in range(len(data.time)):
-#         line = fDF.readline()
-#         lineTB = fTB.readline()
-#         # print(line)
-#         # print(lineTB)
-#         if line != lineTB :
-#             print("Error in line ", i)
-#         assert line == lineTB
-#     i = 1 / np.median(data.time)
-#     # print(i)
-#     assert model.params == pytest.approx(params, rel=1e-3)
-#     assert False
-
 def test_fit(model, data):
     params = model.params.copy()
     model.fit(*data.astuple())
@@ -115,3 +70,23 @@ def test_minimum_distribution(model, data):
     n = np.ones((data.size, 1))
     model = MinimumDistribution(model).fit(*data.astuple(), args=(n,))
     assert model.params == pytest.approx(params, rel=1e-3)
+
+def test_data_2D(model):
+    DATA_PATH = Path(__file__).parent.parent / "relife" / "datasets"
+    data = np.loadtxt(
+        DATA_PATH /"power_transformer.csv", delimiter=",", skiprows=1, unpack=True
+    )
+    # return LifetimeData(*data)
+    time, event, entry = data
+    ind = int(sum(event))
+    exact_obs = np.tile(time[:ind], (2, 1)).T
+    lc_obs = np.column_stack((time[ind:], np.inf * np.ones(len(time[ind:]))))
+    time_2D = np.vstack((exact_obs, lc_obs))
+    assert (time_2D, event, entry) == LifetimeData(time_2D, event, entry).astuple()
+    data = LifetimeData(time_2D, event, entry)
+    params = model.params.copy()
+
+    model.fit(*data.astuple())
+    assert model.params == pytest.approx(params, rel=1e-3)
+
+    # assert False 

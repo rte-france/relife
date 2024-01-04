@@ -390,7 +390,6 @@ class ParametricLifetimeModel(
     """Parametric lifetime model."""
 
     def _sf(self, params: np.ndarray, t: np.ndarray, *args: np.ndarray) -> np.ndarray:
-        print(params)
         """Parametric survival function."""
         return np.exp(-self._chf(params, t, *args))
 
