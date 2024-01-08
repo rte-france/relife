@@ -69,8 +69,6 @@ class Cox:
         ), "entry must be np.ndarray or None"
         assert (
             isinstance(covar, np.ndarray)
-            or isinstance(covar, list)
-            or isinstance(covar, tuple)
         ), "covar must be np.ndarray, list or tuple"
 
         self.time = time
@@ -84,33 +82,15 @@ class Cox:
         if self.entry is None:
             self.entry = np.zeros_like(self.time, float)
 
-        if isinstance(covar, tuple) or isinstance(covar, list):
-            self.covar_set = []
-            for c in covar:
-                assert (
-                    len(c.shape) <= 2
-                ), f"covar {c} has shape {c.shape} but must be 1d or 2d"
-                if len(c.shape) == 1:
-                    c = c[:, None]
-                assert c.shape[0] == len(
-                    self.time
-                ), f"covar {c} must have the same length than time"
-                self.covar_set.append(c)
-            self.covar = np.hstack(self.covar_set)
-        elif isinstance(covar, np.ndarray):
-            assert (
-                len(covar.shape) <= 2
-            ), f"covar has shape {covar.shape} but must be 1d or 2d"
-            if len(covar.shape) == 1:
-                covar = covar[:, None]
-            assert covar.shape[0] == len(
-                self.time
-            ), f"covar must have the same length than time"
-            self.covar = covar
-            self.covar_set = None
-            warnings.warn(
-                "covar are not seperated from each other, covar_set is None and proportional assumption won't be tested for each covar"
-            )
+        assert (
+            len(covar.shape) <= 2
+        ), f"covar has shape {covar.shape} but must be 1d or 2d"
+        if len(covar.shape) == 1:
+            covar = covar[:, None]
+        assert covar.shape[0] == len(
+            self.time
+        ), f"covar must have the same length than time"
+        self.covar = covar
 
         assert (
             len(self.time.shape) == 1
@@ -488,7 +468,7 @@ class Cox:
         if self.param is None:
             warnings.warn("cox model has to be fitted before calling var")
             return None
-        return linalg.inv(self.information())
+        return linalg.inv(self.information)
 
     @property
     def std(self) -> np.ndarray:
@@ -500,7 +480,7 @@ class Cox:
         if self.param is None:
             warnings.warn("cox model has to be fitted before calling std")
             return None
-        return np.sqrt(np.diag(self.var()))
+        return np.sqrt(np.diag(self.var))
 
     def chf0(self, conf_int: bool = False) -> Tuple[np.ndarray, np.ndarray]:
         """Knowing estimates of beta, computes the cumulative baseline hazard rate estimator and its confidence interval (optional)
@@ -643,7 +623,7 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     )
     # returned residuals are in the same order as the orginal time array
     residuals = (
-        chf0_values * np.squeeze(Cox._g(cox.covar[ordered_time_index], cox.beta))
+        chf0_values * np.squeeze(Cox._g(cox.covar[ordered_time_index], cox.param))
     )[np.argsort(ordered_time_index)]
 
     nelson_aalen_estimator = NelsonAalen()
@@ -747,7 +727,7 @@ def cox_wald_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
 
     if c is None:
         # null hypothesis is beta = 0
-        ch2 = np.dot(cox.beta, np.dot(cox.information, cox.beta))
+        ch2 = np.dot(cox.param, np.dot(cox.information, cox.param))
         pval = chi2.sf(ch2, df=cox.covar.shape[-1])
         return round(ch2, 6), round(pval, 6)
     else:
@@ -755,12 +735,12 @@ def cox_wald_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
         other_covar = np.where(c == 0)[0]
 
         ch2 = np.dot(
-            cox.beta[other_covar],
+            cox.param[other_covar],
             np.dot(
                 linalg.inv(
                     linalg.inv(cox.information)[np.ix_(other_covar, other_covar)]
                 ),
-                cox.beta[other_covar],
+                cox.param[other_covar],
             ),
         )
         pval = chi2.sf(ch2, df=len(other_covar))
@@ -792,8 +772,8 @@ def cox_likelihood_ratio_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, fl
 
     if c is None:
         # null hypothesis is beta = 0
-        neg_pl_beta = cox._negative_log_partial_likelihood(cox.beta)
-        neg_pl_beta_0 = cox._negative_log_partial_likelihood(np.zeros_like(cox.beta))
+        neg_pl_beta = cox._negative_log_partial_likelihood(cox.param)
+        neg_pl_beta_0 = cox._negative_log_partial_likelihood(np.zeros_like(cox.param))
         ch2 = 2 * (neg_pl_beta_0 - neg_pl_beta)
         pval = chi2.sf(ch2, df=cox.covar.shape[-1])
         return round(ch2, 6), round(pval, 6)
@@ -802,7 +782,7 @@ def cox_likelihood_ratio_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, fl
         tested_covar = np.where(c != 0)[0]
         other_covar = np.where(c == 0)[0]
 
-        neg_pl_beta = cox._negative_log_partial_likelihood(cox.beta)
+        neg_pl_beta = cox._negative_log_partial_likelihood(cox.param)
         cox_under_h0 = Cox(
             cox.time,
             cox.covar[:, tested_covar],
