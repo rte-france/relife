@@ -43,60 +43,33 @@ class GammaProcessData:
 
     def parse_data(self) -> None:
 
-        if np.size(self.ids) != np.size(self.inspection_times):
+        if np.size(self.ids) != np.size(self.inspection_times) != np.size(self.deterioration_measurements):
             raise ValueError("'inspection_times' and 'ids' must have the same length")
 
-        if np.size(self.inspection_times) != np.size(self.deterioration_measurements):
-            raise ValueError("'inspection_times' and 'deterioration_measurements' must have the same length")
-
-        # TODO: à revoir
-        # check if user specified an 'inspection_times' = 0 for some 'ids', and accordingly, check if corresponding
-        # 'deterioration_measurements' is zero, otherwise raise an error. If 'inspection_times' and
-        # 'deterioration_measurements' are well specified, removes all instances of 'inspection_times' = 0.
-
-        check_initial_inspection_times_per_id_is_zero = np.array(
-            [any(self.inspection_times[self.ids == i] == 0) for i in self.unique_ids]
-        )
-
-        invalid_id_starting_values = self.unique_ids[np.array(
-            [(self.deterioration_measurements[self.ids == i][0] > 0)
-             & (self.inspection_times[self.ids == i][0] == 0) for i in self.unique_ids]
-        )]
-
-        if len(invalid_id_starting_values) > 0:
+        if np.size(self.inspection_times) <= 1 or np.size(self.deterioration_measurements) <= 1:
             raise ValueError(
-                f"Invalid starting values for 'inspection_times' and "
-                f"'deterioration_measurements' for ids {invalid_id_starting_values}")
+                "'inspection_times' and 'deterioration_measurements' must contain at least two data points")
 
-        else:
-            ind = np.where(check_initial_inspection_times_per_id_is_zero)[0]
-            ind = self.unique_ids[ind]
-            ind = np.array([np.where(self.ids == i)[0][0] for i in ind])
+        if any(self.inspection_times < 0):
+            raise ValueError("'inspection_times' must be positive")
 
-            if len(ind) > 0:
-                self.inspection_times = np.delete(self.inspection_times, ind)
-                self.deterioration_measurements = np.delete(self.deterioration_measurements, ind)
-                self.ids = np.delete(self.ids, ind)
+        condition = (self.inspection_times == 0) & (self.deterioration_measurements != 0)
+        if np.any(condition):
+            raise ValueError(f"Deterioration measurements should be at 0 when inspection times is 0. Invalid values for"
+                             f"ids {np.unique(self.ids[condition])} ")
 
-        # Inserting 'inspection_times' = 0, 'deterioration_measurements' = 0 for all 'ids', and calculating
-        # 'increments' with the convention that the increments corresponding to 'inspection_times' = 0 is also 0.
-        first_id_index = [np.where(self.ids == i)[0][0] for i in np.unique(self.ids)]
-        self.ids = np.insert(self.ids, first_id_index, np.unique(self.ids))
+        first_id_index = np.insert(np.where(np.diff(self.ids) > 0)[0] + 1, 0, 0)
+        first_id_location_mask = np.isin(np.arange(len(self.ids)), first_id_index)
+        insert_mask = first_id_location_mask & ~ ((self.inspection_times == 0) & (self.deterioration_measurements == 0))
 
-        self.inspection_times = np.insert(self.inspection_times, first_id_index, 0)
-        self.deterioration_measurements = np.insert(self.deterioration_measurements, first_id_index, 0)
+        # insert (inspection time, deterioration measurements) = (0, 0) at the beginning of each id's values when necessary
+        self.inspection_times = np.insert(self.inspection_times, np.where(insert_mask)[0], 0)
+        self.deterioration_measurements = np.insert(self.deterioration_measurements, np.where(insert_mask)[0], 0)
+        self.ids = np.insert(self.ids, np.where(insert_mask)[0], self.ids[insert_mask])
 
         self.increments = np.concatenate(
             [np.diff(self.deterioration_measurements[self.ids == i]) for i in self.unique_ids])
         self.increments = np.insert(self.increments, first_id_index, 0)
-
-        # Some more tests
-        if any(self.inspection_times < 0):
-            raise ValueError("'inspection_times' must be positive")
-
-        if np.size(self.inspection_times) == 1:
-            raise ValueError(
-                "'inspection_times' and 'deterioration_measurements' must contain at least two data points")
 
         # check if 'inspections_times' are increasing for each 'ids'
         check_inspection_times_per_id = [any(np.diff(self.inspection_times[self.ids == i]) <= 0) for i in
