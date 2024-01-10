@@ -87,8 +87,8 @@ class GammaProcessData:
 
 @dataclass
 class GammaProcess(AbsolutelyContinuousLifetimeModel):
-    r0: float = None
-    l0: float = None
+    r0: float
+    l0: float
     rate: float = None
     shape_rate: float = None
     shape_power: float = None
