@@ -67,9 +67,7 @@ class Cox:
         assert (
             isinstance(entry, np.ndarray) or entry is None
         ), "entry must be np.ndarray or None"
-        assert (
-            isinstance(covar, np.ndarray)
-        ), "covar must be np.ndarray, list or tuple"
+        assert isinstance(covar, np.ndarray), "covar must be np.ndarray, list or tuple"
 
         self.time = time
         # self.covar = covar
@@ -616,18 +614,23 @@ class Cox:
 
 
 def cox_snell_residuals_plot(cox: Cox) -> None:
-    ordered_time_index = np.argsort(cox.time)
+    # ordered_time_index = np.argsort(cox.time)
     # residual are defined for all observed times, chf0_values are computed for all observed times
-    chf0_values = _nearest_1dinterp(
-        cox.time[ordered_time_index], cox.ordered_event_time, cox.chf0()
-    )
+    # chf0_values = _nearest_1dinterp(
+    #     cox.time[ordered_time_index], cox.ordered_event_time, cox.chf0()
+    # )
+    print(cox.time)
+    chf0_values = _nearest_1dinterp(cox.time, cox.ordered_event_time, cox.chf0())
+    print(chf0_values)
     # returned residuals are in the same order as the orginal time array
-    residuals = (
-        chf0_values * np.squeeze(Cox._g(cox.covar[ordered_time_index], cox.param))
-    )[np.argsort(ordered_time_index)]
+    # residuals = (
+    #     chf0_values * np.squeeze(Cox._g(cox.covar[ordered_time_index], cox.param))
+    # )[np.argsort(ordered_time_index)]
+    residuals = chf0_values * np.squeeze(Cox._g(cox.covar, cox.param))
 
     nelson_aalen_estimator = NelsonAalen()
-    nelson_aalen_estimator.fit(residuals, cox.event, cox.entry)
+    # nelson_aalen_estimator.fit(residuals, cox.event, cox.entry)
+    nelson_aalen_estimator.fit(residuals, cox.event)
 
     # print(nelson_aalen_estimator.chf)
     # print(len(nelson_aalen_estimator.chf))
@@ -656,50 +659,107 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     plt.show()
 
 
-def cox_proportionality_effect_plot(cox : Cox, nb_strata = 10, continuous_covar=None) -> None:
+def cox_proportionality_effect_plot(cox: Cox, nb_strata=4, andersen=False) -> None:
+    if cox.covar.shape[1] % 2 == 0:
+        fig, ax = plt.subplots(
+            cox.covar.shape[1] // 2, 2, layout="constrained", squeeze=False
+        )
+    else:
+        fig, ax = plt.subplots(
+            cox.covar.shape[1] // 2 + 1, 2, layout="constrained", squeeze=False
+        )
+        fig.delaxes(ax[cox.covar.shape[1] // 2, 1])
 
-    nb_plots = cox.covar.shape[1]
-    fig, ax = plt.subplots(1, nb_plots)
-    is_continuous = np.zeros(nb_plots)
-    time_on_study = np.sort(cox.time)
+    timeline = np.sort(cox.time)
 
-    if continuous_covar is not None:
-        is_continuous[continuous_covar] = 1
-    for covar_number in range(nb_plots):
-        if is_continuous[covar_number] == 1:
-            # stratify continuous covar into categorical values
-            bins = np.quantile(cox.covar[:, covar_number], np.cumsum(np.ones(nb_strata)/nb_strata))
-            values = np.digitize(cox.covar[:, covar_number], bins, right=True) + 1
-        else:
-            values = cox.covar[:, covar_number]
-        covar = cox.covar
-        covar[:, covar_number] = values
-        log_chf0 = []
-        for value in np.unique(values):
-            value_indices = np.where(values == value)[0]
+    for covar_index in range(cox.covar.shape[1]):
+        # stratify continuous covar into categorical values
+        # bins are the q-th quantile
+        # if covar values are already categorical, they remain the same
+        bins = np.quantile(
+            cox.covar[:, covar_index], q=np.cumsum(np.ones(nb_strata) / nb_strata)
+        )
+        categorical_values = (
+            np.digitize(cox.covar[:, covar_index], bins, right=True) + 1
+        )
+
+        covar_strata = np.copy(cox.covar)
+        covar_strata[:, covar_index] = categorical_values
+        chf0_strata = np.empty((len(np.unique(categorical_values)), len(timeline)))
+
+        for i, value in enumerate(np.unique(categorical_values)):
+            value_index = np.where(categorical_values == value)[0]
+            if len(value_index) == 1:
+                raise ValueError(
+                    f"Nb of strata is too high and {i}-th stratum only corresponds to one value. Decrease nb_strata value"
+                )
+
             cox_at_value = Cox(
-                cox.time[value_indices],
-                covar[value_indices, :],
-                cox.event[value_indices],
-                cox.entry[value_indices],
+                np.copy(cox.time[value_index]),
+                covar_strata[value_index, :],
+                np.copy(cox.event[value_index]),
+                np.copy(cox.entry[value_index]),
             )
             cox_at_value.fit()
-            chf0_at_values = _nearest_1dinterp(time_on_study, cox_at_value.ordered_event_time, cox_at_value.chf0())
-            log_chf0.append(np.log(chf0_at_values))
-        log_chf0_diff = np.vstack(log_chf0[1:]) - np.repeat(log_chf0[0][None, :], len(log_chf0) - 1, axis=0)
 
-        if nb_plots > 1:
-            ax[0, covar_number].step(np.repeat(time_on_study, log_chf0_diff.shape[0], axis=0).T, log_chf0_diff.T, where="post")
-            ax[0, covar_number].plot([0, np.max(time_on_study)], [0, 0], c="black")
-            ax[0, covar_number].set_xlabel("Time on study")
-            ax[0, covar_number].set_ylabel("Difference in log cumulative hazard rates")
+            chf0_strata[i] = _nearest_1dinterp(
+                timeline, cox_at_value.ordered_event_time, cox_at_value.chf0()
+            )
+
+        if andersen:
+            # standardize chf values to compare strata
+            chf0_strata = (
+                chf0_strata - chf0_strata.mean(axis=1)[:, None]
+            ) / chf0_strata.std(axis=1)[:, None]
+            # should be y = x line
+            ax[covar_index // 2, covar_index % 2].plot(
+                [0, np.max(chf0_strata[0])],
+                [0, np.max(chf0_strata[0])],
+                c="black",
+                linestyle="--",
+            )
+            for i in range(1, chf0_strata.shape[0]):
+                ax[covar_index // 2, covar_index % 2].set_title(
+                    f"Covar Z_{covar_index+1}"
+                )
+                ax[covar_index // 2, covar_index % 2].plot(
+                    chf0_strata[0], chf0_strata[i], label=f"strata {i + 1} vs. strata 1"
+                )
+                # ax[covar_index // 2, covar_index % 2].set_title(f"Covar Z_{covar_index+1}")
+                ax[covar_index // 2, covar_index % 2].legend()
+                fig.suptitle(
+                    "Andersen plots of standardized cumulative hazard rates strata"
+                )
+
         else:
-            ax.step(np.repeat(time_on_study, log_chf0_diff.shape[0], axis=0).T, log_chf0_diff.T, where="post")
-            ax.plot([0, np.max(time_on_study)], [0, 0], c="black")
-            ax.set_xlabel("Time on study")
-            ax.set_ylabel("Difference in log cumulative hazard rates")
+            log_chf0_diff = np.log(
+                chf0_strata[1:] / np.full_like(chf0_strata[1:], chf0_strata[0])
+            )
+            # standardize chf values to compare strata
+            log_chf0_diff = (
+                log_chf0_diff - log_chf0_diff.mean(axis=1)[:, None]
+            ) / log_chf0_diff.std(axis=1)[:, None]
+            # should be horizontal line y = 0 if centered
+            ax[covar_index // 2, covar_index % 2].plot(
+                [0, timeline[-1]], [0, 0], c="black", linestyle="--"
+            )
+            for i in range(log_chf0_diff.shape[0]):
+                ax[covar_index // 2, covar_index % 2].step(
+                    timeline,
+                    log_chf0_diff[i],
+                    where="post",
+                    label=f"log (strata {i + 2} / strata 1)",
+                )
+                ax[covar_index // 2, covar_index % 2].set_title(
+                    f"Covar Z_{covar_index+1}"
+                )
+                ax[covar_index // 2, covar_index % 2].set_xlabel("Time on study")
+                ax[covar_index // 2, covar_index % 2].legend()
+                fig.suptitle(
+                    "Difference in standardized log cumulative hazard rates strata"
+                )
 
-    fig.show()
+    plt.show()
 
 
 def cox_wald_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
