@@ -204,8 +204,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
     def _jac_negative_log_likelihood(self, params: np.ndarray, data: GammaProcessData) -> np.ndarray:
         pass
 
-    @staticmethod
-    def _method_of_moments(shape_power, data):
+    def _compute_moments(self, shape_power, data):
 
         moment1, moment2, moment3, moment2_scaling, moment3_scaling = [], [], [], [], []
         for i in data.unique_ids:
@@ -235,39 +234,18 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         moment2_scaling = np.mean(moment2_scaling)
         moment3_scaling = np.mean(moment3_scaling)
 
+        return moment1, moment2, moment3, moment2_scaling, moment3_scaling
+
+    def _method_of_moments(self, shape_power, data):
+
+        moment1, moment2, moment3, moment2_scaling, moment3_scaling = self._compute_moments(shape_power, data)
         rate = moment1 * moment2_scaling / moment2
-        shape_rate = moment1 * rate
         # return np.abs(2 * shape_rate / rate ** 3 * moment3_scaling - moment3)  # la fonction carrée est une pénalité
         return np.abs(2 * moment2 / moment2_scaling * moment3_scaling / moment3 - rate)
 
-    @staticmethod
-    def return_param(shape_power, data):
-        moment1, moment2, moment3, moment2_scaling, moment3_scaling = [], [], [], [], []
-        for i in data.unique_ids:
-            wi_id = np.diff(data.inspection_times[data.ids == i] ** shape_power)
-            zi_id = np.diff(data.deterioration_measurements[data.ids == i])
-            zbar_id = np.sum(zi_id) / np.sum(wi_id)
+    def return_param(self, shape_power, data):
 
-            moment1.append(
-                zbar_id
-            )
-            moment2.append(
-                np.sum((zi_id - zbar_id * wi_id) ** 2)
-            )
-            moment3.append(
-                np.sum((zi_id - zbar_id * wi_id) ** 3)
-            )
-            moment2_scaling.append(
-                np.sum(wi_id) - np.sum(wi_id ** 2) / np.sum(wi_id)
-            )
-            moment3_scaling.append(
-                np.sum(wi_id) + 2 * np.sum(wi_id ** 3) / np.sum(wi_id) ** 2 - 3 * np.sum(wi_id ** 2) / np.sum(wi_id)
-            )
-
-        moment1 = np.mean(moment1)
-        moment2 = np.mean(moment2)
-        moment2_scaling = np.mean(moment2_scaling)
-
+        moment1, moment2, _, moment2_scaling, _ = self._compute_moments(shape_power, data)
         rate = moment1 * moment2_scaling / moment2
         shape_rate = rate * moment1
         return shape_rate, shape_power, rate
