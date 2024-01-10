@@ -40,7 +40,7 @@ class GammaProcessData:
     def parse_data(self) -> None:
 
         if np.size(self.ids) != np.size(self.inspection_times) != np.size(self.deterioration_measurements):
-            raise ValueError("'inspection_times' and 'ids' must have the same length")
+            raise ValueError("'inspection_times', 'ids' and 'deterioration measurements' must have the same length")
 
         if np.size(self.inspection_times) <= 1 or np.size(self.deterioration_measurements) <= 1:
             raise ValueError(
