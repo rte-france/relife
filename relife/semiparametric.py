@@ -722,8 +722,11 @@ def cox_proportionality_effect_plot(cox: Cox, nb_strata=4, andersen=False) -> No
                 ax[covar_index // 2, covar_index % 2].set_title(
                     f"Covar Z_{covar_index+1}"
                 )
-                ax[covar_index // 2, covar_index % 2].plot(
-                    chf0_strata[0], chf0_strata[i], label=f"strata {i + 1} vs. strata 1"
+                ax[covar_index // 2, covar_index % 2].step(
+                    chf0_strata[0],
+                    chf0_strata[i],
+                    where="post",
+                    label=f"strata {i + 1} vs. strata 1",
                 )
                 # ax[covar_index // 2, covar_index % 2].set_title(f"Covar Z_{covar_index+1}")
                 ax[covar_index // 2, covar_index % 2].legend()
