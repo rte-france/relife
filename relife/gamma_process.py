@@ -16,16 +16,14 @@ from .utils import gauss_legendre, quad_laguerre, moore_jac_uppergamma_c
 
 matplotlib.use('Qt5Agg', force=True)
 
-
 @dataclass
 class GammaProcessData:
     inspection_times: np.array
     deterioration_measurements: np.array
     ids: np.array = None
-    censor: np.float = None  # niveau de la censure, par ex : precision de l'instrument de mesure
-    event: np.array = None  # 0: pas de censure, 1 : censure
+    censor: float = 0  # niveau de la censure, par ex : precision de l'instrument de mesure
     increments: np.array = None
-    log_increments: np.array = None
+    _event: np.array = None
 
     def __post_init__(self):
         # TODO: parse.data() beaucoup trop longue à s'exécuter: énorme bottleneck
@@ -34,13 +32,6 @@ class GammaProcessData:
         self.unique_ids = np.unique(self.ids)
         self.increments = np.diff(self.deterioration_measurements)
         self.parse_data()
-        self.event = self.increments == 0
-
-    def set_log_increments(self, log_increments):
-        self.log_increments = log_increments
-
-    def get_log_increments(self):
-        return self.log_increments
 
     def plot(self):
         for i in self.unique_ids:
@@ -52,60 +43,33 @@ class GammaProcessData:
 
     def parse_data(self) -> None:
 
-        if np.size(self.ids) != np.size(self.inspection_times):
+        if np.size(self.ids) != np.size(self.inspection_times) != np.size(self.deterioration_measurements):
             raise ValueError("'inspection_times' and 'ids' must have the same length")
 
-        if np.size(self.inspection_times) != np.size(self.deterioration_measurements):
-            raise ValueError("'inspection_times' and 'deterioration_measurements' must have the same length")
-
-        # TODO: à revoir
-        # check if user specified an 'inspection_times' = 0 for some 'ids', and accordingly, check if corresponding
-        # 'deterioration_measurements' is zero, otherwise raise an error. If 'inspection_times' and
-        # 'deterioration_measurements' are well specified, removes all instances of 'inspection_times' = 0.
-
-        check_initial_inspection_times_per_id_is_zero = np.array(
-            [any(self.inspection_times[self.ids == i] == 0) for i in self.unique_ids]
-        )
-
-        invalid_id_starting_values = self.unique_ids[np.array(
-            [(self.deterioration_measurements[self.ids == i][0] > 0)
-             & (self.inspection_times[self.ids == i][0] == 0) for i in self.unique_ids]
-        )]
-
-        if len(invalid_id_starting_values) > 0:
+        if np.size(self.inspection_times) <= 1 or np.size(self.deterioration_measurements) <= 1:
             raise ValueError(
-                f"Invalid starting values for 'inspection_times' and "
-                f"'deterioration_measurements' for ids {invalid_id_starting_values}")
+                "'inspection_times' and 'deterioration_measurements' must contain at least two data points")
 
-        else:
-            ind = np.where(check_initial_inspection_times_per_id_is_zero)[0]
-            ind = self.unique_ids[ind]
-            ind = np.array([np.where(self.ids == i)[0][0] for i in ind])
+        if any(self.inspection_times < 0):
+            raise ValueError("'inspection_times' must be positive")
 
-            if len(ind) > 0:
-                self.inspection_times = np.delete(self.inspection_times, ind)
-                self.deterioration_measurements = np.delete(self.deterioration_measurements, ind)
-                self.ids = np.delete(self.ids, ind)
+        condition = (self.inspection_times == 0) & (self.deterioration_measurements != 0)
+        if np.any(condition):
+            raise ValueError(f"Deterioration measurements should be at 0 when inspection times is 0. Invalid values for"
+                             f"ids {np.unique(self.ids[condition])} ")
 
-        # Inserting 'inspection_times' = 0, 'deterioration_measurements' = 0 for all 'ids', and calculating
-        # 'increments' with the convention that the increments corresponding to 'inspection_times' = 0 is also 0.
-        first_id_index = [np.where(self.ids == i)[0][0] for i in np.unique(self.ids)]
-        self.ids = np.insert(self.ids, first_id_index, np.unique(self.ids))
+        first_id_index = np.insert(np.where(np.diff(self.ids) > 0)[0] + 1, 0, 0)
+        first_id_location_mask = np.isin(np.arange(len(self.ids)), first_id_index)
+        insert_mask = first_id_location_mask & ~ ((self.inspection_times == 0) & (self.deterioration_measurements == 0))
 
-        self.inspection_times = np.insert(self.inspection_times, first_id_index, 0)
-        self.deterioration_measurements = np.insert(self.deterioration_measurements, first_id_index, 0)
+        # insert (inspection time, deterioration measurements) = (0, 0) at the beginning of each id's values when necessary
+        self.inspection_times = np.insert(self.inspection_times, np.where(insert_mask)[0], 0)
+        self.deterioration_measurements = np.insert(self.deterioration_measurements, np.where(insert_mask)[0], 0)
+        self.ids = np.insert(self.ids, np.where(insert_mask)[0], self.ids[insert_mask])
 
         self.increments = np.concatenate(
             [np.diff(self.deterioration_measurements[self.ids == i]) for i in self.unique_ids])
         self.increments = np.insert(self.increments, first_id_index, 0)
-
-        # Some more tests
-        if any(self.inspection_times < 0):
-            raise ValueError("'inspection_times' must be positive")
-
-        if np.size(self.inspection_times) == 1:
-            raise ValueError(
-                "'inspection_times' and 'deterioration_measurements' must contain at least two data points")
 
         # check if 'inspections_times' are increasing for each 'ids'
         check_inspection_times_per_id = [any(np.diff(self.inspection_times[self.ids == i]) <= 0) for i in
@@ -120,6 +84,9 @@ class GammaProcessData:
         if any(check_deterioration_measurements_per_id):
             incorrect_ids = self.unique_ids[np.where(check_deterioration_measurements_per_id)[0]]
             raise ValueError(f"'ids' {incorrect_ids} have non increasing 'deterioration_measurements'")
+
+        self.increments[self.increments <= self.censor] = 0
+        self._event = self.increments == 0
 
 
 @dataclass
@@ -148,18 +115,13 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                            - self.shape_function(inspection_times[:-1])).reshape(1, -1),
                           nb_sample,
                           axis=0)
-        # increments = np.random.gamma(shape, 1 / self.rate, (nb_sample, n))
-
-        log_increments = loggamma.rvs(c=shape, size=(nb_sample, n)) - np.log(
-            self.rate)  # generate loggamma distribution to avoid underflow. Useful for optimizing log likelihood
-
-        increments = np.exp(log_increments)
+        increments = np.random.gamma(shape, 1 / self.rate, (nb_sample, n))
         deterioration_measurements = np.cumsum(increments, axis=1)
         ids = np.repeat(np.arange(nb_sample), n)
         gp_data = GammaProcessData(np.tile(inspection_times[1:], nb_sample),
                                    deterioration_measurements.ravel(),
-                                   ids)
-        gp_data.set_log_increments(np.concatenate((np.zeros(nb_sample)[:, np.newaxis], log_increments), axis=1).ravel())
+                                   ids,
+                                   increments=increments)
 
         return gp_data
 
@@ -197,52 +159,22 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
     def isf(self, p: np.ndarray, *args: np.ndarray) -> np.ndarray:
         return self.ichf(-np.log(p), *args)
 
-    def ls_integrate(
-            self,
-            func: Callable,
-            a: np.ndarray,
-            b: np.ndarray,
-            *args: np.ndarray,
-            ndim: int = 0,
-            deg: int = 100,
-            q0: float = 1e-4
-    ) -> np.ndarray:
-        ub = self.support_upper_bound(*args)
-        b = np.minimum(ub, b)
-        f = lambda x, *args: func(x) * self.pdf(x, *args)
-        if np.all(np.isinf(b)):
-            b = self.isf(q0, *args)
-            res = quad_laguerre(f, b, *args, ndim=ndim, deg=deg)
-        else:
-            res = 0
-        return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + res
-
     def _negative_log_likelihood(self, params, data):
         shape_rate, shape_power, rate = params
         censor = data.censor
-
-        if data.log_increments is not None:
-            log_increments = data.log_increments
-        else:
-            log_increments = np.log(data.increments, where=data.increments != 0)
 
         negative_log_likelihood_ids = []
         for i in data.unique_ids:
             inspection_times_id = data.inspection_times[data.ids == i]
             increments_id = data.increments[data.ids == i][1:]
-            log_increments_id = log_increments[data.ids == i][1:]
-            # TODO: changer event_id ?
-            if data.log_increments is None:
-                event_id = data.event[data.ids == i][1:]
-            else:
-                event_id = (data.log_increments == 0)[data.ids == i][1:]
+            event_id = data._event[data.ids == i][1:]
 
             # contribution of uncensored measurements to likelihood
             exact_contribution = - np.sum(
                 np.diff(self._shape_function(params, inspection_times_id))[~event_id] * np.log(rate)
                 - np.log(gamma_function(shape_rate * (np.diff(inspection_times_id ** shape_power))[~event_id]))
                 + (shape_rate * (np.diff(inspection_times_id ** shape_power))[~event_id] - 1)
-                * log_increments_id[~event_id] - rate * increments_id[~event_id]
+                * np.log(increments_id[~event_id]) - rate * increments_id[~event_id]
             )
 
             # contributution of censored measurements to likelihood
@@ -325,29 +257,27 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         shape_rate = rate * moment1
         return shape_rate, shape_power, rate
 
-    def fit(self, inspection_times, deterioration_measurements, ids, log_increments=None, censor=None):
+    def fit(self, inspection_times, deterioration_measurements, ids, log_increments=None, censor=0):
         data = GammaProcessData(inspection_times=inspection_times,
                                 deterioration_measurements=deterioration_measurements,
                                 ids=ids,
-                                log_increments=log_increments,
                                 censor=censor)
-        if data.censor is None:
-            data.censor = 0
 
-        if log_increments is not None:
-            data.set_log_increments(log_increments)
-            if (any(data.increments[data.inspection_times != 0] == 0) and any(
-                    data.log_increments[data.inspection_times != 0] == 0)):
-                method = 'mom'
-            else:
-                method = 'likelihood'
+        #MOM
+        if any(data.increments[data.inspection_times != 0] == 0):
+
+            opt = minimize(
+                fun=self._method_of_moments,
+                x0=np.array([1]),
+                args=(data,),
+                method='Nelder-Mead',
+                bounds=((0.1, 3),),
+                options={'maxiter': 1000},
+            )
+            return self.return_param(opt.x[0], data)
+
+        ## Likelihood
         else:
-            if any(data.increments[data.inspection_times != 0] == 0):
-                method = 'mom'
-            else:
-                method = 'likelihood'
-
-        if method == 'likelihood':
             opt = minimize(
                 fun=self._negative_log_likelihood,
                 x0=np.array([1, 1, 1]),
@@ -359,16 +289,6 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             )
 
             return opt.x
-        else:
-            opt = minimize(
-                fun=self._method_of_moments,
-                x0=np.array([1]),
-                args=(data,),
-                method='Nelder-Mead',
-                bounds=((0.1, 3),),
-                options={'maxiter': 1000},
-            )
-            return self.return_param(opt.x[0], data)
 
     def resistance_sample(self, inspection_times, nb_sample=1):
         data = self.sample(inspection_times=inspection_times, nb_sample=nb_sample)
