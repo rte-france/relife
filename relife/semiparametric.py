@@ -614,26 +614,23 @@ class Cox:
 
 
 def cox_snell_residuals_plot(cox: Cox) -> None:
-    # ordered_time_index = np.argsort(cox.time)
-    # residual are defined for all observed times, chf0_values are computed for all observed times
-    # chf0_values = _nearest_1dinterp(
-    #     cox.time[ordered_time_index], cox.ordered_event_time, cox.chf0()
-    # )
-    print(cox.time)
+    """Graphical check of the overall fit of the cox model
+
+    Args:
+        cox (Cox): Cox instance model
+
+    Examples:
+        >>> cox_snell_residuals_plot(cox_model)
+    """
+    
+    # compute cox_snell residuals
     chf0_values = _nearest_1dinterp(cox.time, cox.ordered_event_time, cox.chf0())
-    print(chf0_values)
-    # returned residuals are in the same order as the orginal time array
-    # residuals = (
-    #     chf0_values * np.squeeze(Cox._g(cox.covar[ordered_time_index], cox.param))
-    # )[np.argsort(ordered_time_index)]
     residuals = chf0_values * np.squeeze(Cox._g(cox.covar, cox.param))
 
+    # compute chf values of residuals
     nelson_aalen_estimator = NelsonAalen()
     # nelson_aalen_estimator.fit(residuals, cox.event, cox.entry)
     nelson_aalen_estimator.fit(residuals, cox.event)
-
-    # print(nelson_aalen_estimator.chf)
-    # print(len(nelson_aalen_estimator.chf))
 
     chf_of_residuals = _nearest_1dinterp(
         residuals, nelson_aalen_estimator.timeline, nelson_aalen_estimator.chf
@@ -641,6 +638,7 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
 
     ordered_residuals_index = np.argsort(residuals)
 
+    # plot results
     fig, ax = plt.subplots()
     ax.step(
         residuals[ordered_residuals_index],
@@ -659,7 +657,23 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     plt.show()
 
 
-def cox_proportionality_effect_plot(cox: Cox, nb_strata=4, andersen=False) -> None:
+def cox_proportionality_effect_plot(cox: Cox, nb_strata: int = 4, andersen: bool = False) -> None:
+    """Graphical checks of the proportional effects of covariates assumption
+
+    Args:
+        cox (Cox): Cox instance model 
+        nb_strata (int, optional): number of strata used for covariate values. Defaults to 4.
+        andersen (bool, optional): If True, Andersen plots are used. Defaults to False, then difference of log cumulative hazard rates is used
+
+    Raises:
+        ValueError: the number of strata must not be too high to keep enough data per stratum
+
+    Examples:
+        >>> cox_proportionality_effect_plot(cox_model, nb_strata=4)
+        >>> cox_proportionality_effect_plot(cox_model, nb_strata=4, andersen=True)
+    """
+
+    # set figure grid
     if cox.covar.shape[1] % 2 == 0:
         fig, ax = plt.subplots(
             cox.covar.shape[1] // 2, 2, layout="constrained", squeeze=False
@@ -672,6 +686,7 @@ def cox_proportionality_effect_plot(cox: Cox, nb_strata=4, andersen=False) -> No
 
     timeline = np.sort(cox.time)
 
+    # iterate through each covariate
     for covar_index in range(cox.covar.shape[1]):
         # stratify continuous covar into categorical values
         # bins are the q-th quantile
@@ -687,6 +702,7 @@ def cox_proportionality_effect_plot(cox: Cox, nb_strata=4, andersen=False) -> No
         covar_strata[:, covar_index] = categorical_values
         chf0_strata = np.empty((len(np.unique(categorical_values)), len(timeline)))
 
+        # compute chf0 for each stratum
         for i, value in enumerate(np.unique(categorical_values)):
             value_index = np.where(categorical_values == value)[0]
             if len(value_index) == 1:
