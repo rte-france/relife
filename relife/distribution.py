@@ -36,7 +36,6 @@ class ParametricLifetimeDistribution(ParametricLifetimeModel):
     def _init_params(self, data: LifetimeData) -> np.ndarray:
         params0 = np.ones(self.n_params)
         params0[-1] = 1 / np.median(data.time)
-        print(params0)
         return params0
 
     def _set_params(self, params: np.ndarray) -> None:
@@ -179,12 +178,10 @@ class Exponential(ParametricLifetimeDistribution):
 
     @property
     def params(self) -> np.ndarray:
-        print(self.rate)
         return np.array([self.rate])
 
     def _chf(self, params: np.ndarray, t: np.ndarray) -> np.ndarray:
         rate = params[0]
-        # print(rate)
         return rate * t
 
     def _hf(self, params: np.ndarray, t: np.ndarray) -> np.ndarray:

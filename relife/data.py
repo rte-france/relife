@@ -71,7 +71,7 @@ class LifetimeData:
                 self.xl = np.array(self.time[:, 0])
                 self.xr = np.array(self.time[:, 1])
                 if self.event is None:
-                    self.event = np.array([1 if np.isclose(self.xl[i], self.xr[i]) else 0 for i in range(self.time.shape[0])])
+                    self.event = np.isclose(self.xl, self.xr).astype(int)
                 if self.entry is None:
                     self.entry = np.zeros_like(self.xl, float)
                 

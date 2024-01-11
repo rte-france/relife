@@ -58,10 +58,10 @@ def _estimate(data: LifetimeData) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         data.time, return_inverse=True, return_counts=True
     )
     d = np.zeros_like(timeline, int)
-    np.add.at(d, inv, data.event)
+    np.add.at(d, inv, data.event) # death at each step
     x_in = np.histogram(data.entry, np.insert(timeline, 0, 0))[0]
     x_out = np.insert(counts[:-1], 0, 0)
-    n = np.cumsum(x_in - x_out)
+    n = np.cumsum(x_in - x_out) # number of assets at risk at each step
     return timeline, d, n
 
 
@@ -361,7 +361,7 @@ class Turnbull:
     """
 
     def fit(
-            self, time: np.ndarray, event: np.ndarray = None, entry: np.ndarray = None
+            self, time: np.ndarray, entry: np.ndarray = None
     ) -> Turnbull:
         """[Aya : TODO / Complete code and doc] Fit the Turnbull estimator to interval censored lifetime data.
 
@@ -369,13 +369,44 @@ class Turnbull:
         ----------
 
         """
-        _data = LifetimeData(time, event, entry) # on aura self.xl, self.xr, et self.entry aussi
+        
+        _data = LifetimeData(time, entry = entry) 
         data = np.column_stack((_data.time, _data.entry))
-        # TODO : now that i've defined data, continue (frm censorship and all) using self.sf and self.timeline
-        # self.timeline, self.sf = Turnbull(data).values().T
+        timeline, s = _turnbull_estimate(data)
+        self.timeline = timeline
+        self.sf = s
+    
         return self
+    
+    def plot(self, alpha_ci: float = 0.05, **kwargs: np.ndarray) -> None:
+        r"""[Aya : TODO / Complete code and doc] Plot the Turnbull estimator of the survival function.
 
-def turnbull(data, tol=1e-4, lowmem=False):
+        Parameters
+        ----------
+        alpha_ci : float, optional
+            :math:`\alpha`-value to define the :math:`100(1-\alpha)\%`
+            confidence interval, by default 0.05 corresponding to the 95\%
+            confidence interval. If set to None or if the model has not been
+            fitted, no confidence interval is plotted.
+
+        **kwargs :
+            Extra arguments to specify the plot properties (see
+            matplotlib.pyplot.plot documentation).
+
+        """
+        label = kwargs.pop("label", "Turnbull")
+        plot(
+            self.timeline,
+            self.sf,
+            None,
+            alpha_ci,
+            bounds=(0, np.inf),
+            label=label,
+            drawstyle="steps-post",
+            **kwargs,
+        )
+
+def _turnbull_estimate(data, tol=1e-4, lowmem=False):
     """Computation of the Turnbull estimator on interval censored data.
 
                 Parameters
@@ -389,9 +420,8 @@ def turnbull(data, tol=1e-4, lowmem=False):
                 Estimates of the survival function
     """
 
-    data = data[['L', 'U', 'T']].values
     censorship = (data[:, 0] < data[:, 1])
-    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0))
+    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0)) # prq on insert 0 ?
     # tau = np.unique(np.append(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0),np.inf))
     k = len(tau)
 
@@ -404,7 +434,6 @@ def turnbull(data, tol=1e-4, lowmem=False):
     if not lowmem:
         alpha = (np.logical_not(np.less.outer(tau[:-1], data_censored[:, 0])) * np.logical_not(
             np.greater.outer(tau[1:], data_censored[:, 1]))).T
-        print(sys.getsizeof(alpha))
 
     else:
         ###
@@ -413,7 +442,6 @@ def turnbull(data, tol=1e-4, lowmem=False):
             alpha_bis.append(
                 np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
         alpha_bis = np.array(alpha_bis)
-        print(sys.getsizeof(alpha_bis))
         ###
 
     # count number of exact survival times falling in the intervall (tau_{j-1} ; tau_j]
@@ -464,6 +492,6 @@ def turnbull(data, tol=1e-4, lowmem=False):
         S = S_updated
         count += 1
     ind_del = np.where(tau == np.inf)
-    tau = np.delete(tau, ind_del)
-    S = np.delete(S, ind_del)
-    return pd.DataFrame({'tau': tau, 'S': S})
+    timeline = np.delete(tau, ind_del)
+    s = np.delete(S, ind_del)
+    return timeline, s
