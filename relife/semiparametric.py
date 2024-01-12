@@ -27,6 +27,36 @@ def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarr
     yp = np.concatenate([yp, yp[-1, None]])
     return yp[np.searchsorted(xp, x)]
 
+def _data_processing(time, event, entry):
+    (
+        ordered_event_time,
+        ordered_event_index,
+        event_count,
+    ) = np.unique(
+        time[event == 1],  # uncensored sorted times
+        return_index=True,
+        return_counts=True,
+    )
+
+    # here risk_set is mask array on time
+    # left truncated & right censored
+    risk_set = np.logical_and(
+        (
+            np.vstack([entry] * len(ordered_event_time))
+            < np.hstack([ordered_event_time[:, None]] * len(time))
+        ),
+        (
+            np.hstack([ordered_event_time[:, None]] * len(time))
+            <= np.vstack([time] * len(ordered_event_time))
+        ),
+    )
+
+    death_set = np.vstack([time * event] * len(ordered_event_time)) == np.hstack(
+        [ordered_event_time[:, None]] * len(time)
+    )
+
+    return ordered_event_time, ordered_event_index, event_count, risk_set, death_set
+
 
 class Cox:
     r"""Cox regression model
@@ -101,32 +131,13 @@ class Cox:
 
         (
             self.ordered_event_time,
-            sorted_uncensored_i,
+            ordered_event_index,
             self.event_count,
-        ) = np.unique(
-            self.time[self.event == 1],  # uncensored sorted times
-            return_index=True,
-            return_counts=True,
-        )
+            self.risk_set,
+            self.death_set,
+        ) = _data_processing(self.time, self.event, self.entry)
 
-        self.ordered_event_covar = self.covar[self.event == 1][sorted_uncensored_i]
-
-        # here risk_set is mask array on time
-        # left truncated & right censored
-        self.risk_set = np.logical_and(
-            (
-                np.vstack([self.entry] * len(self.ordered_event_time))
-                < np.hstack([self.ordered_event_time[:, None]] * len(self.time))
-            ),
-            (
-                np.hstack([self.ordered_event_time[:, None]] * len(self.time))
-                <= np.vstack([self.time] * len(self.ordered_event_time))
-            ),
-        )
-
-        self.death_set = np.vstack(
-            [self.time * self.event] * len(self.ordered_event_time)
-        ) == np.hstack([self.ordered_event_time[:, None]] * len(self.time))
+        self.ordered_event_covar = self.covar[self.event == 1][ordered_event_index]
 
         if (self.event_count > 3).any():
             self.set_method("efron")
@@ -538,10 +549,10 @@ class Cox:
             warnings.warn("cox model has to be fitted before calling sf0")
             return None
         elif conf_int:
-            chf0, chf0_conf_int = -self.chf(conf_int=True)
+            chf0, chf0_conf_int = -self.chf0(conf_int=True)
             return np.exp(-chf0), np.exp(-chf0_conf_int)
         else:
-            return np.exp(-self.chf())
+            return np.exp(-self.chf0())
 
     def sf(
         self, covar: np.ndarray, conf_int: bool = False
@@ -566,7 +577,7 @@ class Cox:
         if self.param is None:
             warnings.warn("cox model has to be fitted before calling sf")
             return None
-        values = np.exp(-self.chf()) ** Cox._g(covar, self.param)
+        values = self.sf0() ** Cox._g(covar, self.param)
         if conf_int:
             psi = self._psi(self.param)
             psi_order_1 = self._psi(self.param, order=1)
@@ -622,18 +633,27 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     Examples:
         >>> cox_snell_residuals_plot(cox_model)
     """
-    
+
     # compute cox_snell residuals
     chf0_values = _nearest_1dinterp(cox.time, cox.ordered_event_time, cox.chf0())
     residuals = chf0_values * np.squeeze(Cox._g(cox.covar, cox.param))
 
     # compute chf values of residuals
-    nelson_aalen_estimator = NelsonAalen()
-    # nelson_aalen_estimator.fit(residuals, cox.event, cox.entry)
-    nelson_aalen_estimator.fit(residuals, cox.event)
+    # nelson_aalen_estimator = NelsonAalen()
+    # # nelson_aalen_estimator.fit(residuals, cox.event, cox.entry)
+    # nelson_aalen_estimator.fit(residuals, cox.event)
+
+    # chf_of_residuals = _nearest_1dinterp(
+    #     residuals, nelson_aalen_estimator.timeline, nelson_aalen_estimator.chf
+    # )
+
+    ordered_event_residuals, ordered_event_index, event_count, risk_set, _ = _data_processing(residuals, cox.event, cox.entry)
+    chf_of_residuals = np.cumsum(event_count / risk_set.sum(axis=1))
+    chf_of_residuals = np.insert(chf_of_residuals, 0, 0., axis=0)
+    print(chf_of_residuals)
 
     chf_of_residuals = _nearest_1dinterp(
-        residuals, nelson_aalen_estimator.timeline, nelson_aalen_estimator.chf
+        residuals, ordered_event_residuals, chf_of_residuals
     )
 
     ordered_residuals_index = np.argsort(residuals)
@@ -641,8 +661,8 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     # plot results
     fig, ax = plt.subplots()
     ax.step(
-        residuals[ordered_residuals_index],
-        chf_of_residuals[ordered_residuals_index],
+        residuals[ordered_event_index],
+        chf_of_residuals[ordered_event_index],
         where="post",
     )
     ax.plot(
@@ -657,11 +677,13 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     plt.show()
 
 
-def cox_proportionality_effect_plot(cox: Cox, nb_strata: int = 4, andersen: bool = False) -> None:
+def cox_proportionality_effect_plot(
+    cox: Cox, nb_strata: int = 4, andersen: bool = False
+) -> None:
     """Graphical checks of the proportional effects of covariates assumption
 
     Args:
-        cox (Cox): Cox instance model 
+        cox (Cox): Cox instance model
         nb_strata (int, optional): number of strata used for covariate values. Defaults to 4.
         andersen (bool, optional): If True, Andersen plots are used. Defaults to False, then difference of log cumulative hazard rates is used
 
@@ -868,8 +890,9 @@ def cox_likelihood_ratio_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, fl
             cox.event,
             cox.entry,
         )
+        cox_under_h0.fit()
         neg_pl_beta_under_h0 = cox_under_h0._negative_log_partial_likelihood(
-            cox_under_h0.fit()
+            cox_under_h0.param
         )
         ch2 = 2 * (neg_pl_beta_under_h0 - neg_pl_beta)
         pval = chi2.sf(ch2, df=len(other_covar))
@@ -923,8 +946,9 @@ def cox_scores_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
             cox.event,
             cox.entry,
         )
+        cox_under_h0.fit()
         beta_under_h0 = np.zeros(cox.covar.shape[-1])
-        beta_under_h0[tested_covar] = cox_under_h0.fit()
+        beta_under_h0[tested_covar] = cox_under_h0.param
 
         ch2 = np.dot(
             cox._jac(beta_under_h0)[other_covar],
