@@ -647,7 +647,7 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     )
     ax.plot(
         [0, np.max(residuals)],
-        [0, np.max(chf_of_residuals)],
+        [0, np.max(residuals)],
         c="black",
         linestyle="--",
     )
