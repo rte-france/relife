@@ -639,21 +639,11 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     residuals = chf0_values * np.squeeze(Cox._g(cox.covar, cox.param))
 
     # compute chf values of residuals
-    # nelson_aalen_estimator = NelsonAalen()
-    # # nelson_aalen_estimator.fit(residuals, cox.event, cox.entry)
-    # nelson_aalen_estimator.fit(residuals, cox.event)
-
-    # chf_of_residuals = _nearest_1dinterp(
-    #     residuals, nelson_aalen_estimator.timeline, nelson_aalen_estimator.chf
-    # )
-
-    ordered_event_residuals, ordered_event_index, event_count, risk_set, _ = _data_processing(residuals, cox.event, cox.entry)
-    chf_of_residuals = np.cumsum(event_count / risk_set.sum(axis=1))
-    chf_of_residuals = np.insert(chf_of_residuals, 0, 0., axis=0)
-    print(chf_of_residuals)
+    nelson_aalen_estimator = NelsonAalen()
+    nelson_aalen_estimator.fit(residuals, cox.event)
 
     chf_of_residuals = _nearest_1dinterp(
-        residuals, ordered_event_residuals, chf_of_residuals
+        residuals, nelson_aalen_estimator.timeline, nelson_aalen_estimator.chf
     )
 
     ordered_residuals_index = np.argsort(residuals)
@@ -661,8 +651,8 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
     # plot results
     fig, ax = plt.subplots()
     ax.step(
-        residuals[ordered_event_index],
-        chf_of_residuals[ordered_event_index],
+        residuals[ordered_residuals_index],
+        chf_of_residuals[ordered_residuals_index],
         where="post",
     )
     ax.plot(
