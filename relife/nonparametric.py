@@ -64,6 +64,73 @@ def _estimate(data: LifetimeData) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     n = np.cumsum(x_in - x_out) # number of assets at risk at each step
     return timeline, d, n
 
+def _turnbull_estimate(data, tol=1e-4, lowmem=False):
+    """Computation of the Turnbull estimator on interval censored data.
+
+                Parameters
+                ----------
+                data : data set of generalized interval censored measurements (can  be left, right, interval, exact)
+                tol : stopping criteria for convergence. Algorithm stops when the infinite norm of the difference
+                between the current and updated estimates for the survival function is less than tol.
+
+                Returns
+                -------
+                Estimates of the survival function
+    """
+
+    censorship = (data[:, 0] < data[:, 1])
+    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0)) 
+    k = len(tau)
+    data_censored = data[censorship == True]
+
+    if not lowmem:
+        alpha = (np.logical_not(np.less.outer(tau[:-1], data_censored[:, 0])) * np.logical_not(
+            np.greater.outer(tau[1:], data_censored[:, 1]))).T
+    else:
+        alpha_bis = []
+        for i in range(data_censored.shape[0]):
+            alpha_bis.append(
+                np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
+        alpha_bis = np.array(alpha_bis)
+
+    exact_survival_times = data[censorship == False][:, 0]
+    d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(len(tau) + 1))[0][1:]
+    S = np.linspace(1, 0, k)
+    res = 1
+    count = 1
+
+    while res > tol:
+        p = -np.diff(S)
+        if np.sum(p == 0) > 0: 
+            p = np.where(p == 0, 1e-5 / np.sum(p == 0), p - 1e-5 / ((k - 1) - np.sum(p == 0)))
+        if not lowmem:
+            if np.any(alpha):
+                alpha_p = alpha * p.T
+                d = (alpha_p.T / alpha_p.sum(axis=1)).T.sum(axis=0)
+                d += d_tilde
+            else:
+                d = d_tilde
+        else:
+            x = [p[alpha_bis[i, 0]:(alpha_bis[i, 1] + 1)] for i in range(alpha_bis.shape[0])]
+            d = np.repeat(0, len(tau) - 1)
+            for i in range(data_censored.shape[0]):
+                d = d + (np.append(np.insert(x[i] / x[i].sum(), 0, np.repeat(0, alpha_bis[i][0])),
+                                   np.repeat(0, len(tau) - alpha_bis[i][1] - 2)))
+            d = d + d_tilde
+
+        y = np.cumsum(d[::-1])[::-1]
+        y -= len(data[:, 2]) - np.searchsorted(np.sort(data[:, 2]), tau[1:], side='left')  
+        S_updated = np.array(np.cumprod(1 - d / y))
+        S_updated = np.insert(S_updated, 0, 1)
+        res = max(abs(S - S_updated))
+        S = S_updated
+        count += 1
+
+    ind_del = np.where(tau == np.inf)
+    timeline = np.delete(tau, ind_del)
+    s = np.delete(S, ind_del)
+    
+    return timeline, s
 
 class ECDF:
     """Empirical Cumulative Distribution Function."""
@@ -361,7 +428,8 @@ class Turnbull:
     """
 
     def fit(
-            self, time: np.ndarray, entry: np.ndarray = None
+            self, time: np.ndarray, entry: np.ndarray = None, tol: float = 1e-4,
+              lowmem: bool = False,
     ) -> Turnbull:
         """[Aya : TODO / Complete code and doc] Fit the Turnbull estimator to interval censored lifetime data.
 
@@ -372,10 +440,10 @@ class Turnbull:
         
         _data = LifetimeData(time, entry = entry) 
         data = np.column_stack((_data.time, _data.entry))
-        timeline, s = _turnbull_estimate(data)
+        timeline, s = _turnbull_estimate(data, tol, lowmem)
         self.timeline = timeline
         self.sf = s
-    
+        # TODO ? define / compute self.se ? 
         return self
     
     def plot(self, alpha_ci: float = 0.05, **kwargs: np.ndarray) -> None:
@@ -405,93 +473,3 @@ class Turnbull:
             drawstyle="steps-post",
             **kwargs,
         )
-
-def _turnbull_estimate(data, tol=1e-4, lowmem=False):
-    """Computation of the Turnbull estimator on interval censored data.
-
-                Parameters
-                ----------
-                data : data set of generalized interval censored measurements (can  be left, right, interval, exact)
-                tol : stopping criteria for convergence. Algorithm stops when the infinite norm of the difference
-                between the current and updated estimates for the survival function is less than tol.
-
-                Returns
-                -------
-                Estimates of the survival function
-    """
-
-    censorship = (data[:, 0] < data[:, 1])
-    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0)) # prq on insert 0 ?
-    # tau = np.unique(np.append(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0),np.inf))
-    k = len(tau)
-
-    # Let alpha_{i,j} be 1 if the interval (tau_{j−1}, tau_{j}] is contained in the interval (Li, Ui]
-    # and 0 otherwise. alpha_{i,j} indicates whether the event which occurs in the
-    # interval (L_i, U_i] could have occurred at tau_j.
-
-    data_censored = data[censorship == True]
-
-    if not lowmem:
-        alpha = (np.logical_not(np.less.outer(tau[:-1], data_censored[:, 0])) * np.logical_not(
-            np.greater.outer(tau[1:], data_censored[:, 1]))).T
-
-    else:
-        ###
-        alpha_bis = []
-        for i in range(data_censored.shape[0]):
-            alpha_bis.append(
-                np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
-        alpha_bis = np.array(alpha_bis)
-        ###
-
-    # count number of exact survival times falling in the intervall (tau_{j-1} ; tau_j]
-    exact_survival_times = data[censorship == False][:, 0]
-    d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(len(tau) + 1))[0][1:]
-
-    # Survival function initialization
-    S = np.linspace(1, 0, k)
-
-    res = 1
-    count = 1
-
-    while res > tol:
-        # Step 1 : estimation of probability of an event occuring at times tau_j:
-        p = -np.diff(S)
-        if np.sum(p == 0) > 0:  # prevents alpha * p.T from having a row of 0's which prevents d from updating
-            p = np.where(p == 0, 1e-5 / np.sum(p == 0), p - 1e-5 / ((k - 1) - np.sum(p == 0)))
-
-        # Step 2 + 2.5 : estimation of number of events which occured at time tau_j +
-        # add number of exact survival times falling in (tau_{j-1} ; tau_j] to d
-
-        if not lowmem:
-            if np.any(alpha):
-                alpha_p = alpha * p.T
-                d = (alpha_p.T / alpha_p.sum(axis=1)).T.sum(axis=0)
-                d += d_tilde
-            else:
-                d = d_tilde
-        else:
-            #####
-            x = [p[alpha_bis[i, 0]:(alpha_bis[i, 1] + 1)] for i in range(alpha_bis.shape[0])]
-            d = np.repeat(0, len(tau) - 1)
-
-            for i in range(data_censored.shape[0]):
-                d = d + (np.append(np.insert(x[i] / x[i].sum(), 0, np.repeat(0, alpha_bis[i][0])),
-                                   np.repeat(0, len(tau) - alpha_bis[i][1] - 2)))
-            d = d + d_tilde
-            #####
-
-        # Step 3 : estimation of number of individuals at risk at tau_j:
-        y = np.cumsum(d[::-1])[::-1]
-        y -= len(data[:, 2]) - np.searchsorted(np.sort(data[:, 2]), tau[1:], side='left')  # add truncation effect
-
-        # Step 4 : Compute the Product-Limit estimator using the data found in Steps 2 and 3.
-        S_updated = np.array(np.cumprod(1 - d / y))
-        S_updated = np.insert(S_updated, 0, 1)
-        res = max(abs(S - S_updated))
-        S = S_updated
-        count += 1
-    ind_del = np.where(tau == np.inf)
-    timeline = np.delete(tau, ind_del)
-    s = np.delete(S, ind_del)
-    return timeline, s

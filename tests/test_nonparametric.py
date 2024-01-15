@@ -33,22 +33,24 @@ def weibull_model(request):
 
 
 def test_fit_ecdf_kaplan_meier(data):
-    # print(data) # TODO : check what's the return of this
     time = data.time[data.event == 1]
     ecdf = ECDF().fit(time)
     km = KaplanMeier().fit(time)
     assert ecdf.sf == pytest.approx(km.sf, rel=1e-4)
-    # assert False # TODO : remove when done
 
 def test_turnbull(data_turnbull, weibull_model):
-    import pandas as pd 
-    # tb = Turnbull().fit
-    # TODO : after implementing load_input_turnbull(), checking what data of test_fit_ecdf_kaplan_meier() is, implement same for test_turnbull()
-     
-    tb = Turnbull().fit(data_turnbull.time, entry = data_turnbull.entry)
-    # print(tb.params)
-    print(weibull_model.params)
-    # TODO : assert tb estimation equals weibull_model estimation
-    assert False 
+    """
+    Test the Turnbull estimator.
 
+    Explications : 
+        - Lors de la création de data_turnbull, on s'est basé sur Weibull(c=7.531, rate=0.037) 
+    pour déterminer si un interval contenait une defaillance ou non. 
+
+        - Division de tb.timeline par 6 : On avait multiplié les temps de Weibull(c=7.531, rate=0.037) 
+    par 6 pour avoir des valeurs cohérente avec les valeurs des intervales de visite de poste.
+
+    """
+    tb = Turnbull().fit(data_turnbull.time, entry = data_turnbull.entry)
+    t = tb.timeline / 6
+    assert np.isclose(tb.sf, weibull_model.sf(t), atol=0.02).all()
 
