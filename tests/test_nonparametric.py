@@ -53,4 +53,7 @@ def test_turnbull(data_turnbull, weibull_model):
     tb = Turnbull().fit(data_turnbull.time, entry = data_turnbull.entry)
     t = tb.timeline / 6
     assert np.isclose(tb.sf, weibull_model.sf(t), atol=0.02).all()
-
+    # S = np.linspace(0, 1, 163)
+    # print(np.linspace(0, 1, 163))
+    # print(np.diff(S))
+    # assert False 

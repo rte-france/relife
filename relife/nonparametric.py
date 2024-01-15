@@ -94,7 +94,7 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
         alpha_bis = np.array(alpha_bis)
 
     exact_survival_times = data[censorship == False][:, 0]
-    d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(len(tau) + 1))[0][1:]
+    d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(k + 1))[0][1:]
     S = np.linspace(1, 0, k)
     res = 1
     count = 1
@@ -112,10 +112,10 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
                 d = d_tilde
         else:
             x = [p[alpha_bis[i, 0]:(alpha_bis[i, 1] + 1)] for i in range(alpha_bis.shape[0])]
-            d = np.repeat(0, len(tau) - 1)
+            d = np.repeat(0, k - 1)
             for i in range(data_censored.shape[0]):
                 d = d + (np.append(np.insert(x[i] / x[i].sum(), 0, np.repeat(0, alpha_bis[i][0])),
-                                   np.repeat(0, len(tau) - alpha_bis[i][1] - 2)))
+                                   np.repeat(0, k - alpha_bis[i][1] - 2)))
             d = d + d_tilde
 
         y = np.cumsum(d[::-1])[::-1]
