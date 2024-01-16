@@ -84,12 +84,12 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
     data_censored = data[censorship == True]
 
     if not lowmem:
-        alpha1 = (np.greater_equal.outer(tau[:-1], data_censored[:, 0]) *  # replaced np.logical_not(np.less.outer) by np.greater_equal.outer
-            np.less_equal.outer(tau[1:], data_censored[:, 1])).T
-
-        alpha = (np.logical_not(np.less.outer(tau[:-1], data_censored[:, 0])) * np.logical_not(
-            np.greater.outer(tau[1:], data_censored[:, 1]))).T
-        print((alpha1 == alpha).all())
+        lower_bound = data_censored[:, 0]
+        upper_bound = data_censored[:, 1]
+        alpha = (np.greater_equal.outer(tau[:-1], lower_bound ) *  # replaced np.logical_not(np.less.outer) by np.greater_equal.outer
+            np.less_equal.outer(tau[1:], upper_bound)).T # replaced np.logical_not(np.greater.outer) by np.less_equal.outer
+        # points of the timeline (tau) that are included in the interval (for each interval)
+            # so for each interval, we have a vector of len(tau) of F and T, T if the point is included in the interval
     else:
         alpha_bis = []
         for i in range(data_censored.shape[0]):
@@ -104,7 +104,7 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
     count = 1
 
     while res > tol:
-        p = -np.diff(S)
+        p = -np.diff(S) # écart entre les points de S (survival function?)
         if np.sum(p == 0) > 0: 
             p = np.where(p == 0, 1e-5 / np.sum(p == 0), p - 1e-5 / ((k - 1) - np.sum(p == 0)))
         if not lowmem:
