@@ -56,4 +56,4 @@ def test_turnbull(data_turnbull, weibull_model):
     # S = np.linspace(0, 1, 163)
     # print(np.linspace(0, 1, 163))
     # print(np.diff(S))
-    # assert False 
+    assert False 

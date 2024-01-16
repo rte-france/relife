@@ -79,13 +79,17 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
     """
 
     censorship = (data[:, 0] < data[:, 1])
-    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0)) 
+    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0)) # flattens les intervalles et les tri et insère 0 au début
     k = len(tau)
     data_censored = data[censorship == True]
 
     if not lowmem:
+        alpha1 = (np.greater_equal.outer(tau[:-1], data_censored[:, 0]) *  # replaced np.logical_not(np.less.outer) by np.greater_equal.outer
+            np.less_equal.outer(tau[1:], data_censored[:, 1])).T
+
         alpha = (np.logical_not(np.less.outer(tau[:-1], data_censored[:, 0])) * np.logical_not(
             np.greater.outer(tau[1:], data_censored[:, 1]))).T
+        print((alpha1 == alpha).all())
     else:
         alpha_bis = []
         for i in range(data_censored.shape[0]):
