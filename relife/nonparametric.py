@@ -97,14 +97,14 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
                 np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
         alpha_bis = np.array(alpha_bis)
 
-    exact_survival_times = data[censorship == False][:, 0]
-    d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(k + 1))[0][1:]
+    exact_survival_times = data[censorship == False][:, 0] 
+    d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(k + 1))[0][1:] # TODO
     S = np.linspace(1, 0, k)
     res = 1
     count = 1
 
     while res > tol:
-        p = -np.diff(S) # écart entre les points de S (survival function?)
+        p = -np.diff(S) # écart entre les points de S (survival function?) #TODO from here 
         if np.sum(p == 0) > 0: 
             p = np.where(p == 0, 1e-5 / np.sum(p == 0), p - 1e-5 / ((k - 1) - np.sum(p == 0)))
         if not lowmem:
