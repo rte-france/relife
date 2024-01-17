@@ -9,6 +9,7 @@ from scipy import linalg
 from .nonparametric import NelsonAalen
 import matplotlib.pyplot as plt
 
+
 def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
     """Returns x nearest interpolation based on xp and yp data points
     xp has to be monotonically increasing
@@ -25,6 +26,7 @@ def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarr
     xp = xp + np.hstack([spacing, spacing[-1]])
     yp = np.concatenate([yp, yp[-1, None]])
     return yp[np.searchsorted(xp, x)]
+
 
 def _data_processing(time, event, entry):
     (
@@ -423,7 +425,7 @@ class Cox:
 
             return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
 
-    def fit(self, method: str = "trust-exact", seed : int = None) -> np.ndarray:
+    def fit(self, method: str = "trust-exact", seed: int = None) -> np.ndarray:
         """
         Fit the covariate effect to time, covar, event and entry arrays.
 
@@ -669,7 +671,12 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
 
 
 def cox_proportionality_effect_plot(
-    cox: Cox, covar : np.ndarray, nb_strata: int = 4, andersen: bool = False, is_categorical : bool = False, plot : bool = False,
+    cox: Cox,
+    covar: np.ndarray,
+    nb_strata: int = 4,
+    andersen: bool = False,
+    is_categorical: bool = False,
+    plot: bool = False,
 ) -> None:
     """Graphical checks of the proportional effects of covariates assumption
 
@@ -685,20 +692,14 @@ def cox_proportionality_effect_plot(
         >>> cox_proportionality_effect_plot(cox_model, nb_strata=4)
         >>> cox_proportionality_effect_plot(cox_model, nb_strata=4, andersen=True)
     """
-    assert (
-        len(covar.shape) == 1
-    ), f"covar has shape {covar.shape} but must be 1d"
+    assert len(covar.shape) == 1, f"covar has shape {covar.shape} but must be 1d"
 
     timeline = np.sort(cox.time)
 
     # if not categorical covar, encode it
-    if not is_categorical :
-        bins = np.quantile(
-            covar, q=np.cumsum(np.ones(nb_strata) / nb_strata)
-        )
-        covar = (
-            np.digitize(covar, bins, right=True) + 1
-        )
+    if not is_categorical:
+        bins = np.quantile(covar, q=np.cumsum(np.ones(nb_strata) / nb_strata))
+        covar = np.digitize(covar, bins, right=True) + 1
         covar_strata_values = np.unique(covar)
         nb_cat_values = len(covar_strata_values)
     else:
@@ -707,7 +708,7 @@ def cox_proportionality_effect_plot(
         if nb_strata != nb_cat_values:
             raise ValueError(
                 f"If covar is categorical, nb strata must equal nb of categorical values ({nb_strata} nb strata != {nb_cat_values})"
-        )
+            )
 
     chf0_strata = np.empty((nb_cat_values, len(timeline)))
 
@@ -731,7 +732,7 @@ def cox_proportionality_effect_plot(
         )
 
     if andersen:
-        if plot :
+        if plot:
             # set figure grid
             fig, ax = plt.subplots()
             for i in range(1, chf0_strata.shape[0]):
@@ -753,7 +754,7 @@ def cox_proportionality_effect_plot(
         log_chf0_diff = np.log(
             chf0_strata[1:] / np.full_like(chf0_strata[1:], chf0_strata[0])
         )
-        if plot :
+        if plot:
             # set figure grid
             fig, ax = plt.subplots()
             for i in range(log_chf0_diff.shape[0]):
