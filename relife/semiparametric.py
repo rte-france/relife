@@ -9,7 +9,6 @@ from scipy import linalg
 from .nonparametric import NelsonAalen
 import matplotlib.pyplot as plt
 
-
 def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
     """Returns x nearest interpolation based on xp and yp data points
     xp has to be monotonically increasing
@@ -424,13 +423,15 @@ class Cox:
 
             return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
 
-    def fit(self, method: str = "trust-exact") -> np.ndarray:
+    def fit(self, method: str = "trust-exact", seed : int = None) -> np.ndarray:
         """
         Fit the covariate effect to time, covar, event and entry arrays.
 
         References:
             https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
         """
+        # init random seed for reproductibility
+        np.random.seed(seed)
         opt = minimize(
             fun=self._negative_log_partial_likelihood,
             x0=np.random.random(self.covar.shape[1]),
@@ -668,7 +669,7 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
 
 
 def cox_proportionality_effect_plot(
-    cox: Cox, nb_strata: int = 4, andersen: bool = False
+    cox: Cox, covar : np.ndarray, nb_strata: int = 4, andersen: bool = False, is_categorical : bool = False, plot : bool = False,
 ) -> None:
     """Graphical checks of the proportional effects of covariates assumption
 
@@ -684,113 +685,92 @@ def cox_proportionality_effect_plot(
         >>> cox_proportionality_effect_plot(cox_model, nb_strata=4)
         >>> cox_proportionality_effect_plot(cox_model, nb_strata=4, andersen=True)
     """
-
-    # set figure grid
-    if cox.covar.shape[1] % 2 == 0:
-        fig, ax = plt.subplots(
-            cox.covar.shape[1] // 2, 2, layout="constrained", squeeze=False
-        )
-    else:
-        fig, ax = plt.subplots(
-            cox.covar.shape[1] // 2 + 1, 2, layout="constrained", squeeze=False
-        )
-        fig.delaxes(ax[cox.covar.shape[1] // 2, 1])
+    assert (
+        len(covar.shape) == 1
+    ), f"covar has shape {covar.shape} but must be 1d"
 
     timeline = np.sort(cox.time)
 
-    # iterate through each covariate
-    for covar_index in range(cox.covar.shape[1]):
-        # stratify continuous covar into categorical values
-        # bins are the q-th quantile
-        # if covar values are already categorical, they remain the same
+    # if not categorical covar, encode it
+    if not is_categorical :
         bins = np.quantile(
-            cox.covar[:, covar_index], q=np.cumsum(np.ones(nb_strata) / nb_strata)
+            covar, q=np.cumsum(np.ones(nb_strata) / nb_strata)
         )
-        categorical_values = (
-            np.digitize(cox.covar[:, covar_index], bins, right=True) + 1
+        covar = (
+            np.digitize(covar, bins, right=True) + 1
+        )
+        covar_strata_values = np.unique(covar)
+        nb_cat_values = len(covar_strata_values)
+    else:
+        covar_strata_values = np.unique(covar)
+        nb_cat_values = len(covar_strata_values)
+        if nb_strata != nb_cat_values:
+            raise ValueError(
+                f"If covar is categorical, nb strata must equal nb of categorical values ({nb_strata} nb strata != {nb_cat_values})"
         )
 
-        covar_strata = np.copy(cox.covar)
-        covar_strata[:, covar_index] = categorical_values
-        chf0_strata = np.empty((len(np.unique(categorical_values)), len(timeline)))
+    chf0_strata = np.empty((nb_cat_values, len(timeline)))
 
-        # compute chf0 for each stratum
-        for i, value in enumerate(np.unique(categorical_values)):
-            value_index = np.where(categorical_values == value)[0]
-            if len(value_index) == 1:
-                raise ValueError(
-                    f"Nb of strata is too high and {i}-th stratum only corresponds to one value. Decrease nb_strata value"
-                )
-
-            cox_at_value = Cox(
-                np.copy(cox.time[value_index]),
-                covar_strata[value_index, :],
-                np.copy(cox.event[value_index]),
-                np.copy(cox.entry[value_index]),
+    # compute chf0 for each stratum of covar value
+    for i, value in enumerate(covar_strata_values):
+        value_index = np.where(covar == value)[0]
+        if len(value_index) == 1:
+            raise ValueError(
+                f"Nb of strata is too high and {i}-th stratum only corresponds to one value. Decrease nb_strata value"
             )
-            cox_at_value.fit()
+        cox_at_value = Cox(
+            np.copy(cox.time[value_index]),
+            covar[value_index],
+            np.copy(cox.event[value_index]),
+            np.copy(cox.entry[value_index]),
+        )
+        # set seed for reproductibility
+        cox_at_value.fit(seed=21)
+        chf0_strata[i] = _nearest_1dinterp(
+            timeline, cox_at_value.ordered_event_time, cox_at_value.chf0()
+        )
 
-            chf0_strata[i] = _nearest_1dinterp(
-                timeline, cox_at_value.ordered_event_time, cox_at_value.chf0()
-            )
-
-        if andersen:
-            # standardize chf values to compare strata
-            chf0_strata = (
-                chf0_strata - chf0_strata.mean(axis=1)[:, None]
-            ) / chf0_strata.std(axis=1)[:, None]
-            # should be y = x line
-            ax[covar_index // 2, covar_index % 2].plot(
-                [0, np.max(chf0_strata[0])],
-                [0, np.max(chf0_strata[0])],
-                c="black",
-                linestyle="--",
-            )
+    if andersen:
+        if plot :
+            # set figure grid
+            fig, ax = plt.subplots()
             for i in range(1, chf0_strata.shape[0]):
-                ax[covar_index // 2, covar_index % 2].set_title(
-                    f"Covar Z_{covar_index+1}"
-                )
-                ax[covar_index // 2, covar_index % 2].step(
+                ax.step(
                     chf0_strata[0],
                     chf0_strata[i],
                     where="post",
                     label=f"strata {i + 1} vs. strata 1",
                 )
-                # ax[covar_index // 2, covar_index % 2].set_title(f"Covar Z_{covar_index+1}")
-                ax[covar_index // 2, covar_index % 2].legend()
+                ax.legend()
                 fig.suptitle(
                     "Andersen plots of standardized cumulative hazard rates strata"
                 )
-
+            plt.show()
         else:
-            log_chf0_diff = np.log(
-                chf0_strata[1:] / np.full_like(chf0_strata[1:], chf0_strata[0])
-            )
-            # standardize chf values to compare strata
-            log_chf0_diff = (
-                log_chf0_diff - log_chf0_diff.mean(axis=1)[:, None]
-            ) / log_chf0_diff.std(axis=1)[:, None]
-            # should be horizontal line y = 0 if centered
-            ax[covar_index // 2, covar_index % 2].plot(
-                [0, timeline[-1]], [0, 0], c="black", linestyle="--"
-            )
+            return chf0_strata
+
+    else:
+        log_chf0_diff = np.log(
+            chf0_strata[1:] / np.full_like(chf0_strata[1:], chf0_strata[0])
+        )
+        if plot :
+            # set figure grid
+            fig, ax = plt.subplots()
             for i in range(log_chf0_diff.shape[0]):
-                ax[covar_index // 2, covar_index % 2].step(
+                ax.step(
                     timeline,
                     log_chf0_diff[i],
                     where="post",
                     label=f"log (strata {i + 2} / strata 1)",
                 )
-                ax[covar_index // 2, covar_index % 2].set_title(
-                    f"Covar Z_{covar_index+1}"
-                )
-                ax[covar_index // 2, covar_index % 2].set_xlabel("Time on study")
-                ax[covar_index // 2, covar_index % 2].legend()
+                ax.set_xlabel("Time on study")
+                ax.legend()
                 fig.suptitle(
                     "Difference in standardized log cumulative hazard rates strata"
                 )
-
-    plt.show()
+            plt.show()
+        else:
+            return log_chf0_diff
 
 
 def cox_wald_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
@@ -880,7 +860,8 @@ def cox_likelihood_ratio_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, fl
             cox.event,
             cox.entry,
         )
-        cox_under_h0.fit()
+        # set seed for reproductibility
+        cox_under_h0.fit(seed=21)
         neg_pl_beta_under_h0 = cox_under_h0._negative_log_partial_likelihood(
             cox_under_h0.param
         )
@@ -936,7 +917,8 @@ def cox_scores_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
             cox.event,
             cox.entry,
         )
-        cox_under_h0.fit()
+        # set seed for reproductibility
+        cox_under_h0.fit(seed=21)
         beta_under_h0 = np.zeros(cox.covar.shape[-1])
         beta_under_h0[tested_covar] = cox_under_h0.param
 
