@@ -494,7 +494,9 @@ class Cox:
             return None
         return np.sqrt(np.diag(self.var))
 
-    def chf0(self, conf_int: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+    def chf0(
+        self, conf_int: bool = False, kp: bool = False
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Knowing estimates of beta, computes the cumulative baseline hazard rate estimator and its confidence interval (optional)
 
         Args:
@@ -515,7 +517,20 @@ class Cox:
         if self.param is None:
             warnings.warn("cox model has to be fitted before calling chf0")
             return None
-        values = np.cumsum(self.event_count[:, None] / self._psi(self.param))
+        if kp:
+            values = np.cumsum(
+                1
+                - (
+                    1
+                    - (
+                        Cox._g(self.ordered_event_covar, self.param)
+                        / self._psi(self.param)
+                    )
+                )
+                ** (Cox._g(self.ordered_event_covar, -self.param))
+            )
+        else:
+            values = np.cumsum(self.event_count[:, None] / self._psi(self.param))
         if conf_int:
             var = np.cumsum(self.event_count[:, None] / self._psi(self.param) ** 2)
             conf_int = np.hstack(
