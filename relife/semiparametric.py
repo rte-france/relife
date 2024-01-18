@@ -87,7 +87,7 @@ class Cox:
     def __init__(
         self,
         time: np.ndarray,
-        covar: Union[np.ndarray, list, tuple],
+        covar: np.ndarray,
         event: np.ndarray = None,
         entry: np.ndarray = None,
     ):
@@ -98,7 +98,7 @@ class Cox:
         assert (
             isinstance(entry, np.ndarray) or entry is None
         ), "entry must be np.ndarray or None"
-        assert isinstance(covar, np.ndarray), "covar must be np.ndarray, list or tuple"
+        assert isinstance(covar, np.ndarray), "covar must be np.ndarray"
 
         self.time = time
         # self.covar = covar
@@ -627,30 +627,17 @@ class Cox:
         else:
             return values
 
-    # def rr(self, beta: np.ndarray) -> np.ndarray:
-    #     """Return the relative risks
 
-    #     Args:
-    #         beta (np.ndarray): estimates of parameter vector, shape p
-
-    #     Returns:
-    #         np.ndarray: relative risks, shape (p,p)
-    #     """
-    #     if self.param is None:
-    #         warnings.warn("cox model has to be fitted before calling sf0")
-    #         return None
-    #     return np.dot(np.exp(beta)[:, None], (1 / np.exp(beta))[None, :])
-
-
-def cox_snell_residuals_plot(cox: Cox) -> None:
+def cox_snell_residuals(
+    cox: Cox, plot: bool = False
+) -> Union[None, Tuple[np.ndarray, np.ndarray]]:
     """Graphical check of the overall fit of the cox model
 
     Args:
         cox (Cox): Cox instance model
-
-    Examples:
-        >>> cox_snell_residuals_plot(cox_model)
+        plot (bool, optional): If True, plot the graphical check of the overall model fit
     """
+    assert cox.param is not None, "cox model has to be fitted before calling cox_snell_residuals"
 
     # compute cox_snell residuals
     chf0_values = _nearest_1dinterp(cox.time, cox.ordered_event_time, cox.chf0())
@@ -666,48 +653,53 @@ def cox_snell_residuals_plot(cox: Cox) -> None:
 
     ordered_residuals_index = np.argsort(residuals)
 
-    # plot results
-    fig, ax = plt.subplots()
-    ax.step(
-        residuals[ordered_residuals_index],
-        chf_of_residuals[ordered_residuals_index],
-        where="post",
-    )
-    ax.plot(
-        [0, np.max(residuals)],
-        [0, np.max(residuals)],
-        c="black",
-        linestyle="--",
-    )
-    ax.set_xlabel("Residual")
-    ax.set_ylabel("Estimated Cumulative Hazard Rates")
-    fig.tight_layout()
-    plt.show()
+    if plot:
+        # plot results
+        fig, ax = plt.subplots()
+        ax.step(
+            residuals[ordered_residuals_index],
+            chf_of_residuals[ordered_residuals_index],
+            where="post",
+        )
+        ax.plot(
+            [0, np.max(residuals)],
+            [0, np.max(residuals)],
+            c="black",
+            linestyle="--",
+        )
+        ax.set_xlabel("Residual")
+        ax.set_ylabel("Estimated Cumulative Hazard Rates")
+        fig.tight_layout()
+        plt.show()
+    else:
+        return (
+            residuals[ordered_residuals_index],
+            chf_of_residuals[ordered_residuals_index],
+        )
 
 
-def cox_proportionality_effect_plot(
+def cox_proportionality_effect(
     cox: Cox,
     covar: np.ndarray,
     nb_strata: int = 4,
     andersen: bool = False,
     is_categorical: bool = False,
     plot: bool = False,
-) -> None:
+) -> Union[None, np.ndarray]:
     """Graphical checks of the proportional effects of covariates assumption
 
     Args:
         cox (Cox): Cox instance model
+        covar (np.ndarray) : covar values on which the proportionality effect is tested
         nb_strata (int, optional): number of strata used for covariate values. Defaults to 4.
         andersen (bool, optional): If True, Andersen plots are used. Defaults to False, then difference of log cumulative hazard rates is used
-
+        is_categorical (bool, optional): If True, covar values are considered like categories and are not transformed
+        plot (bool, optional): If True, plot the graphical check of the proportionality effect
     Raises:
         ValueError: the number of strata must not be too high to keep enough data per stratum
-
-    Examples:
-        >>> cox_proportionality_effect_plot(cox_model, nb_strata=4)
-        >>> cox_proportionality_effect_plot(cox_model, nb_strata=4, andersen=True)
     """
     assert len(covar.shape) == 1, f"covar has shape {covar.shape} but must be 1d"
+    assert cox.param is not None, "cox model has to be fitted before calling cox_proportionality_effect"
 
     timeline = np.sort(cox.time)
 
@@ -757,10 +749,9 @@ def cox_proportionality_effect_plot(
                     where="post",
                     label=f"strata {i + 1} vs. strata 1",
                 )
+                ax.set_xlabel("Cumulated baseline hazard rate on stratum 1")
+                ax.set_ylabel("Cumulated baseline hazard rate on stratum K")
                 ax.legend()
-                fig.suptitle(
-                    "Andersen plots of standardized cumulative hazard rates strata"
-                )
             plt.show()
         else:
             return chf0_strata
@@ -780,10 +771,10 @@ def cox_proportionality_effect_plot(
                     label=f"log (strata {i + 2} / strata 1)",
                 )
                 ax.set_xlabel("Time on study")
-                ax.legend()
-                fig.suptitle(
-                    "Difference in standardized log cumulative hazard rates strata"
+                ax.set_ylabel(
+                    "Difference in log cumulative hazard rates strata"
                 )
+                ax.legend()
             plt.show()
         else:
             return log_chf0_diff
@@ -804,7 +795,7 @@ def cox_wald_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
         >>> chi-square, pvalue = my_cox.wald_test(my_cox, [0, 1, 1, 1]) # only the first covariate is tested as 0
         >>> chi-square, pvalue = my_cox.wald_test(my_cox, [0, 0, 0, 1]) # the first three covariates are tested as 0
     """
-
+    assert cox.param is not None, "cox model has to be fitted before calling cox_wald_test"
     if isinstance(c, list):
         assert cox.covar.shape[-1] == len(c)
         c = np.array(c)
@@ -849,7 +840,7 @@ def cox_likelihood_ratio_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, fl
         >>> chi-square, pvalue = my_cox.likelihood_ratio_test(my_cox, [0, 1, 1, 1]) # only the first covariate is tested as 0
         >>> chi-square, pvalue = my_cox.likelihood_ratio_test(my_cox, [0, 0, 0, 1]) # the first three covariates are tested as 0
     """
-
+    assert cox.param is not None, "cox model has to be fitted before calling cox_likelihood_ratio_test"
     if isinstance(c, list):
         assert cox.covar.shape[-1] == len(c)
         c = np.array(c)
@@ -902,7 +893,7 @@ def cox_scores_test(cox: Cox, c: np.ndarray = None) -> Tuple[float, float]:
         >>> chi-square, pvalue = my_cox.scores_test(my_cox, [0, 1, 1, 1]) # only the first covariate is tested as 0
         >>> chi-square, pvalue = my_cox.scores_ratio_test(my_cox, [0, 0, 0, 1]) # the first three covariates are tested as 0
     """
-
+    assert cox.param is not None, "cox model has to be fitted before calling cox_scores_test"
     if isinstance(c, list):
         assert cox.covar.shape[-1] == len(c)
         c = np.array(c)
