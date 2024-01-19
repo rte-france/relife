@@ -443,7 +443,7 @@ class Turnbull:
         """
         
         _data = LifetimeData(time, entry = entry) 
-        data = np.column_stack((_data.time, _data.entry))
+        data = np.column_stack((_data.time, _data.entry)) # éviter : input lifetime data à turnbull_estimate
         timeline, s = _turnbull_estimate(data, tol, lowmem)
         self.timeline = timeline
         self.sf = s
