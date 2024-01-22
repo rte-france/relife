@@ -131,6 +131,6 @@ def load_input_turnbull() -> LifetimeData:
         time, event, entry = load_input_turnbull().astuple()
     """
     data = np.loadtxt(
-        DATA_PATH / "input_turnbull.csv", delimiter=",", skiprows=1, unpack=True, usecols=range(1, 4)
+        DATA_PATH / "input_turnbull.csv", delimiter=",", skiprows=1, unpack=True, usecols=range(0, 3)
     )
     return LifetimeData(data.T[:,:-1], entry=data.T[:,-1])

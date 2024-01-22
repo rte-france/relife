@@ -64,7 +64,7 @@ def _estimate(data: LifetimeData) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     n = np.cumsum(x_in - x_out) # number of assets at risk at each step
     return timeline, d, n
 
-def _turnbull_estimate(data, tol=1e-4, lowmem=False):
+def _turnbull_estimate(data: LifetimeData, tol=1e-4, lowmem=False):
     """Computation of the Turnbull estimator on interval censored data.
 
                 Parameters
@@ -78,26 +78,27 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
                 Estimates of the survival function
     """
 
-    censorship = (data[:, 0] < data[:, 1])
-    tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0)) # flattens les intervalles et les tri et insère 0 au début
+    censorship = (data.time[:, 0] < data.time[:, 1])
+    tau = np.unique(np.insert(np.sort(np.unique(data.time.flatten())), 0, 0)) # flattens les intervalles et les tri et insère 0 au début
     k = len(tau)
-    data_censored = data[censorship == True]
+    data_censored = LifetimeData(data.time[censorship == True], entry = data.entry[censorship == True])
 
     if not lowmem:
-        lower_bound = data_censored[:, 0]
-        upper_bound = data_censored[:, 1]
+        lower_bound = data_censored.time[:, 0]
+        upper_bound = data_censored.time[:, 1]
         alpha = (np.greater_equal.outer(tau[:-1], lower_bound ) *  # replaced np.logical_not(np.less.outer) by np.greater_equal.outer
             np.less_equal.outer(tau[1:], upper_bound)).T # replaced np.logical_not(np.greater.outer) by np.less_equal.outer
         # points of the timeline (tau) that are included in the interval (for each interval)
             # so for each interval, we have a vector of len(tau) of F and T, T if the point is included in the interval
     else:
         alpha_bis = []
-        for i in range(data_censored.shape[0]):
+        for i in range(data_censored.time.shape[0]): #HERE 
             alpha_bis.append(
                 np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
         alpha_bis = np.array(alpha_bis)
 
-    exact_survival_times = data[censorship == False][:, 0] 
+    exact_survival_times = data.time[censorship == False][:, 0] 
+    print(exact_survival_times)
     d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(k + 1))[0][1:] # TODO
     S = np.linspace(1, 0, k)
     res = 1
@@ -117,13 +118,13 @@ def _turnbull_estimate(data, tol=1e-4, lowmem=False):
         else:
             x = [p[alpha_bis[i, 0]:(alpha_bis[i, 1] + 1)] for i in range(alpha_bis.shape[0])]
             d = np.repeat(0, k - 1)
-            for i in range(data_censored.shape[0]):
+            for i in range(data_censored.time.shape[0]):
                 d = d + (np.append(np.insert(x[i] / x[i].sum(), 0, np.repeat(0, alpha_bis[i][0])),
                                    np.repeat(0, k - alpha_bis[i][1] - 2)))
             d = d + d_tilde
 
         y = np.cumsum(d[::-1])[::-1]
-        y -= len(data[:, 2]) - np.searchsorted(np.sort(data[:, 2]), tau[1:], side='left')  
+        y -= len(data.entry) - np.searchsorted(np.sort(data.entry), tau[1:], side='left')  
         S_updated = np.array(np.cumprod(1 - d / y))
         S_updated = np.insert(S_updated, 0, 1)
         res = max(abs(S - S_updated))
@@ -442,8 +443,8 @@ class Turnbull:
 
         """
         
-        _data = LifetimeData(time, entry = entry) 
-        data = np.column_stack((_data.time, _data.entry)) # éviter : input lifetime data à turnbull_estimate
+        data = LifetimeData(time, entry = entry) 
+        # data = np.column_stack((_data.time, _data.entry)) # éviter : input lifetime data à turnbull_estimate
         timeline, s = _turnbull_estimate(data, tol, lowmem)
         self.timeline = timeline
         self.sf = s

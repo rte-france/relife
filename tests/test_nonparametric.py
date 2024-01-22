@@ -40,7 +40,7 @@ def test_fit_ecdf_kaplan_meier(data):
 
 def test_turnbull(data_turnbull, weibull_model):
     """
-    Test the Turnbull estimator.
+    Test the Turnbull estimator. Data contains also exact observations.
 
     Explications : 
         - Lors de la création de data_turnbull, on s'est basé sur Weibull(c=7.531, rate=0.037) 
@@ -50,7 +50,7 @@ def test_turnbull(data_turnbull, weibull_model):
     par 6 pour avoir des valeurs cohérente avec les valeurs des intervales de visite de poste.
 
     """
-    tb = Turnbull().fit(data_turnbull.time, entry = data_turnbull.entry)
+    tb = Turnbull().fit(data_turnbull.time, entry = data_turnbull.entry)    
     t = tb.timeline / 6
     assert np.isclose(tb.sf, weibull_model.sf(t), atol=0.02).all()
     # S = np.linspace(0, 1, 163)
