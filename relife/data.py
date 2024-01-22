@@ -34,7 +34,8 @@ class LifetimeData:
     def __post_init__(self) -> None:
         self._parse_data()
         self._format_data()
-        self.size = self.time.size
+        self.size = self.time.shape[0]
+        self._1Dtime = self._get_1D_from_2D()
 
     def _parse_data(self) -> None:
         """Parse lifetime data and check values.
@@ -145,7 +146,7 @@ class LifetimeData:
                 *[self.xl[ind].reshape(-1, 1) for ind in [D, D_RC]], 
                 self.xr[LC].reshape(-1, 1),
                 self.entry[LT].reshape(-1, 1),
-                self.time[IC].reshape(-1, 1),
+                self.time[IC].reshape(-1, 2),
             )
 
         self._args = self.DataByEvent( 
@@ -167,6 +168,21 @@ class LifetimeData:
             `(time, event, entry, *args)`.
         """
         return self.time, self.event, self.entry, *self.args
+    
+    def _get_1D_from_2D(self) : 
+        """ Get 1D data from 2D data.
+        Used for init params (in distribution.py) for Gombertz in 2D case
+        !!! Attention : pas le même ordre que self.event pour l'info des censures !!!
+        """
+        if len(self.time.shape) == 1 : 
+            return self.time
+        else :
+            D_RC = self._time.D_RC.flatten()
+            LC = self._time.LC.flatten()
+            IC = np.mean(self._time.IC, axis = 1)
+            t = np.concatenate((D_RC, LC, IC))
+            return t
+
 
 
 @dataclass

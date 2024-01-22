@@ -35,7 +35,18 @@ class ParametricLifetimeDistribution(ParametricLifetimeModel):
 
     def _init_params(self, data: LifetimeData) -> np.ndarray:
         params0 = np.ones(self.n_params)
+        # if len(data.time.shape) ==2 :
+        #     print(data.time[:,0])
+        #     print(data.time[:,1])
+        #     print(np.median(data.time[:,0]))
+        #     print(np.median(data.time[:,1]))
+            
+        #     print(np.mean(data.time))
+            
+        #     print(np.std(data.time))
+        #     print(np.median(data.time))
         params0[-1] = 1 / np.median(data.time)
+        print(params0)
         return params0
 
     def _set_params(self, params: np.ndarray) -> None:
@@ -311,8 +322,8 @@ class Gompertz(ParametricLifetimeDistribution):
         return np.array([self.c, self.rate])
 
     def _init_params(self, data: LifetimeData) -> np.ndarray:
-        rate = np.pi / (np.sqrt(6) * np.std(data.time))
-        c = np.exp(-rate * np.mean(data.time))
+        rate = np.pi / (np.sqrt(6) * np.std(data._1Dtime))
+        c = np.exp(-rate * np.mean(data._1Dtime))
         return np.array([c, rate])
 
     def _chf(self, params: np.ndarray, t: np.ndarray) -> np.ndarray:

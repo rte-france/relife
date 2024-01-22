@@ -71,7 +71,7 @@ def test_minimum_distribution(model, data):
     model = MinimumDistribution(model).fit(*data.astuple(), args=(n,))
     assert model.params == pytest.approx(params, rel=1e-3)
 
-def test_data_2D(model):
+def test_2D_data(model):
     DATA_PATH = Path(__file__).parent.parent / "relife" / "datasets"
     data = np.loadtxt(
         DATA_PATH /"power_transformer.csv", delimiter=",", skiprows=1, unpack=True
@@ -87,6 +87,6 @@ def test_data_2D(model):
     params = model.params.copy()
 
     model.fit(*data.astuple())
+    
     assert model.params == pytest.approx(params, rel=1e-3)
 
-    # assert False 
