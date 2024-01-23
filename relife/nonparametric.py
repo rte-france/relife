@@ -92,13 +92,12 @@ def _turnbull_estimate(data: LifetimeData, tol=1e-4, lowmem=False):
             # so for each interval, we have a vector of len(tau) of F and T, T if the point is included in the interval
     else:
         alpha_bis = []
-        for i in range(data_censored.time.shape[0]): #HERE 
+        for i in range(data_censored.size): #HERE 
             alpha_bis.append(
                 np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
         alpha_bis = np.array(alpha_bis)
 
     exact_survival_times = data.time[censorship == False][:, 0] 
-    print(exact_survival_times)
     d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(k + 1))[0][1:] # TODO
     S = np.linspace(1, 0, k)
     res = 1
