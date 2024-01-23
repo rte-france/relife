@@ -53,7 +53,7 @@ def _estimate(data: LifetimeData) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     if not np.all(np.isin(data.event, [0, 1])):
         raise ValueError("event values must be in [0,1]")
     if len(data.time.shape) != 1: 
-        raise NotImplementedError("did not yet adapt _estimate to handle 2d time data for KM and Nelson-A") # [ TODO ] 
+        raise NotImplementedError("did not yet adapt _estimate to handle 2d time data for KM and Nelson-A") # [ TODO ] implement it
     timeline, inv, counts = np.unique(
         data.time, return_inverse=True, return_counts=True
     )
@@ -78,35 +78,40 @@ def _turnbull_estimate(data: LifetimeData, tol=1e-4, lowmem=False):
                 Estimates of the survival function
     """
 
-    censorship = (data.time[:, 0] < data.time[:, 1])
-    tau = np.unique(np.insert(np.sort(np.unique(data.time.flatten())), 0, 0)) # flattens les intervalles et les tri et insère 0 au début
+    # PRECEDENT approach : np.sort redondant et complexité  O(3nlog(n)) + O(n) (appel 2 fois np.unique et insert )
+    # tau = np.unique(np.insert(np.sort(np.unique(data[:, 0:2].flatten())), 0, 0))
+    
+    tau = np.unique(data.time.flatten()) # flattens les intervalles et les tri et insère 0 au début
+    if tau[0] != 0 :
+        tau = np.insert(tau, 0, 0)
     k = len(tau)
-    data_censored = LifetimeData(data.time[censorship == True], entry = data.entry[censorship == True])
+    data_censored = LifetimeData(data.time[data.event == 0], entry = data.entry[data.event == 0 ])
 
     if not lowmem:
-        lower_bound = data_censored.time[:, 0]
-        upper_bound = data_censored.time[:, 1]
-        alpha = (np.greater_equal.outer(tau[:-1], lower_bound ) *  # replaced np.logical_not(np.less.outer) by np.greater_equal.outer
-            np.less_equal.outer(tau[1:], upper_bound)).T # replaced np.logical_not(np.greater.outer) by np.less_equal.outer
+
+        alpha = (np.greater_equal.outer(tau[:-1], data_censored.xl ) *  # replaced np.logical_not(np.less.outer) by np.greater_equal.outer
+            np.less_equal.outer(tau[1:], data_censored.xr)).T # replaced np.logical_not(np.greater.outer) by np.less_equal.outer
         # points of the timeline (tau) that are included in the interval (for each interval)
             # so for each interval, we have a vector of len(tau) of F and T, T if the point is included in the interval
     else:
         alpha_bis = []
-        for i in range(data_censored.size): #HERE 
+        for i in range(data_censored.size): 
             alpha_bis.append(
-                np.where((data_censored[i, 0] <= tau[:-1]) & (tau[1:] <= data_censored[i, 1]) == True)[0][[0, -1]])
+                np.where((data_censored.xl[i] <= tau[:-1]) & (tau[1:] <= data_censored.xr[i]) == True)[0][[0, -1]])
         alpha_bis = np.array(alpha_bis)
 
-    exact_survival_times = data.time[censorship == False][:, 0] 
+    exact_survival_times = data.time[data.event == 1][:, 0] 
     d_tilde = np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(k + 1))[0][1:] # TODO
+    print(np.histogram(np.searchsorted(tau, exact_survival_times), bins=range(k + 1)))
     S = np.linspace(1, 0, k)
     res = 1
     count = 1
 
     while res > tol:
-        p = -np.diff(S) # écart entre les points de S (survival function?) #TODO from here 
-        if np.sum(p == 0) > 0: 
-            p = np.where(p == 0, 1e-5 / np.sum(p == 0), p - 1e-5 / ((k - 1) - np.sum(p == 0)))
+        p = -np.diff(S) # écart entre les points de S (survival function) => proba of an event occuring at 
+        if np.sum(p == 0) > 0 : 
+            p = np.where(p == 0, 1e-5 / np.sum(p == 0), p - 1e-5 / ((k - 1) - np.sum(p == 0))) # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)
+        
         if not lowmem:
             if np.any(alpha):
                 alpha_p = alpha * p.T
@@ -123,7 +128,9 @@ def _turnbull_estimate(data: LifetimeData, tol=1e-4, lowmem=False):
             d = d + d_tilde
 
         y = np.cumsum(d[::-1])[::-1]
+        print(y)
         y -= len(data.entry) - np.searchsorted(np.sort(data.entry), tau[1:], side='left')  
+        print(y)
         S_updated = np.array(np.cumprod(1 - d / y))
         S_updated = np.insert(S_updated, 0, 1)
         res = max(abs(S - S_updated))
@@ -444,11 +451,13 @@ class Turnbull:
         """
         
         data = LifetimeData(time, entry = entry) 
-        # data = np.column_stack((_data.time, _data.entry)) # éviter : input lifetime data à turnbull_estimate
+        if data._time.IC.size + data._time.IC.size == 0 :
+            # self = KaplanMeier().fit(data.time) 
+            print("implement kaplan_meier estimator in case no LC and IC -> what data structure to use ? 2d not taken into account in KM estimete : should it take it, using the 1D rep of 2D ? ") # TODO 
+
         timeline, s = _turnbull_estimate(data, tol, lowmem)
         self.timeline = timeline
         self.sf = s
-        # TODO ? define / compute self.se ? 
         return self
     
     def plot(self, alpha_ci: float = 0.05, **kwargs: np.ndarray) -> None:

@@ -9,7 +9,6 @@ import numpy as np
 
 from relife.datasets import load_power_transformer, load_input_turnbull
 from relife.nonparametric import ECDF, KaplanMeier, Turnbull
-from relife.data import LifetimeData
 from relife.distribution import Weibull
 
 
@@ -33,10 +32,12 @@ def weibull_model(request):
 
 
 def test_fit_ecdf_kaplan_meier(data):
+    print(data._time.D_RC.size)
     time = data.time[data.event == 1]
     ecdf = ECDF().fit(time)
     km = KaplanMeier().fit(time)
     assert ecdf.sf == pytest.approx(km.sf, rel=1e-4)
+    # assert False
 
 def test_turnbull(data_turnbull, weibull_model):
     """
@@ -50,6 +51,8 @@ def test_turnbull(data_turnbull, weibull_model):
     par 6 pour avoir des valeurs cohérente avec les valeurs des intervales de visite de poste.
 
     """
-    tb = Turnbull().fit(data_turnbull.time, entry = data_turnbull.entry)    
+    
+    tb = Turnbull().fit(data_turnbull.time, entry = data_turnbull.entry, lowmem=True)    
     t = tb.timeline / 6
     assert np.isclose(tb.sf, weibull_model.sf(t), atol=0.02).all()
+    assert False
