@@ -21,16 +21,21 @@ class LifetimeData:
     """
 
     time: np.ndarray  #: Age of the assets. 
+    # [ TODO ] shape ..
         # [ qst Aya ] shape (n, ) alors que _time a shape (n, 1), prq ne pas homogénéiser ?
         # Soit forcer l'utilisateur, soit le fr en interne (check len(shape) == 1, si True => reshape)
     event: np.ndarray = None  #: Type of event, by default None.
     entry: np.ndarray = None  #: Age of assets at the beginning of the observation period (left truncation), by default None.
     args: Tuple[np.ndarray] = ()  #: Extra arguments required by the lifetime model. # [ qst Aya ] : use ?
+    xl = None # TODO passer en variable cachée (_xl)
+    xr = None
+
 
     def __post_init__(self) -> None:
         self._parse_data()
         self._format_data()
-        self.size = self.time.size
+        self.size = self.time.shape[0]
+        self._1Dtime = self._get_1D_from_2D()
 
     def _parse_data(self) -> None:
         """Parse lifetime data and check values.
@@ -45,7 +50,7 @@ class LifetimeData:
             Default value for `entry` is 0 (no truncation).
 
         """
-        
+    
         if len(self.time.shape) == 1 : 
             if self.event is None:
                 self.event = np.ones_like(self.time, int)
@@ -59,7 +64,7 @@ class LifetimeData:
                 raise ValueError("entry values must be positive")
             if np.any(self.time <= self.entry):
                 raise ValueError("entry must be strictly lower than the time to event")
-            s = args_size(*self.args) 
+            s = args_size(*self.args)
             if s > 0 and s != np.size(self.time): 
                 raise ValueError(
                     "dimension mismatch for optional args: expected {} got {}".format(
@@ -85,7 +90,7 @@ class LifetimeData:
                     raise ValueError("entry must be lower than the lower bound of time to event")
                 if np.any(self.xl > self.xr):
                     raise ValueError("lower bound of time to event must be strictly lower than the upper bound of time to event")
-            # s = args_size(*self.args) # [ TODO Aya] 
+            # s = args_size(*self.args) # [ to do Aya] 
             
 
     class DataByEvent(NamedTuple):
@@ -141,7 +146,7 @@ class LifetimeData:
                 *[self.xl[ind].reshape(-1, 1) for ind in [D, D_RC]], 
                 self.xr[LC].reshape(-1, 1),
                 self.entry[LT].reshape(-1, 1),
-                self.time[IC].reshape(-1, 1),
+                self.time[IC].reshape(-1, 2),
             )
 
         self._args = self.DataByEvent( 
@@ -163,6 +168,21 @@ class LifetimeData:
             `(time, event, entry, *args)`.
         """
         return self.time, self.event, self.entry, *self.args
+    
+    def _get_1D_from_2D(self) : 
+        """ Get 1D data from 2D data.
+        Used for init params (in distribution.py) for Gombertz in 2D case
+        !!! Attention : pas le même ordre que self.event pour l'info des censures !!!
+        """
+        if len(self.time.shape) == 1 : 
+            return self.time
+        else :
+            D_RC = self._time.D_RC.flatten()
+            LC = self._time.LC.flatten()
+            IC = np.mean(self._time.IC, axis = 1)
+            t = np.concatenate((D_RC, LC, IC))
+            return t
+
 
 
 @dataclass

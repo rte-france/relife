@@ -9,13 +9,13 @@ import numpy as np
 
 from relife.data import LifetimeData
 
-
 def test_data_format_2D():
     """
     Test the formatting of 2D time data in LifetimeData class.
     Validates the shapes and values of time, event, entry, and interval censoring attributes.
     """
     time2d = np.array([[1,2],[0,4],[5,5],[7,np.inf],[10,10], [2,10], [10,11]])
+    time1d = np.array([1.5,4,5,7,10,6,10.5])
     l = LifetimeData(time2d)
 
     expected_event = np.array([0, 0, 1, 0, 1, 0, 0])
@@ -29,20 +29,21 @@ def test_data_format_2D():
 
     # index of values in function of event
     expected_D = np.array([[5.], [10.]])
-    assert np.isclose(l._time.D.flatten(), expected_D.flatten()).all(), "D values do not match expected"
+    assert np.isclose(l._time.D, expected_D).all(), "D values do not match expected"
 
     expected_LC = np.array([[4.]])
-    assert np.isclose(l._time.LC.flatten(), expected_LC.flatten()).all(), "LC values do not match expected"
+    assert np.isclose(l._time.LC, expected_LC).all(), "LC values do not match expected"
 
     expected_D_RC = np.array([[5.], [7.], [10.]])
-    assert np.isclose(l._time.D_RC.flatten(), expected_D_RC.flatten()).all(), "D_RC values do not match expected"
+    assert np.isclose(l._time.D_RC, expected_D_RC).all(), "D_RC values do not match expected"
 
     expected_IC = np.array([[1., 2.], [2., 10.], [10., 11.]])
-    assert np.isclose(l._time.IC.flatten(), expected_IC.flatten()).all(), "IC values do not match expected"
+    assert np.isclose(l._time.IC, expected_IC).all(), "IC values do not match expected"
 
     # Validate shapes
     assert l.time.shape == (7, 2), "Unexpected shape for time attribute"
     assert l.entry.shape == (7,), "Unexpected shape for entry attribute"
     assert l.event.shape == (7,), "Unexpected shape for event attribute"
     assert l._time.D.shape == (2, 1), "Unexpected shape for D attribute"
-    assert l._time.LC.shape == (1,1), "Unexpected shape for LC attribute"
+    assert l._time.LC.shape == (1,1), f"Unexpected shape for LC attribute, got {l._time.LC}"
+    assert l.size == 7, "Unexpected size for LifetimeData instance"

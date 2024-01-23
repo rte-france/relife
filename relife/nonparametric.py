@@ -154,7 +154,8 @@ class ECDF:
             Return the fitted empirical estimate as the current object.
 
         """
-
+        if len(time.shape) != 1: 
+            raise ValueError("ECDF handles only 1D format for time") 
         data = LifetimeData(time)
         self.n_samples = data.size
         x1, n1 = np.unique(data.time, return_counts=True)
