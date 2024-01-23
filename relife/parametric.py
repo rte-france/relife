@@ -10,7 +10,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field, asdict
 import numpy as np
 from scipy.optimize import minimize, Bounds, OptimizeResult
-from scipy.optimize.optimize import approx_fprime
+from scipy.optimize import approx_fprime
 
 from .data import LifetimeData
 from .model import HazardFunctions, AbsolutelyContinuousLifetimeModel
