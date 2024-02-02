@@ -90,7 +90,7 @@ class LifetimeData:
                     raise ValueError("entry must be lower than the lower bound of time to event")
                 if np.any(self.xl > self.xr):
                     raise ValueError("lower bound of time to event must be strictly lower than the upper bound of time to event")
-            # s = args_size(*self.args) # [ to do Aya] 
+            # s = args_size(*self.args) # [ to do ] 
             
 
     class DataByEvent(NamedTuple):
