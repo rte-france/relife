@@ -1,0 +1,1 @@
+Thanks a lot for your interest! If you would like to contribute, you can start by reading [How to contribute ?](./docs/how_to_contribute.md) section. Please fill free to also open an issue on Github or contact the authors.
