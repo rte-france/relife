@@ -7,5 +7,6 @@ pip install [-e] .
 
 # Minimal documentation
 
-- [How to use ReLife ?](./docs/how_to_use.md)
+- [Quick start](./docs/quick_start.md)
+- [How to use ReLife ?](./docs/in_a_nutshell.md)
 - [How to contribute to ReLife ?](./docs/how_to_contribute.md)

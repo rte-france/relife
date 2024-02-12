@@ -1,9 +1,16 @@
-# 1. ReLife2 modules
+# Dive into `data`
 
-![](../img/relife_modules.png)
+`data` module handles survival data loading. Basically, survival data are composed of :
+- lifetime data
+- other data like covariates
 
-ReLife2 is composed of three modules:
+In Relife2, all lifetime data are objects derived from `LifetimeFormat`. This object expects methods that define left-right-interval-regular values and index. What are they ? It depends on the type of lifetime data you are considering :
 
-- `data` : it contains all necessary objects to load data used in ReLife2
-- `survival`: it contains all objects used for survival analysis workflow. This module is composed of three submodules `parametric`, `nonparametric` and `semiparametric`  
-- `policy`: it contains all objects used for reliability theory and renewal theory
+- when using `BaseCensoredLifetime` and `AdvancedCensoredLifetime`, left-right-interval-regular values mean censored or regular lifetimes.   Left-right-interval-regular indexes mean censored or regular lifetimes index
+- when using `Truncation`, left-right-interval-regular values mean truncation values or regular lifetimes. Left-right-interval-regular indexes mean truncated or regular lifetimes index
+
+Why it has to be like that ? `BaseCensoredLifetime`, `AdvancedCensoredLifetime` and `Truncation` respect the same structure as they are all lifetimes data. Thus, we found it more convenient to make them derived from the same object.
+
+For more convenience, their instanciations are handled by two factories : `lifetimes` and `truncations`.
+
+**Want to contribute ? :**  at this step, if you want to contribute, please verify that either `BaseCensoredLifetime`, `AdvancedCensoredLifetime` or `Truncation` can handle your needs. If not, make a new object derived from `LifetimeFormat` and add it to the good factory.
