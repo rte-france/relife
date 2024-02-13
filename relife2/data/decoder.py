@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class LifetimeFormat(ABC):
+class LifetimeDecoder(ABC):
     def __init__(self, values: np.ndarray):
 
         self.regular_index = np.where(np.ones(len(values), dtype=bool))[0]
@@ -54,7 +54,7 @@ class LifetimeFormat(ABC):
         self.set_regular_values(**kwargs)
 
 
-class BaseCensoredLifetime(LifetimeFormat):
+class BaseCensoredLifetime(LifetimeDecoder):
     def __init__(self, values=np.ndarray):
         super().__init__(values)
 
@@ -116,7 +116,7 @@ class BaseCensoredLifetime(LifetimeFormat):
         self.regular_values = values[self.regular_index]
 
 
-class AdvancedCensoredLifetime(LifetimeFormat):
+class AdvancedCensoredLifetime(LifetimeDecoder):
     def __init__(self, values=np.ndarray):
         super().__init__(values)
 
@@ -175,7 +175,7 @@ class AdvancedCensoredLifetime(LifetimeFormat):
         self.regular_values = values[self.regular_index][:, 0]
 
 
-class Truncation(LifetimeFormat):
+class Truncation(LifetimeDecoder):
     def __init__(self, values=np.ndarray):
         super().__init__(values)
 
