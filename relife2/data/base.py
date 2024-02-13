@@ -1,35 +1,54 @@
+from dataclasses import dataclass
 from typing import Union
 
 import numpy as np
 
-from .factory import lifetimes, truncations
+from .decoder import censoredlifetimes_decoder, truncations_decoder
 
 
+@dataclass
 class SurvivalData:
-    def __init__(
-        self,
-        lifetime_values: Union[list, np.ndarray],
-        event: np.ndarray = np.array([], dtype=bool),
-        entry: np.ndarray = np.array([], dtype=float),
-        covar: np.ndarray = np.array([[]], dtype=float),
-    ):
-        self.lifetime_values = lifetime_values
-        self.lifetime_data = lifetimes(lifetime_values, right_indicators=1 - event)
-        self.truncation_data = truncations(lifetime_values, entry=entry)
-        self.covar = covar
+    lifetimes: Union[list, np.ndarray]
+    event: np.ndarray = np.array([], dtype=bool)
+    entry: np.ndarray = np.array([], dtype=float)
+    covar: np.ndarray = np.array([[]], dtype=float)
 
-    @property
-    def lifetimes(self):
-        return self.lifetime_values
+    def __post_init__(self):
+        _censoredlifetimes_decoder = censoredlifetimes_decoder(
+            self.lifetimes, 1 - self.event
+        )
+        _truncations_decoder = truncations_decoder(self.lifetimes, self.entry)
+
+        for how in ["left", "right", "interval"]:
+            for name in ["values", "index"]:
+                setattr(
+                    self,
+                    f"{how}_censored_{name}",
+                    getattr(_censoredlifetimes_decoder, f"get_{how}_{name}")(),
+                )
+        for how in ["regular"]:
+            for name in ["values", "index"]:
+                setattr(
+                    self,
+                    f"{how}_{name}",
+                    getattr(_censoredlifetimes_decoder, f"get_{how}_{name}")(),
+                )
+        for how in ["left", "right", "interval"]:
+            for name in ["values", "index"]:
+                setattr(
+                    self,
+                    f"{how}_truncated_{name}",
+                    getattr(_truncations_decoder, f"get_{how}_{name}")(),
+                )
 
     def __len__(self):
-        return len(self.lifetime_values)
+        return len(self.lifetimes)
 
     def observed(self, return_values: bool = False):
         if return_values:
-            return getattr(self.lifetime_data, "regular_values")
+            return getattr(self, "regular_values")
         else:
-            return getattr(self.lifetime_data, "regular_index")
+            return getattr(self, "regular_index")
 
     def censored(self, how: str = "right", return_values: bool = False):
         assert how in [
@@ -38,9 +57,9 @@ class SurvivalData:
             "interval",
         ], f"how must be left, right or interval. Not {how}"
         if return_values:
-            return getattr(self.lifetime_data, f"{how}_values")
+            return getattr(self, f"{how}_censored_values")
         else:
-            return getattr(self.lifetime_data, f"{how}_index")
+            return getattr(self, f"{how}_censored_index")
 
     def truncated(self, how: str = "right", return_values: bool = False):
         assert how in [
@@ -49,9 +68,9 @@ class SurvivalData:
             "interval",
         ], f"how must be left, right or interval. Not {how}"
         if return_values:
-            return getattr(self.truncation_data, f"{how}_values")
+            return getattr(self, f"{how}_truncated_values")
         else:
-            return getattr(self.truncation_data, f"{how}_index")
+            return getattr(self, f"{how}_truncated_index")
 
     def info(self):
         headers = ["Lifetime data", "Counts"]

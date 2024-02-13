@@ -5,66 +5,74 @@ import numpy as np
 
 class LifetimeDecoder(ABC):
     def __init__(self, values: np.ndarray):
-
-        self.regular_index = np.where(np.ones(len(values), dtype=bool))[0]
-        self.left_index = np.where(np.zeros(len(values), dtype=bool))[0]
-        self.right_index = np.where(np.zeros(len(values), dtype=bool))[0]
-        self.interval_index = np.where(np.zeros(len(values), dtype=bool))[0]
+        self.values = values
 
     @abstractmethod
-    def set_left_index(self, **kwargs):
+    def get_left_index(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def set_right_index(self, **kwargs):
+    def get_right_index(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def set_interval_index(self, **kwargs):
+    def get_interval_index(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def set_regular_index(self, **kwargs):
+    def get_regular_index(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def set_left_values(self, **kwargs):
+    def get_left_values(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def set_right_values(self, **kwargs):
+    def get_right_values(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def set_interval_values(self, **kwargs):
+    def get_interval_values(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def set_regular_values(self, **kwargs):
+    def get_regular_values(
+        self,
+    ):
         pass
-
-    def build(self, **kwargs):
-        self.set_left_index(**kwargs)
-        self.set_right_index(**kwargs)
-        self.set_interval_index(**kwargs)
-        self.set_regular_index(**kwargs)
-        self.set_left_values(**kwargs)
-        self.set_right_values(**kwargs)
-        self.set_interval_values(**kwargs)
-        self.set_regular_values(**kwargs)
 
 
 class BaseCensoredLifetime(LifetimeDecoder):
-    def __init__(self, values=np.ndarray):
+    def __init__(
+        self,
+        values=np.ndarray,
+        left_indicators: np.ndarray = np.array([], dtype=int),
+        right_indicators: np.ndarray = np.array([], dtype=int),
+    ):
         super().__init__(values)
+        self.left_indicators = self._check_indicators(left_indicators)
+        self.right_indicators = self._check_indicators(right_indicators)
 
-    @staticmethod
-    def _check_indicators(values: np.ndarray, indicators: np.ndarray):
+    def _check_indicators(self, indicators: np.ndarray):
         if type(indicators) == np.ndarray:
             if indicators.size != 0:
                 assert len(indicators.shape) == 1, "indicators must be 1d array"
                 assert len(indicators) == len(
-                    values
+                    self.values
                 ), "indicators must have the same length as lifetime values"
                 if indicators.dtype != np.bool_:
                     indicators = indicators.astype(bool)
@@ -72,169 +80,205 @@ class BaseCensoredLifetime(LifetimeDecoder):
             ValueError("indicators must be np.ndarray")
         return indicators
 
-    def set_left_index(
+    def get_left_index(
         self,
-        values: np.ndarray,
-        left_indicators: np.ndarray = np.array([], dtype=int),
-        **kwargs,
     ):
-        left_indicators = BaseCensoredLifetime._check_indicators(
-            values, left_indicators
-        )
-        self.left_index = np.where(left_indicators)[0]
+        return np.where(self.left_indicators)[0]
 
-    def set_right_index(
+    def get_right_index(
         self,
-        values: np.ndarray,
-        right_indicators: np.ndarray = np.array([], dtype=int),
-        **kwargs,
     ):
-        right_indicators = BaseCensoredLifetime._check_indicators(
-            values, right_indicators
+        return np.where(self.right_indicators)[0]
+
+    def get_interval_index(self):
+        return np.where(np.zeros(len(self.values), dtype=int))[0]
+
+    def get_regular_index(
+        self,
+    ):
+        return np.delete(
+            np.arange(0, len(self.values)),
+            list(set(self.get_left_index()).union(set(self.get_right_index()))),
         )
-        self.right_index = np.where(right_indicators)[0]
 
-    def set_interval_index(self, **kwargs):
-        pass
+    def get_left_values(self):
+        return self.values[self.get_left_index()]
 
-    def set_regular_index(self, **kwargs):
-        self.regular_index = np.delete(
-            self.regular_index,
-            list(set(self.left_index).union(set(self.right_index))),
-        )
+    def get_right_values(self):
+        return self.values[self.get_right_index()]
 
-    def set_left_values(self, values: np.ndarray, **kwargs):
-        self.left_values = values[self.left_index]
+    def get_interval_values(self):
+        return self.values[self.get_interval_index()]
 
-    def set_right_values(self, values: np.ndarray, **kwargs):
-        self.right_values = values[self.right_index]
-
-    def set_interval_values(self, values: np.ndarray, **kwargs):
-        self.interval_values = values[self.interval_index]
-
-    def set_regular_values(self, values: np.ndarray, **kwargs):
-        self.regular_values = values[self.regular_index]
+    def get_regular_values(self):
+        return self.values[self.get_regular_index()]
 
 
 class AdvancedCensoredLifetime(LifetimeDecoder):
     def __init__(self, values=np.ndarray):
         super().__init__(values)
 
-    def set_left_index(
+    def get_left_index(
         self,
-        values: np.ndarray,
-        **kwargs,
     ):
-        self.left_index = np.where(values[:, 0] == 0.0)[0]
+        return np.where(self.values[:, 0] == 0.0)[0]
 
-    def set_right_index(
+    def get_right_index(
         self,
-        values: np.ndarray,
-        **kwargs,
     ):
-        self.right_index = np.where(values[:, 1] == np.inf)[0]
+        return np.where(self.values[:, 1] == np.inf)[0]
 
-    def set_interval_index(
+    def get_interval_index(
         self,
-        values: np.ndarray,
-        **kwargs,
     ):
-        self.interval_index = np.where(
+        return np.where(
             np.logical_and(
                 np.logical_and(
-                    values[:, 0] > 0,
-                    values[:, 1] < np.inf,
+                    self.values[:, 0] > 0,
+                    self.values[:, 1] < np.inf,
                 ),
-                np.not_equal(values[:, 0], values[:, 1]),
+                np.not_equal(self.values[:, 0], self.values[:, 1]),
             )
         )[0]
 
-    def set_regular_index(self, **kwargs):
-        self.regular_index = np.delete(
-            self.regular_index,
+    def get_regular_index(self):
+        return np.delete(
+            np.arange(0, len(self.values)),
             list(
-                set(self.left_index)
-                .union(set(self.right_index))
-                .union(self.interval_index)
+                set(self.get_left_index())
+                .union(set(self.get_right_index()))
+                .union(self.get_interval_index())
             ),
         )
 
-    def set_left_values(self, values: np.ndarray, **kwargs):
-        self.left_values = values[self.left_index, :][:, 1]
+    def get_left_values(self):
+        return self.values[self.get_left_index(), :][:, 1]
 
-    def set_right_values(self, values: np.ndarray, **kwargs):
-        self.right_values = values[self.right_index, :][:, 0]
+    def get_right_values(self):
+        return self.values[self.get_right_index(), :][:, 0]
 
-    def set_interval_values(self, values: np.ndarray, **kwargs):
-        self.interval_values = values[self.interval_index, :]
+    def get_interval_values(self):
+        return self.values[self.get_interval_index(), :]
 
-    def set_regular_values(self, values: np.ndarray, **kwargs):
+    def get_regular_values(self):
         assert (
-            values[self.regular_index][:, 0] == values[self.regular_index][:, 1]
+            self.values[self.get_regular_index()][:, 0]
+            == self.values[self.get_regular_index()][:, 1]
         ).all()
-        self.regular_values = values[self.regular_index][:, 0]
+        return self.values[self.get_regular_index()][:, 0]
 
 
 class Truncation(LifetimeDecoder):
-    def __init__(self, values=np.ndarray):
+    def __init__(
+        self,
+        values=np.ndarray,
+        entry: np.ndarray = np.array([], dtype=float),
+        departure: np.ndarray = np.array([], dtype=float),
+    ):
         super().__init__(values)
+        self.entry = entry
+        self.departure = departure
 
-    def set_left_index(
-        self,
-        values: np.ndarray,
-        entry: np.ndarray,
-        **kwargs,
-    ):
-        if entry.size != 0:
-            assert values.size == entry.size and values.shape == entry.shape
-            if np.any(entry < 0):
+        if self.entry.size != 0:
+            assert (
+                self.values.size == self.entry.size
+                and self.values.shape == self.entry.shape
+            )
+            if np.any(self.entry < 0):
                 raise ValueError("entry values must be positive")
-            if np.any(values <= entry):
+            if np.any(self.values <= self.entry):
                 raise ValueError("entry must be strictly lower than the lifetimes")
-        self.left_index = np.where(entry > 0)[0]
 
-    def set_right_index(
-        self,
-        values: np.ndarray,
-        departure: np.ndarray,
-        **kwargs,
-    ):
-        if departure.size != 0:
-            assert values.size == departure.size and values.shape == departure.shape
-            if np.any(departure < 0):
+        if self.departure.size != 0:
+            assert (
+                self.values.size == self.departure.size
+                and self.values.shape == self.departure.shape
+            )
+            if np.any(self.departure < 0):
                 raise ValueError("entry values must be positive")
-            if np.any(values > departure):
+            if np.any(self.values > self.departure):
                 raise ValueError("departure must be higher or equal to lifetimes")
-        self.right_index = np.where(departure > 0)[0]
 
-    def set_interval_index(self, entry: np.ndarray, departure: np.ndarray, **kwargs):
-        if entry.size != 0 and departure.size != 0:
-            self.interval_index = np.where(np.logical_and(entry > 0, departure > 0))[0]
+    def get_left_index(
+        self,
+    ):
+        return np.where(self.entry > 0)[0]
 
-    def set_regular_index(self, **kwargs):
-        self.regular_index = np.delete(
-            self.regular_index,
+    def get_right_index(
+        self,
+    ):
+
+        return np.where(self.departure > 0)[0]
+
+    def get_interval_index(
+        self,
+    ):
+        if self.entry.size != 0 and self.departure.size != 0:
+            return np.where(np.logical_and(self.entry > 0, self.departure > 0))[0]
+        else:
+            return np.where(np.zeros(len(self.values), dtype=int))[0]
+
+    def get_regular_index(
+        self,
+    ):
+        return np.delete(
+            np.arange(0, len(self.values)),
             list(
-                set(self.left_index)
-                .union(set(self.right_index))
-                .union(self.interval_index)
+                set(self.get_left_index())
+                .union(set(self.get_right_index()))
+                .union(self.get_interval_index())
             ),
         )
 
-    def set_left_values(self, entry: np.ndarray, **kwargs):
-        self.left_values = entry[self.left_index]
+    def get_left_values(
+        self,
+    ):
+        return self.entry[self.get_left_index()]
 
-    def set_right_values(self, departure: np.ndarray, **kwargs):
-        self.right_values = departure[self.right_index]
+    def get_right_values(
+        self,
+    ):
+        return self.departure[self.get_right_index()]
 
-    def set_interval_values(self, entry: np.ndarray, departure: np.ndarray, **kwargs):
-        self.interval_values = np.concatenate(
+    def get_interval_values(
+        self,
+    ):
+        return np.concatenate(
             (
-                entry[self.interval_index][:, None],
-                departure[self.interval_index][:, None],
+                self.entry[self.get_interval_index()][:, None],
+                self.departure[self.get_interval_index()][:, None],
             ),
             axis=1,
         )
 
-    def set_regular_values(self, values: np.ndarray, **kwargs):
-        self.regular_values = values[self.regular_index]
+    def get_regular_values(
+        self,
+    ):
+        return self.values[self.get_regular_index()]
+
+
+# factory
+def censoredlifetimes_decoder(
+    lifetime_values: np.ndarray,
+    left_indicators: np.ndarray = np.array([], dtype=bool),
+    right_indicators: np.ndarray = np.array([], dtype=bool),
+):
+    if len(lifetime_values.shape) == 1:
+        constructor = BaseCensoredLifetime(
+            lifetime_values, left_indicators, right_indicators
+        )
+    elif len(lifetime_values.shape) == 2:
+        constructor = AdvancedCensoredLifetime(lifetime_values)
+    else:
+        return ValueError("lifetimes values must be 1d or 2d array")
+    return constructor
+
+
+# factory
+def truncations_decoder(
+    lifetime_values: np.ndarray,
+    entry: np.ndarray = np.array([], dtype=float),
+    departure: np.ndarray = np.array([], dtype=float),
+):
+    constructor = Truncation(lifetime_values, entry, departure)
+    return constructor
