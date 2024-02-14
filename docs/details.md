@@ -82,4 +82,8 @@ np.array([44 35 22 48 48 23 34 15 16 35 35 38 34 29 24 33 26 20 38 23 13 12 23 .
 For more examples, take a look at [this notebook](../examples/data_examples.ipynb) in the [examples folder](../examples/)
 
 
+## Future developments ?
+
+With this code structure, one may imagine new decoders, new dataclass and even new modules. An interesting one could be a `reader` module which implements reader objects. Their role would be to read different file formats (.csv, .xml, etc.) containing lifetime values and load their content in `np.ndarray` object. We could create a synergy between `reader` and `decoder` so that a user can load lifetime time values from files and put it in our `SurvivalData` dataclass automatically. 
+
 # 3. `survival` module
