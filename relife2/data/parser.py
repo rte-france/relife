@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class LifetimeDecoder(ABC):
+class LifetimeParser(ABC):
     def __init__(self, values: np.ndarray):
         self.values = values
 
@@ -56,7 +56,7 @@ class LifetimeDecoder(ABC):
         pass
 
 
-class BaseCensoredLifetime(LifetimeDecoder):
+class BaseCensoredLifetime(LifetimeParser):
     def __init__(
         self,
         values=np.ndarray,
@@ -114,7 +114,7 @@ class BaseCensoredLifetime(LifetimeDecoder):
         return self.values[self.get_regular_index()]
 
 
-class AdvancedCensoredLifetime(LifetimeDecoder):
+class AdvancedCensoredLifetime(LifetimeParser):
     def __init__(self, values=np.ndarray):
         super().__init__(values)
 
@@ -168,7 +168,7 @@ class AdvancedCensoredLifetime(LifetimeDecoder):
         return self.values[self.get_regular_index()][:, 0]
 
 
-class Truncation(LifetimeDecoder):
+class Truncation(LifetimeParser):
     def __init__(
         self,
         values=np.ndarray,
@@ -258,7 +258,7 @@ class Truncation(LifetimeDecoder):
 
 
 # factory
-def censoredlifetimes_decoder(
+def censoredlifetimes_parser(
     lifetime_values: np.ndarray,
     left_indicators: np.ndarray = np.array([], dtype=bool),
     right_indicators: np.ndarray = np.array([], dtype=bool),
@@ -275,7 +275,7 @@ def censoredlifetimes_decoder(
 
 
 # factory
-def truncations_decoder(
+def truncations_parser(
     lifetime_values: np.ndarray,
     entry: np.ndarray = np.array([], dtype=float),
     departure: np.ndarray = np.array([], dtype=float),

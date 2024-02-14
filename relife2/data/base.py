@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 
-from .decoder import censoredlifetimes_decoder, truncations_decoder
+from .parser import censoredlifetimes_parser, truncations_parser
 
 
 @dataclass
@@ -14,31 +14,31 @@ class SurvivalData:
     covar: np.ndarray = np.array([[]], dtype=float)
 
     def __post_init__(self):
-        _censoredlifetimes_decoder = censoredlifetimes_decoder(
+        _censoredlifetimes_parser = censoredlifetimes_parser(
             self.lifetimes, right_indicators=1 - self.event
         )
-        _truncations_decoder = truncations_decoder(self.lifetimes, self.entry)
+        _truncations_parser = truncations_parser(self.lifetimes, self.entry)
 
         for how in ["left", "right", "interval"]:
             for name in ["values", "index"]:
                 setattr(
                     self,
                     f"{how}_censored_{name}",
-                    getattr(_censoredlifetimes_decoder, f"get_{how}_{name}")(),
+                    getattr(_censoredlifetimes_parser, f"get_{how}_{name}")(),
                 )
         for how in ["regular"]:
             for name in ["values", "index"]:
                 setattr(
                     self,
                     f"{how}_{name}",
-                    getattr(_censoredlifetimes_decoder, f"get_{how}_{name}")(),
+                    getattr(_censoredlifetimes_parser, f"get_{how}_{name}")(),
                 )
         for how in ["left", "right", "interval"]:
             for name in ["values", "index"]:
                 setattr(
                     self,
                     f"{how}_truncated_{name}",
-                    getattr(_truncations_decoder, f"get_{how}_{name}")(),
+                    getattr(_truncations_parser, f"get_{how}_{name}")(),
                 )
 
     def __len__(self):

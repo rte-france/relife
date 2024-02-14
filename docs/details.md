@@ -11,11 +11,11 @@ ReLife2 is composed of three modules:
 
 # 2. `data` module
 
-The `data` module is composed of several objects. For a basic usage, one can only focus on the `SurvivalData` dataclass (see section below). For contributors, please make sure you understand the `LifetimeDecoder` family section before.
+The `data` module is composed of several objects. For a basic usage, one can only focus on the `SurvivalData` dataclass (see section below). For contributors, please make sure you understand the `LifetimeParser` family section before.
 
-## `LifetimeDecoder` family
+## `LifetimeParser` family
 
-To understand how `SurvivalData` dataclass works, it is necessary to know the [`decoder` submodule](../relife2/data/decoder.py). It contains objects that decodes lifetime data. Why ? Survival analysis carries on lifetime data whose format may not be constant. Our `LifetimeDecoder` objects share the same setup and their role is to extract all necessary information from given lifetime data. Everyone can propose a new decoder if a new lifetime data format is needed. For now, there are three decoder implementations :
+To understand how `SurvivalData` dataclass works, it is necessary to know the [`decoder` submodule](../relife2/data/decoder.py). It contains objects that decodes lifetime data. Why ? Survival analysis carries on lifetime data whose format may not be constant. Our `LifetimeParser` objects share the same setup and their role is to extract all necessary information from given lifetime data. Everyone can propose a new decoder if a new lifetime data format is needed. For now, there are three decoder implementations :
 
 - [`BaseCensoredLifetime`](../relife2/data/decoder.py#L59)
 - [`AdvancedCensoredLifetime`](../relife2/data/decoder.py#L117)
@@ -23,7 +23,7 @@ To understand how `SurvivalData` dataclass works, it is necessary to know the [`
 
 ![](../img/data_decoder.png)
 
-As you can see, every `LifetimeDecoder` implements `get_*_values()` and `get_*_index()` methods. Here `*` means either left, right, interval or regular. It is just getter methods returning either lifetime values or index. The following table describes more precisely what it means for each implemented decoders
+As you can see, every `LifetimeParser` implements `get_*_values()` and `get_*_index()` methods. Here `*` means either left, right, interval or regular. It is just getter methods returning either lifetime values or index. The following table describes more precisely what it means for each implemented decoders
 
 | |`get_*_values`()|`get_*_index`()|
 |-|-|-|
@@ -33,7 +33,7 @@ As you can see, every `LifetimeDecoder` implements `get_*_values()` and `get_*_i
 
 Because one user doesn't want to know all the decoders, their instanciations are handled by two factories :  [`censoredlifetimes_decoder`](../relife2/data/decoder.py#L261) and [`truncations_decoder`](../relife2/data/decoder.py#L278).
 
-**Want to contribute ? :** at this step, you may noticed that this code structure allows every one to add its own `LifetimeDecoder`. To do so, please make sure that your decoder object inherits from [`LifetimeDecoder`](../relife2/data/decoder.py#L6). It is necessary that every decoder shares the same structure to be used in our dataclass object (see next section). You might also extend current factories to return your decoder. 
+**Want to contribute ? :** at this step, you may noticed that this code structure allows every one to add its own `LifetimeParser`. To do so, please make sure that your decoder object inherits from [`LifetimeParser`](../relife2/data/decoder.py#L6). It is necessary that every decoder shares the same structure to be used in our dataclass object (see next section). You might also extend current factories to return your decoder. 
 
 
 ## `SurvivalData` dataclass
