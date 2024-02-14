@@ -15,7 +15,7 @@ class SurvivalData:
 
     def __post_init__(self):
         _censoredlifetimes_decoder = censoredlifetimes_decoder(
-            self.lifetimes, 1 - self.event
+            self.lifetimes, right_indicators=1 - self.event
         )
         _truncations_decoder = truncations_decoder(self.lifetimes, self.entry)
 
