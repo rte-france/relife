@@ -6,19 +6,45 @@ import numpy as np
 
 class Parser(ABC):
     """
-    Left, right or regular parser
     data pass to parser is unknown but outputs are always 1D array (index) and 1D array (values)
     """
 
     def __init__(self, *data):
         self.index, self.values = self.parse(*data)
-        assert len(self.index.shape) == 1, "index of Parser must be 1d array"
-        assert type(self.values) == tuple, "values of Parser must be tuple"
+        assert len(self.index.shape) == 1, "index of Parser must be of shape (n,)"
+        assert type(self.values) == tuple, "values of Parser must be of shape (n,)"
         for _values in self.values:
             assert len(_values.shape) == 1, "values of Parser must be tuple of 1d array"
 
     @abstractmethod
-    def parse(self, *data) -> Tuple[np.ndarray, tuple]:
+    def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
+        pass
+
+    def __call__(self, return_values=True):
+        if return_values:
+            return self.values
+        else:
+            return self.index
+
+
+class IntervalParser(ABC):
+    """
+    data pass to parser is unknown but outputs are always 1D array (index) and 2D array (values)
+    """
+
+    def __init__(self, *data):
+        self.index, self.values = self.parse(*data)
+        assert (
+            len(self.index.shape) == 1
+        ), "index of IntervalParser must be of shape (n,)"
+        assert (
+            len(self.values.shape) == 2 and self.values.shape[-1] == 2
+        ), "values of IntervalParser must of shape (n, 2)"
+        for _values in self.values:
+            assert len(_values.shape) == 1, "values of Parser must be tuple of 1d array"
+
+    @abstractmethod
+    def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
         pass
 
     def __call__(self, return_values=True):
@@ -65,7 +91,7 @@ class Observed(Parser):
 
     def parse(self, censored_lifetimes):
         index = np.where(censored_lifetimes[:, 0] == censored_lifetimes[:, 1])[0]
-        values = (censored_lifetimes[index][:, 0],)
+        values = censored_lifetimes[index][:, 0]
         return index, values
 
 
@@ -78,7 +104,7 @@ class LeftCensored(Parser):
 
     def parse(self, censored_lifetimes):
         index = np.where(censored_lifetimes[:, 0] == 0.0)[0]
-        values = (censored_lifetimes[index, :][:, 1],)
+        values = censored_lifetimes[index, :][:, 1]
         return index, values
 
 
@@ -91,11 +117,11 @@ class RightCensored(Parser):
 
     def parse(self, censored_lifetimes):
         index = np.where(censored_lifetimes[:, 1] == np.inf)[0]
-        values = (censored_lifetimes[index, :][:, 0],)
+        values = censored_lifetimes[index, :][:, 0]
         return index, values
 
 
-class IntervalCensored(Parser):
+class IntervalCensored(IntervalParser):
     def __init__(self, censored_lifetimes):
         assert (
             len(censored_lifetimes.shape) == 2
@@ -112,16 +138,13 @@ class IntervalCensored(Parser):
                 np.not_equal(censored_lifetimes[:, 0], censored_lifetimes[:, 1]),
             )
         )[0]
-        values = (
-            censored_lifetimes[index][:, 0],
-            censored_lifetimes[index][:, 1],
-        )
+        values = censored_lifetimes[index]
         return index, values
 
 
 class Truncated(Parser):
     def __init__(self, truncation_values):
-        assert len(truncation_values.shape) == 1
+        assert len(truncation_values.shape) == 1, "truncation values must be 1d array"
         super().__init__(truncation_values)
 
     def parse(self, truncation_values):
@@ -130,7 +153,7 @@ class Truncated(Parser):
         return index, values
 
 
-class IntervalTruncated(Parser):
+class IntervalTruncated(IntervalParser):
     def __init__(self, left_truncation_values, right_truncation_values):
         assert (
             len(left_truncation_values.shape) == 1
@@ -145,9 +168,12 @@ class IntervalTruncated(Parser):
         index = np.where(
             np.logical_and(left_truncation_values > 0, right_truncation_values > 0)
         )[0]
-        values = (
-            left_truncation_values[index],
-            right_truncation_values[index],
+        values = np.concatenate(
+            (
+                left_truncation_values[index][:, None],
+                right_truncation_values[index][:, None],
+            ),
+            axis=1,
         )
         return index, values
 
