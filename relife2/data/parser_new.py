@@ -153,7 +153,7 @@ class IntervalTruncated(Parser):
 
 
 # factory
-def observed_parser(censored_lifetimes: np.ndarray, indicators=None) -> Parser:
+def observed_parser_factory(censored_lifetimes: np.ndarray, indicators=None) -> Parser:
     if len(censored_lifetimes.shape) == 1 and indicators is None:
         return ObservedFromIndicators(
             censored_lifetimes, np.ones_like(censored_lifetimes, dtype=bool)
@@ -171,7 +171,9 @@ def observed_parser(censored_lifetimes: np.ndarray, indicators=None) -> Parser:
 
 
 # factory
-def left_censored_parser(censored_lifetimes: np.ndarray, indicators=None) -> Parser:
+def left_censored_parser_factory(
+    censored_lifetimes: np.ndarray, indicators=None
+) -> Parser:
     if len(censored_lifetimes.shape) == 1 and indicators is None:
         return CensoredFromIndicators(
             censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
@@ -189,7 +191,9 @@ def left_censored_parser(censored_lifetimes: np.ndarray, indicators=None) -> Par
 
 
 # factory
-def right_censored_parser(censored_lifetimes: np.ndarray, indicators=None) -> Parser:
+def right_censored_parser_factory(
+    censored_lifetimes: np.ndarray, indicators=None
+) -> Parser:
     if len(censored_lifetimes.shape) == 1 and indicators is None:
         return CensoredFromIndicators(
             censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
@@ -207,7 +211,7 @@ def right_censored_parser(censored_lifetimes: np.ndarray, indicators=None) -> Pa
 
 
 # factory
-def interval_censored_parser(censored_lifetimes: np.ndarray) -> Parser:
+def interval_censored_parser_factory(censored_lifetimes: np.ndarray) -> Parser:
     if len(censored_lifetimes.shape) == 1:
         raise ValueError("interval_censored_parser must take 2d array")
     elif len(censored_lifetimes) == 2:
@@ -217,7 +221,7 @@ def interval_censored_parser(censored_lifetimes: np.ndarray) -> Parser:
 
 
 # factory
-def truncated_parser(
+def truncated_parser_factory(
     left_truncation_values=None, right_truncation_values=None
 ) -> Parser:
     if left_truncation_values and right_truncation_values:
