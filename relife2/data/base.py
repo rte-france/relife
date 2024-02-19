@@ -409,39 +409,39 @@ def survdata(
     right_censored_indicators: np.ndarray = None,
     entry: np.ndarray = None,
     departure: np.ndarray = None,
-    observed_data: Data = None,
-    left_censored_data: Data = None,
-    right_censored_data: Data = None,
-    interval_censored_data: IntervalData = None,
-    left_truncated_data: Data = None,
-    right_truncated_data: Data = None,
-    interval_truncated_data: IntervalData = None,
+    **kwargs,
 ) -> SurvivalData:
 
-    if left_censored_data is None:
-        left_censored_data = left_censored_factory(
+    observed = kwargs.get("observed", None)
+    left_censored = kwargs.get("left_censored", None)
+    right_censored = kwargs.get("right_censored", None)
+    interval_censored = kwargs.get("interval_censored", None)
+    right_truncated = kwargs.get("left_truncated", None)
+    left_truncated = kwargs.get("right_truncated", None)
+    interval_truncated = kwargs.get("interval_truncated", None)
+
+    if left_censored is None:
+        left_censored = left_censored_factory(
             censored_lifetimes, indicators=left_censored_indicators
         )
     else:
         if left_censored_indicators is not None:
             raise ValueError(
-                "left_censored_indicators and left_censored_data can not be specified at the same time"
+                "left_censored_indicators and left_censored can not be specified at the same time"
             )
-        if not issubclass(left_censored_data, Data):
-            raise TypeError(f"Data expected, got '{type(left_censored_data).__name__}'")
-    if right_censored_data is None:
-        right_censored_data = right_censored_factory(
+        if not issubclass(left_censored, Data):
+            raise TypeError(f"Data expected, got '{type(left_censored).__name__}'")
+    if right_censored is None:
+        right_censored = right_censored_factory(
             censored_lifetimes, indicators=right_censored_indicators
         )
     else:
         if right_censored_indicators is not None:
             raise ValueError(
-                "right_censored_indicators and right_censored_data can not be specified at the same time"
+                "right_censored_indicators and right_censored can not be specified at the same time"
             )
-        if not issubclass(right_censored_data, Data):
-            raise TypeError(
-                f"Data expected, got '{type(right_censored_data).__name__}'"
-            )
+        if not issubclass(right_censored, Data):
+            raise TypeError(f"Data expected, got '{type(right_censored).__name__}'")
 
     if left_censored_indicators is not None and right_censored_indicators is not None:
         if len(left_censored_indicators) != len(right_censored_indicators):
@@ -457,12 +457,12 @@ def survdata(
                 "left_censored_indicators and right_censored_indicators can't be true at the same index"
             )
 
-    if interval_censored_data is None:
-        interval_censored_data = interval_censored_factory(censored_lifetimes)
+    if interval_censored is None:
+        interval_censored = interval_censored_factory(censored_lifetimes)
     else:
-        if not issubclass(interval_censored_data, IntervalData):
+        if not issubclass(interval_censored, IntervalData):
             raise TypeError(
-                f"IntervalData expected, got '{type(interval_censored_data).__name__}'"
+                f"IntervalData expected, got '{type(interval_censored).__name__}'"
             )
 
     if observed_indicators is None:
@@ -474,17 +474,15 @@ def survdata(
                 )
             observed_indicators = observed_indicators.all(axis=0)
 
-    if observed_data is None:
-        observed_data = observed_factory(
-            censored_lifetimes, indicators=observed_indicators
-        )
+    if observed is None:
+        observed = observed_factory(censored_lifetimes, indicators=observed_indicators)
     else:
         if observed_indicators is not None:
             raise ValueError(
-                "observed_indicators and observed_data can not be specified at the same time"
+                "observed_indicators and observed can not be specified at the same time"
             )
-        if not issubclass(observed_data, Data):
-            raise TypeError(f"Data expected, got '{type(observed_data).__name__}'")
+        if not issubclass(observed, Data):
+            raise TypeError(f"Data expected, got '{type(observed).__name__}'")
 
     if entry is not None:
         if len(entry) != len(censored_lifetimes):
@@ -497,44 +495,40 @@ def survdata(
                 "departure values (right truncation values) and censored_lifetimes don't have the same length"
             )
 
-    if left_truncated_data is None:
-        left_truncated_data = left_truncated_factory(entry)
+    if left_truncated is None:
+        left_truncated = left_truncated_factory(entry)
     else:
         if entry is not None:
             raise ValueError(
-                "entry and left_truncated_data can not be specified at the same time"
+                "entry and left_truncated can not be specified at the same time"
             )
-        if not issubclass(left_truncated_data, Data):
-            raise TypeError(
-                f"Data expected, got '{type(left_truncated_data).__name__}'"
-            )
-    if right_truncated_data is None:
-        right_truncated_data = right_truncated_factory(departure)
+        if not issubclass(left_truncated, Data):
+            raise TypeError(f"Data expected, got '{type(left_truncated).__name__}'")
+    if right_truncated is None:
+        right_truncated = right_truncated_factory(departure)
     else:
         if departure is not None:
             raise ValueError(
-                "departure and right_truncated_data can not be specified at the same time"
+                "departure and right_truncated can not be specified at the same time"
             )
-        if not issubclass(right_truncated_data, Data):
-            raise TypeError(
-                f"Data expected, got '{type(right_truncated_data).__name__}'"
-            )
-    if interval_truncated_data is None:
-        interval_truncated_data = interval_truncated_factory(
+        if not issubclass(right_truncated, Data):
+            raise TypeError(f"Data expected, got '{type(right_truncated).__name__}'")
+    if interval_truncated is None:
+        interval_truncated = interval_truncated_factory(
             entry,
             departure,
         )
     else:
-        if not issubclass(interval_truncated_data, IntervalData):
+        if not issubclass(interval_truncated, IntervalData):
             raise TypeError(
-                f"IntervalData expected, got '{type(interval_truncated_data).__name__}'"
+                f"IntervalData expected, got '{type(interval_truncated).__name__}'"
             )
     return SurvivalData(
-        observed_data,
-        left_censored_data,
-        right_censored_data,
-        interval_censored_data,
-        left_truncated_data,
-        right_truncated_data,
-        interval_truncated_data,
+        observed,
+        left_censored,
+        right_censored,
+        interval_censored,
+        left_truncated,
+        right_truncated,
+        interval_truncated,
     )
