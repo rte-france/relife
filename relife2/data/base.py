@@ -6,10 +6,12 @@ from .parser import (
     Data,
     IntervalData,
     interval_censored_factory,
+    interval_truncated_factory,
     left_censored_factory,
+    left_truncated_factory,
     observed_factory,
     right_censored_factory,
-    truncated_factory,
+    right_truncated_factory,
 )
 
 
@@ -24,18 +26,24 @@ class SurvivalData:
     interval_truncated: IntervalData
 
     def __post_init__(self):
-        if self.interval_censored.values[:, 0] >= self.interval_censored.values[:, 1]:
+        if (
+            self.interval_censored.values[:, 0] >= self.interval_censored.values[:, 1]
+        ).any():
             raise ValueError("Invalid interval censorship values")
-        if self.interval_truncated.values[:, 0] >= self.interval_trunated.values[:, 1]:
+        if (
+            self.interval_truncated.values[:, 0] >= self.interval_truncated.values[:, 1]
+        ).any():
             raise ValueError("Invalid interval truncation values")
 
-        self.intersection_data = {"index": {}, "values": {}}
+        self._intersection_data = {"index": {}, "values": {}}
 
-        if self._censored_and_truncated(how=("left", "left")).size != 0:
+        res = self._censored_and_truncated(how=("left", "left"))
+        if res["index"].size != 0:
             raise ValueError(
                 "Left censored lifetimes can't be left truncated lifetimes too"
             )
-        if self._censored_and_truncated(how=("left", "interval")).size != 0:
+        res = self._censored_and_truncated(how=("left", "interval"))
+        if res["index"].size != 0:
             raise ValueError(
                 "Left censored lifetimes can't be interval truncated lifetimes too"
             )
@@ -47,10 +55,10 @@ class SurvivalData:
                 f"right censored lifetime values can't be lower or equal to left truncation values: incompatible {censored_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["right_censored_left_truncated"] = res[
+            self._intersection_data["index"]["right_censored_left_truncated"] = res[
                 "index"
             ]
-            self.intersection_data["values"]["right_censored_left_truncated"] = res[
+            self._intersection_data["values"]["right_censored_left_truncated"] = res[
                 "values"
             ]
 
@@ -65,10 +73,10 @@ class SurvivalData:
                 f"interval censored lifetime values can't be lower or equal to left truncation values: incompatible {censored_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["interval_censored_left_truncated"] = res[
+            self._intersection_data["index"]["interval_censored_left_truncated"] = res[
                 "index"
             ]
-            self.intersection_data["values"]["interval_censored_left_truncated"] = res[
+            self._intersection_data["values"]["interval_censored_left_truncated"] = res[
                 "values"
             ]
 
@@ -79,12 +87,12 @@ class SurvivalData:
                 f"right censored lifetime values can't be higer or equal to interval of truncation: incompatible {censored_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["right_censored_interval_truncated"] = res[
+            self._intersection_data["index"]["right_censored_interval_truncated"] = res[
                 "index"
             ]
-            self.intersection_data["values"]["right_censored_interval_truncated"] = res[
-                "values"
-            ]
+            self._intersection_data["values"][
+                "right_censored_interval_truncated"
+            ] = res["values"]
 
         res = self._censored_and_truncated(how=("interval", "interval"))
         censored_values, truncation_values = res["values"]
@@ -97,10 +105,10 @@ class SurvivalData:
                 f"interval censorship can't be outside of truncation interval: incompatible {censored_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"][
+            self._intersection_data["index"][
                 "interval_censored_interval_truncated"
             ] = res["index"]
-            self.intersection_data["values"][
+            self._intersection_data["values"][
                 "interval_censored_interval_truncated"
             ] = res["values"]
 
@@ -111,10 +119,10 @@ class SurvivalData:
                 f"right censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["right_censored_right_truncated"] = res[
+            self._intersection_data["index"]["right_censored_right_truncated"] = res[
                 "index"
             ]
-            self.intersection_data["values"]["right_censored_right_truncated"] = res[
+            self._intersection_data["values"]["right_censored_right_truncated"] = res[
                 "values"
             ]
 
@@ -125,10 +133,10 @@ class SurvivalData:
                 f"left censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["left_censored_right_truncated"] = res[
+            self._intersection_data["index"]["left_censored_right_truncated"] = res[
                 "index"
             ]
-            self.intersection_data["values"]["left_censored_right_truncated"] = res[
+            self._intersection_data["values"]["left_censored_right_truncated"] = res[
                 "values"
             ]
 
@@ -139,12 +147,12 @@ class SurvivalData:
                 f"interval censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["interval_censored_right_truncated"] = res[
+            self._intersection_data["index"]["interval_censored_right_truncated"] = res[
                 "index"
             ]
-            self.intersection_data["values"]["interval_censored_right_truncated"] = res[
-                "values"
-            ]
+            self._intersection_data["values"][
+                "interval_censored_right_truncated"
+            ] = res["values"]
 
         res = self._observed_and_truncated(how="right")
         observed_values, truncation_values = res["values"]
@@ -153,8 +161,10 @@ class SurvivalData:
                 f"observed lifetime values can't be higher than right truncations: incompatible {observed_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["observed_right_truncated"] = res["index"]
-            self.intersection_data["values"]["observed_right_truncated"] = res["values"]
+            self._intersection_data["index"]["observed_right_truncated"] = res["index"]
+            self._intersection_data["values"]["observed_right_truncated"] = res[
+                "values"
+            ]
 
         res = self._observed_and_truncated(how="left")
         observed_values, truncation_values = res["values"]
@@ -163,12 +173,10 @@ class SurvivalData:
                 f"observed lifetime values can't be lower than left truncations: incompatible {observed_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["observed_left_truncated"] = res["index"]
-            self.intersection_data["values"]["observed_left_truncated"] = res["values"]
+            self._intersection_data["index"]["observed_left_truncated"] = res["index"]
+            self._intersection_data["values"]["observed_left_truncated"] = res["values"]
 
-        observed_values, truncation_values = self._observed_and_truncated(
-            how="interval"
-        )
+        res = self._observed_and_truncated(how="interval")
         observed_values, truncation_values = res["values"]
         if (observed_values >= truncation_values[:, 1]).any():
             raise ValueError(
@@ -179,10 +187,10 @@ class SurvivalData:
                 f"observed lifetime values can't be outside of truncation interval: incompatible {observed_values} and {truncation_values}"
             )
         else:
-            self.intersection_data["index"]["observed_interval_truncated"] = res[
+            self._intersection_data["index"]["observed_interval_truncated"] = res[
                 "index"
             ]
-            self.intersection_data["values"]["observed_interval_truncated"] = res[
+            self._intersection_data["values"]["observed_interval_truncated"] = res[
                 "values"
             ]
 
@@ -205,7 +213,7 @@ class SurvivalData:
         ]
 
         censored_lifetime_values = getattr(self, f"{how_0}_censored").values
-        truncation_values = getattr(self, f"{how_1}_truncated").index
+        truncation_values = getattr(self, f"{how_1}_truncated").values
         res_1 = censored_lifetime_values[np.in1d(censored_index, truncated_index)]
         res_2 = truncation_values[np.in1d(truncated_index, censored_index)]
 
@@ -290,13 +298,19 @@ class SurvivalData:
                 f"Invalid intersection args {args} : args cannot be equals"
             )
         if "censored" in args[0] and "truncated" in args[1]:
-            return self.intersection_data["values"][f"{args[0]}_{args[1]}"]
+            return self._intersection_data["values"][f"{args[0]}_{args[1]}"]
         if "truncated" in args[0] and "censored" in args[1]:
-            return self.intersection_data["values"][f"{args[1]}_{args[0]}"]
+            return (
+                self._intersection_data["values"][f"{args[1]}_{args[0]}"][1],
+                self._intersection_data["values"][f"{args[1]}_{args[0]}"][0],
+            )
         if args[0] == "observed" and "truncated" in args[1]:
-            return self.intersection_data["values"][f"{args[0]}_{args[1]}"]
-        if "truncated" in args[0] and args[0] == "observed":
-            return self.intersection_data["values"][f"{args[1]}_{args[0]}"]
+            return self._intersection_data["values"][f"{args[0]}_{args[1]}"]
+        if "truncated" in args[0] and args[1] == "observed":
+            return (
+                self._intersection_data["values"][f"{args[1]}_{args[0]}"][1],
+                self._intersection_data["values"][f"{args[1]}_{args[0]}"][0],
+            )
 
     def intersection_index(self, *args: str):
         if {type(arg) for arg in args} != {str}:
@@ -340,13 +354,19 @@ class SurvivalData:
                 f"Invalid intersection args {args} : args cannot be equals"
             )
         if "censored" in args[0] and "truncated" in args[1]:
-            return self.intersection_data["index"][f"{args[0]}_{args[1]}"]
+            return self._intersection_data["index"][f"{args[0]}_{args[1]}"]
         if "truncated" in args[0] and "censored" in args[1]:
-            return self.intersection_data["index"][f"{args[1]}_{args[0]}"]
+            return (
+                self._intersection_data["index"][f"{args[1]}_{args[0]}"][1],
+                self._intersection_data["index"][f"{args[1]}_{args[0]}"][0],
+            )
         if args[0] == "observed" and "truncated" in args[1]:
-            return self.intersection_data["index"][f"{args[0]}_{args[1]}"]
-        if "truncated" in args[0] and args[0] == "observed":
-            return self.intersection_data["index"][f"{args[1]}_{args[0]}"]
+            return self._intersection_data["index"][f"{args[0]}_{args[1]}"]
+        if "truncated" in args[0] and args[1] == "observed":
+            return (
+                self._intersection_data["index"][f"{args[1]}_{args[0]}"][1],
+                self._intersection_data["index"][f"{args[1]}_{args[0]}"][0],
+            )
 
     def union_values(self, *args):
         if {type(arg) for arg in args} != {str}:
@@ -396,7 +416,7 @@ def survdata(
     left_truncated_data: Data = None,
     right_truncated_data: Data = None,
     interval_truncated_data: IntervalData = None,
-):
+) -> SurvivalData:
 
     if left_censored_data is None:
         left_censored_data = left_censored_factory(
@@ -478,9 +498,7 @@ def survdata(
             )
 
     if left_truncated_data is None:
-        left_truncated_data = truncated_factory(
-            left_truncation_values=entry, right_truncation_values=None
-        )
+        left_truncated_data = left_truncated_factory(entry)
     else:
         if entry is not None:
             raise ValueError(
@@ -491,9 +509,7 @@ def survdata(
                 f"Data expected, got '{type(left_truncated_data).__name__}'"
             )
     if right_truncated_data is None:
-        right_truncated_data = truncated_factory(
-            left_truncation_values=None, right_truncation_values=departure
-        )
+        right_truncated_data = right_truncated_factory(departure)
     else:
         if departure is not None:
             raise ValueError(
@@ -504,16 +520,16 @@ def survdata(
                 f"Data expected, got '{type(right_truncated_data).__name__}'"
             )
     if interval_truncated_data is None:
-        interval_truncated_data = truncated_factory(
-            left_truncation_values=entry,
-            right_truncation_values=departure,
+        interval_truncated_data = interval_truncated_factory(
+            entry,
+            departure,
         )
     else:
         if not issubclass(interval_truncated_data, IntervalData):
             raise TypeError(
                 f"IntervalData expected, got '{type(interval_truncated_data).__name__}'"
             )
-    return Data(
+    return SurvivalData(
         observed_data,
         left_censored_data,
         right_censored_data,
