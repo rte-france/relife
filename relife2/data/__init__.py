@@ -1,3 +1,4 @@
-from .base import SurvivalData
+from .base import survdata
+from .parser import Data, IntervalData
 
-__all__ = ["SurvivalData"]
+__all__ = ["survdata", "IntervalData", "Data"]
