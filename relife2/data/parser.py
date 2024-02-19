@@ -1,284 +1,257 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 import numpy as np
 
 
-class LifetimeParser(ABC):
-    def __init__(self, values: np.ndarray):
-        self.values = values
+class Data(ABC):
+    """
+    data pass to parser is unknown but outputs are always 1D array (index) and 1D array (values)
+    """
+
+    def __init__(self, *data):
+        self.index, self.values = self.parse(*data)
+        if len(self.index.shape) != 1:
+            raise TypeError("index of Data must be of shape (n,)")
+        if len(self.values.shape) != 1:
+            raise TypeError("values of Data must be of shape (n,)")
 
     @abstractmethod
-    def get_left_index(
-        self,
-    ):
-        pass
-
-    @abstractmethod
-    def get_right_index(
-        self,
-    ):
-        pass
-
-    @abstractmethod
-    def get_interval_index(
-        self,
-    ):
-        pass
-
-    @abstractmethod
-    def get_regular_index(
-        self,
-    ):
-        pass
-
-    @abstractmethod
-    def get_left_values(
-        self,
-    ):
-        pass
-
-    @abstractmethod
-    def get_right_values(
-        self,
-    ):
-        pass
-
-    @abstractmethod
-    def get_interval_values(
-        self,
-    ):
-        pass
-
-    @abstractmethod
-    def get_regular_values(
-        self,
-    ):
+    def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
         pass
 
 
-class BaseCensoredLifetime(LifetimeParser):
-    def __init__(
-        self,
-        values=np.ndarray,
-        left_indicators: np.ndarray = np.array([], dtype=int),
-        right_indicators: np.ndarray = np.array([], dtype=int),
-    ):
-        super().__init__(values)
-        self.left_indicators = self._check_indicators(left_indicators)
-        self.right_indicators = self._check_indicators(right_indicators)
+class IntervalData(ABC):
+    """
+    data pass to parser is unknown but outputs are always 1D array (index) and 2D array (values)
+    """
 
-    def _check_indicators(self, indicators: np.ndarray):
-        if type(indicators) == np.ndarray:
-            if indicators.size != 0:
-                assert len(indicators.shape) == 1, "indicators must be 1d array"
-                assert len(indicators) == len(
-                    self.values
-                ), "indicators must have the same length as lifetime values"
-                if indicators.dtype != np.bool_:
-                    indicators = indicators.astype(bool)
-        else:
-            ValueError("indicators must be np.ndarray")
-        return indicators
+    def __init__(self, *data):
+        self.index, self.values = self.parse(*data)
+        if len(self.index.shape) != 1:
+            raise TypeError("index of IntervalParser must be of shape (n,)")
+        if len(self.values.shape) != 2:
+            raise TypeError("values of IntervalParser must of shape (n, 2)")
+        if self.values.shape[-1] != 2:
+            raise TypeError("values of IntervalParser must of shape (n, 2)")
 
-    def get_left_index(
-        self,
-    ):
-        return np.where(self.left_indicators)[0]
-
-    def get_right_index(
-        self,
-    ):
-        return np.where(self.right_indicators)[0]
-
-    def get_interval_index(self):
-        return np.where(np.zeros(len(self.values), dtype=int))[0]
-
-    def get_regular_index(
-        self,
-    ):
-        return np.delete(
-            np.arange(0, len(self.values)),
-            list(set(self.get_left_index()).union(set(self.get_right_index()))),
-        )
-
-    def get_left_values(self):
-        return self.values[self.get_left_index()]
-
-    def get_right_values(self):
-        return self.values[self.get_right_index()]
-
-    def get_interval_values(self):
-        return self.values[self.get_interval_index()]
-
-    def get_regular_values(self):
-        return self.values[self.get_regular_index()]
+    @abstractmethod
+    def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
+        pass
 
 
-class AdvancedCensoredLifetime(LifetimeParser):
-    def __init__(self, values=np.ndarray):
-        super().__init__(values)
+class CensoredFromIndicators(Data):
+    def __init__(self, censored_lifetimes, indicators):
+        if len(censored_lifetimes.shape) != 1:
+            raise TypeError("truncation values must be 1d array")
+        if len(indicators.shape) != 1:
+            raise TypeError("indicators values must be 1d array")
+        if indicators.dtype != bool:
+            raise TypeError("indicators values must be boolean")
+        if len(censored_lifetimes) != len(indicators):
+            raise ValueError(
+                "censored_lifetimes and indicators must have the same length"
+            )
+        super().__init__(censored_lifetimes, indicators)
 
-    def get_left_index(
-        self,
-    ):
-        return np.where(self.values[:, 0] == 0.0)[0]
+    def parse(self, censored_lifetimes, indicators):
+        index = np.where(indicators)[0]
+        values = (censored_lifetimes[index],)
+        return index, values
 
-    def get_right_index(
-        self,
-    ):
-        return np.where(self.values[:, 1] == np.inf)[0]
 
-    def get_interval_index(
-        self,
-    ):
-        return np.where(
+class ObservedFromIndicators(Data):
+    def __init__(self, censored_lifetimes, indicators):
+        if len(censored_lifetimes.shape) != 1:
+            raise TypeError("truncation values must be 1d array")
+        if len(indicators.shape) != 1:
+            raise TypeError("indicators values must be 1d array")
+        if indicators.dtype != bool:
+            raise TypeError("indicators values must be boolean")
+        if len(censored_lifetimes) != len(indicators):
+            raise ValueError(
+                "censored_lifetimes and indicators must have the same length"
+            )
+        super().__init__(censored_lifetimes, indicators)
+
+    def parse(self, censored_lifetimes, indicators):
+        # index = (np.stack(indicators)).all(axis=0)
+        index = np.where(indicators)[0]
+        values = (censored_lifetimes[index],)
+        return index, values
+
+
+class Observed(Data):
+    def __init__(self, censored_lifetimes):
+        if len(censored_lifetimes.shape) != 2:
+            raise TypeError("data must be 2d array")
+        super().__init__(censored_lifetimes)
+
+    def parse(self, censored_lifetimes):
+        index = np.where(censored_lifetimes[:, 0] == censored_lifetimes[:, 1])[0]
+        values = censored_lifetimes[index][:, 0]
+        return index, values
+
+
+class LeftCensored(Data):
+    def __init__(self, censored_lifetimes):
+        if len(censored_lifetimes.shape) != 2:
+            raise TypeError("data must be 2d array")
+        super().__init__(censored_lifetimes)
+
+    def parse(self, censored_lifetimes):
+        index = np.where(censored_lifetimes[:, 0] == 0.0)[0]
+        values = censored_lifetimes[index, :][:, 1]
+        return index, values
+
+
+class RightCensored(Data):
+    def __init__(self, censored_lifetimes):
+        if len(censored_lifetimes.shape) != 2:
+            raise TypeError("data must be 2d array")
+        super().__init__(censored_lifetimes)
+
+    def parse(self, censored_lifetimes):
+        index = np.where(censored_lifetimes[:, 1] == np.inf)[0]
+        values = censored_lifetimes[index, :][:, 0]
+        return index, values
+
+
+class IntervalCensored(IntervalData):
+    def __init__(self, censored_lifetimes):
+        if len(censored_lifetimes.shape) != 2:
+            raise TypeError("data must be 2d array")
+        super().__init__(censored_lifetimes)
+
+    def parse(self, censored_lifetimes):
+        index = np.where(
             np.logical_and(
                 np.logical_and(
-                    self.values[:, 0] > 0,
-                    self.values[:, 1] < np.inf,
+                    censored_lifetimes[:, 0] > 0,
+                    censored_lifetimes[:, 1] < np.inf,
                 ),
-                np.not_equal(self.values[:, 0], self.values[:, 1]),
+                np.not_equal(censored_lifetimes[:, 0], censored_lifetimes[:, 1]),
             )
         )[0]
-
-    def get_regular_index(self):
-        return np.delete(
-            np.arange(0, len(self.values)),
-            list(
-                set(self.get_left_index())
-                .union(set(self.get_right_index()))
-                .union(self.get_interval_index())
-            ),
-        )
-
-    def get_left_values(self):
-        return self.values[self.get_left_index(), :][:, 1]
-
-    def get_right_values(self):
-        return self.values[self.get_right_index(), :][:, 0]
-
-    def get_interval_values(self):
-        return self.values[self.get_interval_index(), :]
-
-    def get_regular_values(self):
-        assert (
-            self.values[self.get_regular_index()][:, 0]
-            == self.values[self.get_regular_index()][:, 1]
-        ).all()
-        return self.values[self.get_regular_index()][:, 0]
+        values = censored_lifetimes[index]
+        return index, values
 
 
-class Truncation(LifetimeParser):
-    def __init__(
-        self,
-        values=np.ndarray,
-        entry: np.ndarray = np.array([], dtype=float),
-        departure: np.ndarray = np.array([], dtype=float),
-    ):
-        super().__init__(values)
-        self.entry = entry
-        self.departure = departure
+class Truncated(Data):
+    def __init__(self, truncation_values):
+        if len(truncation_values.shape) != 1:
+            raise TypeError("truncation values must be 1d array")
+        super().__init__(truncation_values)
 
-        if self.entry.size != 0:
-            assert (
-                self.values.size == self.entry.size
-                and self.values.shape == self.entry.shape
+    def parse(self, truncation_values):
+        index = np.where(truncation_values > 0)[0]
+        values = (truncation_values[index],)
+        return index, values
+
+
+class IntervalTruncated(IntervalData):
+    def __init__(self, left_truncation_values, right_truncation_values):
+        if len(left_truncation_values.shape) != 1:
+            raise TypeError(
+                "left_truncation_values must be 1d array for IntervalTruncation"
             )
-            if np.any(self.entry < 0):
-                raise ValueError("entry values must be positive")
-            if np.any(self.values <= self.entry):
-                raise ValueError("entry must be strictly lower than the lifetimes")
-
-        if self.departure.size != 0:
-            assert (
-                self.values.size == self.departure.size
-                and self.values.shape == self.departure.shape
+        if len(right_truncation_values.shape) != 1:
+            raise TypeError(
+                "left_truncation_values must be 1d array for IntervalTruncation"
             )
-            if np.any(self.departure < 0):
-                raise ValueError("entry values must be positive")
-            if np.any(self.values > self.departure):
-                raise ValueError("departure must be higher or equal to lifetimes")
+        if len(left_truncation_values) != len(right_truncation_values):
+            raise ValueError(
+                "left_truncation_values and right_truncation_values must have the same length"
+            )
+        super().__init__(left_truncation_values, right_truncation_values)
 
-    def get_left_index(
-        self,
-    ):
-        return np.where(self.entry > 0)[0]
-
-    def get_right_index(
-        self,
-    ):
-
-        return np.where(self.departure > 0)[0]
-
-    def get_interval_index(
-        self,
-    ):
-        if self.entry.size != 0 and self.departure.size != 0:
-            return np.where(np.logical_and(self.entry > 0, self.departure > 0))[0]
-        else:
-            return np.where(np.zeros(len(self.values), dtype=int))[0]
-
-    def get_regular_index(
-        self,
-    ):
-        return np.delete(
-            np.arange(0, len(self.values)),
-            list(
-                set(self.get_left_index())
-                .union(set(self.get_right_index()))
-                .union(self.get_interval_index())
-            ),
-        )
-
-    def get_left_values(
-        self,
-    ):
-        return self.entry[self.get_left_index()]
-
-    def get_right_values(
-        self,
-    ):
-        return self.departure[self.get_right_index()]
-
-    def get_interval_values(
-        self,
-    ):
-        return np.concatenate(
+    def parse(self, left_truncation_values, right_truncation_values):
+        index = np.where(
+            np.logical_and(left_truncation_values > 0, right_truncation_values > 0)
+        )[0]
+        values = np.concatenate(
             (
-                self.entry[self.get_interval_index()][:, None],
-                self.departure[self.get_interval_index()][:, None],
+                left_truncation_values[index][:, None],
+                right_truncation_values[index][:, None],
             ),
             axis=1,
         )
-
-    def get_regular_values(
-        self,
-    ):
-        return self.values[self.get_regular_index()]
+        return index, values
 
 
 # factory
-def censoredlifetimes_parser(
-    lifetime_values: np.ndarray,
-    left_indicators: np.ndarray = np.array([], dtype=bool),
-    right_indicators: np.ndarray = np.array([], dtype=bool),
-):
-    if len(lifetime_values.shape) == 1:
-        constructor = BaseCensoredLifetime(
-            lifetime_values, left_indicators, right_indicators
+def observed_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
+    if len(censored_lifetimes.shape) == 1 and indicators is None:
+        return ObservedFromIndicators(
+            censored_lifetimes, np.ones_like(censored_lifetimes, dtype=bool)
         )
-    elif len(lifetime_values.shape) == 2:
-        constructor = AdvancedCensoredLifetime(lifetime_values)
+    elif len(censored_lifetimes.shape) == 1 and indicators:
+        return ObservedFromIndicators(censored_lifetimes, indicators)
+    elif len(censored_lifetimes.shape) == 2 and indicators is None:
+        return Observed(censored_lifetimes)
+    elif len(censored_lifetimes.shape) == 2 and indicators:
+        raise ValueError(
+            "observed with 2d censored_lifetimes and indicators is ambiguous"
+        )
     else:
-        return ValueError("lifetimes values must be 1d or 2d array")
-    return constructor
+        raise ValueError("observed_parser incorrect arguments")
 
 
 # factory
-def truncations_parser(
-    lifetime_values: np.ndarray,
-    entry: np.ndarray = np.array([], dtype=float),
-    departure: np.ndarray = np.array([], dtype=float),
-):
-    constructor = Truncation(lifetime_values, entry, departure)
-    return constructor
+def left_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
+    if len(censored_lifetimes.shape) == 1 and indicators is None:
+        return CensoredFromIndicators(
+            censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
+        )
+    elif len(censored_lifetimes.shape) == 1 and indicators:
+        return CensoredFromIndicators(censored_lifetimes, indicators)
+    elif len(censored_lifetimes.shape) == 2 and indicators is None:
+        return LeftCensored(censored_lifetimes)
+    elif len(censored_lifetimes.shape) == 2 and indicators:
+        raise ValueError(
+            "left_censored with 2d censored_lifetimes and indicators is ambiguous"
+        )
+    else:
+        raise ValueError("left_censored_parser incorrect arguments")
+
+
+# factory
+def right_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
+    if len(censored_lifetimes.shape) == 1 and indicators is None:
+        return CensoredFromIndicators(
+            censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
+        )
+    elif len(censored_lifetimes.shape) == 1 and indicators:
+        return CensoredFromIndicators(censored_lifetimes, indicators)
+    elif len(censored_lifetimes.shape) == 2 and indicators is None:
+        return RightCensored(censored_lifetimes)
+    elif len(censored_lifetimes.shape) == 2 and indicators:
+        raise ValueError(
+            "right_censored with 2d censored_lifetimes and indicators is ambiguous"
+        )
+    else:
+        raise ValueError("right_censored_parser incorrect arguments")
+
+
+# factory
+def interval_censored_factory(censored_lifetimes: np.ndarray) -> Data:
+    if len(censored_lifetimes.shape) == 1:
+        return IntervalCensored(np.ndarray([[]], dtype=float))
+    elif len(censored_lifetimes) == 2:
+        return IntervalCensored(censored_lifetimes)
+    else:
+        raise ValueError("interval_censored incorrect arguments")
+
+
+# factory
+def truncated_factory(
+    left_truncation_values=None, right_truncation_values=None
+) -> Data:
+    if left_truncation_values and right_truncation_values:
+        return IntervalTruncated(left_truncation_values, right_truncation_values)
+    elif left_truncation_values and not right_truncation_values:
+        return Truncated(left_truncation_values)
+    elif not left_truncation_values and right_truncation_values:
+        return Truncated(right_truncation_values)
+    else:
+        return Truncated(np.array([], dtype=float))
