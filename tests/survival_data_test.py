@@ -45,21 +45,13 @@ def test_1d_data(example_1d_data):
     assert (data.index("left_truncated") == np.array([2, 3, 4, 5, 6])).all()
     assert (data.values("left_truncated") == np.array([3, 5, 3, 1, 9])).all()
 
-    assert (
-        data.intersection_values("observed", "left_truncated")[0] == np.array([9, 11])
-    ).all()
+    assert (data.values("observed & left_truncated")[0] == np.array([9, 11])).all()
 
-    assert (
-        data.intersection_values("observed", "left_truncated")[1] == np.array([3, 9])
-    ).all()
+    assert (data.values("observed & left_truncated")[1] == np.array([3, 9])).all()
 
-    assert (
-        data.intersection_values("left_truncated", "observed")[0] == np.array([3, 9])
-    ).all()
+    assert (data.values("left_truncated & observed")[0] == np.array([3, 9])).all()
 
-    assert (
-        data.intersection_values("left_truncated", "observed")[1] == np.array([9, 11])
-    ).all()
+    assert (data.values("left_truncated & observed")[1] == np.array([9, 11])).all()
 
 
 # def test_censored(example_2d_data):

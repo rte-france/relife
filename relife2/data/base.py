@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from itertools import combinations
 
 import numpy as np
 
@@ -26,6 +27,30 @@ class SurvivalData:
     interval_truncated: IntervalData
 
     def __post_init__(self):
+        field_names = list(self.__annotations__.keys())
+        self._intersection_data = {}
+
+        # populate with all possible combinations of data
+        for n in range(1, len(field_names)):
+            for combination in combinations(field_names, n):
+                sorted_combination = sorted(combination)
+                if SurvivalData.check_field_combination(sorted_combination):
+                    self._intersection_data[
+                        " & ".join(sorted_combination)
+                    ] = self._intersection(*sorted_combination)
+                    print(sorted_combination, self._intersection(*sorted_combination))
+                # if field combinations is not allowed, check if no data exists
+                else:
+                    if self._intersection(*sorted_combination)["index"].size != 0:
+                        raise ValueError(
+                            f"Incoherence in provided data : {sorted_combination} data is impossible"
+                        )
+
+        # compute other checks on data values (TO BE COMPLETED)
+        self._sanity_checks()
+
+    def _sanity_checks(self):
+
         if (
             self.interval_censored.values[:, 0] >= self.interval_censored.values[:, 1]
         ).any():
@@ -35,67 +60,29 @@ class SurvivalData:
         ).any():
             raise ValueError("Invalid interval truncation values")
 
-        self._intersection_data = {"index": {}, "values": {}}
-
-        res = self._censored_and_truncated(how=("left", "left"))
-        if res["index"].size != 0:
-            raise ValueError(
-                "Left censored lifetimes can't be left truncated lifetimes too"
-            )
-        res = self._censored_and_truncated(how=("left", "interval"))
-        if res["index"].size != 0:
-            raise ValueError(
-                "Left censored lifetimes can't be interval truncated lifetimes too"
-            )
-
-        res = self._censored_and_truncated(how=("right", "left"))
-        censored_values, truncation_values = res["values"]
+        # print(self.values("right_censored & left_truncated"))
+        censored_values, truncation_values = self.values(
+            "right_censored & left_truncated"
+        )
+        # print(censored_values)
+        # print(truncation_values)
         if (censored_values <= truncation_values).any():
             raise ValueError(
                 f"right censored lifetime values can't be lower or equal to left truncation values: incompatible {censored_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"]["right_censored_left_truncated"] = res[
-                "index"
-            ]
-            self._intersection_data["values"]["right_censored_left_truncated"] = res[
-                "values"
-            ]
 
-        res = self._censored_and_truncated(how=("interval", "left"))
-        censored_values, truncation_values = res["values"]
-        if (censored_values[:, 0] <= truncation_values).any():
-            raise ValueError(
-                f"interval censored lifetime values can't be lower or equal to left truncation values: incompatible {censored_values} and {truncation_values}"
-            )
-        elif (censored_values[:, 1] <= truncation_values).any():
-            raise ValueError(
-                f"interval censored lifetime values can't be lower or equal to left truncation values: incompatible {censored_values} and {truncation_values}"
-            )
-        else:
-            self._intersection_data["index"]["interval_censored_left_truncated"] = res[
-                "index"
-            ]
-            self._intersection_data["values"]["interval_censored_left_truncated"] = res[
-                "values"
-            ]
-
-        res = self._censored_and_truncated(how=("right", "interval"))
-        censored_values, truncation_values = res["values"]
+        # print(self.values("right_censored & interval_truncated"))
+        censored_values, truncation_values = self.values(
+            "right_censored & interval_truncated"
+        )
         if (censored_values >= truncation_values[:, 1]).any():
             raise ValueError(
                 f"right censored lifetime values can't be higer or equal to interval of truncation: incompatible {censored_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"]["right_censored_interval_truncated"] = res[
-                "index"
-            ]
-            self._intersection_data["values"][
-                "right_censored_interval_truncated"
-            ] = res["values"]
 
-        res = self._censored_and_truncated(how=("interval", "interval"))
-        censored_values, truncation_values = res["values"]
+        censored_values, truncation_values = self.values(
+            "interval_censored & interval_truncated"
+        )
         if (censored_values[:, 0] >= truncation_values[:, 0]).any():
             raise ValueError(
                 f"interval censorship can't be outside of truncation interval: incompatible {censored_values} and {truncation_values}"
@@ -104,80 +91,46 @@ class SurvivalData:
             raise ValueError(
                 f"interval censorship can't be outside of truncation interval: incompatible {censored_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"][
-                "interval_censored_interval_truncated"
-            ] = res["index"]
-            self._intersection_data["values"][
-                "interval_censored_interval_truncated"
-            ] = res["values"]
 
-        res = self._censored_and_truncated(how=("right", "right"))
-        censored_values, truncation_values = res["values"]
+        censored_values, truncation_values = self.values(
+            "right_censored & right_truncated"
+        )
         if (censored_values >= truncation_values).any():
             raise ValueError(
                 f"right censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"]["right_censored_right_truncated"] = res[
-                "index"
-            ]
-            self._intersection_data["values"]["right_censored_right_truncated"] = res[
-                "values"
-            ]
 
-        res = self._censored_and_truncated(how=("left", "right"))
-        censored_values, truncation_values = res["values"]
+        censored_values, truncation_values = self.values(
+            "left_censored & right_truncated"
+        )
         if (censored_values >= truncation_values).any():
             raise ValueError(
                 f"left censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"]["left_censored_right_truncated"] = res[
-                "index"
-            ]
-            self._intersection_data["values"]["left_censored_right_truncated"] = res[
-                "values"
-            ]
 
-        res = self._censored_and_truncated(how=("interval", "right"))
-        censored_values, truncation_values = res["values"]
+        censored_values, truncation_values = self.values(
+            "interval_censored & right_truncated"
+        )
         if (censored_values[:, 1] >= truncation_values).any():
             raise ValueError(
                 f"interval censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"]["interval_censored_right_truncated"] = res[
-                "index"
-            ]
-            self._intersection_data["values"][
-                "interval_censored_right_truncated"
-            ] = res["values"]
 
-        res = self._observed_and_truncated(how="right")
-        observed_values, truncation_values = res["values"]
+        observed_values, truncation_values = self.values("observed & right_truncated")
         if (observed_values >= truncation_values).any():
             raise ValueError(
                 f"observed lifetime values can't be higher than right truncations: incompatible {observed_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"]["observed_right_truncated"] = res["index"]
-            self._intersection_data["values"]["observed_right_truncated"] = res[
-                "values"
-            ]
 
-        res = self._observed_and_truncated(how="left")
-        observed_values, truncation_values = res["values"]
+        observed_values, truncation_values = self.values("observed & left_truncated")
         if (observed_values <= truncation_values).any():
             raise ValueError(
                 f"observed lifetime values can't be lower than left truncations: incompatible {observed_values} and {truncation_values}"
             )
-        else:
-            self._intersection_data["index"]["observed_left_truncated"] = res["index"]
-            self._intersection_data["values"]["observed_left_truncated"] = res["values"]
 
-        res = self._observed_and_truncated(how="interval")
-        observed_values, truncation_values = res["values"]
+        observed_values, truncation_values = self.values(
+            "observed & interval_truncated"
+        )
         if (observed_values >= truncation_values[:, 1]).any():
             raise ValueError(
                 f"observed lifetime values can't be outside of truncation interval: incompatible {observed_values} and {truncation_values}"
@@ -186,203 +139,149 @@ class SurvivalData:
             raise ValueError(
                 f"observed lifetime values can't be outside of truncation interval: incompatible {observed_values} and {truncation_values}"
             )
+
+    @staticmethod
+    def check_field_combination(fields: list) -> bool:
+        def other_not_allowed(x):
+            if x == "observed":
+                return [
+                    "observed",
+                    "left_censored",
+                    "right_censored",
+                    "interval_censored",
+                ]
+            elif x == "left_censored":
+                return [
+                    "left_censored",
+                    "observed",
+                    "interval_censored",
+                    "left_truncated",
+                    "interval_truncated",
+                ]
+            elif x == "right_censored":
+                return ["right_censored", "observed", "interval_censored"]
+            elif x == "interval_censored":
+                return [
+                    "interval_censored",
+                    "observed",
+                    "left_censored",
+                    "right_censored",
+                ]
+            elif x == "left_truncated":
+                return [
+                    "left_truncated",
+                    "interval_truncated",
+                    "left_censored",
+                    "interval_censored",
+                ]
+            elif x == "right_truncated":
+                return ["right_truncated", "interval_truncated"]
+            elif x == "interval_truncated":
+                return [
+                    "interval_truncated",
+                    "left_truncated",
+                    "right_truncated",
+                    "left_censored",
+                ]
+
+        not_allowed = []
+        res = True
+        for i in range(len(fields) - 1):
+            cursor = fields[i]
+            rest = fields[i + 1 :]
+            not_allowed += other_not_allowed(cursor)
+            if len(set(rest).intersection(not_allowed)) != 0:
+                res = False
+                break
+        return res
+
+    def _intersection(self, *fields):
+        assert {type(field) for field in fields} == {
+            str
+        }, "intersection expects string arguments"
+        assert {hasattr(self, field) for field in fields} == {
+            True
+        }, f"field names {fields} are unknown"
+
+        def join_index(*index: np.ndarray):
+            s = set.intersection(*map(set, index))
+            mask_index = [np.in1d(_index, np.array(list(s))) for _index in index]
+            index = index[0][mask_index[0]]
+            return index, mask_index
+
+        index = [getattr(self, f"{field}").index for field in fields]
+        values = [getattr(self, f"{field}").values for field in fields]
+
+        common_index, mask_index = join_index(*index)
+        return {
+            "index": common_index,
+            "values": [values[i][mask] for i, mask in enumerate(mask_index)],
+        }
+
+    def values(self, request: str):
+        """if args is list, return values intersection, else only values
+        soit  .. & ...
+        ou .. | ..
+
+        """
+
+        def isort(x: list):
+            return sorted(range(len(x)), key=lambda k: x[k])
+
+        request = " ".join(request.split())
+
+        if ("&" in request) and ("|" not in request):
+            fields = request.split(" & ")
+            sorted_fields = sorted(fields)
+            if {hasattr(self, field) for field in fields} != {True}:
+                raise ValueError(f"field names {fields} are unknown")
+            if not " & ".join(sorted_fields) in self._intersection_data:
+                raise ValueError(f"impossible combination of fields : {fields}")
+
+            sorted_fields_i = isort(fields)
+            return [
+                self._intersection_data[" & ".join(sorted_fields)]["values"][i]
+                for i in sorted_fields_i
+            ]
+
+        elif ("|" in request) and ("&" not in request):
+            fields = request.split(" | ")
+            if {hasattr(self, field) for field in fields} != {True}:
+                raise ValueError(f"field names {fields} are unknown")
+            return [getattr(self, f"{field}").values for field in fields]
+        elif ("|" in request) and ("&" in request):
+            raise ValueError("can't hold & and | operator")
         else:
-            self._intersection_data["index"]["observed_interval_truncated"] = res[
-                "index"
-            ]
-            self._intersection_data["values"]["observed_interval_truncated"] = res[
-                "values"
-            ]
+            if not hasattr(self, request):
+                raise ValueError(f"field name {request} is unknown")
+            return getattr(self, f"{request}").values
 
-    def _censored_and_truncated(self, how=("right", "left")):
-        """return censored and truncated (simultaneously) lifetimes index or corresponding censorship values and truncation values
+    def index(self, request: str):
+        """if args is list, return index in common, else only index"""
 
-        Args:
-            how (tuple, optional): _description_. Defaults to ("right", "left").
-            return_values (bool, optional): _description_. Defaults to False.
+        request = " ".join(request.split())
 
-        Returns:
-            _type_: _description_
-        """
-        how_0 = how[0]
-        how_1 = how[1]
-        censored_index = getattr(self, f"{how_0}_censored").index
-        truncated_index = getattr(self, f"{how_1}_truncated").index
-        index_censored_and_truncated = truncated_index[
-            np.in1d(truncated_index, censored_index)
-        ]
+        if ("&" in request) and ("|" not in request):
+            fields = request.split(" & ")
+            sorted_fields = sorted(fields)
+            if {hasattr(self, field) for field in fields} != {True}:
+                raise ValueError(f"field names {fields} are unknown")
+            if not " & ".join(sorted_fields) in self._intersection_data:
+                raise ValueError(f"impossible combination of fields : {fields}")
+            return self._intersection_data[" & ".join(sorted_fields)]["index"]
 
-        censored_lifetime_values = getattr(self, f"{how_0}_censored").values
-        truncation_values = getattr(self, f"{how_1}_truncated").values
-        res_1 = censored_lifetime_values[np.in1d(censored_index, truncated_index)]
-        res_2 = truncation_values[np.in1d(truncated_index, censored_index)]
+        elif ("|" in request) and ("&" not in request):
+            fields = request.split(" | ")
+            if {hasattr(self, field) for field in fields} != {True}:
+                raise ValueError(f"field names {fields} are unknown")
+            return [getattr(self, f"{field}").index for field in fields]
+        elif ("|" in request) and ("&" in request):
+            raise ValueError("can't hold & and | operator")
 
-        return {"index": index_censored_and_truncated, "values": (res_1, res_2)}
-
-    def _observed_and_truncated(self, how="left"):
-        """return observed and truncated (simultaneously) lifetimes index or corresponding observed values and truncation values
-
-        Args:
-            how (str, optional): _description_. Defaults to "left".
-            return_values (bool, optional): _description_. Defaults to False.
-
-        Returns:
-            _type_: _description_
-        """
-        truncated_index = getattr(self, f"{how}_truncated").index
-        observed_index = self.observed.index
-        index_observed_and_truncated = observed_index[
-            np.in1d(observed_index, truncated_index)
-        ]
-
-        observed_lifetime_values = self.observed.values
-        truncation_values = getattr(self, f"{how}_truncated").values
-        res_1 = observed_lifetime_values[np.in1d(observed_index, truncated_index)]
-        res_2 = truncation_values[np.in1d(truncated_index, observed_index)]
-
-        return {"index": index_observed_and_truncated, "values": (res_1, res_2)}
-
-    def values(self, arg: str):
-        if type(arg) != str:
-            raise TypeError("values expects string argument")
-        if not hasattr(self, arg):
-            raise ValueError(f"SurvivalData does not have {arg} attribute")
-        return getattr(self, f"{arg}").values
-
-    def index(self, arg: str):
-        if type(arg) != str:
-            raise TypeError("index expects string argument")
-        if not hasattr(self, arg):
-            raise ValueError(f"SurvivalData does not have {arg} attribute")
-        return getattr(self, f"{arg}").index
-
-    def intersection_values(self, *args: str):
-        if {type(arg) for arg in args} != {str}:
-            raise TypeError("intersection expects string arguments")
-        if len(args) != 2:
-            raise ValueError(
-                f"intersection takes 2 arguments, {args} provides too many"
-            )
-        if not hasattr(self, args[0]):
-            invalid_arg = args[0]
-            raise ValueError(f"SurvivalData does not have {invalid_arg} attribute")
-        if not hasattr(self, args[1]):
-            invalid_arg = args[1]
-            raise ValueError(f"SurvivalData does not have {invalid_arg} attribute")
-        if "observed" in args[0] and "censored" in args[1]:
-            raise ValueError(
-                f"Invalid intersection args {args} : lifetimes can't be observed and censored at the same time"
-            )
-        if "censored" in args[0] and "observed" in args[1]:
-            raise ValueError(
-                f"Invalid intersection args {args} : lifetimes can't be observed and censored at the same time"
-            )
-        if args[0] == "left_censored" and args[1] == "interval_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be interval truncated lifetimes too"
-            )
-        if args[1] == "left_censored" and args[0] == "interval_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be interval truncated lifetimes too"
-            )
-        if args[0] == "left_censored" and args[1] == "left_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be left truncated lifetimes too"
-            )
-        if args[1] == "left_censored" and args[0] == "left_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be left truncated lifetimes too"
-            )
-        if args[0] == args[1]:
-            raise ValueError(
-                f"Invalid intersection args {args} : args cannot be equals"
-            )
-        if "censored" in args[0] and "truncated" in args[1]:
-            return self._intersection_data["values"][f"{args[0]}_{args[1]}"]
-        if "truncated" in args[0] and "censored" in args[1]:
-            return (
-                self._intersection_data["values"][f"{args[1]}_{args[0]}"][1],
-                self._intersection_data["values"][f"{args[1]}_{args[0]}"][0],
-            )
-        if args[0] == "observed" and "truncated" in args[1]:
-            return self._intersection_data["values"][f"{args[0]}_{args[1]}"]
-        if "truncated" in args[0] and args[1] == "observed":
-            return (
-                self._intersection_data["values"][f"{args[1]}_{args[0]}"][1],
-                self._intersection_data["values"][f"{args[1]}_{args[0]}"][0],
-            )
-
-    def intersection_index(self, *args: str):
-        if {type(arg) for arg in args} != {str}:
-            raise TypeError("intersection expects string arguments")
-        if len(args) != 2:
-            raise ValueError(
-                f"intersection takes 2 arguments, {args} provides too many"
-            )
-        if not hasattr(self, args[0]):
-            invalid_arg = args[0]
-            raise ValueError(f"SurvivalData does not have {invalid_arg} attribute")
-        if not hasattr(self, args[1]):
-            invalid_arg = args[1]
-            raise ValueError(f"SurvivalData does not have {invalid_arg} attribute")
-        if "observed" in args[0] and "censored" in args[1]:
-            raise ValueError(
-                f"Invalid intersection args {args} : lifetimes can't be observed and censored at the same time"
-            )
-        if "censored" in args[0] and "observed" in args[1]:
-            raise ValueError(
-                f"Invalid intersection args {args} : lifetimes can't be observed and censored at the same time"
-            )
-        if args[0] == "left_censored" and args[1] == "interval_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be interval truncated lifetimes too"
-            )
-        if args[1] == "left_censored" and args[0] == "interval_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be interval truncated lifetimes too"
-            )
-        if args[0] == "left_censored" and args[1] == "left_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be left truncated lifetimes too"
-            )
-        if args[1] == "left_censored" and args[0] == "left_truncated":
-            raise ValueError(
-                "Left censored lifetimes can't be left truncated lifetimes too"
-            )
-        if args[0] == args[1]:
-            raise ValueError(
-                f"Invalid intersection args {args} : args cannot be equals"
-            )
-        if "censored" in args[0] and "truncated" in args[1]:
-            return self._intersection_data["index"][f"{args[0]}_{args[1]}"]
-        if "truncated" in args[0] and "censored" in args[1]:
-            return (
-                self._intersection_data["index"][f"{args[1]}_{args[0]}"][1],
-                self._intersection_data["index"][f"{args[1]}_{args[0]}"][0],
-            )
-        if args[0] == "observed" and "truncated" in args[1]:
-            return self._intersection_data["index"][f"{args[0]}_{args[1]}"]
-        if "truncated" in args[0] and args[1] == "observed":
-            return (
-                self._intersection_data["index"][f"{args[1]}_{args[0]}"][1],
-                self._intersection_data["index"][f"{args[1]}_{args[0]}"][0],
-            )
-
-    def union_values(self, *args):
-        if {type(arg) for arg in args} != {str}:
-            raise TypeError("union expects string arguments")
-        if {hasattr(self, arg) for arg in args} != {True}:
-            raise ValueError("some arg are not attribute of SurvData")
-        args = set(args)
-        return (getattr(self, f"{arg}").values for arg in args)
-
-    def union_index(self, *args):
-        if {type(arg) for arg in args} != {str}:
-            raise TypeError("union expects string arguments")
-        if {hasattr(self, arg) for arg in args} != {True}:
-            raise ValueError("some arg are not attribute of SurvData")
-        args = set(args)
-        return (getattr(self, f"{arg}").index for arg in args)
+        else:
+            if not hasattr(self, request):
+                raise ValueError(f"field name {request} is unknown")
+            return getattr(self, f"{request}").index
 
     def info(self):
         headers = ["Lifetime data", "Counts"]
