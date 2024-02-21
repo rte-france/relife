@@ -9,10 +9,11 @@ from .object import (
     IntervalData,
     IntervalTruncated,
     LeftCensored,
+    LeftTruncated,
     Observed,
     ObservedFromIndicators,
     RightCensored,
-    Truncated,
+    RightTruncated,
 )
 
 
@@ -85,19 +86,35 @@ def interval_censored_factory(censored_lifetimes: np.ndarray) -> Type[IntervalDa
 
 
 # factory
-def left_truncated_factory(left_truncation_values=None) -> Type[Data]:
-    if left_truncation_values is not None:
-        return Truncated(left_truncation_values)
+def left_truncated_factory(
+    left_truncation_values=None, right_truncation_values=None
+) -> Type[Data]:
+    if right_truncation_values is not None and left_truncation_values is None:
+        return LeftTruncated(np.array([], dtype=float), np.array([], dtype=float))
+    elif right_truncation_values is None and left_truncation_values is None:
+        return LeftTruncated(np.array([], dtype=float), np.array([], dtype=float))
+    elif right_truncation_values is None and left_truncation_values is not None:
+        return LeftTruncated(
+            left_truncation_values, np.zeros_like(left_truncation_values)
+        )
     else:
-        return Truncated(np.array([], dtype=float))
+        return LeftTruncated(left_truncation_values, right_truncation_values)
 
 
 # factory
-def right_truncated_factory(right_truncation_values=None) -> Type[Data]:
-    if right_truncation_values is not None:
-        return Truncated(right_truncation_values)
+def right_truncated_factory(
+    left_truncation_values=None, right_truncation_values=None
+) -> Type[Data]:
+    if right_truncation_values is not None and left_truncation_values is None:
+        return RightTruncated(
+            np.zeros_like(right_truncation_values), right_truncation_values
+        )
+    elif right_truncation_values is None and left_truncation_values is None:
+        return RightTruncated(np.array([], dtype=float), np.array([], dtype=float))
+    elif right_truncation_values is None and left_truncation_values is not None:
+        return RightTruncated(np.array([], dtype=float), np.array([], dtype=float))
     else:
-        return Truncated(np.array([], dtype=float))
+        return RightTruncated(left_truncation_values, right_truncation_values)
 
 
 # factory

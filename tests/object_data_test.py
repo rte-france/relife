@@ -15,10 +15,10 @@ from relife2.data.object import (
     IntervalCensored,
     IntervalTruncated,
     LeftCensored,
+    LeftTruncated,
     Observed,
     ObservedFromIndicators,
     RightCensored,
-    Truncated,
 )
 
 
@@ -49,7 +49,9 @@ def test_1d_data(example_1d_data):
     right_censored = CensoredFromIndicators(
         example_1d_data["censored_lifetimes"], example_1d_data["event"] == 0
     )
-    left_truncated = Truncated(example_1d_data["entry"])
+    left_truncated = LeftTruncated(
+        example_1d_data["entry"], np.zeros_like(example_1d_data["entry"])
+    )
 
     interval_truncated = IntervalTruncated(
         example_1d_data["entry"], example_1d_data["departure"]
@@ -113,7 +115,9 @@ def test_2d_data(example_2d_data):
     left_censored = LeftCensored(example_2d_data["censored_lifetimes"])
     right_censored = RightCensored(example_2d_data["censored_lifetimes"])
     interval_censored = IntervalCensored(example_2d_data["censored_lifetimes"])
-    left_truncated = Truncated(example_2d_data["entry"])
+    left_truncated = LeftTruncated(
+        example_2d_data["entry"], np.zeros_like(example_2d_data["entry"])
+    )
 
     assert (observed.index == np.array([2, 4])).all()
     assert (observed.values == np.array([5, 10])).all()

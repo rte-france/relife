@@ -175,15 +175,39 @@ class IntervalCensored(IntervalData):
         return index, values
 
 
-class Truncated(Data):
-    def __init__(self, truncation_values):
-        super().__init__(truncation_values)
-        if len(truncation_values.shape) != 1:
+class LeftTruncated(Data):
+    def __init__(self, left_truncation_values, right_truncation_values):
+        super().__init__(left_truncation_values, right_truncation_values)
+        if len(left_truncation_values.shape) != 1:
+            raise TypeError("left truncation values must be 1d array")
+        if len(right_truncation_values.shape) != 1:
+            raise TypeError("right truncation values must be 1d array")
+        if len(left_truncation_values) != len(right_truncation_values):
+            raise ValueError(
+                "left_truncation_values and right_truncation_values must have the same length"
+            )
+
+    def parse(self, left_truncation_values, right_truncation_values):
+        index = np.where(
+            np.logical_and(left_truncation_values > 0, right_truncation_values == 0)
+        )[0]
+        values = left_truncation_values[index]
+        return index, values
+
+
+class RightTruncated(Data):
+    def __init__(self, left_truncation_values, right_truncation_values):
+        super().__init__(left_truncation_values, right_truncation_values)
+        if len(left_truncation_values.shape) != 1:
+            raise TypeError("truncation values must be 1d array")
+        if len(right_truncation_values.shape) != 1:
             raise TypeError("truncation values must be 1d array")
 
-    def parse(self, truncation_values):
-        index = np.where(truncation_values > 0)[0]
-        values = truncation_values[index]
+    def parse(self, left_truncation_values, right_truncation_values):
+        index = np.where(
+            np.logical_and(right_truncation_values > 0, left_truncation_values == 0)
+        )[0]
+        values = right_truncation_values[index]
         return index, values
 
 

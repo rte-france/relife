@@ -104,14 +104,14 @@ class DataBook:
             extracted_data[0].values,
             extracted_data[1].values,
         )
-        if (censored_values[:, 0] >= truncation_values[:, 0]).any():
+        if (censored_values[:, 0] < truncation_values[:, 0]).any():
             raise ValueError(
                 f"""
                 interval censorship can't be outside of truncation interval:
                 incompatible {censored_values} and {truncation_values}
                 """
             )
-        elif (censored_values[:, 1] <= truncation_values[:, 1]).any():
+        elif (censored_values[:, 1] > truncation_values[:, 1]).any():
             raise ValueError(
                 f"""
                 interval censorship can't be outside of truncation interval:
@@ -458,7 +458,7 @@ def databook(
             )
 
     if left_truncated is None:
-        left_truncated = left_truncated_factory(entry)
+        left_truncated = left_truncated_factory(entry, departure)
     else:
         if entry is not None:
             raise ValueError(
@@ -467,7 +467,7 @@ def databook(
         if not issubclass(left_truncated, Data):
             raise TypeError(f"Data expected, got '{type(left_truncated).__name__}'")
     if right_truncated is None:
-        right_truncated = right_truncated_factory(departure)
+        right_truncated = right_truncated_factory(entry, departure)
     else:
         if departure is not None:
             raise ValueError(
