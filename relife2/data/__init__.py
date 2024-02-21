@@ -1,4 +1,4 @@
-from .base import survdata
+from .base import databook
 from .object import Data, IntervalData
 
-__all__ = ["survdata", "IntervalData", "Data"]
+__all__ = ["databook", "IntervalData", "Data"]

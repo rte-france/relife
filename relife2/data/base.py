@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from itertools import combinations
-from typing import Tuple, Union
+from typing import Tuple, Type, Union
 
 import numpy as np
 
@@ -17,14 +17,14 @@ from .object import Data, ExtractedData, IntervalData
 
 
 @dataclass
-class SurvivalData:
-    observed: Data  # object with fixed index and values attrib format
-    left_censored: Data
-    right_censored: Data
-    interval_censored: IntervalData
-    left_truncated: Data
-    right_truncated: Data
-    interval_truncated: IntervalData
+class DataBook:
+    observed: Type[Data]  # object with fixed index and values attrib format
+    left_censored: Type[Data]
+    right_censored: Type[Data]
+    interval_censored: Type[IntervalData]
+    left_truncated: Type[Data]
+    right_truncated: Type[Data]
+    interval_truncated: Type[IntervalData]
 
     def __post_init__(self):
         field_names = list(self.__annotations__.keys())
@@ -34,7 +34,7 @@ class SurvivalData:
         for n in range(1, len(field_names)):
             for combination in combinations(field_names, n):
                 sorted_combination = sorted(combination)
-                if SurvivalData.check_field_combination(sorted_combination):
+                if DataBook.check_field_combination(sorted_combination):
                     self._intersection_data[
                         " & ".join(sorted_combination)
                     ] = self._intersection(*sorted_combination)
@@ -48,7 +48,10 @@ class SurvivalData:
                     extracted_data = self._intersection(*sorted_combination)
                     if {len(_data) for _data in extracted_data} != {0}:
                         raise ValueError(
-                            f"Incoherence in provided data : {sorted_combination} data is impossible"
+                            f"""
+                            Incoherence in provided data :
+                            {sorted_combination} data is impossible
+                            """
                         )
 
         # compute other checks on data values (TO BE COMPLETED)
@@ -75,7 +78,11 @@ class SurvivalData:
         # print(truncation_values)
         if (censored_values <= truncation_values).any():
             raise ValueError(
-                f"right censored lifetime values can't be lower or equal to left truncation values: incompatible {censored_values} and {truncation_values}"
+                f"""
+                right censored lifetime values can't be lower or equal to left
+                truncation values:
+                incompatible {censored_values} and {truncation_values}
+                """
             )
 
         # print(self.values("right_censored & interval_truncated"))
@@ -86,7 +93,10 @@ class SurvivalData:
         )
         if (censored_values >= truncation_values[:, 1]).any():
             raise ValueError(
-                f"right censored lifetime values can't be higer or equal to interval of truncation: incompatible {censored_values} and {truncation_values}"
+                f"""
+                right censored lifetime values can't be higer or equal to interval
+                of truncation: incompatible {censored_values} and {truncation_values}
+                """
             )
 
         extracted_data = self("interval_censored & interval_truncated")
@@ -96,11 +106,17 @@ class SurvivalData:
         )
         if (censored_values[:, 0] >= truncation_values[:, 0]).any():
             raise ValueError(
-                f"interval censorship can't be outside of truncation interval: incompatible {censored_values} and {truncation_values}"
+                f"""
+                interval censorship can't be outside of truncation interval:
+                incompatible {censored_values} and {truncation_values}
+                """
             )
         elif (censored_values[:, 1] <= truncation_values[:, 1]).any():
             raise ValueError(
-                f"interval censorship can't be outside of truncation interval: incompatible {censored_values} and {truncation_values}"
+                f"""
+                interval censorship can't be outside of truncation interval:
+                incompatible {censored_values} and {truncation_values}
+                """
             )
 
         extracted_data = self("right_censored & right_truncated")
@@ -110,7 +126,10 @@ class SurvivalData:
         )
         if (censored_values >= truncation_values).any():
             raise ValueError(
-                f"right censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
+                f"""
+                right censored lifetime values can't be higher than right truncations:
+                incompatible {censored_values} and {truncation_values}
+                """
             )
 
         extracted_data = self("left_censored & right_truncated")
@@ -120,7 +139,10 @@ class SurvivalData:
         )
         if (censored_values >= truncation_values).any():
             raise ValueError(
-                f"left censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
+                f"""
+                left censored lifetime values can't be higher than right truncations:
+                incompatible {censored_values} and {truncation_values}
+                """
             )
 
         extracted_data = self("interval_censored & right_truncated")
@@ -130,7 +152,10 @@ class SurvivalData:
         )
         if (censored_values[:, 1] >= truncation_values).any():
             raise ValueError(
-                f"interval censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
+                f"""
+                interval censored lifetime values can't be higher than right truncations
+                : incompatible {censored_values} and {truncation_values}
+                """
             )
 
         extracted_data = self("observed & right_truncated")
@@ -140,7 +165,10 @@ class SurvivalData:
         )
         if (observed_values >= truncation_values).any():
             raise ValueError(
-                f"observed lifetime values can't be higher than right truncations: incompatible {observed_values} and {truncation_values}"
+                f"""
+                observed lifetime values can't be higher than right truncations:
+                incompatible {observed_values} and {truncation_values}
+                """
             )
 
         extracted_data = self("observed & left_truncated")
@@ -150,7 +178,10 @@ class SurvivalData:
         )
         if (observed_values <= truncation_values).any():
             raise ValueError(
-                f"observed lifetime values can't be lower than left truncations: incompatible {observed_values} and {truncation_values}"
+                f"""
+                observed lifetime values can't be lower than left truncations:
+                incompatible {observed_values} and {truncation_values}
+                """
             )
 
         extracted_data = self("observed & interval_truncated")
@@ -160,11 +191,16 @@ class SurvivalData:
         )
         if (observed_values >= truncation_values[:, 1]).any():
             raise ValueError(
-                f"observed lifetime values can't be outside of truncation interval: incompatible {observed_values} and {truncation_values}"
+                f"""
+                observed lifetime values can't be outside of truncation interval:
+                incompatible {observed_values} and {truncation_values}
+                """
             )
         elif (observed_values <= truncation_values[:, 0]).any():
             raise ValueError(
-                f"observed lifetime values can't be outside of truncation interval: incompatible {observed_values} and {truncation_values}"
+                f"""
+                observed lifetime values can't be outside of truncation interval:
+                incompatible {observed_values} and {truncation_values}"""
             )
 
     @staticmethod
@@ -222,7 +258,7 @@ class SurvivalData:
                 break
         return res
 
-    def _intersection(self, *fields: str) -> Tuple[ExtractedData]:
+    def _intersection(self, *fields: str) -> Tuple[Type[ExtractedData]]:
         assert {type(field) for field in fields} == {
             str
         }, "intersection expects string arguments"
@@ -247,7 +283,9 @@ class SurvivalData:
             )
         )
 
-    def __call__(self, request: str) -> Union[ExtractedData, Tuple[ExtractedData]]:
+    def __call__(
+        self, request: str
+    ) -> Union[Type[ExtractedData], Tuple[Type[ExtractedData]]]:
         def isort(x: list):
             return sorted(range(len(x)), key=lambda k: x[k])
 
@@ -308,7 +346,7 @@ class SurvivalData:
 
 
 # factory
-def survdata(
+def databook(
     censored_lifetimes: np.ndarray,
     observed_indicators: np.ndarray = None,
     left_censored_indicators: np.ndarray = None,
@@ -316,7 +354,7 @@ def survdata(
     entry: np.ndarray = None,
     departure: np.ndarray = None,
     **kwargs,
-) -> SurvivalData:
+) -> Type[DataBook]:
 
     observed = kwargs.get("observed", None)
     left_censored = kwargs.get("left_censored", None)
@@ -333,7 +371,10 @@ def survdata(
     else:
         if left_censored_indicators is not None:
             raise ValueError(
-                "left_censored_indicators and left_censored can not be specified at the same time"
+                """
+                left_censored_indicators and left_censored
+                can not be specified at the same time
+                """
             )
         if not issubclass(left_censored, Data):
             raise TypeError(f"Data expected, got '{type(left_censored).__name__}'")
@@ -344,7 +385,10 @@ def survdata(
     else:
         if right_censored_indicators is not None:
             raise ValueError(
-                "right_censored_indicators and right_censored can not be specified at the same time"
+                """
+                right_censored_indicators and right_censored
+                can not be specified at the same time
+                """
             )
         if not issubclass(right_censored, Data):
             raise TypeError(f"Data expected, got '{type(right_censored).__name__}'")
@@ -352,7 +396,10 @@ def survdata(
     if left_censored_indicators is not None and right_censored_indicators is not None:
         if len(left_censored_indicators) != len(right_censored_indicators):
             raise ValueError(
-                "Expected left_censored_indicators and right_censored_indicators to have the same length"
+                """
+                Expected left_censored_indicators and right_censored_indicators
+                to have the same length
+                """
             )
 
         if (
@@ -360,7 +407,10 @@ def survdata(
             is True
         ):
             raise ValueError(
-                "left_censored_indicators and right_censored_indicators can't be true at the same index"
+                """
+                left_censored_indicators and right_censored_indicators
+                can't be true at the same index
+                """
             )
 
     if interval_censored is None:
@@ -393,12 +443,18 @@ def survdata(
     if entry is not None:
         if len(entry) != len(censored_lifetimes):
             raise ValueError(
-                "entry values (left truncation values) and censored_lifetimes don't have the same length"
+                """
+                entry values (left truncation values) and censored_lifetimes
+                don't have the same length
+                """
             )
     if departure is not None:
         if len(departure) != len(censored_lifetimes):
             raise ValueError(
-                "departure values (right truncation values) and censored_lifetimes don't have the same length"
+                """
+                departure values (right truncation values) and censored_lifetimes
+                don't have the same length
+                """
             )
 
     if left_truncated is None:
@@ -429,7 +485,7 @@ def survdata(
             raise TypeError(
                 f"IntervalData expected, got '{type(interval_truncated).__name__}'"
             )
-    return SurvivalData(
+    return DataBook(
         observed,
         left_censored,
         right_censored,

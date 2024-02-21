@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import relife2.data as rd
+from relife2.data import databook
 
 
 @pytest.fixture
@@ -24,34 +24,36 @@ def example_2d_data():
 
 
 def test_1d_data(example_1d_data):
-    data = rd.survdata(
+    db = databook(
         censored_lifetimes=example_1d_data["lifetimes"],
         right_censored_indicators=example_1d_data["event"] == 0,
         observed_indicators=example_1d_data["event"] == 1,
         entry=example_1d_data["entry"],
     )
-    assert (data.observed.index == np.array([0, 2, 6])).all()
-    assert (data.observed.values == np.array([10, 9, 11])).all()
-    assert (data("observed").index == np.array([0, 2, 6])).all()
-    assert (data("observed").values == np.array([10, 9, 11])).all()
+    assert (db.observed.index == np.array([0, 2, 6])).all()
+    assert (db.observed.values == np.array([10, 9, 11])).all()
+    assert (db("observed").index == np.array([0, 2, 6])).all()
+    assert (db("observed").values == np.array([10, 9, 11])).all()
 
-    assert (data.right_censored.index == np.array([1, 3, 4, 5])).all()
-    assert (data.right_censored.values == np.array([11, 10, 12, 13])).all()
-    assert (data("right_censored").index == np.array([1, 3, 4, 5])).all()
-    assert (data("right_censored").values == np.array([11, 10, 12, 13])).all()
+    assert (db.right_censored.index == np.array([1, 3, 4, 5])).all()
+    assert (db.right_censored.values == np.array([11, 10, 12, 13])).all()
+    assert (db("right_censored").index == np.array([1, 3, 4, 5])).all()
+    assert (db("right_censored").values == np.array([11, 10, 12, 13])).all()
 
-    assert (data.left_truncated.index == np.array([2, 3, 4, 5, 6])).all()
-    assert (data.left_truncated.values == np.array([3, 5, 3, 1, 9])).all()
-    assert (data("left_truncated").index == np.array([2, 3, 4, 5, 6])).all()
-    assert (data("left_truncated").values == np.array([3, 5, 3, 1, 9])).all()
+    assert (db.left_truncated.index == np.array([2, 3, 4, 5, 6])).all()
+    assert (db.left_truncated.values == np.array([3, 5, 3, 1, 9])).all()
+    assert (db("left_truncated").index == np.array([2, 3, 4, 5, 6])).all()
+    assert (db("left_truncated").values == np.array([3, 5, 3, 1, 9])).all()
 
-    assert (data("observed & left_truncated")[0].values == np.array([9, 11])).all()
+    assert (db("observed & left_truncated")[0].values == np.array([9, 11])).all()
 
-    assert (data("observed & left_truncated")[1].values == np.array([3, 9])).all()
+    assert (db("observed & left_truncated")[1].values == np.array([3, 9])).all()
 
-    assert (data("left_truncated & observed")[0].values == np.array([3, 9])).all()
+    assert (
+        db("left_truncated & observed & right_truncated")[0].values == np.array([3, 9])
+    ).all()
 
-    assert (data("left_truncated & observed")[1].values == np.array([9, 11])).all()
+    assert (db("left_truncated & observed")[1].values == np.array([9, 11])).all()
 
 
 # def test_censored(example_2d_data):

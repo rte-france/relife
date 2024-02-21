@@ -1,3 +1,5 @@
+from typing import Type
+
 import numpy as np
 
 from .object import (
@@ -15,7 +17,7 @@ from .object import (
 
 
 # factory
-def observed_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
+def observed_factory(censored_lifetimes: np.ndarray, indicators=None) -> Type[Data]:
     if len(censored_lifetimes.shape) == 1 and indicators is None:
         return ObservedFromIndicators(
             censored_lifetimes, np.ones_like(censored_lifetimes, dtype=bool)
@@ -33,7 +35,9 @@ def observed_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
 
 
 # factory
-def left_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
+def left_censored_factory(
+    censored_lifetimes: np.ndarray, indicators=None
+) -> Type[Data]:
     if len(censored_lifetimes.shape) == 1 and indicators is None:
         return CensoredFromIndicators(
             censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
@@ -51,7 +55,9 @@ def left_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> Da
 
 
 # factory
-def right_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
+def right_censored_factory(
+    censored_lifetimes: np.ndarray, indicators=None
+) -> Type[Data]:
     if len(censored_lifetimes.shape) == 1 and indicators is None:
         return CensoredFromIndicators(
             censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
@@ -69,7 +75,7 @@ def right_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> D
 
 
 # factory
-def interval_censored_factory(censored_lifetimes: np.ndarray) -> IntervalData:
+def interval_censored_factory(censored_lifetimes: np.ndarray) -> Type[IntervalData]:
     if len(censored_lifetimes.shape) == 1:
         return IntervalCensored(np.array([[0, 0]], dtype=float))
     elif len(censored_lifetimes.shape) == 2:
@@ -79,7 +85,7 @@ def interval_censored_factory(censored_lifetimes: np.ndarray) -> IntervalData:
 
 
 # factory
-def left_truncated_factory(left_truncation_values=None) -> Data:
+def left_truncated_factory(left_truncation_values=None) -> Type[Data]:
     if left_truncation_values is not None:
         return Truncated(left_truncation_values)
     else:
@@ -87,7 +93,7 @@ def left_truncated_factory(left_truncation_values=None) -> Data:
 
 
 # factory
-def right_truncated_factory(right_truncation_values=None) -> Data:
+def right_truncated_factory(right_truncation_values=None) -> Type[Data]:
     if right_truncation_values is not None:
         return Truncated(right_truncation_values)
     else:
@@ -97,7 +103,7 @@ def right_truncated_factory(right_truncation_values=None) -> Data:
 # factory
 def interval_truncated_factory(
     left_truncation_values=None, right_truncation_values=None
-) -> IntervalData:
+) -> Type[IntervalData]:
     if left_truncation_values is not None and right_truncation_values is not None:
         return IntervalTruncated(left_truncation_values, right_truncation_values)
     elif left_truncation_values is not None and right_truncation_values is None:
