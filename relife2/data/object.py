@@ -22,6 +22,10 @@ class Data(ABC):
     def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
         pass
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        return f"{class_name}(index={repr(self.index)}, values={repr(self.values)})"
+
 
 class IntervalData(ABC):
     """
@@ -42,6 +46,32 @@ class IntervalData(ABC):
     @abstractmethod
     def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
         pass
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        return f"{class_name}(index={repr(self.index)}, values={repr(self.values)})"
+
+
+class ExtractedData:
+    def __init__(self, index, values):
+        if type(index) != np.ndarray:
+            raise TypeError("Expected np.ndarray index")
+        if type(values) != np.ndarray:
+            raise TypeError("Expected np.ndarray values")
+        if len(index.shape) != 1:
+            raise TypeError("index must be of shape (n,)")
+        if len(values.shape) != 1 and len(values.shape) != 2:
+            raise TypeError("values must be of shape (n,) or (n, 2)")
+        if len(values.shape) == 2:
+            if values.shape[-1] != 2:
+                raise TypeError("values must be of shape (n,) or (n, 2)")
+        if len(index) != len(values):
+            raise ValueError("index and values must have the same length")
+        self.index = index
+        self.values = values
+
+    def __len__(self):
+        return len(self.index)
 
 
 class CensoredFromIndicators(Data):
@@ -185,97 +215,3 @@ class IntervalTruncated(IntervalData):
             axis=1,
         )
         return index, values
-
-
-# factory
-def observed_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
-    if len(censored_lifetimes.shape) == 1 and indicators is None:
-        return ObservedFromIndicators(
-            censored_lifetimes, np.ones_like(censored_lifetimes, dtype=bool)
-        )
-    elif len(censored_lifetimes.shape) == 1 and indicators is not None:
-        return ObservedFromIndicators(censored_lifetimes, indicators)
-    elif len(censored_lifetimes.shape) == 2 and indicators is None:
-        return Observed(censored_lifetimes)
-    elif len(censored_lifetimes.shape) == 2 and indicators is not None:
-        raise ValueError(
-            "observed with 2d censored_lifetimes and indicators is ambiguous"
-        )
-    else:
-        raise ValueError("observed_parser incorrect arguments")
-
-
-# factory
-def left_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
-    if len(censored_lifetimes.shape) == 1 and indicators is None:
-        return CensoredFromIndicators(
-            censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
-        )
-    elif len(censored_lifetimes.shape) == 1 and indicators is not None:
-        return CensoredFromIndicators(censored_lifetimes, indicators)
-    elif len(censored_lifetimes.shape) == 2 and indicators is None:
-        return LeftCensored(censored_lifetimes)
-    elif len(censored_lifetimes.shape) == 2 and indicators is not None:
-        raise ValueError(
-            "left_censored with 2d censored_lifetimes and indicators is ambiguous"
-        )
-    else:
-        raise ValueError("left_censored_parser incorrect arguments")
-
-
-# factory
-def right_censored_factory(censored_lifetimes: np.ndarray, indicators=None) -> Data:
-    if len(censored_lifetimes.shape) == 1 and indicators is None:
-        return CensoredFromIndicators(
-            censored_lifetimes, np.zeros_like(censored_lifetimes, dtype=bool)
-        )
-    elif len(censored_lifetimes.shape) == 1 and indicators is not None:
-        return CensoredFromIndicators(censored_lifetimes, indicators)
-    elif len(censored_lifetimes.shape) == 2 and indicators is None:
-        return RightCensored(censored_lifetimes)
-    elif len(censored_lifetimes.shape) == 2 and indicators is not None:
-        raise ValueError(
-            "right_censored with 2d censored_lifetimes and indicators is ambiguous"
-        )
-    else:
-        raise ValueError("right_censored_parser incorrect arguments")
-
-
-# factory
-def interval_censored_factory(censored_lifetimes: np.ndarray) -> Data:
-    if len(censored_lifetimes.shape) == 1:
-        return IntervalCensored(np.array([[0, 0]], dtype=float))
-    elif len(censored_lifetimes.shape) == 2:
-        return IntervalCensored(censored_lifetimes)
-    else:
-        raise ValueError("interval_censored incorrect arguments")
-
-
-# factory
-def left_truncated_factory(left_truncation_values=None):
-    if left_truncation_values is not None:
-        return Truncated(left_truncation_values)
-    else:
-        return Truncated(np.array([], dtype=float))
-
-
-# factory
-def right_truncated_factory(right_truncation_values=None):
-    if right_truncation_values is not None:
-        return Truncated(right_truncation_values)
-    else:
-        return Truncated(np.array([], dtype=float))
-
-
-# factory
-def interval_truncated_factory(
-    left_truncation_values=None, right_truncation_values=None
-):
-    if left_truncation_values is not None and right_truncation_values is not None:
-        return IntervalTruncated(left_truncation_values, right_truncation_values)
-    elif left_truncation_values is not None and right_truncation_values is None:
-        return IntervalTruncated(np.array([], dtype=float), np.array([], dtype=float))
-    elif left_truncation_values is None and right_truncation_values is not None:
-        return IntervalTruncated(np.array([], dtype=float), np.array([], dtype=float))
-    else:
-        return IntervalTruncated(np.array([], dtype=float), np.array([], dtype=float))

@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from itertools import combinations
+from typing import Tuple, Union
 
 import numpy as np
 
-from .parser import (
-    Data,
-    IntervalData,
+from .factory import (
     interval_censored_factory,
     interval_truncated_factory,
     left_censored_factory,
@@ -14,6 +13,7 @@ from .parser import (
     right_censored_factory,
     right_truncated_factory,
 )
+from .object import Data, ExtractedData, IntervalData
 
 
 @dataclass
@@ -38,10 +38,15 @@ class SurvivalData:
                     self._intersection_data[
                         " & ".join(sorted_combination)
                     ] = self._intersection(*sorted_combination)
-                    print(sorted_combination, self._intersection(*sorted_combination))
+                    print(
+                        "[VALID]: ",
+                        sorted_combination,
+                        self._intersection(*sorted_combination),
+                    )
                 # if field combinations is not allowed, check if no data exists
                 else:
-                    if self._intersection(*sorted_combination)["index"].size != 0:
+                    extracted_data = self._intersection(*sorted_combination)
+                    if {len(_data) for _data in extracted_data} != {0}:
                         raise ValueError(
                             f"Incoherence in provided data : {sorted_combination} data is impossible"
                         )
@@ -61,8 +66,10 @@ class SurvivalData:
             raise ValueError("Invalid interval truncation values")
 
         # print(self.values("right_censored & left_truncated"))
-        censored_values, truncation_values = self.values(
-            "right_censored & left_truncated"
+        extracted_data = self("right_censored & left_truncated")
+        censored_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
         )
         # print(censored_values)
         # print(truncation_values)
@@ -72,16 +79,20 @@ class SurvivalData:
             )
 
         # print(self.values("right_censored & interval_truncated"))
-        censored_values, truncation_values = self.values(
-            "right_censored & interval_truncated"
+        extracted_data = self("right_censored & interval_truncated")
+        censored_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
         )
         if (censored_values >= truncation_values[:, 1]).any():
             raise ValueError(
                 f"right censored lifetime values can't be higer or equal to interval of truncation: incompatible {censored_values} and {truncation_values}"
             )
 
-        censored_values, truncation_values = self.values(
-            "interval_censored & interval_truncated"
+        extracted_data = self("interval_censored & interval_truncated")
+        censored_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
         )
         if (censored_values[:, 0] >= truncation_values[:, 0]).any():
             raise ValueError(
@@ -92,44 +103,60 @@ class SurvivalData:
                 f"interval censorship can't be outside of truncation interval: incompatible {censored_values} and {truncation_values}"
             )
 
-        censored_values, truncation_values = self.values(
-            "right_censored & right_truncated"
+        extracted_data = self("right_censored & right_truncated")
+        censored_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
         )
         if (censored_values >= truncation_values).any():
             raise ValueError(
                 f"right censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
 
-        censored_values, truncation_values = self.values(
-            "left_censored & right_truncated"
+        extracted_data = self("left_censored & right_truncated")
+        censored_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
         )
         if (censored_values >= truncation_values).any():
             raise ValueError(
                 f"left censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
 
-        censored_values, truncation_values = self.values(
-            "interval_censored & right_truncated"
+        extracted_data = self("interval_censored & right_truncated")
+        censored_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
         )
         if (censored_values[:, 1] >= truncation_values).any():
             raise ValueError(
                 f"interval censored lifetime values can't be higher than right truncations: incompatible {censored_values} and {truncation_values}"
             )
 
-        observed_values, truncation_values = self.values("observed & right_truncated")
+        extracted_data = self("observed & right_truncated")
+        observed_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
+        )
         if (observed_values >= truncation_values).any():
             raise ValueError(
                 f"observed lifetime values can't be higher than right truncations: incompatible {observed_values} and {truncation_values}"
             )
 
-        observed_values, truncation_values = self.values("observed & left_truncated")
+        extracted_data = self("observed & left_truncated")
+        observed_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
+        )
         if (observed_values <= truncation_values).any():
             raise ValueError(
                 f"observed lifetime values can't be lower than left truncations: incompatible {observed_values} and {truncation_values}"
             )
 
-        observed_values, truncation_values = self.values(
-            "observed & interval_truncated"
+        extracted_data = self("observed & interval_truncated")
+        observed_values, truncation_values = (
+            extracted_data[0].values,
+            extracted_data[1].values,
         )
         if (observed_values >= truncation_values[:, 1]).any():
             raise ValueError(
@@ -195,7 +222,7 @@ class SurvivalData:
                 break
         return res
 
-    def _intersection(self, *fields):
+    def _intersection(self, *fields: str) -> Tuple[ExtractedData]:
         assert {type(field) for field in fields} == {
             str
         }, "intersection expects string arguments"
@@ -213,25 +240,21 @@ class SurvivalData:
         values = [getattr(self, f"{field}").values for field in fields]
 
         common_index, mask_index = join_index(*index)
-        return {
-            "index": common_index,
-            "values": [values[i][mask] for i, mask in enumerate(mask_index)],
-        }
+        return tuple(
+            (
+                ExtractedData(common_index, values[i][mask])
+                for i, mask in enumerate(mask_index)
+            )
+        )
 
-    def values(self, request: str):
-        """if args is list, return values intersection, else only values
-        soit  .. & ...
-        ou .. | ..
-
-        """
-
+    def __call__(self, request: str) -> Union[ExtractedData, Tuple[ExtractedData]]:
         def isort(x: list):
             return sorted(range(len(x)), key=lambda k: x[k])
 
-        request = " ".join(request.split())
+        request = "".join(request.split())
 
         if ("&" in request) and ("|" not in request):
-            fields = request.split(" & ")
+            fields = request.split("&")
             sorted_fields = sorted(fields)
             if {hasattr(self, field) for field in fields} != {True}:
                 raise ValueError(f"field names {fields} are unknown")
@@ -239,51 +262,35 @@ class SurvivalData:
                 raise ValueError(f"impossible combination of fields : {fields}")
 
             sorted_fields_i = isort(fields)
-            return [
-                self._intersection_data[" & ".join(sorted_fields)]["values"][i]
+            return tuple(
+                list(self._intersection_data[" & ".join(sorted_fields)])[i]
                 for i in sorted_fields_i
-            ]
+            )
 
         elif ("|" in request) and ("&" not in request):
-            fields = request.split(" | ")
+            fields = request.split("|")
             if {hasattr(self, field) for field in fields} != {True}:
                 raise ValueError(f"field names {fields} are unknown")
-            return [getattr(self, f"{field}").values for field in fields]
+            return tuple(
+                (
+                    ExtractedData(
+                        getattr(self, f"{field}").index,
+                        getattr(self, f"{field}").values,
+                    )
+                    for field in fields
+                )
+            )
         elif ("|" in request) and ("&" in request):
             raise ValueError("can't hold & and | operator")
         else:
             if not hasattr(self, request):
                 raise ValueError(f"field name {request} is unknown")
-            return getattr(self, f"{request}").values
+            return ExtractedData(
+                getattr(self, f"{request}").index,
+                getattr(self, f"{request}").values,
+            )
 
-    def index(self, request: str):
-        """if args is list, return index in common, else only index"""
-
-        request = " ".join(request.split())
-
-        if ("&" in request) and ("|" not in request):
-            fields = request.split(" & ")
-            sorted_fields = sorted(fields)
-            if {hasattr(self, field) for field in fields} != {True}:
-                raise ValueError(f"field names {fields} are unknown")
-            if not " & ".join(sorted_fields) in self._intersection_data:
-                raise ValueError(f"impossible combination of fields : {fields}")
-            return self._intersection_data[" & ".join(sorted_fields)]["index"]
-
-        elif ("|" in request) and ("&" not in request):
-            fields = request.split(" | ")
-            if {hasattr(self, field) for field in fields} != {True}:
-                raise ValueError(f"field names {fields} are unknown")
-            return [getattr(self, f"{field}").index for field in fields]
-        elif ("|" in request) and ("&" in request):
-            raise ValueError("can't hold & and | operator")
-
-        else:
-            if not hasattr(self, request):
-                raise ValueError(f"field name {request} is unknown")
-            return getattr(self, f"{request}").index
-
-    def info(self):
+    def info(self) -> None:
         headers = ["Lifetime data", "Counts"]
         info = []
         info.append(["Observed", len(self.observed.values)])

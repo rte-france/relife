@@ -1,7 +1,16 @@
 import numpy as np
 import pytest
 
-from relife2.data.parser import (
+from relife2.data.factory import (
+    interval_censored_factory,
+    interval_truncated_factory,
+    left_censored_factory,
+    left_truncated_factory,
+    observed_factory,
+    right_censored_factory,
+    right_truncated_factory,
+)
+from relife2.data.object import (
     CensoredFromIndicators,
     IntervalCensored,
     IntervalTruncated,
@@ -10,13 +19,6 @@ from relife2.data.parser import (
     ObservedFromIndicators,
     RightCensored,
     Truncated,
-    interval_censored_factory,
-    interval_truncated_factory,
-    left_censored_factory,
-    left_truncated_factory,
-    observed_factory,
-    right_censored_factory,
-    right_truncated_factory,
 )
 
 

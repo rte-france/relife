@@ -32,26 +32,26 @@ def test_1d_data(example_1d_data):
     )
     assert (data.observed.index == np.array([0, 2, 6])).all()
     assert (data.observed.values == np.array([10, 9, 11])).all()
-    assert (data.index("observed") == np.array([0, 2, 6])).all()
-    assert (data.values("observed") == np.array([10, 9, 11])).all()
+    assert (data("observed").index == np.array([0, 2, 6])).all()
+    assert (data("observed").values == np.array([10, 9, 11])).all()
 
     assert (data.right_censored.index == np.array([1, 3, 4, 5])).all()
     assert (data.right_censored.values == np.array([11, 10, 12, 13])).all()
-    assert (data.index("right_censored") == np.array([1, 3, 4, 5])).all()
-    assert (data.values("right_censored") == np.array([11, 10, 12, 13])).all()
+    assert (data("right_censored").index == np.array([1, 3, 4, 5])).all()
+    assert (data("right_censored").values == np.array([11, 10, 12, 13])).all()
 
     assert (data.left_truncated.index == np.array([2, 3, 4, 5, 6])).all()
     assert (data.left_truncated.values == np.array([3, 5, 3, 1, 9])).all()
-    assert (data.index("left_truncated") == np.array([2, 3, 4, 5, 6])).all()
-    assert (data.values("left_truncated") == np.array([3, 5, 3, 1, 9])).all()
+    assert (data("left_truncated").index == np.array([2, 3, 4, 5, 6])).all()
+    assert (data("left_truncated").values == np.array([3, 5, 3, 1, 9])).all()
 
-    assert (data.values("observed & left_truncated")[0] == np.array([9, 11])).all()
+    assert (data("observed & left_truncated")[0].values == np.array([9, 11])).all()
 
-    assert (data.values("observed & left_truncated")[1] == np.array([3, 9])).all()
+    assert (data("observed & left_truncated")[1].values == np.array([3, 9])).all()
 
-    assert (data.values("left_truncated & observed")[0] == np.array([3, 9])).all()
+    assert (data("left_truncated & observed")[0].values == np.array([3, 9])).all()
 
-    assert (data.values("left_truncated & observed")[1] == np.array([9, 11])).all()
+    assert (data("left_truncated & observed")[1].values == np.array([9, 11])).all()
 
 
 # def test_censored(example_2d_data):
