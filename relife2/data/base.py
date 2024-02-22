@@ -339,18 +339,28 @@ class DataBook:
                 getattr(self, f"{request}").values,
             )
 
+    def __len__(self):
+        return (
+            len(self.complete)
+            + len(self.left_censored)
+            + len(self.right_censored)
+            + len(self.interval_censored)
+            + len(self.left_truncated)
+            + len(self.right_truncated)
+            + len(self.interval_truncated)
+        )
+
     def info(self) -> None:
         headers = ["Lifetime data", "Counts"]
         info = []
-        info.append(["Observed", len(self.complete.values)])
-        info.append(["Left censored", len(self.left_censored.values)])
-        info.append(["Right censored", len(self.right_censored.values)])
-        info.append(["Interval censored", len(self.interval_censored.values)])
-        info.append(["Left truncated", len(self.left_truncated.values)])
-        info.append(["Right truncated", len(self.right_truncated.values)])
-        info.append(
-            ["Interval truncated", len(self.interval_truncated.values)]
-        )
+        info.append(["Nb samples (tot.)", len(self)])
+        info.append(["Observed", len(self.complete)])
+        info.append(["Left censored", len(self.left_censored)])
+        info.append(["Right censored", len(self.right_censored)])
+        info.append(["Interval censored", len(self.interval_censored)])
+        info.append(["Left truncated", len(self.left_truncated)])
+        info.append(["Right truncated", len(self.right_truncated)])
+        info.append(["Interval truncated", len(self.interval_truncated)])
 
         row_format = "{:>18}" * (len(headers))
         print(row_format.format(*headers))

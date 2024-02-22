@@ -29,6 +29,9 @@ class Data(ABC):
             f" values={repr(self.values)})"
         )
 
+    def __len__(self):
+        return len(self.index)
+
 
 class IntervalData(ABC):
     """
@@ -56,6 +59,9 @@ class IntervalData(ABC):
             f"{class_name}(index={repr(self.index)},"
             f" values={repr(self.values)})"
         )
+
+    def __len__(self):
+        return len(self.index)
 
 
 class ExtractedData:
