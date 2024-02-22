@@ -5,7 +5,7 @@ import numpy as np
 from scipy.optimize.optimize import approx_fprime
 
 from .. import DataBook
-from .functions import DistributionFunctions
+from .function import DistributionFunctions
 
 
 class ParametricLikelihood(ABC):
