@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import Type
 
 import numpy as np
 from scipy.optimize.optimize import approx_fprime
 
-from .. import SurvivalData
-from .function import DistributionFunction
+from .. import DataBook
+from .functions import DistributionFunctions
 
 
 class ParametricLikelihood(ABC):
@@ -24,7 +25,9 @@ class ParametricLikelihood(ABC):
 class ParametricDistriLikelihood(ParametricLikelihood):
 
     # relife/parametric.ParametricHazardFunction
-    _default_hess_scheme: str = "cs"  #: Default method for evaluating the hessian of the negative log-likelihood.
+    _default_hess_scheme: str = (  #: Default method for evaluating the hessian of the negative log-likelihood.
+        "cs"
+    )
 
     @abstractmethod
     def jac_hf(self):
@@ -36,29 +39,31 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
     # relife/parametric.ParametricHazardFunction
     def negative_log_likelihood(
-        self, param: np.ndarray, data: SurvivalData, functions: DistributionFunction
+        self,
+        param: np.ndarray,
+        databook: Type[DataBook],
+        functions: Type[DistributionFunctions],
     ) -> np.ndarray:
         return (
-            -np.sum(np.log(functions.hf(param, data.observed(return_values=True))))
+            -np.sum(np.log(functions.hf(param, databook("complete").values)))
             + np.sum(
                 functions.chf(
                     param,
                     np.contenate(
                         (
-                            data.observed(return_values=True),
-                            data.censored(how="right", return_values=True),
+                            databook("complete").values,
+                            databook("right_censored").values,
                         )
                     ),
                 )
             )
-            - np.sum(
-                functions.chf(param, data.truncated(how="left", return_values=True))
-            )
+            - np.sum(functions.chf(param, databook("left_truncated").values))
             - np.sum(
                 np.log(
                     -np.expm1(
                         -functions.chf(
-                            param, data.censored(how="left", return_values=True)
+                            param,
+                            databook("left_censored").values,
                         )
                     )
                 )
@@ -67,12 +72,15 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
     # relife/parametric.ParametricHazardFunction
     def jac_negative_log_likelihood(
-        self, param: np.ndarray, data: SurvivalData, functions: DistributionFunction
+        self,
+        param: np.ndarray,
+        databook: Type[DataBook],
+        functions: Type[DistributionFunctions],
     ) -> np.ndarray:
         return (
             -np.sum(
-                self.jac_hf(param, data.observed(return_values=True))
-                / functions.hf(param, data.observed(return_values=True)),
+                self.jac_hf(param, databook("complete").values)
+                / functions.hf(param, databook("complete").values),
                 axis=0,
             )
             + np.sum(
@@ -80,22 +88,20 @@ class ParametricDistriLikelihood(ParametricLikelihood):
                     param,
                     np.contenate(
                         (
-                            data.observed(return_values=True),
-                            data.censored(how="right", return_values=True),
+                            databook("complete").values,
+                            databook("right_censored").values,
                         )
                     ),
                 ),
                 axis=0,
             )
             - np.sum(
-                self.jac_chf(param, data.truncated(how="left", return_values=True)),
+                self.jac_chf(param, databook("left_truncated").values),
                 axis=0,
             )
             - np.sum(
-                self.jac_chf(param, data.censored(how="left", return_values=True))
-                / np.expm1(
-                    self._chf(param, data.censored(how="left", return_values=True))
-                ),
+                self.jac_chf(param, databook("left_censored").values)
+                / np.expm1(self._chf(param, databook("left_censored").values)),
                 axis=0,
             )
         )
@@ -103,8 +109,8 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     def hess_negative_log_likelihood(
         self,
         param: np.ndarray,
-        data: SurvivalData,
-        functions: DistributionFunction,
+        databook: Type[DataBook],
+        functions: Type[DistributionFunctions],
         eps: float = 1e-6,
         scheme: str = None,
     ) -> np.ndarray:
@@ -122,7 +128,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
                     hess[i, j] = (
                         np.imag(
                             self.jac_negative_log_likelihood(
-                                param + u[i], data, functions
+                                param + u[i], databook, functions
                             )[j]
                         )
                         / eps
@@ -135,7 +141,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
                 hess[i] = approx_fprime(
                     param,
                     lambda param: self.jac_negative_log_likelihood(
-                        param, data, functions
+                        param, databook, functions
                     )[i],
                     eps,
                 )
@@ -148,13 +154,13 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
 class ExponentialDistriLikelihood(ParametricDistriLikelihood):
     # relife/distribution.Exponential
-    def dhf(self, elapsed_time: np.ndarray) -> np.ndarray:
-        return np.zeros_like(elapsed_time)
-
-    # relife/distribution.Exponential
-    def jac_chf(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
-        return np.ones((elapsed_time.size, 1)) * elapsed_time
-
-    # relife/distribution.Exponential
-    def jac_hf(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
+    def jac_hf(
+        self, param: np.ndarray, elapsed_time: np.ndarray
+    ) -> np.ndarray:
         return np.ones((elapsed_time.size, 1))
+
+    # relife/distribution.Exponential
+    def jac_chf(
+        self, param: np.ndarray, elapsed_time: np.ndarray
+    ) -> np.ndarray:
+        return np.ones((elapsed_time.size, 1)) * elapsed_time
