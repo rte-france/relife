@@ -5,11 +5,11 @@ from typing import Tuple, Type, Union
 import numpy as np
 
 from .factory import (
+    complete_factory,
     interval_censored_factory,
     interval_truncated_factory,
     left_censored_factory,
     left_truncated_factory,
-    observed_factory,
     right_censored_factory,
     right_truncated_factory,
 )
@@ -18,7 +18,7 @@ from .object import Data, ExtractedData, IntervalData
 
 @dataclass
 class DataBook:
-    observed: Type[Data]  # object with fixed index and values attrib format
+    complete: Type[Data]  # object with fixed index and values attrib format
     left_censored: Type[Data]
     right_censored: Type[Data]
     interval_censored: Type[IntervalData]
@@ -60,11 +60,13 @@ class DataBook:
     def _sanity_checks(self):
 
         if (
-            self.interval_censored.values[:, 0] >= self.interval_censored.values[:, 1]
+            self.interval_censored.values[:, 0]
+            >= self.interval_censored.values[:, 1]
         ).any():
             raise ValueError("Invalid interval censorship values")
         if (
-            self.interval_truncated.values[:, 0] >= self.interval_truncated.values[:, 1]
+            self.interval_truncated.values[:, 0]
+            >= self.interval_truncated.values[:, 1]
         ).any():
             raise ValueError("Invalid interval truncation values")
 
@@ -158,7 +160,7 @@ class DataBook:
                 """
             )
 
-        extracted_data = self("observed & right_truncated")
+        extracted_data = self("complete & right_truncated")
         observed_values, truncation_values = (
             extracted_data[0].values,
             extracted_data[1].values,
@@ -166,12 +168,12 @@ class DataBook:
         if (observed_values >= truncation_values).any():
             raise ValueError(
                 f"""
-                observed lifetime values can't be higher than right truncations:
+                complete lifetime values can't be higher than right truncations:
                 incompatible {observed_values} and {truncation_values}
                 """
             )
 
-        extracted_data = self("observed & left_truncated")
+        extracted_data = self("complete & left_truncated")
         observed_values, truncation_values = (
             extracted_data[0].values,
             extracted_data[1].values,
@@ -179,12 +181,12 @@ class DataBook:
         if (observed_values <= truncation_values).any():
             raise ValueError(
                 f"""
-                observed lifetime values can't be lower than left truncations:
+                complete lifetime values can't be lower than left truncations:
                 incompatible {observed_values} and {truncation_values}
                 """
             )
 
-        extracted_data = self("observed & interval_truncated")
+        extracted_data = self("complete & interval_truncated")
         observed_values, truncation_values = (
             extracted_data[0].values,
             extracted_data[1].values,
@@ -192,23 +194,23 @@ class DataBook:
         if (observed_values >= truncation_values[:, 1]).any():
             raise ValueError(
                 f"""
-                observed lifetime values can't be outside of truncation interval:
+                complete lifetime values can't be outside of truncation interval:
                 incompatible {observed_values} and {truncation_values}
                 """
             )
         elif (observed_values <= truncation_values[:, 0]).any():
             raise ValueError(
                 f"""
-                observed lifetime values can't be outside of truncation interval:
+                complete lifetime values can't be outside of truncation interval:
                 incompatible {observed_values} and {truncation_values}"""
             )
 
     @staticmethod
     def check_field_combination(fields: list) -> bool:
         def other_not_allowed(x):
-            if x == "observed":
+            if x == "complete":
                 return [
-                    "observed",
+                    "complete",
                     "left_censored",
                     "right_censored",
                     "interval_censored",
@@ -216,17 +218,17 @@ class DataBook:
             elif x == "left_censored":
                 return [
                     "left_censored",
-                    "observed",
+                    "complete",
                     "interval_censored",
                     "left_truncated",
                     "interval_truncated",
                 ]
             elif x == "right_censored":
-                return ["right_censored", "observed", "interval_censored"]
+                return ["right_censored", "complete", "interval_censored"]
             elif x == "interval_censored":
                 return [
                     "interval_censored",
-                    "observed",
+                    "complete",
                     "left_censored",
                     "right_censored",
                 ]
@@ -235,10 +237,15 @@ class DataBook:
                     "left_truncated",
                     "interval_truncated",
                     "left_censored",
+                    "right_truncated",
                     "interval_censored",
                 ]
             elif x == "right_truncated":
-                return ["right_truncated", "interval_truncated"]
+                return [
+                    "right_truncated",
+                    "interval_truncated",
+                    "left_truncated",
+                ]
             elif x == "interval_truncated":
                 return [
                     "interval_truncated",
@@ -268,7 +275,9 @@ class DataBook:
 
         def join_index(*index: np.ndarray):
             s = set.intersection(*map(set, index))
-            mask_index = [np.in1d(_index, np.array(list(s))) for _index in index]
+            mask_index = [
+                np.in1d(_index, np.array(list(s))) for _index in index
+            ]
             index = index[0][mask_index[0]]
             return index, mask_index
 
@@ -297,7 +306,9 @@ class DataBook:
             if {hasattr(self, field) for field in fields} != {True}:
                 raise ValueError(f"field names {fields} are unknown")
             if not " & ".join(sorted_fields) in self._intersection_data:
-                raise ValueError(f"impossible combination of fields : {fields}")
+                raise ValueError(
+                    f"impossible combination of fields : {fields}"
+                )
 
             sorted_fields_i = isort(fields)
             return tuple(
@@ -331,13 +342,15 @@ class DataBook:
     def info(self) -> None:
         headers = ["Lifetime data", "Counts"]
         info = []
-        info.append(["Observed", len(self.observed.values)])
+        info.append(["Observed", len(self.complete.values)])
         info.append(["Left censored", len(self.left_censored.values)])
         info.append(["Right censored", len(self.right_censored.values)])
         info.append(["Interval censored", len(self.interval_censored.values)])
         info.append(["Left truncated", len(self.left_truncated.values)])
         info.append(["Right truncated", len(self.right_truncated.values)])
-        info.append(["Interval truncated", len(self.interval_truncated.values)])
+        info.append(
+            ["Interval truncated", len(self.interval_truncated.values)]
+        )
 
         row_format = "{:>18}" * (len(headers))
         print(row_format.format(*headers))
@@ -347,8 +360,8 @@ class DataBook:
 
 # factory
 def databook(
-    censored_lifetimes: np.ndarray,
-    observed_indicators: np.ndarray = None,
+    observed_lifetimes: np.ndarray,
+    complete_indicators: np.ndarray = None,
     left_censored_indicators: np.ndarray = None,
     right_censored_indicators: np.ndarray = None,
     entry: np.ndarray = None,
@@ -356,7 +369,7 @@ def databook(
     **kwargs,
 ) -> Type[DataBook]:
 
-    observed = kwargs.get("observed", None)
+    complete = kwargs.get("complete", None)
     left_censored = kwargs.get("left_censored", None)
     right_censored = kwargs.get("right_censored", None)
     interval_censored = kwargs.get("interval_censored", None)
@@ -366,7 +379,7 @@ def databook(
 
     if left_censored is None:
         left_censored = left_censored_factory(
-            censored_lifetimes, indicators=left_censored_indicators
+            observed_lifetimes, indicators=left_censored_indicators
         )
     else:
         if left_censored_indicators is not None:
@@ -377,10 +390,12 @@ def databook(
                 """
             )
         if not issubclass(left_censored, Data):
-            raise TypeError(f"Data expected, got '{type(left_censored).__name__}'")
+            raise TypeError(
+                f"Data expected, got '{type(left_censored).__name__}'"
+            )
     if right_censored is None:
         right_censored = right_censored_factory(
-            censored_lifetimes, indicators=right_censored_indicators
+            observed_lifetimes, indicators=right_censored_indicators
         )
     else:
         if right_censored_indicators is not None:
@@ -391,9 +406,14 @@ def databook(
                 """
             )
         if not issubclass(right_censored, Data):
-            raise TypeError(f"Data expected, got '{type(right_censored).__name__}'")
+            raise TypeError(
+                f"Data expected, got '{type(right_censored).__name__}'"
+            )
 
-    if left_censored_indicators is not None and right_censored_indicators is not None:
+    if (
+        left_censored_indicators is not None
+        and right_censored_indicators is not None
+    ):
         if len(left_censored_indicators) != len(right_censored_indicators):
             raise ValueError(
                 """
@@ -403,7 +423,9 @@ def databook(
             )
 
         if (
-            np.stack([left_censored_indicators, right_censored_indicators]).any(axis=0)
+            np.stack(
+                [left_censored_indicators, right_censored_indicators]
+            ).any(axis=0)
             is True
         ):
             raise ValueError(
@@ -414,45 +436,49 @@ def databook(
             )
 
     if interval_censored is None:
-        interval_censored = interval_censored_factory(censored_lifetimes)
+        interval_censored = interval_censored_factory(observed_lifetimes)
     else:
         if not issubclass(interval_censored, IntervalData):
             raise TypeError(
-                f"IntervalData expected, got '{type(interval_censored).__name__}'"
+                "IntervalData expected, got"
+                f" '{type(interval_censored).__name__}'"
             )
 
-    if observed_indicators is None:
+    if complete_indicators is None:
         if left_censored_indicators:
-            observed_indicators = np.stack([not left_censored_indicators])
+            complete_indicators = np.stack([not left_censored_indicators])
             if right_censored_indicators:
-                observed_indicators = np.stack(
-                    [observed_indicators, not right_censored_indicators]
+                complete_indicators = np.stack(
+                    [complete_indicators, not right_censored_indicators]
                 )
-            observed_indicators = observed_indicators.all(axis=0)
+            complete_indicators = complete_indicators.all(axis=0)
 
-    if observed is None:
-        observed = observed_factory(censored_lifetimes, indicators=observed_indicators)
+    if complete is None:
+        complete = complete_factory(
+            observed_lifetimes, indicators=complete_indicators
+        )
     else:
-        if observed_indicators is not None:
+        if complete_indicators is not None:
             raise ValueError(
-                "observed_indicators and observed can not be specified at the same time"
+                "complete_indicators and complete can not be specified at the"
+                " same time"
             )
-        if not issubclass(observed, Data):
-            raise TypeError(f"Data expected, got '{type(observed).__name__}'")
+        if not issubclass(complete, Data):
+            raise TypeError(f"Data expected, got '{type(complete).__name__}'")
 
     if entry is not None:
-        if len(entry) != len(censored_lifetimes):
+        if len(entry) != len(observed_lifetimes):
             raise ValueError(
                 """
-                entry values (left truncation values) and censored_lifetimes
+                entry values (left truncation values) and observed_lifetimes
                 don't have the same length
                 """
             )
     if departure is not None:
-        if len(departure) != len(censored_lifetimes):
+        if len(departure) != len(observed_lifetimes):
             raise ValueError(
                 """
-                departure values (right truncation values) and censored_lifetimes
+                departure values (right truncation values) and observed_lifetimes
                 don't have the same length
                 """
             )
@@ -462,19 +488,25 @@ def databook(
     else:
         if entry is not None:
             raise ValueError(
-                "entry and left_truncated can not be specified at the same time"
+                "entry and left_truncated can not be specified at the same"
+                " time"
             )
         if not issubclass(left_truncated, Data):
-            raise TypeError(f"Data expected, got '{type(left_truncated).__name__}'")
+            raise TypeError(
+                f"Data expected, got '{type(left_truncated).__name__}'"
+            )
     if right_truncated is None:
         right_truncated = right_truncated_factory(entry, departure)
     else:
         if departure is not None:
             raise ValueError(
-                "departure and right_truncated can not be specified at the same time"
+                "departure and right_truncated can not be specified at the"
+                " same time"
             )
         if not issubclass(right_truncated, Data):
-            raise TypeError(f"Data expected, got '{type(right_truncated).__name__}'")
+            raise TypeError(
+                f"Data expected, got '{type(right_truncated).__name__}'"
+            )
     if interval_truncated is None:
         interval_truncated = interval_truncated_factory(
             entry,
@@ -483,10 +515,11 @@ def databook(
     else:
         if not issubclass(interval_truncated, IntervalData):
             raise TypeError(
-                f"IntervalData expected, got '{type(interval_truncated).__name__}'"
+                "IntervalData expected, got"
+                f" '{type(interval_truncated).__name__}'"
             )
     return DataBook(
-        observed,
+        complete,
         left_censored,
         right_censored,
         interval_censored,

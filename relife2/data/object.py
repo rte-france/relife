@@ -24,7 +24,10 @@ class Data(ABC):
 
     def __repr__(self):
         class_name = type(self).__name__
-        return f"{class_name}(index={repr(self.index)}, values={repr(self.values)})"
+        return (
+            f"{class_name}(index={repr(self.index)},"
+            f" values={repr(self.values)})"
+        )
 
 
 class IntervalData(ABC):
@@ -49,7 +52,10 @@ class IntervalData(ABC):
 
     def __repr__(self):
         class_name = type(self).__name__
-        return f"{class_name}(index={repr(self.index)}, values={repr(self.values)})"
+        return (
+            f"{class_name}(index={repr(self.index)},"
+            f" values={repr(self.values)})"
+        )
 
 
 class ExtractedData:
@@ -94,7 +100,7 @@ class CensoredFromIndicators(Data):
         return index, values
 
 
-class ObservedFromIndicators(Data):
+class CompleteObservationsFromIndicators(Data):
     def __init__(self, censored_lifetimes, indicators):
         super().__init__(censored_lifetimes, indicators)
         if len(censored_lifetimes.shape) != 1:
@@ -115,14 +121,16 @@ class ObservedFromIndicators(Data):
         return index, values
 
 
-class Observed(Data):
+class CompleteObservations(Data):
     def __init__(self, censored_lifetimes):
         super().__init__(censored_lifetimes)
         if len(censored_lifetimes.shape) != 2:
             raise TypeError("data must be 2d array")
 
     def parse(self, censored_lifetimes):
-        index = np.where(censored_lifetimes[:, 0] == censored_lifetimes[:, 1])[0]
+        index = np.where(censored_lifetimes[:, 0] == censored_lifetimes[:, 1])[
+            0
+        ]
         values = censored_lifetimes[index][:, 0]
         return index, values
 
@@ -168,7 +176,9 @@ class IntervalCensored(IntervalData):
                     censored_lifetimes[:, 0] > 0,
                     censored_lifetimes[:, 1] < np.inf,
                 ),
-                np.not_equal(censored_lifetimes[:, 0], censored_lifetimes[:, 1]),
+                np.not_equal(
+                    censored_lifetimes[:, 0], censored_lifetimes[:, 1]
+                ),
             )
         )[0]
         values = censored_lifetimes[index]
@@ -184,12 +194,15 @@ class LeftTruncated(Data):
             raise TypeError("right truncation values must be 1d array")
         if len(left_truncation_values) != len(right_truncation_values):
             raise ValueError(
-                "left_truncation_values and right_truncation_values must have the same length"
+                "left_truncation_values and right_truncation_values must have"
+                " the same length"
             )
 
     def parse(self, left_truncation_values, right_truncation_values):
         index = np.where(
-            np.logical_and(left_truncation_values > 0, right_truncation_values == 0)
+            np.logical_and(
+                left_truncation_values > 0, right_truncation_values == 0
+            )
         )[0]
         values = left_truncation_values[index]
         return index, values
@@ -205,7 +218,9 @@ class RightTruncated(Data):
 
     def parse(self, left_truncation_values, right_truncation_values):
         index = np.where(
-            np.logical_and(right_truncation_values > 0, left_truncation_values == 0)
+            np.logical_and(
+                right_truncation_values > 0, left_truncation_values == 0
+            )
         )[0]
         values = right_truncation_values[index]
         return index, values
@@ -216,20 +231,25 @@ class IntervalTruncated(IntervalData):
         super().__init__(left_truncation_values, right_truncation_values)
         if len(left_truncation_values.shape) != 1:
             raise TypeError(
-                "left_truncation_values must be 1d array for IntervalTruncation"
+                "left_truncation_values must be 1d array for"
+                " IntervalTruncation"
             )
         if len(right_truncation_values.shape) != 1:
             raise TypeError(
-                "left_truncation_values must be 1d array for IntervalTruncation"
+                "left_truncation_values must be 1d array for"
+                " IntervalTruncation"
             )
         if len(left_truncation_values) != len(right_truncation_values):
             raise ValueError(
-                "left_truncation_values and right_truncation_values must have the same length"
+                "left_truncation_values and right_truncation_values must have"
+                " the same length"
             )
 
     def parse(self, left_truncation_values, right_truncation_values):
         index = np.where(
-            np.logical_and(left_truncation_values > 0, right_truncation_values > 0)
+            np.logical_and(
+                left_truncation_values > 0, right_truncation_values > 0
+            )
         )[0]
         values = np.concatenate(
             (
