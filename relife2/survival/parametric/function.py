@@ -42,19 +42,19 @@ class ParametricDistriFunction(ParametricFunction):
         self.nb_param = nb_param
 
     # relife/parametric.ParametricLifetimeModel
-    def sf(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
+    def sf(self, params: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
         """Parametric survival function."""
-        return np.exp(-self.chf(param, elapsed_time))
+        return np.exp(-self.chf(params, elapsed_time))
 
     # relife/parametric.ParametricLifetimeModel
-    def cdf(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
+    def cdf(self, params: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
         """Parametric cumulative distribution function."""
-        return 1 - self.sf(param, elapsed_time)
+        return 1 - self.sf(params, elapsed_time)
 
     # relife/parametric.ParametricLifetimeModel
-    def pdf(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
+    def pdf(self, params: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
         """Parametric probability density function."""
-        return self.hf(param, elapsed_time) * self.sf(param, elapsed_time)
+        return self.hf(params, elapsed_time) * self.sf(params, elapsed_time)
 
     @abstractmethod
     def mean(self):
@@ -74,44 +74,47 @@ class ExponentialDistriFunction(ParametricDistriFunction):
         super().__init__(nb_params=1)
 
     # relife/distribution.Exponential
-    def hf(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
-        rate = param[0]
+    def hf(self, params: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
+        rate = params[0]
         return rate * np.ones_like(elapsed_time)
 
     # relife/distribution.Exponential
-    def chf(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
-        rate = param[0]
+    def chf(self, params: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
+        rate = params[0]
         return rate * elapsed_time
 
     # relife/distribution.Exponential
-    def mean(self, param: np.ndarray) -> np.ndarray:
-        rate = param[0]
+    def mean(self, params: np.ndarray) -> np.ndarray:
+        rate = params[0]
         return 1 / rate
 
     # relife/distribution.Exponential
     def var(
         self,
-        param: np.ndarray,
+        params: np.ndarray,
     ) -> np.ndarray:
-        rate = param[0]
+        rate = params[0]
         return 1 / rate**2
 
     # relife/distribution.Exponential
-    def mrl(self, param: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
-        rate = param[0]
+    def mrl(self, params: np.ndarray, elapsed_time: np.ndarray) -> np.ndarray:
+        rate = params[0]
         return 1 / rate * np.ones_like(elapsed_time)
 
-    # relife/distribution.Exponential
+    # relife/distribution.Exponential /!\ dependant of _ichf (why : carry fitted params and params)
     def ichf(
-        self, param: np.ndarray, cumulative_hazard_rate: np.ndarray
+        self, params: np.ndarray, cumulative_hazard_rate: np.ndarray
     ) -> np.ndarray:
-        rate = param[0]
+        rate = params[0]
         return cumulative_hazard_rate / rate
 
-    # relife/model.AbsolutelyContinuousLifetimeModel
+    # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
+    # /!\ mathematically -np.log(probability) = cumulative_hazard_rate
     def isf(
         self,
+        params: np.ndarray,
         probability: np.ndarray,
-        cumulative_hazard_rate: np.ndarray,
     ) -> np.ndarray:
-        return self.ichf(-np.log(probability), cumulative_hazard_rate)
+
+        cumulative_hazard_rate = -np.log(probability)
+        return self.ichf(params, cumulative_hazard_rate)

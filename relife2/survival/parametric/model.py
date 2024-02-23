@@ -34,7 +34,7 @@ class ParametricDistriModel:
                 f" '{type(likelihood).__name__}'"
             )
         if param_names is not None:
-            if {type(param) == str for param in param_names} != {str}:
+            if {type(name) == str for name in param_names} != {str}:
                 raise ValueError("param_names must be string")
             if len(param_names) != functions.nb_params:
                 raise ValueError(f"expected {functions.nb_params} params")
@@ -49,22 +49,79 @@ class ParametricDistriModel:
         self.likelihood = likelihood
         self.optimizer = DistriOptimizer()
         self.param_names = param_names
-        self._results = None
+        self._fitting_results = None
         for i in range(self.param_names):
             setattr(self, self.param_names[i], None)
 
-    def sf(self, param: np.ndarray = None):
-        if param is not None:
-            if len(param) != self.functions.nb_params:
+    def _get_params(self, params: np.ndarray):
+        if params is not None:
+            if len(params) != self.functions.nb_params:
                 raise ValueError(f"expected {self.functions.nb_params}")
-            return self.functions.sf()
-        elif param is None and self.results is None:
+            return params
+        elif params is None and self.fitting_results is None:
             warnings.warn(
-                "No fitted model param. Call fit() or specify param first",
+                "No fitted model params. Call fit() or specify params first",
                 UserWarning,
             )
+            return params
         else:
-            return self.functions.sf(self.results.opt.x)
+            return self._fitting_results.opt.x
+
+    def sf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.sf(params, elapsed_time)
+
+    def cdf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.cdf(params, elapsed_time)
+
+    def pdf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.pdf(params, elapsed_time)
+
+    def hf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.hf(params, elapsed_time)
+
+    def chf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.chf(params, elapsed_time)
+
+    def mean(self, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.mean(params)
+
+    def var(self, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.var(params)
+
+    def mrl(self, params: np.ndarray = None):
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.mrl(params)
 
     def fit(
         self,
@@ -86,14 +143,14 @@ class ParametricDistriModel:
         self._results = FittingResult(opt, jac, var, len(self.databook))
 
     @property
-    def results(self):
-        if self._results is None:
+    def fitting_results(self):
+        if self._fitting_results is None:
             warnings.warn(
                 "Model parameters have not been fitted. Call fit() method"
                 " first",
                 UserWarning,
             )
-        return self._results
+        return self._fitting_results
 
 
 def exponential(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
