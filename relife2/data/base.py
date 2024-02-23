@@ -38,11 +38,11 @@ class DataBook:
                     self._intersection_data[
                         " & ".join(sorted_combination)
                     ] = self._intersection(*sorted_combination)
-                    print(
-                        "[VALID]: ",
-                        sorted_combination,
-                        self._intersection(*sorted_combination),
-                    )
+                    # print(
+                    #     "[VALID]: ",
+                    #     sorted_combination,
+                    #     self._intersection(*sorted_combination),
+                    # )
                 # if field combinations is not allowed, check if no data exists
                 else:
                     extracted_data = self._intersection(*sorted_combination)
@@ -219,12 +219,18 @@ class DataBook:
                 return [
                     "left_censored",
                     "complete",
+                    "right_censored",
                     "interval_censored",
                     "left_truncated",
                     "interval_truncated",
                 ]
             elif x == "right_censored":
-                return ["right_censored", "complete", "interval_censored"]
+                return [
+                    "right_censored",
+                    "complete",
+                    "interval_censored",
+                    "left_censored",
+                ]
             elif x == "interval_censored":
                 return [
                     "interval_censored",
