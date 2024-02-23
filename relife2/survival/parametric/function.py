@@ -36,6 +36,39 @@ class ParametricFunction(ABC):
     def chf(self):
         pass
 
+    def isf(self, params: np.ndarray, probability: np.ndarray):
+        """Approx of isf using scipy.optimize in case it is not defined in subclass functions"""
+        pass
+
+    def ppf(self, params: np.ndarray, probability: np.ndarray):
+        return self.isf(params, 1 - probability)
+
+    def median(self, params: np.ndarray):
+        return self.ppf(params, 0.5)
+
+    def rvs(
+        self, params: np.ndarray, size: int = 1, random_state: int = None
+    ) -> np.ndarray:
+        probabilities = np.random.RandomState(seed=random_state).uniform(
+            size=size
+        )
+        return self.isf(params, probabilities)
+
+    def ls_integrate(self):
+        pass
+
+    def moment(self):
+        pass
+
+    def mean(self):
+        pass
+
+    def var(self):
+        pass
+
+    def mrl(self):
+        pass
+
 
 class ParametricDistriFunction(ParametricFunction):
     def __init__(self, nb_param: int):
@@ -110,6 +143,7 @@ class ExponentialDistriFunction(ParametricDistriFunction):
 
     # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
     # /!\ mathematically -np.log(probability) = cumulative_hazard_rate
+
     def isf(
         self,
         params: np.ndarray,

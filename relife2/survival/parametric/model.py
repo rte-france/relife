@@ -50,6 +50,7 @@ class ParametricDistriModel:
         self.optimizer = DistriOptimizer()
         self.param_names = param_names
         self._fitting_results = None
+        self._fitting_params = None
         for i in range(self.param_names):
             setattr(self, self.param_names[i], None)
 
@@ -151,6 +152,16 @@ class ParametricDistriModel:
                 UserWarning,
             )
         return self._fitting_results
+
+    @property
+    def fitting_params(self):
+        if self._fitting_results is None:
+            warnings.warn(
+                "Model parameters have not been fitted. Call fit() method"
+                " first",
+                UserWarning,
+            )
+        return self._fitting_results.opt.x
 
 
 def exponential(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
