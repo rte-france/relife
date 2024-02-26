@@ -50,14 +50,13 @@ class ParametricDistriModel:
         self.optimizer = DistriOptimizer()
         self.param_names = param_names
         self._fitting_results = None
-        self._fitting_params = None
         for i in range(self.param_names):
             setattr(self, self.param_names[i], None)
 
     def _get_params(self, params: np.ndarray):
         if params is not None:
             if len(params) != self.functions.nb_params:
-                raise ValueError(f"expected {self.functions.nb_params}")
+                raise ValueError(f"expected {self.functions.nb_params} params")
             return params
         elif params is None and self.fitting_results is None:
             warnings.warn(
@@ -68,42 +67,50 @@ class ParametricDistriModel:
         else:
             return self._fitting_results.opt.x
 
-    def sf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+    def sf(self, time: np.ndarray, params: np.ndarray = None):
+        """always defined for ParametricDistriFunction"""
         params = self._get_params(params)
         if params is None:
             return None
         else:
-            return self.functions.sf(params, elapsed_time)
+            return self.functions.sf(time, params)
 
-    def cdf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+    def cdf(self, time: np.ndarray, params: np.ndarray = None):
+        """always defined for ParametricDistriFunction"""
         params = self._get_params(params)
         if params is None:
             return None
         else:
-            return self.functions.cdf(params, elapsed_time)
+            return self.functions.cdf(time, params)
 
-    def pdf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+    def pdf(self, time: np.ndarray, params: np.ndarray = None):
+        """always defined for ParametricDistriFunction"""
         params = self._get_params(params)
         if params is None:
             return None
         else:
-            return self.functions.pdf(params, elapsed_time)
+            return self.functions.pdf(time, params)
 
-    def hf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+    def hf(self, time: np.ndarray, params: np.ndarray = None):
+        """user defined and mandatory for ParametricDistriFunction"""
         params = self._get_params(params)
         if params is None:
             return None
         else:
-            return self.functions.hf(params, elapsed_time)
+            return self.functions.hf(time, params)
 
-    def chf(self, elapsed_time: np.ndarray, params: np.ndarray = None):
+    def chf(self, time: np.ndarray, params: np.ndarray = None):
+        """user defined and mandatory for ParametricDistriFunction"""
         params = self._get_params(params)
         if params is None:
             return None
         else:
-            return self.functions.chf(params, elapsed_time)
+            return self.functions.chf(time, params)
 
     def mean(self, params: np.ndarray = None):
+        """mandatory for ParametricDistriFunction but optional for ParametricFunction
+        (handled by ls_integrate)
+        """
         params = self._get_params(params)
         if params is None:
             return None
@@ -111,6 +118,9 @@ class ParametricDistriModel:
             return self.functions.mean(params)
 
     def var(self, params: np.ndarray = None):
+        """mandatory for ParametricDistriFunction but optional for ParametricFunction
+        (handled by ls_integrate)
+        """
         params = self._get_params(params)
         if params is None:
             return None
@@ -118,11 +128,45 @@ class ParametricDistriModel:
             return self.functions.var(params)
 
     def mrl(self, params: np.ndarray = None):
+        """mandatory for ParametricDistriFunction but optional for ParametricFunction
+        (handled by ls_integrate)
+        """
         params = self._get_params(params)
         if params is None:
             return None
         else:
             return self.functions.mrl(params)
+
+    def isf(self, probability: np.ndarray, params: np.ndarray):
+        """mandatory for ParametricDistriFunction but optional for ParametricFunction
+        (handled by scipy optimize knowing sf)
+        """
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.isf(probability, params)
+
+    def median(self, params: np.ndarray):
+        """always defined for ParametricFunction"""
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.median(params)
+
+    # relife/model.LifetimeModel
+    def rvs(
+        self, params: np.ndarray, size: int = 1, random_state: int = None
+    ) -> np.ndarray:
+        """always defined for ParametricFunction"""
+        params = self._get_params(params)
+        if params is None:
+            return None
+        else:
+            return self.functions.rvs(
+                params, size=size, random_state=random_state
+            )
 
     def fit(
         self,
@@ -141,7 +185,9 @@ class ParametricDistriModel:
         )
         for i in range(self.param_names):
             setattr(self, self.param_names[i], opt.x[i])
-        self._results = FittingResult(opt, jac, var, len(self.databook))
+        self._fitting_results = FittingResult(
+            opt, jac, var, len(self.databook)
+        )
 
     @property
     def fitting_results(self):

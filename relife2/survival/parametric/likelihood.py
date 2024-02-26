@@ -45,25 +45,25 @@ class ParametricDistriLikelihood(ParametricLikelihood):
         functions: Type[DistributionFunctions],
     ) -> np.ndarray:
         return (
-            -np.sum(np.log(functions.hf(params, databook("complete").values)))
+            -np.sum(np.log(functions.hf(databook("complete").values, params)))
             + np.sum(
                 functions.chf(
-                    params,
                     np.contenate(
                         (
                             databook("complete").values,
                             databook("right_censored").values,
                         )
                     ),
+                    params,
                 )
             )
-            - np.sum(functions.chf(params, databook("left_truncated").values))
+            - np.sum(functions.chf(databook("left_truncated").values, params))
             - np.sum(
                 np.log(
                     -np.expm1(
                         -functions.chf(
-                            params,
                             databook("left_censored").values,
+                            params,
                         )
                     )
                 )
@@ -79,30 +79,31 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     ) -> np.ndarray:
         return (
             -np.sum(
-                self.jac_hf(params, databook("complete").values)
-                / functions.hf(params, databook("complete").values),
+                self.jac_hf(databook("complete").values, params)
+                / functions.hf(databook("complete").values, params),
                 axis=0,
             )
             + np.sum(
                 self.jac_chf(
-                    params,
                     np.contenate(
                         (
                             databook("complete").values,
                             databook("right_censored").values,
                         )
                     ),
+                    params,
                 ),
                 axis=0,
             )
             - np.sum(
-                self.jac_chf(params, databook("left_truncated").values),
+                self.jac_chf(databook("left_truncated").values),
+                params,
                 axis=0,
             )
             - np.sum(
-                self.jac_chf(params, databook("left_censored").values)
+                self.jac_chf(databook("left_censored").values, params)
                 / np.expm1(
-                    self._chf(params, databook("left_censored").values)
+                    self._chf(databook("left_censored").values, params)
                 ),
                 axis=0,
             )
@@ -156,13 +157,9 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
 class ExponentialDistriLikelihood(ParametricDistriLikelihood):
     # relife/distribution.Exponential
-    def jac_hf(
-        self, params: np.ndarray, elapsed_time: np.ndarray
-    ) -> np.ndarray:
-        return np.ones((elapsed_time.size, 1))
+    def jac_hf(self, time: np.ndarray, params: np.ndarray) -> np.ndarray:
+        return np.ones((time.size, 1))
 
     # relife/distribution.Exponential
-    def jac_chf(
-        self, params: np.ndarray, elapsed_time: np.ndarray
-    ) -> np.ndarray:
-        return np.ones((elapsed_time.size, 1)) * elapsed_time
+    def jac_chf(self, time: np.ndarray, params: np.ndarray) -> np.ndarray:
+        return np.ones((time.size, 1)) * time
