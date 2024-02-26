@@ -5,7 +5,6 @@ from typing import Type
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
-from .. import DataBook
 from .function import ParametricFunction
 from .likelihood import ParametricLikelihood
 
@@ -13,6 +12,11 @@ MIN_POSITIVE_FLOAT = np.finfo(float).resolution
 
 
 class ParametricOptimizer(ABC):
+    def __init__(self, likelihood: Type[ParametricLikelihood]):
+        if not isinstance(likelihood, ParametricLikelihood):
+            raise TypeError("expected ParametricLikelihood")
+        self.likelihood = likelihood
+
     @abstractmethod
     def fit(self) -> None:
         pass
@@ -84,31 +88,45 @@ class FittingResult:
 
 
 class DistriOptimizer(ParametricOptimizer):
-    # relife/parametric.ParametricHazardFunction
-    _default_method: str = (  #: Default method for minimizing the negative log-likelihood.
-        "L-BFGS-B"
-    )
-    # relife/distribution.ParametricLifetimeDistribution
+    def __init__(self, likelihood: Type[ParametricLikelihood]):
+        super().__init__(self, likelihood)
+        # relife/parametric.ParametricHazardFunction
+        self._default_method: str = (  #: Default method for minimizing the negative log-likelihood.
+            "L-BFGS-B"
+        )
 
-    def _init_param(
-        self, databook: Type[DataBook], functions: ParametricFunction
-    ) -> np.ndarray:
-        param0 = np.ones(functions.nb_params)
-        param0[-1] = 1 / np.median(databook("complete").values)
+    # relife/distribution.ParametricLifetimeDistribution
+    def _init_param(self, functions: ParametricFunction) -> np.ndarray:
+        param0 = np.ones(functions.params.nb_params)
+        param0[-1] = 1 / np.median(self.likelihood.databook("complete").values)
         return param0
 
     def get_param_bounds(self, functions: ParametricFunction) -> Bounds:
         return Bounds(
-            np.full(functions.nb_params, MIN_POSITIVE_FLOAT),
-            np.full(functions.nb_params, np.inf),
+            np.full(functions.params.nb_params, MIN_POSITIVE_FLOAT),
+            np.full(functions.params.nb_params, np.inf),
         )
+
+    def _func(
+        self,
+        x,
+        functions: Type[ParametricFunction],
+    ):
+        functions.params.values = x
+        return self.likelihood.negative_log_likelihood(functions)
+
+    def _jac(
+        self,
+        x,
+        functions: Type[ParametricFunction],
+    ):
+        functions.params.values = x
+        return self.likelihood.jac_negative_log_likelihood(functions)
 
     # relife/parametric.ParametricHazardFunctions
     def fit(
         self,
-        databook: Type[DataBook],
         functions: Type[ParametricFunction],
-        likelihood: Type[ParametricLikelihood],
         param0: np.ndarray = None,
         bounds=None,
         method: str = None,
@@ -123,18 +141,18 @@ class DistriOptimizer(ParametricOptimizer):
                     f" {functions.nb_params} but got {param0.size}"
                 )
         else:
-            param0 = self._init_param(databook)
+            param0 = self._init_param(functions)
         if method is None:
             method = self._default_method
         if bounds is None:
             bounds = self._get_param_bounds(functions)
 
         opt = minimize(
-            likelihood.negative_log_likelihood,
+            self._func,
             param0,
-            args=(databook, functions),
+            args=(functions),
             method=method,
-            jac=likelihood.jac,
+            jac=self._jac,
             bounds=bounds,
             **kwargs,
         )

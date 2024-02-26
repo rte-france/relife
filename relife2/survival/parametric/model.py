@@ -57,7 +57,7 @@ class ParametricDistriModel:
                             f" params but got {input_params}"
                         )
                     else:
-                        self.functions.params.params = input_params
+                        self.functions.params.values = input_params
                 elif "params" not in kwargs and self.fitting_results is None:
                     warnings.warn(
                         "No fitted model params. Call fit() or specify params"
@@ -66,7 +66,7 @@ class ParametricDistriModel:
                     )
                     return None
                 else:
-                    self.functions.params.params = self.fitting_params
+                    self.functions.params.values = self.fitting_params
                 # print("called with %r and %r" % (args, kwargs))
                 return getattr(self.functions, attr)(*args, **kwargs)
 

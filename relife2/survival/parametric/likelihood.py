@@ -9,6 +9,11 @@ from .function import DistributionFunctions
 
 
 class ParametricLikelihood(ABC):
+    def __init__(self, databook: Type[DataBook]):
+        if not isinstance(databook, DataBook):
+            raise TypeError("ParametricLikelihood expects databook instance")
+        self.databook = databook
+
     @abstractmethod
     def negative_log_likelihood(self) -> float:
         pass
@@ -23,11 +28,12 @@ class ParametricLikelihood(ABC):
 
 
 class ParametricDistriLikelihood(ParametricLikelihood):
-
-    # relife/parametric.ParametricHazardFunction
-    _default_hess_scheme: str = (  #: Default method for evaluating the hessian of the negative log-likelihood.
-        "cs"
-    )
+    def __init__(self, databook: Type[DataBook]):
+        super().__init__(databook)
+        # relife/parametric.ParametricHazardFunction
+        self._default_hess_scheme: str = (  #: Default method for evaluating the hessian of the negative log-likelihood.
+            "cs"
+        )
 
     @abstractmethod
     def jac_hf(self):
@@ -40,30 +46,26 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def negative_log_likelihood(
         self,
-        params: np.ndarray,
-        databook: Type[DataBook],
         functions: Type[DistributionFunctions],
     ) -> np.ndarray:
         return (
-            -np.sum(np.log(functions.hf(databook("complete").values, params)))
+            -np.sum(np.log(functions.hf(self.databook("complete").values)))
             + np.sum(
                 functions.chf(
                     np.contenate(
                         (
-                            databook("complete").values,
-                            databook("right_censored").values,
+                            self.databook("complete").values,
+                            self.databook("right_censored").values,
                         )
                     ),
-                    params,
                 )
             )
-            - np.sum(functions.chf(databook("left_truncated").values, params))
+            - np.sum(functions.chf(self.databook("left_truncated").values))
             - np.sum(
                 np.log(
                     -np.expm1(
                         -functions.chf(
-                            databook("left_censored").values,
-                            params,
+                            self.databook("left_censored").values,
                         )
                     )
                 )
@@ -73,37 +75,33 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def jac_negative_log_likelihood(
         self,
-        params: np.ndarray,
-        databook: Type[DataBook],
         functions: Type[DistributionFunctions],
     ) -> np.ndarray:
         return (
             -np.sum(
-                self.jac_hf(databook("complete").values, params)
-                / functions.hf(databook("complete").values, params),
+                self.jac_hf(self.databook("complete").values)
+                / functions.hf(self.databook("complete").values),
                 axis=0,
             )
             + np.sum(
                 self.jac_chf(
                     np.contenate(
                         (
-                            databook("complete").values,
-                            databook("right_censored").values,
+                            self.databook("complete").values,
+                            self.databook("right_censored").values,
                         )
                     ),
-                    params,
                 ),
                 axis=0,
             )
             - np.sum(
-                self.jac_chf(databook("left_truncated").values),
-                params,
+                self.jac_chf(self.databook("left_truncated").values),
                 axis=0,
             )
             - np.sum(
-                self.jac_chf(databook("left_censored").values, params)
+                self.jac_chf(self.databook("left_censored").values)
                 / np.expm1(
-                    self._chf(databook("left_censored").values, params)
+                    functions.chf(self.databook("left_censored").values)
                 ),
                 axis=0,
             )
@@ -111,14 +109,12 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
     def hess_negative_log_likelihood(
         self,
-        params: np.ndarray,
-        databook: Type[DataBook],
         functions: Type[DistributionFunctions],
         eps: float = 1e-6,
         scheme: str = None,
     ) -> np.ndarray:
 
-        size = np.size(params)
+        size = np.size(functions.params.values)
         hess = np.empty((size, size))
 
         if scheme is None:
@@ -128,27 +124,28 @@ class ParametricDistriLikelihood(ParametricLikelihood):
             u = eps * 1j * np.eye(size)
             for i in range(size):
                 for j in range(i, size):
+                    functions.params.values += u[i]
                     hess[i, j] = (
-                        np.imag(
-                            self.jac_negative_log_likelihood(
-                                params + u[i], databook, functions
-                            )[j]
-                        )
+                        np.imag(self.jac_negative_log_likelihood(functions)[j])
                         / eps
                     )
                     if i != j:
                         hess[j, i] = hess[i, j]
 
         elif scheme == "2-point":
+
+            def f(xk, functions):
+                functions.params.values = xk
+                return self.jac_negative_log_likelihood(functions)
+
+            xk = functions.params.values
+
             for i in range(size):
                 hess[i] = approx_fprime(
-                    params,
-                    lambda params: self.jac_negative_log_likelihood(
-                        params, databook, functions
-                    )[i],
+                    xk,
+                    lambda x: f(x, functions)[i],
                     eps,
                 )
-
         else:
             raise ValueError("scheme argument must be 'cs' or '2-point'")
 
@@ -156,10 +153,13 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
 
 class ExponentialDistriLikelihood(ParametricDistriLikelihood):
+    def __init__(self, databook: Type[DataBook]):
+        super().__init__(databook)
+
     # relife/distribution.Exponential
-    def jac_hf(self, time: np.ndarray, params: np.ndarray) -> np.ndarray:
+    def jac_hf(self, time: np.ndarray) -> np.ndarray:
         return np.ones((time.size, 1))
 
     # relife/distribution.Exponential
-    def jac_chf(self, time: np.ndarray, params: np.ndarray) -> np.ndarray:
+    def jac_chf(self, time: np.ndarray) -> np.ndarray:
         return np.ones((time.size, 1)) * time

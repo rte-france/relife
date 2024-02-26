@@ -17,10 +17,8 @@ from scipy.optimize import root_scalar
 #         pass
 
 
-class Params:
+class Parameters:
     def __init__(self, nb_params: int = None, param_names: list = None):
-        self.nb_param = nb_params
-        self.fitting_params = None
 
         if nb_params is not None and param_names is not None:
             if {type(name) == str for name in param_names} != {str}:
@@ -42,11 +40,11 @@ class Params:
         else:
             raise ValueError(
                 """
-            Params expects at least nb_params or param_names
+            Parameters expects at least nb_params or param_names
             """
             )
 
-        self.params = np.random.rand(self.nb_params)
+        self.values = np.random.rand(self.nb_params)
         self.fitting_params = None
         self.params_index = {
             name: i for i, name in enumerate(self.param_names)
@@ -56,7 +54,7 @@ class Params:
         return self.nb_params
 
     def __getitem__(self, i):
-        return self.params[i]
+        return self.values[i]
 
     def __getattr__(self, attr: str):
         """
@@ -64,20 +62,31 @@ class Params:
         (different from __getattribute__)
         """
         if attr in self.params_index:
-            return self.params[self.params_index[attr]]
+            return self.values[self.params_index[attr]]
         else:
             raise AttributeError(
                 f"""
-                Params has no attr called {attr}
+                Parameters has no attr called {attr}
                 """
             )
 
 
+class ModelParameters:
+    def __init__(self, *params: Parameters, names: list = None):
+        pass
+
+
 class ParametricFunction(ABC):
-    def __init__(self, params: Type[Params]):
-        if not isinstance(params, Params):
+    def __init__(self, params: Type[Parameters]):
+        if not isinstance(params, Parameters):
             raise ValueError("params must be instance of Params")
         self.params = params
+
+    def _sanity_check(self):
+        """run necessary functions with random array to check
+        if they all run (especially if params args pass)
+        """
+        pass
 
     @abstractmethod
     def sf(self):
@@ -150,7 +159,7 @@ class ParametricFunction(ABC):
 
 class ParametricDistriFunction(ParametricFunction):
     def __init__(self, nb_params: int = None, param_names: list = None):
-        params = Params(nb_params=nb_params, param_names=param_names)
+        params = Parameters(nb_params=nb_params, param_names=param_names)
         super().__init__(self, params)
 
     # relife/parametric.ParametricLifetimeModel
