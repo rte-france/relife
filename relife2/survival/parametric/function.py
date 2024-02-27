@@ -65,8 +65,8 @@ class ParametricFunction(ABC):
         return self.isf(1 - probability)
 
     # relife/model.LifetimeModel
-    def median(self, params: np.ndarray):
-        return self.ppf(params, 0.5)
+    def median(self):
+        return self.ppf(self.params, 0.5)
 
     # relife/model.LifetimeModel
     def rvs(self, size: int = 1, random_state: int = None) -> np.ndarray:
@@ -103,7 +103,7 @@ class ParametricFunction(ABC):
 class ParametricDistriFunction(ParametricFunction):
     def __init__(self, nb_params: int = None, param_names: list = None):
         params = Parameter(nb_params=nb_params, param_names=param_names)
-        super().__init__(self, params)
+        super().__init__(params)
 
     # relife/parametric.ParametricLifetimeModel
     def sf(self, time: np.ndarray) -> np.ndarray:

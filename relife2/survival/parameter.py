@@ -75,9 +75,8 @@ class Parameter:
     param_names: InitVar[list] = None
 
     def __post_init__(self, nb_params, param_names):
-
         if nb_params is not None and param_names is not None:
-            if {type(name) == str for name in param_names} != {str}:
+            if {type(name) for name in param_names} != {str}:
                 raise ValueError("param_names must be string")
             if len(param_names) != nb_params:
                 raise ValueError(
@@ -89,7 +88,7 @@ class Parameter:
             self.nb_params = nb_params
             self.param_names = [f"param_{i}" for i in range(nb_params)]
         elif nb_params is None and param_names is not None:
-            if {type(name) == str for name in param_names} != {str}:
+            if {type(name) for name in param_names} != {str}:
                 raise ValueError("param_names must be string")
             self.nb_params = len(param_names)
             self.param_names = param_names
@@ -125,6 +124,15 @@ class Parameter:
                 Parameter has no attr called {attr}
                 """
             )
+
+    def __str__(self):
+        print(self.nb_params, self.param_names)
+        class_name = type(self).__name__
+        res = [
+            f"{name} = {getattr(self, name)} \n" for name in self.param_names
+        ]
+        res = ", ".join(res)
+        return f"{class_name}\n{res}"
 
 
 class ModelParameters:

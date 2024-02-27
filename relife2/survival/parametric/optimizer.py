@@ -23,7 +23,7 @@ class ParametricOptimizer(ABC):
 
 class DistriOptimizer(ParametricOptimizer):
     def __init__(self, likelihood: Type[ParametricLikelihood]):
-        super().__init__(self, likelihood)
+        super().__init__(likelihood)
         # relife/parametric.ParametricHazardFunction
         self._default_method: str = (  #: Default method for minimizing the negative log-likelihood.
             "L-BFGS-B"

@@ -18,12 +18,12 @@ class ParametricDistriModel:
         # optimizer: DistriOptimizer,
     ):
 
-        if not issubclass(functions, ParametricDistriFunction):
+        if not isinstance(functions, ParametricDistriFunction):
             raise TypeError(
                 "ParametricDistriFunction expected, got"
                 f" '{type(functions).__name__}'"
             )
-        if not issubclass(optimizer, DistriOptimizer):
+        if not isinstance(optimizer, DistriOptimizer):
             raise TypeError(
                 "ParametricDistriLikelihood expected, got"
                 f" '{type(optimizer).__name__}'"
@@ -43,8 +43,9 @@ class ParametricDistriModel:
         if hasattr(self.functions, attr):
 
             def wrapper(*args, **kwargs):
+                print(kwargs)
                 if "params" in kwargs:
-                    input_params = kwargs["params"]
+                    input_params = np.asarray(list[kwargs["params"]])
                     if len(input_params) != self.functions.params.nb_params:
                         raise ValueError(
                             f"expected {self.functions.params.nb_params} nb of"
@@ -86,6 +87,10 @@ class ParametricDistriModel:
         self._fitting_results = FittingResult(
             opt, jac, var, len(self.databook)
         )
+
+    @property
+    def params(self):
+        return self.functions.params
 
     @property
     def fitting_results(self):
