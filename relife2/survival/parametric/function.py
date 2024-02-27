@@ -4,6 +4,8 @@ from typing import Type
 import numpy as np
 from scipy.optimize import root_scalar
 
+from ..parameter import Parameter
+
 # from .. import SurvivalData
 
 # class DistributionFunctions(ParametricFunction):
@@ -17,68 +19,9 @@ from scipy.optimize import root_scalar
 #         pass
 
 
-class Parameters:
-    def __init__(self, nb_params: int = None, param_names: list = None):
-
-        if nb_params is not None and param_names is not None:
-            if {type(name) == str for name in param_names} != {str}:
-                raise ValueError("param_names must be string")
-            if len(param_names) != nb_params:
-                raise ValueError(
-                    "param_names must have same length as nb_params"
-                )
-            self.nb_params = nb_params
-            self.param_names = param_names
-        elif nb_params is not None and param_names is None:
-            self.nb_params = nb_params
-            self.param_names = [f"param_{i}" for i in range(nb_params)]
-        elif nb_params is None and param_names is not None:
-            if {type(name) == str for name in param_names} != {str}:
-                raise ValueError("param_names must be string")
-            self.nb_params = len(param_names)
-            self.param_names = param_names
-        else:
-            raise ValueError(
-                """
-            Parameters expects at least nb_params or param_names
-            """
-            )
-
-        self.values = np.random.rand(self.nb_params)
-        self.fitting_params = None
-        self.params_index = {
-            name: i for i, name in enumerate(self.param_names)
-        }
-
-    def __len__(self):
-        return self.nb_params
-
-    def __getitem__(self, i):
-        return self.values[i]
-
-    def __getattr__(self, attr: str):
-        """
-        called if attr is not found in attributes of the class
-        (different from __getattribute__)
-        """
-        if attr in self.params_index:
-            return self.values[self.params_index[attr]]
-        else:
-            raise AttributeError(
-                f"""
-                Parameters has no attr called {attr}
-                """
-            )
-
-
-class ModelParameters:
-    def __init__(self, *params: Parameters, names: list = None):
-        pass
-
-
 class ParametricFunction(ABC):
-    def __init__(self, params: Type[Parameters]):
-        if not isinstance(params, Parameters):
+    def __init__(self, params: Type[Parameter]):
+        if not isinstance(params, Parameter):
             raise ValueError("params must be instance of Params")
         self.params = params
 
@@ -159,7 +102,7 @@ class ParametricFunction(ABC):
 
 class ParametricDistriFunction(ParametricFunction):
     def __init__(self, nb_params: int = None, param_names: list = None):
-        params = Parameters(nb_params=nb_params, param_names=param_names)
+        params = Parameter(nb_params=nb_params, param_names=param_names)
         super().__init__(self, params)
 
     # relife/parametric.ParametricLifetimeModel

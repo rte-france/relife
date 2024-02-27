@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
 from typing import Type
 
 import numpy as np
@@ -20,71 +19,6 @@ class ParametricOptimizer(ABC):
     @abstractmethod
     def fit(self) -> None:
         pass
-
-
-@dataclass
-class FittingResult:
-    """Fitting results of the parametric model."""
-
-    opt: OptimizeResult = field(
-        repr=False
-    )  #: Optimization result (see scipy.optimize.OptimizeResult doc).
-    jac: np.ndarray = field(
-        repr=False
-    )  #: Jacobian of the negative log-likelihood with the lifetime data.
-    var: np.ndarray = field(
-        repr=False
-    )  #: Covariance matrix (computed as the inverse of the Hessian matrix)
-    se: np.ndarray = field(
-        init=False, repr=False
-    )  #: Standard error, square root of the diagonal of the covariance matrix.
-    nb_samples: int  #: Number of observations (samples).
-    nb_params: int = field(init=False)  #: Number of parameters.
-    AIC: float = field(init=False)  #: Akaike Information Criterion.
-    AICc: float = field(
-        init=False
-    )  #: Akaike Information Criterion with a correction for small sample sizes.
-    BIC: float = field(init=False)  #: Bayesian Information Criterion.
-
-    def __post_init__(self):
-        self.se = np.sqrt(np.diag(self.var))
-        self.nb_params = self.opt.x.size
-        self.AIC = 2 * self.nb_params + 2 * self.opt.fun
-        self.AICc = self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (
-            self.nb_samples - self.nb_params - 1
-        )
-        self.BIC = np.log(self.nb_samples) * self.nb_params + 2 * self.opt.fun
-
-    def standard_error(self, jac_f: np.ndarray) -> np.ndarray:
-        """Standard error estimation function.
-
-        Parameters
-        ----------
-        jac_f : 1D array
-            The Jacobian of a function f with respect to params.
-
-        Returns
-        -------
-        1D array
-            Standard error for f(params).
-
-        References
-        ----------
-        .. [1] Meeker, W. Q., Escobar, L. A., & Pascual, F. G. (2022).
-            Statistical methods for reliability data. John Wiley & Sons.
-        """
-        # [1] equation B.10 in Appendix
-        return np.sqrt(np.einsum("ni,ij,nj->n", jac_f, self.var, jac_f))
-
-    def asdict(self) -> dict:
-        """converts FittingResult into a dictionary.
-
-        Returns
-        -------
-        dict
-            Returns the fitting result as a dictionary.
-        """
-        return asdict(self)
 
 
 class DistriOptimizer(ParametricOptimizer):

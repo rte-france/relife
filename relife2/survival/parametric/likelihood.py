@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from typing import Type
 
 import numpy as np
-from scipy.optimize.optimize import approx_fprime
+from scipy.optimize import approx_fprime
 
 from .. import DataBook
-from .function import DistributionFunctions
+from .function import ParametricDistriFunction
 
 
 class ParametricLikelihood(ABC):
@@ -46,7 +46,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def negative_log_likelihood(
         self,
-        functions: Type[DistributionFunctions],
+        functions: Type[ParametricDistriFunction],
     ) -> np.ndarray:
         return (
             -np.sum(np.log(functions.hf(self.databook("complete").values)))
@@ -75,7 +75,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def jac_negative_log_likelihood(
         self,
-        functions: Type[DistributionFunctions],
+        functions: Type[ParametricDistriFunction],
     ) -> np.ndarray:
         return (
             -np.sum(
@@ -109,7 +109,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
     def hess_negative_log_likelihood(
         self,
-        functions: Type[DistributionFunctions],
+        functions: Type[ParametricDistriFunction],
         eps: float = 1e-6,
         scheme: str = None,
     ) -> np.ndarray:

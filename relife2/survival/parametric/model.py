@@ -4,40 +4,34 @@ from typing import Type
 import numpy as np
 
 from .. import DataBook
+from ..parameter import FittingResult
 from .function import ExponentialDistriFunction, ParametricDistriFunction
-from .likelihood import ExponentialDistriLikelihood, ParametricDistriLikelihood
-from .optimizer import DistriOptimizer, FittingResult
+from .likelihood import ExponentialDistriLikelihood
+from .optimizer import DistriOptimizer
 
 
 class ParametricDistriModel:
     def __init__(
         self,
-        databook: Type[DataBook],
         functions: Type[ParametricDistriFunction],
-        likelihood: Type[ParametricDistriLikelihood],
+        optimizer: Type[DistriOptimizer],
         # optimizer: DistriOptimizer,
     ):
 
-        if not isinstance(databook, DataBook):
-            raise TypeError(
-                f"DataBook expected, got '{type(databook).__name__}'"
-            )
         if not issubclass(functions, ParametricDistriFunction):
             raise TypeError(
                 "ParametricDistriFunction expected, got"
                 f" '{type(functions).__name__}'"
             )
-        if not issubclass(likelihood, ParametricDistriLikelihood):
+        if not issubclass(optimizer, DistriOptimizer):
             raise TypeError(
                 "ParametricDistriLikelihood expected, got"
-                f" '{type(likelihood).__name__}'"
+                f" '{type(optimizer).__name__}'"
             )
 
         # assert issubclass(optimizer, DistriOptimizer)
-        self.databook = databook
         self.functions = functions
-        self.likelihood = likelihood
-        self.optimizer = DistriOptimizer()
+        self.optimizer = optimizer
         self._fitting_results = None
 
     def __getattr__(self, attr):
@@ -78,9 +72,7 @@ class ParametricDistriModel:
         self,
         **kwargs,
     ):
-        opt = self.optimizer.fit(
-            self.databook, self.functions, self.likelihood, kwargs
-        )
+        opt = self.optimizer.fit(self.functions, kwargs)
         jac = self.likelihood.jac_negative_log_likelihood(
             opt.x, self.databook, self.functions
         )
@@ -117,10 +109,12 @@ class ParametricDistriModel:
 
 
 def exponential(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
+    functions = ExponentialDistriFunction(param_names=["rate"])
+    likelihood = ExponentialDistriLikelihood(databook)
+    optimizer = DistriOptimizer(likelihood)
     return ParametricDistriModel(
-        databook,
-        ExponentialDistriFunction(),
-        ExponentialDistriLikelihood(),
+        functions,
+        optimizer,
     )
 
 
