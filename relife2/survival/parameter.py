@@ -126,7 +126,6 @@ class Parameter:
             )
 
     def __str__(self):
-        print(self.nb_params, self.param_names)
         class_name = type(self).__name__
         res = [
             f"{name} = {getattr(self, name)} \n" for name in self.param_names

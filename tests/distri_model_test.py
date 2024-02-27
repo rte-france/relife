@@ -48,7 +48,7 @@ def exponential_distri(databook):
 def test_sf(model, params, request):
     model = request.getfixturevalue(model)
     print(model.params)
-    assert model.sf(model.median(params=params)) == pytest.approx(
+    assert model.sf(params=model.median(params=params)) == pytest.approx(
         0.5, rel=1e-3
     )
 
