@@ -62,8 +62,6 @@ class ParametricFunction(ABC):
 
     # relife/model.LifetimeModel
     def ppf(self, probability: np.ndarray):
-        print(probability)
-        print(self.isf(1 - probability))
         return self.isf(1 - probability)
 
     # relife/model.LifetimeModel
@@ -180,7 +178,6 @@ class ExponentialDistriFunction(ParametricDistriFunction):
     # relife/distribution.Exponential /!\ dependant of _ichf (why : carry fitted params and params)
     def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
         # rate = self.params[0]
-        print("params rate :", self.params.rate)
         return cumulative_hazard_rate / self.params.rate
 
     # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
@@ -188,5 +185,4 @@ class ExponentialDistriFunction(ParametricDistriFunction):
     # mandatory
     def isf(self, probability: np.ndarray) -> np.ndarray:
         cumulative_hazard_rate = -np.log(probability)
-        print("cumulative_hazard_rate :", -np.log(probability))
         return self.ichf(cumulative_hazard_rate)

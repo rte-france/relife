@@ -45,8 +45,6 @@ class ParametricDistriModel:
         if hasattr(self.functions, attr):
 
             def wrapper(*args, **kwargs):
-                print("called with %r and %r" % (args, kwargs))
-                print(type(kwargs["params"]))
                 if "params" in kwargs:
                     if (
                         type(kwargs["params"]) != list
@@ -99,7 +97,7 @@ class ParametricDistriModel:
         )
         var = np.linalg.inv(
             self.optimizer.likelihood.hess_negative_log_likelihood(
-                self.functions, kwargs
+                self.functions, **kwargs
             )
         )
         self._fitting_results = FittingResult(

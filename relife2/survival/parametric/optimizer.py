@@ -67,8 +67,6 @@ class DistriOptimizer(ParametricOptimizer):
         **kwargs,
     ) -> OptimizeResult:
 
-        print(param0)
-
         if param0 is not None:
             param0 = np.asanyarray(param0, float)
             if functions.nb_params != param0.size:

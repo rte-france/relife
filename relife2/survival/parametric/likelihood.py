@@ -115,6 +115,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     ) -> np.ndarray:
 
         size = np.size(functions.params.values)
+        print(size)
         hess = np.empty((size, size))
 
         if scheme is None:
@@ -124,6 +125,9 @@ class ParametricDistriLikelihood(ParametricLikelihood):
             u = eps * 1j * np.eye(size)
             for i in range(size):
                 for j in range(i, size):
+                    print(type(u[i]))
+                    print(u[i])
+                    print(functions.params.values)
                     functions.params.values += u[i]
                     hess[i, j] = (
                         np.imag(self.jac_negative_log_likelihood(functions)[j])
@@ -158,8 +162,8 @@ class ExponentialDistriLikelihood(ParametricDistriLikelihood):
 
     # relife/distribution.Exponential
     def jac_hf(self, time: np.ndarray) -> np.ndarray:
-        return np.ones((time.size, 1))
+        return np.ones(time.size)
 
     # relife/distribution.Exponential
     def jac_chf(self, time: np.ndarray) -> np.ndarray:
-        return np.ones((time.size, 1)) * time
+        return np.ones(time.size) * time
