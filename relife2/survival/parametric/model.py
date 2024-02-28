@@ -1,13 +1,12 @@
-import copy
 import warnings
 from typing import Type
 
 import numpy as np
 
 from .. import DataBook
-from ..parameter import FittingResult
+from ..parameter import FittingResult, Parameter
 from .function import ExponentialDistriFunction, ParametricDistriFunction
-from .likelihood import ExponentialDistriLikelihood
+from .likelihood import ExponentialDistriLikelihood, ParametricDistriLikelihood
 from .optimizer import DistriOptimizer
 
 
@@ -34,7 +33,9 @@ class ParametricDistriModel:
         self.functions = functions
         self.optimizer = optimizer
         self._fitting_results = None
-        self._fitting_params = None
+        self._fitting_params = Parameter(
+            functions.params.nb_params, functions.params.param_names
+        )
 
     def __getattr__(self, attr):
         """
@@ -91,7 +92,6 @@ class ParametricDistriModel:
         **kwargs,
     ):
         opt = self.optimizer.fit(self.functions, **kwargs)
-        self.functions.params.values = opt.x
         jac = self.optimizer.likelihood.jac_negative_log_likelihood(
             self.functions
         )
@@ -103,7 +103,7 @@ class ParametricDistriModel:
         self._fitting_results = FittingResult(
             opt, jac, var, len(self.optimizer.likelihood.databook)
         )
-        self._fitting_params = copy.copy(self.functions.params)
+        self._fitting_params.values = opt.x
 
     @property
     def params(self):
@@ -142,3 +142,17 @@ def exponential(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
 
 def gompertz(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
     pass
+
+
+def custom_distri(
+    databook: DataBook,
+    functions: Type[ParametricDistriFunction],
+    likelihood: Type[ParametricDistriLikelihood],
+) -> Type[ParametricDistriModel]:
+    _functions = functions()
+    _likelihood = likelihood(databook)
+    _optimizer = DistriOptimizer(_likelihood)
+    return ParametricDistriModel(
+        _functions,
+        _optimizer,
+    )

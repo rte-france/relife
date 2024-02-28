@@ -6,18 +6,6 @@ from scipy.optimize import root_scalar
 
 from ..parameter import Parameter
 
-# from .. import SurvivalData
-
-# class DistributionFunctions(ParametricFunction):
-#     def __init__(self, nb_params):
-#         super().__init__(nb_params)
-
-#     def sf(self, dataset: SurvivalData):
-#         pass
-
-#     def hf(self, dataset: SurvivalData):
-#         pass
-
 
 class ParametricFunction(ABC):
     def __init__(self, params: Type[Parameter]):

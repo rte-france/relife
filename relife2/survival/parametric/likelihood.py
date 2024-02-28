@@ -48,64 +48,89 @@ class ParametricDistriLikelihood(ParametricLikelihood):
         self,
         functions: Type[ParametricDistriFunction],
     ) -> np.ndarray:
-        return (
-            -np.sum(np.log(functions.hf(self.databook("complete").values)))
-            + np.sum(
-                functions.chf(
-                    np.concatenate(
-                        (
-                            self.databook("complete").values,
-                            self.databook("right_censored").values,
-                        )
-                    ),
-                )
+
+        D_contrib = -np.sum(
+            np.log(functions.hf(self.databook("complete").values))
+        )
+        RC_contrib = np.sum(
+            functions.chf(
+                np.concatenate(
+                    (
+                        self.databook("complete").values,
+                        self.databook("right_censored").values,
+                    )
+                ),
             )
-            - np.sum(functions.chf(self.databook("left_truncated").values))
-            - np.sum(
-                np.log(
-                    -np.expm1(
-                        -functions.chf(
-                            self.databook("left_censored").values,
-                        )
+        )
+        LC_contrib = -np.sum(
+            np.log(
+                -np.expm1(
+                    -functions.chf(
+                        self.databook("left_censored").values,
                     )
                 )
             )
         )
+        LT_contrib = -np.sum(
+            functions.chf(self.databook("left_truncated").values)
+        )
+        return D_contrib + RC_contrib + LC_contrib + LT_contrib
 
     # relife/parametric.ParametricHazardFunction
     def jac_negative_log_likelihood(
         self,
         functions: Type[ParametricDistriFunction],
     ) -> np.ndarray:
-        return (
-            -np.sum(
-                self.jac_hf(self.databook("complete").values)
-                / functions.hf(self.databook("complete").values),
-                axis=0,
-            )
-            + np.sum(
-                self.jac_chf(
-                    np.concatenate(
-                        (
-                            self.databook("complete").values,
-                            self.databook("right_censored").values,
-                        )
-                    ),
-                ),
-                axis=0,
-            )
-            - np.sum(
-                self.jac_chf(self.databook("left_truncated").values),
-                axis=0,
-            )
-            - np.sum(
-                self.jac_chf(self.databook("left_censored").values)
-                / np.expm1(
-                    functions.chf(self.databook("left_censored").values)
-                ),
-                axis=0,
-            )
+
+        jac_D_contrib = -np.sum(
+            self.jac_hf(self.databook("complete").values)
+            / functions.hf(self.databook("complete").values)[:, None],
+            axis=0,
+            # keepdims=True,
         )
+        # print(jac_D_contrib.shape)
+        jac_RC_contrib = np.sum(
+            self.jac_chf(
+                np.concatenate(
+                    (
+                        self.databook("complete").values,
+                        self.databook("right_censored").values,
+                    )
+                ),
+            ),
+            axis=0,
+            # keepdims=True,
+        )
+        # print(jac_RC_contrib.shape)
+        # print(
+        #     np.concatenate(
+        #         (
+        #             self.databook("complete").values,
+        #             self.databook("right_censored").values,
+        #         )
+        #     ).shape
+        # )
+        jac_LC_contrib = -np.sum(
+            self.jac_chf(self.databook("left_censored").values)
+            / np.expm1(
+                functions.chf(self.databook("left_censored").values)[:, None]
+            ),
+            axis=0,
+            # keepdims=True,
+        )
+        # print(jac_LC_contrib.shape)
+        # print(
+        #     "jac_chf :",
+        #     self.jac_chf(self.databook("left_truncated").values).shape,
+        # )
+        jac_LT_contrib = -np.sum(
+            self.jac_chf(self.databook("left_truncated").values),
+            axis=0,
+            # keepdims=True,
+        )
+        # print(jac_LT_contrib.shape)
+
+        return jac_D_contrib + jac_RC_contrib + jac_LC_contrib + jac_LT_contrib
 
     def hess_negative_log_likelihood(
         self,
@@ -128,7 +153,9 @@ class ParametricDistriLikelihood(ParametricLikelihood):
                     print(type(u[i]))
                     print(u[i])
                     print(functions.params.values)
-                    functions.params.values += u[i]
+                    print(functions.params.values + u[i])
+                    functions.params.values = functions.params.values + u[i]
+                    print(self.jac_negative_log_likelihood(functions))
                     hess[i, j] = (
                         np.imag(self.jac_negative_log_likelihood(functions)[j])
                         / eps
@@ -162,8 +189,10 @@ class ExponentialDistriLikelihood(ParametricDistriLikelihood):
 
     # relife/distribution.Exponential
     def jac_hf(self, time: np.ndarray) -> np.ndarray:
-        return np.ones(time.size)
+        # shape : (len(sample), nb_param)
+        return np.ones((time.size, 1))
 
     # relife/distribution.Exponential
     def jac_chf(self, time: np.ndarray) -> np.ndarray:
-        return np.ones(time.size) * time
+        # shape : (len(sample), nb_param)
+        return np.ones((time.size, 1)) * time[:, None]

@@ -92,5 +92,3 @@ class DistriOptimizer(ParametricOptimizer):
         )
 
         return opt
-
-        # self._set_params(opt.x)

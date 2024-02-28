@@ -117,7 +117,7 @@ def test_mrl(model, params, request):
 def test_fit(model, params, request):
     model = request.getfixturevalue(model)
     model.fit()
-    assert model.fitting_params == pytest.approx(params, rel=1e-3)
+    assert model.fitting_params.values == pytest.approx(params, rel=1e-3)
 
 
 # def test_minimum_distribution(model, data):
