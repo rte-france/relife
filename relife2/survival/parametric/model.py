@@ -1,3 +1,4 @@
+import copy
 import warnings
 from typing import Type
 
@@ -33,6 +34,7 @@ class ParametricDistriModel:
         self.functions = functions
         self.optimizer = optimizer
         self._fitting_results = None
+        self._fitting_params = None
 
     def __getattr__(self, attr):
         """
@@ -47,22 +49,30 @@ class ParametricDistriModel:
                 print(type(kwargs["params"]))
                 if "params" in kwargs:
                     if (
-                        type(kwargs["params"]) == float
-                        or type(kwargs["params"]) == int
+                        type(kwargs["params"]) != list
+                        and type(kwargs["params"]) != np.ndarray
                     ):
                         input_params = np.array([kwargs["params"]])
                     elif type(kwargs["params"]) == list:
                         input_params = np.array(kwargs["params"])
+                    elif type(kwargs["params"]) == np.ndarray:
+                        input_params = kwargs["params"]
                     else:
                         raise TypeError("Incorrect params type")
 
-                    if len(input_params) != self.functions.params.nb_params:
+                    if (
+                        input_params.shape
+                        != self.functions.params.values.shape
+                    ):
                         raise ValueError(
-                            f"expected {self.functions.params.nb_params} nb of"
-                            f" params but got {input_params}"
+                            f"""
+                            expected {self.functions.params.values.shape} shape for
+                            params but got {input_params.shape}
+                            """
                         )
                     else:
                         self.functions.params.values = input_params
+                        del kwargs["params"]
                 elif "params" not in kwargs and self.fitting_results is None:
                     warnings.warn(
                         "No fitted model params. Call fit() or specify params"
@@ -72,7 +82,7 @@ class ParametricDistriModel:
                     return None
                 else:
                     self.functions.params.values = self.fitting_params
-                return getattr(self.functions, attr)(*args)
+                return getattr(self.functions, attr)(*args, **kwargs)
 
             return wrapper
         else:
@@ -82,20 +92,20 @@ class ParametricDistriModel:
         self,
         **kwargs,
     ):
-        opt = self.optimizer.fit(self.functions, kwargs)
-        jac = self.likelihood.jac_negative_log_likelihood(
-            opt.x, self.databook, self.functions
+        opt = self.optimizer.fit(self.functions, **kwargs)
+        self.functions.params.values = opt.x
+        jac = self.optimizer.likelihood.jac_negative_log_likelihood(
+            self.functions
         )
         var = np.linalg.inv(
-            self.likelihood._hess_negative_log_likelihood(
-                self.fitted_param, self.databook, kwargs
+            self.optimizer.likelihood.hess_negative_log_likelihood(
+                self.functions, kwargs
             )
         )
-        for i in range(self.param_names):
-            setattr(self, self.param_names[i], opt.x[i])
         self._fitting_results = FittingResult(
-            opt, jac, var, len(self.databook)
+            opt, jac, var, len(self.optimizer.likelihood.databook)
         )
+        self._fitting_params = copy.copy(self.functions.params)
 
     @property
     def params(self):
@@ -113,13 +123,13 @@ class ParametricDistriModel:
 
     @property
     def fitting_params(self):
-        if self._fitting_results is None:
+        if self._fitting_params is None:
             warnings.warn(
                 "Model parameters have not been fitted. Call fit() method"
                 " first",
                 UserWarning,
             )
-        return self._fitting_results.opt.x
+        return self._fitting_params
 
 
 def exponential(databook: Type[DataBook]) -> Type[ParametricDistriModel]:

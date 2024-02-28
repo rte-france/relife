@@ -52,7 +52,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
             -np.sum(np.log(functions.hf(self.databook("complete").values)))
             + np.sum(
                 functions.chf(
-                    np.contenate(
+                    np.concatenate(
                         (
                             self.databook("complete").values,
                             self.databook("right_censored").values,
@@ -85,7 +85,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
             )
             + np.sum(
                 self.jac_chf(
-                    np.contenate(
+                    np.concatenate(
                         (
                             self.databook("complete").values,
                             self.databook("right_censored").values,

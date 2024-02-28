@@ -35,7 +35,7 @@ class DistriOptimizer(ParametricOptimizer):
         param0[-1] = 1 / np.median(self.likelihood.databook("complete").values)
         return param0
 
-    def get_param_bounds(self, functions: ParametricFunction) -> Bounds:
+    def _get_param_bounds(self, functions: ParametricFunction) -> Bounds:
         return Bounds(
             np.full(functions.params.nb_params, MIN_POSITIVE_FLOAT),
             np.full(functions.params.nb_params, np.inf),
@@ -66,6 +66,8 @@ class DistriOptimizer(ParametricOptimizer):
         method: str = None,
         **kwargs,
     ) -> OptimizeResult:
+
+        print(param0)
 
         if param0 is not None:
             param0 = np.asanyarray(param0, float)
