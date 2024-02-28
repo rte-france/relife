@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Type
 
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
@@ -11,7 +10,7 @@ MIN_POSITIVE_FLOAT = np.finfo(float).resolution
 
 
 class ParametricOptimizer(ABC):
-    def __init__(self, likelihood: Type[ParametricLikelihood]):
+    def __init__(self, likelihood: ParametricLikelihood):
         if not isinstance(likelihood, ParametricLikelihood):
             raise TypeError("expected ParametricLikelihood")
         self.likelihood = likelihood
@@ -22,7 +21,7 @@ class ParametricOptimizer(ABC):
 
 
 class DistriOptimizer(ParametricOptimizer):
-    def __init__(self, likelihood: Type[ParametricLikelihood]):
+    def __init__(self, likelihood: ParametricLikelihood):
         super().__init__(likelihood)
         # relife/parametric.ParametricHazardFunction
         self._default_method: str = (  #: Default method for minimizing the negative log-likelihood.
@@ -44,7 +43,7 @@ class DistriOptimizer(ParametricOptimizer):
     def _func(
         self,
         x,
-        functions: Type[ParametricFunction],
+        functions: ParametricFunction,
     ):
         functions.params.values = x
         return self.likelihood.negative_log_likelihood(functions)
@@ -52,7 +51,7 @@ class DistriOptimizer(ParametricOptimizer):
     def _jac(
         self,
         x,
-        functions: Type[ParametricFunction],
+        functions: ParametricFunction,
     ):
         functions.params.values = x
         return self.likelihood.jac_negative_log_likelihood(functions)
@@ -60,7 +59,7 @@ class DistriOptimizer(ParametricOptimizer):
     # relife/parametric.ParametricHazardFunctions
     def fit(
         self,
-        functions: Type[ParametricFunction],
+        functions: ParametricFunction,
         param0: np.ndarray = None,
         bounds=None,
         method: str = None,

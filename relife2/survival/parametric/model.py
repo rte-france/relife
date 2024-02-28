@@ -13,8 +13,8 @@ from .optimizer import DistriOptimizer
 class ParametricDistriModel:
     def __init__(
         self,
-        functions: Type[ParametricDistriFunction],
-        optimizer: Type[DistriOptimizer],
+        functions: ParametricDistriFunction,
+        optimizer: DistriOptimizer,
         # optimizer: DistriOptimizer,
     ):
 
@@ -130,7 +130,7 @@ class ParametricDistriModel:
         return self._fitting_params
 
 
-def exponential(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
+def exponential(databook: DataBook) -> ParametricDistriModel:
     functions = ExponentialDistriFunction(param_names=["rate"])
     likelihood = ExponentialDistriLikelihood(databook)
     optimizer = DistriOptimizer(likelihood)
@@ -140,7 +140,7 @@ def exponential(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
     )
 
 
-def gompertz(databook: Type[DataBook]) -> Type[ParametricDistriModel]:
+def gompertz(databook: DataBook) -> ParametricDistriModel:
     pass
 
 

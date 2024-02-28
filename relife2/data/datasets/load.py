@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Type
 
 import numpy as np
 
 from ..base import DataBook, databook
 
 
-def load_power_transformer() -> Type[DataBook]:
+def load_power_transformer() -> DataBook:
     """Load and return the power transformer lifetime data.
 
     The data were simulated from a real estimate:

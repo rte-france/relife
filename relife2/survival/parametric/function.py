@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Type
 
 import numpy as np
 from scipy.optimize import root_scalar
@@ -8,7 +7,7 @@ from ..parameter import Parameter
 
 
 class ParametricFunction(ABC):
-    def __init__(self, params: Type[Parameter]):
+    def __init__(self, params: Parameter):
         if not isinstance(params, Parameter):
             raise ValueError("params must be instance of Params")
         self.params = params

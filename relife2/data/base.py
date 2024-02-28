@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from itertools import combinations
-from typing import Tuple, Type, Union
+from typing import Tuple, Union
 
 import numpy as np
 
@@ -18,13 +18,13 @@ from .object import Data, ExtractedData, IntervalData
 
 @dataclass
 class DataBook:
-    complete: Type[Data]  # object with fixed index and values attrib format
-    left_censored: Type[Data]
-    right_censored: Type[Data]
-    interval_censored: Type[IntervalData]
-    left_truncated: Type[Data]
-    right_truncated: Type[Data]
-    interval_truncated: Type[IntervalData]
+    complete: Data  # object with fixed index and values attrib format
+    left_censored: Data
+    right_censored: Data
+    interval_censored: IntervalData
+    left_truncated: Data
+    right_truncated: Data
+    interval_truncated: IntervalData
 
     def __post_init__(self):
         field_names = list(self.__annotations__.keys())
@@ -271,7 +271,7 @@ class DataBook:
                 break
         return res
 
-    def _intersection(self, *fields: str) -> Tuple[Type[ExtractedData]]:
+    def _intersection(self, *fields: str) -> Tuple[ExtractedData]:
         assert {type(field) for field in fields} == {
             str
         }, "intersection expects string arguments"
@@ -300,7 +300,7 @@ class DataBook:
 
     def __call__(
         self, request: str
-    ) -> Union[Type[ExtractedData], Tuple[Type[ExtractedData]]]:
+    ) -> Union[ExtractedData, Tuple[ExtractedData]]:
         def isort(x: list):
             return sorted(range(len(x)), key=lambda k: x[k])
 
@@ -383,7 +383,7 @@ def databook(
     entry: np.ndarray = None,
     departure: np.ndarray = None,
     **kwargs,
-) -> Type[DataBook]:
+) -> DataBook:
 
     complete = kwargs.get("complete", None)
     left_censored = kwargs.get("left_censored", None)

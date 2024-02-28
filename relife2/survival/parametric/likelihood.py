@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Type
 
 import numpy as np
 from scipy.optimize import approx_fprime
@@ -9,7 +8,7 @@ from .function import ParametricDistriFunction
 
 
 class ParametricLikelihood(ABC):
-    def __init__(self, databook: Type[DataBook]):
+    def __init__(self, databook: DataBook):
         if not isinstance(databook, DataBook):
             raise TypeError("ParametricLikelihood expects databook instance")
         self.databook = databook
@@ -28,7 +27,7 @@ class ParametricLikelihood(ABC):
 
 
 class ParametricDistriLikelihood(ParametricLikelihood):
-    def __init__(self, databook: Type[DataBook]):
+    def __init__(self, databook: DataBook):
         super().__init__(databook)
         # relife/parametric.ParametricHazardFunction
         self._default_hess_scheme: str = (  #: Default method for evaluating the hessian of the negative log-likelihood.
@@ -46,7 +45,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def negative_log_likelihood(
         self,
-        functions: Type[ParametricDistriFunction],
+        functions: ParametricDistriFunction,
     ) -> np.ndarray:
 
         D_contrib = -np.sum(
@@ -79,7 +78,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def jac_negative_log_likelihood(
         self,
-        functions: Type[ParametricDistriFunction],
+        functions: ParametricDistriFunction,
     ) -> np.ndarray:
 
         jac_D_contrib = -np.sum(
@@ -134,7 +133,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
     def hess_negative_log_likelihood(
         self,
-        functions: Type[ParametricDistriFunction],
+        functions: ParametricDistriFunction,
         eps: float = 1e-6,
         scheme: str = None,
     ) -> np.ndarray:
@@ -184,7 +183,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
 
 class ExponentialDistriLikelihood(ParametricDistriLikelihood):
-    def __init__(self, databook: Type[DataBook]):
+    def __init__(self, databook: DataBook):
         super().__init__(databook)
 
     # relife/distribution.Exponential
