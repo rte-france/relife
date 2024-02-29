@@ -25,6 +25,7 @@ Welcome to ReLife2's documentation!
    :maxdepth: 1
    :caption: Documentation
 
+   detailed_doc/models_list
    detailed_doc/data
    detailed_doc/survival
 

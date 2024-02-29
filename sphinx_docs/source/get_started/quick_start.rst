@@ -6,7 +6,6 @@ Quick start
 
 First get lifetimes data in numpy array. For instance :
 
-
 .. code-block:: python
     
     import numpy as np
@@ -30,7 +29,10 @@ Then instanciate a databook :
         entry = 1d_data["entry"],
     )
 
-You're now ready to use ReLife models. For instance :
+.. seealso::
+    For more details, please read :doc:`data`.
+    
+You're now ready to use ReLife models like this basic exponential distrubition :
 
 .. code-block:: python
 
@@ -38,11 +40,10 @@ You're now ready to use ReLife models. For instance :
 
     exponential_distri = exponential(db)
 
-For more details, please see :
-* How to use databook
-* How to create survival model
+.. seealso::
+    For more details, please see :doc:`survival`
+
 
 If you want to go deeper and test ReLife with your own data format and/or survival model 
-please see:
-* How to use custom databook
-* How to custom survival model
+please read : :doc:`../customization_guides/data` and :doc:`../customization_guides/survival`
+

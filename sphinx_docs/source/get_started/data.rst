@@ -6,12 +6,6 @@ How to use databook
 
 When you start using ReLife, you first need to load your survival data in a databook. 
 
-.. note::
-
-    To understand more clearly how databook works, please refer to databook section. The 
-    databook stores your data in a specific format and allows you to call specific data fields 
-    depending on your needs.
-
 Databook takes numpy arrays as inputs. Observed lifetimes can either be 1d-array or 
 2d-array, see the examples below.
 
@@ -33,11 +27,15 @@ Databook takes numpy arrays as inputs. Observed lifetimes can either be 1d-array
         "departure": np.array([4, 0, 7, 10, 0, 12, 0]),
     }
 
-As you see :python:`1d_data` and :python:`2d_data` only differs in the shape of 
-:python:`observed_lifetimes`. The advantage of 2d-array observed lifetimes is that this
-data format inherently carries censorship information whereas with 1d-array, one must
-add indicators of censorship (here it is handled by :python:`1d_data` array). Then a
-databook is created as follow:
+
+.. note::
+    As you see :python:`1d_data` and :python:`2d_data` only differs in the shape of 
+    :python:`observed_lifetimes`. The advantage of 2d-array observed lifetimes is that this
+    data format inherently carries censorship information whereas with 1d-array, one must
+    add indicators of censorship (here it is handled by :python:`1d_data` array). 
+
+
+Then a databook is created as follow:
 
 
 Instanciate a databook
