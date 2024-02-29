@@ -12,11 +12,12 @@ pip install [-e] .
 pip install sphinx
 pip install myst-parser
 pip install sphinx-book-theme
+pip install sphinx-copybutton
 sphinx-build -M html sphinx_docs/source/ sphinx_docs/build/
-python -m http.server
+python -m http.server --directory ./sphinx_docs/build/html/
 ```
 
-Then go to : http://localhost:8000/sphinx_docs/build/html/index.html
+Then go to : http://localhost:8000
 
 # Minimal documentation
 

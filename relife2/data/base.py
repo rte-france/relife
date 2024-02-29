@@ -18,6 +18,37 @@ from .object import Data, ExtractedData, IntervalData
 
 @dataclass
 class DataBook:
+    """_summary_
+
+    Args:
+        complete: Data
+        left_censored: Data
+
+    Raises:
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+
     complete: Data  # object with fixed index and values attrib format
     left_censored: Data
     right_censored: Data

@@ -7,16 +7,44 @@ Welcome to ReLife2's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Get started
 
-   markdown/quick_start
-   markdown/how_to_contribute
+   get_started/quick_start
+   get_started/data
+   get_started/survival
+
+.. toctree::
+   :maxdepth: 1
+   :caption: ReLife customization
+
+   customization_guides/data
+   customization_guides/survival
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Documentation
+
+   detailed_doc/data
+   detailed_doc/survival
 
 
-Python code
-===========
-.. autofunction:: relife2.data.base.DataBook
+Installation
+------------
+
+To use ReLife2, first install it using pip:
+
+.. code-block:: console
+
+   pip install .
+
+Uninstall
+---------
+
+.. code-block:: console
+
+   pip uninstall relife2
+
 
 
 

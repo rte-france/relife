@@ -15,9 +15,12 @@ release = "2"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "myst_parser",
+    "myst_parser",  # to enable markdown files
     "sphinx.ext.doctest",
-    "sphinx.ext.autodoc",
+    "sphinx.ext.autodoc",  # to enable autodoc from docstrings
+    "sphinx.ext.napoleon",  # to configure docstring style (use google style by default)
+    "sphinx_copybutton",  # copy button in code block
+    "sphinx.ext.viewcode",  # to insert source code link next to objects documentation
 ]
 
 templates_path = ["_templates"]
