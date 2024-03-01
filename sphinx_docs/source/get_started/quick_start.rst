@@ -4,6 +4,15 @@ Quick start
 .. role:: python(code)
    :language: python
 
+
+.. image:: ../img/main_process.png
+    :scale: 100 %
+    :align: center
+
+
+Data collection
+---------------
+
 First get lifetimes data in numpy array. For instance :
 
 .. code-block:: python
@@ -15,6 +24,12 @@ First get lifetimes data in numpy array. For instance :
         "event": np.array([1, 0, 1, 0, 0, 0, 1]),
         "entry": np.array([0, 0, 3, 5, 3, 1, 9]),
     }
+
+.. seealso::
+    For more details, please read :doc:`data_collect`.
+
+Data exploration
+----------------
 
 Then instanciate a databook :
 
@@ -31,6 +46,9 @@ Then instanciate a databook :
 
 .. seealso::
     For more details, please read :doc:`data`.
+
+Lifetime data analysis
+----------------------
     
 You're now ready to use ReLife models like this basic exponential distrubition :
 
@@ -44,6 +62,15 @@ You're now ready to use ReLife models like this basic exponential distrubition :
     For more details, please see :doc:`survival`
 
 
-If you want to go deeper and test ReLife with your own data format and/or survival model 
-please read : :doc:`../customization_guides/data` and :doc:`../customization_guides/survival`
+Asset management policy
+-----------------------
+Coming soon
 
+
+How to custom ReLife ?
+----------------------
+
+Some users may want to test their own implementations. We tried to make each ReLife
+processes customizable. If you want to go deeper and test ReLife with your own data 
+format and/or survival model please read : :doc:`../customization_guides/data` 
+and :doc:`../customization_guides/survival`

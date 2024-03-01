@@ -4,39 +4,16 @@ How to use databook
 .. role:: python(code)
    :language: python
 
-When you start using ReLife, you first need to load your survival data in a databook. 
 
-Databook takes numpy arrays as inputs. Observed lifetimes can either be 1d-array or 
-2d-array, see the examples below.
-
-.. code-block:: python
-    
-    import numpy as np
-
-    1d_data = {
-        "observed_lifetimes": np.array([10, 11, 9, 10, 12, 13, 11]),
-        "event": np.array([1, 0, 1, 0, 0, 0, 1]),
-        "entry": np.array([0, 0, 3, 5, 3, 1, 9]),
-    }
-
-    2d_data = {
-        "observed_lifetimes": np.array(
-            [[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]]
-        ),
-        "entry": np.array([0, 0, 3, 5, 3, 1, 9]),
-        "departure": np.array([4, 0, 7, 10, 0, 12, 0]),
-    }
+.. image:: ../img/main_process_1.png
+    :scale: 100 %
+    :align: center
 
 
-.. note::
-    As you see :python:`1d_data` and :python:`2d_data` only differs in the shape of 
-    :python:`observed_lifetimes`. The advantage of 2d-array observed lifetimes is that this
-    data format inherently carries censorship information whereas with 1d-array, one must
-    add indicators of censorship (here it is handled by :python:`1d_data` array). 
-
-
-Then a databook is created as follow:
-
+One main object of ReLife is the ``DataBook``. It is used everywhere. As a book, it holds
+every lifetime data information provided and allows users to explore data in a convenient
+way : get all complete lifetime values, get right censored lifetime values being left truncated, etc.
+Following previous section example, a databook is created as follow:
 
 Instanciate a databook
 ----------------------
@@ -62,11 +39,10 @@ As mentionned before, with 1d-array lifetimes, censored lifetimes must be explic
 tagged through indicators. Here :python:`event` can serve both :python:`right_censored_indicators`
 and :python:`complete_indicators`.
 
+Databook exploration
+--------------------
 
-Databook manipulations
-----------------------
-
-Now, lifetimes data can be explored very easily. For instance, one might get every
+Now, lifetimes data can be explored very easily. For instance, one might want to get every
 complete lifetimes. To do so just call:
 
 .. code-block:: python
@@ -90,7 +66,7 @@ To do so, one can use the "and" operator as follow :
     first_db("complete & left_truncated")
 
 This command returns 2 objects which contain complete and left truncations values/index.
-To access To get the values of complete lifetimes being left truncated, just call :
+To access the values of complete lifetimes being left truncated, just call :
 
 .. code-block:: python
 

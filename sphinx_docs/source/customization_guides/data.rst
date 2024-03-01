@@ -4,6 +4,10 @@ How to custom your databook
 .. role:: python(code)
    :language: python
 
+.. image:: ../img/databook.png
+    :scale: 110 %
+    :align: center
+
 The databook function instanciates a :python:`DataBook` object. This functions take
 several arguments (see :doc:`../detailed_doc/data`) but it also allows extra 
 key-words arguments like :

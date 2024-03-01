@@ -4,6 +4,10 @@ How to use survival model
 .. role:: python(code)
    :language: python
 
+.. image:: ../img/main_process_2.png
+    :scale: 100 %
+    :align: center
+
 Once you've instanciated your databook, you're ready to use ReLife's models. A complete
 list of available models can be found in :doc:`../detailed_doc/models_list`. ReLife models
 are grouped in three modules :
@@ -67,7 +71,7 @@ For instance :
 
 It will return the :python:`sf` values of :python:`t`, here an array of shape :python:`(50,)`
 
-Sometimes, one might wants to access functions values without having to fit model's parameters.
+Sometimes, one might wants to access function values without having to fit model's parameters.
 To do so, just add :python:`params` key-word argument in the desired function. :python:`params`
 has to be a 1d-array whose size corresponds to number of model parameters. For instance :
 
@@ -79,6 +83,6 @@ It will return the :python:`sf` values of :python:`t` for an exponential rate of
 
 .. warning::
 
-    Without fitting model, the parameters values are initialized at random. In such case, calling
-    a function will raise a warning encouraging you to fit the model or to specify parameters 
-    as above. 
+    Before fitting the model, its parameters values are initialized at random. In such case, calling
+    a function without specifying ``params`` will raise a warning encouraging you to fit the model first 
+    or to specify parameters as above. 

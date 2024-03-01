@@ -7,22 +7,23 @@ Welcome to ReLife2's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Get started
 
    get_started/quick_start
+   get_started/data_collect
    get_started/data
    get_started/survival
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: ReLife customization
 
    customization_guides/data
    customization_guides/survival
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Documentation
 
    detailed_doc/models_list

@@ -11,6 +11,9 @@ In ReLife, every model is composed of two objects :
 
 A more global view of this structure is given in the following graph. 
 
+.. image:: ../img/relife2_survival.png
+    :scale: 110 %
+    :align: center
 
 Knowing that, one might think that it would be possible to define its own model by customizing
 one or all objects composing a model. That's true as long as one respects every object interfaces !
