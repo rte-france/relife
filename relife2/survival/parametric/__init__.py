@@ -1,3 +1,3 @@
-from .model import ParametricDistriModel, exponential
+from .model import ParametricDistriModel, custom_distri, exponential, gompertz
 
-__all__ = ["exponential", "ParametricDistriModel"]
+__all__ = ["exponential", "ParametricDistriModel", "custom_distri", "gompertz"]

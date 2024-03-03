@@ -27,13 +27,13 @@ a specific type of model. Let's take the example of :python:`custom_distri` . It
 * ``functions``
 * ``likelihood``
 
-If you look at our documentation :doc:`../detailed_doc/survival`, you'll see that ``functions``
+If you look at our documentation, you'll see that ``functions``
 must be an object definition which inherits from ``ParametricDistriFunction`` and ``likelihood``
 must be an object definition which inherits from ``ParametricDistriLikelihood``. 
 
 .. note::
     The arguments type changes depending from which ``survival`` module the ``custom_*``
-    function is. So be carefull of our documentation :doc:`../detailed_doc/survival`
+    function is.
 
 In the case of parametric distribution, one could write the ``functions`` class as follow :
 

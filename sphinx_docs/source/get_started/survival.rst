@@ -8,8 +8,7 @@ How to use survival model
     :scale: 100 %
     :align: center
 
-Once you've instanciated your databook, you're ready to use ReLife's models. A complete
-list of available models can be found in :doc:`../detailed_doc/models_list`. ReLife models
+Once you've instanciated your databook, you're ready to use ReLife's models. ReLife models
 are grouped in three modules :
 
 * :python:`relife2.survival.parametric`
@@ -29,15 +28,14 @@ Every ReLife's model shares the same structure. They are basically a model objec
 a :python:`functions` and an :python:`optmizer` instance.
 
 .. seealso::
-    For more details, please read :doc:`../customization_guides/survival` and 
-    :doc:`../detailed_doc/survival`
+    For more details, please read :doc:`../customization_guides/survival`.
 
 For basic a usage, one can only remember that these model objects allow the user to quickly
 estimate its parameters and make inferences from its functions.
 
 .. note::
     Avaible functions might differ from one model to another. To see which function is
-    available per model, go to :doc:`../detailed_doc/survival`.
+    available per model.
 
 
 Parameters estimations

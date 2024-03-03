@@ -18,36 +18,6 @@ from .object import Data, ExtractedData, IntervalData
 
 @dataclass
 class DataBook:
-    """_summary_
-
-    Args:
-        complete: Data
-        left_censored: Data
-
-    Raises:
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-        ValueError: _description_
-
-    Returns:
-        _type_: _description_
-    """
 
     complete: Data  # object with fixed index and values attrib format
     left_censored: Data
@@ -415,6 +385,31 @@ def databook(
     departure: np.ndarray = None,
     **kwargs,
 ) -> DataBook:
+    """Create a databook.
+
+    Args:
+        observed_lifetimes (np.ndarray): observed lifetimes values. Shape must be (n,)
+        complete_indicators (np.ndarray, optional): _description_. Defaults to None.
+        left_censored_indicators (np.ndarray, optional): _description_. Defaults to None.
+        right_censored_indicators (np.ndarray, optional): _description_. Defaults to None.
+        entry (np.ndarray, optional): _description_. Defaults to None.
+        departure (np.ndarray, optional): _description_. Defaults to None.
+
+    Keyword Args:
+        complete (np.ndarray): description
+        left_censored (np.ndarray): description
+        right_censored (np.ndarray): description
+        interval_censored (np.ndarray): description
+        left_truncated (np.ndarray): description
+        right_truncated (np.ndarray): description
+        interval_truncated (np.ndarray): description
+
+    Returns:
+        DataBook: _description_
+
+    Examples:
+        >>>
+    """
 
     complete = kwargs.get("complete", None)
     left_censored = kwargs.get("left_censored", None)

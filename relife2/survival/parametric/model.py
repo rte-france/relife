@@ -131,6 +131,14 @@ class ParametricDistriModel:
 
 
 def exponential(databook: DataBook) -> ParametricDistriModel:
+    """Create exponential distribution.
+
+    Args:
+        databook (DataBook): _description_
+
+    Returns:
+        ParametricDistriModel: _description_
+    """
     functions = ExponentialDistriFunction(param_names=["rate"])
     likelihood = ExponentialDistriLikelihood(databook)
     optimizer = DistriOptimizer(likelihood)
@@ -141,6 +149,14 @@ def exponential(databook: DataBook) -> ParametricDistriModel:
 
 
 def gompertz(databook: DataBook) -> ParametricDistriModel:
+    """Create gompertz distribution.
+
+    Args:
+        databook (DataBook): _description_
+
+    Returns:
+        ParametricDistriModel: _description_
+    """
     pass
 
 
@@ -149,6 +165,16 @@ def custom_distri(
     functions: Type[ParametricDistriFunction],
     likelihood: Type[ParametricDistriLikelihood],
 ) -> Type[ParametricDistriModel]:
+    """Create custom distribution.
+
+    Args:
+        databook (DataBook): _description_
+        functions (Type[ParametricDistriFunction]): _description_
+        likelihood (Type[ParametricDistriLikelihood]): _description_
+
+    Returns:
+        Type[ParametricDistriModel]: _description_
+    """
     _functions = functions()
     _likelihood = likelihood(databook)
     _optimizer = DistriOptimizer(_likelihood)

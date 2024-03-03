@@ -6,29 +6,41 @@
 Welcome to ReLife2's documentation!
 ===================================
 
+
+**Date**: |today| **Version**: |version|
+
+ReLife is an open source, blah blah blah, etc.
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Get started
+   :maxdepth: 1
+   :caption: New to ReLife ?
 
    get_started/quick_start
+
+.. toctree::
+   :maxdepth: 1
+   :numbered:
+   :caption: User guide
+
    get_started/data_collect
    get_started/data
    get_started/survival
 
 .. toctree::
-   :maxdepth: 2
-   :caption: ReLife customization
+   :maxdepth: 1
+   :numbered:
+   :caption: Contributor's guide
 
    customization_guides/data
    customization_guides/survival
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Documentation
+   :maxdepth: 1
+   :caption: API reference
 
-   detailed_doc/models_list
    detailed_doc/data
-   detailed_doc/survival
+   detailed_doc/survival_parametric
+   detailed_doc/survival_semiparametric
 
 
 Installation

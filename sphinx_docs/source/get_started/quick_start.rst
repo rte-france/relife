@@ -31,7 +31,7 @@ First get lifetimes data in numpy array. For instance :
 Data exploration
 ----------------
 
-Then instanciate a databook :
+Then instanciate a :py:func:`~relife2.survival.data.databook` databook :
 
 .. code-block:: python
 
