@@ -204,7 +204,7 @@ class WeibullDistriFunction(ParametricDistriFunction):
             / (self.params.rate * self.params.c * self.sf(time))
             * gammaincc(
                 1 / self.params.c,
-                (self.params.rate * self.params.time) ** self.params.c,
+                (self.params.rate * time) ** self.params.c,
             )
         )
 

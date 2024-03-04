@@ -52,7 +52,6 @@ class ParametricDistriModel:
         called if attr is not found in attributes of the class
         (different from __getattribute__)
         """
-        # print("Calling __getattr__: " + attr)
         if hasattr(self.functions, attr):
 
             def wrapper(*args, **kwargs):

@@ -40,7 +40,7 @@ def gompertz_distri(databook):
     [
         ("exponential_distri", 0.00795203),
         ("weibull_distri", [3.46597395, 0.01227849]),
-        # ("gompertz_distri", [0.00865741, 0.06062632]),
+        ("gompertz_distri", [0.00865741, 0.06062632]),
         # ("gamma_distri", [5.3571091, 0.06622822]),
         # ("loglogistic_distri", [3.92614064, 0.0133325]),
     ],
@@ -58,7 +58,7 @@ def test_sf(model, params, request):
     [
         ("exponential_distri", 0.00795203),
         ("weibull_distri", [3.46597395, 0.01227849]),
-        # ("gompertz_distri", [0.00865741, 0.06062632]),
+        ("gompertz_distri", [0.00865741, 0.06062632]),
         # ("gamma_distri", [5.3571091, 0.06622822]),
         # ("loglogistic_distri", [3.92614064, 0.0133325]),
     ],
@@ -110,8 +110,8 @@ def test_mrl(model, params, request):
     "model, params",
     [
         ("exponential_distri", 0.00795203),
-        # ("weibull_distri", [3.46597395, 0.01227849]),
-        # ("gompertz_distri", [0.00865741, 0.06062632]),
+        ("weibull_distri", [3.46597395, 0.01227849]),
+        ("gompertz_distri", [0.00865741, 0.06062632]),
         # ("gamma_distri", [5.3571091, 0.06622822]),
         # ("loglogistic_distri", [3.92614064, 0.0133325]),
     ],

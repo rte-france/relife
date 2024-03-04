@@ -82,7 +82,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     ) -> np.ndarray:
 
         jac_D_contrib = -np.sum(
-            self.jac_hf(self.databook("complete").values)
+            self.jac_hf(self.databook("complete").values, functions)
             / functions.hf(self.databook("complete").values)[:, None],
             axis=0,
             # keepdims=True,
@@ -96,6 +96,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
                         self.databook("right_censored").values,
                     )
                 ),
+                functions,
             ),
             axis=0,
             # keepdims=True,
@@ -110,7 +111,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
         #     ).shape
         # )
         jac_LC_contrib = -np.sum(
-            self.jac_chf(self.databook("left_censored").values)
+            self.jac_chf(self.databook("left_censored").values, functions)
             / np.expm1(
                 functions.chf(self.databook("left_censored").values)[:, None]
             ),
@@ -123,7 +124,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
         #     self.jac_chf(self.databook("left_truncated").values).shape,
         # )
         jac_LT_contrib = -np.sum(
-            self.jac_chf(self.databook("left_truncated").values),
+            self.jac_chf(self.databook("left_truncated").values, functions),
             axis=0,
             # keepdims=True,
         )
@@ -187,12 +188,20 @@ class ExponentialDistriLikelihood(ParametricDistriLikelihood):
         super().__init__(databook)
 
     # relife/distribution.Exponential
-    def jac_hf(self, time: np.ndarray) -> np.ndarray:
+    def jac_hf(
+        self,
+        time: np.ndarray,
+        functions: ParametricDistriFunction,
+    ) -> np.ndarray:
         # shape : (len(sample), nb_param)
         return np.ones((time.size, 1))
 
     # relife/distribution.Exponential
-    def jac_chf(self, time: np.ndarray) -> np.ndarray:
+    def jac_chf(
+        self,
+        time: np.ndarray,
+        functions: ParametricDistriFunction,
+    ) -> np.ndarray:
         # shape : (len(sample), nb_param)
         return np.ones((time.size, 1)) * time[:, None]
 
