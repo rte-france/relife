@@ -3,6 +3,15 @@ from typing import Tuple
 
 import numpy as np
 
+from ..utils import (
+    has_same_length,
+    is_1d,
+    is_1d_or_2d,
+    is_2d,
+    is_array,
+    is_array_type,
+)
+
 
 class Data(ABC):
     """
@@ -10,13 +19,17 @@ class Data(ABC):
     """
 
     def __init__(self, *data):
-        if {type(_data) for _data in data} != {np.ndarray}:
-            raise TypeError("Expected np.ndarray data")
+        try:
+            is_array(*data)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
         self.index, self.values = self.parse(*data)
-        if len(self.index.shape) != 1:
-            raise TypeError("index of Data must be of shape (n,)")
-        if len(self.values.shape) != 1:
-            raise TypeError("values of Data must be of shape (n,)")
+        try:
+            is_1d(self.index)
+            is_1d(self.values)
+            has_same_length(self.index, self.values)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
     @abstractmethod
     def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
@@ -39,15 +52,17 @@ class IntervalData(ABC):
     """
 
     def __init__(self, *data):
-        if {type(_data) for _data in data} != {np.ndarray}:
-            raise TypeError("Expected np.ndarray data")
+        try:
+            is_array(*data)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
         self.index, self.values = self.parse(*data)
-        if len(self.index.shape) != 1:
-            raise TypeError("index of IntervalParser must be of shape (n,)")
-        if len(self.values.shape) != 2:
-            raise TypeError("values of IntervalParser must of shape (n, 2)")
-        if self.values.shape[-1] != 2:
-            raise TypeError("values of IntervalParser must of shape (n, 2)")
+        try:
+            is_1d(self.index)
+            is_2d(self.values)
+            has_same_length(self.index, self.values)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
     @abstractmethod
     def parse(self, *data) -> Tuple[np.ndarray, np.ndarray]:
@@ -66,19 +81,14 @@ class IntervalData(ABC):
 
 class ExtractedData:
     def __init__(self, index, values):
-        if type(index) != np.ndarray:
-            raise TypeError("Expected np.ndarray index")
-        if type(values) != np.ndarray:
-            raise TypeError("Expected np.ndarray values")
-        if len(index.shape) != 1:
-            raise TypeError("index must be of shape (n,)")
-        if len(values.shape) != 1 and len(values.shape) != 2:
-            raise TypeError("values must be of shape (n,) or (n, 2)")
-        if len(values.shape) == 2:
-            if values.shape[-1] != 2:
-                raise TypeError("values must be of shape (n,) or (n, 2)")
-        if len(index) != len(values):
-            raise ValueError("index and values must have the same length")
+        try:
+            is_array(index)
+            is_array(values)
+            is_1d(index)
+            is_1d_or_2d(values)
+            has_same_length(index, values)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
         self.index = index
         self.values = values
 
@@ -87,122 +97,117 @@ class ExtractedData:
 
 
 class CensoredFromIndicators(Data):
-    def __init__(self, censored_lifetimes, indicators):
-        super().__init__(censored_lifetimes, indicators)
-        if len(censored_lifetimes.shape) != 1:
-            raise TypeError("truncation values must be 1d array")
-        if len(indicators.shape) != 1:
-            raise TypeError("indicators values must be 1d array")
-        if indicators.dtype != bool:
-            raise TypeError("indicators values must be boolean")
-        if len(censored_lifetimes) != len(indicators):
-            raise ValueError(
-                "censored_lifetimes and indicators must have the same length"
-            )
+    def __init__(self, observed_lifetimes, indicators):
+        super().__init__(observed_lifetimes, indicators)
+        try:
+            is_1d(observed_lifetimes)
+            is_1d(indicators)
+            is_array_type(indicators, np.bool_)
+            has_same_length(observed_lifetimes, indicators)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
-    def parse(self, censored_lifetimes, indicators):
+    def parse(self, observed_lifetimes, indicators):
         index = np.where(indicators)[0]
-        values = censored_lifetimes[index]
+        values = observed_lifetimes[index]
         return index, values
 
 
 class CompleteObservationsFromIndicators(Data):
-    def __init__(self, censored_lifetimes, indicators):
-        super().__init__(censored_lifetimes, indicators)
-        if len(censored_lifetimes.shape) != 1:
-            raise TypeError("truncation values must be 1d array")
-        if len(indicators.shape) != 1:
-            raise TypeError("indicators values must be 1d array")
-        if indicators.dtype != bool:
-            raise TypeError("indicators values must be boolean")
-        if len(censored_lifetimes) != len(indicators):
-            raise ValueError(
-                "censored_lifetimes and indicators must have the same length"
-            )
+    def __init__(self, observed_lifetimes, indicators):
+        super().__init__(observed_lifetimes, indicators)
+        try:
+            is_1d(observed_lifetimes)
+            is_1d(indicators)
+            is_array_type(indicators, np.bool_)
+            has_same_length(observed_lifetimes, indicators)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
-    def parse(self, censored_lifetimes, indicators):
+    def parse(self, observed_lifetimes, indicators):
         # index = (np.stack(indicators)).all(axis=0)
         index = np.where(indicators)[0]
-        values = censored_lifetimes[index]
+        values = observed_lifetimes[index]
         return index, values
 
 
 class CompleteObservations(Data):
-    def __init__(self, censored_lifetimes):
-        super().__init__(censored_lifetimes)
-        if len(censored_lifetimes.shape) != 2:
-            raise TypeError("data must be 2d array")
+    def __init__(self, observed_lifetimes):
+        super().__init__(observed_lifetimes)
+        try:
+            is_2d(observed_lifetimes)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
-    def parse(self, censored_lifetimes):
-        index = np.where(censored_lifetimes[:, 0] == censored_lifetimes[:, 1])[
+    def parse(self, observed_lifetimes):
+        index = np.where(observed_lifetimes[:, 0] == observed_lifetimes[:, 1])[
             0
         ]
-        values = censored_lifetimes[index][:, 0]
+        values = observed_lifetimes[index][:, 0]
         return index, values
 
 
 class LeftCensored(Data):
-    def __init__(self, censored_lifetimes):
-        super().__init__(censored_lifetimes)
-        if len(censored_lifetimes.shape) != 2:
-            raise TypeError("data must be 2d array")
+    def __init__(self, observed_lifetimes):
+        super().__init__(observed_lifetimes)
+        try:
+            is_2d(observed_lifetimes)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
-    def parse(self, censored_lifetimes):
-        index = np.where(censored_lifetimes[:, 0] == 0.0)[0]
-        values = censored_lifetimes[index, :][:, 1]
+    def parse(self, observed_lifetimes):
+        index = np.where(observed_lifetimes[:, 0] == 0.0)[0]
+        values = observed_lifetimes[index, :][:, 1]
         return index, values
 
 
 class RightCensored(Data):
-    def __init__(self, censored_lifetimes):
-        super().__init__(censored_lifetimes)
-        if len(censored_lifetimes.shape) != 2:
-            raise TypeError("data must be 2d array")
+    def __init__(self, observed_lifetimes):
+        super().__init__(observed_lifetimes)
+        try:
+            is_2d(observed_lifetimes)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
-    def parse(self, censored_lifetimes):
-        index = np.where(censored_lifetimes[:, 1] == np.inf)[0]
-        values = censored_lifetimes[index, :][:, 0]
+    def parse(self, observed_lifetimes):
+        index = np.where(observed_lifetimes[:, 1] == np.inf)[0]
+        values = observed_lifetimes[index, :][:, 0]
         return index, values
 
 
 class IntervalCensored(IntervalData):
-    def __init__(self, censored_lifetimes):
-        super().__init__(censored_lifetimes)
-        if len(censored_lifetimes.shape) != 2:
-            raise TypeError("data must be 2d array")
-        if len(censored_lifetimes.shape) != 2:
-            raise TypeError("expected data of shape (n, 2)")
-        if censored_lifetimes.shape[-1] != 2:
-            raise TypeError("expected data of shape (n, 2)")
+    def __init__(self, observed_lifetimes):
+        super().__init__(observed_lifetimes)
+        try:
+            is_2d(observed_lifetimes)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
-    def parse(self, censored_lifetimes):
+    def parse(self, observed_lifetimes):
         index = np.where(
             np.logical_and(
                 np.logical_and(
-                    censored_lifetimes[:, 0] > 0,
-                    censored_lifetimes[:, 1] < np.inf,
+                    observed_lifetimes[:, 0] > 0,
+                    observed_lifetimes[:, 1] < np.inf,
                 ),
                 np.not_equal(
-                    censored_lifetimes[:, 0], censored_lifetimes[:, 1]
+                    observed_lifetimes[:, 0], observed_lifetimes[:, 1]
                 ),
             )
         )[0]
-        values = censored_lifetimes[index]
+        values = observed_lifetimes[index]
         return index, values
 
 
 class LeftTruncated(Data):
     def __init__(self, left_truncation_values, right_truncation_values):
         super().__init__(left_truncation_values, right_truncation_values)
-        if len(left_truncation_values.shape) != 1:
-            raise TypeError("left truncation values must be 1d array")
-        if len(right_truncation_values.shape) != 1:
-            raise TypeError("right truncation values must be 1d array")
-        if len(left_truncation_values) != len(right_truncation_values):
-            raise ValueError(
-                "left_truncation_values and right_truncation_values must have"
-                " the same length"
-            )
+        try:
+            is_1d(left_truncation_values)
+            is_1d(right_truncation_values)
+            has_same_length(left_truncation_values, right_truncation_values)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
     def parse(self, left_truncation_values, right_truncation_values):
         index = np.where(
@@ -217,10 +222,12 @@ class LeftTruncated(Data):
 class RightTruncated(Data):
     def __init__(self, left_truncation_values, right_truncation_values):
         super().__init__(left_truncation_values, right_truncation_values)
-        if len(left_truncation_values.shape) != 1:
-            raise TypeError("truncation values must be 1d array")
-        if len(right_truncation_values.shape) != 1:
-            raise TypeError("truncation values must be 1d array")
+        try:
+            is_1d(left_truncation_values)
+            is_1d(right_truncation_values)
+            has_same_length(left_truncation_values, right_truncation_values)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
     def parse(self, left_truncation_values, right_truncation_values):
         index = np.where(
@@ -235,21 +242,12 @@ class RightTruncated(Data):
 class IntervalTruncated(IntervalData):
     def __init__(self, left_truncation_values, right_truncation_values):
         super().__init__(left_truncation_values, right_truncation_values)
-        if len(left_truncation_values.shape) != 1:
-            raise TypeError(
-                "left_truncation_values must be 1d array for"
-                " IntervalTruncation"
-            )
-        if len(right_truncation_values.shape) != 1:
-            raise TypeError(
-                "left_truncation_values must be 1d array for"
-                " IntervalTruncation"
-            )
-        if len(left_truncation_values) != len(right_truncation_values):
-            raise ValueError(
-                "left_truncation_values and right_truncation_values must have"
-                " the same length"
-            )
+        try:
+            is_1d(left_truncation_values)
+            is_1d(right_truncation_values)
+            has_same_length(left_truncation_values, right_truncation_values)
+        except Exception as error:
+            raise ValueError("invalid argument") from error
 
     def parse(self, left_truncation_values, right_truncation_values):
         index = np.where(
