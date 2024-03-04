@@ -5,8 +5,18 @@ import numpy as np
 
 from .. import DataBook
 from ..parameter import FittingResult, Parameter
-from .function import ExponentialDistriFunction, ParametricDistriFunction
-from .likelihood import ExponentialDistriLikelihood, ParametricDistriLikelihood
+from .function import (
+    ExponentialDistriFunction,
+    GompertzDistriFunction,
+    ParametricDistriFunction,
+    WeibullDistriFunction,
+)
+from .likelihood import (
+    ExponentialDistriLikelihood,
+    GompertzDistriLikelihood,
+    ParametricDistriLikelihood,
+    WeibullDistriLikelihood,
+)
 from .optimizer import DistriOptimizer
 
 
@@ -148,6 +158,24 @@ def exponential(databook: DataBook) -> ParametricDistriModel:
     )
 
 
+def weibull(databook: DataBook) -> ParametricDistriModel:
+    """Create Weibull distribution.
+
+    Args:
+        databook (DataBook): _description_
+
+    Returns:
+        ParametricDistriModel: _description_
+    """
+    functions = WeibullDistriFunction(param_names=["c", "rate"])
+    likelihood = WeibullDistriLikelihood(databook)
+    optimizer = DistriOptimizer(likelihood)
+    return ParametricDistriModel(
+        functions,
+        optimizer,
+    )
+
+
 def gompertz(databook: DataBook) -> ParametricDistriModel:
     """Create gompertz distribution.
 
@@ -157,7 +185,13 @@ def gompertz(databook: DataBook) -> ParametricDistriModel:
     Returns:
         ParametricDistriModel: _description_
     """
-    pass
+    functions = GompertzDistriFunction(param_names=["c", "rate"])
+    likelihood = GompertzDistriLikelihood(databook)
+    optimizer = DistriOptimizer(likelihood)
+    return ParametricDistriModel(
+        functions,
+        optimizer,
+    )
 
 
 def custom_distri(

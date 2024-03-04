@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from relife2.data import load_power_transformer
-from relife2.survival.parametric import exponential
+from relife2.survival.parametric import exponential, gompertz, weibull
 
 
 @pytest.fixture(scope="module")
@@ -15,14 +15,14 @@ def exponential_distri(databook):
     return exponential(databook)
 
 
-# @pytest.fixture(scope="module")
-# def weibull_distri(databook):
-#     pass
+@pytest.fixture(scope="module")
+def weibull_distri(databook):
+    return weibull(databook)
 
 
-# @pytest.fixture(scope="module")
-# def gompertz_distri(databook):
-#     pass
+@pytest.fixture(scope="module")
+def gompertz_distri(databook):
+    return gompertz(databook)
 
 
 # @pytest.fixture(scope="module")
@@ -39,7 +39,7 @@ def exponential_distri(databook):
     "model, params",
     [
         ("exponential_distri", 0.00795203),
-        # ("weibull_distri", [3.46597395, 0.01227849]),
+        ("weibull_distri", [3.46597395, 0.01227849]),
         # ("gompertz_distri", [0.00865741, 0.06062632]),
         # ("gamma_distri", [5.3571091, 0.06622822]),
         # ("loglogistic_distri", [3.92614064, 0.0133325]),
@@ -57,7 +57,7 @@ def test_sf(model, params, request):
     "model, params",
     [
         ("exponential_distri", 0.00795203),
-        # ("weibull_distri", [3.46597395, 0.01227849]),
+        ("weibull_distri", [3.46597395, 0.01227849]),
         # ("gompertz_distri", [0.00865741, 0.06062632]),
         # ("gamma_distri", [5.3571091, 0.06622822]),
         # ("loglogistic_distri", [3.92614064, 0.0133325]),
@@ -92,15 +92,17 @@ def test_rvs(model, params, request):
     "model, params",
     [
         ("exponential_distri", 0.00795203),
-        # ("weibull_distri", [3.46597395, 0.01227849]),
-        # ("gompertz_distri", [0.00865741, 0.06062632]),
+        ("weibull_distri", [3.46597395, 0.01227849]),
+        ("gompertz_distri", [0.00865741, 0.06062632]),
         # ("gamma_distri", [5.3571091, 0.06622822]),
         # ("loglogistic_distri", [3.92614064, 0.0133325]),
     ],
 )
 def test_mrl(model, params, request):
     model = request.getfixturevalue(model)
+    print(model)
     t = np.arange(10)
+    print(t)
     assert model.mrl(t, params=params).shape == (t.size,)
 
 

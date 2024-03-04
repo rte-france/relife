@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from scipy.optimize import root_scalar
+from scipy.special import exp1, gamma, gammaincc
 
 from ..parameter import Parameter
 
@@ -123,9 +124,15 @@ class ParametricDistriFunction(ParametricFunction):
         pass
 
     @abstractmethod
-    def isf(self):
+    def ichf(self, cumulative_hazard_rate: np.ndarray):
         """only mandatory for ParametricDistri as exact expression is known"""
         pass
+
+    # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
+    # /!\ mathematically : -np.log(probability) = cumulative_hazard_rate
+    def isf(self, probability: np.ndarray) -> np.ndarray:
+        cumulative_hazard_rate = -np.log(probability)
+        return self.ichf(cumulative_hazard_rate)
 
 
 class ExponentialDistriFunction(ParametricDistriFunction):
@@ -146,13 +153,13 @@ class ExponentialDistriFunction(ParametricDistriFunction):
 
     # relife/distribution.Exponential
     # mandatory
-    def mean(self) -> np.ndarray:
+    def mean(self) -> float:
         # rate = self.params[0]
         return 1 / self.params.rate
 
     # relife/distribution.Exponential
     # mandatory
-    def var(self) -> np.ndarray:
+    def var(self) -> float:
         # rate = self.params[0]
         return 1 / self.params.rate**2
 
@@ -167,9 +174,69 @@ class ExponentialDistriFunction(ParametricDistriFunction):
         # rate = self.params[0]
         return cumulative_hazard_rate / self.params.rate
 
-    # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
-    # /!\ mathematically -np.log(probability) = cumulative_hazard_rate
-    # mandatory
-    def isf(self, probability: np.ndarray) -> np.ndarray:
-        cumulative_hazard_rate = -np.log(probability)
-        return self.ichf(cumulative_hazard_rate)
+
+class WeibullDistriFunction(ParametricDistriFunction):
+    def __init__(self, param_names=["c", "rate"]):
+        super().__init__(param_names=param_names)
+
+    def hf(self, time: np.ndarray) -> np.ndarray:
+        return (
+            self.params.c
+            * self.params.rate
+            * (self.params.rate * time) ** (self.params.c - 1)
+        )
+
+    def chf(self, time: np.ndarray) -> np.ndarray:
+        return (self.params.rate * time) ** self.params.c
+
+    def mean(self) -> float:
+        return gamma(1 + 1 / self.params.c) / self.params.rate
+
+    def var(self) -> float:
+        return (
+            gamma(1 + 2 / self.params.c) / self.params.rate**2
+            - self.mean() ** 2
+        )
+
+    def mrl(self, time: np.ndarray) -> np.ndarray:
+        return (
+            gamma(1 / self.params.c)
+            / (self.params.rate * self.params.c * self.sf(time))
+            * gammaincc(
+                1 / self.params.c,
+                (self.params.rate * self.params.time) ** self.params.c,
+            )
+        )
+
+    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+        return cumulative_hazard_rate ** (1 / self.params.c) / self.params.rate
+
+
+class GompertzDistriFunction(ParametricDistriFunction):
+    def __init__(self, param_names=["c", "rate"]):
+        super().__init__(param_names=param_names)
+
+    def hf(self, time: np.ndarray) -> np.ndarray:
+        return (
+            self.params.c * self.params.rate * np.exp(self.params.rate * time)
+        )
+
+    def chf(self, time: np.ndarray) -> np.ndarray:
+        return self.params.c * np.expm1(self.params.rate * time)
+
+    def mean(self) -> float:
+        return np.exp(self.params.c) * exp1(self.params.c) / self.params.rate
+
+    def var(self) -> float:
+        pass
+
+    def mrl(self, time: np.ndarray) -> np.ndarray:
+        z = self.params.c * np.exp(self.params.rate * time)
+        return np.exp(z) * exp1(z) / self.params.rate
+
+    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+        return (
+            1
+            / self.params.rate
+            * np.log1p(cumulative_hazard_rate / self.params.c)
+        )
