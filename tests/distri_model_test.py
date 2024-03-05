@@ -100,9 +100,7 @@ def test_rvs(model, params, request):
 )
 def test_mrl(model, params, request):
     model = request.getfixturevalue(model)
-    print(model)
     t = np.arange(10)
-    print(t)
     assert model.mrl(t, params=params).shape == (t.size,)
 
 

@@ -140,8 +140,9 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     ) -> np.ndarray:
 
         size = np.size(functions.params.values)
-        print(size)
+        # print(size)
         hess = np.empty((size, size))
+        params_values = functions.params.values
 
         if scheme is None:
             scheme = self._default_hess_scheme
@@ -150,16 +151,18 @@ class ParametricDistriLikelihood(ParametricLikelihood):
             u = eps * 1j * np.eye(size)
             for i in range(size):
                 for j in range(i, size):
-                    print(type(u[i]))
-                    print(u[i])
-                    print(functions.params.values)
-                    print(functions.params.values + u[i])
+                    # print(type(u[i]))
+                    # print(u[i])
+                    # print(functions.params.values)
+                    # print(functions.params.values + u[i])
                     functions.params.values = functions.params.values + u[i]
-                    print(self.jac_negative_log_likelihood(functions))
+                    # print(self.jac_negative_log_likelihood(functions))
+
                     hess[i, j] = (
                         np.imag(self.jac_negative_log_likelihood(functions)[j])
                         / eps
                     )
+                    functions.params.values = params_values
                     if i != j:
                         hess[j, i] = hess[i, j]
 

@@ -130,8 +130,8 @@ class Parameter:
         res = [
             f"{name} = {getattr(self, name)} \n" for name in self.param_names
         ]
-        res = ", ".join(res)
-        return f"{class_name}\n{res}"
+        res = "".join(res)
+        return f"\n{class_name}\n{res}"
 
 
 class ModelParameters:

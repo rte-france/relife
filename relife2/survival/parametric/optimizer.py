@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
-from .function import ParametricFunction
+from .function import GompertzDistriFunction, ParametricFunction
 from .likelihood import ParametricLikelihood
 
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
@@ -30,9 +30,47 @@ class DistriOptimizer(ParametricOptimizer):
 
     # relife/distribution.ParametricLifetimeDistribution
     def _init_param(self, functions: ParametricFunction) -> np.ndarray:
-        param0 = np.ones(functions.params.nb_params)
-        param0[-1] = 1 / np.median(self.likelihood.databook("complete").values)
-        return param0
+        if isinstance(functions, GompertzDistriFunction):
+            rate = np.pi / (
+                np.sqrt(6)
+                * np.std(
+                    np.concatenate(
+                        [
+                            data.values
+                            for data in self.likelihood.databook(
+                                "complete | right_censored | left_censored"
+                            )
+                        ]
+                    )
+                )
+            )
+            c = np.exp(
+                -rate
+                * np.mean(
+                    np.concatenate(
+                        [
+                            data.values
+                            for data in self.likelihood.databook(
+                                "complete | right_censored | left_censored"
+                            )
+                        ]
+                    )
+                )
+            )
+            return np.array([c, rate])
+        else:
+            param0 = np.ones(functions.params.nb_params)
+            param0[-1] = 1 / np.median(
+                np.concatenate(
+                    [
+                        data.values
+                        for data in self.likelihood.databook(
+                            "complete | right_censored | left_censored"
+                        )
+                    ]
+                )
+            )
+            return param0
 
     def _get_param_bounds(self, functions: ParametricFunction) -> Bounds:
         return Bounds(
