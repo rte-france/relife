@@ -195,23 +195,124 @@ def gompertz(databook: DataBook) -> ParametricDistriModel:
 
 def custom_distri(
     databook: DataBook,
-    functions: Type[ParametricDistriFunction],
-    likelihood: Type[ParametricDistriLikelihood],
-) -> Type[ParametricDistriModel]:
+    functions_cls: Type[ParametricDistriFunction],
+    likelihood_cls: Type[ParametricDistriLikelihood],
+) -> ParametricDistriModel:
     """Create custom distribution.
 
     Args:
-        databook (DataBook): _description_
-        functions (Type[ParametricDistriFunction]): _description_
-        likelihood (Type[ParametricDistriLikelihood]): _description_
+        databook (DataBook): DataBook instance
+        functions_cls (Type[ParametricDistriFunction]): ParametricDistriFunction class definition
+        likelihood_cls (Type[ParametricDistriLikelihood]): ParametricDistriLikelihood class definition
 
     Returns:
-        Type[ParametricDistriModel]: _description_
+        ParametricDistriModel: a parametric distribution
+
+
+    Note:
+        In functions_cls, the following methods are mandatory and must return 1d-array or float:
+            | hf(time: 1d-array) -> 1d-array
+            | chf(time: 1d-array) -> 1d-array
+            | mean() -> float
+            | var() -> float
+            | mrl(time: 1d-array) -> 1d-array
+            | ichf(cumulative_hazard_rate: 1d-array) -> 1d-array
+        In likelihood_cls, the following methods are mandatory and must return 2d-array of shape (nb_sample, nb_param)
+            | jac_hf(time: 1d-array, functions : ParametricDistriFunction) -> 2d-array
+            | jac_chf(time: 1d-array, functions : ParametricDistriFunction) -> 2d-array
+
+
+    Examples:
+        .. code-block:: python
+
+            from relife2.survival.parametric import (
+                ParametricDistriFunction,
+                ParametricDistriLikelihood,
+                custom_distri
+            )
+
+            class WeibullDistriFunction(ParametricDistriFunction):
+                def __init__(self, param_names=["c", "rate"]):
+                    super().__init__(param_names=param_names)
+
+                def hf(self, time: np.ndarray) -> np.ndarray:
+                    return (
+                        self.params.c
+                        * self.params.rate
+                        * (self.params.rate * time) ** (self.params.c - 1)
+                    )
+
+                def chf(self, time: np.ndarray) -> np.ndarray:
+                    return (self.params.rate * time) ** self.params.c
+
+                def mean(self) -> float:
+                    return gamma(1 + 1 / self.params.c) / self.params.rate
+
+                def var(self) -> float:
+                    return (
+                        gamma(1 + 2 / self.params.c) / self.params.rate**2
+                        - self.mean() ** 2
+                    )
+
+                def mrl(self, time: np.ndarray) -> np.ndarray:
+                    return (
+                        gamma(1 / self.params.c)
+                        / (self.params.rate * self.params.c * self.sf(time))
+                        * gammaincc(
+                            1 / self.params.c,
+                            (self.params.rate * time) ** self.params.c,
+                        )
+                    )
+
+            class WeibullDistriLikelihood(ParametricDistriLikelihood):
+                def __init__(self, databook: DataBook):
+                    super().__init__(databook)
+
+                def jac_hf(
+                    self,
+                    time: np.ndarray,
+                    functions: ParametricDistriFunction,
+                ) -> np.ndarray:
+
+                    return np.column_stack(
+                        (
+                            functions.params.rate
+                            * (functions.params.rate * time[:, None])
+                            ** (functions.params.c - 1)
+                            * (
+                                1
+                                + functions.params.c
+                                * np.log(functions.params.rate * time[:, None])
+                            ),
+                            functions.params.c**2
+                            * (functions.params.rate * time[:, None])
+                            ** (functions.params.c - 1),
+                        )
+                    )
+
+                def jac_chf(
+                    self,
+                    time: np.ndarray,
+                    functions: ParametricDistriFunction,
+                ) -> np.ndarray:
+                    return np.column_stack(
+                        (
+                            np.log(functions.params.rate * time[:, None])
+                            * (functions.params.rate * time[:, None])
+                            ** functions.params.c,
+                            functions.params.c
+                            * time[:, None]
+                            * (functions.params.rate * time[:, None])
+                            ** (functions.params.c - 1),
+                        )
+                    )
+
+            my_distri = custom_distri(databook, WeibullDistriFunction, WeibullDistriLikelihood)
     """
-    _functions = functions()
-    _likelihood = likelihood(databook)
-    _optimizer = DistriOptimizer(_likelihood)
+    functions = functions_cls()
+    likelihood = likelihood_cls(databook)
+    optimizer = DistriOptimizer(likelihood)
     return ParametricDistriModel(
-        _functions,
-        _optimizer,
+        functions,
+        optimizer,
     )
