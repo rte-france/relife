@@ -100,7 +100,7 @@ class ParametricDistriModel:
         self,
         **kwargs,
     ):
-        opt = self.optimizer.fit(self.functions, **kwargs)
+        self.functions, opt = self.optimizer.fit(self.functions, **kwargs)
         jac = self.optimizer.likelihood.jac_negative_log_likelihood(
             self.functions
         )
@@ -110,7 +110,10 @@ class ParametricDistriModel:
             )
         )
         self._fitting_results = FittingResult(
-            opt, jac, var, len(self.optimizer.likelihood.databook)
+            opt,
+            jac,
+            var,
+            len(self.optimizer.likelihood.databook),
         )
         self._fitting_params.values = opt.x
 

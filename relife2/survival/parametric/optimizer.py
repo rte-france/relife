@@ -127,5 +127,6 @@ class DistriOptimizer(ParametricOptimizer):
             bounds=bounds,
             **kwargs,
         )
+        functions.params.values = opt.x
 
-        return opt
+        return functions, opt
