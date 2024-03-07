@@ -23,16 +23,16 @@ Instanciate a databook
     from relife2.data import databook
 
     first_db = databook(
-        observed_lifetimes = 1d_data["observed_lifetimes"],
-        right_censored_indicators = 1d_data["event"] == 0,
-        complete_indicators = 1d_data["event"] == 1,
-        entry = 1d_data["entry"],
+        observed_lifetimes = first_data["observed_lifetimes"],
+        right_censored_indicators = first_data["event"] == 0,
+        complete_indicators = first_data["event"] == 1,
+        entry = first_data["entry"],
     )
 
     second_db = databook(
-        observed_lifetimes = 2d_data["observed_lifetimes"],
-        entry = 2d_data["entry"],
-        departure = 2d_data["departure"],
+        observed_lifetimes = second_data["observed_lifetimes"],
+        entry = second_data["entry"],
+        departure = second_data["departure"],
     )
 
 As mentionned before, with 1d-array lifetimes, censored lifetimes must be explicitly
@@ -45,52 +45,49 @@ Databook exploration
 Now, lifetimes data can be explored very easily. For instance, one might want to get every
 complete lifetimes. To do so just call:
 
-.. code-block:: python
+>>> first_db("complete").values
+np.array([10, 9, 11])
 
-    first_db("complete").values
+>>> second_db("complete").values
+np.array([5, 10])
 
-.. code-block:: python
-
-    second_db("complete").values
-
-
-These commands will return 1d-array containing complete lifetimes values. The first one
-returns :python:`np.array([10, 9, 11])` and the latter returns :python:`np.array([5, 10])`.
 One can also get corresponding data index. Just replace :python:`.values` by :python:`.index`.
 
 Databook can do more. One might wants to access lifetimes being complete **and** left truncated.
 To do so, one can use the "and" operator as follow : 
 
-.. code-block:: python
+>>> first_db("complete & left_truncated")[0].values
+np.array([9, 11])
 
-    first_db("complete & left_truncated")
+>>> first_db("complete & left_truncated")[1].values
+np.array([3, 9])
 
-This command returns 2 objects which contain complete and left truncations values/index.
-To access the values of complete lifetimes being left truncated, just call :
+The "or" operator can also be used. For instance :
 
-.. code-block:: python
-
-    first_db("complete & left_truncated")[0].values
-
-It must returns :python:`np.array([9, 11])`. Inversly, to get left truncations values of
-complete lifetimes, call:
-
-.. code-block:: python
-
-    first_db("complete & left_truncated")[1].values
-
-It must returns :python:`np.array([3, 9])`. The "or" operator can also be used. For instance :
-
-.. code-block:: python
-
-    first_db("complete | left_truncated")[0].values
-
-
-It returns all complete lifetimes :python:`np.array([10, 9, 11])`.
+>>> first_db("complete | left_truncated")[0].values
+np.array([10, 9, 11])
 
 Finally, a convenient method of databook is :python:`info`. It summarizes all the databook
 content in one view :
 
-.. code-block:: python
+>>> first_db.info()
+     Lifetime data            Counts
+ Nb samples (tot.)                12
+          Observed                 3
+     Left censored                 0
+    Right censored                 4
+ Interval censored                 0
+    Left truncated                 5
+   Right truncated                 0
+Interval truncated                 0
 
-    first_db.info
+>>> second_db.info()
+     Lifetime data            Counts
+ Nb samples (tot.)                13
+          Observed                 2
+     Left censored                 1
+    Right censored                 1
+ Interval censored                 3
+    Left truncated                 2
+   Right truncated                 1
+Interval truncated                 3

@@ -19,13 +19,13 @@ In ReLife, collected data must are loaded in numpy arrays. By default, ReLife ca
     
     import numpy as np
 
-    1d_data = {
+    first_data = {
         "observed_lifetimes": np.array([10, 11, 9, 10, 12, 13, 11]),
         "event": np.array([1, 0, 1, 0, 0, 0, 1]),
         "entry": np.array([0, 0, 3, 5, 3, 1, 9]),
     }
 
-    2d_data = {
+    second_data = {
         "observed_lifetimes": np.array(
             [[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]]
         ),
@@ -34,7 +34,7 @@ In ReLife, collected data must are loaded in numpy arrays. By default, ReLife ca
     }
 
 
-As you see :python:`1d_data` and :python:`2d_data` only differs in the shape of 
+As you see :python:`first_data` and :python:`second_data` only differs in the shape of 
 :python:`observed_lifetimes`. The advantage of 2d-array observed lifetimes is that this
 data format inherently carries censorship information whereas with 1d-array, one must
 add indicators of censorship (here it is handled by :python:`event` array). 
