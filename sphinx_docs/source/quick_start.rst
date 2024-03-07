@@ -5,7 +5,7 @@ Quick start
    :language: python
 
 
-.. image:: ../img/main_process.png
+.. image:: img/main_process.png
     :scale: 100 %
     :align: center
 
@@ -26,7 +26,7 @@ First get lifetimes data in numpy array. For instance :
     }
 
 .. seealso::
-    For more details, please read :doc:`data_collect`.
+    For more details, please read :doc:`user_guide/data_collect`.
 
 Data exploration
 ----------------
@@ -45,7 +45,7 @@ Then instanciate a :py:func:`~relife2.survival.data.databook` databook :
     )
 
 .. seealso::
-    For more details, please read :doc:`data`.
+    For more details, please read :doc:`user_guide/data`.
 
 Lifetime data analysis
 ----------------------
@@ -59,7 +59,7 @@ You're now ready to use ReLife models like this basic exponential distrubition :
     exponential_distri = exponential(db)
 
 .. seealso::
-    For more details, please see :doc:`survival`
+    For more details, please see :doc:`user_guide/survival`
 
 
 Asset management policy
@@ -72,5 +72,5 @@ How to custom ReLife ?
 
 Some users may want to test their own implementations. We tried to make each ReLife
 processes customizable. If you want to go deeper and test ReLife with your own data 
-format and/or survival model please read : :doc:`../customization_guides/data` 
-and :doc:`../customization_guides/survival`
+format and/or survival model please read : :doc:`contributor_guide/data` 
+and :doc:`contributor_guide/survival`

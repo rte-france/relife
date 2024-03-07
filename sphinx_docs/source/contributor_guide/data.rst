@@ -9,7 +9,7 @@ How to custom your databook
     :align: center
 
 The databook function instanciates a :python:`DataBook` object. This functions take
-several arguments (see :doc:`../detailed_doc/data`) but it also allows extra 
+several arguments (see :doc:`../reference/data`) but it also allows extra 
 key-words arguments like :
 
 * :python:`observed` : :python:`Data` instance (default to :python:`None`)

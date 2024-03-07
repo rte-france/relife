@@ -21,7 +21,11 @@ extensions = [
     "sphinx.ext.napoleon",  # to configure docstring style (use google style by default)
     "sphinx_copybutton",  # copy button in code block
     "sphinx.ext.viewcode",  # to insert source code link next to objects documentation
+    "sphinx_design",  # to enable grids and other cool stuff
 ]
+myst_enable_extensions = [
+    "colon_fence"
+]  # to enable when using both myst_parser and sphinx-design
 
 templates_path = ["_templates"]
 exclude_patterns = []

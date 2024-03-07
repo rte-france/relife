@@ -28,7 +28,7 @@ Every ReLife's model shares the same structure. They are basically a model objec
 a :python:`functions` and an :python:`optmizer` instance.
 
 .. seealso::
-    For more details, please read :doc:`../customization_guides/survival`.
+    For more details, please read :doc:`../contributor_guide/survival`.
 
 For basic a usage, one can only remember that these model objects allow the user to quickly
 estimate its parameters and make inferences from its functions.

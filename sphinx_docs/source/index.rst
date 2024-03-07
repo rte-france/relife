@@ -10,54 +10,98 @@ Welcome to ReLife2's documentation!
 **Date**: |today| **Version**: |version|
 
 ReLife is an open source, blah blah blah, etc.
-
-.. toctree::
-   :maxdepth: 1
-   :caption: New to ReLife ?
-
-   get_started/quick_start
-
-.. toctree::
-   :maxdepth: 1
-   :numbered:
-   :caption: User guide
-
-   get_started/data_collect
-   get_started/data
-   get_started/survival
-
-.. toctree::
-   :maxdepth: 1
-   :numbered:
-   :caption: Contributor's guide
-
-   customization_guides/data
-   customization_guides/survival
-
-.. toctree::
-   :maxdepth: 1
-   :caption: API reference
-
-   detailed_doc/data
-   detailed_doc/survival_parametric
-   detailed_doc/survival_semiparametric
-
-
-Installation
-------------
-
-To use ReLife2, first install it using pip:
+To install ReLife2, first install it using pip:
 
 .. code-block:: console
 
    pip install .
 
-Uninstall
----------
 
-.. code-block:: console
+.. grid:: 1 2 2 2
+    :gutter: 4
+    :padding: 2 2 0 0
+    :class-container: sd-text-center
 
-   pip uninstall relife2
+    .. grid-item-card:: Getting started
+         :class-card: intro-card
+
+         New to *ReLife*? Check out the quick start page. It contains examples of main 
+         *ReLife* commands and links to additional documentation.
+
+
+         +++
+
+         .. button-ref:: quick_start
+            :ref-type: any
+            :click-parent:
+            :color: secondary
+            :expand:
+
+            Quick start
+
+    .. grid-item-card::  User guide
+         :class-card: intro-card
+         :shadow: md
+
+         The user guide provides in-depth information on the
+         key concepts of ReLife with useful background information and explanation.
+
+         +++
+
+         .. button-ref:: user_guide/index
+            :ref-type: any
+            :click-parent:
+            :color: secondary
+            :expand:
+
+            To the user guide
+
+    .. grid-item-card::  API reference
+         :class-card: intro-card
+
+         The reference guide contains a detailed description of
+         the ReLife API. The reference describes how the methods work and which parameters can
+         be used. It assumes that you have an understanding of the key concepts and Python
+         knowledge
+
+         +++
+
+         .. button-ref:: reference/index
+            :ref-type: any
+            :click-parent:
+            :color: secondary
+            :expand:
+
+            To the reference guide
+
+    .. grid-item-card::  Contributor's guide
+         :class-card: intro-card
+
+         Saw a typo in the documentation? Want to improve
+         existing functionalities? The contributing guidelines will guide
+         you through the process of improving ReLife.
+
+         +++
+
+         .. button-ref:: contributor_guide/index
+            :ref-type: any
+            :click-parent:
+            :color: secondary
+            :expand:
+
+            To the contributor's guide
+
+
+.. toctree::
+    :maxdepth: 3
+    :hidden:
+    :titlesonly:
+
+
+    quick_start
+    user_guide/index
+    reference/index
+    contributor_guide/index
 
 
 

@@ -13,7 +13,7 @@ In ReLife, collected data must are loaded in numpy arrays. By default, ReLife ca
 
 .. seealso::
     Advance users may want to use other input array shapes and/or data types. It is possible through the
-    ``parser`` method of ``Data`` and ``IntervalData`` object. Please read :doc:`../customization_guides/data`.
+    ``parser`` method of ``Data`` and ``IntervalData`` object. Please read :doc:`../contributor_guide/data`.
 
 .. code-block:: python
     
