@@ -213,7 +213,7 @@ class WeibullDistriFunction(ParametricDistriFunction):
 
 
 class GompertzDistriFunction(ParametricDistriFunction):
-    def __init__(self, param_names=["c", "rate"]):
+    def __init__(self, param_names, nb_params):
         super().__init__(param_names=param_names)
 
     def hf(self, time: np.ndarray) -> np.ndarray:

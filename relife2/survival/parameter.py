@@ -111,6 +111,16 @@ class Parameter:
     def __getitem__(self, i):
         return self.values[i]
 
+    def __setitem__(self, param_name: str, value: float):
+        if param_name in self.params_index:
+            self.values[self.params_index[param_name]] = value
+        else:
+            raise AttributeError(
+                f"""
+                Parameter has no attr called {param_name}
+                """
+            )
+
     def __getattr__(self, attr: str):
         """
         called if attr is not found in attributes of the class
