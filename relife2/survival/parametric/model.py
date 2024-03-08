@@ -3,7 +3,7 @@ from typing import Type
 
 import numpy as np
 
-from .. import DataBook
+from .. import DataBook, databook
 from ..parameter import FittingResult, Parameter
 from .function import (
     ExponentialDistriFunction,
@@ -24,8 +24,10 @@ class ParametricDistriModel:
     def __init__(
         self,
         functions: ParametricDistriFunction,
-        optimizer: DistriOptimizer,
-        # optimizer: DistriOptimizer,
+        likelihood_cls: Type[ParametricDistriLikelihood],
+        optimizer_cls: Type[DistriOptimizer],
+        init_params=False,
+        # # optimizer: DistriOptimizer,
     ):
 
         if not isinstance(functions, ParametricDistriFunction):
@@ -33,19 +35,23 @@ class ParametricDistriModel:
                 "ParametricDistriFunction expected, got"
                 f" '{type(functions).__name__}'"
             )
-        if not isinstance(optimizer, DistriOptimizer):
-            raise TypeError(
-                "ParametricDistriLikelihood expected, got"
-                f" '{type(optimizer).__name__}'"
-            )
+
+        if not issubclass(likelihood_cls, ParametricDistriLikelihood):
+            raise ValueError("ParametricDistriLikelihood subclass expected")
+
+        if not optimizer_cls == DistriOptimizer:
+            raise ValueError("DistriOptimizer expected")
 
         # assert issubclass(optimizer, DistriOptimizer)
         self.functions = functions
-        self.optimizer = optimizer
+        self.likelihood_cls = likelihood_cls
+        self.optimizer_cls = optimizer_cls
         self._fitting_results = None
         self._fitting_params = Parameter(
             functions.params.nb_params, functions.params.param_names
         )
+        self.init_params = init_params
+        self.init_params_values = self.functions.params.values
 
     def __getattr__(self, attr):
         """
@@ -81,16 +87,21 @@ class ParametricDistriModel:
                     else:
                         self.functions.params.values = input_params
                         del kwargs["params"]
-                elif "params" not in kwargs and self.fitting_results is None:
-                    warnings.warn(
-                        "No fitted model params. Call fit() or specify params"
-                        " first",
-                        UserWarning,
-                    )
-                    return None
+                    res = getattr(self.functions, attr)(*args, **kwargs)
+                    self.functions.params.values = self.init_params_values
+
+                elif (
+                    "params" not in kwargs and self.fitting_params is not None
+                ):
+                    res = getattr(self.functions, attr)(*args, **kwargs)
+                elif "params" not in kwargs and self.init_params:
+                    res = getattr(self.functions, attr)(*args, **kwargs)
                 else:
-                    self.functions.params.values = self.fitting_params
-                return getattr(self.functions, attr)(*args, **kwargs)
+                    raise ValueError(
+                        "No model params found. Call fit() or specify params"
+                        " first"
+                    )
+                return res
 
             return wrapper
         else:
@@ -98,9 +109,28 @@ class ParametricDistriModel:
 
     def fit(
         self,
+        observed_lifetimes: np.ndarray,
+        complete_indicators: np.ndarray = None,
+        left_censored_indicators: np.ndarray = None,
+        right_censored_indicators: np.ndarray = None,
+        entry: np.ndarray = None,
+        departure: np.ndarray = None,
         **kwargs,
     ):
-        self.functions, opt = self.optimizer.fit(self.functions, **kwargs)
+
+        db = databook(
+            observed_lifetimes,
+            complete_indicators,
+            left_censored_indicators,
+            right_censored_indicators,
+            entry,
+            departure,
+        )
+
+        likelihood = self.likelihood_cls(db)
+        optimizer = self.optimizer_cls(likelihood)
+
+        self.functions, opt = optimizer.fit(self.functions, **kwargs)
         jac = self.optimizer.likelihood.jac_negative_log_likelihood(
             self.functions
         )
@@ -142,58 +172,84 @@ class ParametricDistriModel:
         return self._fitting_params
 
 
-def exponential(databook: DataBook) -> ParametricDistriModel:
-    """Create exponential distribution.
+def exponential(*params) -> ParametricDistriModel:
 
-    Args:
-        databook (DataBook): _description_
-
-    Returns:
-        ParametricDistriModel: _description_
-    """
     functions = ExponentialDistriFunction(param_names=["rate"])
-    likelihood = ExponentialDistriLikelihood(databook)
-    optimizer = DistriOptimizer(likelihood)
-    return ParametricDistriModel(
-        functions,
-        optimizer,
-    )
+    if len(params) != 0:
+        params = np.asarray(params)
+        if params.shape != functions.params.values:
+            raise ValueError("Incorrect params shape")
+        functions.params.values = params
+
+        return ParametricDistriModel(
+            functions,
+            ExponentialDistriLikelihood,
+            DistriOptimizer,
+            init_params=True,
+        )
+    else:
+        return ParametricDistriModel(
+            functions,
+            ExponentialDistriLikelihood,
+            DistriOptimizer,
+            init_params=False,
+        )
 
 
-def weibull(databook: DataBook) -> ParametricDistriModel:
-    """Create Weibull distribution.
+def weibull(*params) -> ParametricDistriModel:
 
-    Args:
-        databook (DataBook): _description_
-
-    Returns:
-        ParametricDistriModel: _description_
-    """
     functions = WeibullDistriFunction(param_names=["c", "rate"])
-    likelihood = WeibullDistriLikelihood(databook)
-    optimizer = DistriOptimizer(likelihood)
-    return ParametricDistriModel(
-        functions,
-        optimizer,
-    )
+    if len(params) != 0:
+        params = np.asarray(params)
+        if params.shape != functions.params.values:
+            raise ValueError("Incorrect params shape")
+        functions.params.values = params
+
+        return ParametricDistriModel(
+            functions,
+            WeibullDistriLikelihood,
+            DistriOptimizer,
+            init_params=True,
+        )
+    else:
+        return ParametricDistriModel(
+            functions,
+            WeibullDistriLikelihood,
+            DistriOptimizer,
+            init_params=False,
+        )
 
 
-def gompertz(databook: DataBook) -> ParametricDistriModel:
-    """Create gompertz distribution.
+def gompertz(*params) -> ParametricDistriModel:
 
-    Args:
-        databook (DataBook): _description_
-
-    Returns:
-        ParametricDistriModel: _description_
-    """
     functions = GompertzDistriFunction(param_names=["c", "rate"])
-    likelihood = GompertzDistriLikelihood(databook)
-    optimizer = DistriOptimizer(likelihood)
-    return ParametricDistriModel(
-        functions,
-        optimizer,
-    )
+    if len(params) != 0:
+        params = np.asarray(params)
+        if params.shape != functions.params.values:
+            raise ValueError("Incorrect params shape")
+        functions.params.values = params
+
+        return ParametricDistriModel(
+            functions,
+            GompertzDistriLikelihood,
+            DistriOptimizer,
+            init_params=True,
+        )
+    else:
+        return ParametricDistriModel(
+            functions,
+            GompertzDistriLikelihood,
+            DistriOptimizer,
+            init_params=False,
+        )
+
+
+# class create_distri:
+
+#     def __call__(self, functions : Type[], likelihood : Type[], optimizer : Type[]):
+#         # check functions.__module__ etc.
+#         return distri # function like gompertz, etc.
+#         # custom_distri = distri(*params)
 
 
 def custom_distri(
