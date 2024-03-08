@@ -1,12 +1,8 @@
-from .function import ParametricDistFunction
-from .likelihood import ParametricDistLikelihood
-from .model import ParametricDistModel, exponential, gompertz, weibull
+from .model import dist, exponential, gompertz, weibull
 
 __all__ = [
+    "dist",
     "exponential",
-    "ParametricDistModel",
-    "ParametricDistFunction",
-    "ParametricDistLikelihood",
     "gompertz",
     "weibull",
 ]

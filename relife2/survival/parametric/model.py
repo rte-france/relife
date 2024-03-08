@@ -5,19 +5,17 @@ import numpy as np
 
 from .. import databook
 from ..parameter import FittingResult, Parameter
-from .function import (
+from .distribution import (
+    DistOptimizer,
     ExponentialDistFunction,
-    GompertzDistFunction,
-    ParametricDistFunction,
-    WeibullDistFunction,
-)
-from .likelihood import (
     ExponentialDistLikelihood,
+    GompertzDistFunction,
     GompertzDistLikelihood,
+    ParametricDistFunction,
     ParametricDistLikelihood,
+    WeibullDistFunction,
     WeibullDistLikelihood,
 )
-from .optimizer import DistOptimizer
 
 
 class ParametricDistModel:
@@ -160,13 +158,16 @@ class ParametricDistModel:
         return self._fitting_params
 
 
-def dist(Function, Likelihood, Optimizer):
+def dist(
+    Function: Type[ParametricDistFunction],
+    Likelihood: Type[ParametricDistLikelihood],
+    Optimizer: Type[DistOptimizer],
+):
 
     if not issubclass(Function, ParametricDistFunction):
         parent_classes = (Cls.__name__ for Cls in Function.__bases__)
         raise ValueError(
-            "ParametricDistFunction subclass expected, got"
-            f" '{parent_classes}'"
+            f"ParametricDistFunction subclass expected, got '{parent_classes}'"
         )
 
     if not issubclass(Likelihood, ParametricDistLikelihood):
