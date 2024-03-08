@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import approx_fprime
 
 from .. import DataBook
-from .function import ParametricDistriFunction
+from .function import ParametricDistFunction
 
 
 class ParametricLikelihood(ABC):
@@ -26,7 +26,7 @@ class ParametricLikelihood(ABC):
         pass
 
 
-class ParametricDistriLikelihood(ParametricLikelihood):
+class ParametricDistLikelihood(ParametricLikelihood):
     def __init__(self, databook: DataBook):
         super().__init__(databook)
         # relife/parametric.ParametricHazardFunction
@@ -45,7 +45,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def negative_log_likelihood(
         self,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
 
         D_contrib = -np.sum(
@@ -78,7 +78,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def jac_negative_log_likelihood(
         self,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
 
         jac_D_contrib = -np.sum(
@@ -134,7 +134,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
 
     def hess_negative_log_likelihood(
         self,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
         eps: float = 1e-6,
         scheme: str = None,
     ) -> np.ndarray:
@@ -186,7 +186,7 @@ class ParametricDistriLikelihood(ParametricLikelihood):
         return hess
 
 
-class ExponentialDistriLikelihood(ParametricDistriLikelihood):
+class ExponentialDistLikelihood(ParametricDistLikelihood):
     def __init__(self, databook: DataBook):
         super().__init__(databook)
 
@@ -194,7 +194,7 @@ class ExponentialDistriLikelihood(ParametricDistriLikelihood):
     def jac_hf(
         self,
         time: np.ndarray,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
         # shape : (len(sample), nb_param)
         return np.ones((time.size, 1))
@@ -203,20 +203,20 @@ class ExponentialDistriLikelihood(ParametricDistriLikelihood):
     def jac_chf(
         self,
         time: np.ndarray,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
         # shape : (len(sample), nb_param)
         return np.ones((time.size, 1)) * time[:, None]
 
 
-class WeibullDistriLikelihood(ParametricDistriLikelihood):
+class WeibullDistLikelihood(ParametricDistLikelihood):
     def __init__(self, databook: DataBook):
         super().__init__(databook)
 
     def jac_hf(
         self,
         time: np.ndarray,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
 
         return np.column_stack(
@@ -238,7 +238,7 @@ class WeibullDistriLikelihood(ParametricDistriLikelihood):
     def jac_chf(
         self,
         time: np.ndarray,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
         return np.column_stack(
             (
@@ -253,14 +253,14 @@ class WeibullDistriLikelihood(ParametricDistriLikelihood):
         )
 
 
-class GompertzDistriLikelihood(ParametricDistriLikelihood):
+class GompertzDistLikelihood(ParametricDistLikelihood):
     def __init__(self, databook: DataBook):
         super().__init__(databook)
 
     def jac_hf(
         self,
         time: np.ndarray,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
         return np.column_stack(
             (
@@ -275,7 +275,7 @@ class GompertzDistriLikelihood(ParametricDistriLikelihood):
     def jac_chf(
         self,
         time: np.ndarray,
-        functions: ParametricDistriFunction,
+        functions: ParametricDistFunction,
     ) -> np.ndarray:
         return np.column_stack(
             (

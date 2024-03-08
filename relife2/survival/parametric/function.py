@@ -88,7 +88,7 @@ class ParametricFunction(ABC):
         pass
 
 
-class ParametricDistriFunction(ParametricFunction):
+class ParametricDistFunction(ParametricFunction):
     def __init__(self, nb_params: int = None, param_names: list = None):
         params = Parameter(nb_params=nb_params, param_names=param_names)
         super().__init__(params)
@@ -110,22 +110,22 @@ class ParametricDistriFunction(ParametricFunction):
 
     @abstractmethod
     def mean(self):
-        """only mandatory for ParametricDistri as exact expression is known"""
+        """only mandatory for ParametricDist as exact expression is known"""
         pass
 
     @abstractmethod
     def var(self):
-        """only mandatory for ParametricDistri as exact expression is known"""
+        """only mandatory for ParametricDist as exact expression is known"""
         pass
 
     @abstractmethod
     def mrl(self):
-        """only mandatory for ParametricDistri as exact expression is known"""
+        """only mandatory for ParametricDist as exact expression is known"""
         pass
 
     @abstractmethod
     def ichf(self, cumulative_hazard_rate: np.ndarray):
-        """only mandatory for ParametricDistri as exact expression is known"""
+        """only mandatory for ParametricDist as exact expression is known"""
         pass
 
     # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
@@ -135,7 +135,7 @@ class ParametricDistriFunction(ParametricFunction):
         return self.ichf(cumulative_hazard_rate)
 
 
-class ExponentialDistriFunction(ParametricDistriFunction):
+class ExponentialDistFunction(ParametricDistFunction):
     def __init__(self, param_names=["rate"]):
         super().__init__(param_names=param_names)
 
@@ -175,7 +175,7 @@ class ExponentialDistriFunction(ParametricDistriFunction):
         return cumulative_hazard_rate / self.params.rate
 
 
-class WeibullDistriFunction(ParametricDistriFunction):
+class WeibullDistFunction(ParametricDistFunction):
     def __init__(self, param_names=["c", "rate"]):
         super().__init__(param_names=param_names)
 
@@ -212,8 +212,8 @@ class WeibullDistriFunction(ParametricDistriFunction):
         return cumulative_hazard_rate ** (1 / self.params.c) / self.params.rate
 
 
-class GompertzDistriFunction(ParametricDistriFunction):
-    def __init__(self, param_names, nb_params):
+class GompertzDistFunction(ParametricDistFunction):
+    def __init__(self, param_names=["c", "rate"]):
         super().__init__(param_names=param_names)
 
     def hf(self, time: np.ndarray) -> np.ndarray:

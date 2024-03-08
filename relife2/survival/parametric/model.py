@@ -6,31 +6,31 @@ import numpy as np
 from .. import databook
 from ..parameter import FittingResult, Parameter
 from .function import (
-    ExponentialDistriFunction,
-    GompertzDistriFunction,
-    ParametricDistriFunction,
-    WeibullDistriFunction,
+    ExponentialDistFunction,
+    GompertzDistFunction,
+    ParametricDistFunction,
+    WeibullDistFunction,
 )
 from .likelihood import (
-    ExponentialDistriLikelihood,
-    GompertzDistriLikelihood,
-    ParametricDistriLikelihood,
-    WeibullDistriLikelihood,
+    ExponentialDistLikelihood,
+    GompertzDistLikelihood,
+    ParametricDistLikelihood,
+    WeibullDistLikelihood,
 )
-from .optimizer import DistriOptimizer
+from .optimizer import DistOptimizer
 
 
-class ParametricDistriModel:
+class ParametricDistModel:
     def __init__(
         self,
-        functions: ParametricDistriFunction,
-        Likelihood: Type[ParametricDistriLikelihood],
-        Optimizer: Type[DistriOptimizer],
+        functions: ParametricDistFunction,
+        Likelihood: Type[ParametricDistLikelihood],
+        Optimizer: Type[DistOptimizer],
         init_params=False,
-        # # optimizer: DistriOptimizer,
+        # # optimizer: DistOptimizer,
     ):
 
-        # assert issubclass(optimizer, DistriOptimizer)
+        # assert issubclass(optimizer, DistOptimizer)
         self.functions = functions
         self.Likelihood = Likelihood
         self.Optimizer = Optimizer
@@ -162,22 +162,22 @@ class ParametricDistriModel:
 
 def dist(Function, Likelihood, Optimizer):
 
-    if not issubclass(Function, ParametricDistriFunction):
+    if not issubclass(Function, ParametricDistFunction):
         parent_classes = (Cls.__name__ for Cls in Function.__bases__)
         raise ValueError(
-            "ParametricDistriFunction subclass expected, got"
+            "ParametricDistFunction subclass expected, got"
             f" '{parent_classes}'"
         )
 
-    if not issubclass(Likelihood, ParametricDistriLikelihood):
+    if not issubclass(Likelihood, ParametricDistLikelihood):
         parent_classes = (Cls.__name__ for Cls in Function.__bases__)
         raise ValueError(
-            "ParametricDistriLikelihood subclass expected, got"
+            "ParametricDistLikelihood subclass expected, got"
             f" '{parent_classes}'"
         )
 
-    if not Optimizer == DistriOptimizer:
-        raise ValueError(f"DistriOptimizer expected, got {Optimizer.__name__}")
+    if not Optimizer == DistOptimizer:
+        raise ValueError(f"DistOptimizer expected, got {Optimizer.__name__}")
 
     def custom_dist(*params, **kparams):
         functions = Function()
@@ -208,7 +208,7 @@ def dist(Function, Likelihood, Optimizer):
                 functions.params[key] = value
             init_params = True
 
-        return ParametricDistriModel(
+        return ParametricDistModel(
             functions,
             Likelihood,
             Optimizer,
@@ -219,20 +219,20 @@ def dist(Function, Likelihood, Optimizer):
 
 
 exponential = dist(
-    ExponentialDistriFunction,
-    ExponentialDistriLikelihood,
-    DistriOptimizer,
+    ExponentialDistFunction,
+    ExponentialDistLikelihood,
+    DistOptimizer,
 )
 
 weibull = dist(
-    WeibullDistriFunction,
-    WeibullDistriLikelihood,
-    DistriOptimizer,
+    WeibullDistFunction,
+    WeibullDistLikelihood,
+    DistOptimizer,
 )
 
 
 gompertz = dist(
-    GompertzDistriFunction,
-    GompertzDistriLikelihood,
-    DistriOptimizer,
+    GompertzDistFunction,
+    GompertzDistLikelihood,
+    DistOptimizer,
 )

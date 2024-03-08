@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
-from .function import GompertzDistriFunction, ParametricFunction
+from .function import GompertzDistFunction, ParametricFunction
 from .likelihood import ParametricLikelihood
 
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
@@ -20,7 +20,7 @@ class ParametricOptimizer(ABC):
         pass
 
 
-class DistriOptimizer(ParametricOptimizer):
+class DistOptimizer(ParametricOptimizer):
     def __init__(self, likelihood: ParametricLikelihood):
         super().__init__(likelihood)
         # relife/parametric.ParametricHazardFunction
@@ -28,9 +28,9 @@ class DistriOptimizer(ParametricOptimizer):
             "L-BFGS-B"
         )
 
-    # relife/distribution.ParametricLifetimeDistribution
+    # relife/distribution.ParametricLifetimeDistbution
     def _init_param(self, functions: ParametricFunction) -> np.ndarray:
-        if isinstance(functions, GompertzDistriFunction):
+        if isinstance(functions, GompertzDistFunction):
             rate = np.pi / (
                 np.sqrt(6)
                 * np.std(
