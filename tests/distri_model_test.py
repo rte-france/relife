@@ -6,117 +6,53 @@ from relife2.survival.parametric import exponential, gompertz, weibull
 
 
 @pytest.fixture(scope="module")
-def databook():
+def data():
     return load_power_transformer()
 
 
-@pytest.fixture(scope="module")
-def exponential_distri(databook):
-    return exponential(databook)
-
-
-@pytest.fixture(scope="module")
-def weibull_distri(databook):
-    return weibull(databook)
-
-
-@pytest.fixture(scope="module")
-def gompertz_distri(databook):
-    return gompertz(databook)
-
-
-# @pytest.fixture(scope="module")
-# def gamma_distri(databook):
-#     pass
-
-
-# @pytest.fixture(scope="module")
-# def loglogistic_distri(databook):
-#     pass
-
-
-@pytest.mark.parametrize(
-    "model, params",
-    [
-        ("exponential_distri", 0.00795203),
-        ("weibull_distri", [3.46597395, 0.01227849]),
-        ("gompertz_distri", [0.00865741, 0.06062632]),
-        # ("gamma_distri", [5.3571091, 0.06622822]),
-        # ("loglogistic_distri", [3.92614064, 0.0133325]),
+@pytest.fixture(
+    scope="module",
+    params=[
+        exponential(0.00795203),
+        weibull(3.46597395, 0.01227849),
+        gompertz(0.00865741, 0.06062632),
+        # gamma(5.3571091, 0.06622822),
+        # logLogistic(3.92614064, 0.0133325),
     ],
 )
-def test_sf(model, params, request):
-    model = request.getfixturevalue(model)
-    print(model.params)
-    assert model.sf(
-        model.median(params=params), params=params
-    ) == pytest.approx(0.5, rel=1e-3)
+def model(request):
+    return request.param
 
 
-@pytest.mark.parametrize(
-    "model, params",
-    [
-        ("exponential_distri", 0.00795203),
-        ("weibull_distri", [3.46597395, 0.01227849]),
-        ("gompertz_distri", [0.00865741, 0.06062632]),
-        # ("gamma_distri", [5.3571091, 0.06622822]),
-        # ("loglogistic_distri", [3.92614064, 0.0133325]),
-    ],
-)
-def test_rvs(model, params, request):
-    model = request.getfixturevalue(model)
+def test_sf(model):
+    assert model.sf(model.median()) == pytest.approx(0.5, rel=1e-3)
+
+
+def test_rvs(model):
     size = 10
-    assert model.rvs(size=size, params=params).shape == (size,)
+    assert model.rvs(size=size).shape == (size,)
 
 
 # /!\ depends upon LS_INTEGRATE
-
-# @pytest.mark.parametrize(
-#     "model, params",
-#     [
-#         ("exponential_distri", 0.00795203),
-#         # ("weibull_distri", [3.46597395, 0.01227849]),
-#         # ("gompertz_distri", [0.00865741, 0.06062632]),
-#         # ("gamma_distri", [5.3571091, 0.06622822]),
-#         # ("loglogistic_distri", [3.92614064, 0.0133325]),
-#     ],
-# )
-# def test_mean(model, params, request):
-#     model = request.getfixturevalue(model)
-#     assert super(type(model), model).mean(params=params) == pytest.approx(
-#         model.mean(params=params), rel=1e-3
+# def test_mean(model):
+#     assert super(type(model), model).mean() == pytest.approx(
+#         model.mean(), rel=1e-3
 #     )
 
 
-@pytest.mark.parametrize(
-    "model, params",
-    [
-        ("exponential_distri", 0.00795203),
-        ("weibull_distri", [3.46597395, 0.01227849]),
-        ("gompertz_distri", [0.00865741, 0.06062632]),
-        # ("gamma_distri", [5.3571091, 0.06622822]),
-        # ("loglogistic_distri", [3.92614064, 0.0133325]),
-    ],
-)
-def test_mrl(model, params, request):
-    model = request.getfixturevalue(model)
+def test_mrl(model):
     t = np.arange(10)
-    assert model.mrl(t, params=params).shape == (t.size,)
+    assert model.mrl(t).shape == (t.size,)
 
 
-@pytest.mark.parametrize(
-    "model, params",
-    [
-        ("exponential_distri", 0.00795203),
-        ("weibull_distri", [3.46597395, 0.01227849]),
-        ("gompertz_distri", [0.00865741, 0.06062632]),
-        # ("gamma_distri", [5.3571091, 0.06622822]),
-        # ("loglogistic_distri", [3.92614064, 0.0133325]),
-    ],
-)
-def test_fit(model, params, request):
-    model = request.getfixturevalue(model)
-    model.fit()
+def test_fit(model, data):
+    params = model.params.values.copy()
+    model.fit(
+        data[0, :],
+        complete_indicators=data[1, :] == 1,
+        right_censored_indicators=data[1, :] == 0,
+        entry=data[2, :],
+    )
     assert model.fitting_params.values == pytest.approx(params, rel=1e-3)
 
 

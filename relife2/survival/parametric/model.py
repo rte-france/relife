@@ -117,11 +117,9 @@ class ParametricDistModel:
         optimizer = self.Optimizer(likelihood)
 
         self.functions, opt = optimizer.fit(self.functions, **kwargs)
-        jac = self.optimizer.likelihood.jac_negative_log_likelihood(
-            self.functions
-        )
+        jac = optimizer.likelihood.jac_negative_log_likelihood(self.functions)
         var = np.linalg.inv(
-            self.optimizer.likelihood.hess_negative_log_likelihood(
+            optimizer.likelihood.hess_negative_log_likelihood(
                 self.functions, **kwargs
             )
         )
@@ -129,7 +127,7 @@ class ParametricDistModel:
             opt,
             jac,
             var,
-            len(self.optimizer.likelihood.databook),
+            len(db),
         )
         self._fitting_params.values = opt.x
 

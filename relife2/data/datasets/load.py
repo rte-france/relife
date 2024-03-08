@@ -1,11 +1,10 @@
 from pathlib import Path
+from typing import Tuple
 
 import numpy as np
 
-from ..base import DataBook, databook
 
-
-def load_power_transformer() -> DataBook:
+def load_power_transformer() -> Tuple[np.ndarray]:
     """Load and return the power transformer lifetime data.
 
     The data were simulated from a real estimate:
@@ -35,9 +34,4 @@ def load_power_transformer() -> DataBook:
         unpack=True,
     )
 
-    return databook(
-        data[0, :],
-        complete_indicators=data[1, :] == 1,
-        right_censored_indicators=data[1, :] == 0,
-        entry=data[2, :],
-    )
+    return data
