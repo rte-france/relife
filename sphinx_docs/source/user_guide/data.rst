@@ -5,7 +5,7 @@ How to use databook
    :language: python
 
 
-.. image:: ../img/main_process_1.png
+.. image:: ../img/main_process_bis_1.png
     :scale: 100 %
     :align: center
 

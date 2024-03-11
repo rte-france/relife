@@ -6,10 +6,14 @@
 Welcome to ReLife2's documentation!
 ===================================
 
-
 **Date**: |today| **Version**: |version|
 
-ReLife is an open source, blah blah blah, etc.
+ReLife is an open source Python library for asset management based on reliability theory and lifetime data analysis.
+
+* **Survival analysis**: non-parametric estimator (Kaplan-Meier), parametric estimator (Maximum Likelihood) and regression models (Accelerated Failure Time and Parametric Proportional Hazards) on left-truncated, right-censored and left-censored lifetime data.
+* **Reliability theory**: optimal age of replacement for time-based mainteance policy for one-cycle or infinite number of cycles, with exponential discounting.
+* **Renewal theory**: expected number of events, expected total costs or expected number of replacements for run-to-failures or age replacement policies.
+
 To install ReLife2, first install it using pip:
 
 .. code-block:: console
@@ -25,8 +29,8 @@ To install ReLife2, first install it using pip:
     .. grid-item-card:: Getting started
          :class-card: intro-card
 
-         New to *ReLife*? Check out the quick start page. It contains examples of main 
-         *ReLife* commands and links to additional documentation.
+         New to ReLife? Check out the quick start page. It contains examples of main 
+         ReLife commands and links to additional documentation.
 
 
          +++
