@@ -43,8 +43,8 @@ survival models are in the ``relife2.survival`` module and must be imported from
 
 This command imports all parametric survival models of ReLife. At model's instanciation, one can either :
 
-1. specify model's parameters
-2. let parameters initialization be random
+* specify model's parameters
+* or let parameters initialization be random
 
 
 .. code-block:: python

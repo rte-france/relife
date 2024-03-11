@@ -10,6 +10,6 @@ knowledge
    :maxdepth: 1
    :caption: API reference
 
+   models
    data
    survival_parametric
-   survival_semiparametric

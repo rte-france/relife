@@ -3,8 +3,7 @@ from typing import Type
 
 import numpy as np
 
-from .. import databook
-from ..parameter import FittingResult, Parameter
+from . import databook
 from .distribution import (
     DistOptimizer,
     ExponentialDistFunction,
@@ -16,6 +15,7 @@ from .distribution import (
     WeibullDistFunction,
     WeibullDistLikelihood,
 )
+from .parameter import FittingResult, Parameter
 
 
 class ParametricDistModel:

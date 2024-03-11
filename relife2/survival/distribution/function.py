@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import root_scalar
 from scipy.special import exp1, gamma, gammaincc
 
-from ...parameter import Parameter
+from ..parameter import Parameter
 
 
 class ParametricFunction(ABC):

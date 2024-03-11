@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from relife2.data import load_power_transformer
-from relife2.survival.parametric import exponential, gompertz, weibull
+from relife2.survival import exponential, gompertz, weibull
 
 
 @pytest.fixture(scope="module")

@@ -10,5 +10,5 @@ you through the process of improving ReLife.
    :numbered:
    :caption: Contributor's guide
 
-   data
    survival
+   data

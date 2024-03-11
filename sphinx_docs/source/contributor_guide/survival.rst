@@ -1,108 +1,119 @@
-How to custom your survival model
-=================================
+How to contribute to ReLife's survival analysis ?
+=================================================
 
 .. role:: python(code)
    :language: python
 
-In ReLife, every model is composed of two objects :
+In ReLife, 4 objects are generally used in models :
 
-* ``functions`` : this object contains a ``parameter`` object and several methods that implements expected model's functions (hazard function, survival function, mean, etc.)
-* ``optimizer``: this object contains a ``likelihood`` object instanciated with a ``databook``. It holds the ``fit`` method
 
-A more global view of this structure is given in the following graph. 
+* ``Parameter``: this object contains parameters values and names
+* ``Function`` : this object contains a ``Parameter`` object and several methods that implements expected model's functions (hazard function, survival function, mean, etc.)
+* ``Likelihood``: this object contains likelihood functions computed from ``DataBook`` object
+* ``Optimizer``: this object contains a ``Likelihood`` object instanciated with a ``DataBook``. It holds the ``fit`` method
 
-.. image:: ../img/relife2_survival.png
-    :scale: 110 %
-    :align: center
+If you want to define your own model, you have to customize these objects.
 
-Knowing that, one might think that it would be possible to define its own model by customizing
-one or all objects composing a model. That's true as long as one respects every object interfaces !
+Function object
+---------------
 
-To make it easier, in every :python:`relife2.survival` module, one can implement its custom model with
-:python:`custom_*` like functions. For instance, if one wants to implement its own distribution,
-``custom_distri`` function can be used. These functions specify required objects to custom
-a specific type of model. Let's take the example of :python:`custom_distri` . It expects 3 arguments : 
-
-* ``databook``
-* ``functions``
-* ``likelihood``
-
-If you look at our documentation, you'll see that ``functions``
-must be an object definition which inherits from ``ParametricDistriFunction`` and ``likelihood``
-must be an object definition which inherits from ``ParametricDistriLikelihood``. 
-
-.. note::
-    The arguments type changes depending from which ``survival`` module the ``custom_*``
-    function is.
-
-In the case of parametric distribution, one could write the ``functions`` class as follow :
+Function objects have the following pattern. They all inherit from a super class defining an interface
+and expecting either ``param_names`` or ``nb_params`` at initialization.
 
 .. code-block:: python
 
-    from relife2.survival.parametric.function import ParametricDistriFunction
+    class Function(FunctionSuperClass):
+        def __init__(self, param_names = ["toto", "titi"]):
+            super().__init__(self, param_names)
 
-    class MyFunction(ParametricDistriFunction)
-        def __init__(self, nb_params = 4):
-            super().__init__(nb_params)
-
-        def hf(self, time: np.ndarray) -> np.ndarray:
-            # for instance self.params[0] * np.ones_like(time)  
+        def hf(self, *args) -> np.ndarray:
+            # self.params.titi * args[0] + self.params.toto
+            # self.params[1] * args[0] + self.params[0]
             pass
-
-        def chf(self, time: np.ndarray) -> np.ndarray:
-            pass
-
-        def mean(self) -> np.ndarray:
-            pass
-
-        def var(self) -> np.ndarray:
-            pass
-
-        def mrl(self, time: np.ndarray) -> np.ndarray:
-            pass
-
-        def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
-            pass
-
-        def isf(self, probability: np.ndarray) -> np.ndarray:
-            pass
-
-As you see, many methods must be explicitly defined for a distribution model. It is specific
-for this type of model as the exact expression of these functions are well-known. For others
-parametric model, it would not be the case and only ``hf`` and ``chf`` definitions would have
-been required.
-
-.. note::
-
-    ``functions`` objects takes either ``nb_params`` and/or ``param_names`` at initialization.
-    If one know paramater names, they can be passed as a  ``list`` in ``param_names``. Then,
-    a parameter value can be called in methods with ``self.params.<param_name>``. Otherwise,
-    one must a least specify the number of parameters. Then a parameter value is accessed by
-    indexing on ``self.params``. In the example above, one could access the 3rd parameter
-    value by calling ``self.params[2]``.
-
-
-For ``likelihood``, it would look like :
 
 
 .. code-block:: python
 
-    from relife2.survival.parametric.likelihood import ParametricDistriLikelihood
+    class Function(FunctionSuperClass):
+        def __init__(self, nb_params = 3):
+            super().__init__(self, nb_params)
 
-    class MyLikelihood(ParametricDistriLikelihood)
-        def __init__(self, databook: DataBook):
-            super().__init__(databook)
-
-        def jac_hf(self, time: np.ndarray) -> np.ndarray:
-            # shape : (len(sample), nb_param)
+        def hf(self, *args) -> np.ndarray:
+            # self.params[0] * args[0]
+            # self.params.param_0 * args[0] 
             pass
 
-        def jac_chf(self, time: np.ndarray) -> np.ndarray:
-            # shape : (len(sample), nb_param)
+As you may have noticed, parameter values can be accessed very easily in ``Function`` methods by calling them
+with their names  ``self.params.<param_name>`` or slicing ``self.params[i]``.
+
+.. warning::
+    Outputs of function methods must be 1d-array or float
+
+
+Likelihood object
+-----------------
+
+Likelihood objects have the following pattern. They all inherit from a super class defining an interface
+and expecting a ``databook`` object at initialization. Briefly, ``databook`` is an object that stores 
+lifetime data given by the user after verifying their integrity. To know more about ``databook``, read :doc:`data`
+
+.. code-block:: python
+
+    class Likelihood(LikelihoodSuperClass):
+        def __init__(self, databook : DataBook):
+            super().__init__(self, databook)
+
+        def negative_log_likelihood(self, functions : Function, *args) -> float: 
+            pass
+
+        def jac_hf(self, functions : Function, *args) -> np.ndarray: 
             pass
 
 
-As you can see, only the jacobian definitions of ``hf`` and ``chf`` is required. Again, this
-is specific to parametric model as a generic expression of the likelihood is already implemented.
-Arguments passed to these methods might also change depending on the needs. For instance, could take
-``functions`` as argument.
+In ``Likelihood`` methods, ``functions`` object is used as an argument to access function definitions of the model.
+
+.. warning::
+    Outputs of likelihood methods must be float or 2d-array for derivates
+
+
+Optimizer object
+----------------
+
+Likelihood objects have the following pattern. They all inherit from a super class defining an interface
+and expecting a ``Likelihood`` object at initialization.
+
+.. code-block:: python
+
+    class Optimizer(OptimizerSuperClass):
+        def __init__(self, likelihood : Likelihood):
+            super().__init__(self, likelihood)
+
+        def fit(functions : Function, *args, **kwargs) -> Function:
+            pass
+
+
+The ``fit`` method transforms ``Function`` object by modifying its parameters. 
+
+
+Models' factories
+-----------------
+
+Contributions are easier with factories. In :python:`relife2.survival` module, every models are made from factories expecting
+previous object definitions as arguments. The following factories are used :
+
+* ``dist`` to create survival distribution
+* etc.
+
+
+For instance, in the back-end, ``exponential`` is created by calling ``dist`` like this :
+
+.. code-block:: python
+
+    exponential = dist(
+        ExponentialDistFunction,
+        ExponentialDistLikelihood,
+        DistOptimizer,
+    )
+
+Here ``ExponentialDistFunction`` is the ``Function`` object of the exponential distribution, ``ExponentialDistLikelihood``
+the likelihood and ``DistOptimizer`` the optimizer. If you change one of these arguments, you will create a new distribution.

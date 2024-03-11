@@ -142,8 +142,3 @@ class Parameter:
         ]
         res = "".join(res)
         return f"\n{class_name}\n{res}"
-
-
-class ModelParameters:
-    def __init__(self, *params: Parameter, names: list = None):
-        pass

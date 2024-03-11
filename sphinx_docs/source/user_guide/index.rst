@@ -10,5 +10,4 @@ key concepts of ReLife with useful background information and explanation.
    :caption: User guide
 
    data_collect
-   data
    survival
