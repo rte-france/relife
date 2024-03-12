@@ -81,9 +81,9 @@ To install ReLife2, use pip:
     .. grid-item-card::  Contributor's guide
          :class-card: intro-card
 
-         Saw a typo in the documentation? Want to improve
-         existing functionalities? The contributing guidelines will guide
-         you through the process of improving ReLife.
+         Want to improve existing functionalities? The contributing guidelines will guide
+         you through the process of improving ReLife. It assumes that you have Python
+         knowledge
 
          +++
 

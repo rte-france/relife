@@ -14,7 +14,7 @@ Models' factories
 -----------------
 
 In :python:`relife2.survival` module, every models are made from factories expecting object definitions as arguments. Factories are written
-in ``relife2.survival.model``.
+in ``relife2.survival.model``. Models are built from factories in ``relife2.survival.build`` 
 
 .. autofunction:: relife2.survival.dist
 
@@ -31,7 +31,7 @@ In ReLife, 4 objects are generally used in models :
 * ``Likelihood``: this object contains likelihood functions computed from ``DataBook`` object
 * ``Optimizer``: this object contains a ``Likelihood`` object instanciated with a ``DataBook``. It holds the ``fit`` method
 
-If you want to define your own model, you have to customize these objects.
+If you want to define your own model, you have to customize these objects and use factories listed in the previous section.
 
 Function object
 ^^^^^^^^^^^^^^^
@@ -121,7 +121,10 @@ Function object are written in ``likelihood.py`` modules.
 
 Likelihood objects have the following pattern. They all inherit from a super class defining an interface
 and expecting a ``databook`` object at initialization. Briefly, ``databook`` is an object that stores 
-lifetime data given by the user after verifying their integrity. To know more about ``databook``, read :doc:`data`
+lifetime data given by the user after verifying their integrity. 
+
+.. seealso::
+    To know more about ``databook``, read :doc:`data`
 
 .. code-block:: python
 

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import approx_fprime
 
-from .. import DataBook
+from ...data.base import DataBook
 from .function import ParametricDistFunction
 
 

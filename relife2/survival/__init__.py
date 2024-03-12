@@ -1,5 +1,5 @@
-from ..data import DataBook, databook
-from .model import dist, exponential, gompertz, weibull
+from .build import exponential, gompertz, weibull
+from .model import dist
 
 __all__ = [
     "dist",
@@ -9,8 +9,6 @@ __all__ = [
 ]
 
 __all__ = [
-    "databook",
-    "DataBook",
     "dist",
     "exponential",
     "gompertz",

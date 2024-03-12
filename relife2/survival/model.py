@@ -3,17 +3,11 @@ from typing import Type
 
 import numpy as np
 
-from . import databook
+from ..data.base import databook
 from .distribution import (
     DistOptimizer,
-    ExponentialDistFunction,
-    ExponentialDistLikelihood,
-    GompertzDistFunction,
-    GompertzDistLikelihood,
     ParametricDistFunction,
     ParametricDistLikelihood,
-    WeibullDistFunction,
-    WeibullDistLikelihood,
 )
 from .parameter import FittingResult, Parameter
 
@@ -169,7 +163,7 @@ def dist(
 
     Args:
         Function (Type[ParametricDistFunction]):
-            Function object. Must inherit from ``ParametricDistFunction``. Mandatory methods are:
+            Function object. Must inherit from **ParametricDistFunction**. Mandatory methods are:
 
                 ``hf(time : np.ndarray) -> np.ndarray``, shape (n,) -> (n,)
 
@@ -184,14 +178,14 @@ def dist(
                 ``ichf(cumulative_hazard_rate : np.ndarray) -> np.ndarray``, shape (n,) -> (n,)
 
         Likelihood (Type[ParametricDistLikelihood]):
-            Likelihood object. Must inherit from ``ParametricDistLikelihood``.  Mandatory methods are:
+            Likelihood object. Must inherit from **ParametricDistLikelihood**.  Mandatory methods are:
 
                 ``jac_hf(time : np.ndarray, functions : ParametricDistFunction) -> np.ndarray``, shape (n,) -> (n,p)
 
                 ``jac_chf(time : np.ndarray, functions : ParametricDistFunction) -> np.ndarray``, shape (n,) -> (n,p)
 
         Optimizer (Type[DistOptimizer]):
-            Optimizer object. Must inherit from ``ParametricOptimizer``.  Mandatory methods are:
+            Optimizer object. Must inherit from **ParametricOptimizer**.  Mandatory methods are:
 
                 ``fit(functions : ParametricDistFunction, *args, **kwargs) -> ParametricDistFunction``
 
@@ -258,23 +252,3 @@ def dist(
         )
 
     return custom_dist
-
-
-exponential = dist(
-    ExponentialDistFunction,
-    ExponentialDistLikelihood,
-    DistOptimizer,
-)
-
-weibull = dist(
-    WeibullDistFunction,
-    WeibullDistLikelihood,
-    DistOptimizer,
-)
-
-
-gompertz = dist(
-    GompertzDistFunction,
-    GompertzDistLikelihood,
-    DistOptimizer,
-)
