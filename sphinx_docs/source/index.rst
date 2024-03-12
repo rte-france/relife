@@ -14,7 +14,7 @@ ReLife is an open source Python library for asset management based on reliabilit
 * **Reliability theory**: optimal age of replacement for time-based mainteance policy for one-cycle or infinite number of cycles, with exponential discounting.
 * **Renewal theory**: expected number of events, expected total costs or expected number of replacements for run-to-failures or age replacement policies.
 
-To install ReLife2, first install it using pip:
+To install ReLife2, use pip:
 
 .. code-block:: console
 

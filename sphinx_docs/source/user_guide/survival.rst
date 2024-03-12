@@ -8,43 +8,47 @@ How to use survival model
     :scale: 100 %
     :align: center
 
-Once you've loaded your data in the correct `np.array <https://numpy.org/doc/stable/reference/generated/numpy.array.html>`_ format, you're ready to use ReLife's models.
-ReLife models are grouped in three modules :
+Once you've loaded your data in the correct `np.array <https://numpy.org/doc/stable/reference/generated/numpy.array.html>`_ format, you're ready to use ReLife's models
+available in the survival module. In this section, we will describe every usage of a ReLife model.
 
-* :python:`relife2.survival.parametric`
-* :python:`relife2.survival.semiparametric`
-* :python:`relife2.survival.nonparametric`
 
-Every models can be imported from one of the three modules with :python:`from <module> import <model>`
-For instance, one can catch the exponential distribution with :
+Model importation
+-------------------
+
+Every models can be imported from ``relife2.survival`` module. For instance, one can catch the exponential distribution with :
 
 .. code-block:: python
 
-    from relife2.survival.parametric import exponential
-
+    from relife2.survival import exponential
 
 Model instanciation
 -------------------
 
-Every ReLife's model shares the same structure. They are basically a model object composed of
-a :python:`Function` instance holding :python:`Parameter` instance.
-
-.. seealso::
-    For more details, please read :doc:`../contributor_guide/survival`.
-
 Every models have named parameters. When you instanciate a model, one can either give parameter
 values through ``*args`` or ``**kwargs``. Obviously, number of given arguments must corresponds
-to parameters' model number. If no parameter values are given, then model parameters are initialized
-at random
+to parameters' model number.
 
 .. code-block:: python
     
-    exp_dist = exponential(rate = 0.00795203) # or just exponential(0.00795203)
+    exp_dist = exponential(rate = 0.00795203)
+
+Here ``exp_dist`` has one fixed parameter that is equal to 0.00795203. Only one parameter exists as the
+exponential distribution expects one parameter. The following instanciation would have been equivalent but
+is less explicit
+
+.. code-block:: python
+
+    exp_dist = exponential(0.00795203)
+
+In the previous commands, parameters values are given by the user. If no parameters values are given, then model parameters are initialized
+at random
+
+.. code-block:: python
+
     random_exp_dist = exponential()
 
-Here ``exp_dist`` has fixed parameter whereas ``random_exp_dist`` has parameter initialized at random.
 
-One may wants to see model's parameter at this step. Just print ``params`` :
+If one wants to inspect model's parameters, print its ``params`` attribute :
 
 .. code-block:: python
 
@@ -52,20 +56,39 @@ One may wants to see model's parameter at this step. Just print ``params`` :
     >>> Parameter
         rate = 0.00795203
 
-``params`` stores model's parameters in :python:`Parameter` instance. Parameters' values are stored in
-the ``values`` attribute and can accessed with :
+``params`` stores model's parameters in :python:`Parameter` instance. 
 
-exp_dist.params.values
->>> np.array([0.00795203])
+.. seealso::
+    For more details, please read :doc:`../contributor_guide/survival`.
+
+
+To catch parameters' values in one variable, just get the ``values`` attribute of ``params``:
+
+.. code-block:: python
+
+    exp_dist.params.values
+    >>> np.array([0.00795203])
 
 
 Parameters estimations
 ----------------------
 
-If you want to estimate model's parameters, you have to call the :python:`fit` method.
+If you want to estimate model's parameters, you have to call the :python:`fit` method. The ``fit`` method
+expects lifetime data in its arguments that respect a specific format.
+
+.. seealso::
+
+    For more details, please read :doc:`data_collect`.
+
 
 .. code-block:: python
     
+    import numpy as np
+
+    observed_lifetimes = np.array([10, 11, 9, 10, 12, 13, 11])
+    event = np.array([1, 0, 1, 0, 0, 0, 1])
+    entry = np.array([0, 0, 3, 5, 3, 1, 9])
+
     random_exp_dist.fit(
         observed_lifetimes,
         complete_indicators = event == 1,
@@ -75,16 +98,30 @@ If you want to estimate model's parameters, you have to call the :python:`fit` m
 
 After that, the model instance holds a :python:`fitting_params` and a :python:`fitting_results`
 attribute. The former gives the values of fitting parameters. The latter stores information
-about the estimations like the standard error derived from the information matrix.
+about the estimations like the standard error derived from the information matrix. One can see
+the fitting parameters values with a print : 
+
+.. code-block:: python
+
+    print(random_exp_dist.fitting_params)
+    >>> Parameter 
+        rate = 0.054545454630883686
+
+
+As before, if one wants to catch the values of fitting parameters in one variable, just get the
+``values`` of ``fitting_params``
+
+.. code-block:: python
+
+    exp_dist.fitting_params.values
+    >>> np.array([0.054545454630883686])
 
 
 Inference
 ---------
 
-Once parameters have been estimated, one can call functions to obtain their corresponding values.
+One can call model's functions to obtain their corresponding values.
 For instance : 
-
-For inference, just call the desired function method. For instance : 
 
 .. code-block:: python
 
@@ -98,12 +135,6 @@ One can still   override model's parameters by adding ``params`` key-word argume
 
     random_exp_dist.sf(np.linspace(1, 10, 5), params=0.005)
     >>> array([0.99501248, 0.98388132, 0.97287468, 0.96199118, 0.95122942])
-
-.. code-block:: python
-
-    sf_values = exponential_distri.sf(t, params = np.array([0.00795203]))
-
-It will return the :python:`sf` values of :python:`t` for an exponential rate of 0.00795203.
 
 .. warning::
 

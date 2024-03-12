@@ -35,42 +35,19 @@ Lifetime data analysis
 ----------------------
     
 Several survival models are available in ReLife. A curated list can be found in ... Every ReLife's
-survival models are in the ``relife2.survival`` module and must be imported from there.
+survival models are in the ``relife2.survival`` module and must be imported from there. For instance
 
 .. code-block:: python
     
-    from relife2.survival.parametric import *
+    from relife2.survival import exponential
 
-This command imports all parametric survival models of ReLife. At model's instanciation, one can either :
+    exp_dist = exponential(rate = 0.00795203)
 
-* specify model's parameters
-* or let parameters initialization be random
-
+Models can be fitted to given data using the ``fit`` method. For instance
 
 .. code-block:: python
     
-    exp_dist = exponential(rate = 0.00795203) # or just exponential(0.00795203)
-    random_exp_dist = exponential()
-
-One may wants to see model's parameter at this step. Just print ``params`` :
-
-.. code-block:: python
-
-    print(exp_dist.params)
-    >>> Parameter
-        rate = 0.00795203
-
-.. code-block:: python
-
-    print(random_exp_dist.params)
-    >>> Parameter
-        rate = 0.14797189320089466
-
-In each case, models can be fitted to given data using the ``fit`` method. 
-
-.. code-block:: python
-    
-    random_exp_dist.fit(
+    exp_dist.fit(
         observed_lifetimes,
         complete_indicators = event == 1,
         right_censored_indicators = event == 0,
@@ -81,27 +58,20 @@ Then, one can print the fitting parameters :
 
 .. code-block:: python
 
-    print(random_exp_dist.fitting_params)
+    print(exp_dist.fitting_params)
     >>> Parameter 
         rate = 0.054545454630883686
 
-.. seealso::
-    For more details, please see :doc:`user_guide/survival`
-
-For inference, just call the desired function method. For instance : 
+For inference, just call the desired function method.
 
 .. code-block:: python
 
-    random_exp_dist.sf(np.linspace(1, 10, 5))
+    exp_dist.sf(np.linspace(1, 10, 5))
     >>> array([0.94691547, 0.83755133, 0.74081822, 0.65525731, 0.57957828])
 
-Here, ``sf`` values are computed with fitting parameter because model has been fitted before.
-One can still   override model's parameters by adding ``params`` key-word argument.
 
-.. code-block:: python
-
-    random_exp_dist.sf(np.linspace(1, 10, 5), params=0.005)
-    >>> array([0.99501248, 0.98388132, 0.97287468, 0.96199118, 0.95122942])
+.. seealso::
+    For more details, please see :doc:`user_guide/survival`
 
 Asset management policy
 -----------------------
