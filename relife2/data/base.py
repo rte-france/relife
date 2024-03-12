@@ -394,21 +394,6 @@ def databook(
         right_censored_indicators (np.ndarray, optional): _description_. Defaults to None.
         entry (np.ndarray, optional): _description_. Defaults to None.
         departure (np.ndarray, optional): _description_. Defaults to None.
-
-    Keyword Args:
-        complete (np.ndarray): description
-        left_censored (np.ndarray): description
-        right_censored (np.ndarray): description
-        interval_censored (np.ndarray): description
-        left_truncated (np.ndarray): description
-        right_truncated (np.ndarray): description
-        interval_truncated (np.ndarray): description
-
-    Returns:
-        DataBook: _description_
-
-    Examples:
-        >>>
     """
 
     complete = kwargs.get("complete", None)

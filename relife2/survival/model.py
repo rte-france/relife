@@ -161,6 +161,49 @@ def dist(
     Likelihood: Type[ParametricDistLikelihood],
     Optimizer: Type[DistOptimizer],
 ):
+    """Return a distribution object.
+
+    n is the number of input samples
+
+    p is the number of model's parameters
+
+    Args:
+        Function (Type[ParametricDistFunction]):
+            Function object. Must inherit from ``ParametricDistFunction``. Mandatory methods are:
+
+                ``hf(time : np.ndarray) -> np.ndarray``, shape (n,) -> (n,)
+
+                ``chf(time : np.ndarray) -> np.ndarray``, shape (n,) -> (n,)
+
+                ``mean() -> float``
+
+                ``var() -> float``
+
+                ``mrl(time : np.ndarray) -> np.ndarray``, shape (n,) -> (n,)
+
+                ``ichf(cumulative_hazard_rate : np.ndarray) -> np.ndarray``, shape (n,) -> (n,)
+
+        Likelihood (Type[ParametricDistLikelihood]):
+            Likelihood object. Must inherit from ``ParametricDistLikelihood``.  Mandatory methods are:
+
+                ``jac_hf(time : np.ndarray, functions : ParametricDistFunction) -> np.ndarray``, shape (n,) -> (n,p)
+
+                ``jac_chf(time : np.ndarray, functions : ParametricDistFunction) -> np.ndarray``, shape (n,) -> (n,p)
+
+        Optimizer (Type[DistOptimizer]):
+            Optimizer object. Must inherit from ``ParametricOptimizer``.  Mandatory methods are:
+
+                ``fit(functions : ParametricDistFunction, *args, **kwargs) -> ParametricDistFunction``
+
+    Examples:
+        >>> exponential = dist(
+                ExponentialDistFunction,
+                ExponentialDistLikelihood,
+                DistOptimizer,
+            )
+        >>> exp_dist = exponential(rate=0.007)
+
+    """
 
     if not issubclass(Function, ParametricDistFunction):
         parent_classes = (Cls.__name__ for Cls in Function.__bases__)

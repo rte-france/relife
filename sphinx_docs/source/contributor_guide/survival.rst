@@ -4,6 +4,25 @@ How to contribute to ReLife's survival analysis ?
 .. role:: python(code)
    :language: python
 
+
+In ReLife, every models are created using factory functions. We expect contributors to use them when creating
+a new model to make sure that the rest of the code will run properly with this new piece. A list of available
+factories is presented below. They expects model object as input. In this section, you will also find one guide for each model object.
+
+
+Models' factories
+-----------------
+
+In :python:`relife2.survival` module, every models are made from factories expecting object definitions as arguments. Factories are written
+in ``relife2.survival.model``.
+
+.. autofunction:: relife2.survival.dist
+
+
+Models' objects
+-----------------
+
+
 In ReLife, 4 objects are generally used in models :
 
 
@@ -15,10 +34,32 @@ In ReLife, 4 objects are generally used in models :
 If you want to define your own model, you have to customize these objects.
 
 Function object
----------------
+^^^^^^^^^^^^^^^
 
-Function objects have the following pattern. They all inherit from a super class defining an interface
-and expecting either ``param_names`` or ``nb_params`` at initialization.
+Function object are written in ``function.py`` modules. 
+
++---------------+--------------------------------------------+
+| ReLife models |               Function module              |
++===============+============================================+
+| Distributions | ``relife2.survival.distribution.function`` |
+|               |                                            |
++---------------+--------------------------------------------+
+|  Regressions  | ``relife2.survival.regression.function``   |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+
+Function objects use a specific pattern. They all inherit from a super class defining an interface
+and expecting either ``param_names`` or ``nb_params`` at initialization. When you specify the ``param_names``,
+the general form of ``Function`` is :
 
 .. code-block:: python
 
@@ -31,6 +72,9 @@ and expecting either ``param_names`` or ``nb_params`` at initialization.
             # self.params[1] * args[0] + self.params[0]
             pass
 
+As you may have noticed, parameter values can be accessed very easily in ``Function`` methods by calling them
+with their names  ``self.params.<param_name>``. Otherwise, if you don't specify ``param_names``, you must specify
+``nb_params``. 
 
 .. code-block:: python
 
@@ -43,15 +87,37 @@ and expecting either ``param_names`` or ``nb_params`` at initialization.
             # self.params.param_0 * args[0] 
             pass
 
-As you may have noticed, parameter values can be accessed very easily in ``Function`` methods by calling them
-with their names  ``self.params.<param_name>`` or slicing ``self.params[i]``.
+Here, parameter values can be accessed with slicing ``self.params[i]``.
 
 .. warning::
     Outputs of function methods must be 1d-array or float
 
 
+
 Likelihood object
------------------
+^^^^^^^^^^^^^^^^^
+
+Function object are written in ``likelihood.py`` modules. 
+
++---------------+--------------------------------------------+
+| ReLife models |               Likelihood module            |
++===============+============================================+
+| Distributions |``relife2.survival.distribution.likelihood``|
+|               |                                            |
++---------------+--------------------------------------------+
+|  Regressions  | ``relife2.survival.regression.likelihood`` |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+
 
 Likelihood objects have the following pattern. They all inherit from a super class defining an interface
 and expecting a ``databook`` object at initialization. Briefly, ``databook`` is an object that stores 
@@ -77,9 +143,32 @@ In ``Likelihood`` methods, ``functions`` object is used as an argument to access
 
 
 Optimizer object
-----------------
+^^^^^^^^^^^^^^^^
 
-Likelihood objects have the following pattern. They all inherit from a super class defining an interface
+Optimizer object are written in ``optimizer.py`` modules. 
+
++---------------+--------------------------------------------+
+| ReLife models |               Optimizer module             |
++===============+============================================+
+| Distributions |``relife2.survival.distribution.optimizer`` |
+|               |                                            |
++---------------+--------------------------------------------+
+|  Regressions  | ``relife2.survival.regression.optimizer``  |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+|               |                                            |
++---------------+--------------------------------------------+
+
+
+
+Optimizer objects have the following pattern. They all inherit from a super class defining an interface
 and expecting a ``Likelihood`` object at initialization.
 
 .. code-block:: python
@@ -95,25 +184,3 @@ and expecting a ``Likelihood`` object at initialization.
 The ``fit`` method transforms ``Function`` object by modifying its parameters. 
 
 
-Models' factories
------------------
-
-Contributions are easier with factories. In :python:`relife2.survival` module, every models are made from factories expecting
-previous object definitions as arguments. The following factories are used :
-
-* ``dist`` to create survival distribution
-* etc.
-
-
-For instance, in the back-end, ``exponential`` is created by calling ``dist`` like this :
-
-.. code-block:: python
-
-    exponential = dist(
-        ExponentialDistFunction,
-        ExponentialDistLikelihood,
-        DistOptimizer,
-    )
-
-Here ``ExponentialDistFunction`` is the ``Function`` object of the exponential distribution, ``ExponentialDistLikelihood``
-the likelihood and ``DistOptimizer`` the optimizer. If you change one of these arguments, you will create a new distribution.
