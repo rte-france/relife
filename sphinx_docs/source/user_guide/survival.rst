@@ -4,7 +4,7 @@ How to use survival model
 .. role:: python(code)
    :language: python
 
-.. image:: ../img/main_process_bis_1.png
+.. image:: ../_img/main_process_bis_1.png
     :scale: 100 %
     :align: center
 

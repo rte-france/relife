@@ -4,7 +4,7 @@ Lifetime data format
 .. role:: python(code)
    :language: python
 
-.. image:: ../img/main_process_bis_0.png
+.. image:: ../_img/main_process_bis_0.png
     :scale: 100 %
     :align: center
 

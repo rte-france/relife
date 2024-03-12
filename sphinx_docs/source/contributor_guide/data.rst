@@ -4,7 +4,7 @@ The databook object
 .. role:: python(code)
    :language: python
 
-.. image:: ../img/databook.png
+.. image:: ../_img/databook.png
     :scale: 110 %
     :align: center
 

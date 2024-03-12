@@ -19,9 +19,3 @@ python -m http.server --directory ./sphinx_docs/build/html/ -E
 ```
 
 Then go to : http://localhost:8000
-
-# Minimal documentation
-
-- [Quick start](./docs/quick_start.md)
-- [ReLife in details](./docs/details.md)
-- [How to contribute to ReLife ?](HOW_TO_CONTRIBUTE.md)

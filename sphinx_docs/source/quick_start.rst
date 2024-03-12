@@ -5,7 +5,7 @@ Quick start
    :language: python
 
 
-.. image:: img/main_process_bis.png
+.. image:: _img/main_process_bis.png
     :scale: 100 %
     :align: center
 

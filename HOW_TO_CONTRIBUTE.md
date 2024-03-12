@@ -1,1 +1,0 @@
-Thanks a lot for your interest! If you would like to contribute, you can start by reading [Relife in details](./docs/details.md) chapter. Please fill free to also open an issue on Github or contact the authors.
