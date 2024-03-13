@@ -4,6 +4,7 @@ from .distribution import (
     ExponentialDistLikelihood,
     GompertzDistFunction,
     GompertzDistLikelihood,
+    GompertzOptimizer,
     WeibullDistFunction,
     WeibullDistLikelihood,
 )
@@ -14,7 +15,7 @@ def exponential(*params, **kparams):
     """Exponential distribution
 
     Args:
-        *params (float): model parameter (rate)
+        *params (float): model parameter
         **kwargs (float): model parameter (rate)
 
     Examples:
@@ -31,8 +32,8 @@ def weibull(*params, **kparams):
     """Weilbull distribution
 
     Args:
-        *params (float): model parameter (rate)
-        **kwargs (float): model parameter (rate)
+        *params (float): model parameters
+        **kwargs (float): model parameter (c and rate)
 
     """
     return dist(
@@ -46,12 +47,12 @@ def gompertz(*params, **kparams):
     """Gompertz distribution
 
     Args:
-        *params (float): model parameter (rate)
-        **kwargs (float): model parameter (rate)
+        *params (float): model parameter
+        **kwargs (float): model parameter (c and rate)
 
     """
     return dist(
         GompertzDistFunction,
         GompertzDistLikelihood,
-        DistOptimizer,
+        GompertzOptimizer,
     )(*params, **kparams)

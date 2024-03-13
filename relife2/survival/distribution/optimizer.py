@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
-from .function import GompertzDistFunction, ParametricFunction
+from .function import ParametricFunction
 from .likelihood import ParametricLikelihood
 
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
@@ -30,47 +30,18 @@ class DistOptimizer(ParametricOptimizer):
 
     # relife/distribution.ParametricLifetimeDistbution
     def _init_param(self, functions: ParametricFunction) -> np.ndarray:
-        if isinstance(functions, GompertzDistFunction):
-            rate = np.pi / (
-                np.sqrt(6)
-                * np.std(
-                    np.concatenate(
-                        [
-                            data.values
-                            for data in self.likelihood.databook(
-                                "complete | right_censored | left_censored"
-                            )
-                        ]
+        param0 = np.ones(functions.params.nb_params)
+        param0[-1] = 1 / np.median(
+            np.concatenate(
+                [
+                    data.values
+                    for data in self.likelihood.databook(
+                        "complete | right_censored | left_censored"
                     )
-                )
+                ]
             )
-            c = np.exp(
-                -rate
-                * np.mean(
-                    np.concatenate(
-                        [
-                            data.values
-                            for data in self.likelihood.databook(
-                                "complete | right_censored | left_censored"
-                            )
-                        ]
-                    )
-                )
-            )
-            return np.array([c, rate])
-        else:
-            param0 = np.ones(functions.params.nb_params)
-            param0[-1] = 1 / np.median(
-                np.concatenate(
-                    [
-                        data.values
-                        for data in self.likelihood.databook(
-                            "complete | right_censored | left_censored"
-                        )
-                    ]
-                )
-            )
-            return param0
+        )
+        return param0
 
     def _get_param_bounds(self, functions: ParametricFunction) -> Bounds:
         return Bounds(
@@ -130,3 +101,37 @@ class DistOptimizer(ParametricOptimizer):
         functions.params.values = opt.x
 
         return functions, opt
+
+
+class GompertzOptimizer(DistOptimizer):
+    def __init__(self, likelihood: ParametricLikelihood):
+        super().__init__(likelihood)
+
+    def _init_param(self, functions: ParametricFunction) -> np.ndarray:
+        rate = np.pi / (
+            np.sqrt(6)
+            * np.std(
+                np.concatenate(
+                    [
+                        data.values
+                        for data in self.likelihood.databook(
+                            "complete | right_censored | left_censored"
+                        )
+                    ]
+                )
+            )
+        )
+        c = np.exp(
+            -rate
+            * np.mean(
+                np.concatenate(
+                    [
+                        data.values
+                        for data in self.likelihood.databook(
+                            "complete | right_censored | left_censored"
+                        )
+                    ]
+                )
+            )
+        )
+        return np.array([c, rate])

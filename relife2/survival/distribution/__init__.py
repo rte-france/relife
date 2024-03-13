@@ -10,7 +10,7 @@ from .likelihood import (
     ParametricDistLikelihood,
     WeibullDistLikelihood,
 )
-from .optimizer import DistOptimizer
+from .optimizer import DistOptimizer, GompertzOptimizer
 
 __all__ = [
     "ParametricDistFunction",
@@ -22,5 +22,6 @@ __all__ = [
     "GompertzDistLikelihood",
     "ExponentialDistLikelihood",
     "ExponentialDistLikelihood",
+    "GompertzOptimizer",
     "DistOptimizer",
 ]

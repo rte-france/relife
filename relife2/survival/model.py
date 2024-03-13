@@ -212,8 +212,12 @@ def dist(
             f" '{parent_classes}'"
         )
 
-    if not Optimizer == DistOptimizer:
-        raise ValueError(f"DistOptimizer expected, got {Optimizer.__name__}")
+    if not issubclass(Optimizer, DistOptimizer):
+        parent_classes = (Cls.__name__ for Cls in Function.__bases__)
+        raise ValueError(
+            f"DistOptimizer subclass expected, got {Optimizer.__name__}"
+            f" '{parent_classes}'"
+        )
 
     def custom_dist(*params, **kparams):
         functions = Function()
