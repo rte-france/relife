@@ -1,29 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 import numpy as np
 from scipy.optimize import approx_fprime
 
 from ...data.base import DataBook
+from ..core import ParametricLikelihood
 from .function import ParametricDistFunction
-
-
-class ParametricLikelihood(ABC):
-    def __init__(self, databook: DataBook):
-        if not isinstance(databook, DataBook):
-            raise TypeError("ParametricLikelihood expects databook instance")
-        self.databook = databook
-
-    @abstractmethod
-    def negative_log_likelihood(self) -> float:
-        pass
-
-    @abstractmethod
-    def jac_negative_log_likelihood(self) -> np.ndarray:
-        pass
-
-    @abstractmethod
-    def hess_negative_log_likelihood(self) -> np.ndarray:
-        pass
 
 
 class ParametricDistLikelihood(ParametricLikelihood):

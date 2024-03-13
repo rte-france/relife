@@ -1,23 +1,11 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
+from ..core import ParametricOptimizer
 from .function import ParametricFunction
 from .likelihood import ParametricLikelihood
 
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
-
-
-class ParametricOptimizer(ABC):
-    def __init__(self, likelihood: ParametricLikelihood):
-        if not isinstance(likelihood, ParametricLikelihood):
-            raise TypeError("expected ParametricLikelihood")
-        self.likelihood = likelihood
-
-    @abstractmethod
-    def fit(self) -> None:
-        pass
 
 
 class DistOptimizer(ParametricOptimizer):

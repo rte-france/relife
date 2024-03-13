@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from relife2.data import load_power_transformer
-from relife2.survival import exponential, gompertz, weibull
+from relife2.survival import Exponential, Gompertz, Weibull
 
 
 @pytest.fixture(scope="module")
@@ -13,9 +13,9 @@ def data():
 @pytest.fixture(
     scope="module",
     params=[
-        exponential(0.00795203),
-        weibull(3.46597395, 0.01227849),
-        gompertz(0.00865741, 0.06062632),
+        Exponential(0.00795203),
+        Weibull(3.46597395, 0.01227849),
+        Gompertz(0.00865741, 0.06062632),
         # gamma(5.3571091, 0.06622822),
         # logLogistic(3.92614064, 0.0133325),
     ],

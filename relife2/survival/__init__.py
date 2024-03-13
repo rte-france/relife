@@ -1,16 +1,9 @@
-from .build import exponential, gompertz, weibull
-from .model import dist
+from .build import Exponential, Gompertz, Weibull
+from .model import ParametricModel
 
 __all__ = [
-    "dist",
-    "exponential",
-    "gompertz",
-    "weibull",
-]
-
-__all__ = [
-    "dist",
-    "exponential",
-    "gompertz",
-    "weibull",
+    "ParametricModel",
+    "Exponential",
+    "Gompertz",
+    "Weibull",
 ]

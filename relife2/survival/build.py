@@ -8,51 +8,37 @@ from .distribution import (
     WeibullDistFunction,
     WeibullDistLikelihood,
 )
-from .model import dist
+from .model import ParametricModel
 
 
-def exponential(*params, **kparams):
-    """Exponential distribution
-
-    Args:
-        *params (float): model parameter
-        **kwargs (float): model parameter (rate)
-
-    Examples:
-        >>> exp_dist = exponential(rate = 0.00795203)
-    """
-    return dist(
-        ExponentialDistFunction,
-        ExponentialDistLikelihood,
-        DistOptimizer,
-    )(*params, **kparams)
+class Exponential(ParametricModel):
+    def __init__(self, *params, **kparams):
+        super().__init__(
+            ExponentialDistFunction,
+            ExponentialDistLikelihood,
+            DistOptimizer,
+            *params,
+            **kparams
+        )
 
 
-def weibull(*params, **kparams):
-    """Weilbull distribution
-
-    Args:
-        *params (float): model parameters
-        **kwargs (float): model parameter (c and rate)
-
-    """
-    return dist(
-        WeibullDistFunction,
-        WeibullDistLikelihood,
-        DistOptimizer,
-    )(*params, **kparams)
+class Weibull(ParametricModel):
+    def __init__(self, *params, **kparams):
+        super().__init__(
+            WeibullDistFunction,
+            WeibullDistLikelihood,
+            DistOptimizer,
+            *params,
+            **kparams
+        )
 
 
-def gompertz(*params, **kparams):
-    """Gompertz distribution
-
-    Args:
-        *params (float): model parameter
-        **kwargs (float): model parameter (c and rate)
-
-    """
-    return dist(
-        GompertzDistFunction,
-        GompertzDistLikelihood,
-        GompertzOptimizer,
-    )(*params, **kparams)
+class Gompertz(ParametricModel):
+    def __init__(self, *params, **kparams):
+        super().__init__(
+            GompertzDistFunction,
+            GompertzDistLikelihood,
+            GompertzOptimizer,
+            *params,
+            **kparams
+        )
