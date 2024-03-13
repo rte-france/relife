@@ -16,7 +16,7 @@ Models' factories
 In :python:`relife2.survival` module, every models are made from factories expecting object definitions as arguments. Factories are written
 in ``relife2.survival.model``. Models are built from factories in ``relife2.survival.build`` 
 
-.. autofunction:: relife2.survival.dist
+
 
 
 Models' objects

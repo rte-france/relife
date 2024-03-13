@@ -7,7 +7,7 @@ be used. It assumes that you have an understanding of the key concepts and Pytho
 knowledge
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: API reference
 
-   distributions
+   distributions/index
