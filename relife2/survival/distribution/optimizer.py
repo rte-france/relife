@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
-from ..core import ParametricOptimizer
+from ..core.interface import ParametricOptimizer
 from .function import ParametricFunction
 from .likelihood import ParametricLikelihood
 

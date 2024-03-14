@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import approx_fprime
 
 from ...data.base import DataBook
-from ..core import ParametricLikelihood
+from ..core.interface import ParametricLikelihood
 from .function import ParametricDistFunction
 
 

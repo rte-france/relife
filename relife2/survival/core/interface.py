@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import root_scalar
 
-from ..data import DataBook
-from .parameter import Parameter
+from ...data import DataBook
+from ..parameter import Parameter
 
 
 class ParametricFunction(ABC):

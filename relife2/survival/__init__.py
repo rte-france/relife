@@ -1,5 +1,5 @@
 from .build import Exponential, Gompertz, Weibull
-from .model import ParametricModel
+from .core.model import ParametricModel
 
 __all__ = [
     "ParametricModel",

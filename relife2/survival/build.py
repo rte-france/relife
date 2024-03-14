@@ -8,7 +8,7 @@ from .distribution import (
     WeibullDistFunction,
     WeibullDistLikelihood,
 )
-from .model import ParametricModel
+from .core.model import ParametricModel
 
 
 class Exponential(ParametricModel):

@@ -3,7 +3,7 @@ from abc import abstractmethod
 import numpy as np
 from scipy.special import exp1, gamma, gammaincc
 
-from ..core import ParametricFunction
+from ..core.interface import ParametricFunction
 from ..parameter import Parameter
 
 
