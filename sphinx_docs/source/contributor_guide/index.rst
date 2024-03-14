@@ -7,7 +7,6 @@ you through the process of improving ReLife.
 
 .. toctree::
    :maxdepth: 1
-   :numbered:
    :caption: Contributor's guide
 
    survival
