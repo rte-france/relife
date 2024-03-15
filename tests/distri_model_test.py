@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from relife2.data import load_power_transformer
 from relife2.survival import Exponential, Gompertz, Weibull
+from relife2.survival.data import load_power_transformer
 
 
 @pytest.fixture(scope="module")

@@ -3,7 +3,7 @@ from typing import Tuple
 
 import numpy as np
 
-from ..utils import (
+from ..arrays.inference import (
     has_same_length,
     is_1d,
     is_1d_or_2d,

@@ -1,4 +1,4 @@
-from .distribution import (
+from ..models.distribution import (
     DistOptimizer,
     ExponentialDistFunction,
     ExponentialDistLikelihood,
@@ -8,7 +8,7 @@ from .distribution import (
     WeibullDistFunction,
     WeibullDistLikelihood,
 )
-from .core.model import ParametricModel
+from .backbone import ParametricModel
 
 
 class Exponential(ParametricModel):

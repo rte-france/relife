@@ -1,57 +1,7 @@
-from abc import abstractmethod
-
 import numpy as np
 from scipy.special import exp1, gamma, gammaincc
 
-from ..core.interface import ParametricFunction
-from ..parameter import Parameter
-
-
-class ParametricDistFunction(ParametricFunction):
-    def __init__(self, nb_params: int = None, param_names: list = None):
-        params = Parameter(nb_params=nb_params, param_names=param_names)
-        super().__init__(params)
-
-    # relife/parametric.ParametricLifetimeModel
-    def sf(self, time: np.ndarray) -> np.ndarray:
-        """Parametric survival function."""
-        return np.exp(-self.chf(time))
-
-    # relife/parametric.ParametricLifetimeModel
-    def cdf(self, time: np.ndarray) -> np.ndarray:
-        """Parametric cumulative distribution function."""
-        return 1 - self.sf(time)
-
-    # relife/parametric.ParametricLifetimeModel
-    def pdf(self, time: np.ndarray) -> np.ndarray:
-        """Parametric probability density function."""
-        return self.hf(time) * self.sf(time)
-
-    @abstractmethod
-    def mean(self):
-        """only mandatory for ParametricDist as exact expression is known"""
-        pass
-
-    @abstractmethod
-    def var(self):
-        """only mandatory for ParametricDist as exact expression is known"""
-        pass
-
-    @abstractmethod
-    def mrl(self):
-        """only mandatory for ParametricDist as exact expression is known"""
-        pass
-
-    @abstractmethod
-    def ichf(self, cumulative_hazard_rate: np.ndarray):
-        """only mandatory for ParametricDist as exact expression is known"""
-        pass
-
-    # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
-    # /!\ mathematically : -np.log(probability) = cumulative_hazard_rate
-    def isf(self, probability: np.ndarray) -> np.ndarray:
-        cumulative_hazard_rate = -np.log(probability)
-        return self.ichf(cumulative_hazard_rate)
+from ..interface.distribution import ParametricDistFunction
 
 
 class ExponentialDistFunction(ParametricDistFunction):

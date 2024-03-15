@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife2.data import databook
+from relife2.survival.data import databook
 
 
 @pytest.fixture

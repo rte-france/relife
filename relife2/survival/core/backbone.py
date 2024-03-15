@@ -3,13 +3,13 @@ from typing import Type
 
 import numpy as np
 
-from ...data.base import databook
-from .interface import (
+from ..data.base import databook
+from ..interface.backbone import (
     ParametricFunction,
     ParametricLikelihood,
     ParametricOptimizer,
 )
-from ..parameter import FittingResult, Parameter
+from .parameter import FittingResult, Parameter
 
 
 class ParametricModel:

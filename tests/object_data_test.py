@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife2.data.factory import (
+from relife2.survival.data.factory import (
     complete_factory,
     interval_censored_factory,
     interval_truncated_factory,
@@ -10,7 +10,7 @@ from relife2.data.factory import (
     right_censored_factory,
     right_truncated_factory,
 )
-from relife2.data.object import (
+from relife2.survival.data.object import (
     CensoredFromIndicators,
     CompleteObservations,
     CompleteObservationsFromIndicators,

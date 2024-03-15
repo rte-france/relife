@@ -1,11 +1,62 @@
 from abc import abstractmethod
 
 import numpy as np
-from scipy.optimize import approx_fprime
+from scipy.optimize import Bounds, OptimizeResult, approx_fprime, minimize
 
+from ...core.parameter import Parameter
 from ...data.base import DataBook
-from ..core.interface import ParametricLikelihood
-from .function import ParametricDistFunction
+from ...interface.backbone import (
+    ParametricFunction,
+    ParametricLikelihood,
+    ParametricOptimizer,
+)
+
+
+class ParametricDistFunction(ParametricFunction):
+    def __init__(self, nb_params: int = None, param_names: list = None):
+        params = Parameter(nb_params=nb_params, param_names=param_names)
+        super().__init__(params)
+
+    # relife/parametric.ParametricLifetimeModel
+    def sf(self, time: np.ndarray) -> np.ndarray:
+        """Parametric survival function."""
+        return np.exp(-self.chf(time))
+
+    # relife/parametric.ParametricLifetimeModel
+    def cdf(self, time: np.ndarray) -> np.ndarray:
+        """Parametric cumulative distribution function."""
+        return 1 - self.sf(time)
+
+    # relife/parametric.ParametricLifetimeModel
+    def pdf(self, time: np.ndarray) -> np.ndarray:
+        """Parametric probability density function."""
+        return self.hf(time) * self.sf(time)
+
+    @abstractmethod
+    def mean(self):
+        """only mandatory for ParametricDist as exact expression is known"""
+        pass
+
+    @abstractmethod
+    def var(self):
+        """only mandatory for ParametricDist as exact expression is known"""
+        pass
+
+    @abstractmethod
+    def mrl(self):
+        """only mandatory for ParametricDist as exact expression is known"""
+        pass
+
+    @abstractmethod
+    def ichf(self, cumulative_hazard_rate: np.ndarray):
+        """only mandatory for ParametricDist as exact expression is known"""
+        pass
+
+    # relife/model.AbsolutelyContinuousLifetimeModel /!\ dependant of ichf and _ichf
+    # /!\ mathematically : -np.log(probability) = cumulative_hazard_rate
+    def isf(self, probability: np.ndarray) -> np.ndarray:
+        cumulative_hazard_rate = -np.log(probability)
+        return self.ichf(cumulative_hazard_rate)
 
 
 class ParametricDistLikelihood(ParametricLikelihood):
@@ -168,102 +219,87 @@ class ParametricDistLikelihood(ParametricLikelihood):
         return hess
 
 
-class ExponentialDistLikelihood(ParametricDistLikelihood):
-    def __init__(self, databook: DataBook):
-        super().__init__(databook)
-
-    # relife/distribution.Exponential
-    def jac_hf(
-        self,
-        time: np.ndarray,
-        functions: ParametricDistFunction,
-    ) -> np.ndarray:
-        # shape : (len(sample), nb_param)
-        return np.ones((time.size, 1))
-
-    # relife/distribution.Exponential
-    def jac_chf(
-        self,
-        time: np.ndarray,
-        functions: ParametricDistFunction,
-    ) -> np.ndarray:
-        # shape : (len(sample), nb_param)
-        return np.ones((time.size, 1)) * time[:, None]
+MIN_POSITIVE_FLOAT = np.finfo(float).resolution
 
 
-class WeibullDistLikelihood(ParametricDistLikelihood):
-    def __init__(self, databook: DataBook):
-        super().__init__(databook)
-
-    def jac_hf(
-        self,
-        time: np.ndarray,
-        functions: ParametricDistFunction,
-    ) -> np.ndarray:
-
-        return np.column_stack(
-            (
-                functions.params.rate
-                * (functions.params.rate * time[:, None])
-                ** (functions.params.c - 1)
-                * (
-                    1
-                    + functions.params.c
-                    * np.log(functions.params.rate * time[:, None])
-                ),
-                functions.params.c**2
-                * (functions.params.rate * time[:, None])
-                ** (functions.params.c - 1),
-            )
+class DistOptimizer(ParametricOptimizer):
+    def __init__(self, likelihood: ParametricLikelihood):
+        super().__init__(likelihood)
+        # relife/parametric.ParametricHazardFunction
+        self._default_method: str = (  #: Default method for minimizing the negative log-likelihood.
+            "L-BFGS-B"
         )
 
-    def jac_chf(
-        self,
-        time: np.ndarray,
-        functions: ParametricDistFunction,
-    ) -> np.ndarray:
-        return np.column_stack(
-            (
-                np.log(functions.params.rate * time[:, None])
-                * (functions.params.rate * time[:, None])
-                ** functions.params.c,
-                functions.params.c
-                * time[:, None]
-                * (functions.params.rate * time[:, None])
-                ** (functions.params.c - 1),
+    # relife/distribution.ParametricLifetimeDistbution
+    def _init_param(self, nb_params: int) -> np.ndarray:
+        param0 = np.ones(nb_params)
+        param0[-1] = 1 / np.median(
+            np.concatenate(
+                [
+                    data.values
+                    for data in self.likelihood.databook(
+                        "complete | right_censored | left_censored"
+                    )
+                ]
             )
         )
+        return param0
 
-
-class GompertzDistLikelihood(ParametricDistLikelihood):
-    def __init__(self, databook: DataBook):
-        super().__init__(databook)
-
-    def jac_hf(
-        self,
-        time: np.ndarray,
-        functions: ParametricDistFunction,
-    ) -> np.ndarray:
-        return np.column_stack(
-            (
-                functions.params.rate
-                * np.exp(functions.params.rate * time[:, None]),
-                functions.params.c
-                * np.exp(functions.params.rate * time[:, None])
-                * (1 + functions.params.rate * time[:, None]),
-            )
+    def _get_param_bounds(self, functions: ParametricFunction) -> Bounds:
+        return Bounds(
+            np.full(functions.params.nb_params, MIN_POSITIVE_FLOAT),
+            np.full(functions.params.nb_params, np.inf),
         )
 
-    def jac_chf(
+    def _func(
         self,
-        time: np.ndarray,
-        functions: ParametricDistFunction,
-    ) -> np.ndarray:
-        return np.column_stack(
-            (
-                np.expm1(functions.params.rate * time[:, None]),
-                functions.params.c
-                * time[:, None]
-                * np.exp(functions.params.rate * time[:, None]),
-            )
+        x,
+        functions: ParametricFunction,
+    ):
+        functions.params.values = x
+        return self.likelihood.negative_log_likelihood(functions)
+
+    def _jac(
+        self,
+        x,
+        functions: ParametricFunction,
+    ):
+        functions.params.values = x
+        return self.likelihood.jac_negative_log_likelihood(functions)
+
+    # relife/parametric.ParametricHazardFunctions
+    def fit(
+        self,
+        functions: ParametricFunction,
+        param0: np.ndarray = None,
+        bounds=None,
+        method: str = None,
+        **kwargs,
+    ) -> OptimizeResult:
+
+        if param0 is not None:
+            param0 = np.asanyarray(param0, float)
+            if functions.nb_params != param0.size:
+                raise ValueError(
+                    "Wrong dimension for param0, expected"
+                    f" {functions.nb_params} but got {param0.size}"
+                )
+        else:
+            param0 = self._init_param(functions.params.nb_params)
+        if method is None:
+            method = self._default_method
+        if bounds is None:
+            bounds = self._get_param_bounds(functions)
+
+        opt = minimize(
+            self._func,
+            param0,
+            args=(functions),
+            method=method,
+            jac=self._jac,
+            bounds=bounds,
+            **kwargs,
         )
+        functions.params.values = opt.x
+
+        return functions, opt

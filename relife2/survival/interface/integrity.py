@@ -2,7 +2,7 @@ from typing import Callable
 
 import numpy as np
 
-from ...arrays.inference import has_same_length, is_1d, is_2d, is_array
+from ..arrays.inference import has_same_length, is_1d, is_2d, is_array
 
 """
 For y = f(x)
