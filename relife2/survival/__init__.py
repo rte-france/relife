@@ -1,5 +1,5 @@
-from .core.backbone import ParametricModel
-from .core.build import Exponential, Gompertz, Weibull
+from .models.backbone import ParametricModel
+from .models.build import Exponential, Gompertz, Weibull
 
 __all__ = [
     "ParametricModel",

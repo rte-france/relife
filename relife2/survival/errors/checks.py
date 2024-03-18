@@ -14,7 +14,7 @@ def is_int(x: Any):
 
 
 def is_array(x: Any):
-    if not type(x) != np.ndarray:
+    if type(x) != np.ndarray:
         raise TypeError(f"Expected np.array, got '{type(x).__name__}'")
 
 

@@ -1,21 +1,21 @@
-from ..models.distribution import (
-    DistOptimizer,
-    ExponentialDistFunction,
-    ExponentialDistLikelihood,
-    GompertzDistFunction,
-    GompertzDistLikelihood,
-    GompertzOptimizer,
-    WeibullDistFunction,
-    WeibullDistLikelihood,
-)
 from .backbone import ParametricModel
+from .distributions import (
+    DistOptimizer,
+    ExponentialFunctions,
+    ExponentialLikelihood,
+    GompertzFunctions,
+    GompertzLikelihood,
+    GompertzOptimizer,
+    WeibullFunctions,
+    WeibullLikelihood,
+)
 
 
 class Exponential(ParametricModel):
     def __init__(self, *params, **kparams):
         super().__init__(
-            ExponentialDistFunction,
-            ExponentialDistLikelihood,
+            ExponentialFunctions,
+            ExponentialLikelihood,
             DistOptimizer,
             *params,
             **kparams
@@ -25,8 +25,8 @@ class Exponential(ParametricModel):
 class Weibull(ParametricModel):
     def __init__(self, *params, **kparams):
         super().__init__(
-            WeibullDistFunction,
-            WeibullDistLikelihood,
+            WeibullFunctions,
+            WeibullLikelihood,
             DistOptimizer,
             *params,
             **kparams
@@ -36,8 +36,8 @@ class Weibull(ParametricModel):
 class Gompertz(ParametricModel):
     def __init__(self, *params, **kparams):
         super().__init__(
-            GompertzDistFunction,
-            GompertzDistLikelihood,
+            GompertzFunctions,
+            GompertzLikelihood,
             GompertzOptimizer,
             *params,
             **kparams

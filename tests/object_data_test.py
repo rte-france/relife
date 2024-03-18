@@ -1,7 +1,15 @@
 import numpy as np
 import pytest
 
-from relife2.survival.data.factory import (
+from relife2.survival.data.parsers import (
+    CensoredFromIndicators,
+    CompleteFromIndicators,
+    CompleteFromIntervals,
+    ICFromIntervals,
+    IntervalTruncated,
+    LCFromIntervals,
+    LeftTruncated,
+    RCFromIntervals,
     complete_factory,
     interval_censored_factory,
     interval_truncated_factory,
@@ -9,16 +17,6 @@ from relife2.survival.data.factory import (
     left_truncated_factory,
     right_censored_factory,
     right_truncated_factory,
-)
-from relife2.survival.data.object import (
-    CensoredFromIndicators,
-    CompleteObservations,
-    CompleteObservationsFromIndicators,
-    IntervalCensored,
-    IntervalTruncated,
-    LeftCensored,
-    LeftTruncated,
-    RightCensored,
 )
 
 
@@ -43,7 +41,7 @@ def example_2d_data():
 
 
 def test_1d_data(example_1d_data):
-    complete = CompleteObservationsFromIndicators(
+    complete = CompleteFromIndicators(
         example_1d_data["observed_lifetimes"], example_1d_data["event"] == 1
     )
     right_censored = CensoredFromIndicators(
@@ -119,10 +117,10 @@ def test_1d_data_factory(example_1d_data):
 
 
 def test_2d_data(example_2d_data):
-    complete = CompleteObservations(example_2d_data["observed_lifetimes"])
-    left_censored = LeftCensored(example_2d_data["observed_lifetimes"])
-    right_censored = RightCensored(example_2d_data["observed_lifetimes"])
-    interval_censored = IntervalCensored(example_2d_data["observed_lifetimes"])
+    complete = CompleteFromIntervals(example_2d_data["observed_lifetimes"])
+    left_censored = LCFromIntervals(example_2d_data["observed_lifetimes"])
+    right_censored = RCFromIntervals(example_2d_data["observed_lifetimes"])
+    interval_censored = ICFromIntervals(example_2d_data["observed_lifetimes"])
     left_truncated = LeftTruncated(
         example_2d_data["entry"], np.zeros_like(example_2d_data["entry"])
     )

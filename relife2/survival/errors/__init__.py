@@ -1,34 +1,11 @@
-from inference import (
-    check_array_1d_func,
-    check_float_func,
-    check_jac_func,
-    check_shape,
-    is_0d,
-    is_1d,
-    is_1d_or_2d,
-    is_2d,
-    is_array,
-    is_array_type,
-    is_float,
-    is_int,
-    same_shape,
-)
+class LifetimeDataError(Exception):
+    """Error raised when lifetime data arrays are incorrect
 
-__all__ = [
-    "check_array_1d_func",
-    "check_float_func",
-    "check_jac_func",
-    "check_shape",
-    "same_shape",
-    "is_0d",
-    "is_1d",
-    "is_1d_or_2d",
-    "is_2d",
-    "is_array",
-    "is_array_type",
-    "is_float",
-    "is_int",
-]
+    Args:
+        Exception (_type_): _description_
+    """
+
+    pass
 
 
 class ArrayShapeError(Exception):
