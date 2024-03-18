@@ -8,6 +8,7 @@ import pytest
 import numpy as np
 
 from relife.data import LifetimeData
+from relife.datasets import load_insulator_string_2D
 
 def test_data_format_2D():
     """

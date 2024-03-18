@@ -107,3 +107,15 @@ def load_insulator_string() -> LifetimeData:
     )
     covar = np.column_stack(args)
     return LifetimeData(time, event, entry, (covar,))
+
+def load_insulator_string_2D() -> LifetimeData:
+    """... same but with 2D time
+    """
+    time, event, entry, *args = np.loadtxt(
+        DATA_PATH / "insulator_string.csv", delimiter=",", skiprows=1, unpack=True
+    )
+    covar = np.column_stack(args)
+    xr = np.where(event == 0, np.inf, time)    
+    time2D = np.column_stack([time, xr])
+    # print(LifetimeData(time2D, event, entry, (covar,)).astuple() )
+    return LifetimeData(time2D, event, entry, (covar,))

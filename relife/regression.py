@@ -55,6 +55,10 @@ def concordance_index(
         - discordant : Number of discordant pairs (int)
         - tied_score : Number of pairs having tied estimated risks (int)
     """
+    print(time.shape)
+    if len(time.shape) != 1 : 
+        time = time[:,0]
+        print(time)
     admissible = 0
     concordant = 0
     tied_score = 0
