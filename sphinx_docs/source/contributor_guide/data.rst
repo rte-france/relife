@@ -21,7 +21,11 @@ DataBook instanciation
 ``DataBook`` instances are made with ``databook`` factory. It controls lifetime data format inputs.
 
  
-.. autofunction:: relife2.data.databook
+.. currentmodule:: relife2.survival.data
+
+.. autoclass:: Data
+    :members:
+    :inherited-members:
 
 
 .. code-block:: python

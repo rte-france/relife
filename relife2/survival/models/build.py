@@ -14,33 +14,33 @@ from .distributions import (
 
 
 class Exponential(ParametricModel):
-    def __init__(self, *params: np.ndarray, **kparams: float):
+    def __init__(self, *params: np.ndarray, **kwparams: float):
         super().__init__(
             ExponentialFunctions,
             ExponentialLikelihood,
             DistOptimizer,
             *params,
-            **kparams
+            **kwparams
         )
 
 
 class Weibull(ParametricModel):
-    def __init__(self, *params: np.ndarray, **kparams: float):
+    def __init__(self, *params: np.ndarray, **kwparams: float):
         super().__init__(
             WeibullFunctions,
             WeibullLikelihood,
             DistOptimizer,
             *params,
-            **kparams
+            **kwparams
         )
 
 
 class Gompertz(ParametricModel):
-    def __init__(self, *params: np.ndarray, **kparams: float):
+    def __init__(self, *params: np.ndarray, **kwparams: float):
         super().__init__(
             GompertzFunctions,
             GompertzLikelihood,
             GompertzOptimizer,
             *params,
-            **kparams
+            **kwparams
         )
