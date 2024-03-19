@@ -1,7 +1,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, asdict, dataclass, field
-from typing import Type, TypeVar
+from typing import Tuple, Type, TypeVar
 
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, root_scalar
@@ -89,14 +89,14 @@ class ParametricFunctions(ABC):
         self.params = Parameters(nb_params=nb_params, param_names=param_names)
 
     @abstractmethod
-    def hf(self):
+    def hf(self, time: np.ndarray) -> np.ndarray:
         pass
 
     @abstractmethod
-    def chf(self):
+    def chf(self, time: np.ndarray) -> np.ndarray:
         pass
 
-    def isf(self, probability: np.ndarray):
+    def isf(self, probability: np.ndarray) -> np.ndarray:
         """Approx of isf using scipy.optimize in case it is not defined in subclass functions"""
         res = root_scalar(
             lambda x: self.sf(x) - probability,
@@ -124,30 +124,33 @@ class ParametricFunctions(ABC):
         pass
 
     # relife/model.LifetimeModel
-    def ppf(self, probability: np.ndarray):
+    def ppf(self, probability: np.ndarray) -> np.ndarray:
         return self.isf(1 - probability)
 
     # relife/model.LifetimeModel
-    def median(self):
+    def median(self) -> float:
         return self.ppf(0.5)
 
-    def mean(self):
+    def mean(self) -> float:
         """
         Depends upon ls_integrate IF NOT specified in subclass
         """
         pass
 
-    def var(self):
+    def var(self) -> float:
         """
         Depends upon ls_integrate IF NOT specified in subclass
         """
         pass
 
-    def mrl(self):
+    def mrl(self, time: np.ndarray) -> np.ndarray:
         """
         Depends upon ls_integrate IF NOT specified in subclass
         """
         pass
+
+
+Functions = TypeVar("Functions", bound=ParametricFunctions)
 
 
 class ParametricLikelihood(ABC):
@@ -176,20 +179,21 @@ class ParametricLikelihood(ABC):
         )
 
     @abstractmethod
-    def negative_log_likelihood(self) -> float:
+    def negative_log_likelihood(self, functions: Functions) -> float:
         pass
 
     @abstractmethod
-    def jac_negative_log_likelihood(self) -> np.ndarray:
+    def jac_negative_log_likelihood(self, functions: Functions) -> np.ndarray:
         pass
 
     @abstractmethod
-    def hess_negative_log_likelihood(self) -> np.ndarray:
+    def hess_negative_log_likelihood(
+        self, functions: Functions, **kwargs
+    ) -> np.ndarray:
         pass
 
 
 Likelihood = TypeVar("Likelihood", bound=ParametricLikelihood)
-Functions = TypeVar("Functions", bound=ParametricFunctions)
 
 
 class ParametricOptimizer(ABC):
@@ -225,8 +229,8 @@ class ParametricOptimizer(ABC):
 
     @abstractmethod
     def fit(
-        self, functions: Functions, likelihood: Likelihood
-    ) -> OptimizeResult:
+        self, functions: Functions, likelihood: Likelihood, **kwargs
+    ) -> Tuple[Functions, OptimizeResult]:
         pass
 
 
@@ -301,8 +305,8 @@ class ParametricModel:
         Functions: Type[ParametricFunctions],
         Likelihood: Type[ParametricLikelihood] = None,
         Optimizer: Type[ParametricOptimizer] = None,
-        *params,
-        **kparams,
+        *params: np.ndarray,
+        **kparams: float,
     ):
 
         if not issubclass(Functions, ParametricFunctions):
@@ -335,7 +339,7 @@ class ParametricModel:
         )
         self._fitting_results = None
 
-    def _init_params(self, *params, **kparams):
+    def _init_params(self, *params: np.ndarray, **kparams: float) -> None:
 
         if len(params) != 0 and len(kparams) != 0:
             raise ValueError("Can't specify key word params and params")
@@ -363,7 +367,7 @@ class ParametricModel:
                 self.functions.params[key] = value
             self._init_params_values = self.functions.params.values
 
-    def _set_params(self, params):
+    def _set_params(self, params: np.ndarray) -> Functions:
         if params is None:
             input_params = self._init_params_values
         elif type(params) == list:
@@ -507,7 +511,7 @@ class ParametricModel:
         """
         return self._get_func("isf", probability, params=params)
 
-    def hf(self, time: np.ndarray, params: np.ndarray = None):
+    def hf(self, time: np.ndarray, params: np.ndarray = None) -> np.ndarray:
         """Hazard function
 
         Args:
@@ -636,11 +640,11 @@ class ParametricModel:
         self._fitting_params.values = opt.x
 
     @property
-    def params(self):
+    def params(self) -> Parameters:
         return self.functions.params
 
     @property
-    def fitting_results(self):
+    def fitting_results(self) -> FittingResults:
         if self._fitting_results is None:
             warnings.warn(
                 "Model parameters have not been fitted. Call fit() method"
@@ -650,7 +654,7 @@ class ParametricModel:
         return self._fitting_results
 
     @property
-    def fitting_params(self):
+    def fitting_params(self) -> Parameters:
         if self._fitting_params is None:
             warnings.warn(
                 "Model parameters have not been fitted. Call fit() method"

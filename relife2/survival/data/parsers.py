@@ -181,7 +181,7 @@ class IntervalTruncated(ParsedData):
 
 # factory
 def complete_factory(
-    observed_lifetimes: np.ndarray, indicators=None
+    observed_lifetimes: np.ndarray, indicators: np.ndarray = None
 ) -> CompleteFromIndicators:
 
     if observed_lifetimes.ndim == 1 and indicators is None:
@@ -218,7 +218,7 @@ def complete_factory(
 
 # factory
 def left_censored_factory(
-    observed_lifetimes: np.ndarray, indicators=None
+    observed_lifetimes: np.ndarray, indicators: np.ndarray = None
 ) -> LCFromIntervals:
 
     if observed_lifetimes.ndim == 1 and indicators is None:
@@ -256,7 +256,7 @@ def left_censored_factory(
 
 # factory
 def right_censored_factory(
-    observed_lifetimes: np.ndarray, indicators=None
+    observed_lifetimes: np.ndarray, indicators: np.ndarray = None
 ) -> RCFromIntervals:
 
     if observed_lifetimes.ndim == 1 and indicators is None:

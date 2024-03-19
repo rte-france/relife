@@ -1,3 +1,5 @@
+import numpy as np
+
 from .backbone import ParametricModel
 from .distributions import (
     DistOptimizer,
@@ -12,7 +14,7 @@ from .distributions import (
 
 
 class Exponential(ParametricModel):
-    def __init__(self, *params, **kparams):
+    def __init__(self, *params: np.ndarray, **kparams: float):
         super().__init__(
             ExponentialFunctions,
             ExponentialLikelihood,
@@ -23,7 +25,7 @@ class Exponential(ParametricModel):
 
 
 class Weibull(ParametricModel):
-    def __init__(self, *params, **kparams):
+    def __init__(self, *params: np.ndarray, **kparams: float):
         super().__init__(
             WeibullFunctions,
             WeibullLikelihood,
@@ -34,7 +36,7 @@ class Weibull(ParametricModel):
 
 
 class Gompertz(ParametricModel):
-    def __init__(self, *params, **kparams):
+    def __init__(self, *params: np.ndarray, **kparams: float):
         super().__init__(
             GompertzFunctions,
             GompertzLikelihood,

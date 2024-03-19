@@ -26,7 +26,7 @@ class DistLikelihood(ParametricLikelihood):
     def negative_log_likelihood(
         self,
         functions: Functions,
-    ) -> np.ndarray:
+    ) -> float:
 
         D_contrib = -np.sum(np.log(functions.hf(self.data("complete").values)))
         RC_contrib = np.sum(
