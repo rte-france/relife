@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import List
 
 import numpy as np
 from scipy.special import exp1, gamma, gammaincc
@@ -7,7 +8,7 @@ from ..backbone import ParametricFunctions
 
 
 class DistFunctions(ParametricFunctions):
-    def __init__(self, nb_params: int = None, param_names: list = None):
+    def __init__(self, nb_params: int, param_names: List[str] = None):
         super().__init__(nb_params, param_names)
 
     # relife/parametric.ParametricLifetimeModel
@@ -38,8 +39,8 @@ class DistFunctions(ParametricFunctions):
 
 
 class ExponentialFunctions(DistFunctions):
-    def __init__(self, param_names=["rate"]):
-        super().__init__(param_names=param_names)
+    def __init__(self):
+        super().__init__(1, ["rate"])
 
     # relife/distribution.Exponential
     # mandatory
@@ -78,8 +79,8 @@ class ExponentialFunctions(DistFunctions):
 
 
 class WeibullFunctions(DistFunctions):
-    def __init__(self, param_names=["c", "rate"]):
-        super().__init__(param_names=param_names)
+    def __init__(self):
+        super().__init__(2, ["c", "rate"])
 
     def hf(self, time: np.ndarray) -> np.ndarray:
         return (
@@ -115,8 +116,8 @@ class WeibullFunctions(DistFunctions):
 
 
 class GompertzFunctions(DistFunctions):
-    def __init__(self, param_names=["c", "rate"]):
-        super().__init__(param_names=param_names)
+    def __init__(self):
+        super().__init__(2, ["c", "rate"])
 
     def hf(self, time: np.ndarray) -> np.ndarray:
         return (

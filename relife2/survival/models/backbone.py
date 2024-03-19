@@ -1,7 +1,7 @@
 import warnings
 from abc import ABC, abstractmethod
-from dataclasses import InitVar, asdict, dataclass, field
-from typing import Tuple, Type, TypeVar, Union
+from dataclasses import asdict, dataclass, field
+from typing import List, Tuple, Type, TypeVar, Union
 
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, root_scalar
@@ -9,38 +9,24 @@ from scipy.optimize import Bounds, OptimizeResult, root_scalar
 from ..data import Data
 
 
-@dataclass
 class Parameters:
-    nb_params: InitVar[int] = None
-    param_names: InitVar[list] = None
-
-    def __post_init__(self, nb_params, param_names):
-        if nb_params is not None and param_names is not None:
+    def __init__(self, nb_params: int, param_names: List[str] = None):
+        if type(nb_params) != int:
+            raise TypeError("nb_params must be int")
+        self.nb_params = nb_params
+        if param_names is not None:
             if {type(name) for name in param_names} != {str}:
                 raise ValueError("param_names must be string")
             if len(param_names) != nb_params:
                 raise ValueError(
-                    "param_names must have same length as nb_params"
+                    "param_names must be have the same number of element than"
+                    " parameter numbers"
                 )
-            self.nb_params = nb_params
-            self.param_names = param_names
-        elif nb_params is not None and param_names is None:
-            self.nb_params = nb_params
-            self.param_names = [f"param_{i}" for i in range(nb_params)]
-        elif nb_params is None and param_names is not None:
-            if {type(name) for name in param_names} != {str}:
-                raise ValueError("param_names must be string")
-            self.nb_params = len(param_names)
             self.param_names = param_names
         else:
-            raise ValueError(
-                """
-            Parameter expects at least nb_params or param_names
-            """
-            )
+            self.param_names = [f"param_{i}" for i in range(nb_params)]
 
         self.values = np.random.rand(self.nb_params)
-        self.fitting_params = None
         self.params_index = {
             name: i for i, name in enumerate(self.param_names)
         }
@@ -85,8 +71,8 @@ class Parameters:
 
 
 class ParametricFunctions(ABC):
-    def __init__(self, nb_params: int = None, param_names: list = None):
-        self.params = Parameters(nb_params=nb_params, param_names=param_names)
+    def __init__(self, nb_params: int, param_names: List[str] = None):
+        self.params = Parameters(nb_params, param_names=param_names)
 
     @abstractmethod
     def hf(self, time: np.ndarray) -> np.ndarray:
@@ -392,7 +378,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("ppf")
         res = func(probability)
@@ -410,7 +396,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("median")
         res = func()
@@ -437,7 +423,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("rvs")
         res = func(size, random_state)
@@ -462,7 +448,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("sf")
         res = func(time)
@@ -487,7 +473,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("cdf")
         res = func(time)
@@ -512,7 +498,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("pdf")
         res = func(time)
@@ -537,7 +523,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("isf")
         res = func(probability)
@@ -558,7 +544,7 @@ class ParametricModel:
         Returns:
             np.ndarray: hazard function values
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("hf")
         res = func(time)
@@ -583,7 +569,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("chf")
         res = func(time)
@@ -604,7 +590,7 @@ class ParametricModel:
         Returns:
             float: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("mean")
         res = func()
@@ -625,7 +611,7 @@ class ParametricModel:
         Returns:
             float: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("var")
         res = func()
@@ -650,7 +636,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("mrl")
         res = func(time)
@@ -675,7 +661,7 @@ class ParametricModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values
+        previous_params_values = self.functions.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("ichf")
         res = func(cumulative_hazard_rate)
