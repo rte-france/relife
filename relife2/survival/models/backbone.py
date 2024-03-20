@@ -136,6 +136,17 @@ class ParametricFunctions(ABC):
         pass
 
 
+class CovarEffect(ABC):
+    def __init__(self, nb_covar: int):
+        self.params = Parameters(
+            nb_covar, param_names=[f"beta_{i}" for i in range(nb_covar)]
+        )
+
+    @abstractmethod
+    def g(self, covar: np.ndarray) -> np.ndarray:
+        pass
+
+
 Functions = TypeVar("Functions", bound=ParametricFunctions)
 
 
