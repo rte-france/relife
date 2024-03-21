@@ -1,5 +1,3 @@
-import numpy as np
-
 from .backbone import ParametricModel
 from .distributions import (
     DistOptimizer,
@@ -14,33 +12,50 @@ from .distributions import (
 
 
 class Exponential(ParametricModel):
-    def __init__(self, *params: np.ndarray, **kwparams: float):
+    r"""Exponential parametric lifetime distribution.
+
+    The exponential distribution is a 1-parameter distribution with
+    :math:`(\lambda)`. The probability density function is:
+
+    .. math::
+
+        f(t) = \lambda e^{-\lambda t}
+
+    where:
+
+        - :math:`\lambda > 0`, the rate parameter,
+        - :math:`t\geq 0`, the operating time, age, cycles, etc.
+    """
+
+    def __init__(self, rate: float):
+        """Initialize Exponential object
+
+        Args:
+            rate (float): _description_
+        """
         super().__init__(
             ExponentialFunctions,
             ExponentialLikelihood,
             DistOptimizer,
-            *params,
-            **kwparams
+            rate,
         )
 
 
 class Weibull(ParametricModel):
-    def __init__(self, *params: np.ndarray, **kwparams: float):
+    def __init__(self, c: float, rate: float):
         super().__init__(
             WeibullFunctions,
             WeibullLikelihood,
             DistOptimizer,
-            *params,
-            **kwparams
+            *(c, rate),
         )
 
 
 class Gompertz(ParametricModel):
-    def __init__(self, *params: np.ndarray, **kwparams: float):
+    def __init__(self, c: float, rate: float):
         super().__init__(
             GompertzFunctions,
             GompertzLikelihood,
             GompertzOptimizer,
-            *params,
-            **kwparams
+            *(c, rate),
         )

@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from itertools import combinations
 from typing import Tuple, Union
 
@@ -18,7 +17,6 @@ from .parsers import (
 )
 
 
-@dataclass
 class Data:
     """
     Args:
