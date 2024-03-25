@@ -1,4 +1,4 @@
-from .backbone import ParametricModel
+from .builder import ParametricModel
 from .distributions import (
     DistOptimizer,
     ExponentialFunctions,

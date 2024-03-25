@@ -1,4 +1,4 @@
-from .build import Exponential, Gompertz, Weibull
+from .factory import Exponential, Gompertz, Weibull
 
 __all__ = [
     "Exponential",
