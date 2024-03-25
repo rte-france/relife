@@ -13,7 +13,7 @@ from .backbone import (
 
 
 # builder object
-class ParametricModel:
+class LifetimeModel:
     def __init__(
         self,
         Functions: Type[ParametricFunctions],

@@ -1,4 +1,4 @@
-from .builder import ParametricModel
+from .builder import LifetimeModel
 from .distributions import (
     DistOptimizer,
     ExponentialFunctions,
@@ -13,7 +13,7 @@ from .distributions import (
 )
 
 
-class Exponential(ParametricModel):
+class Exponential(LifetimeModel):
     r"""Exponential parametric lifetime distribution.
 
     The exponential distribution is a 1-parameter distribution with
@@ -43,7 +43,7 @@ class Exponential(ParametricModel):
         )
 
 
-class Weibull(ParametricModel):
+class Weibull(LifetimeModel):
     def __init__(self, c: float, rate: float):
         super().__init__(
             WeibullFunctions,
@@ -53,7 +53,7 @@ class Weibull(ParametricModel):
         )
 
 
-class Gompertz(ParametricModel):
+class Gompertz(LifetimeModel):
     def __init__(self, c: float, rate: float):
         super().__init__(
             GompertzFunctions,
@@ -63,7 +63,7 @@ class Gompertz(ParametricModel):
         )
 
 
-class Gamma(ParametricModel):
+class Gamma(LifetimeModel):
     def __init__(self, c: float, rate: float):
         super().__init__(
             GammaFunctions,
