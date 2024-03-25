@@ -3,6 +3,8 @@ from .distributions import (
     DistOptimizer,
     ExponentialFunctions,
     ExponentialLikelihood,
+    GammaFunctions,
+    GammaLikelihood,
     GompertzFunctions,
     GompertzLikelihood,
     GompertzOptimizer,
@@ -57,5 +59,15 @@ class Gompertz(ParametricModel):
             GompertzFunctions,
             GompertzLikelihood,
             GompertzOptimizer,
+            *(c, rate),
+        )
+
+
+class Gamma(ParametricModel):
+    def __init__(self, c: float, rate: float):
+        super().__init__(
+            GammaFunctions,
+            GammaLikelihood,
+            DistOptimizer,
             *(c, rate),
         )

@@ -3,8 +3,10 @@ from typing import TypeVar
 
 import numpy as np
 from scipy.optimize import approx_fprime
+from scipy.special import digamma
 
 from ..backbone import ParametricLikelihood
+from ..integrations import shifted_laguerre
 from .functions import DistFunctions
 
 Functions = TypeVar("Functions", bound=DistFunctions)
@@ -259,5 +261,61 @@ class GompertzLikelihood(DistLikelihood):
                 functions.params.c
                 * time[:, None]
                 * np.exp(functions.params.rate * time[:, None]),
+            )
+        )
+
+
+class GammaLikelihood(DistLikelihood):
+    def __init__(self, *data, **kwdata):
+        super().__init__(*data, **kwdata)
+        self._default_hess_scheme = "2-point"
+
+    @staticmethod
+    def _jac_uppergamma_c(functions: Functions, x: np.ndarray) -> np.ndarray:
+        return shifted_laguerre(
+            lambda s: np.log(s) * s ** (functions.params.c - 1),
+            x,
+            ndim=np.ndim(x),
+        )
+
+    def jac_hf(
+        self,
+        time: np.ndarray,
+        functions: Functions,
+    ) -> np.ndarray:
+
+        x = self.params.rate * time[:, None]
+        return (
+            x ** (self.params.c - 1)
+            * np.exp(-x)
+            / functions._uppergamma(x) ** 2
+            * np.column_stack(
+                (
+                    functions.params.rate
+                    * np.log(x)
+                    * functions._uppergamma(x)
+                    - functions.params.rate
+                    * GammaLikelihood._jac_uppergamma_c(functions, x),
+                    (functions.params.c - x) * functions._uppergamma(x)
+                    + x**functions.params.c * np.exp(-x),
+                )
+            )
+        )
+
+    def jac_chf(
+        self,
+        time: np.ndarray,
+        functions: Functions,
+    ) -> np.ndarray:
+        x = functions.params.rate * time[:, None]
+        return np.column_stack(
+            (
+                digamma(functions.params.c)
+                - GammaLikelihood._jac_uppergamma_c(functions, x)
+                / functions._uppergamma(x),
+                x ** (functions.params.c - 1)
+                * time[:, None]
+                * np.exp(-x)
+                / functions._uppergamma(x),
             )
         )

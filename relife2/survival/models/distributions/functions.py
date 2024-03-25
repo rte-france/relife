@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import List
 
 import numpy as np
-from scipy.special import exp1, gamma, gammaincc
+from scipy.special import exp1, gamma, gammaincc, gammainccinv
 
 from ..backbone import ParametricFunctions
 
@@ -142,4 +142,41 @@ class GompertzFunctions(DistFunctions):
             1
             / self.params.rate
             * np.log1p(cumulative_hazard_rate / self.params.c)
+        )
+
+
+class GammaFunctions(DistFunctions):
+    def __init__(self):
+        super().__init__(2, ["c", "rate"])
+
+    def _uppergamma(self, x: np.ndarray) -> np.ndarray:
+        return gammaincc(self.params.c, x) * gamma(self.params.c)
+
+    def hf(self, time: np.ndarray) -> np.ndarray:
+        x = self.params.rate * time
+        return (
+            self.params.rate
+            * x ** (self.params.c - 1)
+            * np.exp(-x)
+            / self._uppergamma(x)
+        )
+
+    def chf(self, time: np.ndarray) -> np.ndarray:
+        x = self.params.rate * time
+        return np.log(gamma(self.params.c)) - np.log(self._uppergamma(x))
+
+    def mean(self) -> float:
+        return self.params.c / self.params.rate
+
+    def var(self) -> float:
+        return self.params.c / (self.params.rate**2)
+
+    def mrl(self, time: np.ndarray) -> np.ndarray:
+        pass
+
+    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+        return (
+            1
+            / self.params.rate
+            * gammainccinv(self.params.c, np.exp(-cumulative_hazard_rate))
         )
