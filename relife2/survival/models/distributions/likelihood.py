@@ -284,9 +284,9 @@ class GammaLikelihood(DistLikelihood):
         functions: Functions,
     ) -> np.ndarray:
 
-        x = self.params.rate * time[:, None]
+        x = functions.params.rate * time[:, None]
         return (
-            x ** (self.params.c - 1)
+            x ** (functions.params.c - 1)
             * np.exp(-x)
             / functions._uppergamma(x) ** 2
             * np.column_stack(
