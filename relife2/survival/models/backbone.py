@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
-from typing import List, Tuple, TypeVar
+from typing import List, Tuple
 
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, root_scalar
@@ -69,7 +69,7 @@ class Parameters:
         return f"\n{class_name}\n{res}"
 
 
-class ParametricFunctions(ABC):
+class ProbabilityFunctions(ABC):
     def __init__(self, nb_params: int, param_names: List[str] = None):
         self.params = Parameters(nb_params, param_names=param_names)
 
@@ -81,8 +81,23 @@ class ParametricFunctions(ABC):
     def chf(self, time: np.ndarray) -> np.ndarray:
         pass
 
+    # relife/parametric.ParametricLifetimeModel
+    def sf(self, time: np.ndarray) -> np.ndarray:
+        """Parametric survival function."""
+        return np.exp(-self.chf(time))
+
+    # relife/parametric.ParametricLifetimeModel
+    def cdf(self, time: np.ndarray) -> np.ndarray:
+        """Parametric cumulative distribution function."""
+        return 1 - self.sf(time)
+
+    # relife/parametric.ParametricLifetimeModel
+    def pdf(self, time: np.ndarray) -> np.ndarray:
+        """Parametric probability density function."""
+        return self.hf(time) * self.sf(time)
+
     def isf(self, probability: np.ndarray) -> np.ndarray:
-        """Approx of isf using scipy.optimize in case it is not defined in subclass functions"""
+        """Approx of isf using scipy.optimize in case it is not defined in subclass pf"""
         res = root_scalar(
             lambda x: self.sf(x) - probability,
             method="newton",
@@ -146,10 +161,7 @@ class CovarEffect(ABC):
         pass
 
 
-Functions = TypeVar("Functions", bound=ParametricFunctions)
-
-
-class ParametricLikelihood(ABC):
+class Likelihood(ABC):
     def __init__(
         self,
         observed_lifetimes: np.ndarray,
@@ -175,29 +187,28 @@ class ParametricLikelihood(ABC):
         )
 
     @abstractmethod
-    def negative_log_likelihood(self, functions: Functions) -> float:
+    def negative_log_likelihood(self, pf: ProbabilityFunctions) -> float:
         pass
 
     @abstractmethod
-    def jac_negative_log_likelihood(self, functions: Functions) -> np.ndarray:
+    def jac_negative_log_likelihood(
+        self, pf: ProbabilityFunctions
+    ) -> np.ndarray:
         pass
 
     @abstractmethod
     def hess_negative_log_likelihood(
-        self, functions: Functions, **kwargs
+        self, pf: ProbabilityFunctions, **kwargs
     ) -> np.ndarray:
         pass
 
 
-Likelihood = TypeVar("Likelihood", bound=ParametricLikelihood)
-
-
-class ParametricOptimizer(ABC):
-    def __init__(self, functions: Functions, likelihood: Likelihood):
+class Optimizer(ABC):
+    def __init__(self, pf: ProbabilityFunctions, likelihood: Likelihood):
 
         self.method: str = "L-BFGS-B"
-        self.param0 = self._init_param(likelihood, functions.params.nb_params)
-        self.bounds = self._get_param_bounds(functions)
+        self.param0 = self._init_param(likelihood, pf.params.nb_params)
+        self.bounds = self._get_param_bounds(pf)
 
     # relife/distribution.ParametricLifetimeDistbution
     def _init_param(
@@ -216,17 +227,17 @@ class ParametricOptimizer(ABC):
         )
         return param0
 
-    def _get_param_bounds(self, functions: Functions) -> Bounds:
+    def _get_param_bounds(self, pf: ProbabilityFunctions) -> Bounds:
         MIN_POSITIVE_FLOAT = np.finfo(float).resolution
         return Bounds(
-            np.full(functions.params.nb_params, MIN_POSITIVE_FLOAT),
-            np.full(functions.params.nb_params, np.inf),
+            np.full(pf.params.nb_params, MIN_POSITIVE_FLOAT),
+            np.full(pf.params.nb_params, np.inf),
         )
 
     @abstractmethod
     def fit(
-        self, functions: Functions, likelihood: Likelihood, **kwargs
-    ) -> Tuple[Functions, OptimizeResult]:
+        self, pf: ProbabilityFunctions, likelihood: Likelihood, **kwargs
+    ) -> Tuple[ProbabilityFunctions, OptimizeResult]:
         pass
 
 

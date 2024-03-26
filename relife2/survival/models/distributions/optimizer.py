@@ -1,55 +1,52 @@
-from typing import Tuple, TypeVar
+from typing import Tuple
 
 import numpy as np
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
-from ..backbone import ParametricOptimizer
+from ..backbone import Optimizer
 from .functions import DistFunctions
 from .likelihood import DistLikelihood
 
-Functions = TypeVar("Functions", bound=DistFunctions)
-Likelihood = TypeVar("Likelihood", bound=DistLikelihood)
 
-
-class DistOptimizer(ParametricOptimizer):
-    def __init__(self, functions: Functions, likelihood: Likelihood):
-        super().__init__(functions, likelihood)
+class DistOptimizer(Optimizer):
+    def __init__(self, pf: DistFunctions, likelihood: DistLikelihood):
+        super().__init__(pf, likelihood)
 
     def _func(
         self,
         x,
-        functions: Functions,
-        likelihood: Likelihood,
+        pf: DistFunctions,
+        likelihood: DistLikelihood,
     ):
-        functions.params.values = x
-        return likelihood.negative_log_likelihood(functions)
+        pf.params.values = x
+        return likelihood.negative_log_likelihood(pf)
 
     def _jac(
         self,
         x,
-        functions: Functions,
-        likelihood: Likelihood,
+        pf: DistFunctions,
+        likelihood: DistLikelihood,
     ):
-        functions.params.values = x
-        return likelihood.jac_negative_log_likelihood(functions)
+        pf.params.values = x
+        return likelihood.jac_negative_log_likelihood(pf)
 
     # relife/parametric.ParametricHazardFunctions
     def fit(
         self,
-        functions: Functions,
-        likelihood: Likelihood,
+        pf: DistFunctions,
+        likelihood: DistLikelihood,
         param0: np.ndarray = None,
         bounds=None,
         method: str = None,
         **kwargs,
-    ) -> Tuple[Functions, OptimizeResult]:
+    ) -> Tuple[DistFunctions, OptimizeResult]:
 
         if param0 is not None:
             param0 = np.asanyarray(param0, float)
             if param0 != self.param0.size:
                 raise ValueError(
                     "Wrong dimension for param0, expected"
-                    f" {functions.nb_params} but got {param0.size}"
+                    f" {pf.nb_params} but got {param0.size}"
                 )
             self.param0 = param0
         if bounds is not None:
@@ -66,23 +63,23 @@ class DistOptimizer(ParametricOptimizer):
         opt = minimize(
             self._func,
             self.param0,
-            args=(functions, likelihood),
+            args=(pf, likelihood),
             method=self.method,
             jac=self._jac,
             bounds=self.bounds,
             **kwargs,
         )
-        functions.params.values = opt.x
+        pf.params.values = opt.x
 
-        return functions, opt
+        return pf, opt
 
 
 class GompertzOptimizer(DistOptimizer):
-    def __init__(self, functions: Functions, likelihood: Likelihood):
-        super().__init__(functions, likelihood)
+    def __init__(self, pf: DistFunctions, likelihood: DistLikelihood):
+        super().__init__(pf, likelihood)
 
     def _init_param(
-        self, likelihood: Likelihood, nb_params: int
+        self, likelihood: DistLikelihood, nb_params: int
     ) -> np.ndarray:
         param0 = np.empty(nb_params)
         rate = np.pi / (

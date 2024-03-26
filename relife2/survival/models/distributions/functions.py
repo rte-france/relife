@@ -4,27 +4,12 @@ from typing import List
 import numpy as np
 from scipy.special import exp1, gamma, gammaincc, gammainccinv
 
-from ..backbone import ParametricFunctions
+from ..backbone import ProbabilityFunctions
 
 
-class DistFunctions(ParametricFunctions):
+class DistFunctions(ProbabilityFunctions):
     def __init__(self, nb_params: int, param_names: List[str] = None):
         super().__init__(nb_params, param_names)
-
-    # relife/parametric.ParametricLifetimeModel
-    def sf(self, time: np.ndarray) -> np.ndarray:
-        """Parametric survival function."""
-        return np.exp(-self.chf(time))
-
-    # relife/parametric.ParametricLifetimeModel
-    def cdf(self, time: np.ndarray) -> np.ndarray:
-        """Parametric cumulative distribution function."""
-        return 1 - self.sf(time)
-
-    # relife/parametric.ParametricLifetimeModel
-    def pdf(self, time: np.ndarray) -> np.ndarray:
-        """Parametric probability density function."""
-        return self.hf(time) * self.sf(time)
 
     @abstractmethod
     def ichf(self, cumulative_hazard_rate: np.ndarray):

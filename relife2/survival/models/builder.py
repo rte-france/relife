@@ -5,10 +5,10 @@ import numpy as np
 
 from .backbone import (
     FittingResults,
+    Likelihood,
+    Optimizer,
     Parameters,
-    ParametricFunctions,
-    ParametricLikelihood,
-    ParametricOptimizer,
+    ProbabilityFunctions,
 )
 
 
@@ -16,38 +16,39 @@ from .backbone import (
 class LifetimeModel:
     def __init__(
         self,
-        Functions: Type[ParametricFunctions],
-        Likelihood: Type[ParametricLikelihood] = None,
-        Optimizer: Type[ParametricOptimizer] = None,
+        probability_functions: Type[ProbabilityFunctions],
+        likelihood: Type[Likelihood] = None,
+        optimizer: Type[Optimizer] = None,
         *params: Union[np.ndarray, float],
         **kwparams: float,
     ):
 
-        if not issubclass(Functions, ParametricFunctions):
-            parent_classes = (Cls.__name__ for Cls in Functions.__bases__)
+        if not issubclass(probability_functions, ProbabilityFunctions):
+            parent_classes = (
+                Cls.__name__ for Cls in probability_functions.__bases__
+            )
             raise ValueError(
                 f"ParametricFunction subclass expected, got '{parent_classes}'"
             )
 
-        if not issubclass(Likelihood, ParametricLikelihood):
-            parent_classes = (Cls.__name__ for Cls in Functions.__bases__)
+        if not issubclass(likelihood, Likelihood):
+            parent_classes = (Cls.__name__ for Cls in likelihood.__bases__)
             raise ValueError(
                 "ParametrictLikelihood subclass expected, got"
                 f" '{parent_classes}'"
             )
 
-        if not issubclass(Optimizer, ParametricOptimizer):
-            parent_classes = (Cls.__name__ for Cls in Functions.__bases__)
+        if not issubclass(optimizer, Optimizer):
+            parent_classes = (Cls.__name__ for Cls in optimizer.__bases__)
             raise ValueError(
-                "ParametricOptimizer subclass expected, got"
-                f" {Optimizer.__name__} '{parent_classes}'"
+                f"Optimizer subclass expected, got {parent_classes}"
             )
 
-        self.functions = Functions()
-        self.Likelihood = Likelihood
-        self.Optimizer = Optimizer
+        self.pf = probability_functions()
+        self.likelihood = likelihood
+        self.optimizer = optimizer
         self._set_params(*params, **kwparams)
-        self._init_params_values = self.functions.params.values
+        self._init_params_values = self.pf.params.values
         self._fitting_params = None
         self._fitting_results = None
 
@@ -63,31 +64,31 @@ class LifetimeModel:
             else:
                 params = np.array(params)
             params_shape = params.shape
-            functions_params_shape = self.functions.params.values.shape
-            if params.shape != self.functions.params.values.shape:
+            functions_params_shape = self.pf.params.values.shape
+            if params.shape != self.pf.params.values.shape:
                 raise ValueError(
                     "Incorrect params shape, expected shape"
                     f" {functions_params_shape} but got {params_shape}"
                 )
-            self.functions.params.values = params
+            self.pf.params.values = params
 
         elif len(kwparams) != 0:
-            missing_param_names = set(
-                self.functions.params.param_names
-            ).difference(set(kwparams.keys()))
+            missing_param_names = set(self.pf.params.param_names).difference(
+                set(kwparams.keys())
+            )
             if len(missing_param_names) != 0:
                 warnings.warn(
                     f"""{missing_param_names} params are missing and will be initialized randomly"""
                 )
             for key, value in kwparams.items():
-                self.functions.params[key] = value
+                self.pf.params[key] = value
 
     def _get_func(self, func_name: str):
-        if hasattr(self.functions, func_name):
-            func = getattr(self.functions, func_name)
+        if hasattr(self.pf, func_name):
+            func = getattr(self.pf, func_name)
         else:
             raise AttributeError(
-                "f{self.functions.__name__} has no attribute {func_name}"
+                "f{self.pf.__name__} has no attribute {func_name}"
             )
         return func
 
@@ -106,11 +107,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("ppf")
         res = func(probability)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def median(
@@ -124,11 +125,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("median")
         res = func()
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def rvs(
@@ -151,11 +152,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("rvs")
         res = func(size, random_state)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def sf(
@@ -176,11 +177,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("sf")
         res = func(time)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def cdf(
@@ -201,11 +202,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("cdf")
         res = func(time)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def pdf(
@@ -226,11 +227,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("pdf")
         res = func(time)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def isf(
@@ -251,11 +252,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("isf")
         res = func(probability)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def hf(
@@ -272,11 +273,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: hazard function values
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("hf")
         res = func(time)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def chf(
@@ -297,11 +298,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("chf")
         res = func(time)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def mean(
@@ -318,11 +319,11 @@ class LifetimeModel:
         Returns:
             float: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("mean")
         res = func()
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def var(
@@ -339,11 +340,11 @@ class LifetimeModel:
         Returns:
             float: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("var")
         res = func()
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def mrl(
@@ -364,11 +365,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("mrl")
         res = func(time)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def ichf(
@@ -389,11 +390,11 @@ class LifetimeModel:
         Returns:
             np.ndarray: _description_
         """
-        previous_params_values = self.functions.params.values.copy()
+        previous_params_values = self.pf.params.values.copy()
         self._set_params(*params, **kwparams)
         func = self._get_func("ichf")
         res = func(cumulative_hazard_rate)
-        self.functions.params.values = previous_params_values
+        self.pf.params.values = previous_params_values
         return res
 
     def fit(
@@ -407,13 +408,13 @@ class LifetimeModel:
         **kwargs,
     ) -> None:
 
-        if self.Likelihood is None:
-            raise ValueError("Model has no Likelihood implemented")
+        if self.likelihood is None:
+            raise ValueError("Model has no likelihood implemented")
 
-        if self.Optimizer is None:
-            raise ValueError("Model has no Optimizer implemented")
+        if self.optimizer is None:
+            raise ValueError("Model has no optimizer implemented")
 
-        likelihood = self.Likelihood(
+        likelihood = self.likelihood(
             observed_lifetimes,
             complete_indicators,
             left_censored_indicators,
@@ -421,14 +422,12 @@ class LifetimeModel:
             entry,
             departure,
         )
-        optimizer = self.Optimizer(self.functions, likelihood)
+        optimizer = self.optimizer(self.pf, likelihood)
 
-        self.functions, opt = optimizer.fit(
-            self.functions, likelihood, **kwargs
-        )
-        jac = likelihood.jac_negative_log_likelihood(self.functions)
+        self.pf, opt = optimizer.fit(self.pf, likelihood, **kwargs)
+        jac = likelihood.jac_negative_log_likelihood(self.pf)
         var = np.linalg.inv(
-            likelihood.hess_negative_log_likelihood(self.functions, **kwargs)
+            likelihood.hess_negative_log_likelihood(self.pf, **kwargs)
         )
         self._fitting_results = FittingResults(
             opt,
@@ -438,13 +437,13 @@ class LifetimeModel:
         )
 
         self._fitting_params = Parameters(
-            self.functions.params.nb_params, self.functions.params.param_names
+            self.pf.params.nb_params, self.pf.params.param_names
         )
         self._fitting_params.values = opt.x
 
     @property
     def params(self) -> Parameters:
-        return self.functions.params
+        return self.pf.params
 
     @property
     def fitting_results(self) -> FittingResults:

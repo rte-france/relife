@@ -1,18 +1,15 @@
 from abc import abstractmethod
-from typing import TypeVar
 
 import numpy as np
 from scipy.optimize import approx_fprime
 from scipy.special import digamma
 
-from ..backbone import ParametricLikelihood
+from ..backbone import Likelihood
 from ..integrations import shifted_laguerre
 from .functions import DistFunctions
 
-Functions = TypeVar("Functions", bound=DistFunctions)
 
-
-class DistLikelihood(ParametricLikelihood):
+class DistLikelihood(Likelihood):
     def __init__(self, *data, **kwdata):
         super().__init__(*data, **kwdata)
 
@@ -27,12 +24,12 @@ class DistLikelihood(ParametricLikelihood):
     # relife/parametric.ParametricHazardFunction
     def negative_log_likelihood(
         self,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> float:
 
-        D_contrib = -np.sum(np.log(functions.hf(self.data("complete").values)))
+        D_contrib = -np.sum(np.log(pf.hf(self.data("complete").values)))
         RC_contrib = np.sum(
-            functions.chf(
+            pf.chf(
                 np.concatenate(
                     (
                         self.data("complete").values,
@@ -44,24 +41,24 @@ class DistLikelihood(ParametricLikelihood):
         LC_contrib = -np.sum(
             np.log(
                 -np.expm1(
-                    -functions.chf(
+                    -pf.chf(
                         self.data("left_censored").values,
                     )
                 )
             )
         )
-        LT_contrib = -np.sum(functions.chf(self.data("left_truncated").values))
+        LT_contrib = -np.sum(pf.chf(self.data("left_truncated").values))
         return D_contrib + RC_contrib + LC_contrib + LT_contrib
 
     # relife/parametric.ParametricHazardFunction
     def jac_negative_log_likelihood(
         self,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
 
         jac_D_contrib = -np.sum(
-            self.jac_hf(self.data("complete").values, functions)
-            / functions.hf(self.data("complete").values)[:, None],
+            self.jac_hf(self.data("complete").values, pf)
+            / pf.hf(self.data("complete").values)[:, None],
             axis=0,
             # keepdims=True,
         )
@@ -74,7 +71,7 @@ class DistLikelihood(ParametricLikelihood):
                         self.data("right_censored").values,
                     )
                 ),
-                functions,
+                pf,
             ),
             axis=0,
             # keepdims=True,
@@ -89,10 +86,8 @@ class DistLikelihood(ParametricLikelihood):
         #     ).shape
         # )
         jac_LC_contrib = -np.sum(
-            self.jac_chf(self.data("left_censored").values, functions)
-            / np.expm1(
-                functions.chf(self.data("left_censored").values)[:, None]
-            ),
+            self.jac_chf(self.data("left_censored").values, pf)
+            / np.expm1(pf.chf(self.data("left_censored").values)[:, None]),
             axis=0,
             # keepdims=True,
         )
@@ -102,7 +97,7 @@ class DistLikelihood(ParametricLikelihood):
         #     self.jac_chf(self.data("left_truncated").values).shape,
         # )
         jac_LT_contrib = -np.sum(
-            self.jac_chf(self.data("left_truncated").values, functions),
+            self.jac_chf(self.data("left_truncated").values, pf),
             axis=0,
             # keepdims=True,
         )
@@ -112,15 +107,15 @@ class DistLikelihood(ParametricLikelihood):
 
     def hess_negative_log_likelihood(
         self,
-        functions: Functions,
+        pf: DistFunctions,
         eps: float = 1e-6,
         scheme: str = None,
     ) -> np.ndarray:
 
-        size = np.size(functions.params.values)
+        size = np.size(pf.params.values)
         # print(size)
         hess = np.empty((size, size))
-        params_values = functions.params.values
+        params_values = pf.params.values
 
         if scheme is None:
             scheme = self._default_hess_scheme
@@ -131,31 +126,30 @@ class DistLikelihood(ParametricLikelihood):
                 for j in range(i, size):
                     # print(type(u[i]))
                     # print(u[i])
-                    # print(functions.params.values)
-                    # print(functions.params.values + u[i])
-                    functions.params.values = functions.params.values + u[i]
-                    # print(self.jac_negative_log_likelihood(functions))
+                    # print(pf.params.values)
+                    # print(pf.params.values + u[i])
+                    pf.params.values = pf.params.values + u[i]
+                    # print(self.jac_negative_log_likelihood(pf))
 
                     hess[i, j] = (
-                        np.imag(self.jac_negative_log_likelihood(functions)[j])
-                        / eps
+                        np.imag(self.jac_negative_log_likelihood(pf)[j]) / eps
                     )
-                    functions.params.values = params_values
+                    pf.params.values = params_values
                     if i != j:
                         hess[j, i] = hess[i, j]
 
         elif scheme == "2-point":
 
-            def f(xk, functions):
-                functions.params.values = xk
-                return self.jac_negative_log_likelihood(functions)
+            def f(xk, pf):
+                pf.params.values = xk
+                return self.jac_negative_log_likelihood(pf)
 
-            xk = functions.params.values
+            xk = pf.params.values
 
             for i in range(size):
                 hess[i] = approx_fprime(
                     xk,
-                    lambda x: f(x, functions)[i],
+                    lambda x: f(x, pf)[i],
                     eps,
                 )
         else:
@@ -172,7 +166,7 @@ class ExponentialLikelihood(DistLikelihood):
     def jac_hf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
         # shape : (len(sample), nb_param)
         return np.ones((time.size, 1))
@@ -181,7 +175,7 @@ class ExponentialLikelihood(DistLikelihood):
     def jac_chf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
         # shape : (len(sample), nb_param)
         return np.ones((time.size, 1)) * time[:, None]
@@ -194,39 +188,31 @@ class WeibullLikelihood(DistLikelihood):
     def jac_hf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
 
         return np.column_stack(
             (
-                functions.params.rate
-                * (functions.params.rate * time[:, None])
-                ** (functions.params.c - 1)
-                * (
-                    1
-                    + functions.params.c
-                    * np.log(functions.params.rate * time[:, None])
-                ),
-                functions.params.c**2
-                * (functions.params.rate * time[:, None])
-                ** (functions.params.c - 1),
+                pf.params.rate
+                * (pf.params.rate * time[:, None]) ** (pf.params.c - 1)
+                * (1 + pf.params.c * np.log(pf.params.rate * time[:, None])),
+                pf.params.c**2
+                * (pf.params.rate * time[:, None]) ** (pf.params.c - 1),
             )
         )
 
     def jac_chf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
         return np.column_stack(
             (
-                np.log(functions.params.rate * time[:, None])
-                * (functions.params.rate * time[:, None])
-                ** functions.params.c,
-                functions.params.c
+                np.log(pf.params.rate * time[:, None])
+                * (pf.params.rate * time[:, None]) ** pf.params.c,
+                pf.params.c
                 * time[:, None]
-                * (functions.params.rate * time[:, None])
-                ** (functions.params.c - 1),
+                * (pf.params.rate * time[:, None]) ** (pf.params.c - 1),
             )
         )
 
@@ -238,29 +224,28 @@ class GompertzLikelihood(DistLikelihood):
     def jac_hf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
         return np.column_stack(
             (
-                functions.params.rate
-                * np.exp(functions.params.rate * time[:, None]),
-                functions.params.c
-                * np.exp(functions.params.rate * time[:, None])
-                * (1 + functions.params.rate * time[:, None]),
+                pf.params.rate * np.exp(pf.params.rate * time[:, None]),
+                pf.params.c
+                * np.exp(pf.params.rate * time[:, None])
+                * (1 + pf.params.rate * time[:, None]),
             )
         )
 
     def jac_chf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
         return np.column_stack(
             (
-                np.expm1(functions.params.rate * time[:, None]),
-                functions.params.c
+                np.expm1(pf.params.rate * time[:, None]),
+                pf.params.c
                 * time[:, None]
-                * np.exp(functions.params.rate * time[:, None]),
+                * np.exp(pf.params.rate * time[:, None]),
             )
         )
 
@@ -271,9 +256,9 @@ class GammaLikelihood(DistLikelihood):
         self._default_hess_scheme = "2-point"
 
     @staticmethod
-    def _jac_uppergamma_c(functions: Functions, x: np.ndarray) -> np.ndarray:
+    def _jac_uppergamma_c(pf: DistFunctions, x: np.ndarray) -> np.ndarray:
         return shifted_laguerre(
-            lambda s: np.log(s) * s ** (functions.params.c - 1),
+            lambda s: np.log(s) * s ** (pf.params.c - 1),
             x,
             ndim=np.ndim(x),
         )
@@ -281,23 +266,21 @@ class GammaLikelihood(DistLikelihood):
     def jac_hf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
 
-        x = functions.params.rate * time[:, None]
+        x = pf.params.rate * time[:, None]
         return (
-            x ** (functions.params.c - 1)
+            x ** (pf.params.c - 1)
             * np.exp(-x)
-            / functions._uppergamma(x) ** 2
+            / pf._uppergamma(x) ** 2
             * np.column_stack(
                 (
-                    functions.params.rate
-                    * np.log(x)
-                    * functions._uppergamma(x)
-                    - functions.params.rate
-                    * GammaLikelihood._jac_uppergamma_c(functions, x),
-                    (functions.params.c - x) * functions._uppergamma(x)
-                    + x**functions.params.c * np.exp(-x),
+                    pf.params.rate * np.log(x) * pf._uppergamma(x)
+                    - pf.params.rate
+                    * GammaLikelihood._jac_uppergamma_c(pf, x),
+                    (pf.params.c - x) * pf._uppergamma(x)
+                    + x**pf.params.c * np.exp(-x),
                 )
             )
         )
@@ -305,17 +288,16 @@ class GammaLikelihood(DistLikelihood):
     def jac_chf(
         self,
         time: np.ndarray,
-        functions: Functions,
+        pf: DistFunctions,
     ) -> np.ndarray:
-        x = functions.params.rate * time[:, None]
+        x = pf.params.rate * time[:, None]
         return np.column_stack(
             (
-                digamma(functions.params.c)
-                - GammaLikelihood._jac_uppergamma_c(functions, x)
-                / functions._uppergamma(x),
-                x ** (functions.params.c - 1)
+                digamma(pf.params.c)
+                - GammaLikelihood._jac_uppergamma_c(pf, x) / pf._uppergamma(x),
+                x ** (pf.params.c - 1)
                 * time[:, None]
                 * np.exp(-x)
-                / functions._uppergamma(x),
+                / pf._uppergamma(x),
             )
         )

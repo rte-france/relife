@@ -1,8 +1,6 @@
-from typing import TypeVar
-
 import numpy as np
 
-from ..backbone import CovarEffect, ParametricFunctions
+from ..backbone import CovarEffect, ProbabilityFunctions
 from ..distributions.functions import DistFunctions
 
 
@@ -17,11 +15,8 @@ class PHEffect(CovarEffect):
         return np.dot(covar, self.params.values[:, None])
 
 
-Functions = TypeVar("Functions", bound=DistFunctions)
-
-
-class PHFunctions(ParametricFunctions):
-    def __init__(self, nb_covar: int, baseline: Functions):
+class PHFunctions(ProbabilityFunctions):
+    def __init__(self, nb_covar: int, baseline: DistFunctions):
         self.baseline = baseline()
         self.covar_effect = PHEffect(nb_covar)
         super().__init__(
