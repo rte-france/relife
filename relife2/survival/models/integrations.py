@@ -19,7 +19,7 @@ class LebesgueStieljes:
     def __init__(
         self,
         func: Callable,
-        density: Callable,
+        pf: ProbabilityFunctions,
         a: np.ndarray,
         b: np.ndarray,
     ):
@@ -31,7 +31,7 @@ class LebesgueStieljes:
             b (float): upper bound of integration.
         """
         self.func = func
-        self.density = density
+        self.pf = pf
         self.a = a
         self.b = b
 
@@ -40,6 +40,7 @@ class LebesgueStieljes:
         ndim: int = 0,
         deg: int = 100,
         q0: float = 1e-4,
+        *args,
     ) -> np.ndarray:
 
         if np.isinf(self.b):
