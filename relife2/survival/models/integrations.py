@@ -1,4 +1,4 @@
-"""Numerical integration, args manipulation, plot, etc."""
+"""Numerical integration"""
 
 # Copyright (c) 2022, RTE (https://www.rte-france.com)
 # See AUTHORS.txt
@@ -10,48 +10,29 @@ from typing import Callable
 
 import numpy as np
 
-from .backbone import ProbabilityFunctions
-
 # numerical integration
 
 
-class LebesgueStieljes:
-    def __init__(
-        self,
-        func: Callable,
-        pf: ProbabilityFunctions,
-        a: np.ndarray,
-        b: np.ndarray,
-    ):
-        """_summary_
+def ls_integrate(
+    func: Callable,
+    pf,
+    a: np.ndarray,
+    b: np.ndarray,
+    q0: float = 1e-4,
+    ndim: int = 0,
+    deg: int = 100,
+):
+    b = np.minimum(pf.support_upper_bound, b)
 
-        Args:
-            func (Callable): The function to be integrated.
-            a (float): lower bound of integration.
-            b (float): upper bound of integration.
-        """
-        self.func = func
-        self.pf = pf
-        self.a = a
-        self.b = b
+    def integrand(x):
+        return func(x) * pf.pdf(x)
 
-    def __call__(
-        self,
-        ndim: int = 0,
-        deg: int = 100,
-        q0: float = 1e-4,
-        *args,
-    ) -> np.ndarray:
-
-        if np.isinf(self.b):
-            b = self.isf(q0, *args)
-            res = quad_laguerre(self.func, b, *args, ndim=ndim, deg=deg)
-        else:
-            res = 0
-        return (
-            gauss_legendre(self.func, self.a, b, *args, ndim=ndim, deg=deg)
-            + res
-        )
+    if np.all(np.isinf(b)):
+        b = pf.isf(q0)
+        res = quad_laguerre(integrand, b, ndim=ndim, deg=deg)
+    else:
+        res = 0
+    return gauss_legendre(integrand, a, b, ndim=ndim, deg=deg) + res
 
 
 def gauss_legendre(
@@ -60,7 +41,7 @@ def gauss_legendre(
     b: np.ndarray,
     *args: np.ndarray,
     ndim: int = 0,
-    deg: int = 100,
+    deg: int = 100
 ) -> np.ndarray:
     r"""Gauss-Legendre integration.
 
@@ -144,7 +125,7 @@ def shifted_laguerre(
     a: np.ndarray,
     *args: np.ndarray,
     ndim: int = 0,
-    deg: int = 100,
+    deg: int = 100
 ) -> np.ndarray:
     r"""Shifted Gauss-Laguerre integration.
 
@@ -176,10 +157,12 @@ def shifted_laguerre(
         \int_a^{+\infty} f(x) e^{-x} \mathrm{d} x
     """
 
-    def f(x, *args):
-        return func(x + a, *args) * np.exp(-a)
-
-    return gauss_laguerre(f, *args, ndim=ndim, deg=deg)
+    return gauss_laguerre(
+        lambda x, *args: func(x + a, *args) * np.exp(-a),
+        *args,
+        ndim=ndim,
+        deg=deg
+    )
 
 
 def quad_laguerre(
@@ -187,7 +170,7 @@ def quad_laguerre(
     a: np.ndarray,
     *args: np.ndarray,
     ndim: int = 0,
-    deg: int = 100,
+    deg: int = 100
 ) -> np.ndarray:
     r"""Numerical integration over the interval `[a,inf]`.
 
@@ -220,7 +203,12 @@ def quad_laguerre(
         \int_a^{+\infty} f(x) \mathrm{d} x
     """
 
-    def f(x, *args):
-        return func(x + a, *args) * np.exp(x)
+    return gauss_laguerre(
+        lambda x, *args: func(x + a, *args) * np.exp(x),
+        *args,
+        ndim=ndim,
+        deg=deg
+    )
 
-    return gauss_laguerre(f, *args, ndim=ndim, deg=deg)
+
+# args manipulation functions

@@ -156,8 +156,8 @@ class GammaFunctions(DistFunctions):
     def var(self) -> float:
         return self.params.c / (self.params.rate**2)
 
-    def mrl(self, time: np.ndarray) -> np.ndarray:
-        pass
+    # def mrl(self, time: np.ndarray) -> np.ndarray:
+    #     pass
 
     def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
         return (

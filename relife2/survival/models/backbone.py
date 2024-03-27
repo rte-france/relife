@@ -3,9 +3,11 @@ from dataclasses import asdict, dataclass, field
 from typing import List, Tuple
 
 import numpy as np
+import numpy.ma as ma
 from scipy.optimize import Bounds, OptimizeResult, root_scalar
 
 from ..data import Data
+from .integrations import ls_integrate
 
 
 class Parameters:
@@ -73,6 +75,14 @@ class ProbabilityFunctions(ABC):
     def __init__(self, nb_params: int, param_names: List[str] = None):
         self.params = Parameters(nb_params, param_names=param_names)
 
+    @property
+    def support_upper_bound(self):
+        return np.inf
+
+    @property
+    def support_lower_bound(self):
+        return 0.0
+
     @abstractmethod
     def hf(self, time: np.ndarray) -> np.ndarray:
         pass
@@ -113,15 +123,8 @@ class ProbabilityFunctions(ABC):
         return self.isf(probabilities)
 
     # relife/model.LifetimeModel
-    def ls_integrate(self):
-        pass
-
-    # relife/model.LifetimeModel
-    def moment(self):
-        """
-        Depends upon ls_integrate
-        """
-        pass
+    def moment(self, n: int):
+        return ls_integrate(lambda x: x**n, self, 0, np.inf)
 
     # relife/model.LifetimeModel
     def ppf(self, probability: np.ndarray) -> np.ndarray:
@@ -132,22 +135,20 @@ class ProbabilityFunctions(ABC):
         return self.ppf(0.5)
 
     def mean(self) -> float:
-        """
-        Depends upon ls_integrate IF NOT specified in subclass
-        """
-        pass
+        return self.moment(1)
 
     def var(self) -> float:
-        """
-        Depends upon ls_integrate IF NOT specified in subclass
-        """
-        pass
+        return self.moment(2) - self.moment(1) ** 2
 
     def mrl(self, time: np.ndarray) -> np.ndarray:
-        """
-        Depends upon ls_integrate IF NOT specified in subclass
-        """
-        pass
+        ub = self.support_upper_bound
+        mask = time >= ub
+        if np.any(mask):
+            time, ub = np.broadcast_arrays(time, ub)
+            time = ma.MaskedArray(time, mask)
+            ub = ma.MaskedArray(ub, mask)
+        mu = ls_integrate(lambda x: x - time, self, time, ub) / self.sf(time)
+        return np.ma.filled(mu, 0)
 
 
 class CovarEffect(ABC):

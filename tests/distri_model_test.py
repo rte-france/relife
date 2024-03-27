@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife2.survival import Exponential, Gompertz, Weibull
+from relife2.survival import Exponential, Gamma, Gompertz, Weibull
 from relife2.survival.data import load_power_transformer
 
 
@@ -16,7 +16,7 @@ def data():
         Exponential(0.00795203),
         Weibull(3.46597395, 0.01227849),
         Gompertz(0.00865741, 0.06062632),
-        # gamma(5.3571091, 0.06622822),
+        Gamma(5.3571091, 0.06622822),
         # logLogistic(3.92614064, 0.0133325),
     ],
 )
@@ -34,10 +34,10 @@ def test_rvs(model):
 
 
 # /!\ depends upon LS_INTEGRATE
-# def test_mean(model):
-#     assert super(type(model), model).mean() == pytest.approx(
-#         model.mean(), rel=1e-3
-#     )
+def test_mean(model):
+    assert super(type(model), model).mean() == pytest.approx(
+        model.mean(), rel=1e-3
+    )
 
 
 def test_mrl(model):
