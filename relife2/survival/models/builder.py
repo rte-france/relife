@@ -464,3 +464,78 @@ class LifetimeModel:
                 UserWarning,
             )
         return self._fitting_params
+
+
+class ParametersSet:
+    def __init__(self, *params: Parameters):
+        self.params_set = params
+        self._nb_params = [p.nb_params for p in params]
+        self.nb_params = sum(self._nb_params)
+        self._param_names = [p.param_names for p in params]
+        self.params_index = {
+            name: i for i, name in enumerate(self.param_names)
+        }
+
+    @property
+    def values(self):
+        return np.concatenate([p.values for p in self.params_set])
+
+    @property
+    def param_names(self):
+        return [x for names in self._param_names for x in names]
+
+    @values.setter
+    def values(self, v: np.ndarray):
+        values_set = np.split(v, np.cumsum(self._nb_params))
+        for i, _v in enumerate(values_set):
+            self.params_set[i].values = _v
+
+    def __len__(self):
+        self.nb_params
+
+    def __getitem__(self, i):
+        return self.params_set[self.nb_params // i].values[self.nb_params % i]
+
+    def __setitem__(self, param_name: str, value: float):
+        if param_name in self.params_index:
+            i = self.params_index[param_name]
+            self.params_set[self.nb_params // i].values[
+                self.nb_params % i
+            ] = value
+        else:
+            raise AttributeError(
+                f"""
+                Parameter has no attr called {param_name}
+                """
+            )
+
+    def __getattr__(self, attr: str):
+        if attr in self.params_index:
+            i = self.params_index[attr]
+            return self.params_set[self.nb_params // i].values[
+                self.nb_params % i
+            ]
+        else:
+            raise AttributeError(
+                f"""
+                Parameter has no attr called {attr}
+                """
+            )
+
+    def __str__(self):
+        class_name = type(self).__name__
+        res = [
+            f"{name} = {getattr(self, name)} \n" for name in self.param_names
+        ]
+        res = "".join(res)
+        return f"\n{class_name}\n{res}"
+
+
+class PFComposer(ProbabilityFunctions):
+    def __init__(self, *pf: ProbabilityFunctions):
+        self.pf_set = pf
+        self.params = ParametersSet(*[f.params for f in self.pd_set])
+        super().__init__(self.params.nb_params, self.params.param_names)
+        # problème : on veut que PFComposer soit un object type ProbabilityFunctions sans avoir à définir les méthodes abstraites
+        # idée : __new__
+        # Est-ce qu'on ne peut pas avoir une LifetimeModel prenant en entrée plusieurs ProbabilityFunctions objects ?

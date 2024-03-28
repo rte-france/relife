@@ -80,47 +80,6 @@ class Parameters:
         return f"\n{class_name}\n{res}"
 
 
-class ParametersCombination:
-    def __init__(self, *params: Parameters):
-        self.params = params
-        self._nb_params = [p.nb_params for p in params]
-        self._param_names = [p.param_names for p in params]
-        self._values = [p.values for p in params]
-        self.params_index = {
-            name: i for i, name in enumerate(self.param_names)
-        }
-
-    @property
-    def values(self):
-        return np.concatenate(self._values)
-
-    @property
-    def nb_params(self):
-        return sum(self._nb_params)
-
-    @property
-    def param_names(self):
-        return [x for names in self._param_names for x in names]
-
-    @values.setter
-    def values(self, values: np.ndarray):
-        # attribue à chaque objet Parameters de self.params les values
-
-    def __len__(self):
-        self.nb_params
-
-    def __getitem__(self, i):
-        pass
-
-    def __setitem__(self, param_name: str, value: float):
-        pass
-    def __getattr__(self, attr: str):
-        pass
-
-    def __str__(self):
-        pass
-
-
 class ProbabilityFunctions(ABC):
     def __init__(self, nb_params: int, param_names: List[str] = None):
         self.params = Parameters(nb_params, param_names=param_names)
