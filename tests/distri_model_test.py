@@ -40,6 +40,7 @@ def test_mean(model):
     )
 
 
+# /!\ depends upon LS_INTEGRATExx
 def test_mrl(model):
     t = np.arange(10)
     assert model.mrl(t).shape == (t.size,)

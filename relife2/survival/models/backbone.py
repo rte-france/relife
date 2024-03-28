@@ -148,7 +148,9 @@ class ProbabilityFunctions(ABC):
             time, ub = np.broadcast_arrays(time, ub)
             time = ma.MaskedArray(time, mask)
             ub = ma.MaskedArray(ub, mask)
-        mu = ls_integrate(lambda x: x - time, self, time, ub) / self.sf(time)
+        mu = ls_integrate(
+            lambda x: x - time, self, time, ub, ndim=1
+        ) / self.sf(time)
         return np.ma.filled(mu, 0)
 
 
