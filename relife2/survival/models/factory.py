@@ -8,6 +8,8 @@ from .distributions import (
     GompertzFunctions,
     GompertzLikelihood,
     GompertzOptimizer,
+    LogLogisticFunctions,
+    LogLogisticLikelihood,
     WeibullFunctions,
     WeibullLikelihood,
 )
@@ -68,6 +70,16 @@ class Gamma(LifetimeModel):
         super().__init__(
             GammaFunctions,
             GammaLikelihood,
+            DistOptimizer,
+            *(c, rate),
+        )
+
+
+class LogLogistic(LifetimeModel):
+    def __init__(self, c: float, rate: float):
+        super().__init__(
+            LogLogisticFunctions,
+            LogLogisticLikelihood,
             DistOptimizer,
             *(c, rate),
         )

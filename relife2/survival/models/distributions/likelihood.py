@@ -302,3 +302,42 @@ class GammaLikelihood(DistLikelihood):
                 / pf._uppergamma(x),
             )
         )
+
+
+class LogLogisticLikelihood(DistLikelihood):
+    def __init__(self, *data, **kwdata):
+        super().__init__(*data, **kwdata)
+
+    def jac_hf(self, time: np.ndarray, pf: DistFunctions) -> np.ndarray:
+        x = pf.params.rate * time[:, None]
+        return np.column_stack(
+            (
+                (
+                    pf.params.rate
+                    * x ** (pf.params.c - 1)
+                    / (1 + x**pf.params.c) ** 2
+                )
+                * (
+                    1
+                    + x**pf.params.c
+                    + pf.params.c * np.log(pf.params.rate * time[:, None])
+                ),
+                (
+                    pf.params.rate
+                    * x ** (pf.params.c - 1)
+                    / (1 + x**pf.params.c) ** 2
+                )
+                * (pf.params.c**2 / pf.params.rate),
+            )
+        )
+
+    def jac_chf(self, time: np.ndarray, pf: DistFunctions) -> np.ndarray:
+        x = pf.params.rate * time[:, None]
+        return np.column_stack(
+            (
+                (x**pf.params.c / (1 + x**pf.params.c))
+                * np.log(pf.params.rate * time[:, None]),
+                (x**pf.params.c / (1 + x**pf.params.c))
+                * (pf.params.c / pf.params.rate),
+            )
+        )

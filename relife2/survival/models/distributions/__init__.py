@@ -2,12 +2,14 @@ from .functions import (
     ExponentialFunctions,
     GammaFunctions,
     GompertzFunctions,
+    LogLogisticFunctions,
     WeibullFunctions,
 )
 from .likelihood import (
     ExponentialLikelihood,
     GammaLikelihood,
     GompertzLikelihood,
+    LogLogisticLikelihood,
     WeibullLikelihood,
 )
 from .optimizer import DistOptimizer, GompertzOptimizer
@@ -24,4 +26,6 @@ __all__ = [
     "ExponentialLikelihood",
     "GompertzOptimizer",
     "DistOptimizer",
+    "LogLogisticFunctions",
+    "LogLogisticLikelihood",
 ]

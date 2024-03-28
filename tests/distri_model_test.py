@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife2.survival import Exponential, Gamma, Gompertz, Weibull
+from relife2.survival import Exponential, Gamma, Gompertz, LogLogistic, Weibull
 from relife2.survival.data import load_power_transformer
 
 
@@ -17,7 +17,7 @@ def data():
         Weibull(3.46597395, 0.01227849),
         Gompertz(0.00865741, 0.06062632),
         Gamma(5.3571091, 0.06622822),
-        # logLogistic(3.92614064, 0.0133325),
+        LogLogistic(3.92614064, 0.0133325),
     ],
 )
 def model(request):

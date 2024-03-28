@@ -1,5 +1,5 @@
 from .models.builder import LifetimeModel
-from .models.factory import Exponential, Gamma, Gompertz, Weibull
+from .models.factory import Exponential, Gamma, Gompertz, LogLogistic, Weibull
 
 __all__ = [
     "LifetimeModel",
@@ -7,4 +7,5 @@ __all__ = [
     "Gompertz",
     "Weibull",
     "Gamma",
+    "LogLogistic",
 ]
