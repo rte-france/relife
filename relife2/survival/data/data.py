@@ -3,8 +3,9 @@ from typing import Tuple, Union
 
 import numpy as np
 
-from ..errors import LifetimeDataError
-from ..errors.checks import is_array
+from relife2.errors.checks import is_array
+from relife2.errors.exceptions import LifetimeDataError
+
 from .parsers import (
     ParsedData,
     complete_factory,

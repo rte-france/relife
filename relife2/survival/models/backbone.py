@@ -6,8 +6,9 @@ import numpy as np
 import numpy.ma as ma
 from scipy.optimize import Bounds, OptimizeResult, root_scalar
 
+from relife2.utils.integrations import ls_integrate
+
 from ..data import Data
-from .integrations import ls_integrate
 
 
 class Parameters:

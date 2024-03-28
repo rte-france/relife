@@ -2,14 +2,14 @@ from typing import Tuple
 
 import numpy as np
 
-from ..errors import LifetimeDataError
-from ..errors.checks import (
+from relife2.errors.checks import (
     check_shape,
     is_1d,
     is_array,
     is_array_type,
     same_shape,
 )
+from relife2.errors.exceptions import LifetimeDataError
 
 
 class ParsedData:

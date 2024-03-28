@@ -4,8 +4,9 @@ import numpy as np
 from scipy.optimize import approx_fprime
 from scipy.special import digamma
 
+from relife2.utils.integrations import shifted_laguerre
+
 from ..backbone import Likelihood
-from ..integrations import shifted_laguerre
 from .functions import DistFunctions
 
 
