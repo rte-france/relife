@@ -1,4 +1,5 @@
 from .functions import (
+    DistFunctions,
     ExponentialFunctions,
     GammaFunctions,
     GompertzFunctions,
@@ -28,4 +29,5 @@ __all__ = [
     "DistOptimizer",
     "LogLogisticFunctions",
     "LogLogisticLikelihood",
+    "DistFunctions",
 ]

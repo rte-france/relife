@@ -1,5 +1,8 @@
+import numpy as np
+
 from .builder import LifetimeModel
 from .distributions import (
+    DistFunctions,
     DistOptimizer,
     ExponentialFunctions,
     ExponentialLikelihood,
@@ -83,3 +86,12 @@ class LogLogistic(LifetimeModel):
             DistOptimizer,
             *(c, rate),
         )
+
+
+class MinimumDist(LifetimeModel):
+    def __init__(self, baseline: DistFunctions, n: np.ndarray):
+        self.baseline = baseline
+        if n.ndim == 1:
+            self.n == n[:, None]
+        elif n.ndim == 2:
+            pass

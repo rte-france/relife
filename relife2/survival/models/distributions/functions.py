@@ -208,3 +208,73 @@ class LogLogisticFunctions(DistFunctions):
         return (
             (np.exp(cumulative_hazard_rate) - 1) ** (1 / self.params.c)
         ) / self.params.rate
+
+
+class MinimumDistFunctions(DistFunctions):
+    def __init__(self, baseline: DistFunctions, n: np.ndarray):
+        self.baseline = baseline
+        self.n = n
+        super().__init__(
+            baseline.params.nb_params, baseline.params.param_names
+        )
+
+    @property
+    def _default_hess_scheme(self) -> str:
+        return self.baseline._default_hess_scheme
+
+    def _set_params(self, params: np.ndarray) -> None:
+        self.baseline._set_params(params)
+
+    def _chf(
+        self,
+        params: np.ndarray,
+        t: np.ndarray,
+        n: np.ndarray,
+        *args: np.ndarray,
+    ) -> np.ndarray:
+        return n * self.baseline._chf(params, t, *args)
+
+    def _hf(
+        self,
+        params: np.ndarray,
+        t: np.ndarray,
+        n: np.ndarray,
+        *args: np.ndarray,
+    ) -> np.ndarray:
+        return n * self.baseline._hf(params, t, *args)
+
+    def _dhf(
+        self,
+        params: np.ndarray,
+        t: np.ndarray,
+        n: np.ndarray,
+        *args: np.ndarray,
+    ) -> np.ndarray:
+        return n * self.baseline._dhf(params, t, *args)
+
+    def _jac_chf(
+        self,
+        params: np.ndarray,
+        t: np.ndarray,
+        n: np.ndarray,
+        *args: np.ndarray,
+    ) -> np.ndarray:
+        return n * self.baseline._jac_chf(params, t, *args)
+
+    def _jac_hf(
+        self,
+        params: np.ndarray,
+        t: np.ndarray,
+        n: np.ndarray,
+        *args: np.ndarray,
+    ) -> np.ndarray:
+        return n * self.baseline._jac_hf(params, t, *args)
+
+    def _ichf(
+        self,
+        params: np.ndarray,
+        v: np.ndarray,
+        n: np.ndarray,
+        *args: np.ndarray,
+    ) -> np.ndarray:
+        return self.baseline._ichf(params, v / n, *args)
