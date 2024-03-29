@@ -105,3 +105,11 @@ def load_insulator_string() -> LifetimeData:
     )
     covar = np.column_stack(args)
     return LifetimeData(time, event, entry, (covar,))
+
+def load_insulator_chain_deterioration():
+
+    ids, inspection_times, deterioration_measurements, increments, *args = np.loadtxt(
+        DATA_PATH / "insulator_chain_deterioration.csv", delimiter=",", skiprows=1, unpack=True
+    )
+
+    return ids, inspection_times, deterioration_measurements, increments
