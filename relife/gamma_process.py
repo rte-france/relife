@@ -626,7 +626,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             fun=self.theoretical_one_cycle_cost,
             x0=[tau_initial_guess, l_initial_guess],
             args=cost_structure,
-            bounds=((0.3, 30), (self.l0, self.r0)),
+            bounds=((0.3, np.inf), (self.l0, self.r0)),
             method='L-BFGS-B' #'SLSQP' 'L-BFGS-B' 'Nelder-Mead'
         )
         return opt.x
