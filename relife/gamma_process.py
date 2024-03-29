@@ -10,10 +10,10 @@ from scipy.stats import gamma, loggamma
 from relife.model import AbsolutelyContinuousLifetimeModel
 from .utils import moore_jac_uppergamma_c
 
-
 # matplotlib.use('Qt5Agg', force=True)
 
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
+
 
 @dataclass
 class GammaProcessData:
@@ -151,7 +151,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             self.rate)  # generate loggamma distribution to avoid underflow. Useful for optimizing log likelihood
 
         increments = np.exp(log_increments)
-        increments = np.where(increments<MIN_POSITIVE_FLOAT, 0, increments)
+        increments = np.where(increments < MIN_POSITIVE_FLOAT, 0, increments)
         deterioration_measurements = np.cumsum(increments, axis=1)
         ids = np.repeat(np.arange(nb_sample), n)
         log_increments = np.concatenate((np.zeros(nb_sample)[:, np.newaxis], log_increments), axis=1).ravel()
@@ -232,8 +232,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                               scale=1 / rate)[event_id] -
                     gamma.cdf(increments_id - censor, a=np.diff(self._shape_function(params, inspection_times_id)),
                               scale=1 / rate)[event_id]
-                                                        )
-                                                )
+                )
+                )
 
             else:
                 censored_contribution = 0
@@ -246,7 +246,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         pass
 
     @staticmethod
-    def _method_of_moments(shape_power, data):
+    def _method_of_moments2(shape_power, data):
 
         moment1, moment2, moment3, moment2_scaling, moment3_scaling = [], [], [], [], []
         for i in data.unique_ids:
@@ -282,7 +282,19 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         return np.abs(2 * moment2 / moment2_scaling * moment3_scaling / moment3 - rate)
 
     @staticmethod
-    def return_param(shape_power, data):
+    def _method_of_moments(shape_power, data):
+        wi = data.inspection_times ** shape_power
+        zi = data.deterioration_measurements
+        zbar = np.sum(zi) / np.sum(wi)
+
+        u = np.sum(zi) * (1 - np.sum(wi ** 2) / np.sum(wi) ** 2) / (np.sum((zi - zbar * wi) ** 2))
+        c = zbar * u
+        return np.abs(2 * c / u ** 3 * (
+                np.sum(wi) + 2 * np.sum(wi ** 3) / np.sum(wi) ** 2 - 3 * np.sum(wi ** 2) / np.sum(wi)) - np.sum(
+            (zi - zbar * wi) ** 3)) ** 2
+
+    @staticmethod
+    def return_param2(shape_power, data):
         moment1, moment2, moment3, moment2_scaling, moment3_scaling = [], [], [], [], []
         for i in data.unique_ids:
             wi_id = np.diff(data.inspection_times[data.ids == i] ** shape_power)
@@ -312,6 +324,16 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         rate = moment1 * moment2_scaling / moment2
         shape_rate = rate * moment1
         return shape_rate, shape_power, rate
+
+    @staticmethod
+    def return_param(shape_power, data):
+        wi = data.inspection_times ** shape_power
+        zi = data.deterioration_measurements
+        zbar = np.sum(zi) / np.sum(wi)
+
+        u = np.sum(zi) * (1 - np.sum(wi ** 2) / np.sum(wi) ** 2) / (np.sum((zi - zbar * wi) ** 2))
+        c = zbar * u
+        return (c, shape_power, u)
 
     def fit(self, inspection_times, deterioration_measurements, ids, log_increments=None, censor=0,
             method='likelihood'):
@@ -347,7 +369,17 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
             return opt.x
 
-    def resistance_sample(self, inspection_times, nb_sample=1):
+    def resistance_sample(self, nb_sample=1):
+        def inv_sf(alpha):
+            return newton(func=lambda x: 1 - self.sf(x) - alpha, x0=(self.rate * (self.r0 - self.l0) / self.shape_rate) ** (1 / self.shape_power))
+
+        u = np.random.uniform(low=0, high=1, size=nb_sample)
+        times = np.zeros(nb_sample)
+        for i in range(nb_sample):
+            times[i] = inv_sf(u[i])
+        return times
+
+    def resistance_sample2(self, inspection_times, nb_sample=1):
         data = self.sample(inspection_times=inspection_times, nb_sample=nb_sample)
         data.deterioration_measurements = self.r0 - data.deterioration_measurements
 
@@ -368,8 +400,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         failure_times = inspection_times[ind_failure]
 
         nb_sample_max = nb_sample
-        if nb_sample > 100:
-            nb_sample_max = 100
+        if nb_sample > 1000:
+            nb_sample_max = 1000
 
         fig, ax1 = plt.subplots(dpi=160)
         color = 'tab:grey'
@@ -422,7 +454,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
     def replacement_strategy_plot(self, strategy):
 
         control_frequency, replacement_threshold = strategy
-        control_times = np.arange(1, 100) * control_frequency
+        control_times = np.arange(1, 1000) * control_frequency
         # 1) Simulation de la trajectoire d'un PG X(t)
         T_max = 1
         while self.sf(T_max) > 1e-4:
@@ -456,7 +488,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
 
         plt.plot(inspection_times, resistance_measurements, label='Deterioration process $R(t)$')
 
-        plt.ylim(0, 1.1 * self.r0)
+        plt.ylim(0.9 * self.l0, 1.1 * self.r0)
         plt.axhline(y=self.r0, color='green', linestyle='--', label='Initial resistance $R_0$')
         plt.axhline(y=self.l0, color='red', linestyle='--', label='Load threshold $l_0$')
         plt.axhline(y=replacement_threshold, color='black', linestyle='--', label='Replacement threshold $l$')
@@ -464,11 +496,12 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         plt.axvline(x=lifetime, color='orange', linestyle='-', label='Replacement')
         [plt.axvline(x=_inspec_times, color='grey', alpha=0.2, linestyle='--') for _inspec_times in inspec_times]
         # TODO: gérer la légende
-        plt.legend()
+        plt.legend(loc='upper right', fancybox=True, shadow=True)
         plt.xlabel("t")
         plt.ylabel("$R(t)$")
         plt.title(f'$k(l) = {kl}$, $k(l_0) = {kl0}$. Lifetime = ${round(lifetime, 3)}$')
         plt.show()
+
 
     def empirical_one_cycle_cost(self, strategy, cost_structure, nb_sample):
 
@@ -481,7 +514,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         data = self.sample(inspection_times=inspection_times, nb_sample=nb_sample)
 
         empirical_cost = []
-        control_times = np.arange(1, 100) * control_frequency
+        control_times = np.arange(1, 1000) * control_frequency
 
         for i in range(nb_sample):
 
@@ -584,16 +617,16 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         return np.sum(res)
 
     def theoretical_one_cycle_cost_minimizer(self, cost_structure):
-        q80 = 0
-        while self.sf(q80) > 0.2:
-            q80 += 1
-        tau_initial_guess = q80
+        q = 0
+        while self.sf(q) > 0.2:
+            q += 1
+        tau_initial_guess = q
         l_initial_guess = (self.r0 + self.l0) / 2
         opt = minimize(
             fun=self.theoretical_one_cycle_cost,
             x0=[tau_initial_guess, l_initial_guess],
             args=cost_structure,
-            bounds=((1, np.inf), (self.l0, self.r0)),
-            method='SLSQP'
+            bounds=((0.3, np.inf), (self.l0, self.r0)),
+            method='SLSQP' #'SLSQP' 'L-BFGS-B' 'Nelder-Mead'
         )
         return opt.x
