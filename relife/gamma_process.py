@@ -526,14 +526,15 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             t_defaillance = inspection_times[ind_defaillance]
             if epsilon_l_l0 > 0:
                 lifetime = control_times[kl]
-                empirical_cost.append((kl * cI + cP) / lifetime)
+                empirical_cost.append(((kl+1) * cI + cP) / lifetime)
             else:
                 lifetime = t_defaillance
                 empirical_cost.append((kl * cI + cF) / lifetime)
         return np.mean(empirical_cost)
 
-    def theoretical_one_cycle_cost(self, strategy, cost_structure, tol=1e-4, print_nit=False):
-
+    def theoretical_one_cycle_cost(self, strategy, cost_structure, tol=1e-6, print_nit=True):
+        # TODO: injecter le schéma gauss legendre dans l'intégrable double sur t (somme des poids avec un degré 5
+        #  par exemple), et faire un gauss legendre sur l'intégrale restante sur x, et séparer le cas k=0.
         control_frequency, replacement_threshold = strategy
         cI, cP, cF = cost_structure
 
@@ -545,7 +546,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             if i == 0:
                 res.append(
 
-                    (i * cI + cP) / ((i + 1) * control_frequency) * (gamma.cdf(self.r0 - self.l0, a=self.shape_function(
+                    ((i+1) * cI + cP) / ((i + 1) * control_frequency) * (gamma.cdf(self.r0 - self.l0, a=self.shape_function(
                         (i + 1) * control_frequency) - self.shape_function(i * control_frequency),
                                                                                scale=1 / self.rate) - gamma.cdf(
                         self.r0 - replacement_threshold,
@@ -571,7 +572,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             else:
                 res.append(
 
-                    (i * cI + cP) / ((i + 1) * control_frequency) * integrate.quad(
+                    ((i+1) * cI + cP) / ((i + 1) * control_frequency) * integrate.quad(
                         func=lambda x: (gamma.cdf(self.r0 - self.l0 - x,
                                                   a=self.shape_function(
                                                       (i + 1) * control_frequency) - self.shape_function(
