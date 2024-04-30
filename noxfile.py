@@ -1,14 +1,14 @@
 import nox
 
 
-@nox.session(tags=["style", "fix"])
+@nox.session(tags=["style", "reformat"])
 def black(session):
     session.install("black")
     session.run("black", "noxfile.py")
     session.run("black", "relife2/.")
 
 
-@nox.session(tags=["style", "fix"])
+@nox.session(tags=["style", "reformat"])
 def isort(session):
     session.install("isort")
     session.run("isort", "relife2/.")
