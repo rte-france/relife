@@ -5,7 +5,7 @@ import numpy as np
 import scipy.special as sc
 from scipy import integrate
 from scipy.optimize import minimize, newton
-from scipy.stats import gamma, loggamma
+from scipy.stats import gamma
 
 from relife.model import AbsolutelyContinuousLifetimeModel
 from .utils import moore_jac_uppergamma_c
@@ -87,8 +87,8 @@ class GammaProcessData:
         self.deterioration_measurements = np.insert(self.deterioration_measurements, first_id_index, 0)
 
         self.increments = np.concatenate(
-            [np.diff(self.deterioration_measurements[self.ids == i]) for i in self.unique_ids])
-        self.increments = np.insert(self.increments, first_id_index, 0)
+            [np.diff(self.deterioration_measurements[self.ids == i],
+                     prepend=0) for i in self.unique_ids])
 
         # Some more tests
         if any(self.inspection_times < 0):
