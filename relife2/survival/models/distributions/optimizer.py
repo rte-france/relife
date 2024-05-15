@@ -51,9 +51,7 @@ class DistOptimizer(Optimizer):
             self.param0 = param0
         if bounds is not None:
             if not isinstance(bounds, Bounds):
-                raise ValueError(
-                    "bounds must be scipy.optimize.Bounds instance"
-                )
+                raise ValueError("bounds must be scipy.optimize.Bounds instance")
             self.bounds = bounds
         if method is not None:
             if type(method) != str:
@@ -78,19 +76,16 @@ class GompertzOptimizer(DistOptimizer):
     def __init__(self, pf: DistFunctions, likelihood: DistLikelihood):
         super().__init__(pf, likelihood)
 
-    def _init_param(
-        self, likelihood: DistLikelihood, nb_params: int
-    ) -> np.ndarray:
+    def _init_param(self, likelihood: DistLikelihood, nb_params: int) -> np.ndarray:
         param0 = np.empty(nb_params)
         rate = np.pi / (
             np.sqrt(6)
             * np.std(
                 np.concatenate(
                     [
-                        data.values
-                        for data in likelihood.data(
-                            "complete | right_censored | left_censored"
-                        )
+                        likelihood.complete_lifetimes.values,
+                        likelihood.left_censorships.values,
+                        likelihood.right_censorships.values,
                     ]
                 )
             )
@@ -101,10 +96,9 @@ class GompertzOptimizer(DistOptimizer):
             * np.mean(
                 np.concatenate(
                     [
-                        data.values
-                        for data in likelihood.data(
-                            "complete | right_censored | left_censored"
-                        )
+                        likelihood.complete_lifetimes.values,
+                        likelihood.left_censorships.values,
+                        likelihood.right_censorships.values,
                     ]
                 )
             )

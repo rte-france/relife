@@ -1,7 +1,5 @@
 from abc import abstractmethod
 
-# dummy
-# dummy n2
 import numpy as np
 from scipy.optimize import approx_fprime
 from scipy.special import digamma
@@ -30,13 +28,13 @@ class DistLikelihood(Likelihood):
         pf: DistFunctions,
     ) -> float:
 
-        D_contrib = -np.sum(np.log(pf.hf(self.data("complete").values)))
+        D_contrib = -np.sum(np.log(pf.hf(self.complete_lifetimes.values)))
         RC_contrib = np.sum(
             pf.chf(
                 np.concatenate(
                     (
-                        self.data("complete").values,
-                        self.data("right_censored").values,
+                        self.complete_lifetimes.values,
+                        self.right_censorships.values,
                     )
                 ),
             )
@@ -45,12 +43,12 @@ class DistLikelihood(Likelihood):
             np.log(
                 -np.expm1(
                     -pf.chf(
-                        self.data("left_censored").values,
+                        self.left_censorships.values,
                     )
                 )
             )
         )
-        LT_contrib = -np.sum(pf.chf(self.data("left_truncated").values))
+        LT_contrib = -np.sum(pf.chf(self.left_truncations.values))
         return D_contrib + RC_contrib + LC_contrib + LT_contrib
 
     # relife/parametric.ParametricHazardFunction
@@ -58,20 +56,22 @@ class DistLikelihood(Likelihood):
         self,
         pf: DistFunctions,
     ) -> np.ndarray:
-
+        print(self.jac_hf(self.complete_lifetimes.values, pf).shape)
+        print(pf.hf(self.complete_lifetimes.values)[:, None].shape)
         jac_D_contrib = -np.sum(
-            self.jac_hf(self.data("complete").values, pf)
-            / pf.hf(self.data("complete").values)[:, None],
+            self.jac_hf(self.complete_lifetimes.values, pf)
+            / pf.hf(self.complete_lifetimes.values)[:, None],
             axis=0,
             # keepdims=True,
         )
         # print(jac_D_contrib.shape)
+
         jac_RC_contrib = np.sum(
             self.jac_chf(
                 np.concatenate(
                     (
-                        self.data("complete").values,
-                        self.data("right_censored").values,
+                        self.complete_lifetimes.values,
+                        self.right_censorships.values,
                     )
                 ),
                 pf,
@@ -88,9 +88,11 @@ class DistLikelihood(Likelihood):
         #         )
         #     ).shape
         # )
-        jac_LC_contrib = -np.sum(
-            self.jac_chf(self.data("left_censored").values, pf)
-            / np.expm1(pf.chf(self.data("left_censored").values)[:, None]),
+        print(self.jac_chf(self.left_censorships.values, pf).shape)
+        print(np.expm1(pf.chf(self.right_censorships.values)[:, None]).shape)
+        jac_LC_contrib = -np.sum(  # TODO : debugg => ValueError: operands could not be broadcast together with shapes (0,2,1) (1332,1,1)
+            self.jac_chf(self.left_censorships.values, pf)
+            / np.expm1(pf.chf(self.right_censorships.values)[:, None]),
             axis=0,
             # keepdims=True,
         )
@@ -100,7 +102,7 @@ class DistLikelihood(Likelihood):
         #     self.jac_chf(self.data("left_truncated").values).shape,
         # )
         jac_LT_contrib = -np.sum(
-            self.jac_chf(self.data("left_truncated").values, pf),
+            self.jac_chf(self.left_truncations.values, pf),
             axis=0,
             # keepdims=True,
         )

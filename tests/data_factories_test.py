@@ -4,7 +4,7 @@ import pytest
 from relife2.survival.data.measures import (
     MeasuresParserFrom1D,
     MeasuresParserFrom2D,
-    join_measures,
+    intersect_measures,
 )
 
 
@@ -61,22 +61,22 @@ def test_1d_data(example_1d_data):
     assert np.all(left_truncations.values == np.array([3, 5, 3, 1, 9]).reshape(-1, 1))
 
     assert np.all(
-        join_measures(complete_lifetimes, left_truncations).values[:, [0]]
+        intersect_measures(complete_lifetimes, left_truncations).values[:, [0]]
         == np.array([9, 11]).reshape(-1, 1)
     )
 
     assert np.all(
-        join_measures(complete_lifetimes, left_truncations).values[:, [1]]
+        intersect_measures(complete_lifetimes, left_truncations).values[:, [1]]
         == np.array([3, 9]).reshape(-1, 1)
     )
 
     assert np.all(
-        join_measures(left_truncations, complete_lifetimes).values[:, [0]]
+        intersect_measures(left_truncations, complete_lifetimes).values[:, [0]]
         == np.array([3, 9]).reshape(-1, 1)
     )
 
     assert np.all(
-        join_measures(left_truncations, complete_lifetimes).values[:, [1]]
+        intersect_measures(left_truncations, complete_lifetimes).values[:, [1]]
         == np.array([9, 11]).reshape(-1, 1)
     )
 
@@ -112,19 +112,20 @@ def test_2d_data(example_2d_data):
     assert np.all(left_truncations.values == np.array([3, 5, 3, 1, 9]).reshape(-1, 1))
 
     assert np.all(
-        join_measures(left_truncations, interval_censorships).unit_ids
+        intersect_measures(left_truncations, interval_censorships).unit_ids
         == np.array([5, 6])
     )
 
     assert np.all(
-        join_measures(left_truncations, interval_censorships).values[:, 1:]
+        intersect_measures(left_truncations, interval_censorships).values[:, 1:]
         == np.array([[2, 10], [10, 11]])
     )
 
     assert np.all(
-        join_measures(right_censorships, left_truncations).values[:, [0]]
+        intersect_measures(right_censorships, left_truncations).values[:, [0]]
         == np.array([7]).reshape(-1, 1)
     )
     assert np.all(
-        join_measures(right_censorships, left_truncations).unit_ids == np.array([3])
+        intersect_measures(right_censorships, left_truncations).unit_ids
+        == np.array([3])
     )

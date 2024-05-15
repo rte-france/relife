@@ -3,9 +3,14 @@ from dataclasses import dataclass
 
 import numpy as np
 
+#### si je lance ça va fonctionner (sans mes modifs)
+# mettre dans likelif=hood le choix entre les parser... (dans backbone, Likelikelihood)
 
-@dataclass(frozen=True)
-class Measures:
+
+@dataclass(
+    frozen=True
+)  # décorateur => peux vérifier que deux instance sont égales (pas faisable avec autres classes)
+class Measures:  # objet qui encapsule 2 attibuts : values et unit_ids
     values: np.ndarray
     unit_ids: np.ndarray
 
@@ -21,7 +26,7 @@ class Measures:
         return len(self.values)
 
 
-def join_measures(*measures: Measures) -> Measures:
+def intersect_measures(*measures: Measures) -> Measures:
     """
     Args:
         *measures: Measures object.s containing values of shape (n1, p1), (n2, p2), etc.
@@ -33,7 +38,7 @@ def join_measures(*measures: Measures) -> Measures:
     Examples:
         >>> measures_1 = Measures(values = np.array([[1], [2]]), unit_ids = np.array([3, 10]))
         >>> measures_2 = Measures(values = np.array([[3], [5]]), unit_ids = np.array([10, 2]))
-        >>> join_measures(measures_1, measures_2)
+        >>> intersect_measures(measures_1, measures_2)
         Measures(values=array([[2, 3]]), unit_ids=array([10]))
     """
 
@@ -80,15 +85,15 @@ class MeasuresParser(ABC):
         lifetimes: Measures, left_truncations: Measures
     ) -> None:
         if len(lifetimes) != 0 and len(left_truncations) != 0:
-            joined_measures = join_measures(lifetimes, left_truncations)
-            if len(joined_measures) != 0:
+            intersected_measures = intersect_measures(lifetimes, left_truncations)
+            if len(intersected_measures) != 0:
                 if np.any(
                     np.min(
-                        joined_measures.values[:, : lifetimes.values.shape[-1]],
+                        intersected_measures.values[:, : lifetimes.values.shape[-1]],
                         axis=1,
                         keepdims=True,
                     )
-                    < joined_measures.values[:, lifetimes.values.shape[-1] :]
+                    < intersected_measures.values[:, lifetimes.values.shape[-1] :]
                 ):
                     raise ValueError(
                         f"""
@@ -102,15 +107,15 @@ class MeasuresParser(ABC):
         lifetimes: Measures, right_truncations: Measures
     ) -> None:
         if len(lifetimes) != 0 and len(right_truncations) != 0:
-            joined_measures = join_measures(lifetimes, right_truncations)
-            if len(joined_measures) != 0:
+            intersected_measures = intersect_measures(lifetimes, right_truncations)
+            if len(intersected_measures) != 0:
                 if np.any(
                     np.max(
-                        joined_measures.values[:, : lifetimes.values.shape[-1]],
+                        intersected_measures.values[:, : lifetimes.values.shape[-1]],
                         axis=1,
                         keepdims=True,
                     )
-                    > joined_measures.values[:, lifetimes.values.shape[-1] :]
+                    > intersected_measures.values[:, lifetimes.values.shape[-1] :]
                 ):
                     raise ValueError(
                         f"""
@@ -121,7 +126,9 @@ class MeasuresParser(ABC):
 
     def __call__(
         self,
-    ) -> tuple[Measures, Measures, Measures, Measures, Measures, Measures]:
+    ) -> tuple[
+        Measures, Measures, Measures, Measures, Measures, Measures
+    ]:  # result return has 6 Measures
         result = (
             self.get_complete(),
             self.get_left_censorships(),
@@ -190,6 +197,9 @@ class MeasuresParserFrom1D(MeasuresParser):
         self.entry = entry
         self.departure = departure
 
+    # def __call__(self):
+    #     MeasuresParser.__call__(self)
+
     def get_complete(self) -> Measures:
         index = np.where(np.logical_and(~self.lc_indicators, ~self.rc_indicators))[0]
         values = self.time[index].reshape(-1, 1)
@@ -246,12 +256,19 @@ class MeasuresParserFrom2D(MeasuresParser):
         values = self.time[index][:, 0].reshape(-1, 1)
         return Measures(values, index)
 
-    def get_left_censorships(self) -> Measures:
+    # def __call__(self):
+    #     MeasuresParser.__call__(self)
+
+    def get_left_censorships(
+        self,
+    ) -> Measures:
         index = np.where(self.time[:, 0] == 0.0)[0]
         values = self.time[index, 1].reshape(-1, 1)
         return Measures(values, index)
 
-    def get_right_censorships(self) -> Measures:
+    def get_right_censorships(
+        self,
+    ) -> Measures:
         index = np.where(self.time[:, 1] == np.inf)[0]
         values = self.time[index, 0].reshape(-1, 1)
         return Measures(values, index)

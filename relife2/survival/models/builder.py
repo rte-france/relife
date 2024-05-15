@@ -24,9 +24,7 @@ class LifetimeModel:
     ):
 
         if not issubclass(probability_functions, ProbabilityFunctions):
-            parent_classes = (
-                Cls.__name__ for Cls in probability_functions.__bases__
-            )
+            parent_classes = (Cls.__name__ for Cls in probability_functions.__bases__)
             raise ValueError(
                 f"ParametricFunction subclass expected, got '{parent_classes}'"
             )
@@ -34,15 +32,12 @@ class LifetimeModel:
         if not issubclass(likelihood, Likelihood):
             parent_classes = (Cls.__name__ for Cls in likelihood.__bases__)
             raise ValueError(
-                "ParametrictLikelihood subclass expected, got"
-                f" '{parent_classes}'"
+                "ParametrictLikelihood subclass expected, got" f" '{parent_classes}'"
             )
 
         if not issubclass(optimizer, Optimizer):
             parent_classes = (Cls.__name__ for Cls in optimizer.__bases__)
-            raise ValueError(
-                f"Optimizer subclass expected, got {parent_classes}"
-            )
+            raise ValueError(f"Optimizer subclass expected, got {parent_classes}")
 
         self.pf = probability_functions()
         self.likelihood = likelihood
@@ -52,9 +47,7 @@ class LifetimeModel:
         self._fitting_params = None
         self._fitting_results = None
 
-    def _set_params(
-        self, *params: Union[np.ndarray, float], **kwparams: float
-    ) -> None:
+    def _set_params(self, *params: Union[np.ndarray, float], **kwparams: float) -> None:
         if len(params) != 0 and len(kwparams) != 0:
             raise ValueError("Can't specify key word params and params")
 
@@ -87,9 +80,7 @@ class LifetimeModel:
         if hasattr(self.pf, func_name):
             func = getattr(self.pf, func_name)
         else:
-            raise AttributeError(
-                "f{self.pf.__name__} has no attribute {func_name}"
-            )
+            raise AttributeError("f{self.pf.__name__} has no attribute {func_name}")
         return func
 
     def ppf(
@@ -305,9 +296,7 @@ class LifetimeModel:
         self.pf.params.values = previous_params_values
         return res
 
-    def mean(
-        self, *params: Union[np.ndarray, float], **kwparams: float
-    ) -> float:
+    def mean(self, *params: Union[np.ndarray, float], **kwparams: float) -> float:
         """_summary_
 
         Args:
@@ -326,9 +315,7 @@ class LifetimeModel:
         self.pf.params.values = previous_params_values
         return res
 
-    def var(
-        self, *params: Union[np.ndarray, float], **kwparams: float
-    ) -> float:
+    def var(self, *params: Union[np.ndarray, float], **kwparams: float) -> float:
         """_summary_
 
         Args:
@@ -399,10 +386,9 @@ class LifetimeModel:
 
     def fit(
         self,
-        observed_lifetimes: np.ndarray,
-        complete_indicators: np.ndarray = None,
-        left_censored_indicators: np.ndarray = None,
-        right_censored_indicators: np.ndarray = None,
+        time: np.ndarray,
+        lc_indicators: np.ndarray = None,
+        rc_indicators: np.ndarray = None,
         entry: np.ndarray = None,
         departure: np.ndarray = None,
         **kwargs,
@@ -415,10 +401,9 @@ class LifetimeModel:
             raise ValueError("Model has no optimizer implemented")
 
         likelihood = self.likelihood(
-            observed_lifetimes,
-            complete_indicators,
-            left_censored_indicators,
-            right_censored_indicators,
+            time,
+            lc_indicators,
+            rc_indicators,
             entry,
             departure,
         )
@@ -426,14 +411,12 @@ class LifetimeModel:
 
         self.pf, opt = optimizer.fit(self.pf, likelihood, **kwargs)
         jac = likelihood.jac_negative_log_likelihood(self.pf)
-        var = np.linalg.inv(
-            likelihood.hess_negative_log_likelihood(self.pf, **kwargs)
-        )
+        var = np.linalg.inv(likelihood.hess_negative_log_likelihood(self.pf, **kwargs))
         self._fitting_results = FittingResults(
             opt,
             jac,
             var,
-            len(observed_lifetimes),
+            len(time),
         )
 
         self._fitting_params = Parameters(
@@ -449,8 +432,7 @@ class LifetimeModel:
     def fitting_results(self) -> FittingResults:
         if self._fitting_results is None:
             warnings.warn(
-                "Model parameters have not been fitted. Call fit() method"
-                " first",
+                "Model parameters have not been fitted. Call fit() method" " first",
                 UserWarning,
             )
         return self._fitting_results
@@ -459,8 +441,7 @@ class LifetimeModel:
     def fitting_params(self) -> Parameters:
         if self._fitting_params is None:
             warnings.warn(
-                "Model parameters have not been fitted. Call fit() method"
-                " first",
+                "Model parameters have not been fitted. Call fit() method" " first",
                 UserWarning,
             )
         return self._fitting_params
@@ -472,9 +453,7 @@ class ParametersSet:
         self._nb_params = [p.nb_params for p in params]
         self.nb_params = sum(self._nb_params)
         self._param_names = [p.param_names for p in params]
-        self.params_index = {
-            name: i for i, name in enumerate(self.param_names)
-        }
+        self.params_index = {name: i for i, name in enumerate(self.param_names)}
 
     @property
     def values(self):
@@ -499,9 +478,7 @@ class ParametersSet:
     def __setitem__(self, param_name: str, value: float):
         if param_name in self.params_index:
             i = self.params_index[param_name]
-            self.params_set[self.nb_params // i].values[
-                self.nb_params % i
-            ] = value
+            self.params_set[self.nb_params // i].values[self.nb_params % i] = value
         else:
             raise AttributeError(
                 f"""
@@ -512,9 +489,7 @@ class ParametersSet:
     def __getattr__(self, attr: str):
         if attr in self.params_index:
             i = self.params_index[attr]
-            return self.params_set[self.nb_params // i].values[
-                self.nb_params % i
-            ]
+            return self.params_set[self.nb_params // i].values[self.nb_params % i]
         else:
             raise AttributeError(
                 f"""
@@ -524,9 +499,7 @@ class ParametersSet:
 
     def __str__(self):
         class_name = type(self).__name__
-        res = [
-            f"{name} = {getattr(self, name)} \n" for name in self.param_names
-        ]
+        res = [f"{name} = {getattr(self, name)} \n" for name in self.param_names]
         res = "".join(res)
         return f"\n{class_name}\n{res}"
 

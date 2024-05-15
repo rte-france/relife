@@ -8,7 +8,16 @@ from scipy.optimize import Bounds, OptimizeResult, root_scalar
 
 from relife2.utils.integrations import ls_integrate
 
-from ..data import Data
+from ..data import Measures, MeasuresParserFrom1D, MeasuresParserFrom2D
+
+
+## check array like
+def valid_type(obj):
+    if isinstance(obj, np.ndarray) | isinstance(obj, list) | isinstance(obj, tuple):
+        return np.array(obj)
+    if isinstance(obj, float) | isinstance(obj, int):
+        return np.array([obj])
+    return None
 
 
 class Parameters:
@@ -29,9 +38,7 @@ class Parameters:
             self.param_names = [f"param_{i}" for i in range(nb_params)]
 
         self._values = np.random.rand(self.nb_params)
-        self.params_index = {
-            name: i for i, name in enumerate(self.param_names)
-        }
+        self.params_index = {name: i for i, name in enumerate(self.param_names)}
 
     def __len__(self):
         return self.nb_params
@@ -73,9 +80,7 @@ class Parameters:
 
     def __str__(self):
         class_name = type(self).__name__
-        res = [
-            f"{name} = {getattr(self, name)} \n" for name in self.param_names
-        ]
+        res = [f"{name} = {getattr(self, name)} \n" for name in self.param_names]
         res = "".join(res)
         return f"\n{class_name}\n{res}"
 
@@ -126,9 +131,7 @@ class ProbabilityFunctions(ABC):
 
     # relife/model.LifetimeModel
     def rvs(self, size: int = 1, random_state: int = None) -> np.ndarray:
-        probabilities = np.random.RandomState(seed=random_state).uniform(
-            size=size
-        )
+        probabilities = np.random.RandomState(seed=random_state).uniform(size=size)
         return self.isf(probabilities)
 
     # relife/model.LifetimeModel
@@ -156,9 +159,7 @@ class ProbabilityFunctions(ABC):
             time, ub = np.broadcast_arrays(time, ub)
             time = ma.MaskedArray(time, mask)
             ub = ma.MaskedArray(ub, mask)
-        mu = ls_integrate(
-            lambda x: x - time, self, time, ub, ndim=1
-        ) / self.sf(time)
+        mu = ls_integrate(lambda x: x - time, self, time, ub, ndim=1) / self.sf(time)
         return np.ma.filled(mu, 0)
 
 
@@ -173,28 +174,46 @@ class CovarEffect(ABC):
         pass
 
 
-class Likelihood(ABC):
+class Likelihood(ABC):  # TODO
+
     def __init__(
         self,
-        observed_lifetimes: np.ndarray,
-        complete_indicators: np.ndarray = None,
-        left_censored_indicators: np.ndarray = None,
-        right_censored_indicators: np.ndarray = None,
+        time: np.ndarray,
+        lc_indicators: np.ndarray = None,
+        rc_indicators: np.ndarray = None,
         entry: np.ndarray = None,
         departure: np.ndarray = None,
     ):
+        if valid_type(time) is None:
+            raise TypeError("observed_lifetimes must be array like or float or int")
 
-        self.data = Data(
-            observed_lifetimes,
-            complete_indicators,
-            left_censored_indicators,
-            right_censored_indicators,
-            entry,
-            departure,
-        )
+        if len(time.shape) == 1:
+            parser = MeasuresParserFrom1D(
+                time,
+                lc_indicators,
+                rc_indicators,
+                entry,
+                departure,
+            )
+        else:
+            parser = MeasuresParserFrom2D(
+                time,
+                entry,
+                departure,
+            )
+        (
+            self.complete_lifetimes,
+            self.left_censorships,
+            self.right_censorships,
+            self.interval_censorship,
+            self.left_truncations,
+            self.right_truncations,
+        ) = parser()
 
         # relife/parametric.ParametricHazardFunction
-        self._default_hess_scheme: str = (  #: Default method for evaluating the hessian of the negative log-likelihood.
+        self._default_hess_scheme: (
+            str
+        ) = (  #: Default method for evaluating the hessian of the negative log-likelihood.
             "cs"
         )
 
@@ -203,9 +222,7 @@ class Likelihood(ABC):
         pass
 
     @abstractmethod
-    def jac_negative_log_likelihood(
-        self, pf: ProbabilityFunctions
-    ) -> np.ndarray:
+    def jac_negative_log_likelihood(self, pf: ProbabilityFunctions) -> np.ndarray:
         pass
 
     @abstractmethod
@@ -215,7 +232,7 @@ class Likelihood(ABC):
         pass
 
 
-class Optimizer(ABC):
+class Optimizer(ABC):  # TODO
     def __init__(self, pf: ProbabilityFunctions, likelihood: Likelihood):
 
         self.method: str = "L-BFGS-B"
@@ -223,17 +240,16 @@ class Optimizer(ABC):
         self.bounds = self._get_param_bounds(pf)
 
     # relife/distribution.ParametricLifetimeDistbution
-    def _init_param(
-        self, likelihood: Likelihood, nb_params: int
-    ) -> np.ndarray:
+    def _init_param(self, likelihood: Likelihood, nb_params: int) -> np.ndarray:
         param0 = np.ones(nb_params)
+        # print("debugg")
+        # print(likelihood.complete_lifetimes.values)
         param0[-1] = 1 / np.median(
             np.concatenate(
                 [
-                    data.values
-                    for data in likelihood.data(
-                        "complete | right_censored | left_censored"
-                    )
+                    likelihood.complete_lifetimes.values,
+                    likelihood.left_censorships.values,
+                    likelihood.right_censorships.values,
                 ]
             )
         )
