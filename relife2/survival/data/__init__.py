@@ -1,4 +1,3 @@
-from .data import Data
 from .datasets import load_power_transformer
 from .measures import (
     Measures,

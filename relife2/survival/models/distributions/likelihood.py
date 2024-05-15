@@ -56,57 +56,36 @@ class DistLikelihood(Likelihood):
         self,
         pf: DistFunctions,
     ) -> np.ndarray:
-        print(self.jac_hf(self.complete_lifetimes.values, pf).shape)
-        print(pf.hf(self.complete_lifetimes.values)[:, None].shape)
+
         jac_D_contrib = -np.sum(
-            self.jac_hf(self.complete_lifetimes.values, pf)
-            / pf.hf(self.complete_lifetimes.values)[:, None],
+            self.jac_hf(np.squeeze(self.complete_lifetimes.values), pf)
+            / pf.hf(self.complete_lifetimes.values),
             axis=0,
-            # keepdims=True,
         )
-        # print(jac_D_contrib.shape)
 
         jac_RC_contrib = np.sum(
             self.jac_chf(
                 np.concatenate(
                     (
-                        self.complete_lifetimes.values,
-                        self.right_censorships.values,
+                        np.squeeze(self.complete_lifetimes.values),
+                        np.squeeze(self.right_censorships.values),
                     )
                 ),
                 pf,
             ),
             axis=0,
-            # keepdims=True,
         )
-        # print(jac_RC_contrib.shape)
-        # print(
-        #     np.concatenate(
-        #         (
-        #             self.data("complete").values,
-        #             self.data("right_censored").values,
-        #         )
-        #     ).shape
-        # )
-        print(self.jac_chf(self.left_censorships.values, pf).shape)
-        print(np.expm1(pf.chf(self.right_censorships.values)[:, None]).shape)
-        jac_LC_contrib = -np.sum(  # TODO : debugg => ValueError: operands could not be broadcast together with shapes (0,2,1) (1332,1,1)
-            self.jac_chf(self.left_censorships.values, pf)
-            / np.expm1(pf.chf(self.right_censorships.values)[:, None]),
+
+        jac_LC_contrib = -np.sum(
+            self.jac_chf(np.squeeze(self.left_censorships.values), pf)
+            / np.expm1(pf.chf(self.left_censorships.values)),
             axis=0,
-            # keepdims=True,
         )
-        # print(jac_LC_contrib.shape)
-        # print(
-        #     "jac_chf :",
-        #     self.jac_chf(self.data("left_truncated").values).shape,
-        # )
+
         jac_LT_contrib = -np.sum(
-            self.jac_chf(self.left_truncations.values, pf),
+            self.jac_chf(np.squeeze(self.left_truncations.values), pf),
             axis=0,
-            # keepdims=True,
         )
-        # print(jac_LT_contrib.shape)
 
         return jac_D_contrib + jac_RC_contrib + jac_LC_contrib + jac_LT_contrib
 
