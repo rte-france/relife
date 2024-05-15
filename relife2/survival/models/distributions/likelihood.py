@@ -1,5 +1,7 @@
 from abc import abstractmethod
 
+# dummy
+# dummy n2
 import numpy as np
 from scipy.optimize import approx_fprime
 from scipy.special import digamma
@@ -132,9 +134,7 @@ class DistLikelihood(Likelihood):
                     pf.params.values = pf.params.values + u[i]
                     # print(self.jac_negative_log_likelihood(pf))
 
-                    hess[i, j] = (
-                        np.imag(self.jac_negative_log_likelihood(pf)[j]) / eps
-                    )
+                    hess[i, j] = np.imag(self.jac_negative_log_likelihood(pf)[j]) / eps
                     pf.params.values = params_values
                     if i != j:
                         hess[j, i] = hess[i, j]
@@ -197,8 +197,7 @@ class WeibullLikelihood(DistLikelihood):
                 pf.params.rate
                 * (pf.params.rate * time[:, None]) ** (pf.params.c - 1)
                 * (1 + pf.params.c * np.log(pf.params.rate * time[:, None])),
-                pf.params.c**2
-                * (pf.params.rate * time[:, None]) ** (pf.params.c - 1),
+                pf.params.c**2 * (pf.params.rate * time[:, None]) ** (pf.params.c - 1),
             )
         )
 
@@ -244,9 +243,7 @@ class GompertzLikelihood(DistLikelihood):
         return np.column_stack(
             (
                 np.expm1(pf.params.rate * time[:, None]),
-                pf.params.c
-                * time[:, None]
-                * np.exp(pf.params.rate * time[:, None]),
+                pf.params.c * time[:, None] * np.exp(pf.params.rate * time[:, None]),
             )
         )
 
@@ -278,10 +275,8 @@ class GammaLikelihood(DistLikelihood):
             * np.column_stack(
                 (
                     pf.params.rate * np.log(x) * pf._uppergamma(x)
-                    - pf.params.rate
-                    * GammaLikelihood._jac_uppergamma_c(pf, x),
-                    (pf.params.c - x) * pf._uppergamma(x)
-                    + x**pf.params.c * np.exp(-x),
+                    - pf.params.rate * GammaLikelihood._jac_uppergamma_c(pf, x),
+                    (pf.params.c - x) * pf._uppergamma(x) + x**pf.params.c * np.exp(-x),
                 )
             )
         )
@@ -296,10 +291,7 @@ class GammaLikelihood(DistLikelihood):
             (
                 digamma(pf.params.c)
                 - GammaLikelihood._jac_uppergamma_c(pf, x) / pf._uppergamma(x),
-                x ** (pf.params.c - 1)
-                * time[:, None]
-                * np.exp(-x)
-                / pf._uppergamma(x),
+                x ** (pf.params.c - 1) * time[:, None] * np.exp(-x) / pf._uppergamma(x),
             )
         )
 
@@ -312,21 +304,13 @@ class LogLogisticLikelihood(DistLikelihood):
         x = pf.params.rate * time[:, None]
         return np.column_stack(
             (
-                (
-                    pf.params.rate
-                    * x ** (pf.params.c - 1)
-                    / (1 + x**pf.params.c) ** 2
-                )
+                (pf.params.rate * x ** (pf.params.c - 1) / (1 + x**pf.params.c) ** 2)
                 * (
                     1
                     + x**pf.params.c
                     + pf.params.c * np.log(pf.params.rate * time[:, None])
                 ),
-                (
-                    pf.params.rate
-                    * x ** (pf.params.c - 1)
-                    / (1 + x**pf.params.c) ** 2
-                )
+                (pf.params.rate * x ** (pf.params.c - 1) / (1 + x**pf.params.c) ** 2)
                 * (pf.params.c**2 / pf.params.rate),
             )
         )
