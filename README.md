@@ -16,6 +16,8 @@ pip install -e .[test,format,doc]
 
 # Add nox hook
 
+On client side :
+
 ```bash
 echo "nox" >> .git/pre-commit
 chmod +x .git/hooks/pre-commit #make file executable
