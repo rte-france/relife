@@ -1,19 +1,23 @@
 # Installation
 
+For users :
+
 ```bash
 #in your environment
-pip install [-e] .
+pip install .
+```
+
+For contributors :
+
+```bash
+#in your environment
+pip install -e .[test,format,doc]
 ```
 
 # Build Sphinx doc (temporary)
 
 ```bash
 #in your environment
-pip install sphinx
-pip install myst-parser
-pip install sphinx-book-theme
-pip install sphinx-copybutton
-pip install sphinx-design
 sphinx-build -M html sphinx_docs/source/ sphinx_docs/build/ -Ea
 python -m http.server --directory ./sphinx_docs/build/html/
 ```
