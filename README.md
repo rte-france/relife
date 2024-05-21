@@ -14,6 +14,13 @@ For contributors :
 pip install -e .[test,format,doc]
 ```
 
+# Add nox hook
+
+```bash
+echo "nox" >> .git/pre-commit
+chmod +x .git/hooks/pre-commit #make file executable
+```
+
 # Build Sphinx doc (temporary)
 
 ```bash
