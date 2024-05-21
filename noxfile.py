@@ -16,8 +16,8 @@ def isort(session):
 
 @nox.session(tags=["style"])
 def lint(session):
-    session.install("pycodestyle")
-    session.run("pycodestyle", "relife2/.")
+    session.install("pylint")
+    session.run("pylint", "relife2/.")
 
 
 @nox.session(tags=["style"])
