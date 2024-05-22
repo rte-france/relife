@@ -6,7 +6,7 @@ cd relife
 ```
 
 ```bash
-conda create --name relife2 python=3.9
+conda create --name relife2 python=3.11
 conda activate relife2
 ```
 
