@@ -24,6 +24,7 @@ format = [
     "isort == 5.13.2",
     "black == 24.4.2",
     "pylint == 3.2.2",
+    "no-implicit-optional == 1.4",
 ]
 doc = [
     "sphinx == 7.2.6",
