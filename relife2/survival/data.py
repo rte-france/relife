@@ -4,9 +4,31 @@ This module gathers class used by subsystems' objects to treat lifetime data
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
+
+
+def array_factory(obj: Union[int, float, list, list[list], np.ndarray]) -> np.ndarray:
+    """
+    Converts object input to 2d array
+    Args:
+        obj: object input
+
+    Returns:
+        np.ndarray: 2d array
+    """
+    try:
+        obj = np.asarray(obj)
+    except Exception as error:
+        raise ValueError("Invalid type of param") from error
+    if obj.ndim < 2:
+        obj = obj.reshape(-1, 1)
+    elif obj.ndim > 2:
+        raise ValueError(
+            f"input np.ndarray can't have more than 2 dimensions : got {obj}"
+        )
+    return obj
 
 
 @dataclass(frozen=True)
@@ -53,7 +75,7 @@ def intersect_measures(*measures: Measures) -> Measures:
     )
 
 
-class MeasuresParser(ABC):
+class MeasuresFactory(ABC):
     """
     Factory method of Measures object
     """
@@ -66,15 +88,15 @@ class MeasuresParser(ABC):
         **indicators,
     ):
         if entry is None:
-            entry = np.zeros_like(time)
+            entry = np.zeros((len(time), 1))
         if departure is None:
-            departure = np.ones_like(time) * np.inf
+            departure = np.ones((len(time), 1)) * np.inf
         lc_indicators = indicators.get("lc_indicators", None)
         rc_indicators = indicators.get("lc_indicators", None)
         if lc_indicators is None:
-            lc_indicators = np.zeros_like(time, dtype=np.bool_)
+            lc_indicators = np.zeros((len(time), 1), dtype=np.bool_)
         if rc_indicators is None:
-            rc_indicators = np.zeros_like(time, dtype=np.bool_)
+            rc_indicators = np.zeros((len(time), 1), dtype=np.bool_)
 
         self.time = time
         self.lc_indicators = lc_indicators.astype(np.bool_, copy=False)
@@ -91,15 +113,14 @@ class MeasuresParser(ABC):
             )
 
     def _check_format(self) -> None:
-        (n, _) = self.time.shape
         for values in (
             self.entry,
             self.departure,
             self.lc_indicators,
             self.rc_indicators,
         ):
-            if values.shape != (n,):
-                raise ValueError(f"invalid argument shape, expected ({n},)")
+            if values.shape != (len(self.time), 1):
+                raise ValueError("invalid argument shape")
 
     @abstractmethod
     def get_complete(self) -> Measures:
@@ -200,31 +221,31 @@ class MeasuresParser(ABC):
         )
         try:
             for lifetimes in result[:4]:
-                MeasuresParser._compatible_with_left_truncations(lifetimes, result[4])
-                MeasuresParser._compatible_with_right_truncations(lifetimes, result[5])
+                MeasuresFactory._compatible_with_left_truncations(lifetimes, result[4])
+                MeasuresFactory._compatible_with_right_truncations(lifetimes, result[5])
         except Exception as error:
             raise ValueError("Incorrect input measures") from error
         return result
 
 
-class MeasuresParserFrom1D(MeasuresParser):
+class MeasuresFactoryFrom1D(MeasuresFactory):
     """
     Concrete implementation of MeasuresParser factory for 1D encoding
     """
 
     def get_complete(self) -> Measures:
         index = np.where(np.logical_and(~self.lc_indicators, ~self.rc_indicators))[0]
-        values = self.time[index].reshape(-1, 1)
+        values = self.time[index]
         return Measures(values, index)
 
     def get_left_censorships(self) -> Measures:
         index = np.where(self.lc_indicators)[0]
-        values = self.time[index].reshape(-1, 1)
+        values = self.time[index]
         return Measures(values, index)
 
     def get_right_censorships(self) -> Measures:
         index = np.where(self.rc_indicators)[0]
-        values = self.time[index].reshape(-1, 1)
+        values = self.time[index]
         return Measures(values, index)
 
     def get_interval_censorships(self) -> Measures:
@@ -232,37 +253,37 @@ class MeasuresParserFrom1D(MeasuresParser):
 
     def get_left_truncations(self) -> Measures:
         index = np.where(self.entry > 0)[0]
-        values = self.entry[index].reshape(-1, 1)
+        values = self.entry[index]
         return Measures(values, index)
 
     def get_right_truncations(self) -> Measures:
         index = np.where(self.departure < np.inf)[0]
-        values = self.departure[index].reshape(-1, 1)
+        values = self.departure[index]
         return Measures(values, index)
 
 
-class MeasuresParserFrom2D(MeasuresParser):
+class MeasuresFactoryFrom2D(MeasuresFactory):
     """
     Concrete implementation of MeasuresParser factory for 2D encoding
     """
 
     def get_complete(self) -> Measures:
         index = np.where(self.time[:, 0] == self.time[:, 1])[0]
-        values = self.time[index][:, 0].reshape(-1, 1)
+        values = self.time[index][:, 0]
         return Measures(values, index)
 
     def get_left_censorships(
         self,
     ) -> Measures:
         index = np.where(self.time[:, 0] == 0.0)[0]
-        values = self.time[index, 1].reshape(-1, 1)
+        values = self.time[index, 1]
         return Measures(values, index)
 
     def get_right_censorships(
         self,
     ) -> Measures:
         index = np.where(self.time[:, 1] == np.inf)[0]
-        values = self.time[index, 0].reshape(-1, 1)
+        values = self.time[index, 0]
         return Measures(values, index)
 
     def get_interval_censorships(self) -> Measures:
@@ -286,10 +307,10 @@ class MeasuresParserFrom2D(MeasuresParser):
 
     def get_left_truncations(self) -> Measures:
         index = np.where(self.entry > 0)[0]
-        values = self.entry[index].reshape(-1, 1)
+        values = self.entry[index]
         return Measures(values, index)
 
     def get_right_truncations(self) -> Measures:
         index = np.where(self.departure < np.inf)[0]
-        values = self.departure[index].reshape(-1, 1)
+        values = self.departure[index]
         return Measures(values, index)
