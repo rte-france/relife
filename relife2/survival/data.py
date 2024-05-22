@@ -4,6 +4,7 @@ This module gathers class used by subsystems' objects to treat lifetime data
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -60,19 +61,20 @@ class MeasuresParser(ABC):
     def __init__(
         self,
         time: np.ndarray,
-        lc_indicators: np.ndarray = None,
-        rc_indicators: np.ndarray = None,
-        entry: np.ndarray = None,
-        departure: np.ndarray = None,
+        entry: Optional[np.ndarray] = None,
+        departure: Optional[np.ndarray] = None,
+        **indicators,
     ):
-        if lc_indicators is None:
-            lc_indicators = np.zeros_like(time, dtype=np.bool_)
-        if rc_indicators is None:
-            rc_indicators = np.zeros_like(time, dtype=np.bool_)
         if entry is None:
             entry = np.zeros_like(time)
         if departure is None:
             departure = np.ones_like(time) * np.inf
+        lc_indicators = indicators.get("lc_indicators", None)
+        rc_indicators = indicators.get("lc_indicators", None)
+        if lc_indicators is None:
+            lc_indicators = np.zeros_like(time, dtype=np.bool_)
+        if rc_indicators is None:
+            rc_indicators = np.zeros_like(time, dtype=np.bool_)
 
         self.time = time
         self.lc_indicators = lc_indicators.astype(np.bool_, copy=False)
@@ -229,12 +231,12 @@ class MeasuresParserFrom1D(MeasuresParser):
         return Measures(np.empty((0, 2)), np.empty((0,)))
 
     def get_left_truncations(self) -> Measures:
-        index = np.where(self.entry != 0)[0]
+        index = np.where(self.entry > 0)[0]
         values = self.entry[index].reshape(-1, 1)
         return Measures(values, index)
 
     def get_right_truncations(self) -> Measures:
-        index = np.where(self.departure != 0)[0]
+        index = np.where(self.departure < np.inf)[0]
         values = self.departure[index].reshape(-1, 1)
         return Measures(values, index)
 
@@ -283,11 +285,11 @@ class MeasuresParserFrom2D(MeasuresParser):
         return measures
 
     def get_left_truncations(self) -> Measures:
-        index = np.where(self.entry != 0)[0]
+        index = np.where(self.entry > 0)[0]
         values = self.entry[index].reshape(-1, 1)
         return Measures(values, index)
 
     def get_right_truncations(self) -> Measures:
-        index = np.where(self.departure != 0)[0]
+        index = np.where(self.departure < np.inf)[0]
         values = self.departure[index].reshape(-1, 1)
         return Measures(values, index)
