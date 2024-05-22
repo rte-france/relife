@@ -92,7 +92,7 @@ class MeasuresFactory(ABC):
         if departure is None:
             departure = np.ones((len(time), 1)) * np.inf
         lc_indicators = indicators.get("lc_indicators", None)
-        rc_indicators = indicators.get("lc_indicators", None)
+        rc_indicators = indicators.get("rc_indicators", None)
         if lc_indicators is None:
             lc_indicators = np.zeros((len(time), 1), dtype=np.bool_)
         if rc_indicators is None:
@@ -269,21 +269,21 @@ class MeasuresFactoryFrom2D(MeasuresFactory):
 
     def get_complete(self) -> Measures:
         index = np.where(self.time[:, 0] == self.time[:, 1])[0]
-        values = self.time[index][:, 0]
+        values = self.time[index, 0, None]
         return Measures(values, index)
 
     def get_left_censorships(
         self,
     ) -> Measures:
         index = np.where(self.time[:, 0] == 0.0)[0]
-        values = self.time[index, 1]
+        values = self.time[index, 1, None]
         return Measures(values, index)
 
     def get_right_censorships(
         self,
     ) -> Measures:
         index = np.where(self.time[:, 1] == np.inf)[0]
-        values = self.time[index, 0]
+        values = self.time[index, 0, None]
         return Measures(values, index)
 
     def get_interval_censorships(self) -> Measures:
