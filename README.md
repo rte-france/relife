@@ -30,8 +30,8 @@ pip install -e .[test,format,doc]
 Create a new branch locally
 
 ```commandline
-git branch <my_branch>
-git checkout <my_branch>
+git branch mybranch
+git checkout mybranch
 ```
 
 Run nox before commits
@@ -55,7 +55,7 @@ time ```nox``` will be called.
 Commit and when you're ready to share your branch with the world, push it on the remote ```origin``` :
 
 ```commandline
-git push origin <my_branch>
+git push origin mybranch
 ```
 
 At the end, the maintainer will fetch the branch and merge into the main branch if the work has been done correctly.
