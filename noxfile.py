@@ -19,7 +19,7 @@ def lint(session):
     requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
     session.install(*requirements)
     session.install("pylint")
-    session.run("pylint", "relife2/.")
+    session.run("pylint", "--extension-pkg-whitelist=numpy", "relife2/.")
 
 
 @nox.session(tags=["style"])

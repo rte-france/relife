@@ -6,8 +6,9 @@ from types import EllipsisType
 from typing import Self, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
+FloatArray = NDArray[np.float64]
 Index = Union[EllipsisType, int, slice, tuple[EllipsisType, int, slice, ...]]
 
 
@@ -60,10 +61,10 @@ class Parameters:
         return len(self)
 
     @property
-    def values(self) -> np.ndarray:
+    def values(self) -> FloatArray:
         """
         Returns:
-            np.ndarray: Parameters attributes values encapsulated in np.ndarray
+            FloatArray: Parameters attributes values encapsulated in FloatArray
         """
         return np.array(
             [getattr(self, name) for name in self.indice_to_name.values()],
@@ -88,7 +89,7 @@ class Parameters:
         for indice, name in self.indice_to_name.items():
             setattr(self, name, new_values[indice])
 
-    def __getitem__(self, index: Index) -> Union[np.float64, np.ndarray]:
+    def __getitem__(self, index: Index) -> Union[np.float64, FloatArray]:
         try:
             return self.values[index]
         except IndexError as exc:

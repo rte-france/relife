@@ -4,19 +4,24 @@ This module gathers class used by subsystems' objects to treat lifetime data
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
+
+FloatArray = NDArray[np.float64]
+IntArray = NDArray[np.int64]
+BoolArray = NDArray[np.bool_]
 
 
-def array_factory(obj: Union[int, float, list, list[list], np.ndarray]) -> np.ndarray:
+def array_factory(obj: Union[int, float, list, List[list], FloatArray]) -> FloatArray:
     """
     Converts object input to 2d array
     Args:
         obj: object input
 
     Returns:
-        np.ndarray: 2d array
+        FloatArray: 2d array
     """
     try:
         obj = np.asarray(obj)
@@ -26,7 +31,7 @@ def array_factory(obj: Union[int, float, list, list[list], np.ndarray]) -> np.nd
         obj = obj.reshape(-1, 1)
     elif obj.ndim > 2:
         raise ValueError(
-            f"input np.ndarray can't have more than 2 dimensions : got {obj}"
+            f"input FloatArray can't have more than 2 dimensions : got {obj}"
         )
     return obj
 
@@ -37,8 +42,8 @@ class Measures:
     Object that encapsulates lifetime data values and corresponding units index
     """
 
-    values: np.ndarray
-    unit_ids: np.ndarray
+    values: FloatArray
+    unit_ids: IntArray
 
     def __post_init__(self):
         if self.values.ndim != 2:
@@ -82,10 +87,10 @@ class MeasuresFactory(ABC):
 
     def __init__(
         self,
-        time: np.ndarray,
-        entry: Optional[np.ndarray] = None,
-        departure: Optional[np.ndarray] = None,
-        **indicators,
+        time: FloatArray,
+        entry: Optional[FloatArray] = None,
+        departure: Optional[FloatArray] = None,
+        **indicators: Union[IntArray, BoolArray],
     ):
         if entry is None:
             entry = np.zeros((len(time), 1))
@@ -249,7 +254,7 @@ class MeasuresFactoryFrom1D(MeasuresFactory):
         return Measures(values, index)
 
     def get_interval_censorships(self) -> Measures:
-        return Measures(np.empty((0, 2)), np.empty((0,)))
+        return Measures(np.empty((0, 2)), np.empty((0,), dtype=np.int64))
 
     def get_left_truncations(self) -> Measures:
         index = np.where(self.entry > 0)[0]
