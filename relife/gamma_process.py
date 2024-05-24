@@ -400,8 +400,8 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
         failure_times = inspection_times[ind_failure]
 
         nb_sample_max = nb_sample
-        if nb_sample > 1000:
-            nb_sample_max = 1000
+        if nb_sample > 200:
+            nb_sample_max = 200
 
         fig, ax1 = plt.subplots(dpi=160)
         color = 'tab:grey'
@@ -532,7 +532,7 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
                 empirical_cost.append((kl * cI + cF) / lifetime)
         return np.mean(empirical_cost)
 
-    def theoretical_one_cycle_cost(self, strategy, cost_structure, tol=1e-6, print_nit=True):
+    def theoretical_one_cycle_cost(self, strategy, cost_structure, tol=1e-6, print_nit=False):
         # TODO: injecter le schéma gauss legendre dans l'intégrable double sur t (somme des poids avec un degré 5
         #  par exemple), et faire un gauss legendre sur l'intégrale restante sur x, et séparer le cas k=0.
         control_frequency, replacement_threshold = strategy
@@ -628,6 +628,6 @@ class GammaProcess(AbsolutelyContinuousLifetimeModel):
             x0=[tau_initial_guess, l_initial_guess],
             args=cost_structure,
             bounds=((0.3, np.inf), (self.l0, self.r0)),
-            method='L-BFGS-B' #'SLSQP' 'L-BFGS-B' 'Nelder-Mead'
+            method='SLSQP' #'SLSQP' 'L-BFGS-B' 'Nelder-Mead'
         )
         return opt.x
