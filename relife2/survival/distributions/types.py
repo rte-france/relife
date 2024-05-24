@@ -1,5 +1,9 @@
 """
 This module defines fundamental types used in distributions package
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 import copy
@@ -144,12 +148,14 @@ class Distribution(ABC):
 
     @abstractmethod
     def ichf(
-        self, time: Union[int, float, ArrayLike, FloatArray], **kwparams: float
+        self,
+        cumulative_hazard_rate: Union[int, float, ArrayLike, FloatArray],
+        **kwparams: float,
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            cumulative_hazard_rate (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
             **kwparams (float): BLABLABLABLA
 
         Returns:
@@ -219,7 +225,7 @@ class DistributionFunctions(ABC):
     Object that computes every probability functions of a distribution model
     """
 
-    def __init__(self, *param_names: str, **kparam_names: float):
+    def __init__(self, *param_names: str, **kparam_names: Union[float, None]):
         self.params = Parameters(*param_names, **kparam_names)
 
     @abstractmethod
@@ -267,11 +273,11 @@ class DistributionFunctions(ABC):
         """
 
     @abstractmethod
-    def ichf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def ichf(self, cumulative_hazard_rate: FloatArray) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            cumulative_hazard_rate (FloatArray): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA

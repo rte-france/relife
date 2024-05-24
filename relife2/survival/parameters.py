@@ -1,9 +1,13 @@
 """
 This module defines Parameters class used by survival models' functions
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from types import EllipsisType
-from typing import Self, Union
+from typing import Any, Self, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -34,11 +38,14 @@ class Parameters:
         5.0
     """
 
-    def __init__(self, *names: str, **knames: float):
+    def __init__(self, *names: str, **knames: Union[float, None]):
         for name in names:
             setattr(self, name, np.random.random())
         for name, value in knames.items():
-            setattr(self, name, float(value))
+            if value:
+                setattr(self, name, float(value))
+            else:
+                setattr(self, name, np.random.random())
         self.indice_to_name = dict(enumerate(names + tuple(knames.keys())))
 
     def __len__(self):
@@ -114,6 +121,9 @@ class Parameters:
             ) from exc
         for pos, indice in enumerate(np.where(indice_to_change)[0]):
             setattr(self, self.indice_to_name[indice], np.float64(new_values[pos]))
+
+    def __setattr__(self, name: str, value: Any):
+        super().__setattr__(name, value)
 
     def append(self, params: Self) -> None:
         """

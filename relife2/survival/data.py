@@ -1,5 +1,9 @@
 """
 This module gathers class used by subsystems' objects to treat lifetime data
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
