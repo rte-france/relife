@@ -235,7 +235,7 @@ class MeasuresFactory(ABC):
 
 class MeasuresFactoryFrom1D(MeasuresFactory):
     """
-    Concrete implementation of MeasuresParser factory for 1D encoding
+    Concrete implementation of MeasuresFactory for 1D encoding
     """
 
     def get_complete(self) -> Measures:
@@ -269,7 +269,7 @@ class MeasuresFactoryFrom1D(MeasuresFactory):
 
 class MeasuresFactoryFrom2D(MeasuresFactory):
     """
-    Concrete implementation of MeasuresParser factory for 2D encoding
+    Concrete implementation of MeasuresFactory for 2D encoding
     """
 
     def get_complete(self) -> Measures:

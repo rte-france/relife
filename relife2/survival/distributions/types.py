@@ -2,14 +2,22 @@
 This module defines fundamental types used in distributions package
 """
 
+import copy
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from relife2.survival.data import (
+    MeasuresFactory,
+    MeasuresFactoryFrom1D,
+    MeasuresFactoryFrom2D,
+)
 from relife2.survival.parameters import Parameters
 
+IntArray = NDArray[np.int64]
+BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
@@ -38,12 +46,12 @@ class Distribution(ABC):
 
     @abstractmethod
     def isf(
-        self, probability: Union[float | ArrayLike | FloatArray], **kwparams: float
+        self, probability: Union[float, ArrayLike, FloatArray], **kwparams: float
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            probability (Union[float | ArrayLike | FloatArray]): BLABLABLABLA
+            probability (Union[float, ArrayLike, FloatArray]): BLABLABLABLA
             **kwparams (float): BLABLABLABLA
 
         Returns:
@@ -94,12 +102,12 @@ class Distribution(ABC):
 
     @abstractmethod
     def pdf(
-        self, probability: Union[float | ArrayLike | FloatArray], **kwparams: float
+        self, probability: Union[float, ArrayLike, FloatArray], **kwparams: float
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            probability (Union[float | ArrayLike | FloatArray]): BLABLABLABLA
+            probability (Union[float, ArrayLike, FloatArray]): BLABLABLABLA
             **kwparams (float): BLABLABLABLA
 
         Returns:
@@ -375,3 +383,84 @@ class DistributionFunctions(ABC):
             float: BLABLABLABLA
         """
         return float(self.ppf(np.array(0.5)))
+
+
+class DistributionLikelihood(ABC):
+    """
+    Object that computes every likelihood functions of a distribution model
+    """
+
+    default_hess_scheme: str = "cs"
+
+    def __init__(
+        self,
+        functions: DistributionFunctions,
+        time: FloatArray,
+        entry: Optional[FloatArray] = None,
+        departure: Optional[FloatArray] = None,
+        **indicators: Union[IntArray, BoolArray],
+    ):
+
+        self.functions = copy.copy(functions)
+        factory: MeasuresFactory
+        if time.shape[-1] == 1:
+            factory = MeasuresFactoryFrom1D(time, entry, departure, **indicators)
+        else:
+            factory = MeasuresFactoryFrom2D(time, entry, departure, **indicators)
+        (
+            self.complete_lifetimes,
+            self.left_censorships,
+            self.right_censorships,
+            self.interval_censorship,
+            self.left_truncations,
+            self.right_truncations,
+        ) = factory()
+
+    @abstractmethod
+    def negative_log_likelihood(self, time: FloatArray) -> FloatArray:
+        """
+        BLABLABLABLA
+        Args:
+            time (): BLABLABLABLA
+
+        Returns:
+            FloatArray: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def jac_negative_log_likelihood(self, time: FloatArray) -> FloatArray:
+        """
+        BLABLABLABLA
+        Args:
+            time (): BLABLABLABLA
+
+        Returns:
+            FloatArray: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def hess_negative_log_likelihood(self) -> FloatArray:
+        """
+        BLABLABLABLA
+        Returns:
+            FloatArray: BLABLABLABLA
+        """
+
+
+class DistributionOptimizer(ABC):
+    """
+    Object that optimize parameters of a distribution model given a likelihood
+    """
+
+    method: str = "L-BFGS-B"
+
+    def __init__(self, likelihood: DistributionLikelihood):
+        self.likelihood = likelihood
+
+    @abstractmethod
+    def init_params(self) -> None:
+        """Init parameters values"""
+
+    @abstractmethod
+    def fit(self, **kwargs) -> Parameters:
+        """Optimize model parameters to maximise likelihood"""
