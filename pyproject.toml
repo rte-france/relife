@@ -43,3 +43,7 @@ max-line-length = "88"
 disable = """
     line-too-long,
 """
+
+[[tool.mypy.overrides]]
+module = ["relife2.survival.parameters"]
+disable_error_code = ["misc"]
