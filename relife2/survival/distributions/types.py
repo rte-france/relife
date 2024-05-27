@@ -12,6 +12,7 @@ from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from scipy.optimize import Bounds
 
 from relife2.survival.data import (
     MeasuresFactory,
@@ -411,7 +412,7 @@ class DistributionLikelihood(ABC):
         ) = factory()
 
     @abstractmethod
-    def negative_log_likelihood(self, time: FloatArray) -> FloatArray:
+    def negative_log_likelihood(self) -> float:
         """
         BLABLABLABLA
         Args:
@@ -422,7 +423,7 @@ class DistributionLikelihood(ABC):
         """
 
     @abstractmethod
-    def jac_negative_log_likelihood(self, time: FloatArray) -> FloatArray:
+    def jac_negative_log_likelihood(self) -> FloatArray:
         """
         BLABLABLABLA
         Args:
@@ -450,10 +451,16 @@ class DistributionOptimizer(ABC):
 
     def __init__(self, likelihood: DistributionLikelihood):
         self.likelihood = likelihood
+        self.param0 = self.init_params()
+        self.bounds = self.get_params_bounds()
 
     @abstractmethod
-    def init_params(self) -> None:
+    def init_params(self) -> FloatArray:
         """Init parameters values"""
+
+    @abstractmethod
+    def get_params_bounds(self) -> Bounds:
+        """Returns parameters' bounds"""
 
     @abstractmethod
     def fit(self, **kwargs) -> Parameters:

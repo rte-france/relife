@@ -6,16 +6,13 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 
-from relife2.survival.distributions.types import (
-    DistributionFunctions,
-    DistributionLikelihood,
-)
+from relife2.survival.distributions.types import DistributionLikelihood
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
@@ -26,16 +23,6 @@ class GenericDistributionLikelihood(DistributionLikelihood):
     """
     BLABLABLABLA
     """
-
-    def __init__(
-        self,
-        functions: DistributionFunctions,
-        time: FloatArray,
-        entry: Optional[FloatArray] = None,
-        departure: Optional[FloatArray] = None,
-        **indicators: Union[IntArray, BoolArray],
-    ):
-        super().__init__(functions, time, entry, departure, **indicators)
 
     def negative_log_likelihood(
         self,
@@ -70,9 +57,7 @@ class GenericDistributionLikelihood(DistributionLikelihood):
     ) -> FloatArray:
 
         jac_d_contrib = -np.sum(
-            self.functions.jac_hf(
-                np.squeeze(self.complete_lifetimes.values), self.functions
-            )
+            self.functions.jac_hf(np.squeeze(self.complete_lifetimes.values))
             / self.functions.hf(self.complete_lifetimes.values),
             axis=0,
         )
@@ -84,24 +69,19 @@ class GenericDistributionLikelihood(DistributionLikelihood):
                         np.squeeze(self.complete_lifetimes.values),
                         np.squeeze(self.right_censorships.values),
                     )
-                ),
-                self.functions,
+                )
             ),
             axis=0,
         )
 
         jac_lc_contrib = -np.sum(
-            self.functions.jac_chf(
-                np.squeeze(self.left_censorships.values), self.functions
-            )
+            self.functions.jac_chf(np.squeeze(self.left_censorships.values))
             / np.expm1(self.functions.chf(self.left_censorships.values)),
             axis=0,
         )
 
         jac_lt_contrib = -np.sum(
-            self.functions.jac_chf(
-                np.squeeze(self.left_truncations.values), self.functions
-            ),
+            self.functions.jac_chf(np.squeeze(self.left_truncations.values)),
             axis=0,
         )
 
@@ -110,16 +90,16 @@ class GenericDistributionLikelihood(DistributionLikelihood):
     def hess_negative_log_likelihood(
         self,
         eps: float = 1e-6,
-        scheme: str = None,
+        scheme: Optional[str] = None,
     ) -> FloatArray:
 
-        size = np.size(self.functions.params.values)
+        size = self.functions.params.size
         # print(size)
         hess = np.empty((size, size))
         params_values = self.functions.params.values
 
         if scheme is None:
-            scheme = self._default_hess_scheme
+            scheme = self.default_hess_scheme
 
         if scheme == "cs":
             u = eps * 1j * np.eye(size)
@@ -139,16 +119,10 @@ class GenericDistributionLikelihood(DistributionLikelihood):
 
         elif scheme == "2-point":
 
-            def f(xk):
-                self.functions.params.values = xk
-                return self.jac_negative_log_likelihood()
-
-            xk = self.functions.params.values
-
             for i in range(size):
                 hess[i] = approx_fprime(
-                    xk,
-                    lambda x: f(x)[i],
+                    self.functions.params.values,
+                    self.jac_negative_log_likelihood()[i],
                     eps,
                 )
         else:
