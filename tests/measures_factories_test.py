@@ -1,41 +1,36 @@
 import numpy as np
 import pytest
 
-from relife2.survival.data.measures import (
-    MeasuresParserFrom1D,
-    MeasuresParserFrom2D,
+from relife2.survival.data import (
+    MeasuresFactoryFrom1D,
+    MeasuresFactoryFrom2D,
     intersect_measures,
+    array_factory,
 )
 
 
 @pytest.fixture
 def example_1d_data():
     return {
-        "observed_lifetimes": np.array([10, 11, 9, 10, 12, 13, 11]),
-        "event": np.array([1, 0, 1, 0, 0, 0, 1]),
-        "entry": np.array([0, 0, 3, 5, 3, 1, 9]),
+        "observed_lifetimes": array_factory(np.array([10, 11, 9, 10, 12, 13, 11])),
+        "event": array_factory(np.array([1, 0, 1, 0, 0, 0, 1])),
+        "entry": array_factory(np.array([0, 0, 3, 5, 3, 1, 9])),
     }
 
 
 @pytest.fixture
 def example_2d_data():
     return {
-        "observed_lifetimes": np.array(
-            [[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]]
+        "observed_lifetimes": array_factory(
+            np.array([[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]])
         ),
-        "entry": np.array([0, 0, 3, 5, 3, 1, 9]),
-        "departure": np.array([4, 0, 7, 10, 0, 12, 0]),
+        "entry": array_factory(np.array([0, 0, 3, 5, 3, 1, 9])),
+        "departure": array_factory(np.array([4, np.inf, 7, 10, np.inf, 12, np.inf])),
     }
 
 
 def test_1d_data(example_1d_data):
-    # data = Data(
-    #     example_1d_data["observed_lifetimes"],
-    #     right_censored_indicators=example_1d_data["event"] == 0,
-    #     complete_indicators=example_1d_data["event"] == 1,
-    #     entry=example_1d_data["entry"],
-    # )
-    parser = MeasuresParserFrom1D(
+    factory = MeasuresFactoryFrom1D(
         example_1d_data["observed_lifetimes"],
         rc_indicators=1 - example_1d_data["event"],
         entry=example_1d_data["entry"],
@@ -48,7 +43,7 @@ def test_1d_data(example_1d_data):
         interval_censorships,
         left_truncations,
         right_truncations,
-    ) = parser()
+    ) = factory()
 
     print(complete_lifetimes.unit_ids)
     assert np.all(complete_lifetimes.unit_ids == np.array([0, 2, 6]))
@@ -82,7 +77,7 @@ def test_1d_data(example_1d_data):
 
 
 def test_2d_data(example_2d_data):
-    parser = MeasuresParserFrom2D(
+    factory = MeasuresFactoryFrom2D(
         example_2d_data["observed_lifetimes"],
         entry=example_2d_data["entry"],
         departure=example_2d_data["departure"],
@@ -95,7 +90,7 @@ def test_2d_data(example_2d_data):
         interval_censorships,
         left_truncations,
         right_truncations,
-    ) = parser()
+    ) = factory()
 
     assert np.all(left_censorships.unit_ids == np.array([1]))
     assert np.all(left_censorships.values == np.array([4]).reshape(-1, 1))
@@ -106,8 +101,6 @@ def test_2d_data(example_2d_data):
     assert np.all(interval_censorships.unit_ids == np.array([0, 5, 6]))
     assert np.all(interval_censorships.values == np.array([[1, 2], [2, 10], [10, 11]]))
 
-    # left truncations
-    print(left_truncations)
     assert np.all(left_truncations.unit_ids == np.array([2, 3, 4, 5, 6]))
     assert np.all(left_truncations.values == np.array([3, 5, 3, 1, 9]).reshape(-1, 1))
 

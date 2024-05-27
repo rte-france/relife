@@ -16,11 +16,15 @@ def isort(session):
 
 @nox.session(tags=["style"])
 def lint(session):
-    session.install("pycodestyle")
-    session.run("pycodestyle", "relife2/.")
+    requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
+    session.install(*requirements)
+    session.install("pylint")
+    session.run("pylint", "--extension-pkg-whitelist=numpy", "relife2/.")
 
 
 @nox.session(tags=["style"])
 def mypy(session):
+    requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
+    session.install(*requirements)
     session.install("mypy")
     session.run("mypy", "relife2/.")
