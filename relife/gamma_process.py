@@ -10,6 +10,8 @@ from scipy.stats import gamma
 from relife.model import AbsolutelyContinuousLifetimeModel
 from .utils import moore_jac_uppergamma_c
 
+import cProfile as profile
+
 MIN_POSITIVE_FLOAT = np.finfo(float).resolution
 
 @dataclass
@@ -87,8 +89,8 @@ class GammaProcessData:
 
 @dataclass
 class GammaProcess(AbsolutelyContinuousLifetimeModel):
-    r0: float
-    l0: float
+    r0: float = None
+    l0: float = None
     rate: float = None
     shape_rate: float = None
     shape_power: float = None
