@@ -36,6 +36,9 @@ def test_rvs(model):
 # /!\ depends upon LS_INTEGRATE
 def test_mean(model):
     assert super(type(model), model).mean() == pytest.approx(model.mean(), rel=1e-3)
+    assert super(type(model.pf), model.pf).mean() == pytest.approx(
+        model.mean(), rel=1e-3
+    )
 
 
 # /!\ depends upon LS_INTEGRATExx
@@ -48,7 +51,8 @@ def test_fit(model, data):
     params = model.params.values.copy()
     model.fit(
         data[0, :],
-        rc_indicators=data[1, :] == 0,
+        complete_indicators=data[1, :] == 1,
+        right_censored_indicators=data[1, :] == 0,
         entry=data[2, :],
     )
     assert model.fitting_params.values == pytest.approx(params, rel=1e-3)
