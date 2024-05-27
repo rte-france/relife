@@ -1,7 +1,7 @@
 # Installation (conda)
 
 ```bash
-git clone --single-branch --branch refactoring_validation https://github.com/rte-france/relife.git
+git clone --single-branch --branch refactoring https://github.com/rte-france/relife.git
 cd relife
 ```
 
