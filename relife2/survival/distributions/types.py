@@ -35,9 +35,7 @@ class Distribution(ABC):
         pass
 
     @abstractmethod
-    def sf(
-        self, time: Union[int, float, ArrayLike, FloatArray], **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def sf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
@@ -50,7 +48,7 @@ class Distribution(ABC):
 
     @abstractmethod
     def isf(
-        self, probability: Union[float, ArrayLike, FloatArray], **kwparams: float
+        self, probability: ArrayLike, **kwparams: float
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
@@ -63,9 +61,7 @@ class Distribution(ABC):
         """
 
     @abstractmethod
-    def hf(
-        self, time: Union[int, float, ArrayLike, FloatArray], **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def hf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
@@ -77,9 +73,7 @@ class Distribution(ABC):
         """
 
     @abstractmethod
-    def chf(
-        self, time: Union[int, float, ArrayLike, FloatArray], **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def chf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
@@ -91,9 +85,7 @@ class Distribution(ABC):
         """
 
     @abstractmethod
-    def cdf(
-        self, time: Union[int, float, ArrayLike, FloatArray], **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def cdf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
@@ -106,7 +98,7 @@ class Distribution(ABC):
 
     @abstractmethod
     def pdf(
-        self, probability: Union[float, ArrayLike, FloatArray], **kwparams: float
+        self, probability: ArrayLike, **kwparams: float
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
@@ -119,9 +111,7 @@ class Distribution(ABC):
         """
 
     @abstractmethod
-    def ppf(
-        self, time: Union[int, float, ArrayLike, FloatArray], **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def ppf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
@@ -133,9 +123,7 @@ class Distribution(ABC):
         """
 
     @abstractmethod
-    def mrl(
-        self, time: Union[int, float, ArrayLike, FloatArray], **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def mrl(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
@@ -149,7 +137,7 @@ class Distribution(ABC):
     @abstractmethod
     def ichf(
         self,
-        cumulative_hazard_rate: Union[int, float, ArrayLike, FloatArray],
+        cumulative_hazard_rate: ArrayLike,
         **kwparams: float,
     ) -> Union[float, FloatArray]:
         """
@@ -202,10 +190,10 @@ class Distribution(ABC):
     @abstractmethod
     def fit(
         self,
-        time: Union[ArrayLike, FloatArray],
-        entry: Optional[Union[ArrayLike, FloatArray]] = None,
-        departure: Optional[Union[ArrayLike, FloatArray]] = None,
-        **indicators: Union[ArrayLike, FloatArray],
+        time: ArrayLike,
+        entry: Optional[ArrayLike] = None,
+        departure: Optional[ArrayLike] = None,
+        **indicators: Optional[ArrayLike],
     ) -> Union[None, Parameters]:
         """
         BLABLABLABLA
@@ -225,8 +213,8 @@ class DistributionFunctions(ABC):
     Object that computes every probability functions of a distribution model
     """
 
-    def __init__(self, *param_names: str, **kparam_names: Union[float, None]):
-        self.params = Parameters(*param_names, **kparam_names)
+    def __init__(self, **kparam_names: Union[float, None]):
+        self.params = Parameters(**kparam_names)
 
     @abstractmethod
     def hf(self, time: FloatArray) -> Union[float, FloatArray]:

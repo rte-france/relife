@@ -27,7 +27,7 @@ class Parameters:
         1.0
         >>> params.values
         array([1., 2.])
-        >>> other_params = Parameters("w0", "w1", "w2")
+        >>> other_params = Parameters(w0=None, w1=None, w2=None)
         >>> other_params.values = (3., 5., 6.)
         >>> other_params.values
         array([3., 5., 6.])
@@ -36,17 +36,19 @@ class Parameters:
         array([1., 2., 3., 5., 6.])
         >>> params.w1
         5.0
+        >>> params[2]
+        3.0
+        >>> params[2:]
+        array([3., 5., 6.])
     """
 
-    def __init__(self, *names: str, **knames: Union[float, None]):
-        for name in names:
-            setattr(self, name, np.random.random())
-        for name, value in knames.items():
+    def __init__(self, **kparam_names: Union[float, None]):
+        for name, value in kparam_names.items():
             if value:
                 setattr(self, name, float(value))
             else:
                 setattr(self, name, np.random.random())
-        self.indice_to_name = dict(enumerate(names + tuple(knames.keys())))
+        self.indice_to_name = dict(enumerate(tuple(kparam_names.keys())))
 
     def __len__(self):
         return len(self.indice_to_name)
@@ -79,7 +81,7 @@ class Parameters:
         )
 
     @values.setter
-    def values(self, new_values: Union[float, ArrayLike]) -> None:
+    def values(self, new_values: ArrayLike) -> None:
         """
         Affects new values to Parameters attributes
         Args:
@@ -96,9 +98,12 @@ class Parameters:
         for indice, name in self.indice_to_name.items():
             setattr(self, name, new_values[indice])
 
-    def __getitem__(self, index: Index) -> Union[np.float64, FloatArray]:
+    def __getitem__(self, index: Index) -> Union[float, FloatArray]:
         try:
-            return self.values[index]
+            val = self.values[index]
+            if isinstance(val, np.float64):
+                val = val.item()
+            return val
         except IndexError as exc:
             raise IndexError(
                 f"Invalid index : params indices are 1d from 0 to {len(self) - 1}"
@@ -107,7 +112,7 @@ class Parameters:
     def __setitem__(
         self,
         index: Index,
-        new_values: Union[float, ArrayLike],
+        new_values: ArrayLike,
     ) -> None:
         new_values = np.asarray(new_values, dtype=np.float64).reshape(
             -1,
