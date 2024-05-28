@@ -57,7 +57,7 @@ class Parameters:
     def names(self) -> tuple[str, ...]:
         """
         Returns:
-            int: nb of parameters (alias of len)
+            tuple[str, ...]: param names
         """
         return tuple(self.indice_to_name.values())
 

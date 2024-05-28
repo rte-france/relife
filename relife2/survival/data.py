@@ -8,17 +8,17 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import Optional
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 FloatArray = NDArray[np.float64]
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
 
 
-def array_factory(obj: Union[int, float, list, List[list], FloatArray]) -> FloatArray:
+def array_factory(obj: ArrayLike) -> FloatArray:
     """
     Converts object input to 2d array
     Args:
@@ -94,22 +94,20 @@ class MeasuresFactory(ABC):
         time: FloatArray,
         entry: Optional[FloatArray] = None,
         departure: Optional[FloatArray] = None,
-        **indicators: Union[IntArray, BoolArray],
+        **indicators: BoolArray,
     ):
         if entry is None:
             entry = np.zeros((len(time), 1))
         if departure is None:
             departure = np.ones((len(time), 1)) * np.inf
-        lc_indicators = indicators.get("lc_indicators", None)
-        rc_indicators = indicators.get("rc_indicators", None)
-        if lc_indicators is None:
-            lc_indicators = np.zeros((len(time), 1), dtype=np.bool_)
-        if rc_indicators is None:
-            rc_indicators = np.zeros((len(time), 1), dtype=np.bool_)
+        self.lc_indicators = indicators.get(
+            "lc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
+        )
+        self.rc_indicators = indicators.get(
+            "rc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
+        )
 
         self.time = time
-        self.lc_indicators = lc_indicators.astype(np.bool_, copy=False)
-        self.rc_indicators = rc_indicators.astype(np.bool_, copy=False)
         self.entry = entry
         self.departure = departure
         self._check_format()

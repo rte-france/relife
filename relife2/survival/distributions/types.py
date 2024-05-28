@@ -32,104 +32,89 @@ class Distribution(ABC):
     Object used as facade design pattern
     """
 
-    def __init__(self):
-        pass
-
     @abstractmethod
-    def sf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
+    def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def isf(
-        self, probability: ArrayLike, **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             probability (Union[float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def hf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
+    def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def chf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
+    def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def cdf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
+    def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def pdf(
-        self, probability: ArrayLike, **kwparams: float
-    ) -> Union[float, FloatArray]:
+    def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             probability (Union[float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def ppf(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
+    def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def mrl(self, time: ArrayLike, **kwparams: float) -> Union[float, FloatArray]:
+    def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
@@ -139,13 +124,11 @@ class Distribution(ABC):
     def ichf(
         self,
         cumulative_hazard_rate: ArrayLike,
-        **kwparams: float,
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             cumulative_hazard_rate (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
@@ -153,36 +136,31 @@ class Distribution(ABC):
 
     @abstractmethod
     def rvs(
-        self, size: Optional[int] = 1, seed: Optional[int] = None, **kwparams: float
+        self, size: Optional[int] = 1, seed: Optional[int] = None
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
             size (Optional[int]): BLABLABLABLA
             seed (Optional[int]): BLABLABLABLA
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def mean(self, **kwparams: float) -> float:
+    def mean(self) -> float:
         """
         BLABLABLABLA
-        Args:
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
         """
 
     @abstractmethod
-    def var(self, **kwparams: float) -> float:
+    def var(self) -> float:
         """
         BLABLABLABLA
-        Args:
-            **kwparams (float): BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
@@ -192,20 +170,22 @@ class Distribution(ABC):
     def fit(
         self,
         time: ArrayLike,
+        inplace: bool = True,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
-        **indicators: Optional[ArrayLike],
-    ) -> Union[None, Parameters]:
+        **indicators: ArrayLike,
+    ) -> Parameters:
         """
         BLABLABLABLA
         Args:
             time (Union[ArrayLike, FloatArray]):
+            inplace ():
             entry (Optional[Union[ArrayLike, FloatArray]]):
             departure (Optional[Union[ArrayLike, FloatArray]]):
             **indicators (Union[ArrayLike, FloatArray]):
 
         Returns:
-            Union[None, Parameters]: BLABLABLABLA
+            Parameters: optimum parameters found
         """
 
 
@@ -393,7 +373,7 @@ class DistributionLikelihood(ABC):
         time: FloatArray,
         entry: Optional[FloatArray] = None,
         departure: Optional[FloatArray] = None,
-        **indicators: Union[IntArray, BoolArray],
+        **indicators: BoolArray,
     ):
 
         self.functions = copy.copy(functions)
@@ -415,8 +395,6 @@ class DistributionLikelihood(ABC):
     def negative_log_likelihood(self) -> float:
         """
         BLABLABLABLA
-        Args:
-            time (): BLABLABLABLA
 
         Returns:
             FloatArray: BLABLABLABLA
@@ -426,8 +404,6 @@ class DistributionLikelihood(ABC):
     def jac_negative_log_likelihood(self) -> FloatArray:
         """
         BLABLABLABLA
-        Args:
-            time (): BLABLABLABLA
 
         Returns:
             FloatArray: BLABLABLABLA
