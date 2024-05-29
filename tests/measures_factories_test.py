@@ -13,7 +13,7 @@ from relife2.survival.data import (
 def example_1d_data():
     return {
         "observed_lifetimes": array_factory(np.array([10, 11, 9, 10, 12, 13, 11])),
-        "event": array_factory(np.array([1, 0, 1, 0, 0, 0, 1])),
+        "event": array_factory(np.array([1, 0, 1, 0, 0, 0, 1])).astype(np.bool_),
         "entry": array_factory(np.array([0, 0, 3, 5, 3, 1, 9])),
     }
 
@@ -32,8 +32,8 @@ def example_2d_data():
 def test_1d_data(example_1d_data):
     factory = MeasuresFactoryFrom1D(
         example_1d_data["observed_lifetimes"],
-        rc_indicators=1 - example_1d_data["event"],
         entry=example_1d_data["entry"],
+        rc_indicators=~example_1d_data["event"],
     )
 
     (
@@ -45,7 +45,6 @@ def test_1d_data(example_1d_data):
         right_truncations,
     ) = factory()
 
-    print(complete_lifetimes.unit_ids)
     assert np.all(complete_lifetimes.unit_ids == np.array([0, 2, 6]))
     assert np.all(complete_lifetimes.values == np.array([10, 9, 11]).reshape(-1, 1))
 

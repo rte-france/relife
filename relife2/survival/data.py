@@ -20,7 +20,9 @@ BoolArray = NDArray[np.bool_]
 
 def array_factory(obj: ArrayLike) -> FloatArray:
     """
-    Converts object input to 2d array
+    Converts object input to 2d array of shape (n, p)
+    n is the number of units
+    p is the number of points
     Args:
         obj: object input
 
@@ -100,6 +102,8 @@ class MeasuresFactory(ABC):
             entry = np.zeros((len(time), 1))
         if departure is None:
             departure = np.ones((len(time), 1)) * np.inf
+
+        print(indicators)
         self.lc_indicators = indicators.get(
             "lc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
         )

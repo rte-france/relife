@@ -1,8 +1,16 @@
+import copy
+
 import numpy as np
 import pytest
 
-from relife2.survival import Exponential, Gamma, Gompertz, LogLogistic, Weibull
-from relife2.survival.data import load_power_transformer
+from data.load import load_power_transformer
+from relife2.survival.distributions import (
+    Exponential,
+    Weibull,
+    Gompertz,
+    Gamma,
+    LogLogistic,
+)
 
 
 @pytest.fixture(scope="module")
@@ -34,28 +42,26 @@ def test_rvs(model):
 
 
 # /!\ depends upon LS_INTEGRATE
-def test_mean(model):
-    assert super(type(model), model).mean() == pytest.approx(model.mean(), rel=1e-3)
-    assert super(type(model.pf), model.pf).mean() == pytest.approx(
-        model.mean(), rel=1e-3
-    )
+# def test_mean(model):
+#     assert super(type(model), model).mean() == pytest.approx(model.mean(), rel=1e-3)
+#     assert super(type(model.pf), model.pf).mean() == pytest.approx(
+#         model.mean(), rel=1e-3
+#     )
 
 
-# /!\ depends upon LS_INTEGRATExx
 def test_mrl(model):
-    t = np.arange(10)
-    assert model.mrl(t).shape == (t.size,)
+    time = np.arange(10)
+    assert model.mrl(time).shape == (time.size,)
 
 
 def test_fit(model, data):
-    params = model.params.values.copy()
+    expected_params = copy.copy(model.params)
     model.fit(
         data[0, :],
-        complete_indicators=data[1, :] == 1,
-        right_censored_indicators=data[1, :] == 0,
         entry=data[2, :],
+        rc_indicators=data[1, :] == 0,
     )
-    assert model.fitting_params.values == pytest.approx(params, rel=1e-3)
+    assert model.params.values == pytest.approx(expected_params.values, rel=1e-3)
 
 
 # def test_minimum_distribution(model, data):

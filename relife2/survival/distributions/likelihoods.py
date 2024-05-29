@@ -35,7 +35,8 @@ class GenericDistributionLikelihood(DistributionLikelihood):
                     (
                         self.complete_lifetimes.values,
                         self.right_censorships.values,
-                    )
+                    ),
+                    axis=0,
                 ),
             )
         )
@@ -57,7 +58,7 @@ class GenericDistributionLikelihood(DistributionLikelihood):
     ) -> FloatArray:
 
         jac_d_contrib = -np.sum(
-            self.functions.jac_hf(np.squeeze(self.complete_lifetimes.values))
+            self.functions.jac_hf(self.complete_lifetimes.values)
             / self.functions.hf(self.complete_lifetimes.values),
             axis=0,
         )
@@ -66,22 +67,23 @@ class GenericDistributionLikelihood(DistributionLikelihood):
             self.functions.jac_chf(
                 np.concatenate(
                     (
-                        np.squeeze(self.complete_lifetimes.values),
-                        np.squeeze(self.right_censorships.values),
-                    )
-                )
+                        self.complete_lifetimes.values,
+                        self.right_censorships.values,
+                    ),
+                    axis=0,
+                ),
             ),
             axis=0,
         )
 
         jac_lc_contrib = -np.sum(
-            self.functions.jac_chf(np.squeeze(self.left_censorships.values))
+            self.functions.jac_chf(self.left_censorships.values)
             / np.expm1(self.functions.chf(self.left_censorships.values)),
             axis=0,
         )
 
         jac_lt_contrib = -np.sum(
-            self.functions.jac_chf(np.squeeze(self.left_truncations.values)),
+            self.functions.jac_chf(self.left_truncations.values),
             axis=0,
         )
 

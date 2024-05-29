@@ -106,11 +106,12 @@ class GompertzOptimizer(DistributionOptimizer):
             np.sqrt(6)
             * np.std(
                 np.concatenate(
-                    [
+                    (
                         self.likelihood.complete_lifetimes.values,
                         self.likelihood.left_censorships.values,
                         self.likelihood.right_censorships.values,
-                    ]
+                    ),
+                    axis=0,
                 )
             )
         )
@@ -119,11 +120,12 @@ class GompertzOptimizer(DistributionOptimizer):
             -rate
             * np.mean(
                 np.concatenate(
-                    [
+                    (
                         self.likelihood.complete_lifetimes.values,
                         self.likelihood.left_censorships.values,
                         self.likelihood.right_censorships.values,
-                    ]
+                    ),
+                    axis=0,
                 )
             )
         )

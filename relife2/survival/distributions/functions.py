@@ -50,7 +50,7 @@ class ExponentialFunctions(DistributionFunctions):
         return np.ones((time.size, 1))
 
     def jac_chf(self, time: FloatArray) -> FloatArray:
-        return np.ones((time.size, 1)) * time[:, None]
+        return np.ones((time.size, 1)) * time
 
 
 class WeibullFunctions(DistributionFunctions):
@@ -95,21 +95,21 @@ class WeibullFunctions(DistributionFunctions):
         return np.column_stack(
             (
                 self.params.rate
-                * (self.params.rate * time[:, None]) ** (self.params.shape - 1)
-                * (1 + self.params.shape * np.log(self.params.rate * time[:, None])),
+                * (self.params.rate * time) ** (self.params.shape - 1)
+                * (1 + self.params.shape * np.log(self.params.rate * time)),
                 self.params.shape**2
-                * (self.params.rate * time[:, None]) ** (self.params.shape - 1),
+                * (self.params.rate * time) ** (self.params.shape - 1),
             )
         )
 
     def jac_chf(self, time: FloatArray) -> FloatArray:
         return np.column_stack(
             (
-                np.log(self.params.rate * time[:, None])
-                * (self.params.rate * time[:, None]) ** self.params.shape,
+                np.log(self.params.rate * time)
+                * (self.params.rate * time) ** self.params.shape,
                 self.params.shape
-                * time[:, None]
-                * (self.params.rate * time[:, None]) ** (self.params.shape - 1),
+                * time
+                * (self.params.rate * time) ** (self.params.shape - 1),
             )
         )
 
@@ -146,20 +146,18 @@ class GompertzFunctions(DistributionFunctions):
     def jac_hf(self, time: FloatArray) -> FloatArray:
         return np.column_stack(
             (
-                self.params.rate * np.exp(self.params.rate * time[:, None]),
+                self.params.rate * np.exp(self.params.rate * time),
                 self.params.shape
-                * np.exp(self.params.rate * time[:, None])
-                * (1 + self.params.rate * time[:, None]),
+                * np.exp(self.params.rate * time)
+                * (1 + self.params.rate * time),
             )
         )
 
     def jac_chf(self, time: FloatArray) -> FloatArray:
         return np.column_stack(
             (
-                np.expm1(self.params.rate * time[:, None]),
-                self.params.shape
-                * time[:, None]
-                * np.exp(self.params.rate * time[:, None]),
+                np.expm1(self.params.rate * time),
+                self.params.shape * time * np.exp(self.params.rate * time),
             )
         )
 
@@ -213,7 +211,7 @@ class GammaFunctions(DistributionFunctions):
 
     def jac_hf(self, time: FloatArray) -> FloatArray:
 
-        x = self.params.rate * time[:, None]
+        x = self.params.rate * time
         return (
             x ** (self.params.shape - 1)
             * np.exp(-x)
@@ -232,15 +230,12 @@ class GammaFunctions(DistributionFunctions):
         self,
         time: FloatArray,
     ) -> FloatArray:
-        x = self.params.rate * time[:, None]
+        x = self.params.rate * time
         return np.column_stack(
             (
                 digamma(self.params.shape)
                 - self._jac_uppergamma_shape(x) / self._uppergamma(x),
-                x ** (self.params.shape - 1)
-                * time[:, None]
-                * np.exp(-x)
-                / self._uppergamma(x),
+                x ** (self.params.shape - 1) * time * np.exp(-x) / self._uppergamma(x),
             )
         )
 
@@ -293,7 +288,7 @@ class LogLogisticFunctions(DistributionFunctions):
         ) / self.params.rate
 
     def jac_hf(self, time: FloatArray) -> FloatArray:
-        x = self.params.rate * time[:, None]
+        x = self.params.rate * time
         return np.column_stack(
             (
                 (
@@ -304,7 +299,7 @@ class LogLogisticFunctions(DistributionFunctions):
                 * (
                     1
                     + x**self.params.shape
-                    + self.params.shape * np.log(self.params.rate * time[:, None])
+                    + self.params.shape * np.log(self.params.rate * time)
                 ),
                 (
                     self.params.rate
@@ -316,11 +311,11 @@ class LogLogisticFunctions(DistributionFunctions):
         )
 
     def jac_chf(self, time: FloatArray) -> FloatArray:
-        x = self.params.rate * time[:, None]
+        x = self.params.rate * time
         return np.column_stack(
             (
                 (x**self.params.shape / (1 + x**self.params.shape))
-                * np.log(self.params.rate * time[:, None]),
+                * np.log(self.params.rate * time),
                 (x**self.params.shape / (1 + x**self.params.shape))
                 * (self.params.shape / self.params.rate),
             )

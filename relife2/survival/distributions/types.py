@@ -167,12 +167,21 @@ class Distribution(ABC):
         """
 
     @abstractmethod
+    def median(self) -> float:
+        """
+        BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+
+    @abstractmethod
     def fit(
         self,
         time: ArrayLike,
-        inplace: bool = True,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
+        inplace: bool = True,
         **indicators: ArrayLike,
     ) -> Parameters:
         """
