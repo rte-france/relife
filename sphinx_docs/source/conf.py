@@ -20,17 +20,16 @@ release = "2"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "myst_parser",  # to enable markdown files
-    "sphinx.ext.doctest",
+    # "myst_parser",  # to enable markdown files
     "sphinx.ext.autodoc",  # to enable autodoc from docstrings
     "sphinx.ext.napoleon",  # to configure docstring style (use google style by default)
     "sphinx_copybutton",  # copy button in code block
     "sphinx.ext.viewcode",  # to insert source code link next to objects documentation
     "sphinx_design",  # to enable grids and other cool stuff
 ]
-myst_enable_extensions = [
-    "colon_fence"
-]  # to enable when using both myst_parser and sphinx-design
+# myst_enable_extensions = [
+#     "colon_fence"
+# ]  # to enable when using both myst_parser and sphinx-design
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -41,10 +40,17 @@ exclude_patterns = []
 
 # html_theme = "alabaster"
 html_theme = "sphinx_book_theme"
+html_theme_options = {"navigation_with_keys": True}
 html_static_path = ["_static"]
 
 source_suffix = {
     ".rst": "restructuredtext",
     ".txt": "markdown",
     ".md": "markdown",
+}
+
+# must add "from __future__ import annotations" in the targetted module
+autodoc_type_aliases = {
+    "ArrayLike": "ArrayLike",
+    "FloatArray": "FloatArray",
 }

@@ -30,7 +30,7 @@ def array_factory(obj: ArrayLike) -> FloatArray:
         FloatArray: 2d array
     """
     try:
-        obj = np.asarray(obj)
+        obj = np.asarray(obj, dtype=np.float64)
     except Exception as error:
         raise ValueError("Invalid type of param") from error
     if obj.ndim < 2:

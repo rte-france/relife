@@ -7,6 +7,8 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
+from __future__ import annotations
+
 from typing import Optional, Union
 
 import numpy as np
