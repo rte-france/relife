@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from relife2.survival.data import (
-    MeasuresFactoryFrom1D,
-    MeasuresFactoryFrom2D,
+    LifetimeDataFactoryFrom1D,
+    LifetimeDataFactoryFrom2D,
     intersect_measures,
     array_factory,
 )
@@ -30,7 +30,7 @@ def example_2d_data():
 
 
 def test_1d_data(example_1d_data):
-    factory = MeasuresFactoryFrom1D(
+    factory = LifetimeDataFactoryFrom1D(
         example_1d_data["observed_lifetimes"],
         entry=example_1d_data["entry"],
         rc_indicators=~example_1d_data["event"],
@@ -76,7 +76,7 @@ def test_1d_data(example_1d_data):
 
 
 def test_2d_data(example_2d_data):
-    factory = MeasuresFactoryFrom2D(
+    factory = LifetimeDataFactoryFrom2D(
         example_2d_data["observed_lifetimes"],
         entry=example_2d_data["entry"],
         departure=example_2d_data["departure"],

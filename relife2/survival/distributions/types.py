@@ -15,9 +15,9 @@ from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
 from relife2.survival.data import (
-    MeasuresFactory,
-    MeasuresFactoryFrom1D,
-    MeasuresFactoryFrom2D,
+    LifetimeDataFactory,
+    LifetimeDataFactoryFrom1D,
+    LifetimeDataFactoryFrom2D,
 )
 from relife2.survival.parameters import Parameters
 
@@ -386,11 +386,11 @@ class DistributionLikelihood(ABC):
     ):
 
         self.functions = copy.copy(functions)
-        factory: MeasuresFactory
+        factory: LifetimeDataFactory
         if time.shape[-1] == 1:
-            factory = MeasuresFactoryFrom1D(time, entry, departure, **indicators)
+            factory = LifetimeDataFactoryFrom1D(time, entry, departure, **indicators)
         else:
-            factory = MeasuresFactoryFrom2D(time, entry, departure, **indicators)
+            factory = LifetimeDataFactoryFrom2D(time, entry, departure, **indicators)
         (
             self.complete_lifetimes,
             self.left_censorships,

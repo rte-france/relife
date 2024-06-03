@@ -43,7 +43,7 @@ def array_factory(obj: ArrayLike) -> FloatArray:
 
 
 @dataclass(frozen=True)
-class Measures:
+class LifetimeData:
     """
     Object that encapsulates lifetime data values and corresponding units index
     """
@@ -63,30 +63,32 @@ class Measures:
         return len(self.values)
 
 
-def intersect_measures(*measures: Measures) -> Measures:
+def intersect_measures(*lifetime_data: LifetimeData) -> LifetimeData:
     """
     Args:
-        *measures: Measures object.s containing values of shape (n1, p1), (n2, p2), etc.
+        *lifetime_data: Measures object.s containing values of shape (n1, p1), (n2, p2), etc.
 
     Returns:
-        Measures: One Measures object where values are concatanation of common units values. The result
+        LifetimeData: One Measures object where values are concatanation of common units values. The result
         is of shape (N, p1 + p2 + ...).
 
     Examples:
-        >>> measures_1 = Measures(values = np.array([[1], [2]]), unit_ids = np.array([3, 10]))
-        >>> measures_2 = Measures(values = np.array([[3], [5]]), unit_ids = np.array([10, 2]))
+        >>> measures_1 = LifetimeData(values = np.array([[1], [2]]), unit_ids = np.array([3, 10]))
+        >>> measures_2 = LifetimeData(values = np.array([[3], [5]]), unit_ids = np.array([10, 2]))
         >>> intersect_measures(measures_1, measures_2)
         Measures(values=array([[2, 3]]), unit_ids=array([10]))
     """
 
-    inter_ids = np.array(list(set.intersection(*[set(m.unit_ids) for m in measures])))
-    return Measures(
-        np.hstack([m.values[np.isin(m.unit_ids, inter_ids)] for m in measures]),
+    inter_ids = np.array(
+        list(set.intersection(*[set(m.unit_ids) for m in lifetime_data]))
+    )
+    return LifetimeData(
+        np.hstack([m.values[np.isin(m.unit_ids, inter_ids)] for m in lifetime_data]),
         inter_ids,
     )
 
 
-class MeasuresFactory(ABC):
+class LifetimeDataFactory(ABC):
     """
     Factory method of Measures object
     """
@@ -134,50 +136,50 @@ class MeasuresFactory(ABC):
                 raise ValueError("invalid argument shape")
 
     @abstractmethod
-    def get_complete(self) -> Measures:
+    def get_complete(self) -> LifetimeData:
         """
         Returns:
-            Measures: object containing complete lifetime values and index
+            LifetimeData: object containing complete lifetime values and index
         """
 
     @abstractmethod
-    def get_left_censorships(self) -> Measures:
+    def get_left_censorships(self) -> LifetimeData:
         """
         Returns:
-            Measures: object containing left censorhips values and index
+            LifetimeData: object containing left censorhips values and index
         """
 
     @abstractmethod
-    def get_right_censorships(self) -> Measures:
+    def get_right_censorships(self) -> LifetimeData:
         """
         Returns:
-            Measures: object containing right censorhips values and index
+            LifetimeData: object containing right censorhips values and index
         """
 
     @abstractmethod
-    def get_interval_censorships(self) -> Measures:
+    def get_interval_censorships(self) -> LifetimeData:
         """
         Returns:
-            Measures: object containing interval censorhips valuess and index
+            LifetimeData: object containing interval censorhips valuess and index
         """
 
     @abstractmethod
-    def get_left_truncations(self) -> Measures:
+    def get_left_truncations(self) -> LifetimeData:
         """
         Returns:
-            Measures: object containing left truncations values and index
+            LifetimeData: object containing left truncations values and index
         """
 
     @abstractmethod
-    def get_right_truncations(self) -> Measures:
+    def get_right_truncations(self) -> LifetimeData:
         """
         Returns:
-            Measures: object containing right truncations values and index
+            LifetimeData: object containing right truncations values and index
         """
 
     @staticmethod
     def _compatible_with_left_truncations(
-        lifetimes: Measures, left_truncations: Measures
+        lifetimes: LifetimeData, left_truncations: LifetimeData
     ) -> None:
         if len(lifetimes) != 0 and len(left_truncations) != 0:
             intersected_measures = intersect_measures(lifetimes, left_truncations)
@@ -199,7 +201,7 @@ class MeasuresFactory(ABC):
 
     @staticmethod
     def _compatible_with_right_truncations(
-        lifetimes: Measures, right_truncations: Measures
+        lifetimes: LifetimeData, right_truncations: LifetimeData
     ) -> None:
         if len(lifetimes) != 0 and len(right_truncations) != 0:
             intersected_measures = intersect_measures(lifetimes, right_truncations)
@@ -221,7 +223,14 @@ class MeasuresFactory(ABC):
 
     def __call__(
         self,
-    ) -> tuple[Measures, Measures, Measures, Measures, Measures, Measures]:
+    ) -> tuple[
+        LifetimeData,
+        LifetimeData,
+        LifetimeData,
+        LifetimeData,
+        LifetimeData,
+        LifetimeData,
+    ]:
         result = (
             self.get_complete(),
             self.get_left_censorships(),
@@ -232,72 +241,76 @@ class MeasuresFactory(ABC):
         )
         try:
             for lifetimes in result[:4]:
-                MeasuresFactory._compatible_with_left_truncations(lifetimes, result[4])
-                MeasuresFactory._compatible_with_right_truncations(lifetimes, result[5])
+                LifetimeDataFactory._compatible_with_left_truncations(
+                    lifetimes, result[4]
+                )
+                LifetimeDataFactory._compatible_with_right_truncations(
+                    lifetimes, result[5]
+                )
         except Exception as error:
             raise ValueError("Incorrect input measures") from error
         return result
 
 
-class MeasuresFactoryFrom1D(MeasuresFactory):
+class LifetimeDataFactoryFrom1D(LifetimeDataFactory):
     """
     Concrete implementation of MeasuresFactory for 1D encoding
     """
 
-    def get_complete(self) -> Measures:
+    def get_complete(self) -> LifetimeData:
         index = np.where(np.logical_and(~self.lc_indicators, ~self.rc_indicators))[0]
         values = self.time[index]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
-    def get_left_censorships(self) -> Measures:
+    def get_left_censorships(self) -> LifetimeData:
         index = np.where(self.lc_indicators)[0]
         values = self.time[index]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
-    def get_right_censorships(self) -> Measures:
+    def get_right_censorships(self) -> LifetimeData:
         index = np.where(self.rc_indicators)[0]
         values = self.time[index]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
-    def get_interval_censorships(self) -> Measures:
-        return Measures(np.empty((0, 2)), np.empty((0,), dtype=np.int64))
+    def get_interval_censorships(self) -> LifetimeData:
+        return LifetimeData(np.empty((0, 2)), np.empty((0,), dtype=np.int64))
 
-    def get_left_truncations(self) -> Measures:
+    def get_left_truncations(self) -> LifetimeData:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
-    def get_right_truncations(self) -> Measures:
+    def get_right_truncations(self) -> LifetimeData:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
 
-class MeasuresFactoryFrom2D(MeasuresFactory):
+class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
     """
     Concrete implementation of MeasuresFactory for 2D encoding
     """
 
-    def get_complete(self) -> Measures:
+    def get_complete(self) -> LifetimeData:
         index = np.where(self.time[:, 0] == self.time[:, 1])[0]
         values = self.time[index, 0, None]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
     def get_left_censorships(
         self,
-    ) -> Measures:
+    ) -> LifetimeData:
         index = np.where(self.time[:, 0] == 0.0)[0]
         values = self.time[index, 1, None]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
     def get_right_censorships(
         self,
-    ) -> Measures:
+    ) -> LifetimeData:
         index = np.where(self.time[:, 1] == np.inf)[0]
         values = self.time[index, 0, None]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
-    def get_interval_censorships(self) -> Measures:
+    def get_interval_censorships(self) -> LifetimeData:
         index = np.where(
             np.logical_and(
                 np.logical_and(
@@ -308,7 +321,7 @@ class MeasuresFactoryFrom2D(MeasuresFactory):
             )
         )[0]
         values = self.time[index]
-        measures = Measures(values, index)
+        measures = LifetimeData(values, index)
         if len(measures) != 0:
             if np.any(measures.values[:, 0] >= measures.values[:, 1]):
                 raise ValueError(
@@ -316,12 +329,12 @@ class MeasuresFactoryFrom2D(MeasuresFactory):
                 )
         return measures
 
-    def get_left_truncations(self) -> Measures:
+    def get_left_truncations(self) -> LifetimeData:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
-        return Measures(values, index)
+        return LifetimeData(values, index)
 
-    def get_right_truncations(self) -> Measures:
+    def get_right_truncations(self) -> LifetimeData:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        return Measures(values, index)
+        return LifetimeData(values, index)
