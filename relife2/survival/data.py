@@ -63,7 +63,7 @@ class LifetimeData:
         return len(self.values)
 
 
-def intersect_measures(*lifetime_data: LifetimeData) -> LifetimeData:
+def intersect_lifetime_data(*lifetime_data: LifetimeData) -> LifetimeData:
     """
     Args:
         *lifetime_data: Measures object.s containing values of shape (n1, p1), (n2, p2), etc.
@@ -73,10 +73,10 @@ def intersect_measures(*lifetime_data: LifetimeData) -> LifetimeData:
         is of shape (N, p1 + p2 + ...).
 
     Examples:
-        >>> measures_1 = LifetimeData(values = np.array([[1], [2]]), unit_ids = np.array([3, 10]))
-        >>> measures_2 = LifetimeData(values = np.array([[3], [5]]), unit_ids = np.array([10, 2]))
-        >>> intersect_measures(measures_1, measures_2)
-        Measures(values=array([[2, 3]]), unit_ids=array([10]))
+        >>> lifetime_data_1 = LifetimeData(values = np.array([[1], [2]]), unit_ids = np.array([3, 10]))
+        >>> lifetime_data_2 = LifetimeData(values = np.array([[3], [5]]), unit_ids = np.array([10, 2]))
+        >>> intersect_lifetime_data(lifetime_data_1, lifetime_data_2)
+        LifetimeData(values=array([[2, 3]]), unit_ids=array([10]))
     """
 
     inter_ids = np.array(
@@ -182,7 +182,7 @@ class LifetimeDataFactory(ABC):
         lifetimes: LifetimeData, left_truncations: LifetimeData
     ) -> None:
         if len(lifetimes) != 0 and len(left_truncations) != 0:
-            intersected_measures = intersect_measures(lifetimes, left_truncations)
+            intersected_measures = intersect_lifetime_data(lifetimes, left_truncations)
             if len(intersected_measures) != 0:
                 if np.any(
                     np.min(
@@ -204,7 +204,7 @@ class LifetimeDataFactory(ABC):
         lifetimes: LifetimeData, right_truncations: LifetimeData
     ) -> None:
         if len(lifetimes) != 0 and len(right_truncations) != 0:
-            intersected_measures = intersect_measures(lifetimes, right_truncations)
+            intersected_measures = intersect_lifetime_data(lifetimes, right_truncations)
             if len(intersected_measures) != 0:
                 if np.any(
                     np.max(

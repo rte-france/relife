@@ -6,7 +6,7 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -51,6 +51,9 @@ class ExponentialFunctions(DistributionFunctions):
 
     def jac_chf(self, time: FloatArray) -> FloatArray:
         return np.ones((time.size, 1)) * time
+
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return np.zeros_like(time)
 
 
 class WeibullFunctions(DistributionFunctions):
@@ -113,6 +116,14 @@ class WeibullFunctions(DistributionFunctions):
             )
         )
 
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return (
+            self.params.shape
+            * (self.params.shape - 1)
+            * self.params.rate**2
+            * (self.params.rate * time) ** (self.params.shape - 2)
+        )
+
 
 class GompertzFunctions(DistributionFunctions):
     """
@@ -160,6 +171,9 @@ class GompertzFunctions(DistributionFunctions):
                 self.params.shape * time * np.exp(self.params.rate * time),
             )
         )
+
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return self.params.shape * self.params.rate**2 * np.exp(self.params.rate * time)
 
 
 class GammaFunctions(DistributionFunctions):
@@ -237,6 +251,11 @@ class GammaFunctions(DistributionFunctions):
                 - self._jac_uppergamma_shape(x) / self._uppergamma(x),
                 x ** (self.params.shape - 1) * time * np.exp(-x) / self._uppergamma(x),
             )
+        )
+
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return self.hf(time) * (
+            (self.params.shape - 1) / time - self.params.rate + self.hf(time)
         )
 
 
@@ -319,4 +338,14 @@ class LogLogisticFunctions(DistributionFunctions):
                 (x**self.params.shape / (1 + x**self.params.shape))
                 * (self.params.shape / self.params.rate),
             )
+        )
+
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        x = self.params.rate * time
+        return (
+            self.params.shape
+            * self.params.rate**2
+            * x ** (self.params.shape - 2)
+            * (self.params.shape - 1 - x**self.params.shape)
+            / (1 + x**self.params.shape) ** 2
         )
