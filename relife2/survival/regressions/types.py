@@ -36,88 +36,103 @@ class Regression(ABC):
     """
 
     @abstractmethod
-    def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+    def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            probability (Union[float, ArrayLike, FloatArray]): BLABLABLABLA
+            probability (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def hf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def chf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def cdf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+    def pdf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            probability (Union[float, ArrayLike, FloatArray]): BLABLABLABLA
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def ppf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
 
     @abstractmethod
-    def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def mrl(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
-            time (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
 
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
@@ -125,11 +140,12 @@ class Regression(ABC):
 
     @abstractmethod
     def rvs(
-        self, size: Optional[int] = 1, seed: Optional[int] = None
+        self, covar: ArrayLike, size: Optional[int] = 1, seed: Optional[int] = None
     ) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
+            covar (ArrayLike): BLABLABLABLA
             size (Optional[int]): BLABLABLABLA
             seed (Optional[int]): BLABLABLABLA
 
@@ -138,27 +154,33 @@ class Regression(ABC):
         """
 
     @abstractmethod
-    def mean(self) -> float:
+    def mean(self, covar: ArrayLike) -> float:
         """
         BLABLABLABLA
+        Args:
+            covar (ArrayLike): BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
         """
 
     @abstractmethod
-    def var(self) -> float:
+    def var(self, covar: ArrayLike) -> float:
         """
         BLABLABLABLA
+        Args:
+            covar (ArrayLike): BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
         """
 
     @abstractmethod
-    def median(self) -> float:
+    def median(self, covar: ArrayLike) -> float:
         """
         BLABLABLABLA
+        Args:
+            covar (ArrayLike): BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
@@ -168,6 +190,7 @@ class Regression(ABC):
     def fit(
         self,
         time: ArrayLike,
+        covar: ArrayLike,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
         inplace: bool = True,
@@ -176,11 +199,12 @@ class Regression(ABC):
         """
         BLABLABLABLA
         Args:
-            time (Union[ArrayLike, FloatArray]):
+            time (ArrayLike):
+            covar (ArrayLike):
+            entry (Optional[ArrayLike]):
+            departure (Optional[ArrayLike]):
             inplace ():
-            entry (Optional[Union[ArrayLike, FloatArray]]):
-            departure (Optional[Union[ArrayLike, FloatArray]]):
-            **indicators (Union[ArrayLike, FloatArray]):
+            **indicators (ArrayLike):
 
         Returns:
             Parameters: optimum parameters found
@@ -360,7 +384,7 @@ class RegressionFunctions(ABC):
         )
         return ma.filled(mu, 0)
 
-    def moment(self, n: int) -> FloatArray:
+    def moment(self, n: int) -> float:
         """
         BLABLABLA
         Args:
@@ -493,6 +517,7 @@ class RegressionLikelihood(ABC):
         self,
         functions: RegressionFunctions,
         time: FloatArray,
+        covar: FloatArray,
         entry: Optional[FloatArray] = None,
         departure: Optional[FloatArray] = None,
         **indicators: BoolArray,
@@ -512,6 +537,7 @@ class RegressionLikelihood(ABC):
             self.left_truncations,
             self.right_truncations,
         ) = factory()
+        self.covar = covar
 
     @abstractmethod
     def negative_log_likelihood(self) -> float:

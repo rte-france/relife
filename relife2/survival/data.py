@@ -8,7 +8,6 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -53,14 +52,28 @@ class LifetimeData:
 
     def __post_init__(self):
         if self.values.ndim != 2:
-            raise ValueError("Invalid Measures values number of dimensions")
+            raise ValueError("Invalid LifetimeData values number of dimensions")
         if self.unit_ids.ndim != 1:
-            raise ValueError("Invalid Measures unit_ids number of dimensions")
+            raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
         if len(self.values) != len(self.unit_ids):
             raise ValueError("Incompatible Measures values and unit_ids")
 
     def __len__(self) -> int:
         return len(self.values)
+
+
+@dataclass(frozen=True)
+class ObservedLifetimes:
+    complete_lifetimes: LifetimeData
+    left_censorships: LifetimeData
+    right_censorships: LifetimeData
+    interval_censorships: LifetimeData
+
+
+@dataclass(frozen=True)
+class Truncations:
+    left_truncations: LifetimeData
+    right_truncations: LifetimeData
 
 
 def intersect_lifetime_data(*lifetime_data: LifetimeData) -> LifetimeData:
@@ -96,26 +109,18 @@ class LifetimeDataFactory(ABC):
     def __init__(
         self,
         time: FloatArray,
-        entry: Optional[FloatArray] = None,
-        departure: Optional[FloatArray] = None,
-        **indicators: BoolArray,
+        **kwargs: FloatArray,
     ):
-        if entry is None:
-            entry = np.zeros((len(time), 1))
-        if departure is None:
-            departure = np.ones((len(time), 1)) * np.inf
-
-        print(indicators)
-        self.lc_indicators = indicators.get(
-            "lc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
-        )
-        self.rc_indicators = indicators.get(
-            "rc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
-        )
 
         self.time = time
-        self.entry = entry
-        self.departure = departure
+        self.entry = kwargs.get("entry", np.zeros((len(time), 1)))
+        self.departure = kwargs.get("departure", np.ones((len(time), 1)) * np.inf)
+        self.lc_indicators = kwargs.get(
+            "lc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
+        )
+        self.rc_indicators = kwargs.get(
+            "rc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
+        )
         self._check_format()
 
         if np.any(np.logical_and(self.lc_indicators, self.rc_indicators)) is True:
@@ -224,32 +229,31 @@ class LifetimeDataFactory(ABC):
     def __call__(
         self,
     ) -> tuple[
-        LifetimeData,
-        LifetimeData,
-        LifetimeData,
-        LifetimeData,
-        LifetimeData,
-        LifetimeData,
+        ObservedLifetimes,
+        Truncations,
     ]:
-        result = (
+        observed_lifetimes = ObservedLifetimes(
             self.get_complete(),
             self.get_left_censorships(),
             self.get_right_censorships(),
             self.get_interval_censorships(),
+        )
+        truncations = Truncations(
             self.get_left_truncations(),
             self.get_right_truncations(),
         )
+
         try:
-            for lifetimes in result[:4]:
+            for lifetimes in observed_lifetimes.__annotations__.values():
                 LifetimeDataFactory._compatible_with_left_truncations(
-                    lifetimes, result[4]
+                    lifetimes, truncations.left_truncations
                 )
                 LifetimeDataFactory._compatible_with_right_truncations(
-                    lifetimes, result[5]
+                    lifetimes, truncations.right_truncations
                 )
         except Exception as error:
-            raise ValueError("Incorrect input measures") from error
-        return result
+            raise ValueError("Incorrect input lifetimes") from error
+        return observed_lifetimes, truncations
 
 
 class LifetimeDataFactoryFrom1D(LifetimeDataFactory):
