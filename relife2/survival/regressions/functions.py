@@ -9,7 +9,6 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 from typing import Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
 
 from relife2.survival.distributions.types import DistributionFunctions
 from relife2.survival.regressions.types import (
@@ -37,7 +36,7 @@ class ProportionalHazardFunctions(RegressionFunctions):
     """
 
     def __init__(
-        self, baseline: DistributionFunctions, beta: Optional[ArrayLike] = None
+        self, baseline: DistributionFunctions, beta: Optional[FloatArray] = None
     ):
         super().__init__(baseline)
         self._covar_effect = ProportionalHazardEffect(beta)
@@ -95,7 +94,7 @@ class AFTFunctions(RegressionFunctions):
     """
 
     def __init__(
-        self, baseline: DistributionFunctions, beta: Optional[ArrayLike] = None
+        self, baseline: DistributionFunctions, beta: Optional[FloatArray] = None
     ):
         super().__init__(baseline)
         self._covar_effect = AFTEffect(beta)

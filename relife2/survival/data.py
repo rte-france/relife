@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -64,16 +65,20 @@ class LifetimeData:
 
 @dataclass(frozen=True)
 class ObservedLifetimes:
-    complete_lifetimes: LifetimeData
-    left_censorships: LifetimeData
-    right_censorships: LifetimeData
-    interval_censorships: LifetimeData
+    """BLABLABLA"""
+
+    complete: LifetimeData
+    left_censored: LifetimeData
+    right_censored: LifetimeData
+    interval_censored: LifetimeData
 
 
 @dataclass(frozen=True)
 class Truncations:
-    left_truncations: LifetimeData
-    right_truncations: LifetimeData
+    """BLABLABLA"""
+
+    left: LifetimeData
+    right: LifetimeData
 
 
 def intersect_lifetime_data(*lifetime_data: LifetimeData) -> LifetimeData:
@@ -109,18 +114,29 @@ class LifetimeDataFactory(ABC):
     def __init__(
         self,
         time: FloatArray,
-        **kwargs: FloatArray,
+        entry: Optional[FloatArray] = None,
+        departure: Optional[FloatArray] = None,
+        lc_indicators: Optional[BoolArray] = None,
+        rc_indicators: Optional[BoolArray] = None,
     ):
 
+        if entry is None:
+            entry = np.zeros((len(time), 1))
+
+        if departure is None:
+            departure = np.ones((len(time), 1)) * np.inf
+
+        if lc_indicators is None:
+            lc_indicators = np.zeros_like(time).astype(np.bool_)
+
+        if rc_indicators is None:
+            rc_indicators = np.zeros_like(time).astype(np.bool_)
+
         self.time = time
-        self.entry = kwargs.get("entry", np.zeros((len(time), 1)))
-        self.departure = kwargs.get("departure", np.ones((len(time), 1)) * np.inf)
-        self.lc_indicators = kwargs.get(
-            "lc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
-        )
-        self.rc_indicators = kwargs.get(
-            "rc_indicators", np.zeros((len(time), 1), dtype=np.bool_)
-        )
+        self.entry = entry
+        self.departure = departure
+        self.lc_indicators = lc_indicators
+        self.rc_indicators = rc_indicators
         self._check_format()
 
         if np.any(np.logical_and(self.lc_indicators, self.rc_indicators)) is True:
@@ -246,10 +262,10 @@ class LifetimeDataFactory(ABC):
         try:
             for lifetimes in observed_lifetimes.__annotations__.values():
                 LifetimeDataFactory._compatible_with_left_truncations(
-                    lifetimes, truncations.left_truncations
+                    lifetimes, truncations.left
                 )
                 LifetimeDataFactory._compatible_with_right_truncations(
-                    lifetimes, truncations.right_truncations
+                    lifetimes, truncations.right
                 )
         except Exception as error:
             raise ValueError("Incorrect input lifetimes") from error

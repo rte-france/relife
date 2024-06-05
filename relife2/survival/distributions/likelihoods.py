@@ -28,13 +28,15 @@ class GenericDistributionLikelihood(DistributionLikelihood):
         self,
     ) -> float:
 
-        d_contrib = -np.sum(np.log(self.functions.hf(self.complete_lifetimes.values)))
+        d_contrib = -np.sum(
+            np.log(self.functions.hf(self.observed_lifetimes.complete.values))
+        )
         rc_contrib = np.sum(
             self.functions.chf(
                 np.concatenate(
                     (
-                        self.complete_lifetimes.values,
-                        self.right_censorships.values,
+                        self.observed_lifetimes.complete.values,
+                        self.observed_lifetimes.right_censored.values,
                     ),
                     axis=0,
                 ),
@@ -44,12 +46,12 @@ class GenericDistributionLikelihood(DistributionLikelihood):
             np.log(
                 -np.expm1(
                     -self.functions.chf(
-                        self.left_censorships.values,
+                        self.observed_lifetimes.left_censored.values,
                     )
                 )
             )
         )
-        lt_contrib = -np.sum(self.functions.chf(self.left_truncations.values))
+        lt_contrib = -np.sum(self.functions.chf(self.truncations.left.values))
         return d_contrib + rc_contrib + lc_contrib + lt_contrib
 
     # relife/parametric.ParametricHazardFunction
@@ -58,8 +60,8 @@ class GenericDistributionLikelihood(DistributionLikelihood):
     ) -> FloatArray:
 
         jac_d_contrib = -np.sum(
-            self.functions.jac_hf(self.complete_lifetimes.values)
-            / self.functions.hf(self.complete_lifetimes.values),
+            self.functions.jac_hf(self.observed_lifetimes.complete.values)
+            / self.functions.hf(self.observed_lifetimes.complete.values),
             axis=0,
         )
 
@@ -67,8 +69,8 @@ class GenericDistributionLikelihood(DistributionLikelihood):
             self.functions.jac_chf(
                 np.concatenate(
                     (
-                        self.complete_lifetimes.values,
-                        self.right_censorships.values,
+                        self.observed_lifetimes.complete.values,
+                        self.observed_lifetimes.right_censored.values,
                     ),
                     axis=0,
                 ),
@@ -77,13 +79,15 @@ class GenericDistributionLikelihood(DistributionLikelihood):
         )
 
         jac_lc_contrib = -np.sum(
-            self.functions.jac_chf(self.left_censorships.values)
-            / np.expm1(self.functions.chf(self.left_censorships.values)),
+            self.functions.jac_chf(self.observed_lifetimes.left_censored.values)
+            / np.expm1(
+                self.functions.chf(self.observed_lifetimes.left_censored.values)
+            ),
             axis=0,
         )
 
         jac_lt_contrib = -np.sum(
-            self.functions.jac_chf(self.left_truncations.values),
+            self.functions.jac_chf(self.truncations.left.values),
             axis=0,
         )
 

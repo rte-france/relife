@@ -15,11 +15,7 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import (
-    LifetimeDataFactory,
-    LifetimeDataFactoryFrom1D,
-    LifetimeDataFactoryFrom2D,
-)
+from relife2.survival.data import ObservedLifetimes, Truncations
 from relife2.survival.distributions.types import DistributionFunctions
 from relife2.survival.integrations import ls_integrate
 from relife2.survival.parameters import Parameters
@@ -34,6 +30,15 @@ class Regression(ABC):
     Client object used to create instance of regression model
     Object used as facade design pattern
     """
+
+    @property
+    @abstractmethod
+    def params(self) -> Parameters:
+        """
+        BLABLABLA
+        Returns:
+            BLABLABLABLA
+        """
 
     @abstractmethod
     def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -105,7 +110,7 @@ class Regression(ABC):
         """
         BLABLABLABLA
         Args:
-            time (ArrayLike): BLABLABLABLA
+            probability (ArrayLike): BLABLABLABLA
             covar (ArrayLike): BLABLABLABLA
 
 
@@ -193,8 +198,9 @@ class Regression(ABC):
         covar: ArrayLike,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
+        lc_indicators: Optional[ArrayLike] = None,
+        rc_indicators: Optional[ArrayLike] = None,
         inplace: bool = True,
-        **indicators: ArrayLike,
     ) -> Parameters:
         """
         BLABLABLABLA
@@ -203,8 +209,9 @@ class Regression(ABC):
             covar (ArrayLike):
             entry (Optional[ArrayLike]):
             departure (Optional[ArrayLike]):
-            inplace ():
-            **indicators (ArrayLike):
+            lc_indicators (Optional[ArrayLike]):
+            rc_indicators (Optional[ArrayLike]):
+            inplace (bool): (default is True)
 
         Returns:
             Parameters: optimum parameters found
@@ -216,7 +223,7 @@ class CovarEffect(ABC):
     Object that computes covariates effect functions
     """
 
-    def __init__(self, param_values: Optional[ArrayLike] = None):
+    def __init__(self, param_values: Optional[FloatArray] = None):
         self.params = Parameters()
         if param_values is not None:
             self.params.append(
@@ -515,28 +522,15 @@ class RegressionLikelihood(ABC):
 
     def __init__(
         self,
-        functions: RegressionFunctions,
-        time: FloatArray,
+        functions: DistributionFunctions,
+        observed_lifetimes: ObservedLifetimes,
+        truncations: Truncations,
         covar: FloatArray,
-        entry: Optional[FloatArray] = None,
-        departure: Optional[FloatArray] = None,
-        **indicators: BoolArray,
     ):
 
         self.functions = copy.copy(functions)
-        factory: LifetimeDataFactory
-        if time.shape[-1] == 1:
-            factory = LifetimeDataFactoryFrom1D(time, entry, departure, **indicators)
-        else:
-            factory = LifetimeDataFactoryFrom2D(time, entry, departure, **indicators)
-        (
-            self.complete_lifetimes,
-            self.left_censorships,
-            self.right_censorships,
-            self.interval_censorship,
-            self.left_truncations,
-            self.right_truncations,
-        ) = factory()
+        self.observed_lifetimes = observed_lifetimes
+        self.truncations = truncations
         self.covar = covar
 
     @abstractmethod

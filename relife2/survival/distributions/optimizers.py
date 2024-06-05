@@ -30,9 +30,9 @@ class GenericDistributionOptimizer(DistributionOptimizer):
         param0[-1] = 1 / np.median(
             np.concatenate(
                 [
-                    self.likelihood.complete_lifetimes.values,
-                    self.likelihood.left_censorships.values,
-                    self.likelihood.right_censorships.values,
+                    self.likelihood.observed_lifetimes.complete.values,
+                    self.likelihood.observed_lifetimes.left_censored.values,
+                    self.likelihood.observed_lifetimes.right_censored.values,
                 ]
             )
         )
@@ -107,9 +107,9 @@ class GompertzOptimizer(DistributionOptimizer):
             * np.std(
                 np.concatenate(
                     (
-                        self.likelihood.complete_lifetimes.values,
-                        self.likelihood.left_censorships.values,
-                        self.likelihood.right_censorships.values,
+                        self.likelihood.observed_lifetimes.complete.values,
+                        self.likelihood.observed_lifetimes.left_censored.values,
+                        self.likelihood.observed_lifetimes.right_censored.values,
                     ),
                     axis=0,
                 )
@@ -121,9 +121,9 @@ class GompertzOptimizer(DistributionOptimizer):
             * np.mean(
                 np.concatenate(
                     (
-                        self.likelihood.complete_lifetimes.values,
-                        self.likelihood.left_censorships.values,
-                        self.likelihood.right_censorships.values,
+                        self.likelihood.observed_lifetimes.complete.values,
+                        self.likelihood.observed_lifetimes.left_censored.values,
+                        self.likelihood.observed_lifetimes.right_censored.values,
                     ),
                     axis=0,
                 )

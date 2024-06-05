@@ -40,6 +40,7 @@ profile = 'black'
 
 [tool.pylint.format]
 max-line-length = "88"
+max-args = 10
 disable = """
     line-too-long,
     E1101,
