@@ -6,20 +6,17 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from typing import Callable, Union
+from typing import Callable, Any
 
 import numpy as np
 from numpy.typing import NDArray
-
-from relife2.survival.distributions.types import DistributionFunctions
-from relife2.survival.regressions.types import RegressionFunctions
 
 FloatArray = NDArray[np.float64]
 
 
 def ls_integrate(
     func: Callable,
-    pf: Union[DistributionFunctions, RegressionFunctions],
+    pf: Any,
     a: np.ndarray,
     b: np.ndarray,
     q0: float = 1e-4,

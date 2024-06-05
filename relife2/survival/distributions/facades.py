@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from relife2.survival.data import (
     LifetimeDataFactory,
@@ -32,8 +32,10 @@ from relife2.survival.distributions.optimizers import (
     GenericDistributionOptimizer,
     GompertzOptimizer,
 )
-from relife2.survival.distributions.types import Distribution, FloatArray
+from relife2.survival.distributions.types import Distribution
 from relife2.survival.parameters import Parameters
+
+FloatArray = NDArray[np.float64]
 
 
 class Exponential(Distribution):
