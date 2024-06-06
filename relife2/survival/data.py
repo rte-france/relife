@@ -48,7 +48,6 @@ class LifetimeData:
     Object that encapsulates lifetime data values and corresponding units index
     """
 
-    name: str
     values: FloatArray
     unit_ids: IntArray
 
@@ -58,13 +57,10 @@ class LifetimeData:
         if self.unit_ids.ndim != 1:
             raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
         if len(self.values) != len(self.unit_ids):
-            raise ValueError("Incompatible Measures values and unit_ids")
+            raise ValueError("Incompatible lifetime values and unit_ids")
 
     def __len__(self) -> int:
         return len(self.values)
-
-    def __repr__(self):
-        return f"{self.name}=(values={self.values}, unit_ids={self.unit_ids})"
 
 
 @dataclass(frozen=True)
@@ -91,7 +87,7 @@ def intersect_lifetimes(*lifetimes: LifetimeData) -> LifetimeData:
         *lifetimes: LifetimeData object.s containing values of shape (n1, p1), (n2, p2), etc.
 
     Returns:
-        LifetimeData: One Measures object where values are concatanation of common units values. The result
+        LifetimeData: One LifetimeData object where values are concatanation of common units values. The result
         is of shape (N, p1 + p2 + ...).
 
     Examples:
@@ -110,14 +106,12 @@ def intersect_lifetimes(*lifetimes: LifetimeData) -> LifetimeData:
 
 def lifetimes_compatibility(
     observed_lifetimes: ObservedLifetimes, truncations: Truncations
-):
+) -> None:
     """
+    Check the compatibility between each observed lifetimes and truncation values
     Args:
         observed_lifetimes ():
         truncations ():
-
-    Returns:
-
     """
 
     for attr_name in [
@@ -142,8 +136,8 @@ def lifetimes_compatibility(
                     < left_truncated_lifetimes.values[:, lifetimes.values.shape[-1] :]
                 ):
                     raise ValueError(
-                        f"""
-                        Some lifetimes are under left truncation bounds :
+                        """"
+                        Some lifetimes are under left truncation bounds
                         """
                     )
         if len(truncations.right) != 0 and len(lifetimes) != 0:
@@ -160,15 +154,15 @@ def lifetimes_compatibility(
                     > left_truncated_lifetimes.values[:, lifetimes.values.shape[-1] :]
                 ):
                     raise ValueError(
-                        f"""
-                        Some lifetimes are above right truncation bounds :
+                        """
+                        Some lifetimes are above right truncation bounds
                         """
                     )
 
 
 class LifetimeDataFactory(ABC):
     """
-    Factory method of Measures object
+    Factory method of ObservedLifetimes and Truncations
     """
 
     def __init__(
@@ -187,10 +181,10 @@ class LifetimeDataFactory(ABC):
             departure = np.ones((len(time), 1)) * np.inf
 
         if lc_indicators is None:
-            lc_indicators = np.zeros_like(time).astype(np.bool_)
+            lc_indicators = np.zeros((len(time), 1)).astype(np.bool_)
 
         if rc_indicators is None:
-            rc_indicators = np.zeros_like(time).astype(np.bool_)
+            rc_indicators = np.zeros((len(time), 1)).astype(np.bool_)
 
         self.time = time
         self.entry = entry
@@ -282,63 +276,63 @@ class LifetimeDataFactory(ABC):
 
 class LifetimeDataFactoryFrom1D(LifetimeDataFactory):
     """
-    Concrete implementation of MeasuresFactory for 1D encoding
+    Concrete implementation of LifetimeDataFactory for 1D encoding
     """
 
     def get_complete(self) -> LifetimeData:
+        self.lc_indicators: BoolArray
+        self.rc_indicators: BoolArray
         index = np.where(np.logical_and(~self.lc_indicators, ~self.rc_indicators))[0]
         values = self.time[index]
-        return LifetimeData("complete", values, index)
+        return LifetimeData(values, index)
 
     def get_left_censorships(self) -> LifetimeData:
         index = np.where(self.lc_indicators)[0]
         values = self.time[index]
-        return LifetimeData("left_censored", values, index)
+        return LifetimeData(values, index)
 
     def get_right_censorships(self) -> LifetimeData:
         index = np.where(self.rc_indicators)[0]
         values = self.time[index]
-        return LifetimeData("right_censored", values, index)
+        return LifetimeData(values, index)
 
     def get_interval_censorships(self) -> LifetimeData:
-        return LifetimeData(
-            "interval_censored", np.empty((0, 2)), np.empty((0,), dtype=np.int64)
-        )
+        return LifetimeData(np.empty((0, 2)), np.empty((0,), dtype=np.int64))
 
     def get_left_truncations(self) -> LifetimeData:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
-        return LifetimeData("left_truncations", values, index)
+        return LifetimeData(values, index)
 
     def get_right_truncations(self) -> LifetimeData:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        return LifetimeData("right_truncations", values, index)
+        return LifetimeData(values, index)
 
 
 class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
     """
-    Concrete implementation of MeasuresFactory for 2D encoding
+    Concrete implementation of LifetimeDataFactory for 2D encoding
     """
 
     def get_complete(self) -> LifetimeData:
         index = np.where(self.time[:, 0] == self.time[:, 1])[0]
         values = self.time[index, 0, None]
-        return LifetimeData("complete", values, index)
+        return LifetimeData(values, index)
 
     def get_left_censorships(
         self,
     ) -> LifetimeData:
         index = np.where(self.time[:, 0] == 0.0)[0]
         values = self.time[index, 1, None]
-        return LifetimeData("left_censored", values, index)
+        return LifetimeData(values, index)
 
     def get_right_censorships(
         self,
     ) -> LifetimeData:
         index = np.where(self.time[:, 1] == np.inf)[0]
         values = self.time[index, 0, None]
-        return LifetimeData("right_censored", values, index)
+        return LifetimeData(values, index)
 
     def get_interval_censorships(self) -> LifetimeData:
         index = np.where(
@@ -351,7 +345,7 @@ class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
             )
         )[0]
         values = self.time[index]
-        lifetimes = LifetimeData("interval_censored", values, index)
+        lifetimes = LifetimeData(values, index)
         if len(lifetimes) != 0:
             if np.any(lifetimes.values[:, 0] >= lifetimes.values[:, 1]):
                 raise ValueError(
@@ -362,9 +356,9 @@ class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
     def get_left_truncations(self) -> LifetimeData:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
-        return LifetimeData("left_truncations", values, index)
+        return LifetimeData(values, index)
 
     def get_right_truncations(self) -> LifetimeData:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        return LifetimeData("right_truncations", values, index)
+        return LifetimeData(values, index)

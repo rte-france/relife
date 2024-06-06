@@ -17,7 +17,7 @@ from scipy.optimize import Bounds
 
 from relife2.survival.data import ObservedLifetimes, Truncations
 from relife2.survival.distributions.types import DistributionFunctions
-from relife2.survival.integrations import ls_integrate
+from relife2.survival.integrations import gauss_legendre, quad_laguerre
 from relife2.survival.parameters import Parameters
 
 IntArray = NDArray[np.int64]
@@ -380,43 +380,76 @@ class RegressionFunctions(ABC):
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
-        ub = self.support_upper_bound
-        mask = time >= ub
-        if np.any(mask):
-            time, ub = np.broadcast_arrays(time, ub)
-            time = ma.MaskedArray(time, mask)
-            ub = ma.MaskedArray(ub, mask)
-        mu = ls_integrate(lambda x: x - time, self, time, ub, ndim=1) / self.sf(
-            time, covar
-        )
-        return ma.filled(mu, 0)
 
-    def moment(self, n: int) -> float:
+        time, upper_bound = np.broadcast_arrays(time, self.support_upper_bound)
+        masked_time: ma.MaskedArray = ma.MaskedArray(
+            time, time >= self.support_upper_bound
+        )
+        upper_bound = np.broadcast_to(
+            np.asarray(self.isf(np.array(1e-4), covar)), time.shape
+        )
+
+        masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
+            upper_bound, time >= self.support_upper_bound
+        )
+
+        def integrand(x):
+            return (x - masked_time) * self.pdf(x, covar)
+
+        integration = gauss_legendre(
+            integrand,
+            masked_time,
+            masked_upper_bound,
+            ndim=1,
+        ) + quad_laguerre(
+            integrand,
+            masked_upper_bound,
+            ndim=1,
+        )
+        mrl = integration / self.sf(masked_time, covar)
+        return ma.filled(mrl, 0)
+
+    def moment(self, n: int, covar) -> float:
         """
         BLABLABLA
         Args:
             n (int): BLABLABLA
+            covar (FloatArray):
 
         Returns:
             BLABLABLA
         """
-        return ls_integrate(lambda x: x**n, self, 0, np.inf)
+        upper_bound = self.isf(np.array(1e-4), covar)
 
-    def mean(self) -> float:
+        def integrand(x):
+            return x**n * self.pdf(x, covar)
+
+        return float(
+            gauss_legendre(integrand, np.array(0.0), np.asarray(upper_bound))
+            + quad_laguerre(integrand, np.asarray(upper_bound))
+        )
+
+    def mean(self, covar) -> float:
         """
         BLABLABLABLA
+        Args:
+            covar (FloatArray):
+
         Returns:
             float: BLABLABLABLA
         """
-        return self.moment(1)
+        return self.moment(1, covar)
 
-    def var(self) -> float:
+    def var(self, covar) -> float:
         """
         BLABLABLABLA
+        Args:
+            covar (FloatArray):
+
         Returns:
             float: BLABLABLABLA
         """
-        return self.moment(2) - self.moment(1) ** 2
+        return self.moment(2, covar) - self.moment(1, covar) ** 2
 
     def sf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
         """

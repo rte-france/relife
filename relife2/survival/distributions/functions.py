@@ -187,7 +187,7 @@ class GammaFunctions(DistributionFunctions):
     def _uppergamma(self, x: FloatArray) -> FloatArray:
         return gammaincc(self.params.shape, x) * gamma(self.params.shape)
 
-    def _jac_uppergamma_shape(self, x: np.ndarray) -> np.ndarray:
+    def _jac_uppergamma_shape(self, x: FloatArray) -> FloatArray:
         return shifted_laguerre(
             lambda s: np.log(s) * s ** (self.params.shape - 1),
             x,
