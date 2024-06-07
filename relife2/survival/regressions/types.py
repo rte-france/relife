@@ -223,17 +223,10 @@ class CovarEffect(ABC):
     Object that computes covariates effect functions
     """
 
-    def __init__(self, param_values: Optional[FloatArray] = None):
+    def __init__(self, **beta: Union[float, None]):
         self.params = Parameters()
-        if param_values is not None:
-            self.params.append(
-                Parameters(
-                    **{
-                        f"beta_{i}": value
-                        for i, value in enumerate(np.asarray(param_values))
-                    }
-                )
-            )
+        if len(beta) != 0:
+            self.params.append(Parameters(**beta))
 
     @abstractmethod
     def g(self, covar: FloatArray) -> Union[float, FloatArray]:
@@ -266,19 +259,13 @@ class RegressionFunctions(ABC):
     def __init__(
         self,
         baseline: DistributionFunctions,
+        covar_effect: CovarEffect,
     ):
         self.baseline = copy.deepcopy(baseline)
+        self.covar_effect = copy.deepcopy(covar_effect)
         self.params = Parameters()
         self.params.append(self.baseline.params)
         self.params.append(self.covar_effect.params)
-
-    @property
-    @abstractmethod
-    def covar_effect(self) -> CovarEffect:
-        """
-        Returns:
-            BLABLABLABLA
-        """
 
     @property
     def support_upper_bound(self):

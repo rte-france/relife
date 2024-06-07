@@ -17,6 +17,8 @@ FloatArray = NDArray[np.float64]
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
 
+# pylint: disable=invalid-unary-operand-type
+
 
 def array_factory(obj: ArrayLike) -> FloatArray:
     """

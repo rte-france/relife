@@ -6,7 +6,7 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 
@@ -35,45 +35,38 @@ class ProportionalHazardFunctions(RegressionFunctions):
     BLABLABLABLA
     """
 
-    def __init__(
-        self, baseline: DistributionFunctions, beta: Optional[FloatArray] = None
-    ):
-        super().__init__(baseline)
-        self._covar_effect = ProportionalHazardEffect(beta)
-
-    @property
-    def covar_effect(self) -> CovarEffect:
-        return self._covar_effect
+    def __init__(self, baseline: DistributionFunctions, **beta: Union[float, None]):
+        super().__init__(baseline, ProportionalHazardEffect(**beta))
 
     def hf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        return self._covar_effect.g(covar) * self.baseline.hf(time)
+        return self.covar_effect.g(covar) * self.baseline.hf(time)
 
     def chf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        return self._covar_effect.g(covar) * self.baseline.chf(time)
+        return self.covar_effect.g(covar) * self.baseline.chf(time)
 
     def ichf(
         self, cumulative_hazard_rate: FloatArray, covar: FloatArray
     ) -> Union[float, FloatArray]:
-        return self.baseline.ichf(cumulative_hazard_rate / self._covar_effect.g(covar))
+        return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(covar))
 
     def jac_hf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
         return np.column_stack(
             (
-                self._covar_effect.jac_g(covar) * self.baseline.hf(time),
-                self._covar_effect.g(covar) * self.baseline.jac_hf(time),
+                self.covar_effect.jac_g(covar) * self.baseline.hf(time),
+                self.covar_effect.g(covar) * self.baseline.jac_hf(time),
             )
         )
 
     def jac_chf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
         return np.column_stack(
             (
-                self._covar_effect.jac_g(covar) * self.baseline.chf(time),
-                self._covar_effect.g(covar) * self.baseline.jac_chf(time),
+                self.covar_effect.jac_g(covar) * self.baseline.chf(time),
+                self.covar_effect.g(covar) * self.baseline.jac_chf(time),
             )
         )
 
     def dhf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        return self._covar_effect.g(covar) * self.baseline.dhf(time)
+        return self.covar_effect.g(covar) * self.baseline.dhf(time)
 
 
 class AFTEffect(CovarEffect):
@@ -93,46 +86,39 @@ class AFTFunctions(RegressionFunctions):
     BLABLABLABLA
     """
 
-    def __init__(
-        self, baseline: DistributionFunctions, beta: Optional[FloatArray] = None
-    ):
-        super().__init__(baseline)
-        self._covar_effect = AFTEffect(beta)
-
-    @property
-    def covar_effect(self) -> CovarEffect:
-        return self._covar_effect
+    def __init__(self, baseline: DistributionFunctions, **beta: Union[float, None]):
+        super().__init__(baseline, AFTEffect(**beta))
 
     def hf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        t0 = time / self._covar_effect.g(covar)
-        return self.baseline.hf(t0) / self._covar_effect.g(covar)
+        t0 = time / self.covar_effect.g(covar)
+        return self.baseline.hf(t0) / self.covar_effect.g(covar)
 
     def chf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        t0 = time / self._covar_effect.g(covar)
+        t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0)
 
     def ichf(
         self, cumulative_hazard_rate: FloatArray, covar: FloatArray
     ) -> Union[float, FloatArray]:
-        return self._covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate)
+        return self.covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate)
 
     def jac_hf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        t0 = time / self._covar_effect.g(covar)
+        t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
             (
-                -self._covar_effect.jac_g(covar)
-                / self._covar_effect.g(covar) ** 2
+                -self.covar_effect.jac_g(covar)
+                / self.covar_effect.g(covar) ** 2
                 * (self.baseline.hf(t0) + t0 * self.baseline.dhf(t0)),
-                self.baseline.jac_hf(t0) / self._covar_effect.g(covar),
+                self.baseline.jac_hf(t0) / self.covar_effect.g(covar),
             )
         )
 
     def jac_chf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        t0 = time / self._covar_effect.g(covar)
+        t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
             (
-                -self._covar_effect.jac_g(covar)
-                / self._covar_effect.g(covar)
+                -self.covar_effect.jac_g(covar)
+                / self.covar_effect.g(covar)
                 * t0
                 * self.baseline.hf(t0),
                 self.baseline.jac_chf(t0),
@@ -140,5 +126,5 @@ class AFTFunctions(RegressionFunctions):
         )
 
     def dhf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
-        t0 = time / self._covar_effect.g(covar)
-        return self.baseline.dhf(t0) / self._covar_effect.g(covar) ** 2
+        t0 = time / self.covar_effect.g(covar)
+        return self.baseline.dhf(t0) / self.covar_effect.g(covar) ** 2
