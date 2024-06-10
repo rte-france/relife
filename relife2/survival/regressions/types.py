@@ -224,9 +224,7 @@ class CovarEffect(ABC):
     """
 
     def __init__(self, **beta: Union[float, None]):
-        self.params = Parameters()
-        if len(beta) != 0:
-            self.params.append(Parameters(**beta))
+        self.params = Parameters(**beta)
 
     @abstractmethod
     def g(self, covar: FloatArray) -> Union[float, FloatArray]:
@@ -367,15 +365,12 @@ class RegressionFunctions(ABC):
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
-
-        time, upper_bound = np.broadcast_arrays(time, self.support_upper_bound)
         masked_time: ma.MaskedArray = ma.MaskedArray(
             time, time >= self.support_upper_bound
         )
         upper_bound = np.broadcast_to(
             np.asarray(self.isf(np.array(1e-4), covar)), time.shape
         )
-
         masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
             upper_bound, time >= self.support_upper_bound
         )
@@ -387,11 +382,11 @@ class RegressionFunctions(ABC):
             integrand,
             masked_time,
             masked_upper_bound,
-            ndim=1,
+            ndim=2,
         ) + quad_laguerre(
             integrand,
             masked_upper_bound,
-            ndim=1,
+            ndim=2,
         )
         mrl = integration / self.sf(masked_time, covar)
         return ma.filled(mrl, 0)
@@ -542,7 +537,7 @@ class RegressionLikelihood(ABC):
 
     def __init__(
         self,
-        functions: DistributionFunctions,
+        functions: RegressionFunctions,
         observed_lifetimes: ObservedLifetimes,
         truncations: Truncations,
         covar: FloatArray,

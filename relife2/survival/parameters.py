@@ -40,6 +40,13 @@ class Parameters:
         3.0
         >>> params[2:]
         array([3., 5., 6.])
+        >>> params.update(w1=8, rate=2.)
+        >>> params.values
+        array([2., 2., 3., 8., 6.])
+        >>> params[1:3] = [10., 11.]
+        >>> params.values
+        array([ 2., 10., 11.,  8.,  6.])
+
     """
 
     def __init__(self, **kparam_names: Union[float, None]):
@@ -143,6 +150,19 @@ class Parameters:
         self.indice_to_name.update(
             {indice + len(self): name for indice, name in params.indice_to_name.items()}
         )
+
+    def update(self, **kparams_names: float) -> None:
+        """
+        Args:
+            **kparams_names (float): new parameters values
+        Returns:
+            Update param values of specified param names
+        """
+        for name, value in kparams_names.items():
+            if hasattr(self, name):
+                setattr(self, name, value)
+            else:
+                raise AttributeError(f"Parameters has no attribute {name}")
 
     def __repr__(self):
         class_name = type(self).__name__

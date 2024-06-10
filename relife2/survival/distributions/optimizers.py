@@ -46,15 +46,15 @@ class GenericDistributionOptimizer(DistributionOptimizer):
 
     def _func(
         self,
-        x,
-    ):
+        x: FloatArray,
+    ) -> float:
         self.likelihood.functions.params.values = x
         return self.likelihood.negative_log_likelihood()
 
     def _jac(
         self,
-        x,
-    ):
+        x: FloatArray,
+    ) -> FloatArray:
         self.likelihood.functions.params.values = x
         return self.likelihood.jac_negative_log_likelihood()
 
