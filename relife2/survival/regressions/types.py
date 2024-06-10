@@ -25,199 +25,6 @@ BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class Regression(ABC):
-    """
-    Client object used to create instance of regression model
-    Object used as facade design pattern
-    """
-
-    @property
-    @abstractmethod
-    def params(self) -> Parameters:
-        """
-        BLABLABLA
-        Returns:
-            BLABLABLABLA
-        """
-
-    @abstractmethod
-    def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            probability (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def hf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def chf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def cdf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def pdf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            probability (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def ppf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def mrl(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-            covar (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def rvs(
-        self, covar: ArrayLike, size: Optional[int] = 1, seed: Optional[int] = None
-    ) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            covar (ArrayLike): BLABLABLABLA
-            size (Optional[int]): BLABLABLABLA
-            seed (Optional[int]): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def mean(self, covar: ArrayLike) -> float:
-        """
-        BLABLABLABLA
-        Args:
-            covar (ArrayLike): BLABLABLABLA
-
-        Returns:
-            float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def var(self, covar: ArrayLike) -> float:
-        """
-        BLABLABLABLA
-        Args:
-            covar (ArrayLike): BLABLABLABLA
-
-        Returns:
-            float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def median(self, covar: ArrayLike) -> float:
-        """
-        BLABLABLABLA
-        Args:
-            covar (ArrayLike): BLABLABLABLA
-
-        Returns:
-            float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def fit(
-        self,
-        time: ArrayLike,
-        covar: ArrayLike,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
-        inplace: bool = True,
-    ) -> Parameters:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike):
-            covar (ArrayLike):
-            entry (Optional[ArrayLike]):
-            departure (Optional[ArrayLike]):
-            lc_indicators (Optional[ArrayLike]):
-            rc_indicators (Optional[ArrayLike]):
-            inplace (bool): (default is True)
-
-        Returns:
-            Parameters: optimum parameters found
-        """
-
-
 class CovarEffect(ABC):
     """
     Object that computes covariates effect functions
@@ -598,3 +405,214 @@ class RegressionOptimizer(ABC):
     @abstractmethod
     def fit(self, **kwargs) -> Parameters:
         """Optimize model parameters to maximise likelihood"""
+
+
+class Regression(ABC):
+    """
+    Client object used to create instance of regression model
+    Object used as facade design pattern
+    """
+
+    def __init__(self, functions: RegressionFunctions):
+        self.functions = functions
+
+    @property
+    @abstractmethod
+    def params(self) -> Parameters:
+        """
+        BLABLABLA
+        Returns:
+            BLABLABLABLA
+        """
+
+    @abstractmethod
+    def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            probability (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def hf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def chf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def ichf(
+        self,
+        cumulative_hazard_rate: ArrayLike,
+        covar: ArrayLike,
+    ) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            cumulative_hazard_rate (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def cdf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def pdf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            probability (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def ppf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def mrl(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+            covar (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def rvs(
+        self, covar: ArrayLike, size: Optional[int] = 1, seed: Optional[int] = None
+    ) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            covar (ArrayLike): BLABLABLABLA
+            size (Optional[int]): BLABLABLABLA
+            seed (Optional[int]): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def mean(self, covar: ArrayLike) -> float:
+        """
+        BLABLABLABLA
+        Args:
+            covar (ArrayLike): BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def var(self, covar: ArrayLike) -> float:
+        """
+        BLABLABLABLA
+        Args:
+            covar (ArrayLike): BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def median(self, covar: ArrayLike) -> float:
+        """
+        BLABLABLABLA
+        Args:
+            covar (ArrayLike): BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def fit(
+        self,
+        time: ArrayLike,
+        covar: ArrayLike,
+        entry: Optional[ArrayLike] = None,
+        departure: Optional[ArrayLike] = None,
+        lc_indicators: Optional[ArrayLike] = None,
+        rc_indicators: Optional[ArrayLike] = None,
+        inplace: bool = True,
+    ) -> Parameters:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike):
+            covar (ArrayLike):
+            entry (Optional[ArrayLike]):
+            departure (Optional[ArrayLike]):
+            lc_indicators (Optional[ArrayLike]):
+            rc_indicators (Optional[ArrayLike]):
+            inplace (bool): (default is True)
+
+        Returns:
+            Parameters: optimum parameters found
+        """

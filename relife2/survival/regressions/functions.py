@@ -10,7 +10,6 @@ from typing import Union
 
 import numpy as np
 
-from relife2.survival.distributions.types import DistributionFunctions
 from relife2.survival.regressions.types import (
     CovarEffect,
     FloatArray,
@@ -34,9 +33,6 @@ class ProportionalHazardFunctions(RegressionFunctions):
     """
     BLABLABLABLA
     """
-
-    def __init__(self, baseline: DistributionFunctions, **beta: Union[float, None]):
-        super().__init__(baseline, ProportionalHazardEffect(**beta))
 
     def hf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
         return self.covar_effect.g(covar) * self.baseline.hf(time)
@@ -85,9 +81,6 @@ class AFTFunctions(RegressionFunctions):
     """
     BLABLABLABLA
     """
-
-    def __init__(self, baseline: DistributionFunctions, **beta: Union[float, None]):
-        super().__init__(baseline, AFTEffect(**beta))
 
     def hf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
         t0 = time / self.covar_effect.g(covar)

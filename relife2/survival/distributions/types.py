@@ -22,189 +22,6 @@ BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class Distribution(ABC):
-    """
-    Client object used to create instance of distribution model
-    Object used as facade design pattern
-    """
-
-    @property
-    @abstractmethod
-    def params(self) -> Parameters:
-        """
-        BLABLABLA
-        Returns:
-            BLABLABLABLA
-        """
-
-    @abstractmethod
-    def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            probability (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            probability (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def ichf(
-        self,
-        cumulative_hazard_rate: ArrayLike,
-    ) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            cumulative_hazard_rate (ArrayLike): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def rvs(
-        self, size: Optional[int] = 1, seed: Optional[int] = None
-    ) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            size (Optional[int]): BLABLABLABLA
-            seed (Optional[int]): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def mean(self) -> float:
-        """
-        BLABLABLABLA
-
-        Returns:
-            float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def var(self) -> float:
-        """
-        BLABLABLABLA
-
-        Returns:
-            float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def median(self) -> float:
-        """
-        BLABLABLABLA
-
-        Returns:
-            float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def fit(
-        self,
-        time: ArrayLike,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
-        inplace: bool = True,
-    ) -> Parameters:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike):
-            entry (Optional[ArrayLike]):
-            departure (Optional[ArrayLike]):
-            lc_indicators (Optional[ArrayLike]):
-            rc_indicators (Optional[ArrayLike]):
-            inplace (bool): (default is True)
-
-        Returns:
-            Parameters: optimum parameters found
-        """
-
-
 class DistributionFunctions(ABC):
     """
     Object that computes every probability functions of a distribution model
@@ -471,3 +288,189 @@ class DistributionOptimizer(ABC):
     @abstractmethod
     def fit(self, **kwargs) -> Parameters:
         """Optimize model parameters to maximise likelihood"""
+
+
+class Distribution(ABC):
+    """
+    Client object used to create instance of distribution model
+    Object used as facade design pattern
+    """
+
+    def __init__(self, functions: DistributionFunctions):
+        self.functions = functions
+
+    @property
+    @abstractmethod
+    def params(self) -> Parameters:
+        """
+        BLABLABLA
+        Returns:
+            BLABLABLABLA
+        """
+
+    @abstractmethod
+    def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            probability (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            probability (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def ichf(
+        self,
+        cumulative_hazard_rate: ArrayLike,
+    ) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            cumulative_hazard_rate (ArrayLike): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def rvs(
+        self, size: Optional[int] = 1, seed: Optional[int] = None
+    ) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            size (Optional[int]): BLABLABLABLA
+            seed (Optional[int]): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def mean(self) -> float:
+        """
+        BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def var(self) -> float:
+        """
+        BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def median(self) -> float:
+        """
+        BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def fit(
+        self,
+        time: ArrayLike,
+        entry: Optional[ArrayLike] = None,
+        departure: Optional[ArrayLike] = None,
+        lc_indicators: Optional[ArrayLike] = None,
+        rc_indicators: Optional[ArrayLike] = None,
+        inplace: bool = True,
+    ) -> Parameters:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike):
+            entry (Optional[ArrayLike]):
+            departure (Optional[ArrayLike]):
+            lc_indicators (Optional[ArrayLike]):
+            rc_indicators (Optional[ArrayLike]):
+            inplace (bool): (default is True)
+
+        Returns:
+            Parameters: optimum parameters found
+        """

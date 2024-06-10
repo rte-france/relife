@@ -42,7 +42,7 @@ class Exponential(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, rate: Optional[float] = None):
-        self.functions = ExponentialFunctions(rate=rate)
+        super().__init__(ExponentialFunctions(rate=rate))
 
     @property
     def params(self):
@@ -155,7 +155,7 @@ class Weibull(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        self.functions = WeibullFunctions(shape=shape, rate=rate)
+        super().__init__(WeibullFunctions(shape=shape, rate=rate))
 
     @property
     def params(self):
@@ -268,7 +268,7 @@ class Gompertz(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        self.functions = GompertzFunctions(shape=shape, rate=rate)
+        super().__init__(GompertzFunctions(shape=shape, rate=rate))
 
     @property
     def params(self):
@@ -381,7 +381,7 @@ class Gamma(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        self.functions = GammaFunctions(shape=shape, rate=rate)
+        super().__init__(GammaFunctions(shape=shape, rate=rate))
 
     @property
     def params(self):
@@ -494,7 +494,7 @@ class LogLogistic(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        self.functions = LogLogisticFunctions(shape=shape, rate=rate)
+        super().__init__(LogLogisticFunctions(shape=shape, rate=rate))
 
     @property
     def params(self):
