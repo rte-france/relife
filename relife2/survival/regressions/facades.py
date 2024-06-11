@@ -14,12 +14,7 @@ from typing import Optional, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from relife2.survival.data import (
-    LifetimeDataFactory,
-    LifetimeDataFactoryFrom1D,
-    LifetimeDataFactoryFrom2D,
-    array_factory,
-)
+from relife2.survival.data import array_factory, lifetime_factory_template
 from relife2.survival.distributions.types import Distribution
 from relife2.survival.parameters import Parameters
 from relife2.survival.regressions.functions import (
@@ -29,7 +24,7 @@ from relife2.survival.regressions.functions import (
     ProportionalHazardFunctions,
 )
 from relife2.survival.regressions.likelihoods import GenericRegressionLikelihood
-from relife2.survival.regressions.optimizers import GenericRegressionOptimizer
+from relife2.survival.regressions.optimizers import RegressionLikelihoodOptimizer
 from relife2.survival.regressions.types import Regression
 
 FloatArray = NDArray[np.float64]
@@ -126,47 +121,17 @@ class ProportionalHazard(Regression):
         inplace: bool = True,
     ) -> Parameters:
 
-        time = array_factory(time)
         covar = array_factory(covar)
-
-        if entry is not None:
-            entry = array_factory(entry)
-
-        if departure is not None:
-            departure = array_factory(departure)
-
-        if lc_indicators is not None:
-            lc_indicators = array_factory(lc_indicators).astype(np.bool_)
-
-        if rc_indicators is not None:
-            rc_indicators = array_factory(rc_indicators).astype(np.bool_)
-
-        factory: LifetimeDataFactory
-        if time.shape[-1] == 1:
-            factory = LifetimeDataFactoryFrom1D(
-                time,
-                entry,
-                departure,
-                lc_indicators,
-                rc_indicators,
-            )
-        else:
-            factory = LifetimeDataFactoryFrom2D(
-                time,
-                entry,
-                departure,
-                lc_indicators,
-                rc_indicators,
-            )
-        observed_lifetimes, truncations = factory()
-
+        observed_lifetimes, truncations = lifetime_factory_template(
+            time, entry, departure, lc_indicators, rc_indicators
+        )
         likelihood = GenericRegressionLikelihood(
             self.functions,
             observed_lifetimes,
             truncations,
             covar,
         )
-        optimizer = GenericRegressionOptimizer(likelihood)
+        optimizer = RegressionLikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
             self.functions.params.values = optimum_params.values
@@ -260,39 +225,11 @@ class AFT(Regression):
         inplace: bool = True,
     ) -> Parameters:
 
-        time = array_factory(time)
         covar = array_factory(covar)
 
-        if entry is not None:
-            entry = array_factory(entry)
-
-        if departure is not None:
-            departure = array_factory(departure)
-
-        if lc_indicators is not None:
-            lc_indicators = array_factory(lc_indicators).astype(np.bool_)
-
-        if rc_indicators is not None:
-            rc_indicators = array_factory(rc_indicators).astype(np.bool_)
-
-        factory: LifetimeDataFactory
-        if time.shape[-1] == 1:
-            factory = LifetimeDataFactoryFrom1D(
-                time,
-                entry,
-                departure,
-                lc_indicators,
-                rc_indicators,
-            )
-        else:
-            factory = LifetimeDataFactoryFrom2D(
-                time,
-                entry,
-                departure,
-                lc_indicators,
-                rc_indicators,
-            )
-        observed_lifetimes, truncations = factory()
+        observed_lifetimes, truncations = lifetime_factory_template(
+            time, entry, departure, lc_indicators, rc_indicators
+        )
 
         likelihood = GenericRegressionLikelihood(
             self.functions,
@@ -300,7 +237,7 @@ class AFT(Regression):
             truncations,
             covar,
         )
-        optimizer = GenericRegressionOptimizer(likelihood)
+        optimizer = RegressionLikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
             self.functions.params.values = optimum_params.values

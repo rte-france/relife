@@ -44,7 +44,6 @@ max-args = 10
 disable = """
     line-too-long,
     E1101,
-    duplicate-code,
 """
 ignored-modules = "scipy.special"
 

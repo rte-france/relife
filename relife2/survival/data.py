@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -65,7 +65,7 @@ class LifetimeData:
         return len(self.values)
 
 
-@dataclass(frozen=True)
+@dataclass
 class ObservedLifetimes:
     """BLABLABLA"""
 
@@ -73,6 +73,32 @@ class ObservedLifetimes:
     left_censored: LifetimeData
     right_censored: LifetimeData
     interval_censored: LifetimeData
+
+    def __post_init__(self):
+        self.rc = LifetimeData(
+            np.concatenate(
+                (
+                    self.complete.values,
+                    self.right_censored.values,
+                ),
+                axis=0,
+            ),
+            np.concatenate(self.complete.unit_ids, self.right_censored.unit_ids),
+        )
+        self.rlc = LifetimeData(
+            np.concatenate(
+                [
+                    self.complete.values,
+                    self.left_censored.values,
+                    self.right_censored.values,
+                ]
+            ),
+            np.concatenate(
+                self.complete.unit_ids,
+                self.left_censored.unit_ids,
+                self.right_censored.unit_ids,
+            ),
+        )
 
 
 @dataclass(frozen=True)
@@ -364,3 +390,56 @@ class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
         return LifetimeData(values, index)
+
+
+def lifetime_factory_template(
+    time: ArrayLike,
+    entry: Optional[ArrayLike] = None,
+    departure: Optional[ArrayLike] = None,
+    lc_indicators: Optional[ArrayLike] = None,
+    rc_indicators: Optional[ArrayLike] = None,
+) -> Tuple[ObservedLifetimes, Truncations]:
+    """
+    Args:
+        time ():
+        entry ():
+        departure ():
+        lc_indicators ():
+        rc_indicators ():
+
+    Returns:
+
+    """
+
+    time = array_factory(time)
+
+    if entry is not None:
+        entry = array_factory(entry)
+
+    if departure is not None:
+        departure = array_factory(departure)
+
+    if lc_indicators is not None:
+        lc_indicators = array_factory(lc_indicators).astype(np.bool_)
+
+    if rc_indicators is not None:
+        rc_indicators = array_factory(rc_indicators).astype(np.bool_)
+
+    factory: LifetimeDataFactory
+    if time.shape[-1] == 1:
+        factory = LifetimeDataFactoryFrom1D(
+            time,
+            entry,
+            departure,
+            lc_indicators,
+            rc_indicators,
+        )
+    else:
+        factory = LifetimeDataFactoryFrom2D(
+            time,
+            entry,
+            departure,
+            lc_indicators,
+            rc_indicators,
+        )
+    return factory()
