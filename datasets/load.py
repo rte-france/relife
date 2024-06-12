@@ -13,3 +13,15 @@ def load_power_transformer() -> np.ndarray:
     )
 
     return data
+
+
+def load_insulator_string() -> np.ndarray:
+    """BLABLA"""
+
+    data = np.loadtxt(
+        Path(Path(__file__).parent, "insulator_string.csv"),
+        delimiter=",",
+        skiprows=1,
+        unpack=True,
+    )
+    return data

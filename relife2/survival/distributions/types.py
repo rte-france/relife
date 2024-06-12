@@ -6,14 +6,16 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-import copy
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
+from numpy import ma
 from numpy.typing import ArrayLike, NDArray
+from scipy.optimize import Bounds
 
 from relife2.survival.data import ObservedLifetimes, Truncations
+from relife2.survival.integrations import gauss_legendre, quad_laguerre
 from relife2.survival.parameters import Parameters
 
 IntArray = NDArray[np.int64]
@@ -28,6 +30,24 @@ class DistributionFunctions(ABC):
 
     def __init__(self, **kparam_names: Union[float, None]):
         self.params = Parameters(**kparam_names)
+
+    def initial_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
+        """initialization of params values given observed lifetimes"""
+        param0 = np.ones(self.params.size)
+        param0[-1] = 1 / np.median(lifetimes.rlc.values)
+        return param0
+
+    def update_params(self, values: FloatArray) -> None:
+        """BLABLABLA"""
+        self.params.values = values
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        return Bounds(
+            np.full(self.params.size, np.finfo(float).resolution),
+            np.full(self.params.size, np.inf),
+        )
 
     @property
     def support_upper_bound(self):
@@ -121,6 +141,22 @@ class DistributionFunctions(ABC):
         Returns:
             Union[float, FloatArray]: BLABLABLABLA
         """
+        masked_time: ma.MaskedArray = ma.MaskedArray(time, np.isinf(time))
+        upper_bound = np.broadcast_to(np.asarray(self.isf(np.array(1e-4))), time.shape)
+        masked_upper_bound: ma.MaskedArray = ma.MaskedArray(upper_bound, np.isinf(time))
+
+        integration = gauss_legendre(
+            self.sf,
+            masked_time,
+            masked_upper_bound,
+            ndim=2,
+        ) + quad_laguerre(
+            self.sf,
+            masked_upper_bound,
+            ndim=2,
+        )
+        mrl = integration / self.sf(masked_time)
+        return ma.filled(mrl, 0)
 
     @abstractmethod
     def mean(self) -> float:
@@ -233,9 +269,20 @@ class DistributionLikelihood(ABC):
         truncations: Truncations,
     ):
 
-        self.functions = copy.copy(functions)
+        self.functions = functions
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
+
+    def initial_params(self):
+        return self.functions.initial_params(self.observed_lifetimes)
+
+    @property
+    def params(self):
+        return self.functions.params
+
+    @params.setter
+    def params(self, values: FloatArray):
+        self.functions.update_params(values)
 
     @abstractmethod
     def negative_log_likelihood(self) -> float:
@@ -266,13 +313,13 @@ class Distribution(ABC):
         self.functions = functions
 
     @property
-    @abstractmethod
     def params(self) -> Parameters:
         """
         BLABLABLA
         Returns:
             BLABLABLABLA
         """
+        return self.functions.params
 
     @abstractmethod
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:

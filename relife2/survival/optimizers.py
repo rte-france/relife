@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 import copy
-from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
@@ -19,46 +18,37 @@ from relife2.survival.parameters import Parameters
 FloatArray = NDArray[np.float64]
 
 
-class LikelihoodOptimizer(ABC):
+class LikelihoodOptimizer:
     """BLABLABLA"""
 
-    method: str = "L-BFGS-B"
-
-    def __init__(self, likelihood):
+    def __init__(
+        self,
+        likelihood,
+        param0: Optional[FloatArray] = None,
+        bounds: Optional[Bounds] = None,
+        method: str = "L-BFGS-B",
+    ):
         """
 
         Args:
             likelihood ():
         """
         self.likelihood = likelihood
-        self.param0 = self.init_params()
-        self.bounds = self.get_params_bounds()
-
-    @abstractmethod
-    def update_params(self, new_values: FloatArray) -> None:
-        """BLABLABLA"""
-
-    def init_params(self) -> FloatArray:
-        """
-
-        Returns:
-
-        """
-        nb_params = self.likelihood.functions.params.size
-        param0 = np.ones(nb_params)
-        param0[-1] = 1 / np.median(self.likelihood.observed_lifetimes.rlc.values)
-        return param0
-
-    def get_params_bounds(self) -> Bounds:
-        """
-
-        Returns:
-
-        """
-        return Bounds(
-            np.full(self.likelihood.functions.params.size, np.finfo(float).resolution),
-            np.full(self.likelihood.functions.params.size, np.inf),
-        )
+        if param0 is not None:
+            if not param0.shape == self.likelihood.params.values.shape:
+                raise ValueError("incompatible param0 shape")
+        else:
+            param0 = self.likelihood.initial_params()
+        if bounds is not None:
+            if not isinstance(bounds, Bounds):
+                raise ValueError("bounds must be scipy.optimize.Bounds instance")
+        else:
+            bounds = self.likelihood.functions.params_bounds
+        if method is not None:
+            method = method
+        self.param0 = param0
+        self.bounds = bounds
+        self.method = method
 
     def func(self, x: FloatArray) -> float:
         """
@@ -69,7 +59,7 @@ class LikelihoodOptimizer(ABC):
         Returns:
 
         """
-        self.update_params(x)
+        self.likelihood.params = x
         return self.likelihood.negative_log_likelihood()
 
     def jac(self, x: FloatArray) -> FloatArray:
@@ -81,43 +71,21 @@ class LikelihoodOptimizer(ABC):
         Returns:
 
         """
-        self.update_params(x)
+        self.likelihood.params = x
         return self.likelihood.jac_negative_log_likelihood()
 
     def fit(
         self,
-        param0: Optional[FloatArray] = None,
-        bounds=None,
-        method: Optional[str] = None,
         **kwargs,
     ) -> Parameters:
         """
 
         Args:
-            param0 ():
-            bounds ():
-            method ():
             **kwargs ():
 
         Returns:
 
         """
-
-        if param0 is not None:
-            param0 = np.asanyarray(param0, float)
-            if param0 != self.param0.size:
-                raise ValueError(
-                    "Wrong dimension for param0, expected"
-                    f" {self.likelihood.functions.params.size} but got {param0.size}"
-                )
-            self.param0 = param0
-        if bounds is not None:
-            if not isinstance(bounds, Bounds):
-                raise ValueError("bounds must be scipy.optimize.Bounds instance")
-            self.bounds = bounds
-        if method is not None:
-            self.method = method
-
         opt = minimize(
             self.func,
             self.param0,
@@ -126,7 +94,7 @@ class LikelihoodOptimizer(ABC):
             bounds=self.bounds,
             **kwargs,
         )
-        self.update_params(opt.x)
+        self.likelihood.params = opt.x
 
         return copy.deepcopy(self.likelihood.functions.params)
 

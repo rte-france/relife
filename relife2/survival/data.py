@@ -51,14 +51,14 @@ class LifetimeData:
     """
 
     values: FloatArray
-    unit_ids: IntArray
+    index: IntArray
 
     def __post_init__(self):
         if self.values.ndim != 2:
             raise ValueError("Invalid LifetimeData values number of dimensions")
-        if self.unit_ids.ndim != 1:
+        if self.index.ndim != 1:
             raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
-        if len(self.values) != len(self.unit_ids):
+        if len(self.values) != len(self.index):
             raise ValueError("Incompatible lifetime values and unit_ids")
 
     def __len__(self) -> int:
@@ -83,7 +83,7 @@ class ObservedLifetimes:
                 ),
                 axis=0,
             ),
-            np.concatenate(self.complete.unit_ids, self.right_censored.unit_ids),
+            np.concatenate((self.complete.index, self.right_censored.index)),
         )
         self.rlc = LifetimeData(
             np.concatenate(
@@ -94,9 +94,11 @@ class ObservedLifetimes:
                 ]
             ),
             np.concatenate(
-                self.complete.unit_ids,
-                self.left_censored.unit_ids,
-                self.right_censored.unit_ids,
+                (
+                    self.complete.index,
+                    self.left_censored.index,
+                    self.right_censored.index,
+                )
             ),
         )
 
@@ -119,15 +121,15 @@ def intersect_lifetimes(*lifetimes: LifetimeData) -> LifetimeData:
         is of shape (N, p1 + p2 + ...).
 
     Examples:
-        >>> lifetime_data_1 = LifetimeData(values = np.array([[1], [2]]), unit_ids = np.array([3, 10]))
-        >>> lifetime_data_2 = LifetimeData(values = np.array([[3], [5]]), unit_ids = np.array([10, 2]))
+        >>> lifetime_data_1 = LifetimeData(values = np.array([[1], [2]]), index = np.array([3, 10]))
+        >>> lifetime_data_2 = LifetimeData(values = np.array([[3], [5]]), index = np.array([10, 2]))
         >>> intersect_lifetimes(lifetime_data_1, lifetime_data_2)
         LifetimeData(values=array([[2, 3]]), unit_ids=array([10]))
     """
 
-    inter_ids = np.array(list(set.intersection(*[set(m.unit_ids) for m in lifetimes])))
+    inter_ids = np.array(list(set.intersection(*[set(m.index) for m in lifetimes])))
     return LifetimeData(
-        np.hstack([m.values[np.isin(m.unit_ids, inter_ids)] for m in lifetimes]),
+        np.hstack([m.values[np.isin(m.index, inter_ids)] for m in lifetimes]),
         inter_ids,
     )
 
@@ -149,7 +151,6 @@ def lifetimes_compatibility(
         "interval_censored",
     ]:
         lifetimes = getattr(observed_lifetimes, attr_name)
-        print(lifetimes)
         if len(truncations.left) != 0 and len(lifetimes) != 0:
             left_truncated_lifetimes = intersect_lifetimes(lifetimes, truncations.left)
             if len(left_truncated_lifetimes) != 0:

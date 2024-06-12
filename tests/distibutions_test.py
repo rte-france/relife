@@ -3,8 +3,8 @@ import copy
 import numpy as np
 import pytest
 
-from data.load import load_power_transformer
-from relife2.survival.distributions import (
+from datasets import load_power_transformer
+from relife2.survival import (
     Exponential,
     Weibull,
     Gompertz,

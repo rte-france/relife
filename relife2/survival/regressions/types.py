@@ -13,6 +13,7 @@ from typing import Optional, Union
 import numpy as np
 from numpy import ma
 from numpy.typing import ArrayLike, NDArray
+from scipy.optimize import Bounds
 
 from relife2.survival.data import ObservedLifetimes, Truncations
 from relife2.survival.distributions.types import DistributionFunctions
@@ -68,8 +69,41 @@ class RegressionFunctions(ABC):
         self.baseline = copy.deepcopy(baseline)
         self.covar_effect = copy.deepcopy(covar_effect)
         self.params = Parameters()
-        self.params.append(self.baseline.params)
         self.params.append(self.covar_effect.params)
+        self.params.append(self.baseline.params)
+
+    def initial_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
+        """initialization of params values given observed lifetimes"""
+
+        return np.concatenate(
+            (
+                np.zeros(self.covar_effect.params.size),
+                self.baseline.initial_params(lifetimes),
+            )
+        )
+
+    def update_params(self, values: FloatArray) -> None:
+        """BLABLABLA"""
+        self.params.values = values
+        self.covar_effect.params.values = values[: self.covar_effect.params.size]
+        self.baseline.params.values = values[self.covar_effect.params.size :]
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        lb = np.concatenate(
+            (
+                np.full(self.covar_effect.params.size, -np.inf),
+                self.baseline.params_bounds.lb,
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.full(self.covar_effect.params.size, np.inf),
+                self.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
 
     @property
     def support_upper_bound(self):
@@ -197,7 +231,7 @@ class RegressionFunctions(ABC):
         mrl = integration / self.sf(masked_time, covar)
         return ma.filled(mrl, 0)
 
-    def moment(self, n: int, covar) -> float:
+    def moment(self, n: int, covar: FloatArray) -> FloatArray:
         """
         BLABLABLA
         Args:
@@ -212,12 +246,11 @@ class RegressionFunctions(ABC):
         def integrand(x):
             return x**n * self.pdf(x, covar)
 
-        return float(
-            gauss_legendre(integrand, np.array(0.0), np.asarray(upper_bound))
-            + quad_laguerre(integrand, np.asarray(upper_bound))
-        )
+        return gauss_legendre(
+            integrand, np.array(0.0), upper_bound, ndim=2
+        ) + quad_laguerre(integrand, upper_bound, ndim=2)
 
-    def mean(self, covar) -> float:
+    def mean(self, covar) -> FloatArray:
         """
         BLABLABLABLA
         Args:
@@ -228,7 +261,7 @@ class RegressionFunctions(ABC):
         """
         return self.moment(1, covar)
 
-    def var(self, covar) -> float:
+    def var(self, covar) -> FloatArray:
         """
         BLABLABLABLA
         Args:
@@ -322,7 +355,7 @@ class RegressionFunctions(ABC):
         """
         return self.isf(1 - probability, covar)
 
-    def median(self, covar: FloatArray) -> float:
+    def median(self, covar: FloatArray) -> Union[float, FloatArray]:
         """
         BLABLABLABLA
         Args:
@@ -331,7 +364,7 @@ class RegressionFunctions(ABC):
         Returns:
             float: BLABLABLABLA
         """
-        return float(self.ppf(np.array(0.5), covar))
+        return self.ppf(np.array(0.5), covar)
 
 
 class RegressionLikelihood(ABC):
@@ -349,10 +382,21 @@ class RegressionLikelihood(ABC):
         covar: FloatArray,
     ):
 
-        self.functions = copy.copy(functions)
+        self.functions = functions
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
         self.covar = covar
+
+    def initial_params(self):
+        return self.functions.initial_params(self.observed_lifetimes)
+
+    @property
+    def params(self):
+        return self.functions.params
+
+    @params.setter
+    def params(self, values: FloatArray):
+        self.functions.update_params(values)
 
     @abstractmethod
     def negative_log_likelihood(self) -> float:
@@ -382,14 +426,28 @@ class Regression(ABC):
     def __init__(self, functions: RegressionFunctions):
         self.functions = functions
 
+    def _check_covar_dim(self, covar: FloatArray):
+        nb_covar = covar.shape[-1]
+        if nb_covar != self.functions.covar_effect.params.size:
+            raise ValueError(
+                f"Invalid number of covar : expected {self.functions.covar_effect.params.size}, got {nb_covar}"
+            )
+
     @property
-    @abstractmethod
-    def params(self) -> Parameters:
-        """
-        BLABLABLA
-        Returns:
-            BLABLABLABLA
-        """
+    def params(self):
+        """BLABLABLA"""
+        return self.functions.params
+
+    @property
+    def baseline(self):
+        return self.functions.baseline
+
+    @property
+    def covar_effect(self):
+        return self.functions.covar_effect
+
+    def _init_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
+        pass
 
     @abstractmethod
     def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:

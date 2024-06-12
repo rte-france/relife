@@ -20,23 +20,32 @@ class GenericRegressionLikelihood(RegressionLikelihood):
 
         d_contrib = -np.sum(
             np.log(
-                self.functions.hf(self.observed_lifetimes.complete.values, self.covar)
+                self.functions.hf(
+                    self.observed_lifetimes.complete.values,
+                    self.covar[self.observed_lifetimes.complete.index],
+                )
             )
         )
         rc_contrib = np.sum(
-            self.functions.chf(self.observed_lifetimes.rc.values, self.covar)
+            self.functions.chf(
+                self.observed_lifetimes.rc.values,
+                self.covar[self.observed_lifetimes.rc.index],
+            )
         )
         lc_contrib = -np.sum(
             np.log(
                 -np.expm1(
                     -self.functions.chf(
-                        self.observed_lifetimes.left_censored.values, self.covar
+                        self.observed_lifetimes.left_censored.values,
+                        self.covar[self.observed_lifetimes.left_censored.index],
                     )
                 )
             )
         )
         lt_contrib = -np.sum(
-            self.functions.chf(self.truncations.left.values, self.covar)
+            self.functions.chf(
+                self.truncations.left.values, self.covar[self.truncations.left.index]
+            )
         )
         return d_contrib + rc_contrib + lc_contrib + lt_contrib
 
@@ -46,30 +55,43 @@ class GenericRegressionLikelihood(RegressionLikelihood):
     ) -> FloatArray:
 
         jac_d_contrib = -np.sum(
-            self.functions.jac_hf(self.observed_lifetimes.complete.values, self.covar)
-            / self.functions.hf(self.observed_lifetimes.complete.values, self.covar),
+            self.functions.jac_hf(
+                self.observed_lifetimes.complete.values,
+                self.covar[self.observed_lifetimes.complete.index],
+            )
+            / self.functions.hf(
+                self.observed_lifetimes.complete.values,
+                self.covar[self.observed_lifetimes.complete.index],
+            ),
             axis=0,
         )
 
         jac_rc_contrib = np.sum(
-            self.functions.jac_chf(self.observed_lifetimes.rc.values, self.covar),
+            self.functions.jac_chf(
+                self.observed_lifetimes.rc.values,
+                self.covar[self.observed_lifetimes.rc.index],
+            ),
             axis=0,
         )
 
         jac_lc_contrib = -np.sum(
             self.functions.jac_chf(
-                self.observed_lifetimes.left_censored.values, self.covar
+                self.observed_lifetimes.left_censored.values,
+                self.covar[self.observed_lifetimes.left_censored.index],
             )
             / np.expm1(
                 self.functions.chf(
-                    self.observed_lifetimes.left_censored.values, self.covar
+                    self.observed_lifetimes.left_censored.values,
+                    self.covar[self.observed_lifetimes.left_censored.index],
                 )
             ),
             axis=0,
         )
 
         jac_lt_contrib = -np.sum(
-            self.functions.jac_chf(self.truncations.left.values, self.covar),
+            self.functions.jac_chf(
+                self.truncations.left.values, self.covar[self.truncations.left.index]
+            ),
             axis=0,
         )
 

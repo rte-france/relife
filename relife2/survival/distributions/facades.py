@@ -9,12 +9,16 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from __future__ import annotations
 
-from typing import Optional, Union
+import copy
+from typing import Optional, Union, Any
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from relife2.survival.data import array_factory, lifetime_factory_template
+from relife2.survival.data import (
+    array_factory,
+    lifetime_factory_template,
+)
 from relife2.survival.distributions.functions import (
     ExponentialFunctions,
     GammaFunctions,
@@ -23,11 +27,8 @@ from relife2.survival.distributions.functions import (
     WeibullFunctions,
 )
 from relife2.survival.distributions.likelihoods import GenericDistributionLikelihood
-from relife2.survival.distributions.optimizers import (
-    DistributionLikelihoodOptimizer,
-    GompertzLikelihoodOptimizer,
-)
 from relife2.survival.distributions.types import Distribution
+from relife2.survival.optimizers import LikelihoodOptimizer
 from relife2.survival.parameters import Parameters
 
 FloatArray = NDArray[np.float64]
@@ -108,9 +109,9 @@ class Exponential(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            self.functions, observed_lifetimes, truncations
+            copy.deepcopy(self.functions), observed_lifetimes, truncations
         )
-        optimizer = DistributionLikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
             self.functions.params.values = optimum_params.values
@@ -192,9 +193,9 @@ class Weibull(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            self.functions, observed_lifetimes, truncations
+            copy.deepcopy(self.functions), observed_lifetimes, truncations
         )
-        optimizer = DistributionLikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
             self.functions.params.values = optimum_params.values
@@ -206,11 +207,6 @@ class Gompertz(Distribution):
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(GompertzFunctions(shape=shape, rate=rate))
-
-    @property
-    def params(self):
-        """BLABLABLA"""
-        return self.functions.params
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
@@ -276,12 +272,12 @@ class Gompertz(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            self.functions, observed_lifetimes, truncations
+            copy.deepcopy(self.functions), observed_lifetimes, truncations
         )
-        optimizer = GompertzLikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
-            self.functions.params.values = optimum_params.values
+            self.functions.update_params(optimum_params.values)
         return optimum_params
 
 
@@ -360,12 +356,12 @@ class Gamma(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            self.functions, observed_lifetimes, truncations
+            copy.deepcopy(self.functions), observed_lifetimes, truncations
         )
-        optimizer = DistributionLikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
-            self.functions.params.values = optimum_params.values
+            self.functions.update_params(optimum_params.values)
         return optimum_params
 
 
@@ -437,6 +433,7 @@ class LogLogistic(Distribution):
         lc_indicators: Optional[ArrayLike] = None,
         rc_indicators: Optional[ArrayLike] = None,
         inplace: bool = True,
+        **kwargs: Any,
     ) -> Parameters:
 
         observed_lifetimes, truncations = lifetime_factory_template(
@@ -444,9 +441,10 @@ class LogLogistic(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            self.functions, observed_lifetimes, truncations
+            copy.deepcopy(self.functions), observed_lifetimes, truncations
         )
-        optimizer = DistributionLikelihoodOptimizer(likelihood)
+
+        optimizer = LikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
             self.functions.params.values = optimum_params.values

@@ -10,8 +10,9 @@ from typing import Any, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
+from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
+from relife2.survival.data import ObservedLifetimes
 from relife2.survival.distributions.types import DistributionFunctions
 from relife2.survival.integrations import shifted_laguerre
 
@@ -133,6 +134,15 @@ class GompertzFunctions(DistributionFunctions):
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(shape=shape, rate=rate)
 
+    def initial_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
+        param0 = np.empty(self.params.size, dtype=np.float64)
+        rate = np.pi / (np.sqrt(6) * np.std(lifetimes.rlc.values))
+        shape = np.exp(-rate * np.mean(lifetimes.rlc.values))
+        param0[0] = shape
+        param0[1] = rate
+
+        return param0
+
     def hf(self, time: FloatArray) -> FloatArray:
         return self.params.shape * self.params.rate * np.exp(self.params.rate * time)
 
@@ -143,7 +153,7 @@ class GompertzFunctions(DistributionFunctions):
         return np.exp(self.params.shape) * exp1(self.params.shape) / self.params.rate
 
     def var(self) -> Any:
-        return None
+        return polygamma(1, 1) / self.params.rate**2
 
     def mrl(self, time: FloatArray) -> FloatArray:
         z = self.params.shape * np.exp(self.params.rate * time)
@@ -213,8 +223,8 @@ class GammaFunctions(DistributionFunctions):
     def var(self) -> float:
         return self.params.shape / (self.params.rate**2)
 
-    def mrl(self, time: FloatArray) -> Any:
-        return None
+    def mrl(self, time: FloatArray) -> FloatArray:
+        return super().mrl(time)
 
     def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
         return (
@@ -298,8 +308,8 @@ class LogLogisticFunctions(DistributionFunctions):
             2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2)
         )
 
-    def mrl(self, time: FloatArray) -> Any:
-        return None
+    def mrl(self, time: FloatArray) -> FloatArray:
+        return super().mrl(time)
 
     def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
         return (
