@@ -14,32 +14,29 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import ObservedLifetimes, Truncations
+from relife2.survival.data import ObservedLifetimes, Truncations, LifetimeData
 from relife2.survival.integrations import gauss_legendre, quad_laguerre
 from relife2.survival.parameters import Parameters
+from relife2.survival.types import Model, Likelihood, Functions
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class DistributionFunctions(ABC):
+class DistributionFunctions(Functions, ABC):
     """
     Object that computes every probability functions of a distribution model
     """
 
     def __init__(self, **kparam_names: Union[float, None]):
-        self.params = Parameters(**kparam_names)
+        super().__init__(Parameters(**kparam_names))
 
-    def initial_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
+    def initial_params(self, rlc: LifetimeData) -> FloatArray:
         """initialization of params values given observed lifetimes"""
         param0 = np.ones(self.params.size)
-        param0[-1] = 1 / np.median(lifetimes.rlc.values)
+        param0[-1] = 1 / np.median(rlc.values)
         return param0
-
-    def update_params(self, values: FloatArray) -> None:
-        """BLABLABLA"""
-        self.params.values = values
 
     @property
     def params_bounds(self) -> Bounds:
@@ -50,20 +47,20 @@ class DistributionFunctions(ABC):
         )
 
     @property
-    def support_upper_bound(self):
-        """
-        Returns:
-            BLABLABLA
-        """
-        return np.inf
-
-    @property
     def support_lower_bound(self):
         """
         Returns:
             BLABLABLA
         """
         return 0.0
+
+    @property
+    def support_upper_bound(self):
+        """
+        Returns:
+            BLABLABLA
+        """
+        return np.inf
 
     @abstractmethod
     def hf(self, time: FloatArray) -> Union[float, FloatArray]:
@@ -255,7 +252,7 @@ class DistributionFunctions(ABC):
         return float(self.ppf(np.array(0.5)))
 
 
-class DistributionLikelihood(ABC):
+class DistributionLikelihood(Likelihood, ABC):
     """
     Object that computes every likelihood functions of a distribution model
     """
@@ -268,30 +265,7 @@ class DistributionLikelihood(ABC):
         observed_lifetimes: ObservedLifetimes,
         truncations: Truncations,
     ):
-
-        self.functions = functions
-        self.observed_lifetimes = observed_lifetimes
-        self.truncations = truncations
-
-    def initial_params(self):
-        return self.functions.initial_params(self.observed_lifetimes)
-
-    @property
-    def params(self):
-        return self.functions.params
-
-    @params.setter
-    def params(self, values: FloatArray):
-        self.functions.update_params(values)
-
-    @abstractmethod
-    def negative_log_likelihood(self) -> float:
-        """
-        BLABLABLABLA
-
-        Returns:
-            FloatArray: BLABLABLABLA
-        """
+        super().__init__(functions, observed_lifetimes, truncations)
 
     @abstractmethod
     def jac_negative_log_likelihood(self) -> FloatArray:
@@ -303,23 +277,14 @@ class DistributionLikelihood(ABC):
         """
 
 
-class Distribution(ABC):
+class Distribution(Model, ABC):
     """
     Client object used to create instance of distribution model
     Object used as facade design pattern
     """
 
     def __init__(self, functions: DistributionFunctions):
-        self.functions = functions
-
-    @property
-    def params(self) -> Parameters:
-        """
-        BLABLABLA
-        Returns:
-            BLABLABLABLA
-        """
-        return self.functions.params
+        super().__init__(functions)
 
     @abstractmethod
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
@@ -462,28 +427,4 @@ class Distribution(ABC):
 
         Returns:
             float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def fit(
-        self,
-        time: ArrayLike,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
-        inplace: bool = True,
-    ) -> Parameters:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike):
-            entry (Optional[ArrayLike]):
-            departure (Optional[ArrayLike]):
-            lc_indicators (Optional[ArrayLike]):
-            rc_indicators (Optional[ArrayLike]):
-            inplace (bool): (default is True)
-
-        Returns:
-            Parameters: optimum parameters found
         """

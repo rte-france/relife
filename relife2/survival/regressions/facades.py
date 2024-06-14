@@ -9,7 +9,6 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from __future__ import annotations
 
-import copy
 from typing import Optional, Union
 
 import numpy as np
@@ -118,21 +117,31 @@ class ProportionalHazard(Regression):
     def fit(
         self,
         time: ArrayLike,
-        covar: ArrayLike,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
         lc_indicators: Optional[ArrayLike] = None,
         rc_indicators: Optional[ArrayLike] = None,
         inplace: bool = True,
+        **kwargs,
     ) -> Parameters:
 
+        if "covar" not in kwargs:
+            raise ValueError(
+                "fit expects covar values, add covar : fit(..., covar = ...)"
+            )
+        covar = kwargs.pop("covar")
         covar = array_factory(covar)
         self._check_covar_dim(covar)
         observed_lifetimes, truncations = lifetime_factory_template(
             time, entry, departure, lc_indicators, rc_indicators
         )
         likelihood = GenericRegressionLikelihood(
-            copy.deepcopy(self.functions),
+            ProportionalHazardFunctions(
+                self.baseline.__class__(),
+                ProportionalHazardEffect(
+                    **{f"beta_{i}": None for i in range(self.covar_effect.params.size)}
+                ),
+            ),
             observed_lifetimes,
             truncations,
             covar,
@@ -140,7 +149,7 @@ class ProportionalHazard(Regression):
         optimizer = LikelihoodOptimizer(likelihood)
         optimum_params = optimizer.fit()
         if inplace:
-            self.functions.update_params(optimum_params.values)
+            self.params = optimum_params
         return optimum_params
 
 
@@ -229,14 +238,19 @@ class AFT(Regression):
     def fit(
         self,
         time: ArrayLike,
-        covar: ArrayLike,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
         lc_indicators: Optional[ArrayLike] = None,
         rc_indicators: Optional[ArrayLike] = None,
         inplace: bool = True,
+        **kwargs,
     ) -> Parameters:
 
+        if "covar" not in kwargs:
+            raise ValueError(
+                "fit expects covar values, add covar : fit(..., covar = ...)"
+            )
+        covar = kwargs.pop("covar")
         covar = array_factory(covar)
         self._check_covar_dim(covar)
 
@@ -245,13 +259,18 @@ class AFT(Regression):
         )
 
         likelihood = GenericRegressionLikelihood(
-            copy.deepcopy(self.functions),
+            AFTFunctions(
+                self.baseline.__class__(),
+                AFTEffect(
+                    **{f"beta_{i}": None for i in range(self.covar_effect.params.size)}
+                ),
+            ),
             observed_lifetimes,
             truncations,
             covar,
         )
         optimizer = LikelihoodOptimizer(likelihood)
-        optimum_params = optimizer.fit()
+        optimum_params = optimizer.fit(**kwargs)
         if inplace:
-            self.functions.update_params(optimum_params.values)
+            self.params = optimum_params
         return optimum_params

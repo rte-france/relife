@@ -84,7 +84,7 @@ def test_mean(model, covar):
 def fit_model(model, data):
     model.fit(
         data[0, :],
-        zscore(
+        covar=zscore(
             np.column_stack([boxcox(covar_values)[0] for covar_values in data[3:, :]])
         ),
         entry=data[2, :],
@@ -106,6 +106,6 @@ def test_aft_pph_weibull_eq(data, weibull_aft, weibull_pph):
         weibull_aft.baseline.params.values, rel=1e-3
     )
     assert weibull_pph.covar_effect.params.values == pytest.approx(
-        -weibull_aft.baseline.params.shape * weibull_aft.covar_effect.params.values,
+        -weibull_aft.baseline.shape * weibull_aft.covar_effect.params.values,
         rel=1e-3,
     )

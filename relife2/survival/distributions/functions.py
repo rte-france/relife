@@ -12,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.survival.data import ObservedLifetimes
+from relife2.survival.data import LifetimeData
 from relife2.survival.distributions.types import DistributionFunctions
 from relife2.survival.integrations import shifted_laguerre
 
@@ -134,10 +134,10 @@ class GompertzFunctions(DistributionFunctions):
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(shape=shape, rate=rate)
 
-    def initial_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
+    def initial_params(self, rlc: LifetimeData) -> FloatArray:
         param0 = np.empty(self.params.size, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetimes.rlc.values))
-        shape = np.exp(-rate * np.mean(lifetimes.rlc.values))
+        rate = np.pi / (np.sqrt(6) * np.std(rlc.values))
+        shape = np.exp(-rate * np.mean(rlc.values))
         param0[0] = shape
         param0[1] = rate
 

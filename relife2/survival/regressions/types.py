@@ -6,7 +6,6 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-import copy
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
@@ -15,23 +14,51 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import ObservedLifetimes, Truncations
+from relife2.survival.data import ObservedLifetimes, Truncations, LifetimeData
 from relife2.survival.distributions.types import DistributionFunctions
 from relife2.survival.integrations import gauss_legendre, quad_laguerre
 from relife2.survival.parameters import Parameters
+from relife2.survival.types import Likelihood, Functions, Model
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class CovarEffect(ABC):
+class CovarEffect(Functions, ABC):
     """
     Object that computes covariates effect functions
     """
 
     def __init__(self, **beta: Union[float, None]):
-        self.params = Parameters(**beta)
+        super().__init__(Parameters(**beta))
+
+    @property
+    def support_lower_bound(self):
+        """
+        Returns:
+            BLABLABLABLA
+        """
+        return -np.inf
+
+    @property
+    def support_upper_bound(self):
+        """
+        Returns:
+            BLABLABLABLA
+        """
+        return np.inf
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        return Bounds(
+            np.full(self.params.size, self.support_lower_bound),
+            np.full(self.params.size, self.support_upper_bound),
+        )
+
+    def initial_params(self) -> FloatArray:
+        return np.zeros(self.params.size)
 
     @abstractmethod
     def g(self, covar: FloatArray) -> Union[float, FloatArray]:
@@ -56,7 +83,7 @@ class CovarEffect(ABC):
         """
 
 
-class RegressionFunctions(ABC):
+class RegressionFunctions(Functions, ABC):
     """
     Object that computes every probability functions of a regression model
     """
@@ -66,44 +93,20 @@ class RegressionFunctions(ABC):
         baseline: DistributionFunctions,
         covar_effect: CovarEffect,
     ):
-        self.baseline = copy.deepcopy(baseline)
-        self.covar_effect = copy.deepcopy(covar_effect)
-        self.params = Parameters()
-        self.params.append(self.covar_effect.params)
-        self.params.append(self.baseline.params)
-
-    def initial_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
-        """initialization of params values given observed lifetimes"""
-
-        return np.concatenate(
-            (
-                np.zeros(self.covar_effect.params.size),
-                self.baseline.initial_params(lifetimes),
-            )
-        )
-
-    def update_params(self, values: FloatArray) -> None:
-        """BLABLABLA"""
-        self.params.values = values
-        self.covar_effect.params.values = values[: self.covar_effect.params.size]
-        self.baseline.params.values = values[self.covar_effect.params.size :]
+        params = Parameters()
+        params.append(covar_effect.params)
+        params.append(baseline.params)
+        self.__dict__["baseline"] = baseline
+        self.__dict__["covar_effect"] = covar_effect
+        super().__init__(params)
 
     @property
-    def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
-        lb = np.concatenate(
-            (
-                np.full(self.covar_effect.params.size, -np.inf),
-                self.baseline.params_bounds.lb,
-            )
-        )
-        ub = np.concatenate(
-            (
-                np.full(self.covar_effect.params.size, np.inf),
-                self.baseline.params_bounds.ub,
-            )
-        )
-        return Bounds(lb, ub)
+    def support_lower_bound(self):
+        """
+        Returns:
+            BLABLABLABLA
+        """
+        return 0.0
 
     @property
     def support_upper_bound(self):
@@ -113,13 +116,45 @@ class RegressionFunctions(ABC):
         """
         return np.inf
 
+    def initial_params(self, rlc: LifetimeData) -> FloatArray:
+        """initialization of params values given observed lifetimes"""
+
+        return np.concatenate(
+            (
+                self.covar_effect.initial_params(),
+                self.baseline.initial_params(rlc),
+            )
+        )
+
     @property
-    def support_lower_bound(self):
-        """
-        Returns:
-            BLABLABLABLA
-        """
-        return 0.0
+    def params(self):
+        return self._params
+
+    @params.setter
+    def params(self, values: Union[FloatArray, Parameters]) -> None:
+        """BLABLABLA"""
+        if isinstance(values, Parameters):
+            values = values.values
+        self._params.values = values
+        self.covar_effect.params = values[: self.covar_effect.params.size]
+        self.baseline.params = values[self.covar_effect.params.size :]
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        lb = np.concatenate(
+            (
+                self.covar_effect.params_bounds.lb,
+                self.baseline.params_bounds.lb,
+            )
+        )
+        ub = np.concatenate(
+            (
+                self.covar_effect.params_bounds.ub,
+                self.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
 
     @abstractmethod
     def hf(self, time: FloatArray, covar: FloatArray) -> Union[float, FloatArray]:
@@ -367,7 +402,7 @@ class RegressionFunctions(ABC):
         return self.ppf(np.array(0.5), covar)
 
 
-class RegressionLikelihood(ABC):
+class RegressionLikelihood(Likelihood, ABC):
     """
     Object that computes every likelihood functions of a regression model
     """
@@ -381,31 +416,8 @@ class RegressionLikelihood(ABC):
         truncations: Truncations,
         covar: FloatArray,
     ):
-
-        self.functions = functions
-        self.observed_lifetimes = observed_lifetimes
-        self.truncations = truncations
+        super().__init__(functions, observed_lifetimes, truncations)
         self.covar = covar
-
-    def initial_params(self):
-        return self.functions.initial_params(self.observed_lifetimes)
-
-    @property
-    def params(self):
-        return self.functions.params
-
-    @params.setter
-    def params(self, values: FloatArray):
-        self.functions.update_params(values)
-
-    @abstractmethod
-    def negative_log_likelihood(self) -> float:
-        """
-        BLABLABLABLA
-
-        Returns:
-            FloatArray: BLABLABLABLA
-        """
 
     @abstractmethod
     def jac_negative_log_likelihood(self) -> FloatArray:
@@ -417,14 +429,14 @@ class RegressionLikelihood(ABC):
         """
 
 
-class Regression(ABC):
+class Regression(Model, ABC):
     """
     Client object used to create instance of regression model
     Object used as facade design pattern
     """
 
     def __init__(self, functions: RegressionFunctions):
-        self.functions = functions
+        super().__init__(functions)
 
     def _check_covar_dim(self, covar: FloatArray):
         nb_covar = covar.shape[-1]
@@ -434,20 +446,12 @@ class Regression(ABC):
             )
 
     @property
-    def params(self):
-        """BLABLABLA"""
-        return self.functions.params
-
-    @property
     def baseline(self):
         return self.functions.baseline
 
     @property
     def covar_effect(self):
         return self.functions.covar_effect
-
-    def _init_params(self, lifetimes: ObservedLifetimes) -> FloatArray:
-        pass
 
     @abstractmethod
     def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -614,30 +618,4 @@ class Regression(ABC):
 
         Returns:
             float: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def fit(
-        self,
-        time: ArrayLike,
-        covar: ArrayLike,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
-        inplace: bool = True,
-    ) -> Parameters:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike):
-            covar (ArrayLike):
-            entry (Optional[ArrayLike]):
-            departure (Optional[ArrayLike]):
-            lc_indicators (Optional[ArrayLike]):
-            rc_indicators (Optional[ArrayLike]):
-            inplace (bool): (default is True)
-
-        Returns:
-            Parameters: optimum parameters found
         """
