@@ -57,12 +57,12 @@ def covar():
 
 @pytest.fixture(scope="module")
 def weibull_aft():
-    return AFT(Weibull(), *[None, None, None])
+    return AFT(Weibull(), nb_covar=3)
 
 
 @pytest.fixture(scope="module")
 def weibull_pph():
-    return ProportionalHazard(Weibull(), *[None, None, None])
+    return ProportionalHazard(Weibull(), nb_covar=3)
 
 
 # test functions

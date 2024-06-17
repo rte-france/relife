@@ -30,14 +30,40 @@ from relife2.survival.regressions.types import Regression
 FloatArray = NDArray[np.float64]
 
 
+def set_covar_weights(*beta: Union[float, None], **kwargs) -> dict[str, float]:
+    print(beta)
+    nb_covar = kwargs.pop("nb_covar", None)
+    print(nb_covar)
+    if nb_covar is None:
+        if len(beta) == 0:
+            raise ValueError(
+                "Regression model expects at least covar weights values or nb_covar"
+            )
+        kwbeta = {f"beta_{i}": value for i, value in enumerate(beta)}
+    else:
+        if len(beta) != 0:
+            raise ValueError(
+                "When covar weights are specified, nb_covar is useless. Remove nb_covar."
+            )
+        kwbeta = {f"beta_{i}": np.random.random() for i in range(nb_covar)}
+    print(kwbeta)
+    return kwbeta
+
+
 class ProportionalHazard(Regression):
     """BLABLABLABLA"""
 
-    def __init__(self, baseline: Distribution, *beta: Union[float, None]):
+    def __init__(
+        self,
+        baseline: Distribution,
+        *beta: Union[float, None],
+        nb_covar: Optional[int] = None,
+    ):
+
         super().__init__(
             ProportionalHazardFunctions(
                 covar_effect=ProportionalHazardEffect(
-                    **{f"beta_{i}": value for i, value in enumerate(beta)}
+                    **set_covar_weights(*beta, nb_covar=nb_covar)
                 ),
                 baseline=baseline.functions,
             )
@@ -156,12 +182,15 @@ class ProportionalHazard(Regression):
 class AFT(Regression):
     """BLABLABLABLA"""
 
-    def __init__(self, baseline: Distribution, *beta: Union[float, None]):
+    def __init__(
+        self,
+        baseline: Distribution,
+        *beta: Union[float, None],
+        nb_covar: Optional[int] = None,
+    ):
         super().__init__(
             AFTFunctions(
-                covar_effect=AFTEffect(
-                    **{f"beta_{i}": value for i, value in enumerate(beta)}
-                ),
+                covar_effect=AFTEffect(**set_covar_weights(*beta, nb_covar=nb_covar)),
                 baseline=baseline.functions,
             )
         )

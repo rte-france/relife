@@ -48,13 +48,13 @@ class Parameters:
         array([ 2., 10., 11.,  8.,  6.])
     """
 
-    def __init__(self, **kparam_names: Union[float, None]):
-        for name, value in kparam_names.items():
+    def __init__(self, **kwparams: Union[float, None]):
+        for name, value in kwparams.items():
             if value:
                 setattr(self, name, float(value))
             else:
                 setattr(self, name, np.random.random())
-        self.indice_to_name = dict(enumerate(tuple(kparam_names.keys())))
+        self.indice_to_name = dict(enumerate(tuple(kwparams.keys())))
 
     def __len__(self):
         return len(self.indice_to_name)
