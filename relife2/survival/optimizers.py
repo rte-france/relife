@@ -14,6 +14,7 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds, approx_fprime, minimize
 
 from relife2.survival.parameters import Parameters
+from relife2.survival.types import Likelihood
 
 FloatArray = NDArray[np.float64]
 
@@ -23,7 +24,7 @@ class LikelihoodOptimizer:
 
     def __init__(
         self,
-        likelihood,
+        likelihood: Likelihood,
         param0: Optional[FloatArray] = None,
         bounds: Optional[Bounds] = None,
         method: str = "L-BFGS-B",

@@ -15,10 +15,9 @@ from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
 from relife2.survival.data import ObservedLifetimes, Truncations, LifetimeData
-from relife2.survival.distributions.types import DistributionFunctions
 from relife2.survival.integrations import gauss_legendre, quad_laguerre
 from relife2.survival.parameters import Parameters
-from relife2.survival.types import Likelihood, Functions, Model
+from relife2.survival.types import Likelihood, Functions, Model, CompositionFunctions
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
@@ -83,22 +82,10 @@ class CovarEffect(Functions, ABC):
         """
 
 
-class RegressionFunctions(Functions, ABC):
+class RegressionFunctions(CompositionFunctions, ABC):
     """
     Object that computes every probability functions of a regression model
     """
-
-    def __init__(
-        self,
-        baseline: DistributionFunctions,
-        covar_effect: CovarEffect,
-    ):
-        params = Parameters()
-        params.append(covar_effect.params)
-        params.append(baseline.params)
-        self.__dict__["baseline"] = baseline
-        self.__dict__["covar_effect"] = covar_effect
-        super().__init__(params)
 
     @property
     def support_lower_bound(self):
@@ -125,19 +112,6 @@ class RegressionFunctions(Functions, ABC):
                 self.baseline.initial_params(rlc),
             )
         )
-
-    @property
-    def params(self):
-        return self._params
-
-    @params.setter
-    def params(self, values: Union[FloatArray, Parameters]) -> None:
-        """BLABLABLA"""
-        if isinstance(values, Parameters):
-            values = values.values
-        self._params.values = values
-        self.covar_effect.params = values[: self.covar_effect.params.size]
-        self.baseline.params = values[self.covar_effect.params.size :]
 
     @property
     def params_bounds(self) -> Bounds:

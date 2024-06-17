@@ -76,6 +76,69 @@ class Functions(ABC):
         else:
             super().__setattr__(name, value)
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        return f"{class_name}({self.params.__repr__()})"
+
+
+class CompositionFunctions(Functions, ABC):
+
+    def __init__(self, **kwfunctions: Functions):
+        self.__dict__["composites"] = kwfunctions
+        params = Parameters()
+        for functions in kwfunctions.values():
+            params.append(functions.params)
+        super().__init__(params)
+
+    @property
+    def params(self):
+        "BLABLABLA"
+        return self._params
+
+    @params.setter
+    def params(self, values: Union[FloatArray, Parameters]) -> None:
+        """BLABLABLA"""
+        if isinstance(values, Parameters):
+            values = values.values
+        self._params.values = values
+        pos = 0
+        for functions in self.composites.values():
+            functions.params = values[pos : pos + functions.params.size]
+            pos += functions.params.size
+
+    def __getattr__(self, name: str):
+        value = None
+        if name in self.composites:
+            value = self.composites[name]
+        else:
+            for functions in self.composites.values():
+                if hasattr(functions, name):
+                    value = getattr(functions, name)
+                    break
+        if not value:
+            raise AttributeError(f"Functions has no attribute named {name}")
+        return value
+
+    def __setattr__(self, name: str, value: Any):
+        if hasattr(self.params, name):
+            setattr(self.params, name, value)
+            for functions in self.composites.values():
+                if hasattr(functions, name):
+                    setattr(functions, name, value)
+                    break
+        else:
+            super().__setattr__(name, value)
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        functions_repr = "".join(
+            (
+                f"    {name} : {value.__repr__()},\n"
+                for name, value in self.composites.items()
+            )
+        )
+        return f"{class_name}(\n{functions_repr})"
+
 
 class Likelihood(ABC):
     def __init__(
@@ -140,3 +203,7 @@ class Model(ABC):
         Returns:
             Parameters: optimum parameters found
         """
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        return f"{class_name}({self.params.__repr__()})"

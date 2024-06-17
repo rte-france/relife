@@ -46,7 +46,6 @@ class Parameters:
         >>> params[1:3] = [10., 11.]
         >>> params.values
         array([ 2., 10., 11.,  8.,  6.])
-
     """
 
     def __init__(self, **kparam_names: Union[float, None]):

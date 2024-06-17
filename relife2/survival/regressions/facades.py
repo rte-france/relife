@@ -36,10 +36,10 @@ class ProportionalHazard(Regression):
     def __init__(self, baseline: Distribution, *beta: Union[float, None]):
         super().__init__(
             ProportionalHazardFunctions(
-                baseline.functions,
-                ProportionalHazardEffect(
+                covar_effect=ProportionalHazardEffect(
                     **{f"beta_{i}": value for i, value in enumerate(beta)}
                 ),
+                baseline=baseline.functions,
             )
         )
 
@@ -137,10 +137,10 @@ class ProportionalHazard(Regression):
         )
         likelihood = GenericRegressionLikelihood(
             ProportionalHazardFunctions(
-                self.baseline.__class__(),
-                ProportionalHazardEffect(
+                covar_effect=ProportionalHazardEffect(
                     **{f"beta_{i}": None for i in range(self.covar_effect.params.size)}
                 ),
+                baseline=self.baseline.__class__(),
             ),
             observed_lifetimes,
             truncations,
@@ -159,8 +159,10 @@ class AFT(Regression):
     def __init__(self, baseline: Distribution, *beta: Union[float, None]):
         super().__init__(
             AFTFunctions(
-                baseline.functions,
-                AFTEffect(**{f"beta_{i}": value for i, value in enumerate(beta)}),
+                covar_effect=AFTEffect(
+                    **{f"beta_{i}": value for i, value in enumerate(beta)}
+                ),
+                baseline=baseline.functions,
             )
         )
 
@@ -260,10 +262,10 @@ class AFT(Regression):
 
         likelihood = GenericRegressionLikelihood(
             AFTFunctions(
-                self.baseline.__class__(),
-                AFTEffect(
+                covar_effect=AFTEffect(
                     **{f"beta_{i}": None for i in range(self.covar_effect.params.size)}
                 ),
+                baseline=self.baseline.__class__(),
             ),
             observed_lifetimes,
             truncations,
