@@ -173,6 +173,9 @@ class Parameters:
 
     def __str__(self):
         attributes = "\n".join(
-            [f"{name}: {getattr(self, name)}" for name in self.indice_to_name.values()]
+            [
+                f"\t{name}: {getattr(self, name)},"
+                for name in self.indice_to_name.values()
+            ]
         )
-        return f"Parameters\n---\n{attributes}"
+        return f"Parameters(\n{attributes}\n)"

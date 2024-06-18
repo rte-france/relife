@@ -24,13 +24,11 @@ FloatArray = NDArray[np.float64]
 
 class Functions(ABC):
     def __init__(self, params: Parameters):
-        self.__dict__["_params"] = (
-            params  # bypass setattr for first attribute assignment
-        )
+        self._params = params
 
     @property
     def params(self):
-        "BLABLABLA"
+        """BLABLABLA"""
         return self._params
 
     @params.setter
@@ -66,12 +64,25 @@ class Functions(ABC):
         """BLABLABLA"""
 
     def __getattr__(self, name: str):
-        if not hasattr(self.params, name):
-            raise AttributeError(f"Functions has no attribute named {name}")
-        return getattr(self.params, name)
+        class_name = type(self).__name__
+        if name in self.__dict__:
+            value = self.__dict__[name]
+        elif name in ["values", "size"]:
+            raise AttributeError(
+                f"""
+            {class_name} has no attribute named {name}. Maybe you meant functions.params.{name}
+            """
+            )
+        else:
+            if not hasattr(self.params, name):
+                raise AttributeError(f"{class_name} has no attribute named {name}")
+            value = getattr(self.params, name)
+        return value
 
     def __setattr__(self, name: str, value: Any):
-        if hasattr(self.params, name):
+        if name == "_params":
+            super().__setattr__(name, value)
+        elif hasattr(self.params, name):
             setattr(self.params, name, value)
         else:
             super().__setattr__(name, value)
@@ -84,7 +95,7 @@ class Functions(ABC):
 class CompositionFunctions(Functions, ABC):
 
     def __init__(self, **kwfunctions: Functions):
-        self.__dict__["composites"] = kwfunctions
+        self.composites = kwfunctions
         params = Parameters()
         for functions in kwfunctions.values():
             params.append(functions.params)
@@ -92,7 +103,7 @@ class CompositionFunctions(Functions, ABC):
 
     @property
     def params(self):
-        "BLABLABLA"
+        """BLABLABLA"""
         return self._params
 
     @params.setter
@@ -108,19 +119,30 @@ class CompositionFunctions(Functions, ABC):
 
     def __getattr__(self, name: str):
         value = None
-        if name in self.composites:
+        class_name = type(self).__name__
+        if name in self.__dict__:
+            value = self.__dict__[name]
+        elif name in self.composites:
             value = self.composites[name]
+        elif name in ["values", "size"]:
+            raise AttributeError(
+                f"""
+                {class_name} has no attribute named {name}. Maybe you meant functions.params.{name}
+                """
+            )
         else:
             for functions in self.composites.values():
                 if hasattr(functions, name):
                     value = getattr(functions, name)
                     break
-        if not value:
-            raise AttributeError(f"Functions has no attribute named {name}")
+        if value is None:
+            raise AttributeError(f"{class_name} has no attribute named {name}")
         return value
 
     def __setattr__(self, name: str, value: Any):
-        if hasattr(self.params, name):
+        if name == "composites":
+            self.__dict__[name] = value
+        elif hasattr(self.params, name):
             setattr(self.params, name, value)
             for functions in self.composites.values():
                 if hasattr(functions, name):
@@ -166,6 +188,24 @@ class Likelihood(ABC):
     def negative_log_likelihood(self):
         """BLABLABLA"""
 
+    def __getattr__(self, name: str):
+        class_name = type(self).__name__
+        if name in self.__dict__:
+            value = self.__dict__[name]
+        else:
+            if not hasattr(self.functions, name):
+                raise AttributeError(f"{class_name} has no attribute named {name}")
+            value = getattr(self.functions, name)
+        return value
+
+    def __setattr__(self, name: str, value: Any):
+        if name == "functions":
+            super().__setattr__(name, value)
+        elif hasattr(self.functions, name):
+            setattr(self.functions, name, value)
+        else:
+            super().__setattr__(name, value)
+
 
 class Model(ABC):
     def __init__(self, functions: Functions):
@@ -203,6 +243,24 @@ class Model(ABC):
         Returns:
             Parameters: optimum parameters found
         """
+
+    def __getattr__(self, name: str):
+        class_name = type(self).__name__
+        if name in self.__dict__:
+            value = self.__dict__[name]
+        else:
+            if not hasattr(self.functions, name):
+                raise AttributeError(f"{class_name} has no attribute named {name}")
+            value = getattr(self.functions, name)
+        return value
+
+    def __setattr__(self, name: str, value: Any):
+        if name == "functions":
+            super().__setattr__(name, value)
+        elif hasattr(self.functions, name):
+            setattr(self.functions, name, value)
+        else:
+            super().__setattr__(name, value)
 
     def __repr__(self):
         class_name = type(self).__name__

@@ -30,22 +30,22 @@ class ExponentialFunctions(DistributionFunctions):
         super().__init__(rate=rate)
 
     def hf(self, time: FloatArray) -> FloatArray:
-        return self.params.rate * np.ones_like(time)
+        return self.rate * np.ones_like(time)
 
     def chf(self, time: FloatArray) -> FloatArray:
-        return self.params.rate * time
+        return self.rate * time
 
     def mean(self) -> float:
-        return 1 / self.params.rate
+        return 1 / self.rate
 
     def var(self) -> float:
-        return 1 / self.params.rate**2
+        return 1 / self.rate**2
 
     def mrl(self, time: FloatArray) -> FloatArray:
-        return 1 / self.params.rate * np.ones_like(time)
+        return 1 / self.rate * np.ones_like(time)
 
     def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
-        return cumulative_hazard_rate / self.params.rate
+        return cumulative_hazard_rate / self.rate
 
     def jac_hf(self, time: FloatArray) -> FloatArray:
         return np.ones((time.size, 1))
