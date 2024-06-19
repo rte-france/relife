@@ -2,29 +2,29 @@ import numpy as np
 from numpy.typing import ArrayLike
 from numpy.typing import NDArray
 
-from relife2.survival.data.lifetimes import LifetimeData, ObservedLifetimes, Truncations
+from relife2.survival.data.lifetimes import Lifetimes, ObservedLifetimes, Truncations
 
 FloatArray = NDArray[np.float64]
 
 
-def intersect_lifetimes(*lifetimes: LifetimeData) -> LifetimeData:
+def intersect_lifetimes(*lifetimes: Lifetimes) -> Lifetimes:
     """
     Args:
         *lifetimes: LifetimeData object.s containing values of shape (n1, p1), (n2, p2), etc.
 
     Returns:
-        LifetimeData: One LifetimeData object where values are concatanation of common units values. The result
+        Lifetimes: One LifetimeData object where values are concatanation of common units values. The result
         is of shape (N, p1 + p2 + ...).
 
     Examples:
-        >>> lifetime_data_1 = LifetimeData(values = np.array([[1], [2]]), index = np.array([3, 10]))
-        >>> lifetime_data_2 = LifetimeData(values = np.array([[3], [5]]), index = np.array([10, 2]))
+        >>> lifetime_data_1 = Lifetimes(values = np.array([[1], [2]]), index = np.array([3, 10]))
+        >>> lifetime_data_2 = Lifetimes(values = np.array([[3], [5]]), index = np.array([10, 2]))
         >>> intersect_lifetimes(lifetime_data_1, lifetime_data_2)
         LifetimeData(values=array([[2, 3]]), unit_ids=array([10]))
     """
 
     inter_ids = np.array(list(set.intersection(*[set(m.index) for m in lifetimes])))
-    return LifetimeData(
+    return Lifetimes(
         np.hstack([m.values[np.isin(m.index, inter_ids)] for m in lifetimes]),
         inter_ids,
     )

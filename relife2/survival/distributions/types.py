@@ -14,7 +14,7 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import LifetimeData
+from relife2.survival.data import Lifetimes
 from relife2.survival.types import Model, Functions, Parameters
 from relife2.survival.utils.integrations import gauss_legendre, quad_laguerre
 
@@ -31,7 +31,7 @@ class DistributionFunctions(Functions, ABC):
     def __init__(self, **kparam_names: Union[float, None]):
         super().__init__(Parameters(**kparam_names))
 
-    def init_params(self, rlc: LifetimeData) -> FloatArray:
+    def init_params(self, rlc: Lifetimes) -> FloatArray:
         """initialization of params values given observed lifetimes"""
         param0 = np.ones(self.params.size)
         param0[-1] = 1 / np.median(rlc.values)

@@ -8,7 +8,7 @@ IntArray = NDArray[np.int64]
 
 
 @dataclass(frozen=True)
-class LifetimeData:
+class Lifetimes:
     """
     Object that encapsulates lifetime data values and corresponding units index
     """
@@ -32,13 +32,13 @@ class LifetimeData:
 class ObservedLifetimes:
     """BLABLABLA"""
 
-    complete: LifetimeData
-    left_censored: LifetimeData
-    right_censored: LifetimeData
-    interval_censored: LifetimeData
+    complete: Lifetimes
+    left_censored: Lifetimes
+    right_censored: Lifetimes
+    interval_censored: Lifetimes
 
     def __post_init__(self):
-        self.rc = LifetimeData(
+        self.rc = Lifetimes(
             np.concatenate(
                 (
                     self.complete.values,
@@ -48,7 +48,7 @@ class ObservedLifetimes:
             ),
             np.concatenate((self.complete.index, self.right_censored.index)),
         )
-        self.rlc = LifetimeData(
+        self.rlc = Lifetimes(
             np.concatenate(
                 [
                     self.complete.values,
@@ -70,5 +70,5 @@ class ObservedLifetimes:
 class Truncations:
     """BLABLABLA"""
 
-    left: LifetimeData
-    right: LifetimeData
+    left: Lifetimes
+    right: Lifetimes

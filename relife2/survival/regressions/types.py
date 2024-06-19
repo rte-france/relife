@@ -14,7 +14,7 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import LifetimeData
+from relife2.survival.data import Lifetimes
 from relife2.survival.types import Functions, Model, CompositionFunctions, Parameters
 from relife2.survival.utils.integrations import gauss_legendre, quad_laguerre
 
@@ -102,7 +102,7 @@ class RegressionFunctions(CompositionFunctions, ABC):
         """
         return np.inf
 
-    def init_params(self, rlc: LifetimeData) -> FloatArray:
+    def init_params(self, rlc: Lifetimes) -> FloatArray:
         """initialization of params values given observed lifetimes"""
 
         return np.concatenate(
