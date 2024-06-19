@@ -14,7 +14,7 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygam
 
 from relife2.survival.data import LifetimeData
 from relife2.survival.distributions.types import DistributionFunctions
-from relife2.survival.integrations import shifted_laguerre
+from relife2.survival.utils.integrations import shifted_laguerre
 
 FloatArray = NDArray[np.float64]
 

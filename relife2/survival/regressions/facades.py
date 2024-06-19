@@ -16,7 +16,6 @@ from numpy.typing import ArrayLike, NDArray
 
 from relife2.survival.data import array_factory, lifetime_factory_template
 from relife2.survival.distributions.types import Distribution
-from relife2.survival.optimizers import LikelihoodOptimizer
 from relife2.survival.regressions.functions import (
     AFTEffect,
     AFTFunctions,
@@ -26,6 +25,7 @@ from relife2.survival.regressions.functions import (
 from relife2.survival.regressions.likelihoods import GenericRegressionLikelihood
 from relife2.survival.regressions.types import Regression
 from relife2.survival.types import Parameters
+from relife2.survival.utils.optimizers import LikelihoodOptimizer
 
 FloatArray = NDArray[np.float64]
 
