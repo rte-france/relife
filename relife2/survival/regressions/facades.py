@@ -31,9 +31,7 @@ FloatArray = NDArray[np.float64]
 
 
 def set_covar_weights(*beta: Union[float, None], **kwargs) -> dict[str, float]:
-    print(beta)
     nb_covar = kwargs.pop("nb_covar", None)
-    print(nb_covar)
     if nb_covar is None:
         if len(beta) == 0:
             raise ValueError(
@@ -46,7 +44,6 @@ def set_covar_weights(*beta: Union[float, None], **kwargs) -> dict[str, float]:
                 "When covar weights are specified, nb_covar is useless. Remove nb_covar."
             )
         kwbeta = {f"beta_{i}": np.random.random() for i in range(nb_covar)}
-    print(kwbeta)
     return kwbeta
 
 
@@ -63,7 +60,7 @@ class ProportionalHazard(Regression):
         super().__init__(
             ProportionalHazardFunctions(
                 covar_effect=ProportionalHazardEffect(
-                    **set_covar_weights(*beta, nb_covar=nb_covar)
+                    Parameters(**set_covar_weights(*beta, nb_covar=nb_covar))
                 ),
                 baseline=baseline.functions,
             )
@@ -162,12 +159,7 @@ class ProportionalHazard(Regression):
             time, entry, departure, lc_indicators, rc_indicators
         )
         likelihood = GenericRegressionLikelihood(
-            ProportionalHazardFunctions(
-                covar_effect=ProportionalHazardEffect(
-                    **{f"beta_{i}": None for i in range(self.covar_effect.params.size)}
-                ),
-                baseline=self.baseline.__class__(),
-            ),
+            self.functions.copy(),
             observed_lifetimes,
             truncations,
             covar,
@@ -192,7 +184,9 @@ class AFT(Regression):
     ):
         super().__init__(
             AFTFunctions(
-                covar_effect=AFTEffect(**set_covar_weights(*beta, nb_covar=nb_covar)),
+                covar_effect=AFTEffect(
+                    Parameters(**set_covar_weights(*beta, nb_covar=nb_covar))
+                ),
                 baseline=baseline.functions,
             )
         )
@@ -292,12 +286,7 @@ class AFT(Regression):
         )
 
         likelihood = GenericRegressionLikelihood(
-            AFTFunctions(
-                covar_effect=AFTEffect(
-                    **{f"beta_{i}": None for i in range(self.covar_effect.params.size)}
-                ),
-                baseline=self.baseline.__class__(),
-            ),
+            self.functions.copy(),
             observed_lifetimes,
             truncations,
             covar,

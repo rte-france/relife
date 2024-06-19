@@ -189,7 +189,7 @@ class Parameters:
         return f"Parameters(\n{attributes}\n)"
 
 
-class Functions(ABC):
+class ParametricFunctions(ABC):
     def __init__(self, params: Parameters):
         self._params = params
 
@@ -230,6 +230,9 @@ class Functions(ABC):
     def params_bounds(self) -> Bounds:
         """BLABLABLA"""
 
+    def copy(self) -> Self:
+        return self.__class__(self.params.copy())
+
     def __getattr__(self, name: str):
         class_name = type(self).__name__
         if name in self.__dict__:
@@ -259,9 +262,9 @@ class Functions(ABC):
         return f"{class_name}({self.params.__repr__()})"
 
 
-class CompositionFunctions(Functions, ABC):
+class CompositionParametricFunctions(ParametricFunctions, ABC):
 
-    def __init__(self, **kwfunctions: Functions):
+    def __init__(self, **kwfunctions: ParametricFunctions):
         self.composites = kwfunctions
         params = Parameters()
         for functions in kwfunctions.values():
@@ -283,6 +286,10 @@ class CompositionFunctions(Functions, ABC):
         for functions in self.composites.values():
             functions.params = values[pos : pos + functions.params.size]
             pos += functions.params.size
+
+    def copy(self) -> Self:
+        print(self.__class__)
+        return self.__class__(**{k: v.copy() for k, v in self.composites.items()})
 
     def __getattr__(self, name: str):
         value = None
@@ -336,7 +343,7 @@ class Likelihood(ABC):
 
     def __init__(
         self,
-        functions: Functions,
+        functions: ParametricFunctions,
     ):
         self.functions = functions
 
@@ -395,7 +402,7 @@ class Model(ABC):
     BLABLABLA
     """
 
-    def __init__(self, functions: Functions):
+    def __init__(self, functions: ParametricFunctions):
         self.functions = functions
 
     @property

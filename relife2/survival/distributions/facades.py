@@ -34,7 +34,7 @@ class Exponential(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, rate: Optional[float] = None):
-        super().__init__(ExponentialFunctions(rate=rate))
+        super().__init__(ExponentialFunctions(Parameters(rate=rate)))
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
@@ -101,7 +101,7 @@ class Exponential(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            ExponentialFunctions(rate=self.params.rate), observed_lifetimes, truncations
+            self.functions.copy(), observed_lifetimes, truncations
         )
         optimizer = LikelihoodOptimizer(
             likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
@@ -116,7 +116,7 @@ class Weibull(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(WeibullFunctions(shape=shape, rate=rate))
+        super().__init__(WeibullFunctions(Parameters(shape=shape, rate=rate)))
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
@@ -183,7 +183,7 @@ class Weibull(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            WeibullFunctions(shape=self.params.shape, rate=self.params.rate),
+            self.functions.copy(),
             observed_lifetimes,
             truncations,
         )
@@ -200,7 +200,7 @@ class Gompertz(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(GompertzFunctions(shape=shape, rate=rate))
+        super().__init__(GompertzFunctions(Parameters(shape=shape, rate=rate)))
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
@@ -267,7 +267,7 @@ class Gompertz(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            GompertzFunctions(shape=self.params.shape, rate=self.params.rate),
+            self.functions.copy(),
             observed_lifetimes,
             truncations,
         )
@@ -284,7 +284,7 @@ class Gamma(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(GammaFunctions(shape=shape, rate=rate))
+        super().__init__(GammaFunctions(Parameters(shape=shape, rate=rate)))
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
@@ -351,7 +351,7 @@ class Gamma(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            GammaFunctions(shape=self.params.shape, rate=self.params.rate),
+            self.functions.copy(),
             observed_lifetimes,
             truncations,
         )
@@ -368,7 +368,7 @@ class LogLogistic(Distribution):
     """BLABLABLABLA"""
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(LogLogisticFunctions(shape=shape, rate=rate))
+        super().__init__(LogLogisticFunctions(Parameters(shape=shape, rate=rate)))
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
@@ -435,7 +435,7 @@ class LogLogistic(Distribution):
         )
 
         likelihood = GenericDistributionLikelihood(
-            LogLogisticFunctions(shape=self.params.shape, rate=self.params.rate),
+            self.functions.copy(),
             observed_lifetimes,
             truncations,
         )

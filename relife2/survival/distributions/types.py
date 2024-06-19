@@ -15,7 +15,7 @@ from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
 from relife2.survival.data import Lifetimes
-from relife2.survival.types import Model, Functions, Parameters
+from relife2.survival.types import Model, ParametricFunctions
 from relife2.survival.utils.integrations import gauss_legendre, quad_laguerre
 
 IntArray = NDArray[np.int64]
@@ -23,13 +23,10 @@ BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class DistributionFunctions(Functions, ABC):
+class DistributionFunctions(ParametricFunctions, ABC):
     """
     Object that computes every probability functions of a distribution model
     """
-
-    def __init__(self, **kparam_names: Union[float, None]):
-        super().__init__(Parameters(**kparam_names))
 
     def init_params(self, rlc: Lifetimes) -> FloatArray:
         """initialization of params values given observed lifetimes"""

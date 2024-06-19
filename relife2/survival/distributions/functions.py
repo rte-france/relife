@@ -6,7 +6,7 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -25,9 +25,6 @@ class ExponentialFunctions(DistributionFunctions):
     """
     BLABLABLABLA
     """
-
-    def __init__(self, rate: Optional[float] = None):
-        super().__init__(rate=rate)
 
     def hf(self, time: FloatArray) -> FloatArray:
         return self.rate * np.ones_like(time)
@@ -61,9 +58,6 @@ class WeibullFunctions(DistributionFunctions):
     """
     BLABLABLABLA
     """
-
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(shape=shape, rate=rate)
 
     def hf(self, time: FloatArray) -> FloatArray:
         return (
@@ -131,9 +125,6 @@ class GompertzFunctions(DistributionFunctions):
     BLABLABLABLA
     """
 
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(shape=shape, rate=rate)
-
     def init_params(self, rlc: Lifetimes) -> FloatArray:
         param0 = np.empty(self.params.size, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(rlc.values))
@@ -190,9 +181,6 @@ class GammaFunctions(DistributionFunctions):
     """
     BLABLABLABLA
     """
-
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(shape=shape, rate=rate)
 
     def _uppergamma(self, x: FloatArray) -> FloatArray:
         return gammaincc(self.params.shape, x) * gamma(self.params.shape)
@@ -273,9 +261,6 @@ class LogLogisticFunctions(DistributionFunctions):
     """
     BLABLABLABLA
     """
-
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(shape=shape, rate=rate)
 
     def hf(self, time: FloatArray) -> FloatArray:
         x = self.params.rate * time

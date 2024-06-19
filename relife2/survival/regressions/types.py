@@ -15,7 +15,11 @@ from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
 from relife2.survival.data import Lifetimes
-from relife2.survival.types import Functions, Model, CompositionFunctions, Parameters
+from relife2.survival.types import (
+    ParametricFunctions,
+    Model,
+    CompositionParametricFunctions,
+)
 from relife2.survival.utils.integrations import gauss_legendre, quad_laguerre
 
 IntArray = NDArray[np.int64]
@@ -23,13 +27,10 @@ BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class CovarEffect(Functions, ABC):
+class CovarEffect(ParametricFunctions, ABC):
     """
     Object that computes covariates effect functions
     """
-
-    def __init__(self, **beta: Union[float, None]):
-        super().__init__(Parameters(**beta))
 
     @property
     def support_lower_bound(self):
@@ -81,7 +82,7 @@ class CovarEffect(Functions, ABC):
         """
 
 
-class RegressionFunctions(CompositionFunctions, ABC):
+class RegressionFunctions(CompositionParametricFunctions, ABC):
     """
     Object that computes every probability functions of a regression model
     """
