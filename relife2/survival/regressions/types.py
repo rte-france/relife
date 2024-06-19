@@ -16,8 +16,7 @@ from scipy.optimize import Bounds
 
 from relife2.survival.data import LifetimeData
 from relife2.survival.integrations import gauss_legendre, quad_laguerre
-from relife2.survival.parameters import Parameters
-from relife2.survival.types import Functions, Model, CompositionFunctions
+from relife2.survival.types import Functions, Model, CompositionFunctions, Parameters
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]

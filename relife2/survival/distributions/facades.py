@@ -25,7 +25,7 @@ from relife2.survival.distributions.functions import (
 from relife2.survival.distributions.likelihoods import GenericDistributionLikelihood
 from relife2.survival.distributions.types import Distribution
 from relife2.survival.optimizers import LikelihoodOptimizer
-from relife2.survival.parameters import Parameters
+from relife2.survival.types import Parameters
 
 FloatArray = NDArray[np.float64]
 

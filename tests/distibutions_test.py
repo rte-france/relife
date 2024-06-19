@@ -1,5 +1,3 @@
-import copy
-
 import numpy as np
 import pytest
 
@@ -55,7 +53,7 @@ def test_mrl(model):
 
 
 def test_fit(model, data):
-    expected_params = copy.copy(model.params)
+    expected_params = model.params.copy()
     model.fit(
         data[0, :],
         entry=data[2, :],

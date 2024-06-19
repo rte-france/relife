@@ -6,15 +6,13 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-import copy
 from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, approx_fprime, minimize
 
-from relife2.survival.parameters import Parameters
-from relife2.survival.types import Likelihood
+from relife2.survival.types import Likelihood, Parameters
 
 FloatArray = NDArray[np.float64]
 
@@ -96,7 +94,8 @@ class LikelihoodOptimizer:
         )
         self.likelihood.params = opt.x
 
-        return copy.deepcopy(self.likelihood.functions.params)
+        return self.likelihood.params.copy()
+
 
 
 def hess_negative_log_likelihood(
