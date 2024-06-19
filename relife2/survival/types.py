@@ -14,7 +14,7 @@ from numpy.typing import ArrayLike
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import ObservedLifetimes, Truncations, LifetimeData
+from relife2.survival.data import ObservedLifetimes, Truncations
 from relife2.survival.parameters import Parameters
 
 IntArray = NDArray[np.int64]
@@ -55,7 +55,7 @@ class Functions(ABC):
         """
 
     @abstractmethod
-    def initial_params(self, *lifetimes: LifetimeData) -> FloatArray:
+    def init_params(self, *args: Any) -> FloatArray:
         """initialization of params values given observed lifetimes"""
 
     @property
@@ -172,9 +172,6 @@ class Likelihood(ABC):
         self.functions = functions
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
-
-    def initial_params(self, *lifetimes: LifetimeData):
-        return self.functions.initial_params(*lifetimes)
 
     @property
     def params(self):

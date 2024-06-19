@@ -134,7 +134,7 @@ class GompertzFunctions(DistributionFunctions):
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(shape=shape, rate=rate)
 
-    def initial_params(self, rlc: LifetimeData) -> FloatArray:
+    def init_params(self, rlc: LifetimeData) -> FloatArray:
         param0 = np.empty(self.params.size, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(rlc.values))
         shape = np.exp(-rate * np.mean(rlc.values))

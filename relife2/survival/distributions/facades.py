@@ -103,7 +103,9 @@ class Exponential(Distribution):
         likelihood = GenericDistributionLikelihood(
             ExponentialFunctions(rate=self.params.rate), observed_lifetimes, truncations
         )
-        optimizer = LikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(
+            likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
+        )
         optimum_params = optimizer.fit(**kwargs)
         if inplace:
             self.params = optimum_params
@@ -185,7 +187,9 @@ class Weibull(Distribution):
             observed_lifetimes,
             truncations,
         )
-        optimizer = LikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(
+            likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
+        )
         optimum_params = optimizer.fit(**kwargs)
         if inplace:
             self.params = optimum_params
@@ -267,7 +271,9 @@ class Gompertz(Distribution):
             observed_lifetimes,
             truncations,
         )
-        optimizer = LikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(
+            likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
+        )
         optimum_params = optimizer.fit(**kwargs)
         if inplace:
             self.params = optimum_params
@@ -349,7 +355,9 @@ class Gamma(Distribution):
             observed_lifetimes,
             truncations,
         )
-        optimizer = LikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(
+            likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
+        )
         optimum_params = optimizer.fit(**kwargs)
         if inplace:
             self.params = optimum_params
@@ -432,7 +440,9 @@ class LogLogistic(Distribution):
             truncations,
         )
 
-        optimizer = LikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(
+            likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
+        )
         optimum_params = optimizer.fit(**kwargs)
         if inplace:
             self.params = optimum_params

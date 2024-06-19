@@ -35,18 +35,17 @@ class LikelihoodOptimizer:
             likelihood ():
         """
         self.likelihood = likelihood
-        if param0 is not None:
-            if not param0.shape == self.likelihood.params.values.shape:
-                raise ValueError("incompatible param0 shape")
+        if param0 is None:
+            param0 = np.random.random(self.likelihood.params.size)
         else:
-            param0 = self.likelihood.initial_params(
-                self.likelihood.observed_lifetimes.rlc
-            )
-        if bounds is not None:
+            if param0.shape != self.likelihood.params.values.shape:
+                raise ValueError("incompatible param0 shape")
+        if bounds is None:
+            bounds = self.likelihood.functions.params_bounds
+        else:
             if not isinstance(bounds, Bounds):
                 raise ValueError("bounds must be scipy.optimize.Bounds instance")
-        else:
-            bounds = self.likelihood.functions.params_bounds
+
         self.param0 = param0
         self.bounds = bounds
         self.method = method

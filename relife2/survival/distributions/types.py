@@ -32,7 +32,7 @@ class DistributionFunctions(Functions, ABC):
     def __init__(self, **kparam_names: Union[float, None]):
         super().__init__(Parameters(**kparam_names))
 
-    def initial_params(self, rlc: LifetimeData) -> FloatArray:
+    def init_params(self, rlc: LifetimeData) -> FloatArray:
         """initialization of params values given observed lifetimes"""
         param0 = np.ones(self.params.size)
         param0[-1] = 1 / np.median(rlc.values)

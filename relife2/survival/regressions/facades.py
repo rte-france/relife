@@ -172,7 +172,9 @@ class ProportionalHazard(Regression):
             truncations,
             covar,
         )
-        optimizer = LikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(
+            likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
+        )
         optimum_params = optimizer.fit()
         if inplace:
             self.params = optimum_params
@@ -300,7 +302,9 @@ class AFT(Regression):
             truncations,
             covar,
         )
-        optimizer = LikelihoodOptimizer(likelihood)
+        optimizer = LikelihoodOptimizer(
+            likelihood, param0=self.functions.init_params(observed_lifetimes.rlc)
+        )
         optimum_params = optimizer.fit(**kwargs)
         if inplace:
             self.params = optimum_params

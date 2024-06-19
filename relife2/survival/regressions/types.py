@@ -56,7 +56,7 @@ class CovarEffect(Functions, ABC):
             np.full(self.params.size, self.support_upper_bound),
         )
 
-    def initial_params(self) -> FloatArray:
+    def init_params(self) -> FloatArray:
         return np.zeros(self.params.size)
 
     @abstractmethod
@@ -103,13 +103,13 @@ class RegressionFunctions(CompositionFunctions, ABC):
         """
         return np.inf
 
-    def initial_params(self, rlc: LifetimeData) -> FloatArray:
+    def init_params(self, rlc: LifetimeData) -> FloatArray:
         """initialization of params values given observed lifetimes"""
 
         return np.concatenate(
             (
-                self.covar_effect.initial_params(),
-                self.baseline.initial_params(rlc),
+                self.covar_effect.init_params(),
+                self.baseline.init_params(rlc),
             )
         )
 
@@ -418,14 +418,6 @@ class Regression(Model, ABC):
             raise ValueError(
                 f"Invalid number of covar : expected {self.functions.covar_effect.params.size}, got {nb_covar}"
             )
-
-    @property
-    def baseline(self):
-        return self.functions.baseline
-
-    @property
-    def covar_effect(self):
-        return self.functions.covar_effect
 
     @abstractmethod
     def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
