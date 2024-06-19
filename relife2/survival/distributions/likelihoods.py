@@ -9,17 +9,29 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.survival.distributions.types import DistributionLikelihood
+from relife2.survival.data import ObservedLifetimes, Truncations
+from relife2.survival.distributions.types import DistributionFunctions
+from relife2.survival.types import JacLikelihood
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class GenericDistributionLikelihood(DistributionLikelihood):
+class GenericDistributionLikelihood(JacLikelihood):
     """
     BLABLABLABLA
     """
+
+    def __init__(
+        self,
+        functions: DistributionFunctions,
+        observed_lifetimes: ObservedLifetimes,
+        truncations: Truncations,
+    ):
+        super().__init__(functions)
+        self.observed_lifetimes = observed_lifetimes
+        self.truncations = truncations
 
     def negative_log_likelihood(
         self,

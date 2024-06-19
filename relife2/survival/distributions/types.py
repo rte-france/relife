@@ -14,10 +14,10 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import ObservedLifetimes, Truncations, LifetimeData
+from relife2.survival.data import LifetimeData
 from relife2.survival.integrations import gauss_legendre, quad_laguerre
 from relife2.survival.parameters import Parameters
-from relife2.survival.types import Model, Likelihood, Functions
+from relife2.survival.types import Model, Functions
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
@@ -250,31 +250,6 @@ class DistributionFunctions(Functions, ABC):
             float: BLABLABLABLA
         """
         return float(self.ppf(np.array(0.5)))
-
-
-class DistributionLikelihood(Likelihood, ABC):
-    """
-    Object that computes every likelihood functions of a distribution model
-    """
-
-    default_hess_scheme: str = "cs"
-
-    def __init__(
-        self,
-        functions: DistributionFunctions,
-        observed_lifetimes: ObservedLifetimes,
-        truncations: Truncations,
-    ):
-        super().__init__(functions, observed_lifetimes, truncations)
-
-    @abstractmethod
-    def jac_negative_log_likelihood(self) -> FloatArray:
-        """
-        BLABLABLABLA
-
-        Returns:
-            FloatArray: BLABLABLABLA
-        """
 
 
 class Distribution(Model, ABC):

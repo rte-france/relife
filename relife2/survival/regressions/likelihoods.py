@@ -8,11 +8,25 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 import numpy as np
 
-from relife2.survival.regressions.types import FloatArray, RegressionLikelihood
+from relife2.survival.data import ObservedLifetimes, Truncations
+from relife2.survival.regressions.types import FloatArray, RegressionFunctions
+from relife2.survival.types import JacLikelihood
 
 
-class GenericRegressionLikelihood(RegressionLikelihood):
+class GenericRegressionLikelihood(JacLikelihood):
     """BLABLABLABLA"""
+
+    def __init__(
+        self,
+        functions: RegressionFunctions,
+        observed_lifetimes: ObservedLifetimes,
+        truncations: Truncations,
+        covar: FloatArray,
+    ):
+        super().__init__(functions)
+        self.observed_lifetimes = observed_lifetimes
+        self.truncations = truncations
+        self.covar = covar
 
     def negative_log_likelihood(
         self,

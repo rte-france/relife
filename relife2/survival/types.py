@@ -14,7 +14,6 @@ from numpy.typing import ArrayLike
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import ObservedLifetimes, Truncations
 from relife2.survival.parameters import Parameters
 
 IntArray = NDArray[np.int64]
@@ -163,22 +162,31 @@ class CompositionFunctions(Functions, ABC):
 
 
 class Likelihood(ABC):
+    """
+    BLABLABLA
+    """
+
     def __init__(
         self,
         functions: Functions,
-        observed_lifetimes: ObservedLifetimes,
-        truncations: Truncations,
     ):
         self.functions = functions
-        self.observed_lifetimes = observed_lifetimes
-        self.truncations = truncations
 
     @property
     def params(self):
+        """
+        Returns:
+        """
         return self.functions.params
 
     @params.setter
     def params(self, values: Union[FloatArray, Parameters]):
+        """
+        Args:
+            values ():
+
+        Returns:
+        """
         self.functions.params = values
 
     @abstractmethod
@@ -204,16 +212,39 @@ class Likelihood(ABC):
             super().__setattr__(name, value)
 
 
+class JacLikelihood(Likelihood, ABC):
+    """
+    BLABLABLA
+    """
+
+    @abstractmethod
+    def jac_negative_log_likelihood(self):
+        """"""
+
+
 class Model(ABC):
+    """
+    BLABLABLA
+    """
+
     def __init__(self, functions: Functions):
         self.functions = functions
 
     @property
     def params(self):
+        """
+        Returns:
+        """
         return self.functions.params
 
     @params.setter
     def params(self, values: Union[FloatArray, Parameters]):
+        """
+        Args:
+            values ():
+
+        Returns:
+        """
         self.functions.params = values
 
     @abstractmethod

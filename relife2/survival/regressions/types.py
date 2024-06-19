@@ -14,10 +14,10 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.data import ObservedLifetimes, Truncations, LifetimeData
+from relife2.survival.data import LifetimeData
 from relife2.survival.integrations import gauss_legendre, quad_laguerre
 from relife2.survival.parameters import Parameters
-from relife2.survival.types import Likelihood, Functions, Model, CompositionFunctions
+from relife2.survival.types import Functions, Model, CompositionFunctions
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
@@ -374,33 +374,6 @@ class RegressionFunctions(CompositionFunctions, ABC):
             float: BLABLABLABLA
         """
         return self.ppf(np.array(0.5), covar)
-
-
-class RegressionLikelihood(Likelihood, ABC):
-    """
-    Object that computes every likelihood functions of a regression model
-    """
-
-    default_hess_scheme: str = "cs"
-
-    def __init__(
-        self,
-        functions: RegressionFunctions,
-        observed_lifetimes: ObservedLifetimes,
-        truncations: Truncations,
-        covar: FloatArray,
-    ):
-        super().__init__(functions, observed_lifetimes, truncations)
-        self.covar = covar
-
-    @abstractmethod
-    def jac_negative_log_likelihood(self) -> FloatArray:
-        """
-        BLABLABLABLA
-
-        Returns:
-            FloatArray: BLABLABLABLA
-        """
 
 
 class Regression(Model, ABC):
