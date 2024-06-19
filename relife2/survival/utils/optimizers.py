@@ -10,7 +10,7 @@ from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, approx_fprime, minimize
+from scipy.optimize import Bounds, minimize
 
 from relife2.survival.types import Likelihood, Parameters
 
@@ -95,57 +95,3 @@ class LikelihoodOptimizer:
         self.likelihood.params = opt.x
 
         return self.likelihood.params.copy()
-
-
-
-def hess_negative_log_likelihood(
-    likelihood,
-    eps: float = 1e-6,
-    scheme="cs",
-) -> FloatArray:
-    """
-
-    Args:
-        likelihood ():
-        eps ():
-        scheme ():
-
-    Returns:
-
-    """
-
-    size = likelihood.functions.params.size
-    # print(size)
-    hess = np.empty((size, size))
-    params_values = likelihood.functions.params.values
-
-    if scheme == "cs":
-        u = eps * 1j * np.eye(size)
-        for i in range(size):
-            for j in range(i, size):
-                # print(type(u[i]))
-                # print(u[i])
-                # print(self.functions.params.values)
-                # print(self.functions.params.values + u[i])
-                likelihood.functions.params.values = (
-                    likelihood.functions.params.values + u[i]
-                )
-                # print(self.jac_negative_log_likelihood(self.functions))
-
-                hess[i, j] = np.imag(likelihood.jac_negative_log_likelihood()[j]) / eps
-                likelihood.functions.params.values = params_values
-                if i != j:
-                    hess[j, i] = hess[i, j]
-
-    elif scheme == "2-point":
-
-        for i in range(size):
-            hess[i] = approx_fprime(
-                likelihood.functions.params.values,
-                likelihood.jac_negative_log_likelihood()[i],
-                eps,
-            )
-    else:
-        raise ValueError("scheme argument must be 'cs' or '2-point'")
-
-    return hess
