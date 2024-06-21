@@ -8,6 +8,26 @@ IntArray = NDArray[np.int64]
 
 
 @dataclass(frozen=True)
+class ExtraData:
+    values: FloatArray
+    index: IntArray
+
+    values: FloatArray
+    index: IntArray
+
+    def __post_init__(self):
+        if self.values.ndim != 2:
+            raise ValueError("Invalid LifetimeData values number of dimensions")
+        if self.index.ndim != 1:
+            raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
+        if len(self.values) != len(self.index):
+            raise ValueError("Incompatible lifetime values and unit_ids")
+
+    def __len__(self) -> int:
+        return len(self.values)
+
+
+@dataclass(frozen=True)
 class Lifetimes:
     """
     Object that encapsulates lifetime data values and corresponding units index

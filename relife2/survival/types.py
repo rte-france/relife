@@ -11,8 +11,11 @@ from types import EllipsisType
 from typing import Optional, Any, Union, Self
 
 import numpy as np
+from numpy import ma
 from numpy.typing import ArrayLike, NDArray
-from scipy.optimize import Bounds
+from scipy.optimize import Bounds, root_scalar
+
+from old.relife2.utils.integrations import gauss_legendre, quad_laguerre
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
@@ -20,190 +23,109 @@ FloatArray = NDArray[np.float64]
 Index = Union[EllipsisType, int, slice, tuple[EllipsisType, int, slice, ...]]
 
 
-class Parameters:
+class ParametricFunctions(ABC):
     """
     Object that encapsulates model parameters names and values
     It emulated a 1D np.array with named values
 
     Examples:
-        >>> params = Parameters(rate=1, scale=2)
-        >>> params.rate
+        >>> func = ParametricFunctions(rate=1, scale=2)
+        >>> func.rate
         1.0
-        >>> params.values
+        >>> func.params
         array([1., 2.])
-        >>> other_params = Parameters(w0=None, w1=None, w2=None)
-        >>> other_params.values = (3., 5., 6.)
-        >>> other_params.values
-        array([3., 5., 6.])
-        >>> params.append(other_params)
-        >>> params.values
-        array([1., 2., 3., 5., 6.])
-        >>> params.w1
-        5.0
-        >>> params[2]
-        3.0
-        >>> params[2:]
-        array([3., 5., 6.])
-        >>> params.update(w1=8, rate=2.)
-        >>> params.values
-        array([2., 2., 3., 8., 6.])
-        >>> params[1:3] = [10., 11.]
-        >>> params.values
-        array([ 2., 10., 11.,  8.,  6.])
+        >>> func.params[1:] = [11.]
+        >>> func.params
+        array([ 1., 11.])
+        >>> func.scale = 4.
+        >>> func.params
+        array([ 1., 4.])
     """
 
     def __init__(self, **kwparams: Union[float, None]):
 
-        self.name_to_indice = {}
-        values = []
+        self.params_names_indices = {}
+        params_values = []
         for i, (k, v) in enumerate(kwparams.items()):
-            self.name_to_indice[k] = i
+            self.params_names_indices[k] = i
             if v is None:
-                values.append(np.random.random())
+                params_values.append(np.random.random())
             else:
-                values.append(float(v))
-        self._values = np.array(values, dtype=np.float64)
+                params_values.append(float(v))
+        self._params = np.array(params_values, dtype=np.float64)
 
-    def __len__(self):
-        return len(self.name_to_indice)
+    @abstractmethod
+    def init_params(self, *args: Any) -> FloatArray:
+        """initialization of params values given observed lifetimes"""
 
     @property
-    def names(self) -> tuple[str, ...]:
+    @abstractmethod
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+
+    @property
+    def params(self) -> FloatArray:
+        """BLABLABLA"""
+        return self._params
+
+    @property
+    def params_names(self) -> tuple[str, ...]:
         """
         Returns:
             tuple[str, ...]: param names
         """
-        return tuple(self.name_to_indice.keys())
+        return tuple(self.params_names_indices.keys())
 
-    @property
-    def size(self) -> int:
-        """
-        Returns:
-            int: nb of parameters (alias of len)
-        """
-        return len(self)
-
-    @property
-    def values(self):
-        return self._values
-
-    @values.setter
-    def values(self, new_values: ArrayLike) -> None:
-        """
-        Affects new values to Parameters attributes
-        Args:
-            new_values (Union[float, ArrayLike]):
-        """
-        new_values = np.asarray(new_values, dtype=np.float64).reshape(
+    @params.setter
+    def params(self, values: ArrayLike) -> None:
+        """BLABLABLA"""
+        values = np.asarray(values, dtype=np.float64).reshape(
             -1,
         )
-        nb_of_params = self.size
-        if new_values.size != nb_of_params:
+        nb_of_params = values.size
+        expected_nb_of_params = self.params.size
+        if nb_of_params != expected_nb_of_params:
             raise ValueError(
-                f"Can't set different number of params, expected {nb_of_params} param values, got {new_values.size}"
+                f"""
+                Can't set different number of params, expected {expected_nb_of_params} param values, got {nb_of_params}
+                """
             )
-        self._values = new_values
+        self._params = values
 
-    def __getitem__(self, index: Index) -> Union[float, FloatArray]:
-        try:
-            val = self.values[index]
-            if isinstance(val, np.float64):
-                val = val.item()
-            return val
-        except IndexError as exc:
-            raise IndexError(
-                f"Invalid index : params indices are 1d from 0 to {len(self) - 1}"
-            ) from exc
-
-    def __setitem__(
-        self,
-        index: Index,
-        new_values: ArrayLike,
-    ) -> None:
-        new_values = np.asarray(new_values, dtype=np.float64).reshape(
-            -1,
+    def copy(self) -> Self:
+        return self.__class__(
+            **{self.params_names[i]: value for i, value in enumerate(self._params)}
         )
-        try:
-            self._values[index] = new_values
-        except IndexError as exc:
-            raise IndexError(
-                f"Invalid index : params indices are 1d from 0 to {len(self) - 1}"
-            ) from exc
 
     def __getattr__(self, name: str):
+        class_name = type(self).__name__
         if name in self.__dict__:
             value = self.__dict__[name]
-        elif name in self.name_to_indice:
-            value = self._values[self.name_to_indice[name]].item()
+        elif name in self.params_names_indices:
+            value = self._params[self.params_names_indices[name]].item()
         else:
-            raise AttributeError(f"Parameters has no attribute named {name}")
+            raise AttributeError(f"{class_name} has no attribute named {name}")
         return value
 
     def __setattr__(self, name: str, value: Any):
-        if name == "name_to_indice":
+        if name == "params_names_indices":
             super().__setattr__(name, value)
-        elif name in self.name_to_indice:
-            self._values[self.name_to_indice[name]] = float(value)
+        elif name in self.params_names_indices:
+            self._params[self.params_names_indices[name]] = float(value)
         else:
             super().__setattr__(name, value)
 
-    def append(self, params: Self) -> None:
-        """
-        Appends another Parameters object to itself
-        Args:
-            params (Parameters): Parameters object to append
-        """
-        if set(self.names) & set(params.names):
-            raise ValueError("Can't append Parameters object having common param names")
-        self._values = np.concatenate((self._values, params.values))
-        self.name_to_indice.update(
-            {name: indice + len(self) for name, indice in params.name_to_indice.items()}
-        )
-
-    def update(self, **kparams_names: float) -> None:
-        """
-        Args:
-            **kparams_names (float): new parameters values
-        Returns:
-            Update param values of specified param names
-        """
-        for name, value in kparams_names.items():
-            if hasattr(self, name):
-                setattr(self, name, value)
-            else:
-                raise AttributeError(f"Parameters has no attribute {name}")
-
-    def copy(self) -> Self:
-        names = self.names
-        return Parameters(**{names[i]: value for i, value in enumerate(self._values)})
-
     def __repr__(self):
         class_name = type(self).__name__
-        attributes = ", ".join([f"{name}={getattr(self, name)}" for name in self.names])
-        return f"{class_name}({attributes})"
-
-    def __str__(self):
-        attributes = "\n".join(
-            [f"\t{name}: {getattr(self, name)}," for name in self.names]
+        params_repr = ", ".join(
+            [f"{name}: {value}" for name, value in zip(self.params_names, self.params)]
         )
-        return f"Parameters(\n{attributes}\n)"
+        return f"{class_name}({params_repr})"
 
 
-class ParametricFunctions(ABC):
-    def __init__(self, params: Parameters):
-        self._params = params
+class ParametricHazard(ParametricFunctions, ABC):
 
-    @property
-    def params(self):
-        """BLABLABLA"""
-        return self._params
-
-    @params.setter
-    def params(self, values: Union[FloatArray, Parameters]) -> None:
-        """BLABLABLA"""
-        if isinstance(values, Parameters):
-            values = values.values
-        self._params.values = values
+    extra_arguments = []
 
     @property
     @abstractmethod
@@ -222,54 +144,220 @@ class ParametricFunctions(ABC):
         """
 
     @abstractmethod
-    def init_params(self, *args: Any) -> FloatArray:
-        """initialization of params values given observed lifetimes"""
+    def hf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
 
-    @property
-    @abstractmethod
-    def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
 
-    def copy(self) -> Self:
-        return self.__class__(self.params.copy())
+    def chf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
 
-    def __getattr__(self, name: str):
-        class_name = type(self).__name__
-        if name in self.__dict__:
-            value = self.__dict__[name]
-        elif name in ["values", "size"]:
-            raise AttributeError(
-                f"""
-            {class_name} has no attribute named {name}. Maybe you meant functions.params.{name}
-            """
-            )
-        else:
-            if not hasattr(self.params, name):
-                raise AttributeError(f"{class_name} has no attribute named {name}")
-            value = getattr(self.params, name)
-        return value
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        lower_bound = np.zeros_like(time)
+        upper_bound = np.broadcast_to(np.asarray(self.isf(np.array(1e-4))), time.shape)
+        masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
+            upper_bound, time >= self.support_upper_bound
+        )
+        masked_lower_bound: ma.MaskedArray = ma.MaskedArray(
+            lower_bound, time >= self.support_upper_bound
+        )
 
-    def __setattr__(self, name: str, value: Any):
-        if name == "_params":
-            super().__setattr__(name, value)
-        elif hasattr(self.params, name):
-            setattr(self.params, name, value)
-        else:
-            super().__setattr__(name, value)
+        integration = gauss_legendre(
+            self.hf,
+            masked_lower_bound,
+            masked_upper_bound,
+            ndim=2,
+        ) + quad_laguerre(
+            self.hf,
+            masked_upper_bound,
+            ndim=2,
+        )
+        return ma.filled(integration, 1.0)
 
-    def __repr__(self):
-        class_name = type(self).__name__
-        return f"{class_name}({self.params.__repr__()})"
+    def mrl(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        masked_time: ma.MaskedArray = ma.MaskedArray(
+            time, time >= self.support_upper_bound
+        )
+        upper_bound = np.broadcast_to(np.asarray(self.isf(np.array(1e-4))), time.shape)
+        masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
+            upper_bound, time >= self.support_upper_bound
+        )
+
+        def integrand(x):
+            return (x - masked_time) * self.pdf(x)
+
+        integration = gauss_legendre(
+            integrand,
+            masked_time,
+            masked_upper_bound,
+            ndim=2,
+        ) + quad_laguerre(
+            integrand,
+            masked_upper_bound,
+            ndim=2,
+        )
+        mrl = integration / self.sf(masked_time)
+        return ma.filled(mrl, 0.0)
+
+    def moment(self, n: int) -> FloatArray:
+        """
+        BLABLABLA
+        Args:
+            n (int): BLABLABLA
+
+        Returns:
+            BLABLABLA
+        """
+        upper_bound = self.isf(np.array(1e-4))
+
+        def integrand(x):
+            return x**n * self.pdf(x)
+
+        return gauss_legendre(
+            integrand, np.array(0.0), upper_bound, ndim=2
+        ) + quad_laguerre(integrand, upper_bound, ndim=2)
+
+    def mean(self) -> FloatArray:
+        """
+        BLABLABLABLA
+        Returns:
+            float: BLABLABLABLA
+        """
+        return self.moment(1)
+
+    def var(self) -> FloatArray:
+        """
+        BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+        return self.moment(2) - self.moment(1) ** 2
+
+    def sf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        return np.exp(-self.chf(time))
+
+    def isf(
+        self,
+        probability: FloatArray,
+    ) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            probability (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        return root_scalar(
+            lambda x: self.sf(x) - probability,
+            method="newton",
+            x0=0.0,
+        ).root
+
+    def cdf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        return 1 - self.sf(time)
+
+    def pdf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        return self.hf(time) * self.sf(time)
+
+    def rvs(
+        self, size: Optional[int] = 1, seed: Optional[int] = None
+    ) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            size (Optional[int]): BLABLABLABLA
+            seed (Optional[int]): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        generator = np.random.RandomState(seed=seed)
+        probability = generator.uniform(size=size)
+        return self.isf(probability)
+
+    def ppf(
+        self,
+        probability: FloatArray,
+    ) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            probability (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+        return self.isf(1 - probability)
+
+    def median(self) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+
+        Returns:
+            float: BLABLABLABLA
+        """
+        return self.ppf(np.array(0.5))
 
 
-class CompositionParametricFunctions(ParametricFunctions, ABC):
+class CompositeHazard(ParametricHazard, ABC):
 
     def __init__(self, **kwfunctions: ParametricFunctions):
-        self.composites = kwfunctions
-        params = Parameters()
+        self.components = kwfunctions
+        kwparams = {}
         for functions in kwfunctions.values():
-            params.append(functions.params)
-        super().__init__(params)
+            if set(kwparams.keys()) & set(functions.params_names):
+                raise ValueError("Can't compose functions with common param names")
+            kwparams.update(
+                {
+                    name: value
+                    for name, value in zip(functions.params_names, functions.params)
+                }
+            )
+        super().__init__(**kwparams)
 
     @property
     def params(self):
@@ -277,35 +365,26 @@ class CompositionParametricFunctions(ParametricFunctions, ABC):
         return self._params
 
     @params.setter
-    def params(self, values: Union[FloatArray, Parameters]) -> None:
+    def params(self, values: FloatArray) -> None:
         """BLABLABLA"""
-        if isinstance(values, Parameters):
-            values = values.values
-        self._params.values = values
         pos = 0
-        for functions in self.composites.values():
+        super().__setattr__("params", values)
+        for functions in self.components.values():
             functions.params = values[pos : pos + functions.params.size]
             pos += functions.params.size
 
     def copy(self) -> Self:
-        print(self.__class__)
-        return self.__class__(**{k: v.copy() for k, v in self.composites.items()})
+        return self.__class__(**{k: v.copy() for k, v in self.components.items()})
 
     def __getattr__(self, name: str):
         value = None
         class_name = type(self).__name__
         if name in self.__dict__:
             value = self.__dict__[name]
-        elif name in self.composites:
-            value = self.composites[name]
-        elif name in ["values", "size"]:
-            raise AttributeError(
-                f"""
-                {class_name} has no attribute named {name}. Maybe you meant functions.params.{name}
-                """
-            )
+        elif name in self.components:
+            value = self.components[name]
         else:
-            for functions in self.composites.values():
+            for functions in self.components.values():
                 if hasattr(functions, name):
                     value = getattr(functions, name)
                     break
@@ -314,11 +393,11 @@ class CompositionParametricFunctions(ParametricFunctions, ABC):
         return value
 
     def __setattr__(self, name: str, value: Any):
-        if name == "composites":
+        if name == "components":
             self.__dict__[name] = value
-        elif hasattr(self.params, name):
-            setattr(self.params, name, value)
-            for functions in self.composites.values():
+        elif name in self.params_names_indices:
+            self._params[self.params_names_indices[name]] = float(value)
+            for functions in self.components.values():
                 if hasattr(functions, name):
                     setattr(functions, name, value)
                     break
@@ -330,78 +409,13 @@ class CompositionParametricFunctions(ParametricFunctions, ABC):
         functions_repr = "".join(
             (
                 f"    {name} : {value.__repr__()},\n"
-                for name, value in self.composites.items()
+                for name, value in self.components.items()
             )
         )
         return f"{class_name}(\n{functions_repr})"
 
 
 class Likelihood(ABC):
-    """
-    BLABLABLA
-    """
-
-    def __init__(
-        self,
-        functions: ParametricFunctions,
-    ):
-        self.functions = functions
-
-    @property
-    def params(self):
-        """
-        Returns:
-        """
-        return self.functions.params
-
-    @params.setter
-    def params(self, values: Union[FloatArray, Parameters]):
-        """
-        Args:
-            values ():
-
-        Returns:
-        """
-        self.functions.params = values
-
-    @abstractmethod
-    def negative_log_likelihood(self):
-        """BLABLABLA"""
-
-    def __getattr__(self, name: str):
-        class_name = type(self).__name__
-        if name in self.__dict__:
-            value = self.__dict__[name]
-        else:
-            if not hasattr(self.functions, name):
-                raise AttributeError(f"{class_name} has no attribute named {name}")
-            value = getattr(self.functions, name)
-        return value
-
-    def __setattr__(self, name: str, value: Any):
-        if name == "functions":
-            super().__setattr__(name, value)
-        elif hasattr(self.functions, name):
-            setattr(self.functions, name, value)
-        else:
-            super().__setattr__(name, value)
-
-
-class JacLikelihood(Likelihood, ABC):
-    """
-    BLABLABLA
-    """
-
-    @abstractmethod
-    def jac_negative_log_likelihood(self):
-        """"""
-
-
-class Model(ABC):
-    """
-    BLABLABLA
-    """
-
     def __init__(self, functions: ParametricFunctions):
         self.functions = functions
 
@@ -413,7 +427,7 @@ class Model(ABC):
         return self.functions.params
 
     @params.setter
-    def params(self, values: Union[FloatArray, Parameters]):
+    def params(self, values: FloatArray):
         """
         Args:
             values ():
@@ -423,29 +437,8 @@ class Model(ABC):
         self.functions.params = values
 
     @abstractmethod
-    def fit(
-        self,
-        time: ArrayLike,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
-        inplace: bool = True,
-        **kwargs: Any,
-    ) -> Parameters:
-        """
-        BLABLABLABLA
-        Args:
-            time (ArrayLike):
-            entry (Optional[ArrayLike]):
-            departure (Optional[ArrayLike]):
-            lc_indicators (Optional[ArrayLike]):
-            rc_indicators (Optional[ArrayLike]):
-            inplace (bool): (default is True)
-
-        Returns:
-            Parameters: optimum parameters found
-        """
+    def negative_log(self, params: FloatArray) -> float:
+        """"""
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
@@ -464,7 +457,3 @@ class Model(ABC):
             setattr(self.functions, name, value)
         else:
             super().__setattr__(name, value)
-
-    def __repr__(self):
-        class_name = type(self).__name__
-        return f"{class_name}({self.params.__repr__()})"

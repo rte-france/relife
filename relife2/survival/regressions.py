@@ -1,0 +1,273 @@
+"""
+This module defines probability functions used in regression
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
+"""
+
+from abc import ABC, abstractmethod
+from typing import Union
+
+import numpy as np
+from numpy.typing import NDArray
+from scipy.optimize import Bounds
+
+from relife2.survival.data import Lifetimes
+from relife2.survival.distributions import DistributionFunctions
+from relife2.survival.types import (
+    ParametricFunctions,
+    CompositeHazard,
+)
+
+IntArray = NDArray[np.int64]
+BoolArray = NDArray[np.bool_]
+FloatArray = NDArray[np.float64]
+
+
+class CovarEffect(ParametricFunctions, ABC):
+    """
+    Object that computes covariates effect functions
+    """
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        return Bounds(
+            np.full(self.params.size, -np.inf),
+            np.full(self.params.size, np.inf),
+        )
+
+    def init_params(self) -> FloatArray:
+        return np.zeros_like(self.params)
+
+    @abstractmethod
+    def g(self, covar: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            covar (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def jac_g(self, covar: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            covar (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+
+class RegressionFunctions(CompositeHazard, ABC):
+    """
+    Object that computes every probability functions of a regression model
+    """
+
+    def __init__(self, covar_effect: CovarEffect, baseline: DistributionFunctions):
+        super().__init__(covar_effect=covar_effect, baseline=baseline)
+        self._covar = np.random.random((1, self.covar_effet.params.size))
+        self.extra_arguments.append("covar")
+
+    @property
+    def covar(self):
+        return self._covar
+
+    @covar.setter
+    def covar(self, values: FloatArray) -> None:
+        nb_covar = values.shape[-1]
+        if nb_covar != self.functions.covar_effect.params.size:
+            raise ValueError(
+                f"Invalid number of covar : expected {self.covar_effect.params.size}, got {nb_covar}"
+            )
+        self._covar = values
+
+    @property
+    def support_lower_bound(self):
+        """
+        Returns:
+            BLABLABLABLA
+        """
+        return 0.0
+
+    @property
+    def support_upper_bound(self):
+        """
+        Returns:
+            BLABLABLABLA
+        """
+        return np.inf
+
+    def init_params(self, rlc: Lifetimes) -> FloatArray:
+        """initialization of params values given observed lifetimes"""
+
+        return np.concatenate(
+            (
+                self.covar_effect.init_params(),
+                self.baseline.init_params(rlc),
+            )
+        )
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        lb = np.concatenate(
+            (
+                self.covar_effect.params_bounds.lb,
+                self.baseline.params_bounds.lb,
+            )
+        )
+        ub = np.concatenate(
+            (
+                self.covar_effect.params_bounds.ub,
+                self.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
+
+    @abstractmethod
+    def jac_hf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def jac_chf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+    @abstractmethod
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            Union[float, FloatArray]: BLABLABLABLA
+        """
+
+
+class ProportionalHazardEffect(CovarEffect):
+    """
+    BLABLABLABLA
+    """
+
+    def g(self, covar: FloatArray) -> Union[float, FloatArray]:
+        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
+
+    def jac_g(self, covar: FloatArray) -> Union[float, FloatArray]:
+        return covar * self.g(covar)
+
+
+class ProportionalHazardFunctions(RegressionFunctions):
+    """
+    BLABLABLABLA
+    """
+
+    def hf(
+        self,
+        time: FloatArray,
+    ) -> Union[float, FloatArray]:
+        return self.covar_effect.g(self.covar) * self.baseline.hf(time)
+
+    def chf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return self.covar_effect.g(self.covar) * self.baseline.chf(time)
+
+    def ichf(self, cumulative_hazard_rate: FloatArray) -> Union[float, FloatArray]:
+        return self.baseline.ichf(
+            cumulative_hazard_rate / self.covar_effect.g(self.covar)
+        )
+
+    def jac_hf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return np.column_stack(
+            (
+                self.covar_effect.jac_g(self.covar) * self.baseline.hf(time),
+                self.covar_effect.g(self.covar) * self.baseline.jac_hf(time),
+            )
+        )
+
+    def jac_chf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return np.column_stack(
+            (
+                self.covar_effect.jac_g(self.covar) * self.baseline.chf(time),
+                self.covar_effect.g(self.covar) * self.baseline.jac_chf(time),
+            )
+        )
+
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        return self.covar_effect.g(self.covar) * self.baseline.dhf(time)
+
+
+class AFTEffect(CovarEffect):
+    """
+    BLABLABLABLA
+    """
+
+    def g(self, covar: FloatArray) -> Union[float, FloatArray]:
+        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
+
+    def jac_g(self, covar: FloatArray) -> Union[float, FloatArray]:
+        return covar * self.g(covar)
+
+
+class AFTFunctions(RegressionFunctions):
+    """
+    BLABLABLABLA
+    """
+
+    def hf(self, time: FloatArray) -> Union[float, FloatArray]:
+        t0 = time / self.covar_effect.g(self.covar)
+        return self.baseline.hf(t0) / self.covar_effect.g(self.covar)
+
+    def chf(self, time: FloatArray) -> Union[float, FloatArray]:
+        t0 = time / self.covar_effect.g(self.covar)
+        return self.baseline.chf(t0)
+
+    def ichf(self, cumulative_hazard_rate: FloatArray) -> Union[float, FloatArray]:
+        return self.covar_effect.g(self.covar) * self.baseline.ichf(
+            cumulative_hazard_rate
+        )
+
+    def jac_hf(self, time: FloatArray) -> Union[float, FloatArray]:
+        t0 = time / self.covar_effect.g(self.covar)
+        return np.column_stack(
+            (
+                -self.covar_effect.jac_g(self.covar)
+                / self.covar_effect.g(self.covar) ** 2
+                * (self.baseline.hf(t0) + t0 * self.baseline.dhf(t0)),
+                self.baseline.jac_hf(t0) / self.covar_effect.g(self.covar),
+            )
+        )
+
+    def jac_chf(self, time: FloatArray) -> Union[float, FloatArray]:
+        t0 = time / self.covar_effect.g(self.covar)
+        return np.column_stack(
+            (
+                -self.covar_effect.jac_g(self.covar)
+                / self.covar_effect.g(self.covar)
+                * t0
+                * self.baseline.hf(t0),
+                self.baseline.jac_chf(t0),
+            )
+        )
+
+    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+        t0 = time / self.covar_effect.g(self.covar)
+        return self.baseline.dhf(t0) / self.covar_effect.g(self.covar) ** 2

@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from numpy.typing import NDArray
 
-from relife2.survival.data.lifetimes import Lifetimes, ObservedLifetimes, Truncations
+from relife2.survival.data.dataclass import Lifetimes, ObservedLifetimes, Truncations
 
 FloatArray = NDArray[np.float64]
 

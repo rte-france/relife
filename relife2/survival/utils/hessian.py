@@ -2,13 +2,13 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 
-from relife2.survival.types import JacLikelihood
+from relife2.survival.types import Likelihood
 
 FloatArray = NDArray[np.float64]
 
 
 def hessian_cs(
-    likelihood: JacLikelihood,
+    likelihood: Likelihood,
     eps: float = 1e-6,
 ) -> FloatArray:
     """
@@ -36,7 +36,7 @@ def hessian_cs(
 
 
 def hessian_2point(
-    likelihood: JacLikelihood,
+    likelihood: Likelihood,
     eps: float = 1e-6,
 ) -> FloatArray:
     """
