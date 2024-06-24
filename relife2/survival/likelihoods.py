@@ -30,19 +30,9 @@ class LikelihoodFromLifetimes(Likelihood):
         super().__init__(functions)
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
+        self._control_kwargs(**kwdata)
         self.kwdata = kwdata
-        for extra_arg in self.functions.extra_arguments:
-            if extra_arg not in self.kwdata:
-                class_name = self.functions.__class__.__name__
-                raise ValueError(
-                    f"kwdata must contain values of {extra_arg} to work with {class_name}"
-                )
-        for name in kwdata:
-            if not hasattr(self.functions, name):
-                class_name = self.functions.__class__.__name__
-                raise AttributeError(
-                    f"{class_name} must have attribute {name} so it can be used in likelihood"
-                )
+
         if hasattr(self.functions, "jac_hf") and hasattr(self.functions, "jac_chf"):
             self.hasjac = True
 

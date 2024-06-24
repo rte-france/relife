@@ -65,10 +65,19 @@ class RegressionFunctions(CompositeHazard, ABC):
     Object that computes every probability functions of a regression model
     """
 
-    def __init__(self, covar_effect: CovarEffect, baseline: DistributionFunctions):
+    def __init__(
+        self,
+        covar_effect: CovarEffect,
+        baseline: DistributionFunctions,
+    ):
         super().__init__(covar_effect=covar_effect, baseline=baseline)
-        self._covar = np.random.random((1, self.covar_effect.params.size))
         self.extra_arguments.append("covar")
+        self._covar = np.empty((1, self.nb_covar), dtype=np.float64)
+
+    @property
+    def nb_covar(self) -> int:
+        """BLABLA"""
+        return self.covar_effect.params.size
 
     @property
     def covar(self):
@@ -81,7 +90,7 @@ class RegressionFunctions(CompositeHazard, ABC):
     @covar.setter
     def covar(self, values: FloatArray) -> None:
         nb_covar = values.shape[-1]
-        if nb_covar != self.covar_effect.params.size:
+        if values.shape[-1] != self.nb_covar:
             raise ValueError(
                 f"Invalid number of covar : expected {self.covar_effect.params.size}, got {nb_covar}"
             )

@@ -461,6 +461,19 @@ class FunctionsBridge:
         """
         self.functions.params = values
 
+    def _control_kwargs(self, **kwargs: Any) -> None:
+        """"""
+        for extra_arg in self.functions.extra_arguments:
+            if extra_arg not in kwargs:
+                class_name = self.__class__.__name__
+                raise ValueError(
+                    f"kwargs must contain values of {extra_arg} to work with {class_name}"
+                )
+        for name in kwargs:
+            class_name = self.__class__.__name__
+            if not hasattr(self.functions, name):
+                raise AttributeError(f"{class_name} has no attribute called {name}")
+
     def __getattr__(self, name: str):
         class_name = type(self).__name__
         if name in self.__dict__:

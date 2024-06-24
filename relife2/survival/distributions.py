@@ -121,7 +121,6 @@ class ExponentialFunctions(DistributionFunctions):
     """
 
     def hf(self, time: FloatArray) -> FloatArray:
-        print("functions :", self.params)
         return self.rate * np.ones_like(time)
 
     def chf(self, time: FloatArray) -> FloatArray:

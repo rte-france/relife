@@ -40,108 +40,146 @@ class LifetimeModel(FunctionsBridge):
 
     functions: ParametricHazard
 
-    def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def sf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
         Args:
             time ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
 
-    def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+    def isf(self, probability: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Args:
             probability ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.isf(array_factory(probability)))[()]
 
-    def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def hf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Args:
             time ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.hf(array_factory(time)))[()]
 
-    def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def chf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Args:
             time ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.chf(array_factory(time)))[()]
 
-    def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def cdf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Args:
             time ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.cdf(array_factory(time)))[()]
 
-    def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+    def pdf(self, probability: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Args:
             probability ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
 
-    def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def ppf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Args:
             time ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.ppf(array_factory(time)))[()]
 
-    def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
+    def mrl(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Args:
             time ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.mrl(array_factory(time)))[()]
 
-    def ichf(self, cumulative_hazard_rate: ArrayLike) -> Union[float, FloatArray]:
+    def ichf(
+        self, cumulative_hazard_rate: ArrayLike, **kwargs: Any
+    ) -> Union[float, FloatArray]:
         """
 
         Args:
             cumulative_hazard_rate ():
+            **kwargs (object):
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
             ()
         ]
 
     def rvs(
-        self, size: Optional[int] = 1, seed: Optional[int] = None
+        self, size: Optional[int] = 1, seed: Optional[int] = None, **kwargs: Any
     ) -> Union[float, FloatArray]:
         """
 
@@ -152,36 +190,42 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
 
-    def mean(
-        self,
-    ) -> Union[float, FloatArray]:
+    def mean(self, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return self.functions.mean()
 
-    def var(
-        self,
-    ) -> Union[float, FloatArray]:
+    def var(self, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return self.functions.var()
 
-    def median(
-        self,
-    ) -> Union[float, FloatArray]:
+    def median(self, **kwargs: Any) -> Union[float, FloatArray]:
         """
 
         Returns:
 
         """
+        self._control_kwargs(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
         return self.functions.median()
 
     def fit(
@@ -288,30 +332,36 @@ class LogLogistic(LifetimeModel):
 Distribution = Union[Exponential, Gamma, Gompertz, LogLogistic, Weibull]
 
 
-def set_covar_weights(*beta: Union[float, None], **kwargs) -> dict[str, float | None]:
+def control_covar_args(
+    weights: Optional[
+        tuple[float, None] | list[float | None] | dict[str, float | None]
+    ] = None,
+    nb_covar: Optional[int] = None,
+) -> dict[str, float | None]:
     """
 
     Args:
-        *beta ():
-        **kwargs ():
+        nb_covar ():
+        covar ():
+        weights ():
 
     Returns:
 
     """
-    nb_covar = kwargs.pop("nb_covar", None)
     if nb_covar is None:
-        if len(beta) == 0:
+        if weights is None:
             raise ValueError(
                 "Regression model expects at least covar weights values or nb_covar"
             )
-        kwbeta = {f"beta_{i}": value for i, value in enumerate(beta)}
+        if isinstance(weights, (tuple, list)):
+            weights = {f"beta_{i}": value for i, value in enumerate(weights)}
     else:
-        if len(beta) != 0:
+        if weights is not None:
             raise ValueError(
                 "When covar weights are specified, nb_covar is useless. Remove nb_covar."
             )
-        kwbeta = {f"beta_{i}": np.random.random() for i in range(nb_covar)}
-    return kwbeta
+        weights = {f"beta_{i}": None for i in range(nb_covar)}
+    return weights
 
 
 class ProportionalHazard(LifetimeModel):
@@ -320,16 +370,16 @@ class ProportionalHazard(LifetimeModel):
     def __init__(
         self,
         baseline: Distribution,
-        *beta: Union[float, None],
+        weights: Optional[
+            tuple[float, None] | list[float | None] | dict[str, float | None]
+        ] = None,
         nb_covar: Optional[int] = None,
     ):
-
+        weights = control_covar_args(weights, nb_covar)
         super().__init__(
             ProportionalHazardFunctions(
-                covar_effect=ProportionalHazardEffect(
-                    **set_covar_weights(*beta, nb_covar=nb_covar)
-                ),
-                baseline=baseline.functions.copy(),
+                ProportionalHazardEffect(**weights),
+                baseline.functions.copy(),
             )
         )
 
@@ -340,12 +390,15 @@ class AFT(LifetimeModel):
     def __init__(
         self,
         baseline: Distribution,
-        *beta: Union[float, None],
+        weights: Optional[
+            tuple[float, None] | list[float | None] | dict[str, float | None]
+        ] = None,
         nb_covar: Optional[int] = None,
     ):
+        weights = control_covar_args(weights, nb_covar)
         super().__init__(
             AFTFunctions(
-                covar_effect=AFTEffect(**set_covar_weights(*beta, nb_covar=nb_covar)),
-                baseline=baseline.functions.copy(),
+                AFTEffect(**weights),
+                baseline.functions.copy(),
             )
         )
