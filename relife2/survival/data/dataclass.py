@@ -1,3 +1,11 @@
+"""
+This module defines dataclass used to encapsulate data used for parameters estimation of models
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
+"""
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -5,26 +13,6 @@ from numpy.typing import NDArray
 
 FloatArray = NDArray[np.float64]
 IntArray = NDArray[np.int64]
-
-
-@dataclass(frozen=True)
-class ExtraData:
-    values: FloatArray
-    index: IntArray
-
-    values: FloatArray
-    index: IntArray
-
-    def __post_init__(self):
-        if self.values.ndim != 2:
-            raise ValueError("Invalid LifetimeData values number of dimensions")
-        if self.index.ndim != 1:
-            raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
-        if len(self.values) != len(self.index):
-            raise ValueError("Incompatible lifetime values and unit_ids")
-
-    def __len__(self) -> int:
-        return len(self.values)
 
 
 @dataclass(frozen=True)

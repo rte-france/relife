@@ -1,12 +1,19 @@
+"""
+This module defines factory classes used to instanciate appropriate dataclass given user data
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
+"""
+
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
 import numpy as np
-from numpy.typing import ArrayLike
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from relife2.survival.data.dataclass import Lifetimes, ObservedLifetimes, Truncations
-from relife2.survival.data.tools import lifetimes_compatibility, array_factory
+from relife2.survival.data.tools import array_factory, lifetimes_compatibility
 
 FloatArray = NDArray[np.float64]
 BoolArray = NDArray[np.bool_]

@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring
 
-from .dataclass import ObservedLifetimes, Truncations, Lifetimes
+from .dataclass import Lifetimes, ObservedLifetimes, Truncations
 from .factories import lifetime_factory_template
-from .tools import array_factory, lifetimes_compatibility, intersect_lifetimes
+from .tools import array_factory, intersect_lifetimes, lifetimes_compatibility

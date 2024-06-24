@@ -6,15 +6,14 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from abc import abstractmethod, ABC
-from typing import Any, Union
+from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.survival.data import Lifetimes
 from relife2.survival.types import ParametricHazard
 from relife2.survival.utils.integrations import shifted_laguerre
 
@@ -28,10 +27,10 @@ class DistributionFunctions(ParametricHazard, ABC):
     Object that computes every probability functions of a distribution model
     """
 
-    def init_params(self, rlc: Lifetimes) -> FloatArray:
+    def init_params(self, *args: Any) -> FloatArray:
         """initialization of params values given observed lifetimes"""
         param0 = np.ones(self.params.size)
-        param0[-1] = 1 / np.median(rlc.values)
+        param0[-1] = 1 / np.median(args[0].values)
         return param0
 
     @property
@@ -59,37 +58,61 @@ class DistributionFunctions(ParametricHazard, ABC):
         return np.inf
 
     @abstractmethod
-    def jac_hf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def jac_hf(self, time: FloatArray) -> FloatArray:
         """
         BLABLABLABLA
         Args:
             time (FloatArray): BLABLABLABLA
 
         Returns:
-            Union[float, FloatArray]: BLABLABLABLA
+            FloatArray: BLABLABLABLA
         """
 
     @abstractmethod
-    def jac_chf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def jac_chf(self, time: FloatArray) -> FloatArray:
         """
         BLABLABLABLA
         Args:
             time (FloatArray): BLABLABLABLA
 
         Returns:
-            Union[float, FloatArray]: BLABLABLABLA
+            FloatArray: BLABLABLABLA
         """
 
     @abstractmethod
-    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def dhf(self, time: FloatArray) -> FloatArray:
         """
         BLABLABLABLA
         Args:
             time (FloatArray): BLABLABLABLA
 
         Returns:
-            Union[float, FloatArray]: BLABLABLABLA
+            FloatArray: BLABLABLABLA
         """
+
+    @abstractmethod
+    def ichf(
+        self,
+        cumulative_hazard_rate: FloatArray,
+    ) -> FloatArray:
+        """
+        BLABLABLABLA
+        Args:
+            cumulative_hazard_rate (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+        Returns:
+            FloatArray: BLABLABLABLA
+        """
+
+    def isf(self, probability: FloatArray) -> FloatArray:
+        """
+        BLABLABLABLA
+        Args:
+            probability (FloatArray): BLABLABLABLA
+        Returns:
+            FloatArray: BLABLABLABLA
+        """
+        cumulative_hazard_rate = -np.log(probability)
+        return self.ichf(cumulative_hazard_rate)
 
 
 class ExponentialFunctions(DistributionFunctions):
@@ -97,7 +120,7 @@ class ExponentialFunctions(DistributionFunctions):
     BLABLABLABLA
     """
 
-    def hf(self, time: FloatArray, **kwargs) -> FloatArray:
+    def hf(self, time: FloatArray) -> FloatArray:
         return self.rate * np.ones_like(time)
 
     def chf(self, time: FloatArray) -> FloatArray:
@@ -121,7 +144,7 @@ class ExponentialFunctions(DistributionFunctions):
     def jac_chf(self, time: FloatArray) -> FloatArray:
         return np.ones((time.size, 1)) * time
 
-    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def dhf(self, time: FloatArray) -> FloatArray:
         return np.zeros_like(time)
 
 
@@ -130,7 +153,7 @@ class WeibullFunctions(DistributionFunctions):
     BLABLABLABLA
     """
 
-    def hf(self, time: FloatArray, **kwargs) -> FloatArray:
+    def hf(self, time: FloatArray) -> FloatArray:
         return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
 
     def chf(self, time: FloatArray) -> FloatArray:
@@ -174,7 +197,7 @@ class WeibullFunctions(DistributionFunctions):
             )
         )
 
-    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def dhf(self, time: FloatArray) -> FloatArray:
         return (
             self.shape
             * (self.shape - 1)
@@ -188,10 +211,10 @@ class GompertzFunctions(DistributionFunctions):
     BLABLABLABLA
     """
 
-    def init_params(self, rlc: Lifetimes) -> FloatArray:
+    def init_params(self, *args: Any) -> FloatArray:
         param0 = np.empty(self.params.size, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(rlc.values))
-        shape = np.exp(-rate * np.mean(rlc.values))
+        rate = np.pi / (np.sqrt(6) * np.std(args[0].values))
+        shape = np.exp(-rate * np.mean(args[0].values))
         param0[0] = shape
         param0[1] = rate
 
@@ -232,7 +255,7 @@ class GompertzFunctions(DistributionFunctions):
             )
         )
 
-    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def dhf(self, time: FloatArray) -> FloatArray:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
 
@@ -264,9 +287,6 @@ class GammaFunctions(DistributionFunctions):
 
     def var(self) -> float:
         return self.shape / (self.rate**2)
-
-    def mrl(self, time: FloatArray) -> FloatArray:
-        return super().mrl(time)
 
     def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
@@ -300,7 +320,7 @@ class GammaFunctions(DistributionFunctions):
             )
         )
 
-    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def dhf(self, time: FloatArray) -> FloatArray:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
 
@@ -329,9 +349,6 @@ class LogLogisticFunctions(DistributionFunctions):
             raise ValueError(f"Variance only defined for c > 2: c = {self.shape}")
         return (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
 
-    def mrl(self, time: FloatArray) -> FloatArray:
-        return super().mrl(time)
-
     def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
@@ -355,7 +372,7 @@ class LogLogisticFunctions(DistributionFunctions):
             )
         )
 
-    def dhf(self, time: FloatArray) -> Union[float, FloatArray]:
+    def dhf(self, time: FloatArray) -> FloatArray:
         x = self.rate * time
         return (
             self.shape

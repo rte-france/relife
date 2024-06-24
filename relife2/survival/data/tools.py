@@ -1,6 +1,13 @@
+"""
+This module defines tools functions used to treat statistical data
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
+"""
+
 import numpy as np
-from numpy.typing import ArrayLike
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from relife2.survival.data.dataclass import Lifetimes, ObservedLifetimes, Truncations
 

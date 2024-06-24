@@ -1,3 +1,11 @@
+"""
+This module defines functions used for estimation of hessian matrix given likelihood
+
+Copyright (c) 2022, RTE (https://www.rte-france.com)
+See AUTHORS.txt
+SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import approx_fprime

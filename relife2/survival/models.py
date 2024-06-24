@@ -1,87 +1,141 @@
 """
-This module defines probability functions used in regression
+This module defines classes that instanciate facade objects used to create statistical models
 
 Copyright (c) 2022, RTE (https://www.rte-france.com)
 See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from typing import Optional, Union, NewType, Any
+from typing import Any, NewType, Optional, Union
 
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import minimize
 
 from relife2.survival.data import array_factory, lifetime_factory_template
 from relife2.survival.distributions import (
     ExponentialFunctions,
-    WeibullFunctions,
-    GompertzFunctions,
     GammaFunctions,
+    GompertzFunctions,
     LogLogisticFunctions,
+    WeibullFunctions,
 )
 from relife2.survival.likelihoods import LikelihoodFromLifetimes
 from relife2.survival.regressions import (
-    ProportionalHazardFunctions,
-    ProportionalHazardEffect,
-    AFTFunctions,
     AFTEffect,
+    AFTFunctions,
+    ProportionalHazardEffect,
+    ProportionalHazardFunctions,
 )
-from relife2.survival.types import ParametricHazard
+from relife2.survival.types import FunctionsBridge, ParametricHazard
 
 FloatArray = NDArray[np.float64]
 
 
-class LifetimeModel:
+class LifetimeModel(FunctionsBridge):
     """
-    BLABLABLA
+    Façade class that provides a simplified interface to lifetime model
     """
 
     def __init__(self, functions: ParametricHazard):
-        self.functions = functions
-
-    @property
-    def params(self):
-        """
-        Returns:
-        """
-        return self.functions.params
-
-    @params.setter
-    def params(self, values: FloatArray):
-        """
-        Args:
-            values ():
-
-        Returns:
-        """
-        self.functions.params = values
+        super().__init__(functions)
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        Args:
+            time ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
 
     def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.isf(array_factory(probability)))[()]
 
     def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.hf(array_factory(time)))[()]
 
     def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.chf(array_factory(time)))[()]
 
     def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.cdf(array_factory(time)))[()]
 
     def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
 
     def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.ppf(array_factory(time)))[()]
 
     def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.mrl(array_factory(time)))[()]
 
     def ichf(self, cumulative_hazard_rate: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            cumulative_hazard_rate ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
             ()
         ]
@@ -89,21 +143,45 @@ class LifetimeModel:
     def rvs(
         self, size: Optional[int] = 1, seed: Optional[int] = None
     ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            size ():
+            seed ():
+
+        Returns:
+
+        """
         return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
 
     def mean(
         self,
     ) -> float:
+        """
+
+        Returns:
+
+        """
         return self.functions.mean()
 
     def var(
         self,
     ) -> float:
+        """
+
+        Returns:
+
+        """
         return self.functions.var()
 
     def median(
         self,
     ) -> float:
+        """
+
+        Returns:
+
+        """
         return self.functions.median()
 
     def fit(
@@ -136,7 +214,7 @@ class LifetimeModel:
         minimize_kwargs = {
             "method": kwargs.pop("method", "L-BFGS-B"),
             "bounds": kwargs.pop("bounds", None),
-            "contraints": kwargs.pop("constraints", ()),
+            "constraints": kwargs.pop("constraints", ()),
             "tol": kwargs.pop("tol", None),
             "callback": kwargs.pop("callback", None),
             "options": kwargs.pop("options", None),
@@ -159,28 +237,6 @@ class LifetimeModel:
         if inplace:
             self.params = optimizer.x
         return optimizer.x
-
-    def __getattr__(self, name: str):
-        class_name = type(self).__name__
-        if name in self.__dict__:
-            value = self.__dict__[name]
-        else:
-            if not hasattr(self.functions, name):
-                raise AttributeError(f"{class_name} has no attribute named {name}")
-            value = getattr(self.functions, name)
-        return value
-
-    def __setattr__(self, name: str, value: Any):
-        if name == "functions":
-            super().__setattr__(name, value)
-        elif hasattr(self.functions, name):
-            setattr(self.functions, name, value)
-        else:
-            super().__setattr__(name, value)
-
-    def __repr__(self):
-        class_name = type(self).__name__
-        return f"{class_name}({self.params.__repr__()})"
 
 
 class Exponential(LifetimeModel):
@@ -224,6 +280,15 @@ Distribution = NewType(
 
 
 def set_covar_weights(*beta: Union[float, None], **kwargs) -> dict[str, float]:
+    """
+
+    Args:
+        *beta ():
+        **kwargs ():
+
+    Returns:
+
+    """
     nb_covar = kwargs.pop("nb_covar", None)
     if nb_covar is None:
         if len(beta) == 0:
