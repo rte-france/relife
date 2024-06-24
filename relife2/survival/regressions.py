@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray

@@ -6,7 +6,7 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from typing import Any, NewType, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -14,6 +14,7 @@ from scipy.optimize import minimize
 
 from relife2.survival.data import array_factory, lifetime_factory_template
 from relife2.survival.distributions import (
+    DistributionFunctions,
     ExponentialFunctions,
     GammaFunctions,
     GompertzFunctions,
@@ -37,8 +38,7 @@ class LifetimeModel(FunctionsBridge):
     Façade class that provides a simplified interface to lifetime model
     """
 
-    def __init__(self, functions: ParametricHazard):
-        super().__init__(functions)
+    functions: ParametricHazard
 
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
@@ -242,12 +242,16 @@ class LifetimeModel(FunctionsBridge):
 class Exponential(LifetimeModel):
     """BLABLABLABLA"""
 
+    functions: DistributionFunctions
+
     def __init__(self, rate: Optional[float] = None):
         super().__init__(ExponentialFunctions(rate=rate))
 
 
 class Weibull(LifetimeModel):
     """BLABLABLABLA"""
+
+    functions: DistributionFunctions
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(WeibullFunctions(shape=shape, rate=rate))
@@ -256,12 +260,16 @@ class Weibull(LifetimeModel):
 class Gompertz(LifetimeModel):
     """BLABLABLABLA"""
 
+    functions: DistributionFunctions
+
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(GompertzFunctions(shape=shape, rate=rate))
 
 
 class Gamma(LifetimeModel):
     """BLABLABLABLA"""
+
+    functions: DistributionFunctions
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(GammaFunctions(shape=shape, rate=rate))
@@ -270,16 +278,16 @@ class Gamma(LifetimeModel):
 class LogLogistic(LifetimeModel):
     """BLABLABLABLA"""
 
+    functions: DistributionFunctions
+
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(LogLogisticFunctions(shape=shape, rate=rate))
 
 
-Distribution = NewType(
-    "Distribution", Union[Exponential, Gamma, Gompertz, LogLogistic, Weibull]
-)
+Distribution = Union[Exponential, Gamma, Gompertz, LogLogistic, Weibull]
 
 
-def set_covar_weights(*beta: Union[float, None], **kwargs) -> dict[str, float]:
+def set_covar_weights(*beta: Union[float, None], **kwargs) -> dict[str, float | None]:
     """
 
     Args:
@@ -320,7 +328,7 @@ class ProportionalHazard(LifetimeModel):
                 covar_effect=ProportionalHazardEffect(
                     **set_covar_weights(*beta, nb_covar=nb_covar)
                 ),
-                baseline=baseline.functions,
+                baseline=baseline.functions.copy(),
             )
         )
 
@@ -337,6 +345,6 @@ class AFT(LifetimeModel):
         super().__init__(
             AFTFunctions(
                 covar_effect=AFTEffect(**set_covar_weights(*beta, nb_covar=nb_covar)),
-                baseline=baseline.functions,
+                baseline=baseline.functions.copy(),
             )
         )

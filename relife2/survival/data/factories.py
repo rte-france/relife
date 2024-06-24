@@ -33,23 +33,19 @@ class LifetimeDataFactory(ABC):
         rc_indicators: Optional[BoolArray] = None,
     ):
 
-        if entry is None:
-            entry = np.zeros((len(time), 1))
-
-        if departure is None:
-            departure = np.ones((len(time), 1)) * np.inf
-
-        if lc_indicators is None:
-            lc_indicators = np.zeros((len(time), 1)).astype(np.bool_)
-
-        if rc_indicators is None:
-            rc_indicators = np.zeros((len(time), 1)).astype(np.bool_)
-
         self.time = time
-        self.entry = entry
-        self.departure = departure
-        self.lc_indicators = lc_indicators
-        self.rc_indicators = rc_indicators
+        self.entry = entry if entry else np.zeros((len(time), 1))
+        self.departure = departure if departure else np.ones((len(time), 1)) * np.inf
+        self.lc_indicators = (
+            lc_indicators
+            if lc_indicators
+            else np.zeros((len(time), 1)).astype(np.bool_)
+        )
+        self.rc_indicators = (
+            rc_indicators
+            if rc_indicators
+            else np.zeros((len(time), 1)).astype(np.bool_)
+        )
 
         if np.any(np.logical_and(self.lc_indicators, self.rc_indicators)) is True:
             raise ValueError(

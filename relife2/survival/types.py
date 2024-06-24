@@ -341,14 +341,14 @@ class ParametricHazard(ParametricFunctions, ABC):
         """
         return self.isf(1 - probability)
 
-    def median(self) -> FloatArray:
+    def median(self) -> float:
         """
         BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
         """
-        return self.ppf(np.array(0.5))
+        return float(self.ppf(np.array(0.5)))
 
 
 class CompositeHazard(ParametricHazard, ABC):
