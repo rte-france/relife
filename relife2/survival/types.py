@@ -71,6 +71,16 @@ class ParametricFunctions(ABC):
 
     @params.setter
     def params(self, values: ArrayLike) -> None:
+        """
+        Args:
+            values ():
+
+        Returns:
+
+        """
+        self._set_params(values)
+
+    def _set_params(self, values: ArrayLike) -> None:
         """BLABLABLA"""
         values = np.asarray(values, dtype=np.float64).reshape(
             -1,
@@ -226,7 +236,7 @@ class ParametricHazard(ParametricFunctions, ABC):
         mrl = integration / self.sf(masked_time)
         return ma.filled(mrl, 0.0)
 
-    def moment(self, n: int) -> float:
+    def moment(self, n: int) -> FloatArray:
         """
         BLABLABLA
         Args:
@@ -240,27 +250,26 @@ class ParametricHazard(ParametricFunctions, ABC):
         def integrand(x):
             return x**n * self.pdf(x)
 
-        return float(
-            gauss_legendre(integrand, np.array(0.0), upper_bound, ndim=2)
-            + quad_laguerre(integrand, upper_bound, ndim=2)
-        )
+        return gauss_legendre(
+            integrand, np.array(0.0), upper_bound, ndim=2
+        ) + quad_laguerre(integrand, upper_bound, ndim=2)
 
-    def mean(self) -> float:
+    def mean(self) -> Union[float | FloatArray]:
         """
         BLABLABLABLA
         Returns:
             float: BLABLABLABLA
         """
-        return self.moment(1)
+        return np.squeeze(self.moment(1))[()]
 
-    def var(self) -> float:
+    def var(self) -> Union[float | FloatArray]:
         """
         BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
         """
-        return self.moment(2) - self.moment(1) ** 2
+        return np.squeeze(self.moment(2) - self.moment(1) ** 2)[()]
 
     def sf(self, time: FloatArray) -> FloatArray:
         """
@@ -341,14 +350,14 @@ class ParametricHazard(ParametricFunctions, ABC):
         """
         return self.isf(1 - probability)
 
-    def median(self) -> float:
+    def median(self) -> Union[float | FloatArray]:
         """
         BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
         """
-        return float(self.ppf(np.array(0.5)))
+        return np.squeeze(self.ppf(np.array(0.5)))[()]
 
 
 class CompositeHazard(ParametricHazard, ABC):
@@ -375,7 +384,7 @@ class CompositeHazard(ParametricHazard, ABC):
     def params(self, values: FloatArray) -> None:
         """BLABLABLA"""
         pos = 0
-        super().__setattr__("params", values)
+        super()._set_params(values)
         for functions in self.components.values():
             functions.params = values[pos : pos + functions.params.size]
             pos += functions.params.size

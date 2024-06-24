@@ -2,13 +2,7 @@ import numpy as np
 import pytest
 
 from datasets import load_power_transformer
-from relife2.survival import (
-    Exponential,
-    Weibull,
-    Gompertz,
-    Gamma,
-    LogLogistic,
-)
+from relife2.survival import Exponential, Weibull, Gompertz, Gamma, LogLogistic
 
 
 @pytest.fixture(scope="module")
@@ -39,12 +33,10 @@ def test_rvs(model):
     assert model.rvs(size=size).shape == (size,)
 
 
-# /!\ depends upon LS_INTEGRATE
-# def test_mean(model):
-#     assert super(type(model), model).mean() == pytest.approx(model.mean(), rel=1e-3)
-#     assert super(type(model.pf), model.pf).mean() == pytest.approx(
-#         model.mean(), rel=1e-3
-#     )
+def test_mean(model):
+    assert super(type(model.functions), model.functions).mean() == pytest.approx(
+        model.mean(), rel=1e-3
+    )
 
 
 def test_mrl(model):
@@ -59,7 +51,7 @@ def test_fit(model, data):
         entry=data[2, :],
         rc_indicators=data[1, :] == 0,
     )
-    assert model.params.values == pytest.approx(expected_params.values, rel=1e-3)
+    assert model.params == pytest.approx(expected_params, rel=1e-3)
 
 
 # def test_minimum_distribution(model, data):

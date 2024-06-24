@@ -121,6 +121,7 @@ class ExponentialFunctions(DistributionFunctions):
     """
 
     def hf(self, time: FloatArray) -> FloatArray:
+        print("functions :", self.params)
         return self.rate * np.ones_like(time)
 
     def chf(self, time: FloatArray) -> FloatArray:
@@ -229,8 +230,8 @@ class GompertzFunctions(DistributionFunctions):
     def mean(self) -> float:
         return np.exp(self.shape) * exp1(self.shape) / self.rate
 
-    def var(self) -> Any:
-        return polygamma(1, 1) / self.rate**2
+    def var(self) -> float:
+        return polygamma(1, 1).item() / self.rate**2
 
     def mrl(self, time: FloatArray) -> FloatArray:
         z = self.shape * np.exp(self.rate * time)

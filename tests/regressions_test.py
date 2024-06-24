@@ -69,16 +69,19 @@ def weibull_pph():
 
 
 def test_sf(model, covar):
-    assert model.sf(model.median(covar), covar) == pytest.approx(0.5, rel=1e-3)
+    model.covar = covar
+    assert model.sf(model.median()) == pytest.approx(0.5, rel=1e-3)
 
 
 def test_rvs(model, covar):
     size = 10
-    assert model.rvs(covar, size=size).shape == (covar.shape[0], size)
+    model.covar = covar
+    assert model.rvs(size=size).shape == (covar.shape[0], size)
 
 
 def test_mean(model, covar):
-    assert model.mean(covar).shape[0] == covar.shape[0]
+    model.covar = covar
+    assert model.mean().shape[0] == covar.shape[0]
 
 
 def fit_model(model, data):
@@ -102,10 +105,10 @@ def test_aft_pph_weibull_eq(data, weibull_aft, weibull_pph):
     weibull_aft = fit_model(weibull_aft, data)
     weibull_pph = fit_model(weibull_pph, data)
 
-    assert weibull_pph.baseline.params.values == pytest.approx(
-        weibull_aft.baseline.params.values, rel=1e-3
+    assert weibull_pph.baseline.params == pytest.approx(
+        weibull_aft.baseline.params, rel=1e-3
     )
-    assert weibull_pph.covar_effect.params.values == pytest.approx(
-        -weibull_aft.baseline.shape * weibull_aft.covar_effect.params.values,
+    assert weibull_pph.covar_effect.params == pytest.approx(
+        -weibull_aft.baseline.shape * weibull_aft.covar_effect.params,
         rel=1e-3,
     )

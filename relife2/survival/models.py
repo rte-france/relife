@@ -156,7 +156,7 @@ class LifetimeModel(FunctionsBridge):
 
     def mean(
         self,
-    ) -> float:
+    ) -> Union[float, FloatArray]:
         """
 
         Returns:
@@ -166,7 +166,7 @@ class LifetimeModel(FunctionsBridge):
 
     def var(
         self,
-    ) -> float:
+    ) -> Union[float, FloatArray]:
         """
 
         Returns:
@@ -176,7 +176,7 @@ class LifetimeModel(FunctionsBridge):
 
     def median(
         self,
-    ) -> float:
+    ) -> Union[float, FloatArray]:
         """
 
         Returns:
@@ -211,9 +211,10 @@ class LifetimeModel(FunctionsBridge):
             time, entry, departure, lc_indicators, rc_indicators
         )
 
+        param0 = kwargs.pop("x0", self.functions.init_params(observed_lifetimes.rlc))
         minimize_kwargs = {
             "method": kwargs.pop("method", "L-BFGS-B"),
-            "bounds": kwargs.pop("bounds", None),
+            "bounds": kwargs.pop("bounds", self.functions.params_bounds),
             "constraints": kwargs.pop("constraints", ()),
             "tol": kwargs.pop("tol", None),
             "callback": kwargs.pop("callback", None),
@@ -229,8 +230,8 @@ class LifetimeModel(FunctionsBridge):
 
         optimizer = minimize(
             likelihood.negative_log,
-            self.functions.init_params(observed_lifetimes.rlc),
-            jac=self.likelihood.jac if self.likelihood.hasjac else None,
+            param0,
+            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
             **minimize_kwargs,
         )
 

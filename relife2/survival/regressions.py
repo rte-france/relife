@@ -67,7 +67,7 @@ class RegressionFunctions(CompositeHazard, ABC):
 
     def __init__(self, covar_effect: CovarEffect, baseline: DistributionFunctions):
         super().__init__(covar_effect=covar_effect, baseline=baseline)
-        self._covar = np.random.random((1, self.covar_effet.params.size))
+        self._covar = np.random.random((1, self.covar_effect.params.size))
         self.extra_arguments.append("covar")
 
     @property
@@ -81,7 +81,7 @@ class RegressionFunctions(CompositeHazard, ABC):
     @covar.setter
     def covar(self, values: FloatArray) -> None:
         nb_covar = values.shape[-1]
-        if nb_covar != self.functions.covar_effect.params.size:
+        if nb_covar != self.covar_effect.params.size:
             raise ValueError(
                 f"Invalid number of covar : expected {self.covar_effect.params.size}, got {nb_covar}"
             )
