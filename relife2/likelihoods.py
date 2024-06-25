@@ -7,12 +7,35 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 import warnings
+from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
+from numpy.typing import NDArray
 
-from relife2.survival.data import Lifetimes, ObservedLifetimes, Truncations
-from relife2.survival.types import FloatArray, Likelihood, ParametricHazard
+from relife2 import parametric
+from relife2.data import Lifetimes, ObservedLifetimes, Truncations
+
+FloatArray = NDArray[np.float64]
+
+
+class Likelihood(parametric.LifetimeFunctionsBridge, ABC):
+    """
+    Class that instanciates likelihood base having finite number of parameters related to
+    one parametric functions
+    """
+
+    hasjac: bool = False
+
+    @abstractmethod
+    def negative_log(self, params: FloatArray) -> float:
+        """
+        Args:
+            params ():
+
+        Returns:
+            Negative log likelihood value given a set a parameters values
+        """
 
 
 class LikelihoodFromLifetimes(Likelihood):
@@ -22,7 +45,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def __init__(
         self,
-        functions: ParametricHazard,
+        functions: parametric.LifetimeFunctions,
         observed_lifetimes: ObservedLifetimes,
         truncations: Truncations,
         **kwdata: FloatArray,
@@ -30,7 +53,7 @@ class LikelihoodFromLifetimes(Likelihood):
         super().__init__(functions)
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
-        self._control_kwargs(**kwdata)
+        self.control_extra_args(**kwdata)
         self.kwdata = kwdata
 
         if hasattr(self.functions, "jac_hf") and hasattr(self.functions, "jac_chf"):

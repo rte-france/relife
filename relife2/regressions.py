@@ -13,15 +13,15 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from relife2.survival.distributions import DistributionFunctions
-from relife2.survival.types import CompositeHazard, ParametricFunctions
+from relife2 import parametric
+from relife2.distributions import DistributionFunctions
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
 FloatArray = NDArray[np.float64]
 
 
-class CovarEffect(ParametricFunctions, ABC):
+class CovarEffect(parametric.Functions, ABC):
     """
     Object that computes covariates effect functions
     """
@@ -60,7 +60,7 @@ class CovarEffect(ParametricFunctions, ABC):
         """
 
 
-class RegressionFunctions(CompositeHazard, ABC):
+class RegressionFunctions(parametric.CompositeLifetimeFunctions, ABC):
     """
     Object that computes every probability functions of a regression model
     """
@@ -69,9 +69,13 @@ class RegressionFunctions(CompositeHazard, ABC):
         self,
         covar_effect: CovarEffect,
         baseline: DistributionFunctions,
+        extra_args=("covar",),
     ):
-        super().__init__(covar_effect=covar_effect, baseline=baseline)
-        self.extra_arguments.append("covar")
+        super().__init__(
+            extra_args=extra_args,
+            covar_effect=covar_effect,
+            baseline=baseline,
+        )
         self._covar = np.empty((1, self.nb_covar), dtype=np.float64)
 
     @property

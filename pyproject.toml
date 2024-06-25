@@ -49,7 +49,7 @@ ignored-modules = "scipy.special"
 # mypy does not recognize Tuple[Any, ...] notation (bug)
 # see : https://github.com/python/mypy/issues/9459
 [[tool.mypy.overrides]]
-module = ["relife2.survival.types"]
+module = ["relife2.parametric"]
 disable_error_code = ["misc"]
 
 # current scipy is untyped and does not work with mypy

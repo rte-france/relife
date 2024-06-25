@@ -15,7 +15,7 @@ from numpy import ma
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import Bounds, root_scalar
 
-from relife2.survival.utils.integrations import gauss_legendre, quad_laguerre
+from relife2.utils.integrations import gauss_legendre, quad_laguerre
 
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
@@ -23,14 +23,14 @@ FloatArray = NDArray[np.float64]
 Index = Union[EllipsisType, int, slice, tuple[EllipsisType, int, slice, ...]]
 
 
-class ParametricFunctions(ABC):
+class Functions(ABC):
     """
     Class that instanciates parametric functions having finite number of parameters.
     They are encapsulated in params attribute and can be set and call
     by their names.
 
     Examples:
-        >>> func = ParametricFunctions(rate=1, scale=2)
+        >>> func = Functions(rate=1, scale=2)
         >>> func.rate
         1.0
         >>> func.params
@@ -138,13 +138,22 @@ class ParametricFunctions(ABC):
         return f"{class_name}({params_repr})"
 
 
-class ParametricHazard(ParametricFunctions, ABC):
+class LifetimeFunctions(Functions, ABC):
     """
-    Class that instanciates objects whose probability functions are defined
-    from hazard function
+    BLABLABLA
     """
 
-    extra_arguments: list[str] = []
+    def __init__(
+        self,
+        extra_args: Optional[tuple[str, ...]] = None,
+        **kwparams: Union[float, None],
+    ):
+        super().__init__(**kwparams)
+        self.extra_args = list(extra_args) if extra_args else None
+        self._base_functions: list[str] = []
+        for name in ["sf", "hf", "chf", "pdf"]:
+            if name in self.__class__.__dict__:
+                self._base_functions.append(name)
 
     @property
     @abstractmethod
@@ -162,7 +171,6 @@ class ParametricHazard(ParametricFunctions, ABC):
             BLABLABLABLA
         """
 
-    @abstractmethod
     def hf(self, time: FloatArray) -> FloatArray:
         """
         BLABLABLABLA
@@ -172,6 +180,22 @@ class ParametricHazard(ParametricFunctions, ABC):
         Returns:
             FloatArray: BLABLABLABLA
         """
+        if "pdf" in self._base_functions and "sf" in self._base_functions:
+            return self.pdf(time) / self.sf(time)
+        if "sf" in self._base_functions:
+            raise NotImplementedError(
+                """
+                ReLife does not implement hf as the derivate of chf yet. Consider adding it in future versions
+                see: https://docs.scipy.org/doc/scipy-1.11.4/reference/generated/scipy.misc.derivative.html
+                or : https://github.com/maroba/findiff
+                """
+            )
+        class_name = type(self).__name__
+        raise NotImplementedError(
+            f"""
+        {class_name} must implement hf function
+        """
+        )
 
     def chf(self, time: FloatArray) -> FloatArray:
         """
@@ -182,26 +206,80 @@ class ParametricHazard(ParametricFunctions, ABC):
         Returns:
             FloatArray: BLABLABLABLA
         """
-        lower_bound = np.zeros_like(time)
-        upper_bound = np.broadcast_to(np.asarray(self.isf(np.array(1e-4))), time.shape)
-        masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
-            upper_bound, time >= self.support_upper_bound
-        )
-        masked_lower_bound: ma.MaskedArray = ma.MaskedArray(
-            lower_bound, time >= self.support_upper_bound
+        if "sf" in self._base_functions:
+            return -np.log(self.sf(time))
+        if "pdf" in self._base_functions and "hf" in self._base_functions:
+            return -np.log(self.pdf(time) / self.hf(time))
+        if "hf" in self._base_functions:
+            lower_bound = np.zeros_like(time)
+            upper_bound = np.broadcast_to(
+                np.asarray(self.isf(np.array(1e-4))), time.shape
+            )
+            masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
+                upper_bound, time >= self.support_upper_bound
+            )
+            masked_lower_bound: ma.MaskedArray = ma.MaskedArray(
+                lower_bound, time >= self.support_upper_bound
+            )
+
+            integration = gauss_legendre(
+                self.hf,
+                masked_lower_bound,
+                masked_upper_bound,
+                ndim=2,
+            ) + quad_laguerre(
+                self.hf,
+                masked_upper_bound,
+                ndim=2,
+            )
+            return ma.filled(integration, 1.0)
+
+        class_name = type(self).__name__
+        raise NotImplementedError(
+            f"""
+        {class_name} must implement chf or at least hf function
+        """
         )
 
-        integration = gauss_legendre(
-            self.hf,
-            masked_lower_bound,
-            masked_upper_bound,
-            ndim=2,
-        ) + quad_laguerre(
-            self.hf,
-            masked_upper_bound,
-            ndim=2,
+    def sf(self, time: FloatArray) -> FloatArray:
+        """
+        BLABLABLABLA
+        Args:
+            time (FloatArray): BLABLABLABLA
+
+        Returns:
+            FloatArray: BLABLABLABLA
+        """
+        if "chf" in self._base_functions:
+            return np.exp(-self.chf(time))
+        if "pdf" in self._base_functions and "hf" in self._base_functions:
+            return self.pdf(time) / self.hf(time)
+
+        class_name = type(self).__name__
+        raise NotImplementedError(
+            f"""
+        {class_name} must implement sf function
+        """
         )
-        return ma.filled(integration, 1.0)
+
+    def pdf(self, time: FloatArray) -> FloatArray:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
+        try:
+            return self.sf(time) * self.hf(time)
+        except NotImplementedError as err:
+            class_name = type(self).__name__
+            raise NotImplementedError(
+                f"""
+            {class_name} must implement pdf or the above functions
+            """
+            ) from err
 
     def mrl(self, time: FloatArray) -> FloatArray:
         """
@@ -271,17 +349,6 @@ class ParametricHazard(ParametricFunctions, ABC):
         """
         return np.squeeze(self.moment(2) - self.moment(1) ** 2)[()]
 
-    def sf(self, time: FloatArray) -> FloatArray:
-        """
-        BLABLABLABLA
-        Args:
-            time (FloatArray): BLABLABLABLA
-
-        Returns:
-            FloatArray: BLABLABLABLA
-        """
-        return np.exp(-self.chf(time))
-
     def isf(
         self,
         probability: FloatArray,
@@ -310,17 +377,6 @@ class ParametricHazard(ParametricFunctions, ABC):
             FloatArray: BLABLABLABLA
         """
         return 1 - self.sf(time)
-
-    def pdf(self, time: FloatArray) -> FloatArray:
-        """
-        BLABLABLABLA
-        Args:
-            time (FloatArray): BLABLABLABLA
-
-        Returns:
-            FloatArray: BLABLABLABLA
-        """
-        return self.hf(time) * self.sf(time)
 
     def rvs(self, size: Optional[int] = 1, seed: Optional[int] = None) -> FloatArray:
         """
@@ -359,21 +415,33 @@ class ParametricHazard(ParametricFunctions, ABC):
         """
         return np.squeeze(self.ppf(np.array(0.5)))[()]
 
+    def copy(self) -> Self:
+        """
+        Returns:
+            A ParamtricFunctions object copied from current instance
+        """
+        return self.__class__(
+            extra_args=tuple(self.extra_args) if self.extra_args else None,
+            **{self.params_names[i]: value for i, value in enumerate(self._params)},
+        )
 
-class CompositeHazard(ParametricHazard, ABC):
+
+class CompositeLifetimeFunctions(LifetimeFunctions, ABC):
     """
     Class that instanciates objects whose probability functions are defined
     from hazard function and constructed from several parametric functions
     """
 
-    def __init__(self, **kwfunctions: ParametricFunctions):
+    def __init__(
+        self, extra_args: Optional[tuple[str, ...]] = None, **kwfunctions: Functions
+    ):
         self.components = kwfunctions
         kwparams: dict[str, float] = {}
         for functions in kwfunctions.values():
             if set(kwparams.keys()) & set(functions.params_names):
                 raise ValueError("Can't compose functions with common param names")
             kwparams.update(dict(zip(functions.params_names, functions.params)))
-        super().__init__(**kwparams)
+        super().__init__(extra_args=extra_args, **kwparams)
 
     @property
     def params(self):
@@ -394,7 +462,10 @@ class CompositeHazard(ParametricHazard, ABC):
         Returns:
             A CompositeHazard object copied from current instance
         """
-        return self.__class__(**{k: v.copy() for k, v in self.components.items()})
+        return self.__class__(
+            extra_args=tuple(self.extra_args) if self.extra_args else None,
+            **{k: v.copy() for k, v in self.components.items()},
+        )
 
     def __getattr__(self, name: str):
         value = None
@@ -435,14 +506,32 @@ class CompositeHazard(ParametricHazard, ABC):
         return f"{class_name}(\n{functions_repr})"
 
 
-class FunctionsBridge:
+class LifetimeFunctionsBridge:
     """
     Bridge class to functions implementor that can be extended.
     The bridge pattern allows to decouple varying functions from varying interfaces using them
     """
 
-    def __init__(self, functions: ParametricFunctions):
+    def __init__(self, functions: LifetimeFunctions):
         self.functions = functions
+        class_name = self.functions.__class__.__name__
+        if self.extra_args:
+            for arg in self.extra_args:
+                if not hasattr(functions, arg):
+                    raise AttributeError(
+                        f"""
+                        {class_name} expected extra arg {arg} but has no attribute called {arg}.
+                        Set {arg} has attribute of {class_name} or remove {arg} from extra_args
+                        """
+                    )
+
+    @property
+    def extra_args(self):
+        """
+        Returns:
+
+        """
+        return self.functions.extra_args
 
     @property
     def params(self):
@@ -461,18 +550,34 @@ class FunctionsBridge:
         """
         self.functions.params = values
 
-    def _control_kwargs(self, **kwargs: Any) -> None:
-        """"""
-        for extra_arg in self.functions.extra_arguments:
-            if extra_arg not in kwargs:
+    def control_extra_args(self, **kwargs: Any) -> None:
+        """
+
+        Args:
+            **kwargs ():
+
+        Returns:
+
+        """
+        if self.extra_args:
+            if set(kwargs.keys()) != set(self.extra_args):
                 class_name = self.__class__.__name__
                 raise ValueError(
-                    f"kwargs must contain values of {extra_arg} to work with {class_name}"
+                    f"kwargs must contain values for {self.extra_args} to work with {class_name}"
                 )
-        for name in kwargs:
-            class_name = self.__class__.__name__
-            if not hasattr(self.functions, name):
-                raise AttributeError(f"{class_name} has no attribute called {name}")
+
+    def set_extra_args(self, **kwargs: Any) -> None:
+        """
+
+        Args:
+            **kwargs ():
+
+        Returns:
+
+        """
+        self.control_extra_args(**kwargs)
+        for name, value in kwargs.items():
+            setattr(self.functions, name, value)
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
@@ -491,22 +596,3 @@ class FunctionsBridge:
             setattr(self.functions, name, value)
         else:
             super().__setattr__(name, value)
-
-
-class Likelihood(FunctionsBridge, ABC):
-    """
-    Class that instanciates likelihood base having finite number of parameters related to
-    one parametric functions
-    """
-
-    hasjac: bool = False
-
-    @abstractmethod
-    def negative_log(self, params: FloatArray) -> float:
-        """
-        Args:
-            params ():
-
-        Returns:
-            Negative log likelihood value given a set a parameters values
-        """

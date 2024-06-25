@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from relife2.survival.data import intersect_lifetimes
-from relife2.survival.data.factories import (
+from relife2.data import intersect_lifetimes
+from relife2.data.factories import (
     LifetimeDataFactoryFrom1D,
     LifetimeDataFactoryFrom2D,
     array_factory,

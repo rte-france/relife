@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from relife2.survival.data.dataclass import Lifetimes, ObservedLifetimes, Truncations
+from .dataclass import Lifetimes, ObservedLifetimes, Truncations
 
 FloatArray = NDArray[np.float64]
 

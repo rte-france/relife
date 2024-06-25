@@ -12,8 +12,9 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import minimize
 
-from relife2.survival.data import array_factory, lifetime_factory_template
-from relife2.survival.distributions import (
+from relife2 import parametric
+from relife2.data import array_factory, lifetime_factory_template
+from relife2.distributions import (
     DistributionFunctions,
     ExponentialFunctions,
     GammaFunctions,
@@ -21,24 +22,23 @@ from relife2.survival.distributions import (
     LogLogisticFunctions,
     WeibullFunctions,
 )
-from relife2.survival.likelihoods import LikelihoodFromLifetimes
-from relife2.survival.regressions import (
+from relife2.likelihoods import LikelihoodFromLifetimes
+from relife2.regressions import (
     AFTEffect,
     AFTFunctions,
     ProportionalHazardEffect,
     ProportionalHazardFunctions,
 )
-from relife2.survival.types import FunctionsBridge, ParametricHazard
 
 FloatArray = NDArray[np.float64]
 
 
-class LifetimeModel(FunctionsBridge):
+class LifetimeModel(parametric.LifetimeFunctionsBridge):
     """
     Façade class that provides a simplified interface to lifetime model
     """
 
-    functions: ParametricHazard
+    functions: parametric.LifetimeFunctions
 
     def sf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
         """
@@ -49,9 +49,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
 
     def isf(self, probability: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
@@ -64,9 +62,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.isf(array_factory(probability)))[()]
 
     def hf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
@@ -79,9 +75,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.hf(array_factory(time)))[()]
 
     def chf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
@@ -94,9 +88,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.chf(array_factory(time)))[()]
 
     def cdf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
@@ -109,9 +101,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.cdf(array_factory(time)))[()]
 
     def pdf(self, probability: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
@@ -124,9 +114,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
 
     def ppf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
@@ -139,9 +127,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.ppf(array_factory(time)))[()]
 
     def mrl(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
@@ -154,9 +140,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.mrl(array_factory(time)))[()]
 
     def ichf(
@@ -171,9 +155,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
             ()
         ]
@@ -190,9 +172,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
 
     def mean(self, **kwargs: Any) -> Union[float, FloatArray]:
@@ -201,9 +181,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return self.functions.mean()
 
     def var(self, **kwargs: Any) -> Union[float, FloatArray]:
@@ -212,9 +190,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return self.functions.var()
 
     def median(self, **kwargs: Any) -> Union[float, FloatArray]:
@@ -223,9 +199,7 @@ class LifetimeModel(FunctionsBridge):
         Returns:
 
         """
-        self._control_kwargs(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
+        self.set_extra_args(**kwargs)
         return self.functions.median()
 
     def fit(
@@ -342,7 +316,6 @@ def control_covar_args(
 
     Args:
         nb_covar ():
-        covar ():
         weights ():
 
     Returns:
