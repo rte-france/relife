@@ -10,15 +10,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
 from relife2 import parametric
 from relife2.distributions import DistributionFunctions
-
-IntArray = NDArray[np.int64]
-BoolArray = NDArray[np.bool_]
-FloatArray = NDArray[np.float64]
+from relife2.types import FloatArray
 
 
 class CovarEffect(parametric.Functions, ABC):
@@ -69,10 +65,8 @@ class RegressionFunctions(parametric.CompositeLifetimeFunctions, ABC):
         self,
         covar_effect: CovarEffect,
         baseline: DistributionFunctions,
-        extra_args=("covar",),
     ):
         super().__init__(
-            extra_args=extra_args,
             covar_effect=covar_effect,
             baseline=baseline,
         )
@@ -117,8 +111,6 @@ class RegressionFunctions(parametric.CompositeLifetimeFunctions, ABC):
         return np.inf
 
     def init_params(self, *args: Any) -> FloatArray:
-        """initialization of params values given observed lifetimes"""
-
         return np.concatenate(
             (
                 self.covar_effect.init_params(*args),

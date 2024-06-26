@@ -7,11 +7,11 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
+
+from relife2.types import FloatArray
 
 from .dataclass import Lifetimes, ObservedLifetimes, Truncations
-
-FloatArray = NDArray[np.float64]
 
 
 def intersect_lifetimes(*lifetimes: Lifetimes) -> Lifetimes:

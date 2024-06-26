@@ -11,12 +11,10 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
-from numpy.typing import NDArray
 
 from relife2 import parametric
 from relife2.data import Lifetimes, ObservedLifetimes, Truncations
-
-FloatArray = NDArray[np.float64]
+from relife2.types import FloatArray
 
 
 class Likelihood(parametric.LifetimeFunctionsBridge, ABC):
@@ -53,7 +51,6 @@ class LikelihoodFromLifetimes(Likelihood):
         super().__init__(functions)
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
-        self.control_extra_args(**kwdata)
         self.kwdata = kwdata
 
         if hasattr(self.functions, "jac_hf") and hasattr(self.functions, "jac_chf"):
@@ -83,7 +80,7 @@ class LikelihoodFromLifetimes(Likelihood):
         """
         for name, data in self.kwdata.items():
             setattr(self.functions, name, data[lifetimes.index])
-        return np.sum(self.functions.chf(lifetimes.values))
+        return np.sum(self.functions.chf(lifetimes.values), dtype=np.float64)
 
     def lc_contrib(self, lifetimes: Lifetimes) -> float:
         """
@@ -117,7 +114,7 @@ class LikelihoodFromLifetimes(Likelihood):
         """
         for name, data in self.kwdata.items():
             setattr(self.functions, name, data[lifetimes.index])
-        return -np.sum(self.functions.chf(lifetimes.values))
+        return -np.sum(self.functions.chf(lifetimes.values), dtype=np.float64)
 
     def jac_d_contrib(self, lifetimes: Lifetimes) -> FloatArray:
         """

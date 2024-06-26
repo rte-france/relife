@@ -6,14 +6,20 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
+from abc import ABC, abstractmethod
 from typing import Any, Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
 from relife2 import parametric
-from relife2.data import array_factory, lifetime_factory_template
+from relife2.data import (
+    ObservedLifetimes,
+    Truncations,
+    array_factory,
+    lifetime_factory_template,
+)
 from relife2.distributions import (
     DistributionFunctions,
     ExponentialFunctions,
@@ -28,179 +34,26 @@ from relife2.regressions import (
     AFTFunctions,
     ProportionalHazardEffect,
     ProportionalHazardFunctions,
+    RegressionFunctions,
 )
+from relife2.types import FloatArray
 
-FloatArray = NDArray[np.float64]
 
-
-class LifetimeModel(parametric.LifetimeFunctionsBridge):
+class LifetimeModel(parametric.LifetimeFunctionsBridge, ABC):
     """
     Façade class that provides a simplified interface to lifetime model
     """
 
     functions: parametric.LifetimeFunctions
 
-    def sf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-        Args:
-            time ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.sf(array_factory(time)))[()]
-
-    def isf(self, probability: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            probability ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.isf(array_factory(probability)))[()]
-
-    def hf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            time ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.hf(array_factory(time)))[()]
-
-    def chf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            time ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.chf(array_factory(time)))[()]
-
-    def cdf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            time ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.cdf(array_factory(time)))[()]
-
-    def pdf(self, probability: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            probability ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
-
-    def ppf(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            time ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.ppf(array_factory(time)))[()]
-
-    def mrl(self, time: ArrayLike, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            time ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.mrl(array_factory(time)))[()]
-
-    def ichf(
-        self, cumulative_hazard_rate: ArrayLike, **kwargs: Any
-    ) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            cumulative_hazard_rate ():
-            **kwargs (object):
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
-            ()
-        ]
-
-    def rvs(
-        self, size: Optional[int] = 1, seed: Optional[int] = None, **kwargs: Any
-    ) -> Union[float, FloatArray]:
-        """
-
-        Args:
-            size ():
-            seed ():
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
-
-    def mean(self, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return self.functions.mean()
-
-    def var(self, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return self.functions.var()
-
-    def median(self, **kwargs: Any) -> Union[float, FloatArray]:
-        """
-
-        Returns:
-
-        """
-        self.set_extra_args(**kwargs)
-        return self.functions.median()
+    @abstractmethod
+    def _init_likelihood(
+        self,
+        observed_lifetimes: ObservedLifetimes,
+        truncations: Truncations,
+        **kwargs: Any,
+    ) -> LikelihoodFromLifetimes:
+        """"""
 
     def fit(
         self,
@@ -230,6 +83,7 @@ class LifetimeModel(parametric.LifetimeFunctionsBridge):
         )
 
         param0 = kwargs.pop("x0", self.functions.init_params(observed_lifetimes.rlc))
+
         minimize_kwargs = {
             "method": kwargs.pop("method", "L-BFGS-B"),
             "bounds": kwargs.pop("bounds", self.functions.params_bounds),
@@ -239,12 +93,7 @@ class LifetimeModel(parametric.LifetimeFunctionsBridge):
             "options": kwargs.pop("options", None),
         }
 
-        likelihood = LikelihoodFromLifetimes(
-            self.functions.copy(),
-            observed_lifetimes,
-            truncations,
-            **kwargs,
-        )
+        likelihood = self._init_likelihood(observed_lifetimes, truncations, **kwargs)
 
         optimizer = minimize(
             likelihood.negative_log,
@@ -258,16 +107,372 @@ class LifetimeModel(parametric.LifetimeFunctionsBridge):
         return optimizer.x
 
 
-class Exponential(LifetimeModel):
-    """BLABLABLABLA"""
+class Distribution(LifetimeModel):
+    """
+    Facade implementation for distribution models
+    """
 
     functions: DistributionFunctions
+
+    def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+        Args:
+            time ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.sf(array_factory(time)))[()]
+
+    def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.isf(array_factory(probability)))[()]
+
+    def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.hf(array_factory(time)))[()]
+
+    def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.chf(array_factory(time)))[()]
+
+    def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.cdf(array_factory(time)))[()]
+
+    def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
+
+    def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.ppf(array_factory(time)))[()]
+
+    def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.mrl(array_factory(time)))[()]
+
+    def ichf(self, cumulative_hazard_rate: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            cumulative_hazard_rate ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
+            ()
+        ]
+
+    def rvs(
+        self, size: Optional[int] = 1, seed: Optional[int] = None
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            size ():
+            seed ():
+
+        Returns:
+
+        """
+        return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
+
+    def mean(self) -> Union[float, FloatArray]:
+        """
+
+        Returns:
+
+        """
+        return self.functions.mean()
+
+    def var(self) -> Union[float, FloatArray]:
+        """
+
+        Returns:
+
+        """
+        return self.functions.var()
+
+    def median(self) -> Union[float, FloatArray]:
+        """
+
+        Returns:
+
+        """
+        return self.functions.median()
+
+    def _init_likelihood(
+        self,
+        observed_lifetimes: ObservedLifetimes,
+        truncations: Truncations,
+        **kwargs: Any,
+    ) -> LikelihoodFromLifetimes:
+        if len(kwargs) != 0:
+            extra_args_names = tuple(kwargs.keys())
+            raise ValueError(
+                f"""
+                Distribution likelihood does not expect other data than lifetimes
+                Remove {extra_args_names} from kwargs.
+                """
+            )
+        return LikelihoodFromLifetimes(
+            self.functions.copy(),
+            observed_lifetimes,
+            truncations,
+        )
+
+
+class Regression(LifetimeModel):
+    """
+    Facade implementation for regression models
+    """
+
+    functions: RegressionFunctions
+
+    def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        Args:
+            time ():
+            covar ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.sf(array_factory(time)))[()]
+
+    def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+            covar ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.isf(array_factory(probability)))[()]
+
+    def hf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            covar ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.hf(array_factory(time)))[()]
+
+    def chf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            covar ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.chf(array_factory(time)))[()]
+
+    def cdf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            covar ():
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.cdf(array_factory(time)))[()]
+
+    def pdf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
+
+    def ppf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            covar ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.ppf(array_factory(time)))[()]
+
+    def mrl(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            covar ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.mrl(array_factory(time)))[()]
+
+    def ichf(
+        self, cumulative_hazard_rate: ArrayLike, covar: ArrayLike
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            covar ():
+            cumulative_hazard_rate ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
+            ()
+        ]
+
+    def rvs(
+        self, covar: ArrayLike, size: Optional[int] = 1, seed: Optional[int] = None
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            covar ():
+            size ():
+            seed ():
+
+        Returns:
+
+        """
+        self.functions.covar = array_factory(covar)
+        return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
+
+    def mean(self, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Returns:
+            covar ():
+
+        """
+        self.functions.covar = array_factory(covar)
+        return self.functions.mean()
+
+    def var(self, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+
+        Returns:
+            covar ():
+
+        """
+        self.functions.covar = array_factory(covar)
+        return self.functions.var()
+
+    def median(self, covar: ArrayLike) -> Union[float, FloatArray]:
+        """
+        Returns:
+            covar ():
+        """
+        self.functions.covar = array_factory(covar)
+        return self.functions.median()
+
+    def _init_likelihood(
+        self,
+        observed_lifetimes: ObservedLifetimes,
+        truncations: Truncations,
+        **kwargs: Any,
+    ) -> LikelihoodFromLifetimes:
+        if set(kwargs.keys()) != {"covar"}:
+            extra_args_names = tuple(kwargs.keys())
+            raise ValueError(
+                f"""
+                Regression likelihood only expects covar as other data.
+                Got {extra_args_names} from kwargs.
+                """
+            )
+        return LikelihoodFromLifetimes(
+            self.functions.copy(),
+            observed_lifetimes,
+            truncations,
+            **kwargs,
+        )
+
+
+class Exponential(Distribution):
+    """BLABLABLABLA"""
 
     def __init__(self, rate: Optional[float] = None):
         super().__init__(ExponentialFunctions(rate=rate))
 
 
-class Weibull(LifetimeModel):
+class Weibull(Distribution):
     """BLABLABLABLA"""
 
     functions: DistributionFunctions
@@ -276,7 +481,7 @@ class Weibull(LifetimeModel):
         super().__init__(WeibullFunctions(shape=shape, rate=rate))
 
 
-class Gompertz(LifetimeModel):
+class Gompertz(Distribution):
     """BLABLABLABLA"""
 
     functions: DistributionFunctions
@@ -284,8 +489,17 @@ class Gompertz(LifetimeModel):
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(GompertzFunctions(shape=shape, rate=rate))
 
+    def _init_params(self, observed_lifetimes: ObservedLifetimes) -> FloatArray:
+        param0 = np.empty(self.params.size, dtype=np.float64)
+        rate = np.pi / (np.sqrt(6) * np.std(observed_lifetimes.rlc.values))
+        shape = np.exp(-rate * np.mean(observed_lifetimes.rlc.values))
+        param0[0] = shape
+        param0[1] = rate
 
-class Gamma(LifetimeModel):
+        return param0
+
+
+class Gamma(Distribution):
     """BLABLABLABLA"""
 
     functions: DistributionFunctions
@@ -294,16 +508,13 @@ class Gamma(LifetimeModel):
         super().__init__(GammaFunctions(shape=shape, rate=rate))
 
 
-class LogLogistic(LifetimeModel):
+class LogLogistic(Distribution):
     """BLABLABLABLA"""
 
     functions: DistributionFunctions
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(LogLogisticFunctions(shape=shape, rate=rate))
-
-
-Distribution = Union[Exponential, Gamma, Gompertz, LogLogistic, Weibull]
 
 
 def control_covar_args(
@@ -337,7 +548,7 @@ def control_covar_args(
     return weights
 
 
-class ProportionalHazard(LifetimeModel):
+class ProportionalHazard(Regression):
     """BLABLABLABLA"""
 
     def __init__(
@@ -357,7 +568,7 @@ class ProportionalHazard(LifetimeModel):
         )
 
 
-class AFT(LifetimeModel):
+class AFT(Regression):
     """BLABLABLABLA"""
 
     def __init__(

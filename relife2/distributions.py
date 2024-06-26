@@ -10,14 +10,12 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
 from relife2 import parametric
+from relife2.types import FloatArray
 from relife2.utils.integrations import shifted_laguerre
-
-FloatArray = NDArray[np.float64]
 
 # pylint: disable=no-member
 
@@ -28,7 +26,6 @@ class DistributionFunctions(parametric.LifetimeFunctions, ABC):
     """
 
     def init_params(self, *args: Any) -> FloatArray:
-        """initialization of params values given observed lifetimes"""
         param0 = np.ones(self.params.size)
         param0[-1] = 1 / np.median(args[0].values)
         return param0

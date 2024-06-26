@@ -7,20 +7,15 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from types import EllipsisType
 from typing import Any, Optional, Self, Union
 
 import numpy as np
 from numpy import ma
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 from scipy.optimize import Bounds, root_scalar
 
+from relife2.types import FloatArray
 from relife2.utils.integrations import gauss_legendre, quad_laguerre
-
-IntArray = NDArray[np.int64]
-BoolArray = NDArray[np.bool_]
-FloatArray = NDArray[np.float64]
-Index = Union[EllipsisType, int, slice, tuple[EllipsisType, int, slice, ...]]
 
 
 class Functions(ABC):
@@ -57,7 +52,7 @@ class Functions(ABC):
 
     @abstractmethod
     def init_params(self, *args: Any) -> FloatArray:
-        """initialization of params values given observed lifetimes"""
+        """initialization of params values (usefull before fit)"""
 
     @property
     @abstractmethod
@@ -145,11 +140,9 @@ class LifetimeFunctions(Functions, ABC):
 
     def __init__(
         self,
-        extra_args: Optional[tuple[str, ...]] = None,
         **kwparams: Union[float, None],
     ):
         super().__init__(**kwparams)
-        self.extra_args = list(extra_args) if extra_args else None
         self._base_functions: list[str] = []
         for name in ["sf", "hf", "chf", "pdf"]:
             if name in self.__class__.__dict__:
@@ -421,7 +414,6 @@ class LifetimeFunctions(Functions, ABC):
             A ParamtricFunctions object copied from current instance
         """
         return self.__class__(
-            extra_args=tuple(self.extra_args) if self.extra_args else None,
             **{self.params_names[i]: value for i, value in enumerate(self._params)},
         )
 
@@ -432,16 +424,14 @@ class CompositeLifetimeFunctions(LifetimeFunctions, ABC):
     from hazard function and constructed from several parametric functions
     """
 
-    def __init__(
-        self, extra_args: Optional[tuple[str, ...]] = None, **kwfunctions: Functions
-    ):
+    def __init__(self, **kwfunctions: Functions):
         self.components = kwfunctions
         kwparams: dict[str, float] = {}
         for functions in kwfunctions.values():
             if set(kwparams.keys()) & set(functions.params_names):
                 raise ValueError("Can't compose functions with common param names")
             kwparams.update(dict(zip(functions.params_names, functions.params)))
-        super().__init__(extra_args=extra_args, **kwparams)
+        super().__init__(**kwparams)
 
     @property
     def params(self):
@@ -463,7 +453,6 @@ class CompositeLifetimeFunctions(LifetimeFunctions, ABC):
             A CompositeHazard object copied from current instance
         """
         return self.__class__(
-            extra_args=tuple(self.extra_args) if self.extra_args else None,
             **{k: v.copy() for k, v in self.components.items()},
         )
 
@@ -514,24 +503,6 @@ class LifetimeFunctionsBridge:
 
     def __init__(self, functions: LifetimeFunctions):
         self.functions = functions
-        class_name = self.functions.__class__.__name__
-        if self.extra_args:
-            for arg in self.extra_args:
-                if not hasattr(functions, arg):
-                    raise AttributeError(
-                        f"""
-                        {class_name} expected extra arg {arg} but has no attribute called {arg}.
-                        Set {arg} has attribute of {class_name} or remove {arg} from extra_args
-                        """
-                    )
-
-    @property
-    def extra_args(self):
-        """
-        Returns:
-
-        """
-        return self.functions.extra_args
 
     @property
     def params(self):
@@ -549,35 +520,6 @@ class LifetimeFunctionsBridge:
         Returns:
         """
         self.functions.params = values
-
-    def control_extra_args(self, **kwargs: Any) -> None:
-        """
-
-        Args:
-            **kwargs ():
-
-        Returns:
-
-        """
-        if self.extra_args:
-            if set(kwargs.keys()) != set(self.extra_args):
-                class_name = self.__class__.__name__
-                raise ValueError(
-                    f"kwargs must contain values for {self.extra_args} to work with {class_name}"
-                )
-
-    def set_extra_args(self, **kwargs: Any) -> None:
-        """
-
-        Args:
-            **kwargs ():
-
-        Returns:
-
-        """
-        self.control_extra_args(**kwargs)
-        for name, value in kwargs.items():
-            setattr(self.functions, name, value)
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
