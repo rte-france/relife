@@ -1,11 +1,11 @@
 # pylint: disable=missing-module-docstring
 
 from .models import (
-    AFT,
     Exponential,
-    Gamma,
+    Weibull,
     Gompertz,
     LogLogistic,
+    Gamma,
     ProportionalHazard,
-    Weibull,
+    AFT,
 )

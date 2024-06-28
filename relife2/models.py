@@ -349,6 +349,7 @@ class Regression(LifetimeModel):
 
         Args:
             probability ():
+            covar ():
 
         Returns:
 
@@ -465,6 +466,10 @@ class Regression(LifetimeModel):
         )
 
 
+# class GammaProcess(LifetimeModel):
+#     """BLABLABLA"""
+
+
 class Exponential(Distribution):
     """BLABLABLABLA"""
 
@@ -488,15 +493,6 @@ class Gompertz(Distribution):
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(GompertzFunctions(shape=shape, rate=rate))
-
-    def _init_params(self, observed_lifetimes: ObservedLifetimes) -> FloatArray:
-        param0 = np.empty(self.params.size, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(observed_lifetimes.rlc.values))
-        shape = np.exp(-rate * np.mean(observed_lifetimes.rlc.values))
-        param0[0] = shape
-        param0[1] = rate
-
-        return param0
 
 
 class Gamma(Distribution):
@@ -586,3 +582,11 @@ class AFT(Regression):
                 baseline.functions.copy(),
             )
         )
+
+
+# class PowerGammaProcess(GammaProcess):
+#     """BLABLABLA"""
+#
+#
+# class ExponentialGammaProcess(GammaProcess):
+#     """BLABLABLA"""

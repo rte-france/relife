@@ -6,6 +6,7 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
+import copy
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Self, Union
 
@@ -19,36 +20,18 @@ from relife2.utils.integrations import gauss_legendre, quad_laguerre
 
 
 class Functions(ABC):
-    """
-    Class that instanciates parametric functions having finite number of parameters.
-    They are encapsulated in params attribute and can be set and call
-    by their names.
-
-    Examples:
-        >>> func = Functions(rate=1, scale=2)
-        >>> func.rate
-        1.0
-        >>> func.params
-        array([1., 2.])
-        >>> func.params[1:] = [11.]
-        >>> func.params
-        array([ 1., 11.])
-        >>> func.scale = 4.
-        >>> func.params
-        array([ 1., 4.])
-    """
 
     def __init__(self, **kwparams: Union[float, None]):
 
-        self.params_names_indices = {}
-        params_values = []
-        for i, (k, v) in enumerate(kwparams.items()):
-            self.params_names_indices[k] = i
+        self.root_params = {}
+        for k, v in kwparams.items():
             if v is None:
-                params_values.append(np.random.random())
+                self.root_params[k] = np.random.random()
             else:
-                params_values.append(float(v))
-        self._params = np.array(params_values, dtype=np.float64)
+                self.root_params[k] = float(v)
+        # self.leaves_params: dict[str, dict] = {}
+        self.leaves_functions: dict[str, Self] = {}
+        self.all_params = self.root_params.copy()
 
     @abstractmethod
     def init_params(self, *args: Any) -> FloatArray:
@@ -60,77 +43,143 @@ class Functions(ABC):
         """BLABLABLA"""
 
     @property
-    def params(self) -> FloatArray:
-        """BLABLABLA"""
-        return self._params
-
-    @params.setter
-    def params(self, values: ArrayLike) -> None:
-        """
-        Args:
-            values ():
-
-        Returns:
-
-        """
-        self._set_params(values)
-
-    def _set_params(self, values: ArrayLike) -> None:
-        """BLABLABLA"""
-        values = np.asarray(values, dtype=np.float64).reshape(
-            -1,
-        )
-        nb_of_params = values.size
-        expected_nb_of_params = self.params.size
-        if nb_of_params != expected_nb_of_params:
-            raise ValueError(
-                f"""
-                Can't set different number of params, expected {expected_nb_of_params} param values, got {nb_of_params}
-                """
-            )
-        self._params = values
-
-    @property
     def params_names(self) -> tuple[str, ...]:
         """
         Returns:
             tuple[str, ...]: param names
         """
-        return tuple(self.params_names_indices.keys())
+        return tuple(self.all_params.keys())
 
-    def copy(self) -> Self:
+    @property
+    def nb_params(self) -> int:
         """
         Returns:
-            A ParamtricFunctions object copied from current instance
+            int: nb of parameters (alias of len)
         """
-        return self.__class__(
-            **{self.params_names[i]: value for i, value in enumerate(self._params)}
+        return len(self.all_params)
+
+    @property
+    def params(self) -> FloatArray:
+        return np.array(tuple(self.all_params.values()), dtype=np.float64)
+
+    @params.setter
+    def params(self, values: ArrayLike) -> None:
+        """
+        Affects new values to Parameters attributes
+        Args:
+            values (Union[float, ArrayLike]):
+        """
+        values = np.asarray(values, dtype=np.float64).reshape(
+            -1,
         )
+        if values.size != self.nb_params:
+            raise ValueError(
+                f"Can't set different number of params, expected {self.nb_params} param values, got {values.size}"
+            )
+
+        self.all_params.update(zip(self.all_params, values))
+        pos = len(self.root_params)
+        self.root_params.update(zip(self.root_params, values[:pos]))
+        for i, functions in enumerate(self.leaves_functions.values()):
+            functions.params = values[pos : pos + functions.nb_params]
+            pos += functions.nb_params
+
+    def add_functions(self, name: str, functions: Self) -> None:
+        """
+        add leaf functions to tree
+        Appends another Parameters object to itself
+        Args:
+            name (str):
+            functions (Functions): Functions object to append
+        """
+        if set(self.params_names) & set(functions.params_names):
+            raise ValueError("Can't append Function object having common param names")
+        self.leaves_functions[name] = functions
+        self.all_params.update(functions.all_params)
+
+    def __search_leaf_functions(self, name):
+        leaves = []
+        todo = [self]
+        found_functions = None
+        while todo:
+            current_node = todo.pop(0)
+            if current_node is None:
+                continue
+            if not current_node.leaves_functions:
+                leaves.append(current_node)
+                continue
+            for leaf_name, leaf in current_node.leaves_functions.items():
+                if leaf_name == name:
+                    found_functions = leaf
+                    break
+                todo.append(leaf)
+        return found_functions
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
         if name in self.__dict__:
-            value = self.__dict__[name]
-        elif name in self.params_names_indices:
-            value = self._params[self.params_names_indices[name]].item()
+            return self.__dict__[name]
+        elif name in super().__getattribute__("all_params"):
+            return super().__getattribute__("all_params")[name]
         else:
-            raise AttributeError(f"{class_name} has no attribute named {name}")
-        return value
+            value = self.__search_leaf_functions(name)
+            if value is None:
+                raise AttributeError(f"{class_name} has no attribute named {name}")
+            else:
+                return value
 
     def __setattr__(self, name: str, value: Any):
-        if name == "params_names_indices":
+        if name in ["all_params", "leaves_functions", "root_params"]:
             super().__setattr__(name, value)
-        elif name in self.params_names_indices:
-            self._params[self.params_names_indices[name]] = float(value)
+        elif name in self.all_params:
+            self.all_params[name] = float(value)
+            if name in self.root_params:
+                self.root_params[name] = float(value)
+            stop = False
+            while not stop:
+                for functions in self.leaves_functions.values():
+                    if name in functions.all_params:
+                        setattr(functions, name, float(value))
+                stop = True
+        elif self.__search_leaf_functions(name) is not None:
+            raise AttributeError(
+                f"Can't set {name} which is a leaf Functions. Recreate a Function object instead"
+            )
         else:
             super().__setattr__(name, value)
+
+    def __write_str(self, name, node, depth=0, indent=4):
+        if not node.leaves_functions:
+            return [
+                "{}{}{} {},".format(
+                    "|" * (depth != 0),
+                    "_" * (indent * depth),
+                    name,
+                    node.root_params,
+                )
+            ]
+        str_repr = [
+            "{}{}{} {},".format(
+                "|" * (depth != 0), "_" * (indent * depth), name, node.root_params
+            )
+        ]
+        if node.leaves_functions:
+            for leaf_name, leaf in node.leaves_functions.items():
+                str_repr.extend(
+                    self.__write_str(leaf_name, leaf, depth=depth + 1, indent=indent)
+                )
+        return str_repr
 
     def __repr__(self):
         class_name = type(self).__name__
-        params_repr = ", ".join(
-            [f"{name}: {value}" for name, value in zip(self.params_names, self.params)]
-        )
-        return f"{class_name}({params_repr})"
+        return f"{class_name}({self.all_params})"
+
+    def __str__(self):
+        class_name = type(self).__name__
+        return "\n".join(self.__write_str(class_name, self))
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
 class LifetimeFunctions(Functions, ABC):
@@ -408,91 +457,14 @@ class LifetimeFunctions(Functions, ABC):
         """
         return np.squeeze(self.ppf(np.array(0.5)))[()]
 
-    def copy(self) -> Self:
-        """
-        Returns:
-            A ParamtricFunctions object copied from current instance
-        """
-        return self.__class__(
-            **{self.params_names[i]: value for i, value in enumerate(self._params)},
-        )
-
-
-class CompositeLifetimeFunctions(LifetimeFunctions, ABC):
-    """
-    Class that instanciates objects whose probability functions are defined
-    from hazard function and constructed from several parametric functions
-    """
-
-    def __init__(self, **kwfunctions: Functions):
-        self.components = kwfunctions
-        kwparams: dict[str, float] = {}
-        for functions in kwfunctions.values():
-            if set(kwparams.keys()) & set(functions.params_names):
-                raise ValueError("Can't compose functions with common param names")
-            kwparams.update(dict(zip(functions.params_names, functions.params)))
-        super().__init__(**kwparams)
-
-    @property
-    def params(self):
-        """BLABLABLA"""
-        return self._params
-
-    @params.setter
-    def params(self, values: FloatArray) -> None:
-        """BLABLABLA"""
-        pos = 0
-        super()._set_params(values)
-        for functions in self.components.values():
-            functions.params = values[pos : pos + functions.params.size]
-            pos += functions.params.size
-
-    def copy(self) -> Self:
-        """
-        Returns:
-            A CompositeHazard object copied from current instance
-        """
-        return self.__class__(
-            **{k: v.copy() for k, v in self.components.items()},
-        )
-
-    def __getattr__(self, name: str):
-        value = None
-        class_name = type(self).__name__
-        if name in self.__dict__:
-            value = self.__dict__[name]
-        elif name in self.components:
-            value = self.components[name]
-        else:
-            for functions in self.components.values():
-                if hasattr(functions, name):
-                    value = getattr(functions, name)
-                    break
-        if value is None:
-            raise AttributeError(f"{class_name} has no attribute named {name}")
-        return value
-
-    def __setattr__(self, name: str, value: Any):
-        if name == "components":
-            self.__dict__[name] = value
-        elif name in self.params_names_indices:
-            self._params[self.params_names_indices[name]] = float(value)
-            for functions in self.components.values():
-                if hasattr(functions, name):
-                    setattr(functions, name, value)
-                    break
-        else:
-            super().__setattr__(name, value)
-
-    def __repr__(self):
-        class_name = type(self).__name__
-        functions_repr = "".join(
-            (
-                f"    {name} : {value.__repr__()},\n"
-                for name, value in self.components.items()
-            )
-        )
-        return f"{class_name}(\n{functions_repr})"
+    # def copy(self) -> Self:
+    #     """
+    #     Returns:
+    #         A ParametricFunctions object copied from current instance
+    #     """
+    #     objcopy = super().copy()
+    #     objcopy._base_functions = self._base_functions.copy()
+    #     return objcopy
 
 
 class LifetimeFunctionsBridge:

@@ -26,8 +26,8 @@ class CovarEffect(parametric.Functions, ABC):
     def params_bounds(self) -> Bounds:
         """BLABLABLA"""
         return Bounds(
-            np.full(self.params.size, -np.inf),
-            np.full(self.params.size, np.inf),
+            np.full(self.nb_params, -np.inf),
+            np.full(self.nb_params, np.inf),
         )
 
     def init_params(self, *args: Any) -> FloatArray:
@@ -56,7 +56,7 @@ class CovarEffect(parametric.Functions, ABC):
         """
 
 
-class RegressionFunctions(parametric.CompositeLifetimeFunctions, ABC):
+class RegressionFunctions(parametric.LifetimeFunctions, ABC):
     """
     Object that computes every probability functions of a regression model
     """
@@ -66,10 +66,9 @@ class RegressionFunctions(parametric.CompositeLifetimeFunctions, ABC):
         covar_effect: CovarEffect,
         baseline: DistributionFunctions,
     ):
-        super().__init__(
-            covar_effect=covar_effect,
-            baseline=baseline,
-        )
+        super().__init__()
+        self.add_functions("covar_effect", covar_effect)
+        self.add_functions("baseline", baseline)
         self._covar = np.empty((1, self.nb_covar), dtype=np.float64)
 
     @property

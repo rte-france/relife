@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
+from scipy.stats import gamma
 
 from relife2 import parametric
 from relife2.data import Lifetimes, ObservedLifetimes, Truncations
@@ -216,3 +217,53 @@ class LikelihoodFromLifetimes(Likelihood):
             + self.jac_lc_contrib(self.observed_lifetimes.left_censored)
             + self.jac_lt_contrib(self.truncations.left)
         )
+
+
+class GPLikelihoodFromDeteriorations(Likelihood):
+    """BLABLABLA"""
+
+    def negative_log(self, params: FloatArray) -> float:
+        self.params = params
+
+        delta_shape = np.diff(
+            self.functions.shape_function.nu(self.deterioration_data.times), axis=1
+        )
+
+        contributions = (
+            delta_shape * np.log(self.rate)
+            + (self.deterioration_data.increments - 1)
+            * np.log(self.deterioration_data.increments)
+            - self.rate * self.deterioration_data.increments
+            - np.log(gamma(self.deterioration_data.increments))
+        )
+
+        if self.censor is not None:
+
+            first_inspections = self.deterioration_data.times[:, 0]
+            self.functions.shape_function.nu(first_inspections)
+            censored_contributions = np.log(
+                gamma.cdf(
+                    self.censor[1] - contributions[:, 0],
+                    a=self.shape_function.nu(first_inspections),
+                    scale=1 / self.rate,
+                )
+                - gamma.cdf(
+                    self.censor[0] - contributions[:, 0],
+                    a=self.functions.shape_function.nu(first_inspections),
+                    scale=1 / self.rate,
+                )
+            ).reshape((-1, 1))
+
+            contributions = np.ma.hstack((censored_contributions, contributions[:, 1:]))
+
+        return np.sum(
+            contributions,
+            axis=None,
+        )
+
+
+class GPLikelihoodFromLifetimes(Likelihood):
+    """BLABLABLA"""
+
+    def negative_log(self, params: FloatArray) -> float:
+        pass

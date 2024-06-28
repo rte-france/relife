@@ -2,7 +2,13 @@ import numpy as np
 import pytest
 
 from datasets import load_power_transformer
-from relife2 import Exponential, Weibull, Gompertz, Gamma, LogLogistic
+from relife2 import (
+    Exponential,
+    Weibull,
+    Gompertz,
+    Gamma,
+    LogLogistic,
+)
 
 
 @pytest.fixture(scope="module")
