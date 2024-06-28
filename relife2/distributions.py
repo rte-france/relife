@@ -7,28 +7,27 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Union, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 from scipy.optimize import Bounds
 from scipy.special import (
     digamma,
     exp1,
+    expi,
     gamma,
+    gammainc,
     gammaincc,
     gammainccinv,
-    polygamma,
-    expi,
-    gammainc,
-    loggamma,
     lambertw,
+    loggamma,
+    polygamma,
 )
 
 from relife2 import parametric
 from relife2.gammaprocess import ShapeFunctions
 from relife2.types import FloatArray
 from relife2.utils.integrations import shifted_laguerre
-
 
 # pylint: disable=no-member
 
