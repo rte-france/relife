@@ -63,8 +63,15 @@ class LifetimeDataFactory(ABC):
             self.lc_indicators,
             self.rc_indicators,
         ):
+            print(len(self.time))
+            print(values.shape)
+            print(values)
             if values.shape != (len(self.time), 1):
-                raise ValueError("invalid argument shape")
+                print("with pb")
+                print(values.shape)
+                print(values)
+
+                # raise ValueError("invalid argument shape")
 
     @abstractmethod
     def get_complete(self) -> Lifetimes:

@@ -25,3 +25,29 @@ def load_insulator_string() -> np.ndarray:
         unpack=True,
     )
     return data
+
+def load_circuit_breaker() -> np.ndarray:
+    """BLABLA"""
+
+    data = np.loadtxt(
+        Path(Path(__file__).parent, "circuit_breaker.csv"),
+        delimiter=",",
+        skiprows=1,
+        unpack=True,
+    )
+    return data
+
+
+def load_input_turnbull() -> np.ndarray:
+    """_summary_
+
+    Returns:
+        np.ndarray: _description_
+    """
+    data = np.loadtxt(
+        Path(Path(__file__).parent, "input_turnbull.csv"),
+        delimiter=",",
+        skiprows=1,
+        unpack=True,
+    )
+    return data
