@@ -9,6 +9,4 @@ from .models import (
     ProportionalHazard,
     Weibull,
 )
-
-
 from .nonparametric import ECDF, KaplanMeier, NelsonAalen, Turnbull

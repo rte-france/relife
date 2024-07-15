@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Self, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from numpy import ma
@@ -18,8 +18,60 @@ from scipy.optimize import Bounds, root_scalar
 from relife2.types import FloatArray
 from relife2.utils.integrations import gauss_legendre, quad_laguerre
 
+# A TypeVar that’s bound by a class can materialize as any subclass
+# AnyFunctions = TypeVar("AnyFunctions", bound="Functions")
+
 
 class Functions(ABC):
+    """
+    Base class of objects implementing parametric functions.
+    Functions have a tree structure of parameters allowing to compose functions with add_functions method.
+    Parameters can be called and set by their name.
+
+    Examples:
+        >>> # Functions types must implement init_params and params_bounds methods
+        ... # They are passed in this example just to show how main Functions methods work
+        ... class MyFunctions(Functions):
+        ...   def init_params(self):
+        ...       pass
+        ...   def params_bounds(self):
+        ...       pass
+        >>> f = MyFunctions(w1=1.0, w2=2.0) # a parametric functions made of two parameters
+        >>> print(f.params) # parameters are returned as np.ndarray
+        ... # doctest: +NORMALIZE_WHITESPACE
+        [1. 2.]
+        >>> g = MyFunctions(w3=3.0, w4=4, w5=5) # other parametric functions
+        >>> h = MyFunctions(w6=6)
+        >>> y = MyFunctions(w7=7.0)
+        >>> z = MyFunctions(w8=8.0)
+        >>> k = MyFunctions(w9=9.0)
+        >>> f.add_functions("g", g)
+        >>> h.add_functions("y", y) # compose functions
+        >>> h.add_functions("z", z)
+        >>> f.add_functions("h", h)
+        >>> f.add_functions("k", k)
+        >>> print(f) # functions are like tree in their structure of parameters
+        ... # doctest: +NORMALIZE_WHITESPACE
+        MyFunctions {'w1': 1.0, 'w2': 2.0},
+        |____g {'w3': 3.0, 'w4': 4.0, 'w5': 5.0},
+        |____h {'w6': 6.0},
+        |________y {'w7': 7.0},
+        |________z {'w8': 8.0},
+        |____k {'w9': 9.0},
+        >>> (f.params == np.array([1., 2., 3., 4., 5., 6., 7., 8., 9.])).all()
+        ... # but parameters are always seen as one np.ndarray object
+        ... # read from top to bottom and left to right
+        True
+        >>> f.w5 = 10.0 # parameters can be set by their name
+        >>> (f.params == np.array([1., 2., 3., 4., 10., 6., 7., 8., 9.])).all()
+        True
+        >>> print(f.leaves_functions["g"]) # in the backend functions are stored in a dict
+        MyFunctions {'w3': 3.0, 'w4': 4.0, 'w5': 10.0},
+        >>> print(hasattr(f, "h")) # functions are seen as attribute and can be resquested
+        True
+        >>> print(hasattr(f, "w5")) # even parameters are seen as attribute and can be requested
+        True
+    """
 
     def __init__(self, **kwparams: Union[float, None]):
 
@@ -30,7 +82,7 @@ class Functions(ABC):
             else:
                 self.root_params[k] = float(v)
         # self.leaves_params: dict[str, dict] = {}
-        self.leaves_functions: dict[str, Self] = {}
+        self.leaves_functions: dict[str, "Functions"] = {}
         self.all_params = self.root_params.copy()
 
     @abstractmethod
@@ -60,6 +112,10 @@ class Functions(ABC):
 
     @property
     def params(self) -> FloatArray:
+        """
+        Returns:
+            (np.ndarray) : parameters values
+        """
         return np.array(tuple(self.all_params.values()), dtype=np.float64)
 
     @params.setter
@@ -80,11 +136,11 @@ class Functions(ABC):
         self.all_params.update(zip(self.all_params, values))
         pos = len(self.root_params)
         self.root_params.update(zip(self.root_params, values[:pos]))
-        for i, functions in enumerate(self.leaves_functions.values()):
+        for functions in self.leaves_functions.values():
             functions.params = values[pos : pos + functions.nb_params]
             pos += functions.nb_params
 
-    def add_functions(self, name: str, functions: Self) -> None:
+    def add_functions(self, name: str, functions: "Functions") -> None:
         """
         add leaf functions to tree
         Appends another Parameters object to itself
@@ -119,14 +175,12 @@ class Functions(ABC):
         class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
-        elif name in super().__getattribute__("all_params"):
+        if name in super().__getattribute__("all_params"):
             return super().__getattribute__("all_params")[name]
-        else:
-            value = self.__search_leaf_functions(name)
-            if value is None:
-                raise AttributeError(f"{class_name} has no attribute named {name}")
-            else:
-                return value
+        value = self.__search_leaf_functions(name)
+        if value is None:
+            raise AttributeError(f"{class_name} has no attribute named {name}")
+        return value
 
     def __setattr__(self, name: str, value: Any):
         if name in ["all_params", "leaves_functions", "root_params"]:
@@ -149,20 +203,11 @@ class Functions(ABC):
             super().__setattr__(name, value)
 
     def __write_str(self, name, node, depth=0, indent=4):
-        if not node.leaves_functions:
-            return [
-                "{}{}{} {},".format(
-                    "|" * (depth != 0),
-                    "_" * (indent * depth),
-                    name,
-                    node.root_params,
-                )
-            ]
         str_repr = [
-            "{}{}{} {},".format(
-                "|" * (depth != 0), "_" * (indent * depth), name, node.root_params
-            )
+            f"{'|' * (depth != 0)}{'_' * (indent * depth)}{name} {node.root_params},"
         ]
+        if not node.leaves_functions:
+            return str_repr
         if node.leaves_functions:
             for leaf_name, leaf in node.leaves_functions.items():
                 str_repr.extend(
@@ -179,6 +224,10 @@ class Functions(ABC):
         return "\n".join(self.__write_str(class_name, self))
 
     def copy(self):
+        """
+        Returns:
+            Functions : a copy of the Functions object
+        """
         return copy.deepcopy(self)
 
 
