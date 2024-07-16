@@ -29,6 +29,7 @@ from relife2.gammaprocess import ShapeFunctions
 from relife2.types import FloatArray
 from relife2.utils.integrations import shifted_laguerre
 
+
 # pylint: disable=no-member
 
 
@@ -392,7 +393,7 @@ class LogLogisticFunctions(DistributionFunctions):
         )
 
 
-class GPDistributionFunctions(parametric.LifetimeFunctions, ABC):
+class GPDistributionFunctions(parametric.LifetimeFunctions):
     """BLABLABLA"""
 
     def __init__(
@@ -415,14 +416,24 @@ class GPDistributionFunctions(parametric.LifetimeFunctions, ABC):
         self.load_threshold = load_threshold
 
     @property
-    def suppert_upper_bound(self):
-        """BLABLABLA"""
+    def support_lower_bound(self):
+        """
+        Returns:
+            BLABLABLA
+        """
+        return 0.0
+
+    @property
+    def support_upper_bound(self):
+        """
+        Returns:
+            BLABLABLA
+        """
         return np.inf
 
     @property
-    def suppert_lower_bound(self):
-        """BLABLABLA"""
-        return 0.0
+    def resistance_magnitude(self):
+        return (self.initial_resistance - self.load_threshold) * self.rate
 
     def init_params(self, *args: Any) -> FloatArray:
         pass
@@ -460,236 +471,166 @@ class GPDistributionFunctions(parametric.LifetimeFunctions, ABC):
             (self.initial_resistance - self.load_threshold) * self.rate,
         )
 
-    @abstractmethod
-    def mrl(self, time: FloatArray) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (FloatArray): BLABLABLABLA
+    def _series_expansion(self, shape_values: FloatArray, tol: float) -> FloatArray:
 
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
+        # resistance_values - shape : (n,)
 
-    @abstractmethod
-    def mean(self) -> float:
-        """
-        BLABLABLABLA
-        Returns:
-            float: BLABLABLABLA
-        """
+        # shape : (n,)
+        r = self.resistance_magnitude / (1 + shape_values)
 
-    @abstractmethod
-    def var(self) -> float:
-        """
-        BLABLABLABLA
-        Returns:
-            float: BLABLABLABLA
-        """
+        # shape : (n,)
+        f = np.exp(
+            shape_values * np.log(self.resistance_magnitude)
+            - loggamma(shape_values + 1)
+            - self.resistance_magnitude
+        )
+        # shape : (n,)
+        d_f = f * (np.log(self.resistance_magnitude) - digamma(shape_values + 1))
+        # shape : (n,)
+        epsilon = tol / (abs(f) + abs(d_f))
+        # shape : (n,)
+        delta = (1 - r) * epsilon / 2
 
-    def moore_jac_uppergamma_c(self, time, tol=1e-6, print_feedback=False):
+        # shape : (n,)
+        n1 = np.ceil((np.log(epsilon) + np.log(1 - r)) / np.log(r), dtype=np.int32)
+        n2 = np.ceil(1 + r / (1 - r), dtype=np.int32)
+        n3 = np.ceil(
+            np.real(lambertw(np.log(r) * delta, k=-1) / np.log(r)), dtype=np.int32
+        )
+
+        # M = max(n1, n2, 3)
+        # shape : (n, M)
+        range_grid = (
+            np.tile(np.arange(1, np.max(n1, n2, n3) + 1), (len(n1), 1))
+            + shape_values[:, None]
+        )
+        mask = np.ones_like(range_grid)
+
+        # shape : (n,), fill range_grid with zeros when crossed max upper bound on conditioned indices
+        ind = np.log(r) * delta >= -1 / np.exp(1)
+
+        # shape : (n, M)
+        mask[ind] = (
+            mask[ind]
+            <= np.maximum(np.max(np.vstack((n1, n2)), axis=0), n3)[ind][:, None]
+        ) * mask[ind]
+        mask[~ind] = (
+            mask[~ind] <= np.max(np.vstack((n1, n2)), axis=0)[ind][:, None]
+        ) * mask[~ind]
+
+        # shape : (n, M + 1)
+        harmonic = np.hstack(
+            (np.zeros((range_grid.shape[0], 1)), 1 / range_grid), dtype=range_grid.dtype
+        )
+        cn = np.hstack(
+            (np.ones((range_grid.shape[0], 1)), self.resistance_magnitude / range_grid),
+            dtype=range_grid.dtype,
+        )
+
+        # shape : (n, M + 1)
+        harmonic = np.cumsum(harmonic, axis=1) * mask
+        cn = np.cumprod(cn, axis=1) * mask
+
+        cn_derivative = -cn * harmonic
+
+        # shape : (n,)
+        s = np.sum(cn, axis=1)
+        d_s = np.sum(cn_derivative, axis=1)
+
+        # return shape : (n,)
+        return s * d_f + f * d_s
+
+    def _continued_fraction_expansion(
+        self, shape_values: FloatArray, tol: float
+    ) -> FloatArray:
+
+        # resistance_values - shape : (n,)
+
+        # shape : (n, 2)
+        a = np.tile(
+            np.array([1, 1 + self.resistance_magnitude]),
+            (len(shape_values), 1),
+        )
+        b = np.hstack(
+            (
+                (np.ones_like(shape_values) * self.resistance_magnitude)[:None],
+                self.resistance_magnitude
+                * (2 - shape_values[:, None] + self.resistance_magnitude),
+            )
+        )
+
+        # shape : (n, 2)
+        d_a = np.zeros_like(a)
+        d_b = np.zeros_like(b)
+        d_b[:, 1] = -self.resistance_magnitude
+
+        # shape : (n,)
+        f = np.exp(
+            shape_values * np.log(self.resistance_magnitude)
+            - loggamma(shape_values)
+            - self.resistance_magnitude
+        )
+        d_f = f * (np.log(self.resistance_magnitude) - digamma(shape_values))
+
+        s = None
+
+        res = np.ones_like(shape_values) * 2 * tol
+        k = 2
+
+        result = np.full_like(shape_values, np.nan)
+        d_result = result.copy()
+
+        while (res > tol).any():
+
+            ak = (k - 1) * (shape_values - k)
+            bk = 2 * k - shape_values + self.resistance_magnitude
+
+            next_a = bk * a[:, 1] + ak * a[:, 0]
+            next_b = bk * b[:, 1] + ak * b[:, 0]
+
+            next_d_a = bk * d_a[:, 1] - a[:, 1] + ak * d_a[:, 0] + (k - 1) * a[:, 0]
+            next_d_b = bk * d_b[:, 1] - b[:, 1] + ak * d_b[:, 0] + (k - 1) * b[:, 0]
+
+            next_s = next_a / next_b
+
+            if s is not None:
+                res = np.abs(next_s - s) / next_s
+            k += 1
+
+            # update
+            a = np.hstack((a[:, 1], next_a))
+            b = np.hstack((b[:, 1], next_b))
+            d_a = np.hstack((d_a[:, 1], next_d_a))
+            d_b = np.hstack((d_b[:, 1], next_d_b))
+            result = np.where(res <= tol, next_s, result)
+            d_result = np.where(
+                res <= tol,
+                next_b ** (-2) * (next_b * next_d_a - next_a * next_d_b),
+                d_result,
+            )
+
+        return -f * d_result - result * d_f
+
+    def moore_jac_uppergamma_c(self, time: FloatArray, tol: float = 1e-6) -> FloatArray:
         """BLABLABLA"""
 
-        ind0 = np.where(time == 0)[0]
-        non0_times = np.delete(time, ind0)
-        x = (self.initial_resistance - self.load_threshold) * self.rate
+        # /!\ consider time as masked array
+        shape_values = np.ravel(self.shape_function.nu(time).astype(float))
+        series_indices = np.where(
+            np.logical_or(
+                np.logical_and(
+                    shape_values <= self.resistance_magnitude,
+                    self.resistance_magnitude <= 1,
+                ),
+                self.resistance_magnitude < shape_values,
+            )
+        )[0]
 
-        # critère d'arrêt calculé pour une intégrale voisine, et non cible.
-        # Ne devrait pas changer grand chose mais à modifier.
-
-        p_ravel = np.ravel(self.shape_function.nu(non0_times)).astype(float)
-        logic_one = np.logical_and(p_ravel <= x, x <= 1)
-        logic_two = x < p_ravel
-
-        series_indices = np.where(np.logical_or(logic_one, logic_two))[0]
-
-        # if((p<=x<=1) | (x<p)): # On this case we use the series expansion of the incomplete gamma
-        result = []
-        for i in range(len(p_ravel)):
-            p = p_ravel[i]
-            if i in series_indices:
-
-                # Initialization of parameters
-                r = x / (1 + p)
-
-                # f = np.exp(-x) * (x ** p) / sc.gamma(p + 1)
-                # d_f = np.exp(-x) * x ** p * (np.log(x) - digamma(p + 1)) / sc.gamma(p + 1)
-                f = np.exp(p * np.log(x) - loggamma(p + 1) - x)
-                d_f = f * (np.log(x) - digamma(p + 1))
-                epsilon = tol / (abs(f) + abs(d_f))
-                delta = (1 - r) * epsilon / 2
-
-                # determining stopping criteria for the infinite series s and dS:
-                n1 = np.ceil((np.log(epsilon) + np.log(1 - r)) / np.log(r)).astype(int)
-
-                n2 = np.ceil(1 + r / (1 - r)).astype(int)
-
-                if np.log(r) * delta >= -1 / np.exp(1):
-                    n3 = np.ceil(
-                        np.real(lambertw(np.log(r) * delta, k=-1) / np.log(r))
-                    ).astype(int)
-                    n = max(n1, n2, n3)
-                else:
-                    n = max(n1, n2)
-
-                # Computing the coefficients C_n and their derivatives
-                cn = x / (p + np.arange(1, n + 1))
-                cn = np.insert(cn, 0, 1)
-                cn = cn.cumprod()
-
-                harmonic = 1 / (p + np.arange(1, n + 1))
-                harmonic = np.insert(harmonic, 0, 0)
-                harmonic = np.cumsum(harmonic)
-
-                cn_derivative = -cn * harmonic
-
-                s = sum(cn)
-                d_s = sum(cn_derivative)
-
-                if print_feedback:
-                    print(
-                        f"Series expansion was used. Convergence happened after {n} steps"
-                    )
-
-                # result.append(sc.gamma(p) * digamma(p) - s * d_f - f * d_s)
-                result.append(s * d_f + f * d_s)
-
-            else:  # On this case we use the continued fraction expansion of the incomplete gamma
-
-                # Parameter initialization
-                a = [1, 1 + x]
-                b = [x, x * (2 - p + x)]
-                d_a = [0, 0]
-                d_b = [0, -x]
-
-                # f = np.exp(-x) * x ** p / sc.gamma(p)
-                # d_f = np.exp(-x) * x ** p * (np.log(x) - digamma(p)) / sc.gamma(p)
-                f = np.exp(p * np.log(x) - loggamma(p) - x)
-                d_f = f * (np.log(x) - digamma(p))
-
-                s = []
-                res = 2 * tol
-                k = 2
-                while res > tol:
-
-                    ak = (k - 1) * (p - k)
-                    bk = 2 * k - p + x
-
-                    a.append(bk * a[k - 1] + ak * a[k - 2])
-                    b.append(bk * b[k - 1] + ak * b[k - 2])
-
-                    d_a.append(
-                        bk * d_a[k - 1]
-                        - a[k - 1]
-                        + ak * d_a[k - 2]
-                        + (k - 1) * a[k - 2]
-                    )
-                    d_b.append(
-                        bk * d_b[k - 1]
-                        - b[k - 1]
-                        + ak * d_b[k - 2]
-                        + (k - 1) * b[k - 2]
-                    )
-
-                    s.append(a[-1] / b[-1])
-
-                    if len(s) > 1:
-                        res = abs(s[-1] - s[-2]) / s[-1]
-                    k += 1
-
-                s = s[-1]
-                d_s = b[-1] ** (-2) * (b[-1] * d_a[-1] - a[-1] * d_b[-1])
-
-                if print_feedback:
-                    print(
-                        f"Continued fraction expansion was used. Convergence happened after {k - 1} steps"
-                    )
-
-                result.append(-f * d_s - s * d_f)
-
-        result = np.array(result).reshape(self.shape_function.nu(non0_times).shape)
-        return np.insert(result, ind0, 0)
-
-    def isf(self, probability: FloatArray) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            probability (FloatArray): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-        cumulative_hazard_rate = -np.log(probability)
-        return self.ichf(cumulative_hazard_rate)
-
-    def cdf(self, time: FloatArray) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            time (FloatArray): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-        return 1 - self.sf(time)
-
-    def rvs(
-        self, size: int = 1, seed: Optional[int] = None
-    ) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            size (Optional[int]): BLABLABLABLA
-            seed (Optional[int]): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-        generator = np.random.RandomState(seed=seed)
-        probability = generator.uniform(size=size)
-        return self.isf(probability)
-
-    def ppf(self, probability: FloatArray) -> Union[float, FloatArray]:
-        """
-        BLABLABLABLA
-        Args:
-            probability (FloatArray): BLABLABLABLA
-
-        Returns:
-            Union[float, FloatArray]: BLABLABLABLA
-        """
-        return self.isf(1 - probability)
-
-    def median(self) -> float:
-        """
-        BLABLABLABLA
-        Returns:
-            float: BLABLABLABLA
-        """
-        return float(self.ppf(np.array(0.5)))
-
-
-class PowerGPFunctionsFunctions(GPDistributionFunctions):
-    """BLABLABLA"""
-
-    def mrl(self, time: FloatArray) -> Union[float, FloatArray]:
-        pass
-
-    def mean(self) -> float:
-        pass
-
-    def var(self) -> float:
-        pass
-
-
-class ExponentialGPFunctionsFunctions(GPDistributionFunctions):
-    """BLABLABLA"""
-
-    def mrl(self, time: FloatArray) -> Union[float, FloatArray]:
-        pass
-
-    def mean(self) -> float:
-        pass
-
-    def var(self) -> float:
-        pass
+        result = time.copy()
+        result[series_indices] = self._series_expansion(
+            shape_values[series_indices], tol
+        )
+        result[~series_indices] = self._continued_fraction_expansion(
+            shape_values[~series_indices], tol
+        )
+        return np.where(time == 0, 0, result)
