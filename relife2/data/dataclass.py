@@ -42,7 +42,7 @@ class ObservedLifetimes:
     left_censored: Lifetimes
     right_censored: Lifetimes
     interval_censored: Lifetimes
-
+    
     def __post_init__(self):
         self.rc = Lifetimes(
             np.concatenate(

@@ -73,17 +73,17 @@ def lifetimes_compatibility(
                         """
                     )
         if len(truncations.right) != 0 and len(lifetimes) != 0:
-            left_truncated_lifetimes = intersect_lifetimes(lifetimes, truncations.right)
-            if len(left_truncated_lifetimes) != 0:
+            right_truncated_lifetimes = intersect_lifetimes(lifetimes, truncations.right)
+            if len(right_truncated_lifetimes) != 0:
                 if np.any(
                     np.max(
-                        left_truncated_lifetimes.values[
+                        right_truncated_lifetimes.values[
                             :, : lifetimes.values.shape[-1]
                         ],
                         axis=1,
                         keepdims=True,
                     )
-                    > left_truncated_lifetimes.values[:, lifetimes.values.shape[-1] :]
+                    > right_truncated_lifetimes.values[:, lifetimes.values.shape[-1] :]
                 ):
                     raise ValueError(
                         """
