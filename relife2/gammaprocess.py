@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from scipy.optimize import Bounds
@@ -34,6 +34,11 @@ class ShapeFunctions(parametric.Functions, ABC):
 class PowerShapeFunctions(ShapeFunctions):
     """BLABLABLA"""
 
+    def __init__(
+        self, shape_rate: Optional[float] = None, shape_power: Optional[float] = None
+    ):
+        super().__init__(shape_rate=shape_rate, shape_power=shape_power)
+
     def nu(self, time: FloatArray) -> FloatArray:
         return self.shape_rate * time**self.shape_power
 
@@ -41,8 +46,11 @@ class PowerShapeFunctions(ShapeFunctions):
         return self.shape_rate * self.shape_power * time ** (self.shape_power - 1)
 
 
-class ExponentialShapeFunction(ShapeFunctions):
+class ExponentialShapeFunctions(ShapeFunctions):
     """BLABLABLA"""
+
+    def __init__(self, shape_exponent: Optional[float] = None):
+        super().__init__(shape_exponent=shape_exponent)
 
     def nu(self, time: FloatArray) -> FloatArray:
         pass

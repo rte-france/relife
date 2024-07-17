@@ -18,6 +18,7 @@ from scipy.optimize import Bounds, root_scalar
 from relife2.types import FloatArray
 from relife2.utils.integrations import gauss_legendre, quad_laguerre
 
+
 # A TypeVar that’s bound by a class can materialize as any subclass
 # AnyFunctions = TypeVar("AnyFunctions", bound="Functions")
 
@@ -455,7 +456,6 @@ class LifetimeFunctions(Functions, ABC):
         return root_scalar(
             lambda x: self.sf(x) - probability,
             method="newton",
-            x0=0.0,
         ).root
 
     def cdf(self, time: FloatArray) -> FloatArray:

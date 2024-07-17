@@ -436,11 +436,28 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
         return (self.initial_resistance - self.load_threshold) * self.rate
 
     def init_params(self, *args: Any) -> FloatArray:
-        pass
+        return np.concatenate(
+            (
+                np.array([1]),
+                self.shape_function.init_params(*args),
+            )
+        )
 
     @property
     def params_bounds(self) -> Bounds:
-        return None
+        lb = np.concatenate(
+            (
+                np.array([np.finfo(float).resolution]),
+                self.shape_function.params_bounds.lb,
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.array([np.inf]),
+                self.shape_function.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
 
     def pdf(self, time: FloatArray) -> Union[float, FloatArray]:
         """BLABLABLA"""
@@ -494,6 +511,8 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
         # shape : (n,)
         n1 = np.ceil((np.log(epsilon) + np.log(1 - r)) / np.log(r), dtype=np.int32)
         n2 = np.ceil(1 + r / (1 - r), dtype=np.int32)
+
+        # /!\ n3 does not run if condition ind not true
         n3 = np.ceil(
             np.real(lambertw(np.log(r) * delta, k=-1) / np.log(r)), dtype=np.int32
         )
@@ -520,10 +539,17 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
 
         # shape : (n, M + 1)
         harmonic = np.hstack(
-            (np.zeros((range_grid.shape[0], 1)), 1 / range_grid), dtype=range_grid.dtype
+            (
+                np.zeros((range_grid.shape[0], 1)),
+                1 / (range_grid + shape_values[:, None]),
+            ),
+            dtype=range_grid.dtype,
         )
         cn = np.hstack(
-            (np.ones((range_grid.shape[0], 1)), self.resistance_magnitude / range_grid),
+            (
+                np.ones((range_grid.shape[0], 1)),
+                self.resistance_magnitude / (range_grid + shape_values[:, None]),
+            ),
             dtype=range_grid.dtype,
         )
 
