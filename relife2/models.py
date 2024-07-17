@@ -293,6 +293,7 @@ class Regression(LifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
+        check_params(self.functions)
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
 
     def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:

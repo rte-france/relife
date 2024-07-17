@@ -13,7 +13,7 @@ from typing import Any, Optional, Union
 import numpy as np
 from numpy import ma
 from numpy.typing import ArrayLike
-from scipy.optimize import Bounds, root_scalar
+from scipy.optimize import Bounds, newton
 
 from relife2.types import FloatArray
 from relife2.utils.integrations import gauss_legendre, quad_laguerre
@@ -453,10 +453,10 @@ class LifetimeFunctions(Functions, ABC):
         Returns:
             FloatArray: BLABLABLABLA
         """
-        return root_scalar(
+        return newton(
             lambda x: self.sf(x) - probability,
-            method="newton",
-        ).root
+            x0=np.zeros_like(probability),
+        )
 
     def cdf(self, time: FloatArray) -> FloatArray:
         """

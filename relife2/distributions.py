@@ -467,10 +467,7 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
         return np.where(
             time == 0,
             int(self.shape_power == 1)
-            * (
-                -self.shape_rate
-                * expi(-(self.initial_resistance - self.load_threshold) * self.rate)
-            ),
+            * (-self.shape_rate * expi(-self.resistance_magnitude)),
             res,
         )
 
@@ -509,33 +506,44 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
         delta = (1 - r) * epsilon / 2
 
         # shape : (n,)
-        n1 = np.ceil((np.log(epsilon) + np.log(1 - r)) / np.log(r), dtype=np.int32)
-        n2 = np.ceil(1 + r / (1 - r), dtype=np.int32)
+        n1 = np.ceil((np.log(epsilon) + np.log(1 - r)) / np.log(r)).astype(np.int64)
+        n2 = np.ceil(1 + r / (1 - r)).astype(np.int64)
 
         # /!\ n3 does not run if condition ind not true
-        n3 = np.ceil(
-            np.real(lambertw(np.log(r) * delta, k=-1) / np.log(r)), dtype=np.int32
+        n3 = np.ceil(np.real(lambertw(np.log(r) * delta, k=-1) / np.log(r))).astype(
+            np.int64
         )
 
         # M = max(n1, n2, 3)
         # shape : (n, M)
-        range_grid = (
-            np.tile(np.arange(1, np.max(n1, n2, n3) + 1), (len(n1), 1))
-            + shape_values[:, None]
+        # print("n1 :", n1)
+        # print("n2 :", n2)
+        # print("n3 :", n3)
+        # print("M :", np.max((n1, n2, n3), initial=0.0) + 1)
+        range_grid = np.tile(
+            np.arange(1, np.max((n1, n2, n3), initial=0.0) + 1),
+            (len(n1), 1),
         )
+
+        # print("range_grid :", range_grid)
         mask = np.ones_like(range_grid)
 
         # shape : (n,), fill range_grid with zeros when crossed max upper bound on conditioned indices
         ind = np.log(r) * delta >= -1 / np.exp(1)
 
+        # print("ind :", ind)
+
         # shape : (n, M)
         mask[ind] = (
-            mask[ind]
+            range_grid[ind]
             <= np.maximum(np.max(np.vstack((n1, n2)), axis=0), n3)[ind][:, None]
-        ) * mask[ind]
+        )
+        # print(np.maximum(np.max(np.vstack((n1, n2)), axis=0), n3)[ind][:, None])
         mask[~ind] = (
-            mask[~ind] <= np.max(np.vstack((n1, n2)), axis=0)[ind][:, None]
-        ) * mask[~ind]
+            range_grid[~ind] <= np.max(np.vstack((n1, n2)), axis=0)[~ind][:, None]
+        )
+        # print(np.max(np.vstack((n1, n2)), axis=0)[~ind][:, None])
+        # print("mask :", mask)
 
         # shape : (n, M + 1)
         harmonic = np.hstack(
@@ -543,15 +551,14 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
                 np.zeros((range_grid.shape[0], 1)),
                 1 / (range_grid + shape_values[:, None]),
             ),
-            dtype=range_grid.dtype,
         )
         cn = np.hstack(
             (
                 np.ones((range_grid.shape[0], 1)),
                 self.resistance_magnitude / (range_grid + shape_values[:, None]),
             ),
-            dtype=range_grid.dtype,
         )
+        mask = np.hstack((np.ones((range_grid.shape[0], 1)), mask))
 
         # shape : (n, M + 1)
         harmonic = np.cumsum(harmonic, axis=1) * mask
@@ -579,7 +586,7 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
         )
         b = np.hstack(
             (
-                (np.ones_like(shape_values) * self.resistance_magnitude)[:None],
+                (np.ones_like(shape_values) * self.resistance_magnitude)[:, None],
                 self.resistance_magnitude
                 * (2 - shape_values[:, None] + self.resistance_magnitude),
             )
@@ -624,16 +631,15 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
             k += 1
 
             # update
-            a = np.hstack((a[:, 1], next_a))
-            b = np.hstack((b[:, 1], next_b))
-            d_a = np.hstack((d_a[:, 1], next_d_a))
-            d_b = np.hstack((d_b[:, 1], next_d_b))
-            result = np.where(res <= tol, next_s, result)
-            d_result = np.where(
-                res <= tol,
-                next_b ** (-2) * (next_b * next_d_a - next_a * next_d_b),
-                d_result,
-            )
+            a = np.hstack((a[:, [1]], next_a[:, None]))
+            b = np.hstack((b[:, [1]], next_b[:, None]))
+            d_a = np.hstack((d_a[:, [1]], next_d_a[:, None]))
+            d_b = np.hstack((d_b[:, [1]], next_d_b[:, None]))
+            result[res <= tol] = next_s[res <= tol]
+            d_result[res <= tol] = (
+                next_b ** (-2) * (next_b * next_d_a - next_a * next_d_b)
+            )[res <= tol]
+            s = next_s
 
         return -f * d_result - result * d_f
 
@@ -641,22 +647,32 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
         """BLABLABLA"""
 
         # /!\ consider time as masked array
-        shape_values = np.ravel(self.shape_function.nu(time).astype(float))
-        series_indices = np.where(
-            np.logical_or(
-                np.logical_and(
-                    shape_values <= self.resistance_magnitude,
-                    self.resistance_magnitude <= 1,
-                ),
-                self.resistance_magnitude < shape_values,
-            )
-        )[0]
+        shape_values = np.ravel(self.shape_function.nu(time))
+        zero_time = np.ravel(time == 0)
+        # print("shape_values :", shape_values)
+        # print("zero_time", zero_time)
 
-        result = time.copy()
-        result[series_indices] = self._series_expansion(
-            shape_values[series_indices], tol
+        series_indices = np.logical_or(
+            np.logical_and(
+                shape_values <= self.resistance_magnitude,
+                self.resistance_magnitude <= 1,
+            ),
+            self.resistance_magnitude < shape_values,
         )
-        result[~series_indices] = self._continued_fraction_expansion(
-            shape_values[~series_indices], tol
+        # print("series_indices :", series_indices)
+        # print(np.logical_and(~zero_time, series_indices))
+        # print(shape_values[np.logical_and(~zero_time, series_indices)])
+
+        result = np.full_like(shape_values, np.nan)
+        result[np.logical_and(~zero_time, series_indices)] = self._series_expansion(
+            shape_values[np.logical_and(~zero_time, series_indices)], tol
         )
-        return np.where(time == 0, 0, result)
+        result[np.logical_and(~zero_time, ~series_indices)] = (
+            self._continued_fraction_expansion(
+                shape_values[np.logical_and(~zero_time, ~series_indices)], tol
+            )
+        )
+        result[zero_time] = 0
+        # print("result moore jac:", result.reshape(time.shape))
+
+        return result.reshape(time.shape)

@@ -8,5 +8,6 @@ from .models import (
     LogLogistic,
     ProportionalHazard,
     Weibull,
+    GammaProcessDistribution,
 )
 from .nonparametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
