@@ -199,26 +199,17 @@ class NelsonAalen(NonParametricEstimator):
         )[0]
         x_out = np.insert(counts[:-1], 0, 0)
         at_risk_assets = np.cumsum(x_in - x_out)
-        s = np.cumprod(1 - death_set / at_risk_assets)
-        sf = np.insert(s, 0, 1)  # TODO : double check avec NA de T
-
-        with np.errstate(divide="ignore"):
-            var = s**2 * np.cumsum(
-                np.where(
-                    at_risk_assets > death_set,
-                    death_set / (at_risk_assets * (at_risk_assets - death_set)),
-                    0,
-                )
-            )
+        s = np.cumsum(death_set / at_risk_assets)
+        var = np.cumsum(death_set / np.where(at_risk_assets == 0, 1, at_risk_assets**2))
         chf = np.insert(s, 0, 0)
         se = np.sqrt(np.insert(var, 0, 0))
         timeline = np.insert(timeline, 0, 0)
-        self._sf = Estimates(timeline, sf, se)
         self._chf = Estimates(timeline, chf, se)
 
     @property
     def sf(self) -> Estimates:
-        return self._sf
+        # TODO : verify following
+        return np.exp(-self._chf)
 
     @property
     def chf(self) -> Estimates:
