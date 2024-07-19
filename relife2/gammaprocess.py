@@ -5,6 +5,7 @@ import numpy as np
 from scipy.optimize import Bounds
 
 from relife2 import parametric
+from relife2.distributions import GPDistributionFunctions
 from relife2.types import FloatArray
 
 
@@ -56,4 +57,35 @@ class ExponentialShapeFunctions(ShapeFunctions):
         pass
 
     def jac_nu(self, time: FloatArray) -> FloatArray:
+        pass
+
+
+# GammaProcessFunctions(FunctionsBridge, parametric.Functions)
+class GammaProcessFunctions(parametric.Functions):
+    """BLABLABLA"""
+
+    def __init__(
+        self,
+        shape_function: ShapeFunctions,
+        rate: Optional[float] = None,
+        initial_resistance: Optional[float] = None,
+        load_threshold: Optional[float] = None,
+    ):
+        super().__init__()
+        self.process_lifetime_distribution = GPDistributionFunctions(
+            shape_function, rate, initial_resistance, load_threshold
+        )
+        self.add_functions(
+            "process_lifetime_distribution", self.process_lifetime_distribution
+        )
+
+    def init_params(self, *args: Any) -> FloatArray:
+        return self.process_lifetime_distribution.init_params(*args)
+
+    @property
+    def params_bounds(self) -> Bounds:
+        return self.process_lifetime_distribution.params_bounds
+
+    def sample(self):
+        """BLABLABLA"""
         pass

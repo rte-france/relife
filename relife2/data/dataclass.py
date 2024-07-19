@@ -34,7 +34,6 @@ class Lifetimes:
         return len(self.values)
 
 
-@dataclass
 class ObservedLifetimes:
     """BLABLABLA"""
 
@@ -78,3 +77,10 @@ class Truncations:
 
     left: Lifetimes
     right: Lifetimes
+
+
+@dataclass
+class Deteriorations:
+    """BLABLABLA"""
+    pass
+    # increments : 

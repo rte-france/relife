@@ -15,9 +15,12 @@ from scipy.stats import gamma
 
 from relife2 import parametric
 from relife2.data import Lifetimes, ObservedLifetimes, Truncations
+from relife2.data.dataclass import Deteriorations
+from relife2.gammaprocess import GammaProcessFunctions
 from relife2.types import FloatArray
 
 
+# Likelihood(FunctionsBridge)
 class Likelihood(parametric.LifetimeFunctionsBridge, ABC):
     """
     Class that instanciates likelihood base having finite number of parameters related to
@@ -222,6 +225,16 @@ class LikelihoodFromLifetimes(Likelihood):
 class GPLikelihoodFromDeteriorations(Likelihood):
     """BLABLABLA"""
 
+    def __init__(
+        self,
+        functions: GammaProcessFunctions,
+        deterioration_data: Deteriorations,
+        **kwdata: FloatArray,
+    ):
+        super().__init__(functions)
+        self.deterioration_data = deterioration_data
+        self.kwdata = kwdata
+
     def negative_log(self, params: FloatArray) -> float:
         self.params = params
 
@@ -260,10 +273,3 @@ class GPLikelihoodFromDeteriorations(Likelihood):
             contributions,
             axis=None,
         )
-
-
-class GPLikelihoodFromLifetimes(Likelihood):
-    """BLABLABLA"""
-
-    def negative_log(self, params: FloatArray) -> float:
-        pass
