@@ -9,5 +9,6 @@ from .models import (
     ProportionalHazard,
     Weibull,
     GammaProcessDistribution,
+    GammaProcess,
 )
 from .nonparametric import ECDF, KaplanMeier, NelsonAalen, Turnbull

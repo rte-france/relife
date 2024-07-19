@@ -61,7 +61,7 @@ class ExponentialShapeFunctions(ShapeFunctions):
 
 
 # GammaProcessFunctions(FunctionsBridge, parametric.Functions)
-class GammaProcessFunctions(parametric.Functions):
+class GPFunctions(parametric.Functions):
     """BLABLABLA"""
 
     def __init__(
@@ -87,6 +87,19 @@ class GammaProcessFunctions(parametric.Functions):
     def params_bounds(self) -> Bounds:
         return self.process_lifetime_distribution.params_bounds
 
-    def sample(self):
-        """BLABLABLA"""
-        pass
+    def sample(self, inspection_times: FloatArray, nb_sample=1) -> FloatArray:
+        n = len(inspection_times) - 1
+        h = np.diff(inspection_times)
+        shape = np.repeat(
+            (
+                self.shape_function.nu(inspection_times[:-1] + h)
+                - self.shape_function.nu(inspection_times[:-1])
+            ).reshape(1, -1),
+            nb_sample,
+            axis=0,
+        )
+
+        increments = np.random.gamma(shape, 1 / self.rate, (nb_sample, n))
+        deterioration_measurements = np.cumsum(increments, axis=1)
+        # ids = np.repeat(np.arange(nb_sample), n)
+        return deterioration_measurements

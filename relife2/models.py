@@ -29,7 +29,11 @@ from relife2.distributions import (
     WeibullFunctions,
     GPDistributionFunctions,
 )
-from relife2.gammaprocess import ExponentialShapeFunctions, PowerShapeFunctions
+from relife2.gammaprocess import (
+    ExponentialShapeFunctions,
+    PowerShapeFunctions,
+    GPFunctions,
+)
 from relife2.likelihoods import LikelihoodFromLifetimes
 from relife2.regressions import (
     AFTEffect,
@@ -649,4 +653,30 @@ class GammaProcessDistribution(Distribution):
             GPDistributionFunctions(
                 shape_functions, rate, initial_resistance, load_threshold
             )
+        )
+
+
+class GammaProcess(Model):
+    shape_names: tuple = ("exponential", "power")
+
+    def __init__(
+        self,
+        shape: str,
+        rate: Optional[float] = None,
+        initial_resistance: Optional[float] = None,
+        load_threshold: Optional[float] = None,
+        **shape_params: Union[float, None],
+    ):
+
+        if shape == "exponential":
+            shape_functions = ExponentialShapeFunctions(**shape_params)
+        elif shape == "power":
+            shape_functions = PowerShapeFunctions(**shape_params)
+        else:
+            raise ValueError(
+                f"{shape} is not valid name for shape, only {self.shape_names} are allowed"
+            )
+
+        super().__init__(
+            GPFunctions(shape_functions, rate, initial_resistance, load_threshold)
         )
