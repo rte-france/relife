@@ -4,8 +4,8 @@ from typing import Any, Optional
 import numpy as np
 from scipy.optimize import Bounds
 
+import relife2.distributions as distributions
 from relife2 import parametric
-from relife2.distributions import GPDistributionFunctions
 from relife2.types import FloatArray
 
 
@@ -71,12 +71,13 @@ class GammaProcessFunctions(parametric.Functions):
         initial_resistance: Optional[float] = None,
         load_threshold: Optional[float] = None,
     ):
+
         super().__init__()
-        self.process_lifetime_distribution = GPDistributionFunctions(
-            shape_function, rate, initial_resistance, load_threshold
-        )
         self.add_functions(
-            "process_lifetime_distribution", self.process_lifetime_distribution
+            "process_lifetime_distribution",
+            distributions.GPDistributionFunctions(
+                shape_function, rate, initial_resistance, load_threshold
+            ),
         )
 
     def init_params(self, *args: Any) -> FloatArray:

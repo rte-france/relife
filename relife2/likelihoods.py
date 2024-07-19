@@ -7,10 +7,11 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 import warnings
-from abc import ABC, abstractmethod
-from typing import Union
+from abc import abstractmethod
+from typing import Union, Any, Optional
 
 import numpy as np
+from scipy.optimize import Bounds
 from scipy.stats import gamma
 
 from relife2 import parametric
@@ -21,13 +22,24 @@ from relife2.types import FloatArray
 
 
 # Likelihood(FunctionsBridge)
-class Likelihood(parametric.LifetimeFunctionsBridge, ABC):
+class Likelihood(parametric.Functions):
     """
     Class that instanciates likelihood base having finite number of parameters related to
     one parametric functions
     """
 
     hasjac: bool = False
+
+    def __init__(self, functions: parametric.Functions):
+        super().__init__()
+        self.add_functions("functions", functions)
+
+    def init_params(self, *args: Any) -> FloatArray:
+        return self.functions.init_params()
+
+    @property
+    def params_bounds(self) -> Bounds:
+        return self.functions.params_bounds
 
     @abstractmethod
     def negative_log(self, params: FloatArray) -> float:
@@ -222,18 +234,20 @@ class LikelihoodFromLifetimes(Likelihood):
         )
 
 
-class GPLikelihoodFromDeteriorations(Likelihood):
+class LikelihoodFromDeteriorations(Likelihood):
     """BLABLABLA"""
 
     def __init__(
         self,
         functions: GammaProcessFunctions,
         deterioration_data: Deteriorations,
-        **kwdata: FloatArray,
+        first_increment_uncertainty: Optional[tuple] = None,
+        measurement_tol: float = np.finfo(float).resolution,
     ):
         super().__init__(functions)
         self.deterioration_data = deterioration_data
-        self.kwdata = kwdata
+        self.first_increment_uncertainty = first_increment_uncertainty
+        self.measurement_tol = measurement_tol
 
     def negative_log(self, params: FloatArray) -> float:
         self.params = params
@@ -245,29 +259,53 @@ class GPLikelihoodFromDeteriorations(Likelihood):
         contributions = (
             delta_shape * np.log(self.rate)
             + (self.deterioration_data.increments - 1)
-            * np.log(self.deterioration_data.increments)
+            * np.log(
+                self.deterioration_data.increments, where=~self.deterioration_data.event
+            )
             - self.rate * self.deterioration_data.increments
-            - np.log(gamma(self.deterioration_data.increments))
+            - np.log(
+                gamma(self.deterioration_data.increments),
+                where=~self.deterioration_data.event,
+            )
+        )
+        censored_contributions = -np.sum(
+            np.log(
+                gamma.cdf(
+                    self.deterioration_data.increments + self.measurement_tol,
+                    a=np.diff(
+                        self.functions.shape_function.nu(self.deterioration_data.times)
+                    ),
+                    scale=1 / self.rate,
+                )
+                - gamma.cdf(
+                    self.deterioration_data.increments - self.measurement_tol,
+                    a=np.diff(
+                        self.functions.shape_function.nu(self.deterioration_data.times)
+                    ),
+                    scale=1 / self.rate,
+                )
+            )
         )
 
-        if self.censor is not None:
+        contributions = np.where(self.event, censored_contributions, contributions)
+
+        if self.first_increment_uncertainty is not None:
 
             first_inspections = self.deterioration_data.times[:, 0]
             self.functions.shape_function.nu(first_inspections)
-            censored_contributions = np.log(
+            first_increment_contribution = np.log(
                 gamma.cdf(
-                    self.censor[1] - contributions[:, 0],
+                    self.first_increment_uncertainty[1] - contributions[:, 0],
                     a=self.shape_function.nu(first_inspections),
                     scale=1 / self.rate,
                 )
                 - gamma.cdf(
-                    self.censor[0] - contributions[:, 0],
+                    self.first_increment_uncertainty[0] - contributions[:, 0],
                     a=self.functions.shape_function.nu(first_inspections),
                     scale=1 / self.rate,
                 )
-            ).reshape((-1, 1))
-
-            contributions = np.ma.hstack((censored_contributions, contributions[:, 1:]))
+            )
+            contributions[:, 0] = first_increment_contribution[:, None]
 
         return np.sum(
             contributions,

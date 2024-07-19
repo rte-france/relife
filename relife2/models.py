@@ -41,12 +41,52 @@ from relife2.regressions import (
 from relife2.types import FloatArray
 
 
-class LifetimeModel(parametric.LifetimeFunctionsBridge, ABC):
-    """
-    Façade class that provides a simplified interface to lifetime model
-    """
+class Model:
+    """Façade like Model type"""
 
-    functions: parametric.LifetimeFunctions
+    def __init__(self, functions: parametric.Functions):
+        self.functions = functions
+
+    @property
+    def params(self):
+        """
+        Returns:
+        """
+        return self.functions.params
+
+    @params.setter
+    def params(self, values: FloatArray):
+        """
+        Args:
+            values ():
+
+        Returns:
+        """
+        self.functions.params = values
+
+    def __getattr__(self, name: str):
+        class_name = type(self).__name__
+        if name in self.__dict__:
+            value = self.__dict__[name]
+        else:
+            if not hasattr(self.functions, name):
+                raise AttributeError(f"{class_name} has no attribute named {name}")
+            value = getattr(self.functions, name)
+        return value
+
+    def __setattr__(self, name: str, value: Any):
+        if name == "functions":
+            super().__setattr__(name, value)
+        elif hasattr(self.functions, name):
+            setattr(self.functions, name, value)
+        else:
+            super().__setattr__(name, value)
+
+
+class LifetimeModel(Model, ABC):
+    """
+    Façade class for lifetime model (where functions is a LifetimeFunctions)
+    """
 
     @abstractmethod
     def _init_likelihood(
@@ -293,7 +333,7 @@ class Regression(LifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        check_params(self.functions)
+        # check_params(self.functions)
         return np.squeeze(self.functions.sf(array_factory(time)))[()]
 
     def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:

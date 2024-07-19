@@ -13,8 +13,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from relife2.types import BoolArray, FloatArray
-
-from .dataclass import Lifetimes, ObservedLifetimes, Truncations
+from .dataclass import Lifetimes, ObservedLifetimes, Truncations, Deteriorations
 from .tools import array_factory, lifetimes_compatibility
 
 
@@ -273,3 +272,63 @@ def lifetime_factory_template(
             rc_indicators,
         )
     return factory()
+
+
+class DeteriorationsFactory:
+    """BLABLABLA"""
+
+    def __init__(
+        self,
+        deterioration_measurements: ArrayLike,
+        inspection_times: ArrayLike,
+        unit_ids: ArrayLike,
+    ):
+        # verifier la cohérence des arguments
+        self.deterioration_measurements = deterioration_measurements
+        self.inspection_times = inspection_times
+        self.unit_ids = unit_ids
+
+    @staticmethod
+    def _padding_values(max_length, arrays):
+        return np.array(
+            list(
+                map(
+                    lambda arr: np.concatenate(
+                        [arr, np.full(max_length - len(arr), np.nan)]
+                    ),
+                    arrays,
+                )
+            )
+        )
+
+    def get_data(self) -> FloatArray:
+        sorted_indices = np.argsort(self.unit_ids)
+        sorted_ids = self.unit_ids[sorted_indices]
+        sorted_inspection_times = self.inspection_times[sorted_indices]
+        arrays_inspection_times = np.split(
+            sorted_inspection_times, np.unique(sorted_ids, return_index=True)[1]
+        )[1:]
+        max_len = max(len(arr) for arr in arrays_inspection_times)
+        inspection_times = DeteriorationsFactory._padding_values(
+            max_len, arrays_inspection_times
+        )
+        sorted_deterioration_measurements = self.deterioration_measurements[
+            sorted_indices
+        ]
+        arrays_deterioration_measurements = np.split(
+            sorted_deterioration_measurements,
+            np.unique(sorted_ids, return_index=True)[1],
+        )[1:]
+        deterioration_measurements = DeteriorationsFactory._padding_values(
+            max_len, arrays_deterioration_measurements
+        )
+        return inspection_times, deterioration_measurements
+
+    def fabric(self) -> Deteriorations:
+        """BLABLABLA"""
+        deterioration_measurements, inspection_times = self.get_data()
+        return Deteriorations(
+            deterioration_measurements,
+            inspection_times,
+            self.unit_ids,
+        )

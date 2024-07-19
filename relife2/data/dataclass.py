@@ -34,6 +34,7 @@ class Lifetimes:
         return len(self.values)
 
 
+@dataclass
 class ObservedLifetimes:
     """BLABLABLA"""
 
@@ -82,5 +83,13 @@ class Truncations:
 @dataclass
 class Deteriorations:
     """BLABLABLA"""
-    pass
-    # increments : 
+
+    values: FloatArray
+    times: FloatArray
+    ids: IntArray
+
+    def __post_init__(self):
+        self.values = np.ma.array(self.values, mask=np.isnan(self.values))
+        self.times = np.ma.array(self.times, mask=np.isnan(self.times))
+        self.increments = np.diff(self.values, axis=1)
+        self.event = self.increments == 0
