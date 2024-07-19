@@ -101,5 +101,8 @@ class GPFunctions(parametric.Functions):
 
         increments = np.random.gamma(shape, 1 / self.rate, (nb_sample, n))
         deterioration_measurements = np.cumsum(increments, axis=1)
+        deterioration_measurements = np.hstack(
+            (np.zeros((nb_sample, 1)), deterioration_measurements)
+        )
         # ids = np.repeat(np.arange(nb_sample), n)
         return deterioration_measurements

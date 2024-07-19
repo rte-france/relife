@@ -20,6 +20,8 @@ from relife2.data import (
     array_factory,
     lifetime_factory_template,
 )
+from relife2.data.dataclass import Deteriorations
+from relife2.data.factories import DeteriorationsFactory
 from relife2.distributions import (
     DistributionFunctions,
     ExponentialFunctions,
@@ -34,7 +36,7 @@ from relife2.gammaprocess import (
     PowerShapeFunctions,
     GPFunctions,
 )
-from relife2.likelihoods import LikelihoodFromLifetimes
+from relife2.likelihoods import LikelihoodFromLifetimes, LikelihoodFromDeteriorations
 from relife2.regressions import (
     AFTEffect,
     AFTFunctions,
@@ -680,3 +682,69 @@ class GammaProcess(Model):
         super().__init__(
             GPFunctions(shape_functions, rate, initial_resistance, load_threshold)
         )
+
+    def _init_likelihood(
+        self,
+        deterioration_data: Deteriorations,
+        first_increment_uncertainty,
+        measurement_tol,
+        **kwargs: Any,
+    ) -> LikelihoodFromDeteriorations:
+        if len(kwargs) != 0:
+            extra_args_names = tuple(kwargs.keys())
+            raise ValueError(
+                f"""
+                Distribution likelihood does not expect other data than lifetimes
+                Remove {extra_args_names} from kwargs.
+                """
+            )
+        return LikelihoodFromDeteriorations(
+            self.functions.copy(),
+            deterioration_data,
+            first_increment_uncertainty=first_increment_uncertainty,
+            measurement_tol=measurement_tol,
+        )
+
+    def fit(
+        self,
+        deterioration_measurements: ArrayLike,
+        inspection_times: ArrayLike,
+        unit_ids: ArrayLike,
+        first_increment_uncertainty: Optional[tuple] = None,
+        measurement_tol: float = np.finfo(float).resolution,
+        inplace: bool = True,
+        **kwargs: Any,
+    ) -> FloatArray:
+        """
+        BLABLABLABLA
+        """
+
+        deterioration_data = DeteriorationsFactory(
+            deterioration_measurements, inspection_times, unit_ids
+        ).fabric()
+
+        param0 = kwargs.pop("x0", self.functions.init_params())
+
+        minimize_kwargs = {
+            "method": kwargs.pop("method", "L-BFGS-B"),
+            "bounds": kwargs.pop("bounds", self.functions.params_bounds),
+            "constraints": kwargs.pop("constraints", ()),
+            "tol": kwargs.pop("tol", None),
+            "callback": kwargs.pop("callback", None),
+            "options": kwargs.pop("options", None),
+        }
+
+        likelihood = self._init_likelihood(
+            deterioration_data, first_increment_uncertainty, measurement_tol, **kwargs
+        )
+
+        optimizer = minimize(
+            likelihood.negative_log,
+            param0,
+            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
+            **minimize_kwargs,
+        )
+
+        if inplace:
+            self.params = optimizer.x
+        return optimizer.x

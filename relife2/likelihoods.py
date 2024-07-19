@@ -17,7 +17,7 @@ from scipy.stats import gamma
 from relife2 import parametric
 from relife2.data import Lifetimes, ObservedLifetimes, Truncations
 from relife2.data.dataclass import Deteriorations
-from relife2.gammaprocess import GammaProcessFunctions
+from relife2.gammaprocess import GPFunctions
 from relife2.types import FloatArray
 
 
@@ -239,7 +239,7 @@ class LikelihoodFromDeteriorations(Likelihood):
 
     def __init__(
         self,
-        functions: GammaProcessFunctions,
+        functions: GPFunctions,
         deterioration_data: Deteriorations,
         first_increment_uncertainty: Optional[tuple] = None,
         measurement_tol: float = np.finfo(float).resolution,
@@ -256,6 +256,7 @@ class LikelihoodFromDeteriorations(Likelihood):
             self.functions.shape_function.nu(self.deterioration_data.times), axis=1
         )
 
+        print(self.rate)
         contributions = (
             delta_shape * np.log(self.rate)
             + (self.deterioration_data.increments - 1)
