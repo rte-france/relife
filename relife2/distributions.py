@@ -447,7 +447,7 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
     def params_bounds(self) -> Bounds:
         lb = np.concatenate(
             (
-                np.array([np.finfo(float).resolution]),
+                np.array([1e-3]),
                 self.shape_function.params_bounds.lb,
             )
         )

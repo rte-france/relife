@@ -288,47 +288,35 @@ class DeteriorationsFactory:
         self.inspection_times = inspection_times
         self.unit_ids = unit_ids
 
-    @staticmethod
-    def _padding_values(max_length, arrays):
-        return np.array(
-            list(
-                map(
-                    lambda arr: np.concatenate(
-                        [arr, np.full(max_length - len(arr), np.nan)]
-                    ),
-                    arrays,
-                )
-            )
-        )
-
-    def get_data(self) -> FloatArray:
-        sorted_indices = np.argsort(self.unit_ids)
-        sorted_ids = self.unit_ids[sorted_indices]
-        sorted_inspection_times = self.inspection_times[sorted_indices]
-        arrays_inspection_times = np.split(
-            sorted_inspection_times, np.unique(sorted_ids, return_index=True)[1]
-        )[1:]
-        max_len = max(len(arr) for arr in arrays_inspection_times)
-        inspection_times = DeteriorationsFactory._padding_values(
-            max_len, arrays_inspection_times
-        )
-        sorted_deterioration_measurements = self.deterioration_measurements[
+    def __call__(self) -> Deteriorations:
+        sorted_indices = np.argsort(self.unit_ids, kind="mergesort")
+        sorted_unit_ids = self.unit_ids[sorted_indices]
+        sorted_deteriorations_measurements = self.deterioration_measurements[
             sorted_indices
         ]
-        arrays_deterioration_measurements = np.split(
-            sorted_deterioration_measurements,
-            np.unique(sorted_ids, return_index=True)[1],
-        )[1:]
-        deterioration_measurements = DeteriorationsFactory._padding_values(
-            max_len, arrays_deterioration_measurements
-        )
-        return inspection_times, deterioration_measurements
+        sorted_inspection_times = self.inspection_times[sorted_indices]
+        unique_unit_ids, counts = np.unique(sorted_unit_ids, return_counts=True)
+        max_len = np.max(counts)
+        split_indices = np.cumsum(counts)[:-1]
 
-    def fabric(self) -> Deteriorations:
-        """BLABLABLA"""
-        deterioration_measurements, inspection_times = self.get_data()
+        deteriorations_measurements_2d = np.vstack(
+            [
+                np.pad(split_arr, max_len - len(split_arr), constant_values=np.nan)
+                for split_arr in np.split(
+                    sorted_deteriorations_measurements, split_indices
+                )
+            ]
+        )
+
+        inspection_times_2d = np.vstack(
+            [
+                np.pad(split_arr, max_len - len(split_arr), constant_values=np.nan)
+                for split_arr in np.split(sorted_inspection_times, split_indices)
+            ]
+        )
+
         return Deteriorations(
-            deterioration_measurements,
-            inspection_times,
-            self.unit_ids,
+            deteriorations_measurements_2d,
+            inspection_times_2d,
+            unique_unit_ids,
         )

@@ -12,6 +12,7 @@ from typing import Union, Any, Optional
 
 import numpy as np
 from scipy.optimize import Bounds
+from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
 from relife2 import parametric
@@ -256,45 +257,53 @@ class LikelihoodFromDeteriorations(Likelihood):
             self.functions.shape_function.nu(self.deterioration_data.times), axis=1
         )
 
-        print(self.rate)
-        contributions = (
+        contributions = -(
             delta_shape * np.log(self.rate)
-            + (self.deterioration_data.increments - 1)
+            + (delta_shape - 1)
             * np.log(
-                self.deterioration_data.increments, where=~self.deterioration_data.event
+                self.deterioration_data.increments,
+                where=~self.deterioration_data.event,
+                out=np.zeros_like(delta_shape),
             )
             - self.rate * self.deterioration_data.increments
             - np.log(
-                gamma(self.deterioration_data.increments),
+                gamma_function(delta_shape),
                 where=~self.deterioration_data.event,
+                out=np.zeros_like(delta_shape),
             )
         )
-        censored_contributions = -np.sum(
-            np.log(
-                gamma.cdf(
-                    self.deterioration_data.increments + self.measurement_tol,
-                    a=np.diff(
-                        self.functions.shape_function.nu(self.deterioration_data.times)
-                    ),
-                    scale=1 / self.rate,
-                )
-                - gamma.cdf(
-                    self.deterioration_data.increments - self.measurement_tol,
-                    a=np.diff(
-                        self.functions.shape_function.nu(self.deterioration_data.times)
-                    ),
-                    scale=1 / self.rate,
-                )
+        print("params", self.params)
+        print("contributions", contributions)
+        print(np.isnan(contributions).any())
+
+        censored_contributions = -np.log(
+            gamma.cdf(
+                self.deterioration_data.increments + self.measurement_tol,
+                a=np.diff(
+                    self.functions.shape_function.nu(self.deterioration_data.times)
+                ),
+                scale=1 / self.rate,
             )
+            - gamma.cdf(
+                self.deterioration_data.increments - self.measurement_tol,
+                a=np.diff(
+                    self.functions.shape_function.nu(self.deterioration_data.times)
+                ),
+                scale=1 / self.rate,
+            ),
+            where=self.deterioration_data.event,
+            out=np.zeros_like(delta_shape),
         )
 
-        contributions = np.where(self.event, censored_contributions, contributions)
+        contributions = np.where(
+            self.deterioration_data.event, censored_contributions, contributions
+        )
 
         if self.first_increment_uncertainty is not None:
 
             first_inspections = self.deterioration_data.times[:, 0]
             self.functions.shape_function.nu(first_inspections)
-            first_increment_contribution = np.log(
+            first_increment_contribution = -np.log(
                 gamma.cdf(
                     self.first_increment_uncertainty[1] - contributions[:, 0],
                     a=self.shape_function.nu(first_inspections),
@@ -308,7 +317,12 @@ class LikelihoodFromDeteriorations(Likelihood):
             )
             contributions[:, 0] = first_increment_contribution[:, None]
 
-        return np.sum(
-            contributions,
-            axis=None,
+        print(
+            "neg_log",
+            np.sum(
+                contributions,
+            ),
+            "\n ===================================",
         )
+
+        return np.sum(contributions)

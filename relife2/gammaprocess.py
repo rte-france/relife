@@ -19,7 +19,7 @@ class ShapeFunctions(parametric.Functions, ABC):
     def params_bounds(self) -> Bounds:
         """BLABLABLA"""
         return Bounds(
-            np.full(self.params.size, np.finfo(float).resolution),
+            np.full(self.params.size, 1e-3),
             np.full(self.params.size, np.inf),
         )
 
@@ -87,7 +87,10 @@ class GPFunctions(parametric.Functions):
     def params_bounds(self) -> Bounds:
         return self.process_lifetime_distribution.params_bounds
 
-    def sample(self, inspection_times: FloatArray, nb_sample=1) -> FloatArray:
+    def sample(
+        self, inspection_times: FloatArray, nb_sample=1, seed=None
+    ) -> FloatArray:
+        np.random.seed(seed=seed)
         n = len(inspection_times) - 1
         h = np.diff(inspection_times)
         shape = np.repeat(

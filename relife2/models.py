@@ -719,14 +719,15 @@ class GammaProcess(Model):
         BLABLABLABLA
         """
 
-        deterioration_data = DeteriorationsFactory(
+        data_factory = DeteriorationsFactory(
             deterioration_measurements, inspection_times, unit_ids
-        ).fabric()
+        )
+        deterioration_data = data_factory()
 
         param0 = kwargs.pop("x0", self.functions.init_params())
 
         minimize_kwargs = {
-            "method": kwargs.pop("method", "L-BFGS-B"),
+            "method": kwargs.pop("method", "Nelder-Mead"),
             "bounds": kwargs.pop("bounds", self.functions.params_bounds),
             "constraints": kwargs.pop("constraints", ()),
             "tol": kwargs.pop("tol", None),
@@ -737,6 +738,8 @@ class GammaProcess(Model):
         likelihood = self._init_likelihood(
             deterioration_data, first_increment_uncertainty, measurement_tol, **kwargs
         )
+
+        print("true likelihood :", likelihood.negative_log(self.params))
 
         optimizer = minimize(
             likelihood.negative_log,
