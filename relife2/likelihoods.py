@@ -251,6 +251,10 @@ class LikelihoodFromDeteriorations(Likelihood):
         self.measurement_tol = measurement_tol
 
     def negative_log(self, params: FloatArray) -> float:
+        """
+        All deteriorations have R0 in first column
+        All times have 0 in first column
+        """
         self.params = params
 
         delta_shape = np.diff(
@@ -272,9 +276,6 @@ class LikelihoodFromDeteriorations(Likelihood):
                 out=np.zeros_like(delta_shape),
             )
         )
-        print("params", self.params)
-        print("contributions", contributions)
-        print(np.isnan(contributions).any())
 
         censored_contributions = -np.log(
             gamma.cdf(
@@ -301,28 +302,44 @@ class LikelihoodFromDeteriorations(Likelihood):
 
         if self.first_increment_uncertainty is not None:
 
-            first_inspections = self.deterioration_data.times[:, 0]
-            self.functions.shape_function.nu(first_inspections)
+            first_inspections = self.deterioration_data.times[:, 1]
+            a = self.functions.shape_function.nu(first_inspections)
             first_increment_contribution = -np.log(
                 gamma.cdf(
-                    self.first_increment_uncertainty[1] - contributions[:, 0],
-                    a=self.shape_function.nu(first_inspections),
+                    self.first_increment_uncertainty[1] - self.deterioration_data.values[:, 1],
+                    a=a,
                     scale=1 / self.rate,
                 )
                 - gamma.cdf(
-                    self.first_increment_uncertainty[0] - contributions[:, 0],
-                    a=self.functions.shape_function.nu(first_inspections),
+                    self.first_increment_uncertainty[0] - self.deterioration_data.values[:, 1],
+                    a=a,
                     scale=1 / self.rate,
                 )
             )
             contributions[:, 0] = first_increment_contribution[:, None]
 
-        print(
-            "neg_log",
-            np.sum(
-                contributions,
-            ),
-            "\n ===================================",
-        )
+        # print(
+        #     "neg_log",
+        #     np.sum(
+        #         contributions[~np.isnan(contributions)],
+        #     ),
+        #     "\n ===================================",
+        # )
+        # print(
+        #     "sum contributions exactes :",
+        #     np.sum(
+        #         contributions[~np.isnan(contributions)][
+        #             ~self.deterioration_data.event[~np.isnan(contributions)]
+        #         ]
+        #     ),
+        # )
+        # print(
+        #     "sum contributions censures :",
+        #     np.sum(
+        #         contributions[~np.isnan(contributions)][
+        #             self.deterioration_data.event[~np.isnan(contributions)]
+        #         ]
+        #     ),
+        # )
 
-        return np.sum(contributions)
+        return np.sum(contributions[~np.isnan(contributions)])

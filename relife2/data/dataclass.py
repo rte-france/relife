@@ -84,12 +84,12 @@ class Truncations:
 class Deteriorations:
     """BLABLABLA"""
 
-    values: FloatArray
-    times: FloatArray
+    values: FloatArray  # R0 in first column (always)
+    times: FloatArray  # 0 in first column (always)
     ids: IntArray
 
     def __post_init__(self):
         # self.values = np.ma.array(self.values, mask=np.isnan(self.values))
         # self.times = np.ma.array(self.times, mask=np.isnan(self.times))
-        self.increments = np.diff(self.values, axis=1)
+        self.increments = -np.diff(self.values, axis=1)
         self.event = self.increments == 0

@@ -447,7 +447,7 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
     def params_bounds(self) -> Bounds:
         lb = np.concatenate(
             (
-                np.array([1e-3]),
+                np.array([np.finfo(float).resolution]),
                 self.shape_function.params_bounds.lb,
             )
         )
@@ -483,6 +483,18 @@ class GPDistributionFunctions(parametric.LifetimeFunctions):
         return gammainc(
             self.shape_function.nu(time),
             (self.initial_resistance - self.load_threshold) * self.rate,
+        )
+
+    def conditional_sf(
+        self,
+        time: FloatArray,
+        conditional_time: FloatArray,
+        conditional_resistance: FloatArray,
+    ) -> Union[float, FloatArray]:
+
+        return gammainc(
+            self.shape_function.nu(time) - self.shape_function.nu(conditional_time),
+            (conditional_resistance - self.load_threshold) * self.rate,
         )
 
     def _series_expansion(self, shape_values: FloatArray, tol: float) -> FloatArray:

@@ -282,11 +282,13 @@ class DeteriorationsFactory:
         deterioration_measurements: ArrayLike,
         inspection_times: ArrayLike,
         unit_ids: ArrayLike,
+        initial_resistance: float,
     ):
-        # verifier la cohérence des arguments
+        # verifier la cohérence des arguments (temps croissant et mesures decroissantes)
         self.deterioration_measurements = deterioration_measurements
         self.inspection_times = inspection_times
         self.unit_ids = unit_ids
+        self.initial_resistance = initial_resistance
 
     def __call__(self) -> Deteriorations:
         sorted_indices = np.argsort(self.unit_ids, kind="mergesort")
@@ -296,12 +298,13 @@ class DeteriorationsFactory:
         ]
         sorted_inspection_times = self.inspection_times[sorted_indices]
         unique_unit_ids, counts = np.unique(sorted_unit_ids, return_counts=True)
+
         max_len = np.max(counts)
         split_indices = np.cumsum(counts)[:-1]
 
         deteriorations_measurements_2d = np.vstack(
             [
-                np.pad(split_arr, max_len - len(split_arr), constant_values=np.nan)
+                np.concatenate((split_arr, np.ones(max_len - len(split_arr)) * np.nan))
                 for split_arr in np.split(
                     sorted_deteriorations_measurements, split_indices
                 )
@@ -310,7 +313,7 @@ class DeteriorationsFactory:
 
         inspection_times_2d = np.vstack(
             [
-                np.pad(split_arr, max_len - len(split_arr), constant_values=np.nan)
+                np.concatenate((split_arr, np.ones(max_len - len(split_arr)) * np.nan))
                 for split_arr in np.split(sorted_inspection_times, split_indices)
             ]
         )

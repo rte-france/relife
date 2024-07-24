@@ -658,6 +658,7 @@ class GammaProcessDistribution(Distribution):
         )
 
 
+# créer un type StochasticProcess (voir reponse Thomas)
 class GammaProcess(Model):
     shape_names: tuple = ("exponential", "power")
 
@@ -682,6 +683,16 @@ class GammaProcess(Model):
         super().__init__(
             GPFunctions(shape_functions, rate, initial_resistance, load_threshold)
         )
+
+    def sample(
+        self,
+        time: ArrayLike,
+        unit_ids=ArrayLike,
+        nb_sample=1,
+        seed=None,
+        add_death_time=True,
+    ):
+        return self.functions.sample(time, unit_ids, nb_sample, seed, add_death_time)
 
     def _init_likelihood(
         self,
@@ -720,7 +731,10 @@ class GammaProcess(Model):
         """
 
         data_factory = DeteriorationsFactory(
-            deterioration_measurements, inspection_times, unit_ids
+            deterioration_measurements,
+            inspection_times,
+            unit_ids,
+            self.functions.process_lifetime_distribution.initial_resistance,
         )
         deterioration_data = data_factory()
 
@@ -739,7 +753,7 @@ class GammaProcess(Model):
             deterioration_data, first_increment_uncertainty, measurement_tol, **kwargs
         )
 
-        print("true likelihood :", likelihood.negative_log(self.params))
+        # print("true likelihood :", likelihood.negative_log(self.params))
 
         optimizer = minimize(
             likelihood.negative_log,
