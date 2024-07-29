@@ -17,7 +17,7 @@ from relife2.stats.distributions import DistributionFunctions
 from relife2.utils.types import FloatArray
 
 
-class CovarEffect(ParametricFunctions, ABC):
+class CovarEffect(ParametricFunctions):
     """
     Object that computes covariates effect functions
     """
@@ -31,9 +31,8 @@ class CovarEffect(ParametricFunctions, ABC):
         )
 
     def init_params(self, *args: Any) -> FloatArray:
-        return np.zeros_like(self.params)
+        return np.zeros(self.nb_params)
 
-    @abstractmethod
     def g(self, covar: FloatArray) -> FloatArray:
         """
         BLABLABLABLA
@@ -43,17 +42,10 @@ class CovarEffect(ParametricFunctions, ABC):
         Returns:
             FloatArray: BLABLABLABLA
         """
+        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
 
-    @abstractmethod
     def jac_g(self, covar: FloatArray) -> FloatArray:
-        """
-        BLABLABLABLA
-        Args:
-            covar (FloatArray): BLABLABLABLA
-
-        Returns:
-            FloatArray: BLABLABLABLA
-        """
+        return covar * self.g(covar)
 
 
 class RegressionFunctions(ParametricLifetimeFunctions, ABC):
@@ -69,12 +61,12 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         super().__init__()
         self.add_functions("covar_effect", covar_effect)
         self.add_functions("baseline", baseline)
-        self._covar = np.empty((1, self.nb_covar), dtype=np.float64)
+        self._covar = None
 
     @property
     def nb_covar(self) -> int:
         """BLABLA"""
-        return self.covar_effect.params.size
+        return self.covar_effect.nb_params
 
     @property
     def covar(self):
@@ -89,7 +81,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         nb_covar = values.shape[-1]
         if values.shape[-1] != self.nb_covar:
             raise ValueError(
-                f"Invalid number of covar : expected {self.covar_effect.params.size}, got {nb_covar}"
+                f"Invalid number of covar : expected {self.nb_covar}, got {nb_covar}"
             )
         self._covar = values
 
@@ -192,18 +184,6 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         return self.ichf(cumulative_hazard_rate)
 
 
-class ProportionalHazardEffect(CovarEffect):
-    """
-    BLABLABLABLA
-    """
-
-    def g(self, covar: FloatArray) -> FloatArray:
-        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
-
-    def jac_g(self, covar: FloatArray) -> FloatArray:
-        return covar * self.g(covar)
-
-
 class ProportionalHazardFunctions(RegressionFunctions):
     """
     BLABLABLABLA
@@ -241,18 +221,6 @@ class ProportionalHazardFunctions(RegressionFunctions):
 
     def dhf(self, time: FloatArray) -> FloatArray:
         return self.covar_effect.g(self.covar) * self.baseline.dhf(time)
-
-
-class AFTEffect(CovarEffect):
-    """
-    BLABLABLABLA
-    """
-
-    def g(self, covar: FloatArray) -> FloatArray:
-        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
-
-    def jac_g(self, covar: FloatArray) -> FloatArray:
-        return covar * self.g(covar)
 
 
 class AFTFunctions(RegressionFunctions):

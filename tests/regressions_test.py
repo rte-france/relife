@@ -46,7 +46,7 @@ def baseline(request):
 
 @pytest.fixture(scope="module", params=[AFT, ProportionalHazard])
 def model(request, baseline):
-    return request.param(baseline, weights=[1.0, 1.0, 1.0])
+    return request.param(baseline, coefficients=[1.0, 1.0, 1.0])
 
 
 @pytest.fixture(scope="module")
@@ -56,30 +56,28 @@ def covar():
 
 @pytest.fixture(scope="module")
 def weibull_aft():
-    return AFT(Weibull(), nb_covar=3)
+    return AFT(Weibull())
 
 
 @pytest.fixture(scope="module")
 def weibull_pph():
-    return ProportionalHazard(Weibull(), nb_covar=3)
+    return ProportionalHazard(Weibull())
 
 
 # test functions
 
 
 def test_sf(model, covar):
-    assert model.sf(model.median(covar=covar), covar=covar) == pytest.approx(
-        0.5, rel=1e-3
-    )
+    assert model.sf(model.median(covar), covar) == pytest.approx(0.5, rel=1e-3)
 
 
 def test_rvs(model, covar):
     size = 10
-    assert model.rvs(covar=covar, size=size).shape == (covar.shape[0], size)
+    assert model.rvs(covar, size=size).shape == (covar.shape[0], size)
 
 
 def test_mean(model, covar):
-    assert model.mean(covar=covar).shape[0] == covar.shape[0]
+    assert model.mean(covar).shape[0] == covar.shape[0]
 
 
 def fit_model(model, data):

@@ -137,6 +137,8 @@ class ParametricFunctions(ABC):
             pos += functions.nb_params
 
     def add_params(self, **kwparams: dict[str, Union[None, float]]) -> None:
+        if set(self.params_names) & set(kwparams.keys()):
+            raise ValueError("Can't add params when param names are already used")
         pos = len(self.root_params)
         root_params_items = list(self.root_params.items())
         all_params_items = list(self.all_params.items())
@@ -159,11 +161,11 @@ class ParametricFunctions(ABC):
             functions (ParametricFunctions): ParametricFunctions object to append
         """
         if set(self.params_names) & set(functions.params_names):
-            raise ValueError("Can't append Function object having common param names")
+            raise ValueError("Can't add functions having common param names")
         self.leaves_functions[name] = functions
         self.all_params.update(functions.all_params)
 
-    def __search_leaf_functions(self, name):
+    def _get_leaf_functions(self, name: str) -> Union[None, "ParametricFunctions"]:
         leaves = []
         todo = [self]
         found_functions = None
@@ -181,16 +183,54 @@ class ParametricFunctions(ABC):
                 todo.append(leaf)
         return found_functions
 
+    # def _set_leaf_functions(self, name: str, functions: "ParametricFunctions") -> None:
+    #     leaves = []
+    #     todo = [self]
+    #     pos = len(self.root_params)
+    #     functions_set = False
+    #     while todo:
+    #         current_node = todo.pop(0)
+    #         if current_node is None:
+    #             continue
+    #         if not current_node.leaves_functions:
+    #             leaves.append(current_node)
+    #             continue
+    #         for leaf_name, leaf in current_node.leaves_functions.items():
+    #             if leaf_name == name:
+    #                 all_params_items = list(self.all_params.items())
+    #                 items_to_insert = list(functions.all_params.items())
+    #
+    #                 all_params_items = (
+    #                     all_params_items[:pos]
+    #                     + items_to_insert
+    #                     + all_params_items[pos + leaf.nb_params :]
+    #                 )
+    #
+    #                 all_params_dict = dict(all_params_items)
+    #                 if len(all_params_dict) < len(all_params_items):
+    #                     raise ValueError(
+    #                         "Can't set functions having common param names with other functions"
+    #                     )
+    #                 self.all_params = all_params_dict
+    #                 current_node.leaves_functions[name] = functions
+    #                 todo = []
+    #                 functions_set = True
+    #                 break
+    #             todo.append(leaf)
+    #             pos += len(leaf.root_params)
+    #     if not functions_set:
+    #         raise ValueError(f"No functions named {name} was found")
+
     def __getattr__(self, name: str):
         class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
         if name in super().__getattribute__("all_params"):
             return super().__getattribute__("all_params")[name]
-        value = self.__search_leaf_functions(name)
-        if value is None:
+        functions = self._get_leaf_functions(name)
+        if functions is None:
             raise AttributeError(f"{class_name} has no attribute named {name}")
-        return value
+        return functions
 
     def __setattr__(self, name: str, value: Any):
         if name in ["all_params", "leaves_functions", "root_params"]:
@@ -205,14 +245,16 @@ class ParametricFunctions(ABC):
                     if name in functions.all_params:
                         setattr(functions, name, float(value))
                 stop = True
-        elif self.__search_leaf_functions(name) is not None:
+        # elif isinstance(value, ParametricFunctions):
+        #     self._set_leaf_functions(name, value)
+        elif isinstance(value, ParametricFunctions):
             raise AttributeError(
-                f"Can't set {name} which is a leaf ParametricFunctions. Recreate a Function object instead"
+                f"Can't set a functions. Recreate a Function object instead"
             )
         else:
             super().__setattr__(name, value)
 
-    def __get_leaf_names(self, node):
+    def _get_functions_names(self, node):
         leaf_names = {
             key: type(value).__name__ for key, value in node.leaves_functions.items()
         }
@@ -220,7 +262,7 @@ class ParametricFunctions(ABC):
             return leaf_names
         if node.leaves_functions:
             for leaf in node.leaves_functions.values():
-                leaf_names.update(self.__get_leaf_names(leaf))
+                leaf_names.update(self._get_functions_names(leaf))
         return leaf_names
 
     # def __repr__(self):
@@ -232,7 +274,7 @@ class ParametricFunctions(ABC):
         return (
             f"{class_name}(\n"
             f" params = {self.all_params}\n"
-            f" functions = {self.__get_leaf_names(self)}\n)"
+            f" functions = {self._get_functions_names(self)}\n)"
         )
 
     def copy(self):

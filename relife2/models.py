@@ -38,11 +38,10 @@ from relife2.stats.gammaprocess import (
     GPDistributionFunctions,
 )
 from relife2.stats.regressions import (
-    AFTEffect,
     AFTFunctions,
-    ProportionalHazardEffect,
     ProportionalHazardFunctions,
     RegressionFunctions,
+    CovarEffect,
 )
 from relife2.utils.types import FloatArray
 
@@ -170,11 +169,8 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             time, entry, departure, lc_indicators, rc_indicators
         )
 
-        param0 = kwargs.pop("x0", self.functions.init_params(observed_lifetimes.rlc))
-
         minimize_kwargs = {
             "method": kwargs.pop("method", "L-BFGS-B"),
-            "bounds": kwargs.pop("bounds", self.functions.params_bounds),
             "constraints": kwargs.pop("constraints", ()),
             "tol": kwargs.pop("tol", None),
             "callback": kwargs.pop("callback", None),
@@ -182,6 +178,12 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         }
 
         likelihood = self._init_likelihood(observed_lifetimes, truncations, **kwargs)
+        param0 = kwargs.pop(
+            "x0", likelihood.functions.init_params(observed_lifetimes.rlc)
+        )
+        minimize_kwargs.update(
+            {"bounds": kwargs.pop("bounds", likelihood.functions.params_bounds)}
+        )
 
         optimizer = minimize(
             likelihood.negative_log,
@@ -191,7 +193,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         )
 
         if inplace:
-            self.params = optimizer.x
+            self.functions = likelihood.functions.copy()
         return optimizer.x
 
 
@@ -368,6 +370,20 @@ class Regression(ParametricLifetimeModel):
     """
 
     functions: RegressionFunctions
+
+    @property
+    def coefficients(self) -> FloatArray:
+        return self.covar_effect.params
+
+    @coefficients.setter
+    def coefficients(self, values: Union[list[float], tuple[float]]):
+        if len(values) != self.functions.nb_covar:
+            self.functions = type(self.functions)(
+                CovarEffect(**{f"coef_{i}": v for i, v in enumerate(values)}),
+                self.functions.baseline.copy(),
+            )
+        else:
+            self.functions.covar_effect.params = values
 
     def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
@@ -547,8 +563,16 @@ class Regression(ParametricLifetimeModel):
                 Got {extra_args_names} from kwargs.
                 """
             )
+        covar = kwargs["covar"]
+        if covar.shape[-1] != self.functions.covar_effect.nb_params:
+            optimized_functions = type(self.functions)(
+                CovarEffect(**{f"coef_{i}": None for i in range(covar.shape[-1])}),
+                self.functions.baseline.copy(),
+            )
+        else:
+            optimized_functions = self.functions.copy()
         return LikelihoodFromLifetimes(
-            self.functions.copy(),
+            optimized_functions,
             observed_lifetimes,
             truncations,
             **kwargs,
@@ -599,34 +623,25 @@ class LogLogistic(Distribution):
 
 
 def control_covar_args(
-    weights: Optional[
-        tuple[float, None] | list[float | None] | dict[str, float | None]
+    coefficients: Optional[
+        tuple[float | None] | list[float | None] | dict[str, float | None]
     ] = None,
-    nb_covar: Optional[int] = None,
 ) -> dict[str, float | None]:
     """
 
     Args:
-        nb_covar ():
-        weights ():
+        coefficients ():
 
     Returns:
 
     """
-    if nb_covar is None:
-        if weights is None:
-            raise ValueError(
-                "Regression model expects at least covar weights values or nb_covar"
-            )
-        if isinstance(weights, (tuple, list)):
-            weights = {f"beta_{i}": value for i, value in enumerate(weights)}
-    else:
-        if weights is not None:
-            raise ValueError(
-                "When covar weights are specified, nb_covar is useless. Remove nb_covar."
-            )
-        weights = {f"beta_{i}": None for i in range(nb_covar)}
-    return weights
+    if coefficients is None:
+        return {"coef_0": None}
+    if isinstance(coefficients, tuple) or isinstance(coefficients, list):
+        return {f"coef_{i}": v for i, v in enumerate(coefficients)}
+    if isinstance(coefficients, dict):
+        return coefficients
+    raise ValueError("coefficients must be tuple, list or dict")
 
 
 class ProportionalHazard(Regression):
@@ -635,15 +650,14 @@ class ProportionalHazard(Regression):
     def __init__(
         self,
         baseline: Distribution,
-        weights: Optional[
-            tuple[float, None] | list[float | None] | dict[str, float | None]
+        coefficients: Optional[
+            tuple[float | None] | list[float | None] | dict[str, float | None]
         ] = None,
-        nb_covar: Optional[int] = None,
     ):
-        weights = control_covar_args(weights, nb_covar)
+        coefficients = control_covar_args(coefficients)
         super().__init__(
             ProportionalHazardFunctions(
-                ProportionalHazardEffect(**weights),
+                CovarEffect(**coefficients),
                 baseline.functions.copy(),
             )
         )
@@ -655,15 +669,14 @@ class AFT(Regression):
     def __init__(
         self,
         baseline: Distribution,
-        weights: Optional[
-            tuple[float, None] | list[float | None] | dict[str, float | None]
+        coefficients: Optional[
+            tuple[float] | list[float] | dict[str, float | None]
         ] = None,
-        nb_covar: Optional[int] = None,
     ):
-        weights = control_covar_args(weights, nb_covar)
+        coefficients = control_covar_args(coefficients)
         super().__init__(
             AFTFunctions(
-                AFTEffect(**weights),
+                CovarEffect(**coefficients),
                 baseline.functions.copy(),
             )
         )
@@ -792,8 +805,6 @@ class GammaProcess(ParametricModel):
         likelihood = self._init_likelihood(
             deterioration_data, first_increment_uncertainty, measurement_tol, **kwargs
         )
-
-        # print("true likelihood :", likelihood.negative_log(self.params))
 
         optimizer = minimize(
             likelihood.negative_log,
