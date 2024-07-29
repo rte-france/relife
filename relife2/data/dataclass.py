@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from relife2.types import FloatArray, IntArray
+from relife2.utils.types import FloatArray, IntArray
 
 
 @dataclass(frozen=True)

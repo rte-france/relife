@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 import numpy as np
 from numpy.typing import ArrayLike
 
-from relife2.types import BoolArray, FloatArray
+from relife2.utils.types import BoolArray, FloatArray
 from .dataclass import Lifetimes, ObservedLifetimes, Truncations, Deteriorations
 from .tools import array_factory, lifetimes_compatibility
 

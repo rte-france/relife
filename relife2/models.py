@@ -13,38 +13,65 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
+from relife2.data import Deteriorations
+from relife2.data import DeteriorationsFactory
 from relife2.data import (
     ObservedLifetimes,
     Truncations,
     array_factory,
     lifetime_factory_template,
 )
-from relife2.data.dataclass import Deteriorations
-from relife2.data.factories import DeteriorationsFactory
-from relife2.distributions import (
+from relife2.functions import ParametricFunctions
+from relife2.likelihoods import LikelihoodFromLifetimes, LikelihoodFromDeteriorations
+from relife2.stats.distributions import (
     DistributionFunctions,
     ExponentialFunctions,
     GammaFunctions,
     GompertzFunctions,
     LogLogisticFunctions,
     WeibullFunctions,
-    GPDistributionFunctions,
 )
-from relife2.functions import ParametricFunctions
-from relife2.gammaprocess import (
+from relife2.stats.gammaprocess import (
     ExponentialShapeFunctions,
     PowerShapeFunctions,
     GPFunctions,
+    GPDistributionFunctions,
 )
-from relife2.likelihoods import LikelihoodFromLifetimes, LikelihoodFromDeteriorations
-from relife2.regressions import (
+from relife2.stats.regressions import (
     AFTEffect,
     AFTFunctions,
     ProportionalHazardEffect,
     ProportionalHazardFunctions,
     RegressionFunctions,
 )
-from relife2.types import FloatArray
+from relife2.utils.types import FloatArray
+
+_LIFETIME_FUNCTIONS_NAMES = [
+    "sf",
+    "isf",
+    "hf",
+    "chf",
+    "cdf",
+    "cdf",
+    "pdf",
+    "ppf",
+    "mrl",
+    "ichf",
+    "rvs",
+    "mean",
+    "var",
+    "median",
+]
+
+
+def are_params_set(functions: ParametricFunctions):
+    if None in functions.all_params.values():
+        params_to_set = " ".join(
+            [name for name, value in functions.all_params.items() if value is None]
+        )
+        raise ValueError(
+            f"Params {params_to_set} unset. Please set them first or fit the model."
+        )
 
 
 class ParametricModel:
@@ -88,6 +115,14 @@ class ParametricModel:
         else:
             super().__setattr__(name, value)
 
+    # def __repr__(self):
+    #     class_name = type(self).__name__
+    #     return f"{class_name}(\n" f" params = {self.functions.all_params}\n"
+
+    def __str__(self):
+        class_name = type(self).__name__
+        return f"{class_name}(\n" f" params = {self.functions.all_params}\n"
+
 
 class ParametricLifetimeModel(ParametricModel, ABC):
     """
@@ -102,6 +137,11 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         **kwargs: Any,
     ) -> LikelihoodFromLifetimes:
         """"""
+
+    def __getattribute__(self, item):
+        if item in _LIFETIME_FUNCTIONS_NAMES:
+            are_params_set(self.functions)
+        return super().__getattribute__(item)
 
     def fit(
         self,

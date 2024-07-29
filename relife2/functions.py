@@ -15,8 +15,8 @@ from numpy import ma
 from numpy.typing import ArrayLike
 from scipy.optimize import Bounds, newton
 
-from relife2.types import FloatArray
 from relife2.utils.integrations import gauss_legendre, quad_laguerre
+from relife2.utils.types import FloatArray
 
 
 class ParametricFunctions(ABC):
@@ -223,20 +223,16 @@ class ParametricFunctions(ABC):
                 leaf_names.update(self.__get_leaf_names(leaf))
         return leaf_names
 
-    def __repr__(self):
+    # def __repr__(self):
+    #     class_name = type(self).__name__
+    #     return f"{class_name}({self.all_params})"
+
+    def __str__(self):
         class_name = type(self).__name__
         return (
             f"{class_name}(\n"
             f" params = {self.all_params}\n"
             f" functions = {self.__get_leaf_names(self)}\n)"
-        )
-
-    def __str__(self):
-        class_name = type(self).__name__
-        return (
-            f"{class_name}("
-            f"{len(self.all_params)} params, "
-            f"{len(self.__get_leaf_names(self))} other functions interfaces)"
         )
 
     def copy(self):

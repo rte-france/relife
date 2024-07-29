@@ -14,7 +14,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from relife2.data import lifetime_factory_template
-from relife2.types import FloatArray
+from relife2.utils.types import FloatArray
 
 
 @dataclass

@@ -15,11 +15,11 @@ from scipy.optimize import Bounds
 from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
+from relife2.data import Deteriorations
 from relife2.data import Lifetimes, ObservedLifetimes, Truncations
-from relife2.data.dataclass import Deteriorations
 from relife2.functions import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.gammaprocess import GPFunctions
-from relife2.types import FloatArray
+from relife2.stats.gammaprocess import GPFunctions
+from relife2.utils.types import FloatArray
 
 
 # Likelihood(FunctionsBridge)
