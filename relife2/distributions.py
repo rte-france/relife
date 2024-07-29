@@ -24,7 +24,7 @@ from scipy.special import (
     polygamma,
 )
 
-from relife2 import parametric
+from relife2.functions import ParametricLifetimeFunctions
 from relife2.gammaprocess import ShapeFunctions
 from relife2.types import FloatArray
 from relife2.utils.integrations import shifted_laguerre
@@ -33,7 +33,7 @@ from relife2.utils.integrations import shifted_laguerre
 # pylint: disable=no-member
 
 
-class DistributionFunctions(parametric.LifetimeFunctions, ABC):
+class DistributionFunctions(ParametricLifetimeFunctions, ABC):
     """
     Object that computes every probability functions of a distribution model
     """
@@ -393,7 +393,7 @@ class LogLogisticFunctions(DistributionFunctions):
         )
 
 
-class GPDistributionFunctions(parametric.LifetimeFunctions):
+class GPDistributionFunctions(ParametricLifetimeFunctions):
     """BLABLABLA"""
 
     def __init__(

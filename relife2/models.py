@@ -13,7 +13,6 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
-from relife2 import parametric
 from relife2.data import (
     ObservedLifetimes,
     Truncations,
@@ -31,6 +30,7 @@ from relife2.distributions import (
     WeibullFunctions,
     GPDistributionFunctions,
 )
+from relife2.functions import ParametricFunctions
 from relife2.gammaprocess import (
     ExponentialShapeFunctions,
     PowerShapeFunctions,
@@ -47,10 +47,10 @@ from relife2.regressions import (
 from relife2.types import FloatArray
 
 
-class Model:
+class ParametricModel:
     """Façade like Model type"""
 
-    def __init__(self, functions: parametric.Functions):
+    def __init__(self, functions: ParametricFunctions):
         self.functions = functions
 
     @property
@@ -89,7 +89,7 @@ class Model:
             super().__setattr__(name, value)
 
 
-class LifetimeModel(Model, ABC):
+class ParametricLifetimeModel(ParametricModel, ABC):
     """
     Façade class for lifetime model (where functions is a LifetimeFunctions)
     """
@@ -155,7 +155,7 @@ class LifetimeModel(Model, ABC):
         return optimizer.x
 
 
-class Distribution(LifetimeModel):
+class Distribution(ParametricLifetimeModel):
     """
     Facade implementation for distribution models
     """
@@ -322,7 +322,7 @@ class Distribution(LifetimeModel):
         )
 
 
-class Regression(LifetimeModel):
+class Regression(ParametricLifetimeModel):
     """
     Facade implementation for regression models
     """
@@ -659,7 +659,7 @@ class GammaProcessDistribution(Distribution):
 
 
 # créer un type StochasticProcess (voir reponse Thomas)
-class GammaProcess(Model):
+class GammaProcess(ParametricModel):
     shape_names: tuple = ("exponential", "power")
 
     def __init__(

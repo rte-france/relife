@@ -15,15 +15,15 @@ from scipy.optimize import Bounds
 from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
-from relife2 import parametric
 from relife2.data import Lifetimes, ObservedLifetimes, Truncations
 from relife2.data.dataclass import Deteriorations
+from relife2.functions import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.gammaprocess import GPFunctions
 from relife2.types import FloatArray
 
 
 # Likelihood(FunctionsBridge)
-class Likelihood(parametric.Functions):
+class Likelihood(ParametricFunctions):
     """
     Class that instanciates likelihood base having finite number of parameters related to
     one parametric functions
@@ -31,7 +31,7 @@ class Likelihood(parametric.Functions):
 
     hasjac: bool = False
 
-    def __init__(self, functions: parametric.Functions):
+    def __init__(self, functions: ParametricFunctions):
         super().__init__()
         self.add_functions("functions", functions)
 
@@ -60,7 +60,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def __init__(
         self,
-        functions: parametric.LifetimeFunctions,
+        functions: ParametricLifetimeFunctions,
         observed_lifetimes: ObservedLifetimes,
         truncations: Truncations,
         **kwdata: FloatArray,
@@ -306,12 +306,14 @@ class LikelihoodFromDeteriorations(Likelihood):
             a = self.functions.shape_function.nu(first_inspections)
             first_increment_contribution = -np.log(
                 gamma.cdf(
-                    self.first_increment_uncertainty[1] - self.deterioration_data.values[:, 1],
+                    self.first_increment_uncertainty[1]
+                    - self.deterioration_data.values[:, 1],
                     a=a,
                     scale=1 / self.rate,
                 )
                 - gamma.cdf(
-                    self.first_increment_uncertainty[0] - self.deterioration_data.values[:, 1],
+                    self.first_increment_uncertainty[0]
+                    - self.deterioration_data.values[:, 1],
                     a=a,
                     scale=1 / self.rate,
                 )

@@ -19,20 +19,16 @@ from relife2.types import FloatArray
 from relife2.utils.integrations import gauss_legendre, quad_laguerre
 
 
-# A TypeVar that’s bound by a class can materialize as any subclass
-# AnyFunctions = TypeVar("AnyFunctions", bound="Functions")
-
-
-class Functions(ABC):
+class ParametricFunctions(ABC):
     """
     Base class of objects implementing parametric functions.
-    Functions have a tree structure of parameters allowing to compose functions with add_functions method.
+    ParametricFunctions have a tree structure of parameters allowing to compose functions with add_functions method.
     Parameters can be called and set by their name.
 
     Examples:
-        >>> # Functions types must implement init_params and params_bounds methods
-        ... # They are passed in this example just to show how main Functions methods work
-        ... class MyFunctions(Functions):
+        >>> # ParametricFunctions types must implement init_params and params_bounds methods
+        ... # They are passed in this example just to show how main ParametricFunctions methods work
+        ... class MyFunctions(ParametricFunctions):
         ...   def init_params(self):
         ...       pass
         ...   def params_bounds(self):
@@ -78,12 +74,11 @@ class Functions(ABC):
 
         self.root_params = {}
         for k, v in kwparams.items():
-            if v is None:
-                self.root_params[k] = np.random.random()
-            else:
+            if v is not None:
                 self.root_params[k] = float(v)
-        # self.leaves_params: dict[str, dict] = {}
-        self.leaves_functions: dict[str, "Functions"] = {}
+            else:
+                self.root_params[k] = v
+        self.leaves_functions: dict[str, "ParametricFunctions"] = {}
         self.all_params = self.root_params.copy()
 
     @abstractmethod
@@ -141,13 +136,27 @@ class Functions(ABC):
             functions.params = values[pos : pos + functions.nb_params]
             pos += functions.nb_params
 
-    def add_functions(self, name: str, functions: "Functions") -> None:
+    def add_params(self, **kwparams: dict[str, Union[None, float]]) -> None:
+        pos = len(self.root_params)
+        root_params_items = list(self.root_params.items())
+        all_params_items = list(self.all_params.items())
+        items_to_insert = list(kwparams.items())
+        root_params_items = (
+            root_params_items[:pos] + items_to_insert + root_params_items[pos:]
+        )
+        all_params_items = (
+            all_params_items[:pos] + items_to_insert + all_params_items[pos:]
+        )
+        self.root_params = dict(root_params_items)
+        self.all_params = dict(all_params_items)
+
+    def add_functions(self, name: str, functions: "ParametricFunctions") -> None:
         """
         add leaf functions to tree
         Appends another Parameters object to itself
         Args:
             name (str):
-            functions (Functions): Functions object to append
+            functions (ParametricFunctions): ParametricFunctions object to append
         """
         if set(self.params_names) & set(functions.params_names):
             raise ValueError("Can't append Function object having common param names")
@@ -198,41 +207,47 @@ class Functions(ABC):
                 stop = True
         elif self.__search_leaf_functions(name) is not None:
             raise AttributeError(
-                f"Can't set {name} which is a leaf Functions. Recreate a Function object instead"
+                f"Can't set {name} which is a leaf ParametricFunctions. Recreate a Function object instead"
             )
         else:
             super().__setattr__(name, value)
 
-    def __write_str(self, name, node, depth=0, indent=4):
-        str_repr = [
-            f"{'|' * (depth != 0)}{'_' * (indent * depth)}{name} {node.root_params},"
-        ]
+    def __get_leaf_names(self, node):
+        leaf_names = {
+            key: type(value).__name__ for key, value in node.leaves_functions.items()
+        }
         if not node.leaves_functions:
-            return str_repr
+            return leaf_names
         if node.leaves_functions:
-            for leaf_name, leaf in node.leaves_functions.items():
-                str_repr.extend(
-                    self.__write_str(leaf_name, leaf, depth=depth + 1, indent=indent)
-                )
-        return str_repr
+            for leaf in node.leaves_functions.values():
+                leaf_names.update(self.__get_leaf_names(leaf))
+        return leaf_names
 
     def __repr__(self):
         class_name = type(self).__name__
-        return f"{class_name}({self.all_params})"
+        return (
+            f"{class_name}(\n"
+            f" params = {self.all_params}\n"
+            f" functions = {self.__get_leaf_names(self)}\n)"
+        )
 
     def __str__(self):
         class_name = type(self).__name__
-        return "\n".join(self.__write_str(class_name, self))
+        return (
+            f"{class_name}("
+            f"{len(self.all_params)} params, "
+            f"{len(self.__get_leaf_names(self))} other functions interfaces)"
+        )
 
     def copy(self):
         """
         Returns:
-            Functions : a copy of the Functions object
+            ParametricFunctions : a copy of the ParametricFunctions object
         """
         return copy.deepcopy(self)
 
 
-class LifetimeFunctions(Functions, ABC):
+class ParametricLifetimeFunctions(ParametricFunctions, ABC):
     """
     BLABLABLA
     """

@@ -5,11 +5,11 @@ import numpy as np
 from scipy.optimize import Bounds, bisect
 
 import relife2.distributions as distributions
-from relife2 import parametric
+from relife2.functions import ParametricFunctions
 from relife2.types import FloatArray
 
 
-class ShapeFunctions(parametric.Functions, ABC):
+class ShapeFunctions(ParametricFunctions, ABC):
     """BLABLABLA"""
 
     def init_params(self, *args: Any) -> FloatArray:
@@ -61,7 +61,7 @@ class ExponentialShapeFunctions(ShapeFunctions):
 
 
 # GammaProcessFunctions(FunctionsBridge, parametric.Functions)
-class GPFunctions(parametric.Functions):
+class GPFunctions(ParametricFunctions):
     """BLABLABLA"""
 
     def __init__(

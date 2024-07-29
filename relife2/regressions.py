@@ -12,12 +12,12 @@ from typing import Any
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife2 import parametric
 from relife2.distributions import DistributionFunctions
+from relife2.functions import ParametricLifetimeFunctions, ParametricFunctions
 from relife2.types import FloatArray
 
 
-class CovarEffect(parametric.Functions, ABC):
+class CovarEffect(ParametricFunctions, ABC):
     """
     Object that computes covariates effect functions
     """
@@ -56,7 +56,7 @@ class CovarEffect(parametric.Functions, ABC):
         """
 
 
-class RegressionFunctions(parametric.LifetimeFunctions, ABC):
+class RegressionFunctions(ParametricLifetimeFunctions, ABC):
     """
     Object that computes every probability functions of a regression model
     """
