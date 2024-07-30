@@ -13,7 +13,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from relife2.utils.types import BoolArray, FloatArray
-from .dataclass import Lifetimes, ObservedLifetimes, Truncations, Deteriorations
+
+from .dataclass import Deteriorations, Lifetimes, ObservedLifetimes, Truncations
 from .tools import array_factory, lifetimes_compatibility
 
 
@@ -25,7 +26,7 @@ class LifetimeDataFactory(ABC):
     def __init__(
         self,
         time: FloatArray,
-        event: Optional[FloatArray] = None,
+        event: Optional[BoolArray] = None,
         entry: Optional[FloatArray] = None,
         departure: Optional[FloatArray] = None,
     ):
@@ -249,52 +250,48 @@ def lifetime_factory_template(
     return factory()
 
 
-class DeteriorationsFactory:
-    """BLABLABLA"""
+def deteriorations_factory(
+    deterioration_measurements: FloatArray,
+    inspection_times: FloatArray,
+    unit_ids: FloatArray,
+    initial_resistance: float,
+):
+    """
+    Args:
+        deterioration_measurements ():
+        inspection_times ():
+        unit_ids ():
+        initial_resistance ():
+    Returns:
 
-    def __init__(
-        self,
-        deterioration_measurements: ArrayLike,
-        inspection_times: ArrayLike,
-        unit_ids: ArrayLike,
-        initial_resistance: float,
-    ):
-        # verifier la cohérence des arguments (temps croissant et mesures decroissantes)
-        self.deterioration_measurements = deterioration_measurements
-        self.inspection_times = inspection_times
-        self.unit_ids = unit_ids
-        self.initial_resistance = initial_resistance
+    """
+    # verifier la cohérence des arguments (temps croissant et mesures decroissantes)
 
-    def __call__(self) -> Deteriorations:
-        sorted_indices = np.argsort(self.unit_ids, kind="mergesort")
-        sorted_unit_ids = self.unit_ids[sorted_indices]
-        sorted_deteriorations_measurements = self.deterioration_measurements[
-            sorted_indices
+    sorted_indices = np.argsort(unit_ids, kind="mergesort")
+    sorted_unit_ids = unit_ids[sorted_indices]
+    sorted_deteriorations_measurements = deterioration_measurements[sorted_indices]
+    sorted_inspection_times = inspection_times[sorted_indices]
+    unique_unit_ids, counts = np.unique(sorted_unit_ids, return_counts=True)
+
+    max_len = np.max(counts)
+    split_indices = np.cumsum(counts)[:-1]
+
+    deteriorations_measurements_2d = np.vstack(
+        [
+            np.concatenate((split_arr, np.ones(max_len - len(split_arr)) * np.nan))
+            for split_arr in np.split(sorted_deteriorations_measurements, split_indices)
         ]
-        sorted_inspection_times = self.inspection_times[sorted_indices]
-        unique_unit_ids, counts = np.unique(sorted_unit_ids, return_counts=True)
+    )
 
-        max_len = np.max(counts)
-        split_indices = np.cumsum(counts)[:-1]
+    inspection_times_2d = np.vstack(
+        [
+            np.concatenate((split_arr, np.ones(max_len - len(split_arr)) * np.nan))
+            for split_arr in np.split(sorted_inspection_times, split_indices)
+        ]
+    )
 
-        deteriorations_measurements_2d = np.vstack(
-            [
-                np.concatenate((split_arr, np.ones(max_len - len(split_arr)) * np.nan))
-                for split_arr in np.split(
-                    sorted_deteriorations_measurements, split_indices
-                )
-            ]
-        )
-
-        inspection_times_2d = np.vstack(
-            [
-                np.concatenate((split_arr, np.ones(max_len - len(split_arr)) * np.nan))
-                for split_arr in np.split(sorted_inspection_times, split_indices)
-            ]
-        )
-
-        return Deteriorations(
-            deteriorations_measurements_2d,
-            inspection_times_2d,
-            unique_unit_ids,
-        )
+    return Deteriorations(
+        deteriorations_measurements_2d,
+        inspection_times_2d,
+        unique_unit_ids,
+    )

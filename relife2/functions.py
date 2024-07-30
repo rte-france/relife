@@ -72,14 +72,14 @@ class ParametricFunctions(ABC):
 
     def __init__(self, **kwparams: Union[float, None]):
 
-        self.root_params = {}
+        self.root_params: dict[str, Union[float, None]] = {}
         for k, v in kwparams.items():
             if v is not None:
                 self.root_params[k] = float(v)
             else:
                 self.root_params[k] = v
         self.leaves_functions: dict[str, "ParametricFunctions"] = {}
-        self.all_params = self.root_params.copy()
+        self.all_params: dict[str, Union[float, None]] = self.root_params.copy()
 
     @abstractmethod
     def init_params(self, *args: Any) -> FloatArray:
@@ -136,21 +136,25 @@ class ParametricFunctions(ABC):
             functions.params = values[pos : pos + functions.nb_params]
             pos += functions.nb_params
 
-    def add_params(self, **kwparams: dict[str, Union[None, float]]) -> None:
+    def add_params(self, **kwparams: Union[float, None]) -> None:
+        """
+        Args:
+            **kwparams ():
+
+        Returns:
+        """
         if set(self.params_names) & set(kwparams.keys()):
             raise ValueError("Can't add params when param names are already used")
         pos = len(self.root_params)
         root_params_items = list(self.root_params.items())
         all_params_items = list(self.all_params.items())
         items_to_insert = list(kwparams.items())
-        root_params_items = (
+        self.root_params = dict(
             root_params_items[:pos] + items_to_insert + root_params_items[pos:]
         )
-        all_params_items = (
+        self.all_params = dict(
             all_params_items[:pos] + items_to_insert + all_params_items[pos:]
         )
-        self.root_params = dict(root_params_items)
-        self.all_params = dict(all_params_items)
 
     def add_functions(self, name: str, functions: "ParametricFunctions") -> None:
         """
@@ -167,10 +171,10 @@ class ParametricFunctions(ABC):
 
     def _get_leaf_functions(self, name: str) -> Union[None, "ParametricFunctions"]:
         leaves = []
-        todo = [self]
+        queue = [self]
         found_functions = None
-        while todo:
-            current_node = todo.pop(0)
+        while queue:
+            current_node = queue.pop(0)
             if current_node is None:
                 continue
             if not current_node.leaves_functions:
@@ -180,16 +184,16 @@ class ParametricFunctions(ABC):
                 if leaf_name == name:
                     found_functions = leaf
                     break
-                todo.append(leaf)
+                queue.append(leaf)
         return found_functions
 
     # def _set_leaf_functions(self, name: str, functions: "ParametricFunctions") -> None:
     #     leaves = []
-    #     todo = [self]
+    #     queue = [self]
     #     pos = len(self.root_params)
     #     functions_set = False
-    #     while todo:
-    #         current_node = todo.pop(0)
+    #     while queue:
+    #         current_node = queue.pop(0)
     #         if current_node is None:
     #             continue
     #         if not current_node.leaves_functions:
@@ -213,10 +217,10 @@ class ParametricFunctions(ABC):
     #                     )
     #                 self.all_params = all_params_dict
     #                 current_node.leaves_functions[name] = functions
-    #                 todo = []
+    #                 queue = []
     #                 functions_set = True
     #                 break
-    #             todo.append(leaf)
+    #             queue.append(leaf)
     #             pos += len(leaf.root_params)
     #     if not functions_set:
     #         raise ValueError(f"No functions named {name} was found")
@@ -249,7 +253,7 @@ class ParametricFunctions(ABC):
         #     self._set_leaf_functions(name, value)
         elif isinstance(value, ParametricFunctions):
             raise AttributeError(
-                f"Can't set a functions. Recreate a Function object instead"
+                "Can't set a functions. Recreate a Function object instead"
             )
         else:
             super().__setattr__(name, value)

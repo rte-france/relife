@@ -12,7 +12,7 @@ from typing import Any
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife2.functions import ParametricLifetimeFunctions, ParametricFunctions
+from relife2.functions import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.stats.distributions import DistributionFunctions
 from relife2.utils.types import FloatArray
 
@@ -45,6 +45,12 @@ class CovarEffect(ParametricFunctions):
         return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
 
     def jac_g(self, covar: FloatArray) -> FloatArray:
+        """
+        Args:
+            covar ():
+
+        Returns:
+        """
         return covar * self.g(covar)
 
 
@@ -61,7 +67,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         super().__init__()
         self.add_functions("covar_effect", covar_effect)
         self.add_functions("baseline", baseline)
-        self._covar = None
+        self._covar = np.empty((0, 0), dtype=np.float64)
 
     @property
     def nb_covar(self) -> int:

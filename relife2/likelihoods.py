@@ -8,15 +8,14 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 import warnings
 from abc import abstractmethod
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 from scipy.optimize import Bounds
 from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
-from relife2.data import Deteriorations
-from relife2.data import Lifetimes, ObservedLifetimes, Truncations
+from relife2.data import Deteriorations, Lifetimes, ObservedLifetimes, Truncations
 from relife2.functions import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.stats.gammaprocess import GPFunctions
 from relife2.utils.types import FloatArray
@@ -243,7 +242,7 @@ class LikelihoodFromDeteriorations(Likelihood):
         functions: GPFunctions,
         deterioration_data: Deteriorations,
         first_increment_uncertainty: Optional[tuple] = None,
-        measurement_tol: float = np.finfo(float).resolution,
+        measurement_tol: np.floating[Any] = np.finfo(float).resolution,
     ):
         super().__init__(functions)
         self.deterioration_data = deterioration_data

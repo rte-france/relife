@@ -13,16 +13,16 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
-from relife2.data import Deteriorations
-from relife2.data import DeteriorationsFactory
 from relife2.data import (
+    Deteriorations,
     ObservedLifetimes,
     Truncations,
     array_factory,
+    deteriorations_factory,
     lifetime_factory_template,
 )
 from relife2.functions import ParametricFunctions
-from relife2.likelihoods import LikelihoodFromLifetimes, LikelihoodFromDeteriorations
+from relife2.likelihoods import LikelihoodFromDeteriorations, LikelihoodFromLifetimes
 from relife2.stats.distributions import (
     DistributionFunctions,
     ExponentialFunctions,
@@ -32,16 +32,15 @@ from relife2.stats.distributions import (
     WeibullFunctions,
 )
 from relife2.stats.gammaprocess import (
-    ExponentialShapeFunctions,
-    PowerShapeFunctions,
-    GPFunctions,
     GPDistributionFunctions,
+    GPFunctions,
+    PowerShapeFunctions,
 )
 from relife2.stats.regressions import (
     AFTFunctions,
+    CovarEffect,
     ProportionalHazardFunctions,
     RegressionFunctions,
-    CovarEffect,
 )
 from relife2.utils.types import FloatArray
 
@@ -64,6 +63,12 @@ _LIFETIME_FUNCTIONS_NAMES = [
 
 
 def are_params_set(functions: ParametricFunctions):
+    """
+    Args:
+        functions ():
+
+    Returns:
+    """
     if None in functions.all_params.values():
         params_to_set = " ".join(
             [name for name, value in functions.all_params.items() if value is None]
@@ -350,14 +355,6 @@ class Distribution(ParametricLifetimeModel):
         truncations: Truncations,
         **kwargs: Any,
     ) -> LikelihoodFromLifetimes:
-        if len(kwargs) != 0:
-            extra_args_names = tuple(kwargs.keys())
-            raise ValueError(
-                f"""
-                Distribution likelihood does not expect other data than lifetimes
-                Remove {extra_args_names} from kwargs.
-                """
-            )
         return LikelihoodFromLifetimes(
             self.functions.copy(),
             observed_lifetimes,
@@ -374,10 +371,19 @@ class Regression(ParametricLifetimeModel):
 
     @property
     def coefficients(self) -> FloatArray:
+        """
+        Returns:
+        """
         return self.covar_effect.params
 
     @coefficients.setter
     def coefficients(self, values: Union[list[float], tuple[float]]):
+        """
+        Args:
+            values ():
+
+        Returns:
+        """
         if len(values) != self.functions.nb_covar:
             self.functions = type(self.functions)(
                 CovarEffect(**{f"coef_{i}": v for i, v in enumerate(values)}),
@@ -556,12 +562,11 @@ class Regression(ParametricLifetimeModel):
         truncations: Truncations,
         **kwargs: Any,
     ) -> LikelihoodFromLifetimes:
-        if set(kwargs.keys()) != {"covar"}:
-            extra_args_names = tuple(kwargs.keys())
+        if "covar" not in kwargs:
             raise ValueError(
-                f"""
-                Regression likelihood only expects covar as other data.
-                Got {extra_args_names} from kwargs.
+                """
+                Regression likelihood expects covar as data.
+                Please add covar values to kwargs.
                 """
             )
         covar = kwargs["covar"]
@@ -576,7 +581,7 @@ class Regression(ParametricLifetimeModel):
             optimized_functions,
             observed_lifetimes,
             truncations,
-            **kwargs,
+            covar=covar,
         )
 
 
@@ -638,7 +643,7 @@ def control_covar_args(
     """
     if coefficients is None:
         return {"coef_0": None}
-    if isinstance(coefficients, tuple) or isinstance(coefficients, list):
+    if isinstance(coefficients, (list, tuple)):
         return {f"coef_{i}": v for i, v in enumerate(coefficients)}
     if isinstance(coefficients, dict):
         return coefficients
@@ -671,7 +676,7 @@ class AFT(Regression):
         self,
         baseline: Distribution,
         coefficients: Optional[
-            tuple[float] | list[float] | dict[str, float | None]
+            tuple[float | None] | list[float | None] | dict[str, float | None]
         ] = None,
     ):
         coefficients = control_covar_args(coefficients)
@@ -683,7 +688,10 @@ class AFT(Regression):
         )
 
 
-class GammaProcessDistribution(Distribution):
+class GammaProcessDistribution(ParametricLifetimeModel):
+    """
+    BLABLABLABLA
+    """
 
     shape_names: tuple = ("exponential", "power")
 
@@ -691,52 +699,300 @@ class GammaProcessDistribution(Distribution):
         self,
         shape: str,
         rate: Optional[float] = None,
-        initial_resistance: Optional[float] = None,
-        load_threshold: Optional[float] = None,
         **shape_params: Union[float, None],
     ):
 
-        if shape == "exponential":
-            shape_functions = ExponentialShapeFunctions(**shape_params)
-        elif shape == "power":
+        # if shape == "exponential":
+        #     shape_functions = ExponentialShapeFunctions(**shape_params)
+        if shape == "power":
             shape_functions = PowerShapeFunctions(**shape_params)
         else:
             raise ValueError(
                 f"{shape} is not valid name for shape, only {self.shape_names} are allowed"
             )
 
-        super().__init__(
-            GPDistributionFunctions(
-                shape_functions, rate, initial_resistance, load_threshold
+        super().__init__(GPDistributionFunctions(shape_functions, rate))
+
+    def sf(
+        self, time: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.sf(array_factory(time)))[()]
+
+    def isf(
+        self, probability: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.isf(array_factory(probability)))[()]
+
+    def hf(
+        self, time: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.hf(array_factory(time)))[()]
+
+    def chf(
+        self, time: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.chf(array_factory(time)))[()]
+
+    def cdf(
+        self, time: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.cdf(array_factory(time)))[()]
+
+    def pdf(
+        self, probability: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            probability ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
+
+    def ppf(
+        self, time: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.ppf(array_factory(time)))[()]
+
+    def mrl(
+        self, time: ArrayLike, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            time ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.mrl(array_factory(time)))[()]
+
+    def ichf(
+        self,
+        cumulative_hazard_rate: ArrayLike,
+        initial_resistance: float,
+        load_threshold: float,
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            cumulative_hazard_rate ():
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
+            ()
+        ]
+
+    def rvs(
+        self,
+        initial_resistance: float,
+        load_threshold: float,
+        size: Optional[int] = 1,
+        seed: Optional[int] = None,
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            initial_resistance ():
+            load_threshold ():
+            size ():
+            seed ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
+
+    def mean(
+        self, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return self.functions.mean()
+
+    def var(
+        self, initial_resistance: float, load_threshold: float
+    ) -> Union[float, FloatArray]:
+        """
+
+        Args:
+            initial_resistance ():
+            load_threshold ():
+
+        Returns:
+
+        """
+
+        self.functions.initial_resistance = float(initial_resistance)
+        self.functions.load_threshold = float(load_threshold)
+        return self.functions.var()
+
+    def _init_likelihood(
+        self,
+        observed_lifetimes: ObservedLifetimes,
+        truncations: Truncations,
+        **kwargs: Any,
+    ) -> LikelihoodFromLifetimes:
+        if "initial_resistance" not in kwargs:
+            raise ValueError(
+                """
+                GammaProcessDistribution likelihood expects initial_resistance as data.
+                Please add initial_resistance value to kwargs.
+                """
             )
+        if "load_threshold" not in kwargs:
+            raise ValueError(
+                """
+                GammaProcessDistribution likelihood expects load_threshold as data.
+                Please add load_threshold value to kwargs.
+                """
+            )
+
+        optimized_functions = self.functions.copy()
+        optimized_functions.initial_resistance = kwargs["initial_resistance"]
+        optimized_functions.load_threshold = kwargs["load_threshold"]
+
+        return LikelihoodFromLifetimes(
+            optimized_functions,
+            observed_lifetimes,
+            truncations,
         )
 
 
 # créer un type StochasticProcess (voir reponse Thomas)
 class GammaProcess(ParametricModel):
+    """
+    BLABLABLABLA
+    """
+
     shape_names: tuple = ("exponential", "power")
 
     def __init__(
         self,
         shape: str,
         rate: Optional[float] = None,
-        initial_resistance: Optional[float] = None,
-        load_threshold: Optional[float] = None,
         **shape_params: Union[float, None],
     ):
 
-        if shape == "exponential":
-            shape_functions = ExponentialShapeFunctions(**shape_params)
-        elif shape == "power":
+        # if shape == "exponential":
+        #     shape_functions = ExponentialShapeFunctions(**shape_params)
+        if shape == "power":
             shape_functions = PowerShapeFunctions(**shape_params)
         else:
             raise ValueError(
                 f"{shape} is not valid name for shape, only {self.shape_names} are allowed"
             )
 
-        super().__init__(
-            GPFunctions(shape_functions, rate, initial_resistance, load_threshold)
-        )
+        super().__init__(GPFunctions(shape_functions, rate))
 
     def sample(
         self,
@@ -746,6 +1002,17 @@ class GammaProcess(ParametricModel):
         seed=None,
         add_death_time=True,
     ):
+        """
+        Args:
+            time ():
+            unit_ids ():
+            nb_sample ():
+            seed ():
+            add_death_time ():
+
+        Returns:
+
+        """
         return self.functions.sample(time, unit_ids, nb_sample, seed, add_death_time)
 
     def _init_likelihood(
@@ -776,7 +1043,7 @@ class GammaProcess(ParametricModel):
         inspection_times: ArrayLike,
         unit_ids: ArrayLike,
         first_increment_uncertainty: Optional[tuple] = None,
-        measurement_tol: float = np.finfo(float).resolution,
+        measurement_tol: np.floating[Any] = np.finfo(float).resolution,
         inplace: bool = True,
         **kwargs: Any,
     ) -> FloatArray:
@@ -784,13 +1051,12 @@ class GammaProcess(ParametricModel):
         BLABLABLABLA
         """
 
-        data_factory = DeteriorationsFactory(
-            deterioration_measurements,
-            inspection_times,
-            unit_ids,
+        deterioration_data = deteriorations_factory(
+            array_factory(deterioration_measurements),
+            array_factory(inspection_times),
+            array_factory(unit_ids),
             self.functions.process_lifetime_distribution.initial_resistance,
         )
-        deterioration_data = data_factory()
 
         param0 = kwargs.pop("x0", self.functions.init_params())
 

@@ -37,7 +37,7 @@ def hessian_cs(
         init_params = likelihood.params.copy()
         for i in range(size):
             for j in range(i, size):
-                likelihood.params = likelihood.params.values + u[i]
+                likelihood.params = likelihood.params + u[i]
                 hess[i, j] = np.imag(likelihood.jac_negative_log_likelihood()[j]) / eps
                 likelihood.params = init_params
                 if i != j:
@@ -65,7 +65,7 @@ def hessian_2point(
         hess = np.empty((size, size))
         for i in range(size):
             hess[i] = approx_fprime(
-                likelihood.params.values,
+                likelihood.params,
                 likelihood.jac_negative_log_likelihood()[i],
                 eps,
             )

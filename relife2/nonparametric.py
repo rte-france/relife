@@ -19,6 +19,10 @@ from relife2.utils.types import FloatArray
 
 @dataclass
 class Estimates:
+    """
+    BLABLABLABLA
+    """
+
     timeline: FloatArray
     values: FloatArray
     se: Optional[FloatArray] = None
@@ -56,7 +60,7 @@ class NonParametricEstimator(ABC):
     @property
     @abstractmethod
     def sf(self) -> Estimates:
-        """"""
+        """BLABLABLA"""
 
     @abstractmethod
     def _estimate(self) -> None:
@@ -92,6 +96,9 @@ class ECDF(NonParametricEstimator):
 
     @property
     def cdf(self) -> Estimates:
+        """
+        Returns:
+        """
         return self._cdf
 
     @property
@@ -238,7 +245,7 @@ class Turnbull(NonParametricEstimator):
 
         super().__init__(time, event, entry, departure)
 
-        # TODO : qst => entry is not optional???
+        # qst => entry is not optional???
 
     def _estimate_with_low_memory(
         self, timeline_temp, timeline_len, event_occurence, len_censored_data

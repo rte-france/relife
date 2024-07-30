@@ -13,7 +13,7 @@ from relife2.data.dataclass import Lifetimes, ObservedLifetimes, Truncations
 from relife2.utils.types import FloatArray
 
 
-def intersect_lifetimes(*lifetimes: Lifetimes) -> tuple[Lifetimes]:
+def intersect_lifetimes(*lifetimes: Lifetimes) -> list[Lifetimes]:
     """
     Args:
         *lifetimes: LifetimeData object.s containing values of shape (n1, p1), (n2, p2), etc.
@@ -24,20 +24,16 @@ def intersect_lifetimes(*lifetimes: Lifetimes) -> tuple[Lifetimes]:
         >>> lifetimes_1 = Lifetimes(values = np.array([[1], [2]]), index = np.array([3, 10]))
         >>> lifetimes_2 = Lifetimes(values = np.array([[3], [5]]), index = np.array([10, 2]))
         >>> intersect_lifetimes(lifetimes_1, lifetimes_2)
-        (Lifetimes(values=array([[2]]), index=array([10])), Lifetimes(values=array([[3]]), index=array([10])))
+        [Lifetimes(values=array([[2]]), index=array([10])), Lifetimes(values=array([[3]]), index=array([10]))]
     """
 
     inter_ids = np.array(
         list(set.intersection(*[set(_lifetimes.index) for _lifetimes in lifetimes]))
     )
-    return tuple(
-        [
-            Lifetimes(
-                _lifetimes.values[np.isin(_lifetimes.index, inter_ids)], inter_ids
-            )
-            for _lifetimes in lifetimes
-        ]
-    )
+    return [
+        Lifetimes(_lifetimes.values[np.isin(_lifetimes.index, inter_ids)], inter_ids)
+        for _lifetimes in lifetimes
+    ]
 
 
 def lifetimes_compatibility(

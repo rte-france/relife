@@ -15,4 +15,4 @@ from numpy.typing import NDArray
 FloatArray = NDArray[np.float64]
 IntArray = NDArray[np.int64]
 BoolArray = NDArray[np.bool_]
-Index = Union[EllipsisType, int, slice, tuple[EllipsisType, int, slice, ...]]
+Index = Union[EllipsisType, int, slice, tuple[EllipsisType, int, slice]]
