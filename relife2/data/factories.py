@@ -126,8 +126,8 @@ class LifetimeDataFactory(ABC):
 
         try:
             lifetimes_compatibility(observed_lifetimes, truncations)
-        except Exception as error:
-            raise ValueError("Incorrect input lifetimes") from error
+        except Exception as exc:
+            raise ValueError("Incorrect input lifetimes") from exc
         return observed_lifetimes, truncations
 
 
@@ -154,7 +154,19 @@ class LifetimeDataFactoryFrom1D(LifetimeDataFactory):
         return Lifetimes(values, index)
 
     def get_interval_censorships(self) -> Lifetimes:
-        return Lifetimes(np.empty((0, 2)), np.empty((0,), dtype=np.int64))
+        lc_index = np.where(self.lc_indicators)[0]
+        lc_values = np.c_[
+            np.zeros(len(lc_index)), self.time[lc_index]
+        ]  # add a column of zero
+
+        rc_index = np.where(self.rc_indicators)[0]
+        rc_values = np.c_[
+            self.time[rc_index], np.ones(len(rc_index)) * np.inf
+        ]  # add a column of inf
+        lifetimes = Lifetimes(
+            np.vstack((lc_values, rc_values)), np.concatenate((lc_index, rc_index))
+        )
+        return lifetimes
 
     def get_left_truncations(self) -> Lifetimes:
         index = np.where(self.entry > 0)[0]
@@ -196,16 +208,6 @@ class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
             np.not_equal(self.time[:, 0], self.time[:, 1]),
         )[0]
 
-        ## Censures par int sans RC et LC :
-        # index = np.where(
-        #     np.logical_and(
-        #         np.logical_and(
-        #             self.time[:, 0] > 0,
-        #             self.time[:, 1] < np.inf,
-        #         ),
-        #         np.not_equal(self.time[:, 0], self.time[:, 1]),
-        #     )
-        # )[0]
         values = self.time[index]
         lifetimes = Lifetimes(values, index)
         if len(lifetimes) != 0:
@@ -217,7 +219,7 @@ class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
 
     def get_left_truncations(self) -> Lifetimes:
         index = np.where(self.entry > 0)[0]
-        values = self.entry[index] # TODO : if None, should put 0s !!
+        values = self.entry[index]  # TODO : if None, should put 0s !!
         return Lifetimes(values, index)
 
     def get_right_truncations(self) -> Lifetimes:

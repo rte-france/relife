@@ -29,6 +29,8 @@ class Lifetimes:
             raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
         if len(self.values) != len(self.index):
             raise ValueError("Incompatible lifetime values and unit_ids")
+        if np.all(self.values == 0, axis=1).any():
+            raise ValueError("Lifetimes values must be greater than 0")
 
     def __len__(self) -> int:
         return len(self.values)
@@ -42,7 +44,7 @@ class ObservedLifetimes:
     left_censored: Lifetimes
     right_censored: Lifetimes
     interval_censored: Lifetimes
-    
+
     def __post_init__(self):
         self.rc = Lifetimes(
             np.concatenate(

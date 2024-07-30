@@ -53,30 +53,22 @@ def test_1d_data(example_1d_data):
     assert np.all(truncations.left.values == np.array([3, 5, 3, 1, 9]).reshape(-1, 1))
 
     assert np.all(
-        intersect_lifetimes(observed_lifetimes.complete, truncations.left).values[
-            :, [0]
-        ]
+        intersect_lifetimes(observed_lifetimes.complete, truncations.left)[0].values
         == np.array([9, 11]).reshape(-1, 1)
     )
 
     assert np.all(
-        intersect_lifetimes(observed_lifetimes.complete, truncations.left).values[
-            :, [1]
-        ]
+        intersect_lifetimes(observed_lifetimes.complete, truncations.left)[1].values
         == np.array([3, 9]).reshape(-1, 1)
     )
 
     assert np.all(
-        intersect_lifetimes(truncations.left, observed_lifetimes.complete).values[
-            :, [0]
-        ]
+        intersect_lifetimes(truncations.left, observed_lifetimes.complete)[0].values
         == np.array([3, 9]).reshape(-1, 1)
     )
 
     assert np.all(
-        intersect_lifetimes(truncations.left, observed_lifetimes.complete).values[
-            :, [1]
-        ]
+        intersect_lifetimes(truncations.left, observed_lifetimes.complete)[1].values
         == np.array([9, 11]).reshape(-1, 1)
     )
 
@@ -100,36 +92,40 @@ def test_2d_data(example_2d_data):
         observed_lifetimes.right_censored.values == np.array([7]).reshape(-1, 1)
     )
 
-    assert np.all(observed_lifetimes.interval_censored.index == np.array([0, 5, 6]))
+    assert np.all(
+        observed_lifetimes.interval_censored.index == np.array([0, 1, 3, 5, 6])
+    )
     assert np.all(
         observed_lifetimes.interval_censored.values
-        == np.array([[1, 2], [2, 10], [10, 11]])
+        == np.array([[1, 2], [0, 4], [7, np.inf], [2, 10], [10, 11]])
     )
 
     assert np.all(truncations.left.index == np.array([2, 3, 4, 5, 6]))
     assert np.all(truncations.left.values == np.array([3, 5, 3, 1, 9]).reshape(-1, 1))
 
     assert np.all(
-        intersect_lifetimes(
-            truncations.left, observed_lifetimes.interval_censored
-        ).index
-        == np.array([5, 6])
+        intersect_lifetimes(truncations.left, observed_lifetimes.interval_censored)[
+            1
+        ].index
+        == np.array([3, 5, 6])
     )
 
     assert np.all(
-        intersect_lifetimes(
-            truncations.left, observed_lifetimes.interval_censored
-        ).values[:, 1:]
-        == np.array([[2, 10], [10, 11]])
+        intersect_lifetimes(truncations.left, observed_lifetimes.interval_censored)[
+            1
+        ].values
+        == np.array([[7, np.inf], [2, 10], [10, 11]])
     )
 
     assert np.all(
-        intersect_lifetimes(observed_lifetimes.right_censored, truncations.left).values[
-            :, [0]
-        ]
+        intersect_lifetimes(observed_lifetimes.right_censored, truncations.left)[
+            0
+        ].values
         == np.array([7]).reshape(-1, 1)
     )
     assert np.all(
-        intersect_lifetimes(observed_lifetimes.right_censored, truncations.left).index
+        intersect_lifetimes(observed_lifetimes.right_censored, truncations.left)[
+            0
+        ].index
         == np.array([3])
     )

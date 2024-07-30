@@ -9,30 +9,34 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 import numpy as np
 from numpy.typing import ArrayLike
 
+from relife2.data.dataclass import Lifetimes, ObservedLifetimes, Truncations
 from relife2.utils.types import FloatArray
-from .dataclass import Lifetimes, ObservedLifetimes, Truncations
 
 
-def intersect_lifetimes(*lifetimes: Lifetimes) -> Lifetimes:
+def intersect_lifetimes(*lifetimes: Lifetimes) -> tuple[Lifetimes]:
     """
     Args:
         *lifetimes: LifetimeData object.s containing values of shape (n1, p1), (n2, p2), etc.
 
     Returns:
-        Lifetimes: One LifetimeData object where values are concatanation of common units values. The result
-        is of shape (N, p1 + p2 + ...).
 
     Examples:
-        >>> lifetime_data_1 = Lifetimes(values = np.array([[1], [2]]), index = np.array([3, 10]))
-        >>> lifetime_data_2 = Lifetimes(values = np.array([[3], [5]]), index = np.array([10, 2]))
-        >>> intersect_lifetimes(lifetime_data_1, lifetime_data_2)
-        LifetimeData(values=array([[2, 3]]), unit_ids=array([10]))
+        >>> lifetimes_1 = Lifetimes(values = np.array([[1], [2]]), index = np.array([3, 10]))
+        >>> lifetimes_2 = Lifetimes(values = np.array([[3], [5]]), index = np.array([10, 2]))
+        >>> intersect_lifetimes(lifetimes_1, lifetimes_2)
+        (Lifetimes(values=array([[2]]), index=array([10])), Lifetimes(values=array([[3]]), index=array([10])))
     """
 
-    inter_ids = np.array(list(set.intersection(*[set(m.index) for m in lifetimes])))
-    return Lifetimes(
-        np.hstack([m.values[np.isin(m.index, inter_ids)] for m in lifetimes]),
-        inter_ids,
+    inter_ids = np.array(
+        list(set.intersection(*[set(_lifetimes.index) for _lifetimes in lifetimes]))
+    )
+    return tuple(
+        [
+            Lifetimes(
+                _lifetimes.values[np.isin(_lifetimes.index, inter_ids)], inter_ids
+            )
+            for _lifetimes in lifetimes
+        ]
     )
 
 
@@ -58,37 +62,35 @@ def lifetimes_compatibility(
             if len(left_truncated_lifetimes) != 0:
                 if np.any(
                     np.min(
-                        left_truncated_lifetimes.values[
-                            :, : lifetimes.values.shape[-1]
-                        ],
+                        np.where(
+                            left_truncated_lifetimes[0].values == 0,
+                            left_truncated_lifetimes[1].values,
+                            left_truncated_lifetimes[0].values,
+                        ),
                         axis=1,
                         keepdims=True,
                     )
-                    < left_truncated_lifetimes.values[:, lifetimes.values.shape[-1] :]
+                    < left_truncated_lifetimes[1].values
                 ):
-                    raise ValueError(
-                        """"
-                        Some lifetimes are under left truncation bounds
-                        """
-                    )
+                    raise ValueError("Some lifetimes are under left truncation bounds")
         if len(truncations.right) != 0 and len(lifetimes) != 0:
-            right_truncated_lifetimes = intersect_lifetimes(lifetimes, truncations.right)
+            right_truncated_lifetimes = intersect_lifetimes(
+                lifetimes, truncations.right
+            )
             if len(right_truncated_lifetimes) != 0:
                 if np.any(
                     np.max(
-                        right_truncated_lifetimes.values[
-                            :, : lifetimes.values.shape[-1]
-                        ],
+                        np.where(
+                            right_truncated_lifetimes[0].values == np.inf,
+                            right_truncated_lifetimes[1].values,
+                            right_truncated_lifetimes[0].values,
+                        ),
                         axis=1,
                         keepdims=True,
                     )
-                    > right_truncated_lifetimes.values[:, lifetimes.values.shape[-1] :]
+                    > right_truncated_lifetimes[1].values
                 ):
-                    raise ValueError(
-                        """
-                        Some lifetimes are above right truncation bounds
-                        """
-                    )
+                    raise ValueError("Some lifetimes are above right truncation bounds")
 
 
 def array_factory(obj: ArrayLike) -> FloatArray:
