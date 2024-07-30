@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
+from functools import wraps
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -76,6 +77,15 @@ def are_params_set(functions: ParametricFunctions):
         raise ValueError(
             f"Params {params_to_set} unset. Please set them first or fit the model."
         )
+
+
+def squeeze(method):
+    @wraps(method)
+    def _impl(self, *method_args, **method_kwargs):
+        method_output = method(self, *method_args, **method_kwargs)
+        return np.squeeze(method_output)[()]
+
+    return _impl
 
 
 class ParametricModel:
@@ -210,6 +220,7 @@ class Distribution(ParametricLifetimeModel):
 
     functions: DistributionFunctions
 
+    @squeeze
     def sf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
         Args:
@@ -218,8 +229,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.sf(array_factory(time)))[()]
+        return self.functions.sf(array_factory(time))
 
+    @squeeze
     def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -229,8 +241,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.isf(array_factory(probability)))[()]
+        return self.functions.isf(array_factory(probability))
 
+    @squeeze
     def hf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -240,8 +253,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.hf(array_factory(time)))[()]
+        return self.functions.hf(array_factory(time))
 
+    @squeeze
     def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -251,8 +265,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.chf(array_factory(time)))[()]
+        return self.functions.chf(array_factory(time))
 
+    @squeeze
     def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -262,8 +277,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.cdf(array_factory(time)))[()]
+        return self.functions.cdf(array_factory(time))
 
+    @squeeze
     def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -273,8 +289,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
+        return self.functions.pdf(array_factory(probability))
 
+    @squeeze
     def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -284,8 +301,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.ppf(array_factory(time)))[()]
+        return self.functions.ppf(array_factory(time))
 
+    @squeeze
     def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -296,8 +314,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.mrl(array_factory(time)))[()]
+        return self.functions.mrl(array_factory(time))
 
+    @squeeze
     def ichf(self, cumulative_hazard_rate: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -307,10 +326,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
-            ()
-        ]
+        return self.functions.ichf(array_factory(cumulative_hazard_rate))
 
+    @squeeze
     def rvs(
         self, size: Optional[int] = 1, seed: Optional[int] = None
     ) -> Union[float, FloatArray]:
@@ -323,8 +341,9 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
+        return self.functions.rvs(size=size, seed=seed)
 
+    @squeeze
     def mean(self) -> Union[float, FloatArray]:
         """
 
@@ -333,6 +352,7 @@ class Distribution(ParametricLifetimeModel):
         """
         return self.functions.mean()
 
+    @squeeze
     def var(self) -> Union[float, FloatArray]:
         """
 
@@ -341,6 +361,7 @@ class Distribution(ParametricLifetimeModel):
         """
         return self.functions.var()
 
+    @squeeze
     def median(self) -> Union[float, FloatArray]:
         """
 
@@ -392,6 +413,7 @@ class Regression(ParametricLifetimeModel):
         else:
             self.functions.covar_effect.params = values
 
+    @squeeze
     def sf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         Args:
@@ -403,8 +425,9 @@ class Regression(ParametricLifetimeModel):
         """
         self.functions.covar = array_factory(covar)
         # check_params(self.functions)
-        return np.squeeze(self.functions.sf(array_factory(time)))[()]
+        return self.functions.sf(array_factory(time))
 
+    @squeeze
     def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -416,8 +439,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.isf(array_factory(probability)))[()]
+        return self.functions.isf(array_factory(probability))
 
+    @squeeze
     def hf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -429,8 +453,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.hf(array_factory(time)))[()]
+        return self.functions.hf(array_factory(time))
 
+    @squeeze
     def chf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -442,8 +467,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.chf(array_factory(time)))[()]
+        return self.functions.chf(array_factory(time))
 
+    @squeeze
     def cdf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -454,8 +480,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.cdf(array_factory(time)))[()]
+        return self.functions.cdf(array_factory(time))
 
+    @squeeze
     def pdf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -467,8 +494,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
+        return self.functions.pdf(array_factory(probability))
 
+    @squeeze
     def ppf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -482,6 +510,7 @@ class Regression(ParametricLifetimeModel):
         self.functions.covar = array_factory(covar)
         return np.squeeze(self.functions.ppf(array_factory(time)))[()]
 
+    @squeeze
     def mrl(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -493,8 +522,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.mrl(array_factory(time)))[()]
+        return self.functions.mrl(array_factory(time))
 
+    @squeeze
     def ichf(
         self, cumulative_hazard_rate: ArrayLike, covar: ArrayLike
     ) -> Union[float, FloatArray]:
@@ -508,10 +538,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
-            ()
-        ]
+        return self.functions.ichf(array_factory(cumulative_hazard_rate))
 
+    @squeeze
     def rvs(
         self, covar: ArrayLike, size: Optional[int] = 1, seed: Optional[int] = None
     ) -> Union[float, FloatArray]:
@@ -526,8 +555,9 @@ class Regression(ParametricLifetimeModel):
 
         """
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
+        return self.functions.rvs(size=size, seed=seed)
 
+    @squeeze
     def mean(self, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -538,6 +568,7 @@ class Regression(ParametricLifetimeModel):
         self.functions.covar = array_factory(covar)
         return self.functions.mean()
 
+    @squeeze
     def var(self, covar: ArrayLike) -> Union[float, FloatArray]:
         """
 
@@ -548,6 +579,7 @@ class Regression(ParametricLifetimeModel):
         self.functions.covar = array_factory(covar)
         return self.functions.var()
 
+    @squeeze
     def median(self, covar: ArrayLike) -> Union[float, FloatArray]:
         """
         Returns:
@@ -713,6 +745,7 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         super().__init__(GPDistributionFunctions(shape_functions, rate))
 
+    @squeeze
     def sf(
         self, time: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -729,8 +762,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.sf(array_factory(time)))[()]
+        return self.functions.sf(array_factory(time))
 
+    @squeeze
     def isf(
         self, probability: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -747,8 +781,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.isf(array_factory(probability)))[()]
+        return self.functions.isf(array_factory(probability))
 
+    @squeeze
     def hf(
         self, time: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -765,8 +800,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.hf(array_factory(time)))[()]
+        return self.functions.hf(array_factory(time))
 
+    @squeeze
     def chf(
         self, time: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -783,8 +819,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.chf(array_factory(time)))[()]
+        return self.functions.chf(array_factory(time))
 
+    @squeeze
     def cdf(
         self, time: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -801,8 +838,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.cdf(array_factory(time)))[()]
+        return self.functions.cdf(array_factory(time))
 
+    @squeeze
     def pdf(
         self, probability: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -819,8 +857,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.pdf(array_factory(probability)))[()]
+        return self.functions.pdf(array_factory(probability))
 
+    @squeeze
     def ppf(
         self, time: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -837,8 +876,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.ppf(array_factory(time)))[()]
+        return self.functions.ppf(array_factory(time))
 
+    @squeeze
     def mrl(
         self, time: ArrayLike, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -855,8 +895,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.mrl(array_factory(time)))[()]
+        return self.functions.mrl(array_factory(time))
 
+    @squeeze
     def ichf(
         self,
         cumulative_hazard_rate: ArrayLike,
@@ -876,10 +917,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.ichf(array_factory(cumulative_hazard_rate)))[
-            ()
-        ]
+        return self.functions.ichf(array_factory(cumulative_hazard_rate))
 
+    @squeeze
     def rvs(
         self,
         initial_resistance: float,
@@ -901,8 +941,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return np.squeeze(self.functions.rvs(size=size, seed=seed))[()]
+        return self.functions.rvs(size=size, seed=seed)
 
+    @squeeze
     def mean(
         self, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:
@@ -919,6 +960,7 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         self.functions.load_threshold = float(load_threshold)
         return self.functions.mean()
 
+    @squeeze
     def var(
         self, initial_resistance: float, load_threshold: float
     ) -> Union[float, FloatArray]:

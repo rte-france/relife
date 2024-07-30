@@ -123,11 +123,11 @@ class ExponentialFunctions(DistributionFunctions):
     def chf(self, time: FloatArray) -> FloatArray:
         return self.rate * time
 
-    def mean(self) -> float:
-        return 1 / self.rate
+    def mean(self) -> FloatArray:
+        return np.array(1 / self.rate)
 
-    def var(self) -> float:
-        return 1 / self.rate**2
+    def var(self) -> FloatArray:
+        return np.array(1 / self.rate**2)
 
     def mrl(self, time: FloatArray) -> FloatArray:
         return 1 / self.rate * np.ones_like(time)
@@ -156,11 +156,11 @@ class WeibullFunctions(DistributionFunctions):
     def chf(self, time: FloatArray) -> FloatArray:
         return (self.rate * time) ** self.shape
 
-    def mean(self) -> float:
-        return gamma(1 + 1 / self.shape) / self.rate
+    def mean(self) -> FloatArray:
+        return np.array(gamma(1 + 1 / self.shape) / self.rate)
 
-    def var(self) -> float:
-        return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
+    def var(self) -> FloatArray:
+        return np.array(gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2)
 
     def mrl(self, time: FloatArray) -> FloatArray:
         return (
@@ -223,11 +223,11 @@ class GompertzFunctions(DistributionFunctions):
     def chf(self, time: FloatArray) -> FloatArray:
         return self.shape * np.expm1(self.rate * time)
 
-    def mean(self) -> float:
-        return np.exp(self.shape) * exp1(self.shape) / self.rate
+    def mean(self) -> FloatArray:
+        return np.array(np.exp(self.shape) * exp1(self.shape) / self.rate)
 
-    def var(self) -> float:
-        return polygamma(1, 1).item() / self.rate**2
+    def var(self) -> FloatArray:
+        return np.array(polygamma(1, 1).item() / self.rate**2)
 
     def mrl(self, time: FloatArray) -> FloatArray:
         z = self.shape * np.exp(self.rate * time)
@@ -279,11 +279,11 @@ class GammaFunctions(DistributionFunctions):
         x = self.rate * time
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
-    def mean(self) -> float:
-        return self.shape / self.rate
+    def mean(self) -> FloatArray:
+        return np.array(self.shape / self.rate)
 
-    def var(self) -> float:
-        return self.shape / (self.rate**2)
+    def var(self) -> FloatArray:
+        return np.array(self.shape / (self.rate**2))
 
     def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
@@ -332,19 +332,21 @@ class LogLogisticFunctions(DistributionFunctions):
 
     def chf(self, time: FloatArray) -> FloatArray:
         x = self.rate * time
-        return np.log(1 + x**self.shape)
+        return np.array(np.log(1 + x**self.shape))
 
-    def mean(self) -> float:
+    def mean(self) -> FloatArray:
         b = np.pi / self.shape
         if self.shape <= 1:
             raise ValueError(f"Expectancy only defined for c > 1: c = {self.shape}")
-        return b / (self.rate * np.sin(b))
+        return np.array(b / (self.rate * np.sin(b)))
 
-    def var(self) -> float:
+    def var(self) -> FloatArray:
         b = np.pi / self.shape
         if self.shape <= 2:
             raise ValueError(f"Variance only defined for c > 2: c = {self.shape}")
-        return (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
+        return np.array(
+            (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
+        )
 
     def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate

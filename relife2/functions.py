@@ -481,13 +481,13 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
             integrand, np.array(0.0), upper_bound, ndim=2
         ) + quad_laguerre(integrand, upper_bound, ndim=2)
 
-    def mean(self) -> Union[float | FloatArray]:
+    def mean(self) -> FloatArray:
         """
         BLABLABLABLA
         Returns:
             float: BLABLABLABLA
         """
-        return np.squeeze(self.moment(1))[()]
+        return self.moment(1)
 
     def var(self) -> Union[float | FloatArray]:
         """
@@ -496,7 +496,7 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         Returns:
             float: BLABLABLABLA
         """
-        return np.squeeze(self.moment(2) - self.moment(1) ** 2)[()]
+        return self.moment(2) - self.moment(1) ** 2
 
     def isf(
         self,
@@ -554,14 +554,14 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         """
         return self.isf(1 - probability)
 
-    def median(self) -> Union[float | FloatArray]:
+    def median(self) -> FloatArray:
         """
         BLABLABLABLA
 
         Returns:
             float: BLABLABLABLA
         """
-        return np.squeeze(self.ppf(np.array(0.5)))[()]
+        return self.ppf(np.array(0.5))
 
     # def copy(self) -> Self:
     #     """
