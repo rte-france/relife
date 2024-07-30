@@ -13,7 +13,7 @@ import numpy as np
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.functions import ParametricLifetimeFunctions
+from relife2.stats.functions import ParametricLifetimeFunctions
 from relife2.utils.integrations import shifted_laguerre
 from relife2.utils.types import FloatArray
 

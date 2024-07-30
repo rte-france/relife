@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
-
-from datasets import load_power_transformer
-from relife2 import (
+from relife2.lifetime_models import (
     Exponential,
     Weibull,
     Gompertz,
     Gamma,
     LogLogistic,
 )
+
+from datasets import load_power_transformer
 
 
 @pytest.fixture(scope="module")

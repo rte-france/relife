@@ -14,7 +14,7 @@ import numpy as np
 from scipy.optimize import Bounds, bisect
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 
-from relife2.functions import ParametricFunctions, ParametricLifetimeFunctions
+from relife2.stats.functions import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.utils.types import FloatArray
 
 

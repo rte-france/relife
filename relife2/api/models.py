@@ -7,42 +7,23 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from functools import wraps
 from typing import Any, Optional, Union
 
-import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
+from relife2.api.utils import are_params_set, squeeze
 from relife2.data import (
-    Deteriorations,
     ObservedLifetimes,
     Truncations,
     array_factory,
-    deteriorations_factory,
     lifetime_factory_template,
 )
-from relife2.functions import ParametricFunctions
-from relife2.likelihoods import LikelihoodFromDeteriorations, LikelihoodFromLifetimes
-from relife2.stats.distributions import (
-    DistributionFunctions,
-    ExponentialFunctions,
-    GammaFunctions,
-    GompertzFunctions,
-    LogLogisticFunctions,
-    WeibullFunctions,
-)
-from relife2.stats.gammaprocess import (
-    GPDistributionFunctions,
-    GPFunctions,
-    PowerShapeFunctions,
-)
-from relife2.stats.regressions import (
-    AFTFunctions,
-    CovarEffect,
-    ProportionalHazardFunctions,
-    RegressionFunctions,
-)
+from relife2.stats.distributions import DistributionFunctions
+from relife2.stats.functions import ParametricFunctions
+from relife2.stats.gammaprocess import GPDistributionFunctions
+from relife2.stats.likelihoods import LikelihoodFromLifetimes
+from relife2.stats.regressions import CovarEffect, RegressionFunctions
 from relife2.utils.types import FloatArray
 
 _LIFETIME_FUNCTIONS_NAMES = [
@@ -61,31 +42,6 @@ _LIFETIME_FUNCTIONS_NAMES = [
     "var",
     "median",
 ]
-
-
-def are_params_set(functions: ParametricFunctions):
-    """
-    Args:
-        functions ():
-
-    Returns:
-    """
-    if None in functions.all_params.values():
-        params_to_set = " ".join(
-            [name for name, value in functions.all_params.items() if value is None]
-        )
-        raise ValueError(
-            f"Params {params_to_set} unset. Please set them first or fit the model."
-        )
-
-
-def squeeze(method):
-    @wraps(method)
-    def _impl(self, *method_args, **method_kwargs):
-        method_output = method(self, *method_args, **method_kwargs)
-        return np.squeeze(method_output)[()]
-
-    return _impl
 
 
 class ParametricModel:
@@ -229,7 +185,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.sf(array_factory(time))
+        time = array_factory(time)
+        return self.functions.sf(time)
 
     @squeeze
     def isf(self, probability: ArrayLike) -> Union[float, FloatArray]:
@@ -241,6 +198,7 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
+        probability = array_factory(probability)
         return self.functions.isf(array_factory(probability))
 
     @squeeze
@@ -253,7 +211,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.hf(array_factory(time))
+        time = array_factory(time)
+        return self.functions.hf(time)
 
     @squeeze
     def chf(self, time: ArrayLike) -> Union[float, FloatArray]:
@@ -265,7 +224,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.chf(array_factory(time))
+        time = array_factory(time)
+        return self.functions.chf(time)
 
     @squeeze
     def cdf(self, time: ArrayLike) -> Union[float, FloatArray]:
@@ -277,7 +237,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.cdf(array_factory(time))
+        time = array_factory(time)
+        return self.functions.cdf(time)
 
     @squeeze
     def pdf(self, probability: ArrayLike) -> Union[float, FloatArray]:
@@ -289,7 +250,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.pdf(array_factory(probability))
+        probability = array_factory(probability)
+        return self.functions.pdf(probability)
 
     @squeeze
     def ppf(self, time: ArrayLike) -> Union[float, FloatArray]:
@@ -301,7 +263,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.ppf(array_factory(time))
+        time = array_factory(time)
+        return self.functions.ppf(time)
 
     @squeeze
     def mrl(self, time: ArrayLike) -> Union[float, FloatArray]:
@@ -314,7 +277,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.mrl(array_factory(time))
+        time = array_factory(time)
+        return self.functions.mrl(time)
 
     @squeeze
     def ichf(self, cumulative_hazard_rate: ArrayLike) -> Union[float, FloatArray]:
@@ -326,7 +290,8 @@ class Distribution(ParametricLifetimeModel):
         Returns:
 
         """
-        return self.functions.ichf(array_factory(cumulative_hazard_rate))
+        cumulative_hazard_rate = array_factory(cumulative_hazard_rate)
+        return self.functions.ichf(cumulative_hazard_rate)
 
     @squeeze
     def rvs(
@@ -423,9 +388,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        time = array_factory(time)
         self.functions.covar = array_factory(covar)
-        # check_params(self.functions)
-        return self.functions.sf(array_factory(time))
+        return self.functions.sf(time)
 
     @squeeze
     def isf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -438,8 +403,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        probability = array_factory(probability)
         self.functions.covar = array_factory(covar)
-        return self.functions.isf(array_factory(probability))
+        return self.functions.isf(probability)
 
     @squeeze
     def hf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -452,8 +418,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        time = array_factory(time)
         self.functions.covar = array_factory(covar)
-        return self.functions.hf(array_factory(time))
+        return self.functions.hf(time)
 
     @squeeze
     def chf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -466,8 +433,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        time = array_factory(time)
         self.functions.covar = array_factory(covar)
-        return self.functions.chf(array_factory(time))
+        return self.functions.chf(time)
 
     @squeeze
     def cdf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -479,8 +447,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        time = array_factory(time)
         self.functions.covar = array_factory(covar)
-        return self.functions.cdf(array_factory(time))
+        return self.functions.cdf(time)
 
     @squeeze
     def pdf(self, probability: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -493,8 +462,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        probability = array_factory(probability)
         self.functions.covar = array_factory(covar)
-        return self.functions.pdf(array_factory(probability))
+        return self.functions.pdf(probability)
 
     @squeeze
     def ppf(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -507,8 +477,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        time = array_factory(time)
         self.functions.covar = array_factory(covar)
-        return np.squeeze(self.functions.ppf(array_factory(time)))[()]
+        return self.functions.ppf(time)
 
     @squeeze
     def mrl(self, time: ArrayLike, covar: ArrayLike) -> Union[float, FloatArray]:
@@ -521,8 +492,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        time = array_factory(time)
         self.functions.covar = array_factory(covar)
-        return self.functions.mrl(array_factory(time))
+        return self.functions.mrl(time)
 
     @squeeze
     def ichf(
@@ -537,8 +509,9 @@ class Regression(ParametricLifetimeModel):
         Returns:
 
         """
+        cumulative_hazard_rate = array_factory(cumulative_hazard_rate)
         self.functions.covar = array_factory(covar)
-        return self.functions.ichf(array_factory(cumulative_hazard_rate))
+        return self.functions.ichf(cumulative_hazard_rate)
 
     @squeeze
     def rvs(
@@ -617,133 +590,12 @@ class Regression(ParametricLifetimeModel):
         )
 
 
-class Exponential(Distribution):
-    """BLABLABLABLA"""
-
-    def __init__(self, rate: Optional[float] = None):
-        super().__init__(ExponentialFunctions(rate=rate))
-
-
-class Weibull(Distribution):
-    """BLABLABLABLA"""
-
-    functions: DistributionFunctions
-
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(WeibullFunctions(shape=shape, rate=rate))
-
-
-class Gompertz(Distribution):
-    """BLABLABLABLA"""
-
-    functions: DistributionFunctions
-
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(GompertzFunctions(shape=shape, rate=rate))
-
-
-class Gamma(Distribution):
-    """BLABLABLABLA"""
-
-    functions: DistributionFunctions
-
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(GammaFunctions(shape=shape, rate=rate))
-
-
-class LogLogistic(Distribution):
-    """BLABLABLABLA"""
-
-    functions: DistributionFunctions
-
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(LogLogisticFunctions(shape=shape, rate=rate))
-
-
-def control_covar_args(
-    coefficients: Optional[
-        tuple[float | None] | list[float | None] | dict[str, float | None]
-    ] = None,
-) -> dict[str, float | None]:
-    """
-
-    Args:
-        coefficients ():
-
-    Returns:
-
-    """
-    if coefficients is None:
-        return {"coef_0": None}
-    if isinstance(coefficients, (list, tuple)):
-        return {f"coef_{i}": v for i, v in enumerate(coefficients)}
-    if isinstance(coefficients, dict):
-        return coefficients
-    raise ValueError("coefficients must be tuple, list or dict")
-
-
-class ProportionalHazard(Regression):
-    """BLABLABLABLA"""
-
-    def __init__(
-        self,
-        baseline: Distribution,
-        coefficients: Optional[
-            tuple[float | None] | list[float | None] | dict[str, float | None]
-        ] = None,
-    ):
-        coefficients = control_covar_args(coefficients)
-        super().__init__(
-            ProportionalHazardFunctions(
-                CovarEffect(**coefficients),
-                baseline.functions.copy(),
-            )
-        )
-
-
-class AFT(Regression):
-    """BLABLABLABLA"""
-
-    def __init__(
-        self,
-        baseline: Distribution,
-        coefficients: Optional[
-            tuple[float | None] | list[float | None] | dict[str, float | None]
-        ] = None,
-    ):
-        coefficients = control_covar_args(coefficients)
-        super().__init__(
-            AFTFunctions(
-                CovarEffect(**coefficients),
-                baseline.functions.copy(),
-            )
-        )
-
-
 class GammaProcessDistribution(ParametricLifetimeModel):
     """
     BLABLABLABLA
     """
 
-    shape_names: tuple = ("exponential", "power")
-
-    def __init__(
-        self,
-        shape: str,
-        rate: Optional[float] = None,
-        **shape_params: Union[float, None],
-    ):
-
-        # if shape == "exponential":
-        #     shape_functions = ExponentialShapeFunctions(**shape_params)
-        if shape == "power":
-            shape_functions = PowerShapeFunctions(**shape_params)
-        else:
-            raise ValueError(
-                f"{shape} is not valid name for shape, only {self.shape_names} are allowed"
-            )
-
-        super().__init__(GPDistributionFunctions(shape_functions, rate))
+    functions: GPDistributionFunctions
 
     @squeeze
     def sf(
@@ -759,10 +611,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        time = array_factory(time)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.sf(array_factory(time))
+        return self.functions.sf(time)
 
     @squeeze
     def isf(
@@ -778,10 +630,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        probability = array_factory(probability)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.isf(array_factory(probability))
+        return self.functions.isf(probability)
 
     @squeeze
     def hf(
@@ -797,10 +649,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        time = array_factory(time)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.hf(array_factory(time))
+        return self.functions.hf(time)
 
     @squeeze
     def chf(
@@ -816,10 +668,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        time = array_factory(time)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.chf(array_factory(time))
+        return self.functions.chf(time)
 
     @squeeze
     def cdf(
@@ -835,10 +687,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        time = array_factory(time)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.cdf(array_factory(time))
+        return self.functions.cdf(time)
 
     @squeeze
     def pdf(
@@ -854,10 +706,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        probability = array_factory(probability)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.pdf(array_factory(probability))
+        return self.functions.pdf(probability)
 
     @squeeze
     def ppf(
@@ -873,10 +725,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        time = array_factory(time)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.ppf(array_factory(time))
+        return self.functions.ppf(time)
 
     @squeeze
     def mrl(
@@ -892,10 +744,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        time = array_factory(time)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.mrl(array_factory(time))
+        return self.functions.mrl(time)
 
     @squeeze
     def ichf(
@@ -914,10 +766,10 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         Returns:
 
         """
-
+        cumulative_hazard_rate = array_factory(cumulative_hazard_rate)
         self.functions.initial_resistance = float(initial_resistance)
         self.functions.load_threshold = float(load_threshold)
-        return self.functions.ichf(array_factory(cumulative_hazard_rate))
+        return self.functions.ichf(cumulative_hazard_rate)
 
     @squeeze
     def rvs(
@@ -1008,120 +860,3 @@ class GammaProcessDistribution(ParametricLifetimeModel):
             observed_lifetimes,
             truncations,
         )
-
-
-# créer un type StochasticProcess (voir reponse Thomas)
-class GammaProcess(ParametricModel):
-    """
-    BLABLABLABLA
-    """
-
-    shape_names: tuple = ("exponential", "power")
-
-    def __init__(
-        self,
-        shape: str,
-        rate: Optional[float] = None,
-        **shape_params: Union[float, None],
-    ):
-
-        # if shape == "exponential":
-        #     shape_functions = ExponentialShapeFunctions(**shape_params)
-        if shape == "power":
-            shape_functions = PowerShapeFunctions(**shape_params)
-        else:
-            raise ValueError(
-                f"{shape} is not valid name for shape, only {self.shape_names} are allowed"
-            )
-
-        super().__init__(GPFunctions(shape_functions, rate))
-
-    def sample(
-        self,
-        time: ArrayLike,
-        unit_ids=ArrayLike,
-        nb_sample=1,
-        seed=None,
-        add_death_time=True,
-    ):
-        """
-        Args:
-            time ():
-            unit_ids ():
-            nb_sample ():
-            seed ():
-            add_death_time ():
-
-        Returns:
-
-        """
-        return self.functions.sample(time, unit_ids, nb_sample, seed, add_death_time)
-
-    def _init_likelihood(
-        self,
-        deterioration_data: Deteriorations,
-        first_increment_uncertainty,
-        measurement_tol,
-        **kwargs: Any,
-    ) -> LikelihoodFromDeteriorations:
-        if len(kwargs) != 0:
-            extra_args_names = tuple(kwargs.keys())
-            raise ValueError(
-                f"""
-                Distribution likelihood does not expect other data than lifetimes
-                Remove {extra_args_names} from kwargs.
-                """
-            )
-        return LikelihoodFromDeteriorations(
-            self.functions.copy(),
-            deterioration_data,
-            first_increment_uncertainty=first_increment_uncertainty,
-            measurement_tol=measurement_tol,
-        )
-
-    def fit(
-        self,
-        deterioration_measurements: ArrayLike,
-        inspection_times: ArrayLike,
-        unit_ids: ArrayLike,
-        first_increment_uncertainty: Optional[tuple] = None,
-        measurement_tol: np.floating[Any] = np.finfo(float).resolution,
-        inplace: bool = True,
-        **kwargs: Any,
-    ) -> FloatArray:
-        """
-        BLABLABLABLA
-        """
-
-        deterioration_data = deteriorations_factory(
-            array_factory(deterioration_measurements),
-            array_factory(inspection_times),
-            array_factory(unit_ids),
-            self.functions.process_lifetime_distribution.initial_resistance,
-        )
-
-        param0 = kwargs.pop("x0", self.functions.init_params())
-
-        minimize_kwargs = {
-            "method": kwargs.pop("method", "Nelder-Mead"),
-            "bounds": kwargs.pop("bounds", self.functions.params_bounds),
-            "constraints": kwargs.pop("constraints", ()),
-            "tol": kwargs.pop("tol", None),
-            "callback": kwargs.pop("callback", None),
-            "options": kwargs.pop("options", None),
-        }
-
-        likelihood = self._init_likelihood(
-            deterioration_data, first_increment_uncertainty, measurement_tol, **kwargs
-        )
-
-        optimizer = minimize(
-            likelihood.negative_log,
-            param0,
-            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-            **minimize_kwargs,
-        )
-
-        if inplace:
-            self.params = optimizer.x
-        return optimizer.x

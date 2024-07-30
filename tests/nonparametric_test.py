@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 
 from datasets import load_power_transformer, load_input_turnbull
-from relife2 import ECDF, KaplanMeier, NelsonAalen, Turnbull, Weibull  # TODO test it
+from relife2 import ECDF, KaplanMeier, NelsonAalen, Turnbull  # TODO test it
+from relife2.lifetime_models import Weibull
 
 
 @pytest.fixture

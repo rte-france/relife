@@ -12,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 
-from relife2.likelihoods import Likelihood
+from relife2.stats.likelihoods import Likelihood
 
 FloatArray = NDArray[np.float64]
 

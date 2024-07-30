@@ -12,8 +12,8 @@ from typing import Any
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife2.functions import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.stats.distributions import DistributionFunctions
+from relife2.stats.functions import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.utils.types import FloatArray
 
 

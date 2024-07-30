@@ -16,7 +16,7 @@ from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
 from relife2.data import Deteriorations, Lifetimes, ObservedLifetimes, Truncations
-from relife2.functions import ParametricFunctions, ParametricLifetimeFunctions
+from relife2.stats.functions import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.stats.gammaprocess import GPFunctions
 from relife2.utils.types import FloatArray
 
