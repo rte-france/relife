@@ -28,16 +28,15 @@ def weibull_model(request):
 
 def test_fit_ecdf_kaplan_meier(data):
     time, event, entry = data
-    rc_indic = 1 - event
     ecdf = ECDF(time=time)
     km = KaplanMeier(
         time=time
     )  ## ATTENTION faut tester sans entry ni rc_indic pr être cohérent avec ECDF,
 
     _km = KaplanMeier(
-        time=time, entry=entry, rc_indicators=rc_indic
+        time=time, event=event, entry=entry
     )  # mais tester l'estimate avec rc_indic qd mm pour verifier que tt fonctionne shape wise
-    _na = NelsonAalen(time=time, entry=entry, rc_indicators=rc_indic)
+    _na = NelsonAalen(time=time, entry=entry)
 
     assert ecdf.sf.values == pytest.approx(km.sf.values, rel=1e-4)
 

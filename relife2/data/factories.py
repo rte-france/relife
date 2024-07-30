@@ -25,10 +25,9 @@ class LifetimeDataFactory(ABC):
     def __init__(
         self,
         time: FloatArray,
+        event: Optional[FloatArray] = None,
         entry: Optional[FloatArray] = None,
         departure: Optional[FloatArray] = None,
-        lc_indicators: Optional[BoolArray] = None,
-        rc_indicators: Optional[BoolArray] = None,
     ):
 
         if entry is None:
@@ -37,30 +36,18 @@ class LifetimeDataFactory(ABC):
         if departure is None:
             departure = np.ones((len(time), 1)) * np.inf
 
-        if lc_indicators is None:
-            lc_indicators = np.zeros((len(time), 1)).astype(np.bool_)
-
-        if rc_indicators is None:
-            rc_indicators = np.zeros((len(time), 1)).astype(np.bool_)
+        if event is None:
+            event = np.ones((len(time), 1)).astype(np.bool_)
 
         self.time = time
+        self.event: BoolArray = event
         self.entry: FloatArray = entry
         self.departure: FloatArray = departure
-        self.lc_indicators: BoolArray = lc_indicators
-        self.rc_indicators: BoolArray = rc_indicators
-
-        if np.any(np.logical_and(self.lc_indicators, self.rc_indicators)) is True:
-            raise ValueError(
-                """
-                lc_indicators and rc_indicators can't be true at the same index
-                """
-            )
 
         for values in (
+            self.event,
             self.entry,
             self.departure,
-            self.lc_indicators,
-            self.rc_indicators,
         ):
             if values.shape != (len(self.time), 1):
                 raise ValueError("invalid argument shape")
@@ -137,36 +124,24 @@ class LifetimeDataFactoryFrom1D(LifetimeDataFactory):
     """
 
     def get_complete(self) -> Lifetimes:
-        index = np.where(
-            np.logical_and(np.invert(self.lc_indicators), np.invert(self.rc_indicators))
-        )[0]
+        index = np.where(self.event)[0]
         values = self.time[index]
         return Lifetimes(values, index)
 
     def get_left_censorships(self) -> Lifetimes:
-        index = np.where(self.lc_indicators)[0]
-        values = self.time[index]
-        return Lifetimes(values, index)
+        return Lifetimes(np.empty((0, 1)), np.empty((0,), dtype=np.int64))
 
     def get_right_censorships(self) -> Lifetimes:
-        index = np.where(self.rc_indicators)[0]
+        index = np.where(~self.event)[0]
         values = self.time[index]
         return Lifetimes(values, index)
 
     def get_interval_censorships(self) -> Lifetimes:
-        lc_index = np.where(self.lc_indicators)[0]
-        lc_values = np.c_[
-            np.zeros(len(lc_index)), self.time[lc_index]
-        ]  # add a column of zero
-
-        rc_index = np.where(self.rc_indicators)[0]
+        rc_index = np.where(~self.event)[0]
         rc_values = np.c_[
             self.time[rc_index], np.ones(len(rc_index)) * np.inf
         ]  # add a column of inf
-        lifetimes = Lifetimes(
-            np.vstack((lc_values, rc_values)), np.concatenate((lc_index, rc_index))
-        )
-        return lifetimes
+        return Lifetimes(rc_values, rc_index)
 
     def get_left_truncations(self) -> Lifetimes:
         index = np.where(self.entry > 0)[0]
@@ -230,18 +205,16 @@ class LifetimeDataFactoryFrom2D(LifetimeDataFactory):
 
 def lifetime_factory_template(
     time: ArrayLike,
+    event: Optional[ArrayLike] = None,
     entry: Optional[ArrayLike] = None,
     departure: Optional[ArrayLike] = None,
-    lc_indicators: Optional[ArrayLike] = None,
-    rc_indicators: Optional[ArrayLike] = None,
 ) -> Tuple[ObservedLifetimes, Truncations]:
     """
     Args:
         time ():
+        event ():
         entry ():
         departure ():
-        lc_indicators ():
-        rc_indicators ():
 
     Returns:
 
@@ -249,34 +222,29 @@ def lifetime_factory_template(
 
     time = array_factory(time)
 
+    if event is not None:
+        event = array_factory(event).astype(np.bool_)
+
     if entry is not None:
         entry = array_factory(entry)
 
     if departure is not None:
         departure = array_factory(departure)
 
-    if lc_indicators is not None:
-        lc_indicators = array_factory(lc_indicators).astype(np.bool_)
-
-    if rc_indicators is not None:
-        rc_indicators = array_factory(rc_indicators).astype(np.bool_)
-
     factory: LifetimeDataFactory
     if time.shape[-1] == 1:
         factory = LifetimeDataFactoryFrom1D(
             time,
+            event,
             entry,
             departure,
-            lc_indicators,
-            rc_indicators,
         )
     else:
         factory = LifetimeDataFactoryFrom2D(
             time,
+            event,
             entry,
             departure,
-            lc_indicators,
-            rc_indicators,
         )
     return factory()
 

@@ -54,8 +54,8 @@ def test_fit(model, data):
     expected_params = model.params.copy()
     model.fit(
         data[0, :],
+        event=data[1, :] == 1,
         entry=data[2, :],
-        rc_indicators=data[1, :] == 0,
     )
     assert model.params == pytest.approx(expected_params, rel=1e-3)
 

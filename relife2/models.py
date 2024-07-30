@@ -145,10 +145,9 @@ class ParametricLifetimeModel(ParametricModel, ABC):
     def fit(
         self,
         time: ArrayLike,
+        event: Optional[ArrayLike] = None,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
         inplace: bool = True,
         **kwargs: Any,
     ) -> FloatArray:
@@ -156,17 +155,19 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         BLABLABLABLA
         Args:
             time (ArrayLike):
+            event (Optional[ArrayLike]):
             entry (Optional[ArrayLike]):
             departure (Optional[ArrayLike]):
-            lc_indicators (Optional[ArrayLike]):
-            rc_indicators (Optional[ArrayLike]):
             inplace (bool): (default is True)
 
         Returns:
             Parameters: optimum parameters found
         """
         observed_lifetimes, truncations = lifetime_factory_template(
-            time, entry, departure, lc_indicators, rc_indicators
+            time,
+            event,
+            entry,
+            departure,
         )
 
         minimize_kwargs = {

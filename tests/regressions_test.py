@@ -83,11 +83,11 @@ def test_mean(model, covar):
 def fit_model(model, data):
     model.fit(
         data[0, :],
+        event=data[1, :] == 1,
         covar=zscore(
             np.column_stack([boxcox(covar_values)[0] for covar_values in data[3:, :]])
         ),
         entry=data[2, :],
-        rc_indicators=data[1, :] == 0,
     )
     return model
 

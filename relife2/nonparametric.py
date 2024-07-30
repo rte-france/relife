@@ -39,14 +39,16 @@ class NonParametricEstimator(ABC):
     def __init__(
         self,
         time: ArrayLike,
+        event: Optional[ArrayLike] = None,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
     ):
 
         self.observed_lifetimes, self.truncations = lifetime_factory_template(
-            time, entry, departure, lc_indicators, rc_indicators
+            time,
+            event,
+            entry,
+            departure,
         )
 
         self._estimate()
@@ -224,10 +226,9 @@ class Turnbull(NonParametricEstimator):
     def __init__(
         self,
         time: ArrayLike,
+        event: Optional[ArrayLike] = None,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
-        lc_indicators: Optional[ArrayLike] = None,
-        rc_indicators: Optional[ArrayLike] = None,
         tol: Optional[float] = 1e-4,
         lowmem: Optional[bool] = False,
     ):
@@ -235,7 +236,7 @@ class Turnbull(NonParametricEstimator):
         self.lowmem = lowmem
         self.tol = tol
 
-        super().__init__(time, entry, departure, lc_indicators, rc_indicators)
+        super().__init__(time, event, entry, departure)
 
         # TODO : qst => entry is not optional???
 
