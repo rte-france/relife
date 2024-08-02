@@ -9,45 +9,48 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Tuple
+from relife2.data.tools import array_factory
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from relife2.data import lifetime_factory_template
+
 from relife2.utils.types import FloatArray
+from relife2.data import lifetime_factory_template
+from relife2.stats.nonparametric import Estimates, NonParametricEstimators
 
+def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
+    """Returns x nearest interpolation based on xp and yp data points
+    xp has to be monotonically increasing
 
-@dataclass
-class Estimates:
+    Args:
+        x (np.ndarray): 1d x coordinates to interpolate
+        xp (np.ndarray): 1d known x coordinates
+        yp (np.ndarray): 1d known y coordinates
+
+    Returns:
+        np.ndarray: interpolation values of x
     """
-    BLABLABLABLA
-    """
-
-    timeline: FloatArray
-    values: FloatArray
-    se: Optional[FloatArray] = None
-
-    def __post_init__(self):
-        if self.se is None:
-            self.se = np.zeros_like(
-                self.values
-            )  # garder None/Nan efaire le changement de valeur au niveau du plot
-
-        if self.timeline.shape != self.values.shape != self.se:
-            raise ValueError("Incompatible timeline, values and se in Estimates")
+    spacing = np.diff(xp) / 2
+    xp = xp + np.hstack([spacing, spacing[-1]])
+    yp = np.concatenate([yp, yp[-1, None]])
+    return yp[np.searchsorted(xp, x)]
 
 
-class NonParametricEstimator(ABC):
+class ECDF(NonParametricEstimators):
     """_summary_"""
 
-    def __init__(
+    def estimate(
         self,
         time: ArrayLike,
         event: Optional[ArrayLike] = None,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
-    ):
+    ) -> None:
+        """_summary_
 
+        Returns:
+            FloatArray: _description_"""
         self.observed_lifetimes, self.truncations = lifetime_factory_template(
             time,
             event,
@@ -55,30 +58,6 @@ class NonParametricEstimator(ABC):
             departure,
         )
 
-        self._estimate()
-
-    @property
-    @abstractmethod
-    def sf(self) -> Estimates:
-        """BLABLABLA"""
-
-    @abstractmethod
-    def _estimate(self) -> None:
-        """_summary_
-
-        Returns:
-            Tuple[Estimates]: description
-        """
-
-
-class ECDF(NonParametricEstimator):
-    """_summary_"""
-
-    def _estimate(self) -> None:
-        """_summary_
-
-        Returns:
-            FloatArray: _description_"""
         timeline, counts = np.unique(
             self.observed_lifetimes.rlc.values, return_counts=True
         )
@@ -87,37 +66,45 @@ class ECDF(NonParametricEstimator):
         sf = 1 - cdf
         se = np.sqrt(cdf * (1 - cdf) / len(self.observed_lifetimes.rlc.values))
 
-        self._sf = Estimates(timeline, sf, se)
-        self._cdf = Estimates(timeline, cdf, se)
+        self.estimations["sf"] = Estimates(timeline, sf, se)
+        self.estimations["cdf"] = Estimates(timeline, cdf, se)
 
-    @property
-    def sf(self) -> Estimates:
-        return self._sf
+    def sf(self, t: ArrayLike) -> ArrayLike:
+        if "sf" not in self.estimations.keys():
+            raise KeyError("sf values not yet estimated. First run ECDF.estimate(...)")
+        t = array_factory(t)
+        return _nearest_1dinterp(t, self.estimations["sf"].timeline, self.estimations["sf"].values)
 
-    @property
-    def cdf(self) -> Estimates:
-        """
-        Returns:
-        """
-        return self._cdf
-
-    @property
-    def timeline(self) -> FloatArray:
-        """_summary_
-
-        Returns:
-            FloatArray: _description_"""
-        return np.insert(np.unique(self.observed_lifetimes.rlc.values), 0, 0)
+    def cdf(self, t: ArrayLike) -> ArrayLike:
+        if "cdf" not in self.estimations.keys():
+            raise KeyError("cdf values not yet estimated. First run ECDF.estimate(...)")
+        t = array_factory(t)
+        return _nearest_1dinterp(
+            t, self.estimations["cdf"].timeline, self.estimations["cdf"].values
+        )
 
 
-class KaplanMeier(NonParametricEstimator):
+class KaplanMeier(NonParametricEstimators):
     """_summary_"""
 
-    def _estimate(self) -> None:
+    def estimate(
+        self,
+        time: ArrayLike,
+        event: Optional[ArrayLike] = None,
+        entry: Optional[ArrayLike] = None,
+        departure: Optional[ArrayLike] = None,
+    ) -> None:
         """_summary_
 
         Returns:
             FloatArray: _description_"""
+
+        self.observed_lifetimes, self.truncations = lifetime_factory_template(
+            time,
+            event,
+            entry,
+            departure,
+        )
 
         if len(self.observed_lifetimes.left_censored) > 0:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
@@ -163,21 +150,39 @@ class KaplanMeier(NonParametricEstimator):
         se = np.sqrt(np.insert(var, 0, 0))
 
         timeline = np.insert(timeline, 0, 0)
-        self._sf = Estimates(timeline, sf, se)
+        self.estimations["sf"] = Estimates(timeline, sf, se)
 
-    @property
-    def sf(self) -> Estimates:
-        return self._sf
+    def sf(self, t: ArrayLike) -> ArrayLike:
+        if "sf" not in self.estimations.keys():
+            raise KeyError(
+                "sf values not yet estimated. First run KaplanMeier.estimate(...)"
+            )
+        t = array_factory(t)
+        return _nearest_1dinterp(
+            t, self.estimations["sf"].timeline, self.estimations["sf"].values
+        )
 
 
-class NelsonAalen(NonParametricEstimator):
+class NelsonAalen(NonParametricEstimators):
     """_summary_"""
 
-    def _estimate(self) -> Tuple[FloatArray]:
+    def estimate(
+        self,
+        time: ArrayLike,
+        event: Optional[ArrayLike] = None,
+        entry: Optional[ArrayLike] = None,
+        departure: Optional[ArrayLike] = None,
+    ) -> None:
         """_summary_
 
         Returns:
             FloatArray: _description_"""
+        self.observed_lifetimes, self.truncations = lifetime_factory_template(
+            time,
+            event,
+            entry,
+            departure,
+        )
         if len(self.observed_lifetimes.left_censored) > 0:
             raise ValueError("NelsonAalen does not take left censored lifetimes")
         timeline, timeline_indexes, counts = np.unique(
@@ -213,39 +218,98 @@ class NelsonAalen(NonParametricEstimator):
         chf = np.insert(s, 0, 0)
         se = np.sqrt(np.insert(var, 0, 0))
         timeline = np.insert(timeline, 0, 0)
-        self._chf = Estimates(timeline, chf, se)
+        self.estimations["chf"] = Estimates(timeline, chf, se)
 
-    @property
-    def sf(self) -> Estimates:
-        # TODO : verify following
-        return np.exp(-self._chf)
+    def chf(self, t: ArrayLike) -> ArrayLike:
+        if "chf" not in self.estimations.keys():
+            raise KeyError(
+                "chf values not yet estimated. First run NelsonAalen.estimate(...)"
+            )
+        t = array_factory(t)
+        return _nearest_1dinterp(
+            t, self.estimations["chf"].timeline, self.estimations["chf"].values
+        )
 
-    @property
-    def chf(self) -> Estimates:
-        return self._chf
 
-
-class Turnbull(NonParametricEstimator):
+class Turnbull(NonParametricEstimators):
     """
     BLABLABLA
     """
 
     def __init__(
         self,
+        tol: Optional[float] = 1e-4,
+        lowmem: Optional[bool] = False,
+    ):
+        super().__init__()
+        self.tol = tol
+        self.lowmem = lowmem
+
+    def estimate(
+        self,
         time: ArrayLike,
         event: Optional[ArrayLike] = None,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
-        tol: Optional[float] = 1e-4,
-        lowmem: Optional[bool] = False,
-    ):
+    ) -> None:
+        """_summary_
 
-        self.lowmem = lowmem
-        self.tol = tol
+        Returns:
+            FloatArray: _description_"""
+        self.observed_lifetimes, self.truncations = lifetime_factory_template(
+            time,
+            event,
+            entry,
+            departure,
+        )
+        timeline_temp = np.unique(
+            np.insert(self.observed_lifetimes.interval_censored.values.flatten(), 0, 0)
+        )
+        timeline_len = len(timeline_temp)
+        if not self.lowmem:
+            event_occurence = (
+                np.greater_equal.outer(
+                    timeline_temp[:-1],
+                    self.observed_lifetimes.interval_censored.values[
+                        :, 0
+                    ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
+                )
+                * np.less_equal.outer(
+                    timeline_temp[1:],
+                    self.observed_lifetimes.interval_censored.values[:, 1],
+                )
+            ).T
 
-        super().__init__(time, event, entry, departure)
+            s = self._estimate_with_high_memory(
+                timeline_len, event_occurence, timeline_temp
+            )
 
-        # qst => entry is not optional???
+        else:
+            len_censored_data = len(self.observed_lifetimes.interval_censored.values)
+            event_occurence = []
+            for i in range(len_censored_data):
+                event_occurence.append(
+                    np.where(
+                        (
+                            self.observed_lifetimes.interval_censored.values[:, 0][i]
+                            <= timeline_temp[:-1]
+                        )
+                        & (
+                            timeline_temp[1:]
+                            <= self.observed_lifetimes.interval_censored.values[:, 1][i]
+                        )
+                        == True
+                    )[0][[0, -1]]
+                )
+            event_occurence = np.array(event_occurence)
+            s = self._estimate_with_low_memory(
+                timeline_temp, timeline_len, event_occurence, len_censored_data
+            )
+
+        ind_del = np.where(timeline_temp == np.inf)
+        sf = np.delete(s, ind_del)
+        timeline = np.delete(timeline_temp, ind_del)
+        self.estimations["sf"] = Estimates(timeline, sf)
 
     def _estimate_with_low_memory(
         self, timeline_temp, timeline_len, event_occurence, len_censored_data
@@ -338,61 +402,12 @@ class Turnbull(NonParametricEstimator):
             count += 1
         return s
 
-    def _estimate(self) -> Tuple[FloatArray]:
-        """_summary_
-
-        Returns:
-            FloatArray: _description_"""
-
-        timeline_temp = np.unique(
-            np.insert(self.observed_lifetimes.interval_censored.values.flatten(), 0, 0)
+    def sf(self, t: ArrayLike) -> ArrayLike:
+        if "sf" not in self.estimations.keys():
+            raise KeyError(
+                "sf values not yet estimated. First run Turnbull.estimate(...)"
+            )
+        t = array_factory(t)
+        return _nearest_1dinterp(
+            t, self.estimations["sf"].timeline, self.estimations["sf"].values
         )
-        timeline_len = len(timeline_temp)
-        if not self.lowmem:
-            event_occurence = (
-                np.greater_equal.outer(
-                    timeline_temp[:-1],
-                    self.observed_lifetimes.interval_censored.values[
-                        :, 0
-                    ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
-                )
-                * np.less_equal.outer(
-                    timeline_temp[1:],
-                    self.observed_lifetimes.interval_censored.values[:, 1],
-                )
-            ).T
-
-            s = self._estimate_with_high_memory(
-                timeline_len, event_occurence, timeline_temp
-            )
-
-        else:
-            len_censored_data = len(self.observed_lifetimes.interval_censored.values)
-            event_occurence = []
-            for i in range(len_censored_data):
-                event_occurence.append(
-                    np.where(
-                        (
-                            self.observed_lifetimes.interval_censored.values[:, 0][i]
-                            <= timeline_temp[:-1]
-                        )
-                        & (
-                            timeline_temp[1:]
-                            <= self.observed_lifetimes.interval_censored.values[:, 1][i]
-                        )
-                        == True
-                    )[0][[0, -1]]
-                )
-            event_occurence = np.array(event_occurence)
-            s = self._estimate_with_low_memory(
-                timeline_temp, timeline_len, event_occurence, len_censored_data
-            )
-
-        ind_del = np.where(timeline_temp == np.inf)
-        sf = np.delete(s, ind_del)
-        timeline = np.delete(timeline_temp, ind_del)
-        self._sf = Estimates(timeline, sf)
-
-    @property
-    def sf(self) -> Estimates:
-        return self._sf
