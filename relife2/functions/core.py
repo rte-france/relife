@@ -15,8 +15,8 @@ from numpy import ma
 from numpy.typing import ArrayLike
 from scipy.optimize import Bounds, newton
 
-from relife2.utils.integrations import gauss_legendre, quad_laguerre
-from relife2.utils.types import FloatArray
+from relife2.functions.utils.integrations import gauss_legendre, quad_laguerre
+from relife2.typing import FloatArray
 
 
 class ParametricFunctions(ABC):

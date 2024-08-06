@@ -11,7 +11,7 @@ import pytest
 from scipy.stats import boxcox, zscore
 
 from datasets import load_insulator_string
-from relife2.lifetime_models import (
+from relife2 import (
     AFT,
     ProportionalHazard,
     LogLogistic,

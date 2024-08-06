@@ -1,21 +1,18 @@
-"""
-This module defines stochastic process models objects known by clients
-Copyright (c) 2022, RTE (https://www.rte-france.com)
-See AUTHORS.txt
-SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
-"""
-
 from typing import Any, Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
-from relife2.api.models import ParametricModel
 from relife2.data import Deteriorations, array_factory, deteriorations_factory
-from relife2.stats.gammaprocess import GPFunctions, PowerShapeFunctions
-from relife2.stats.likelihoods import LikelihoodFromDeteriorations
-from relife2.utils.types import FloatArray
+from relife2.functions import (
+    GPFunctions,
+    LikelihoodFromDeteriorations,
+    PowerShapeFunctions,
+)
+from relife2.typing import FloatArray
+
+from .core import ParametricModel
 
 
 class GammaProcess(ParametricModel):

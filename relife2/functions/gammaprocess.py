@@ -11,11 +11,13 @@ from random import uniform
 from typing import Any, Optional, Union
 
 import numpy as np
-from scipy.optimize import Bounds, bisect
+from numpy.typing import ArrayLike
+from scipy.optimize import Bounds, bisect, minimize
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 
-from relife2.stats.functions import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.utils.types import FloatArray
+from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
+from relife2.functions.likelihoods import LikelihoodFromDeteriorations
+from relife2.typing import FloatArray
 
 
 class ShapeFunctions(ParametricFunctions, ABC):

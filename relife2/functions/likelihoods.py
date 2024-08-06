@@ -16,9 +16,8 @@ from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
 from relife2.data import Deteriorations, Lifetimes, ObservedLifetimes, Truncations
-from relife2.stats.functions import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.stats.gammaprocess import GPFunctions
-from relife2.utils.types import FloatArray
+from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
+from relife2.typing import FloatArray
 
 
 # Likelihood(FunctionsBridge)
@@ -239,7 +238,7 @@ class LikelihoodFromDeteriorations(Likelihood):
 
     def __init__(
         self,
-        functions: GPFunctions,
+        functions: "GPFunctions",
         deterioration_data: Deteriorations,
         first_increment_uncertainty: Optional[tuple] = None,
         measurement_tol: np.floating[Any] = np.finfo(float).resolution,

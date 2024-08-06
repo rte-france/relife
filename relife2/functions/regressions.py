@@ -12,9 +12,10 @@ from typing import Any
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife2.stats.distributions import DistributionFunctions
-from relife2.stats.functions import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.utils.types import FloatArray
+from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
+from relife2.typing import FloatArray
+
+from .distributions import DistributionFunctions
 
 
 class CovarEffect(ParametricFunctions):

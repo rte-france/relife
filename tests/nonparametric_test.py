@@ -3,7 +3,7 @@ import pytest
 
 from datasets import load_power_transformer, load_input_turnbull
 from relife2 import ECDF, KaplanMeier, NelsonAalen, Turnbull  # TODO test it
-from relife2.lifetime_models import Weibull
+from relife2 import Weibull
 
 
 @pytest.fixture
@@ -31,9 +31,13 @@ def test_fit_ecdf_kaplan_meier(data):
     time, event, entry = data
     ecdf = ECDF()
     ecdf.estimate(time=time)
-    km = KaplanMeier()  ## ATTENTION faut tester sans entry ni rc_indic pr être cohérent avec ECDF,
+    km = (
+        KaplanMeier()
+    )  ## ATTENTION faut tester sans entry ni rc_indic pr être cohérent avec ECDF,
     km.estimate(time=time)
-    _km = KaplanMeier()  # mais tester l'estimate avec rc_indic qd mm pour verifier que tt fonctionne shape wise
+    _km = (
+        KaplanMeier()
+    )  # mais tester l'estimate avec rc_indic qd mm pour verifier que tt fonctionne shape wise
     _km.estimate(time=time, event=event, entry=entry)
     _na = NelsonAalen()
     _na.estimate(time=time, entry=entry)

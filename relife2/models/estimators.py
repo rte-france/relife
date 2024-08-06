@@ -6,18 +6,16 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Optional, Tuple
-from relife2.data.tools import array_factory
+from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-
-from relife2.utils.types import FloatArray
 from relife2.data import lifetime_factory_template
-from relife2.stats.nonparametric import Estimates, NonParametricEstimators
+from relife2.data.tools import array_factory
+
+from .core import Estimates, NonParametricEstimators
+
 
 def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
     """Returns x nearest interpolation based on xp and yp data points
@@ -73,7 +71,9 @@ class ECDF(NonParametricEstimators):
         if "sf" not in self.estimations.keys():
             raise KeyError("sf values not yet estimated. First run ECDF.estimate(...)")
         t = array_factory(t)
-        return _nearest_1dinterp(t, self.estimations["sf"].timeline, self.estimations["sf"].values)
+        return _nearest_1dinterp(
+            t, self.estimations["sf"].timeline, self.estimations["sf"].values
+        )
 
     def cdf(self, t: ArrayLike) -> ArrayLike:
         if "cdf" not in self.estimations.keys():
