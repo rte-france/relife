@@ -53,19 +53,22 @@ class EventSampling(Sequence, ABC):
         )
 
     def _get_values_from_partitions(self, partitions: np.ndarray, index: int):
-        if index == len(partitions):
-            start = partitions[-1]
-        elif index > len(partitions):
-            raise IndexError
+        if partitions.size == 0:
+            values_index = slice(None, None)
         else:
-            start = partitions[index]
-        if start == partitions[0]:
-            values_index = slice(None, start)
-        elif start != partitions[-1]:
-            stop = partitions[index + 1]
-            values_index = slice(start, stop)
-        else:
-            values_index = slice(start, None)
+            if index == len(partitions):
+                start = partitions[-1]
+            elif index > len(partitions):
+                raise IndexError
+            else:
+                start = partitions[index]
+            if start == partitions[0]:
+                values_index = slice(None, start)
+            elif start != partitions[-1]:
+                stop = partitions[index + 1]
+                values_index = slice(start, stop)
+            else:
+                values_index = slice(start, None)
         return self.values[values_index], values_index
 
 
