@@ -4,13 +4,12 @@ import numpy as np
 
 from relife2.functions.distributions import DistributionFunctions
 from relife2.functions.regressions import RegressionFunctions
-
-from ..functions.core import ParametricLifetimeFunctions
 from .iterators import DistributionIterator, EventIterator, RegressionIterator
+from ..functions.core import ParametricLifetimeFunctions
 
 
-def sample(iterator: EventIterator):
-    """function that aggregates results of EventIterator iterations in array, sorted by samples_ids and assets_ids"""
+def event_aggregator(iterator: EventIterator):
+    """function that aggregates results of EventIterator iterations in arrays, sorted by samples_ids and assets_ids"""
     values = np.array([], dtype=np.float64)
     samples_ids = np.array([], dtype=np.float64)
     assets_ids = np.array([], dtype=np.float64)
@@ -33,20 +32,15 @@ class EventSampling(Sequence):
         self.samples_ids = samples_ids
         self.assets_ids = assets_ids
 
+        self.nb_samples = len(np.unique(self.samples_ids, return_counts=True)[-1])
+        self.nb_assets = len(np.unique(self.assets_ids, return_counts=True)[-1])
+
         self._samples_partitions = (
             np.where(self.samples_ids[:-1] != self.samples_ids[1:])[0] + 1
         )
         self._assets_partitions = (
             np.where(self.assets_ids[:-1] != self.assets_ids[1:])[0] + 1
         )
-
-    @property
-    def nb_samples(self):
-        return len(self._samples_partitions) + 1
-
-    @property
-    def nb_assets(self):
-        return len(self._assets_partitions) + 1
 
     def __len__(self):
         if self.nb_assets == 1:
@@ -113,9 +107,9 @@ class EventSampling(Sequence):
 class DistributionSampling(EventSampling):
     """Concrete EventSampling for DistributionFunctions"""
 
-    def __init__(self, functions, nb_samples, end_time):
-        values, samples_ids, assets_ids = sample(
-            DistributionIterator(functions, nb_samples, end_time)
+    def __init__(self, functions, nb_samples, end_time, nb_assets=1):
+        values, samples_ids, assets_ids = event_aggregator(
+            DistributionIterator(functions, nb_samples, end_time, nb_assets=nb_assets)
         )
         super().__init__(values, samples_ids, assets_ids)
 
@@ -124,20 +118,20 @@ class RegressionSampling(EventSampling):
     """Concrete EventSampling for RegressionFunctions"""
 
     def __init__(self, functions, covar, nb_samples, end_time):
-        values, samples_ids, assets_ids = sample(
+        values, samples_ids, assets_ids = event_aggregator(
             RegressionIterator(functions, covar, nb_samples, end_time)
         )
         super().__init__(values, samples_ids, assets_ids)
 
 
-def sampling(functions: ParametricLifetimeFunctions, *args):
+def sample(functions: ParametricLifetimeFunctions, *args, **kwargs) -> EventSampling:
     """Factory of EventSampling sequence object"""
     if isinstance(functions, DistributionFunctions):
-        return DistributionSampling(functions, *args)
+        return DistributionSampling(functions, *args, **kwargs)
     elif isinstance(functions, RegressionFunctions):
-        return RegressionSampling(functions, *args)
+        return RegressionSampling(functions, *args, **kwargs)
     else:
-        raise ValueError("sampling ")
+        raise ValueError
 
 
 # distribution_model = Weibull(2.0, 0.1)
