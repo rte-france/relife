@@ -9,10 +9,26 @@ from relife2.functions import DistributionFunctions, RegressionFunctions
 class EventIterator(Iterator, ABC):
     """Iterator pattern expecting nb of samples and optionally a nb of assets"""
 
-    def __init__(self, functions, nb_samples, nb_assets=1):
+    def __init__(self, functions, nb_samples, nb_assets):
         self.functions = functions
         self.nb_samples = nb_samples
         self.nb_assets = nb_assets
+
+
+def transform_1d_index(index, nb_samples, nb_assets):
+    if 1 < nb_assets < nb_samples:
+        samples_ids = np.where(index)[0] % nb_assets
+        assets_ids = np.where(index)[0] // nb_assets
+    elif 1 <= nb_samples <= nb_assets:
+        samples_ids = np.where(index)[0] % nb_samples
+        assets_ids = np.where(index)[0] // nb_samples
+    elif nb_samples > 1 == nb_assets:
+        samples_ids = np.where(index)[0]
+        assets_ids = np.zeros_like(samples_ids)
+    else:
+        samples_ids = np.zeros_like(index)
+        assets_ids = np.zeros_like(samples_ids)
+    return samples_ids, assets_ids
 
 
 class DistributionIterator(EventIterator):
@@ -32,12 +48,9 @@ class DistributionIterator(EventIterator):
             rvs_size = np.sum(unfailed_samples)
             event_times = self.functions.rvs(size=rvs_size).reshape(-1)
             self.durations[unfailed_samples] += event_times
-            if self.nb_assets != 1:
-                samples_ids = np.where(unfailed_samples)[0] % self.nb_assets
-                assets_ids = np.where(unfailed_samples)[0] // self.nb_assets
-            else:
-                samples_ids = np.where(unfailed_samples)[0]
-                assets_ids = np.zeros_like(samples_ids)
+            samples_ids, assets_ids = transform_1d_index(
+                unfailed_samples, self.nb_samples, self.nb_assets
+            )
             return event_times, samples_ids, assets_ids
         else:
             raise StopIteration
@@ -47,7 +60,7 @@ class RegressionIterator(EventIterator):
     """Concrete EventIterator for RegressionFunctions"""
 
     def __init__(self, functions: RegressionFunctions, covar, nb_samples, end_time):
-        super().__init__(functions, nb_samples, nb_assets=covar.shape[0])
+        super().__init__(functions, nb_samples, covar.shape[0])
         self.end_time = end_time
         self.durations = np.zeros(self.nb_assets * self.nb_samples)
         self.functions.covar = covar
@@ -62,8 +75,9 @@ class RegressionIterator(EventIterator):
                 unfailed_samples
             ]
             self.durations[unfailed_samples] += event_times
-            samples_ids = np.where(unfailed_samples)[0] % self.nb_assets
-            assets_ids = np.where(unfailed_samples)[0] // self.nb_assets
+            samples_ids, assets_ids = transform_1d_index(
+                unfailed_samples, self.nb_samples, self.nb_assets
+            )
             return event_times, samples_ids, assets_ids
         else:
             raise StopIteration

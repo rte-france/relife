@@ -1,1 +1,1 @@
-from .sampling import sample
+from .sample import sample
