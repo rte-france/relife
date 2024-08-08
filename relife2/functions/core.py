@@ -304,6 +304,10 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
             if name in self.__class__.__dict__:
                 self._base_functions.append(name)
 
+        # any other values than time used as inputs in prob functions
+        # ex : covar
+        self.extras: dict[str, Any] = {}
+
     @property
     @abstractmethod
     def support_upper_bound(self):
@@ -562,12 +566,3 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
             float: BLABLABLABLA
         """
         return self.ppf(np.array(0.5))
-
-    # def copy(self) -> Self:
-    #     """
-    #     Returns:
-    #         A ParametricFunctions object copied from current instance
-    #     """
-    #     objcopy = super().copy()
-    #     objcopy._base_functions = self._base_functions.copy()
-    #     return objcopy

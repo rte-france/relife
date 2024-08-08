@@ -16,8 +16,8 @@ from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
 from relife2.data import Deteriorations, Lifetimes, ObservedLifetimes, Truncations
-from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.typing import FloatArray
+from .core import ParametricFunctions, ParametricLifetimeFunctions
 
 
 # Likelihood(FunctionsBridge)
@@ -61,12 +61,23 @@ class LikelihoodFromLifetimes(Likelihood):
         functions: ParametricLifetimeFunctions,
         observed_lifetimes: ObservedLifetimes,
         truncations: Truncations,
-        **kwdata: FloatArray,
+        **kwdata: Any,
     ):
         super().__init__(functions)
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
         self.kwdata = kwdata
+
+        # expected_extra_data = set(self.functions.extras.keys())
+        # given_extra_data = set(kwdata.keys())
+        # common_extra_data = given_extra_data & expected_extra_data
+        # if common_extra_data != expected_extra_data:
+        #     raise ValueError(
+        #         f"Likelihood expects {expected_extra_data} but got only {common_extra_data}"
+        #     )
+        #
+        # for name in expected_extra_data:
+        #     setattr(self.functions, name, kwdata[name])
 
         if hasattr(self.functions, "jac_hf") and hasattr(self.functions, "jac_chf"):
             self.hasjac = True
@@ -238,7 +249,7 @@ class LikelihoodFromDeteriorations(Likelihood):
 
     def __init__(
         self,
-        functions: "GPFunctions",
+        functions: ParametricFunctions,
         deterioration_data: Deteriorations,
         first_increment_uncertainty: Optional[tuple] = None,
         measurement_tol: np.floating[Any] = np.finfo(float).resolution,

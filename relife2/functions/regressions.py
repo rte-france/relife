@@ -14,7 +14,6 @@ from scipy.optimize import Bounds
 
 from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
 from relife2.typing import FloatArray
-
 from .distributions import DistributionFunctions
 
 
@@ -68,7 +67,9 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         super().__init__()
         self.add_functions("covar_effect", covar_effect)
         self.add_functions("baseline", baseline)
-        self._covar = np.empty((0, 0), dtype=np.float64)
+        self.extras["covar"] = np.empty(
+            (0, self.covar_effect.nb_params), dtype=np.float64
+        )
 
     @property
     def nb_covar(self) -> int:
@@ -81,7 +82,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         Returns:
             Covar extra arguments used in functions
         """
-        return self._covar
+        return self.extras["covar"]
 
     @covar.setter
     def covar(self, values: FloatArray) -> None:
@@ -90,7 +91,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
             raise ValueError(
                 f"Invalid number of covar : expected {self.nb_covar}, got {nb_covar}"
             )
-        self._covar = values
+        self.extras["covar"] = values
 
     @property
     def support_lower_bound(self):

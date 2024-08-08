@@ -11,12 +11,10 @@ from random import uniform
 from typing import Any, Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
-from scipy.optimize import Bounds, bisect, minimize
+from scipy.optimize import Bounds, bisect
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 
 from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.functions.likelihoods import LikelihoodFromDeteriorations
 from relife2.typing import FloatArray
 
 
@@ -81,8 +79,28 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
     ):
         super().__init__(rate=rate)
         self.add_functions("shape_function", shape_function)
-        self.initial_resistance = uniform(1, 2)
-        self.load_threshold = uniform(0, 1)
+        self.extras["initial_resistance"] = uniform(1, 2)
+        self.extras["load_threshold"] = uniform(0, 1)
+
+    @property
+    def initial_resistance(self):
+        return self.extras["initial_resistance"]
+
+    @property
+    def load_threshold(self):
+        return self.extras["load_threshold"]
+
+    @initial_resistance.setter
+    def initial_resistance(self, value: float):
+        if not isinstance(value, float):
+            raise ValueError("initial_resistance must be float")
+        self.extras["initial_resistance"] = value
+
+    @load_threshold.setter
+    def load_threshold(self, value: float):
+        if not isinstance(value, float):
+            raise ValueError("load_threshold must be float")
+        self.extras["load_threshold"] = value
 
     @property
     def support_lower_bound(self):
