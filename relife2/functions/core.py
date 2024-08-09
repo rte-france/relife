@@ -306,7 +306,11 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
 
         # any other values than time used as inputs in prob functions
         # ex : covar
-        self.extras: dict[str, Any] = {}
+        self.extravars: dict[str, Any] = {}
+
+    @property
+    def extravars_names(self):
+        return list(self.extravars.keys())
 
     @property
     @abstractmethod

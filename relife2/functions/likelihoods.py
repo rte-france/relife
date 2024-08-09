@@ -15,9 +15,10 @@ from scipy.optimize import Bounds
 from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
-from relife2.data import Deteriorations, Lifetimes, ObservedLifetimes, Truncations
+from relife2.data.dataclass import Deteriorations, LifetimeSample, Truncations
 from relife2.typing import FloatArray
 from .core import ParametricFunctions, ParametricLifetimeFunctions
+from ..data.dataclass import Sample
 
 
 # Likelihood(FunctionsBridge)
@@ -59,30 +60,21 @@ class LikelihoodFromLifetimes(Likelihood):
     def __init__(
         self,
         functions: ParametricLifetimeFunctions,
-        observed_lifetimes: ObservedLifetimes,
+        observed_lifetimes: LifetimeSample,
         truncations: Truncations,
-        **kwdata: Any,
     ):
         super().__init__(functions)
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
-        self.kwdata = kwdata
-
-        # expected_extra_data = set(self.functions.extras.keys())
-        # given_extra_data = set(kwdata.keys())
-        # common_extra_data = given_extra_data & expected_extra_data
-        # if common_extra_data != expected_extra_data:
-        #     raise ValueError(
-        #         f"Likelihood expects {expected_extra_data} but got only {common_extra_data}"
-        #     )
-        #
-        # for name in expected_extra_data:
-        #     setattr(self.functions, name, kwdata[name])
 
         if hasattr(self.functions, "jac_hf") and hasattr(self.functions, "jac_chf"):
             self.hasjac = True
 
-    def d_contrib(self, lifetimes: Lifetimes) -> float:
+    def _set_extravars(self, lifetimes: Sample):
+        for name, values in lifetimes.extravars.items():
+            setattr(self.functions, name, values)
+
+    def d_contrib(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -91,11 +83,10 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return -np.sum(np.log(self.functions.hf(lifetimes.values)))
 
-    def rc_contrib(self, lifetimes: Lifetimes) -> float:
+    def rc_contrib(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -104,11 +95,10 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return np.sum(self.functions.chf(lifetimes.values), dtype=np.float64)
 
-    def lc_contrib(self, lifetimes: Lifetimes) -> float:
+    def lc_contrib(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -117,8 +107,7 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return -np.sum(
             np.log(
                 -np.expm1(
@@ -129,7 +118,7 @@ class LikelihoodFromLifetimes(Likelihood):
             )
         )
 
-    def lt_contrib(self, lifetimes: Lifetimes) -> float:
+    def lt_contrib(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -138,11 +127,10 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return -np.sum(self.functions.chf(lifetimes.values), dtype=np.float64)
 
-    def jac_d_contrib(self, lifetimes: Lifetimes) -> FloatArray:
+    def jac_d_contrib(self, lifetimes: Sample) -> FloatArray:
         """
 
         Args:
@@ -151,15 +139,14 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return -np.sum(
             self.functions.jac_hf(lifetimes.values)
             / self.functions.hf(lifetimes.values),
             axis=0,
         )
 
-    def jac_rc_contrib(self, lifetimes: Lifetimes) -> FloatArray:
+    def jac_rc_contrib(self, lifetimes: Sample) -> FloatArray:
         """
 
         Args:
@@ -168,14 +155,13 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return np.sum(
             self.functions.jac_chf(lifetimes.values),
             axis=0,
         )
 
-    def jac_lc_contrib(self, lifetimes: Lifetimes) -> FloatArray:
+    def jac_lc_contrib(self, lifetimes: Sample) -> FloatArray:
         """
 
         Args:
@@ -184,15 +170,14 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return -np.sum(
             self.functions.jac_chf(lifetimes.values)
             / np.expm1(self.functions.chf(lifetimes.values)),
             axis=0,
         )
 
-    def jac_lt_contrib(self, lifetimes: Lifetimes) -> FloatArray:
+    def jac_lt_contrib(self, lifetimes: Sample) -> FloatArray:
         """
 
         Args:
@@ -201,8 +186,7 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        for name, data in self.kwdata.items():
-            setattr(self.functions, name, data[lifetimes.index])
+        self._set_extravars(lifetimes)
         return -np.sum(
             self.functions.jac_chf(lifetimes.values),
             axis=0,

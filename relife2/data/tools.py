@@ -10,11 +10,10 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from relife2.typing import FloatArray
+from .dataclass import Sample, LifetimeSample, Truncations
 
-from .dataclass import Lifetimes, ObservedLifetimes, Truncations
 
-
-def intersect_lifetimes(*lifetimes: Lifetimes) -> list[Lifetimes]:
+def intersect_lifetimes(*lifetimes: Sample) -> list[Sample]:
     """
     Args:
         *lifetimes: LifetimeData object.s containing values of shape (n1, p1), (n2, p2), etc.
@@ -22,23 +21,27 @@ def intersect_lifetimes(*lifetimes: Lifetimes) -> list[Lifetimes]:
     Returns:
 
     Examples:
-        >>> lifetimes_1 = Lifetimes(values = np.array([[1], [2]]), index = np.array([3, 10]))
-        >>> lifetimes_2 = Lifetimes(values = np.array([[3], [5]]), index = np.array([10, 2]))
+        >>> lifetimes_1 = Sample(values = np.array([[1], [2]]), ids = np.array([3, 10]))
+        >>> lifetimes_2 = Sample(values = np.array([[3], [5]]), ids = np.array([10, 2]))
         >>> intersect_lifetimes(lifetimes_1, lifetimes_2)
         [Lifetimes(values=array([[2]]), index=array([10])), Lifetimes(values=array([[3]]), index=array([10]))]
     """
 
     inter_ids = np.array(
-        list(set.intersection(*[set(_lifetimes.index) for _lifetimes in lifetimes]))
+        list(set.intersection(*[set(_lifetimes.ids) for _lifetimes in lifetimes]))
     )
     return [
-        Lifetimes(_lifetimes.values[np.isin(_lifetimes.index, inter_ids)], inter_ids)
+        Sample(
+            _lifetimes.values[np.isin(_lifetimes.ids, inter_ids)],
+            inter_ids,
+            {k: v[np.isin(_lifetimes.ids, inter_ids)] for k, v in _lifetimes.extravars},
+        )
         for _lifetimes in lifetimes
     ]
 
 
 def lifetimes_compatibility(
-    observed_lifetimes: ObservedLifetimes, truncations: Truncations
+    observed_lifetimes: LifetimeSample, truncations: Truncations
 ) -> None:
     """
     Check the compatibility between each observed lifetimes and truncation values

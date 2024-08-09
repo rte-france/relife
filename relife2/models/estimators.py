@@ -115,7 +115,7 @@ class KaplanMeier(NonParametricEstimators):
         complete_observation_indic = np.zeros_like(
             self.observed_lifetimes.rlc.values
         )  # just creating an array to fill it next line
-        complete_observation_indic[self.observed_lifetimes.complete.index] = 1
+        complete_observation_indic[self.observed_lifetimes.complete.ids] = 1
         np.add.at(death_set, timeline_indexes, complete_observation_indic.flatten())
         x_in = np.histogram(
             np.concatenate(
@@ -192,7 +192,7 @@ class NelsonAalen(NonParametricEstimators):
         complete_observation_indic = np.zeros_like(
             self.observed_lifetimes.rlc.values
         )  # just creating an array to fill it next line
-        complete_observation_indic[self.observed_lifetimes.complete.index] = 1
+        complete_observation_indic[self.observed_lifetimes.complete.ids] = 1
         np.add.at(death_set, timeline_indexes, complete_observation_indic.flatten())
         x_in = np.histogram(
             np.concatenate(

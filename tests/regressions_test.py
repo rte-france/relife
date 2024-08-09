@@ -68,16 +68,18 @@ def weibull_pph():
 
 
 def test_sf(model, covar):
-    assert model.sf(model.median(covar), covar) == pytest.approx(0.5, rel=1e-3)
+    assert model.sf(model.median(covar=covar), covar=covar) == pytest.approx(
+        0.5, rel=1e-3
+    )
 
 
 def test_rvs(model, covar):
     size = 10
-    assert model.rvs(covar, size=size).shape == (covar.shape[0], size)
+    assert model.rvs(covar=covar, size=size).shape == (covar.shape[0], size)
 
 
 def test_mean(model, covar):
-    assert model.mean(covar).shape[0] == covar.shape[0]
+    assert model.mean(covar=covar).shape[0] == covar.shape[0]
 
 
 def fit_model(model, data):

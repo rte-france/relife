@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 from scipy.optimize import Bounds
@@ -67,7 +67,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         super().__init__()
         self.add_functions("covar_effect", covar_effect)
         self.add_functions("baseline", baseline)
-        self.extras["covar"] = np.empty(
+        self.extravars["covar"] = np.empty(
             (0, self.covar_effect.nb_params), dtype=np.float64
         )
 
@@ -82,7 +82,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         Returns:
             Covar extra arguments used in functions
         """
-        return self.extras["covar"]
+        return self.extravars["covar"]
 
     @covar.setter
     def covar(self, values: FloatArray) -> None:
@@ -91,7 +91,30 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
             raise ValueError(
                 f"Invalid number of covar : expected {self.nb_covar}, got {nb_covar}"
             )
-        self.extras["covar"] = values
+        self.extravars["covar"] = values
+
+    @property
+    def coefficients(self) -> FloatArray:
+        """
+        Returns:
+        """
+        return self.covar_effect.params
+
+    @coefficients.setter
+    def coefficients(self, values: Union[list[float], tuple[float]]):
+        """
+        Args:
+            values ():
+
+        Returns:
+        """
+        nb_coeff = len(values)
+        if len(values) != self.nb_covar:
+            raise ValueError(
+                f"Invalid number of coefficients : expected {self.nb_covar}, got {nb_coeff}"
+            )
+        else:
+            self.covar_effect.params = values
 
     @property
     def support_lower_bound(self):

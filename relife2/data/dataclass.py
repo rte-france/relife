@@ -6,28 +6,32 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 
 from relife2.typing import FloatArray, IntArray
 
 
-@dataclass(frozen=True)
-class Lifetimes:
+@dataclass
+class Sample:
     """
     Object that encapsulates lifetime data values and corresponding units index
     """
 
     values: FloatArray
-    index: IntArray
+    ids: IntArray
+    extravars: dict[str, Any] = field(
+        default_factory=dict
+    )  # any other data attached to values (e.g. covar values)
 
     def __post_init__(self):
         if self.values.ndim != 2:
             raise ValueError("Invalid LifetimeData values number of dimensions")
-        if self.index.ndim != 1:
+        if self.ids.ndim != 1:
             raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
-        if len(self.values) != len(self.index):
+        if len(self.values) != len(self.ids):
             raise ValueError("Incompatible lifetime values and unit_ids")
         if np.all(self.values == 0, axis=1).any():
             raise ValueError("Lifetimes values must be greater than 0")
@@ -37,16 +41,16 @@ class Lifetimes:
 
 
 @dataclass
-class ObservedLifetimes:
+class LifetimeSample:
     """BLABLABLA"""
 
-    complete: Lifetimes
-    left_censored: Lifetimes
-    right_censored: Lifetimes
-    interval_censored: Lifetimes
+    complete: Sample
+    left_censored: Sample
+    right_censored: Sample
+    interval_censored: Sample
 
     def __post_init__(self):
-        self.rc = Lifetimes(
+        self.rc = Sample(
             np.concatenate(
                 (
                     self.complete.values,
@@ -54,9 +58,9 @@ class ObservedLifetimes:
                 ),
                 axis=0,
             ),
-            np.concatenate((self.complete.index, self.right_censored.index)),
+            np.concatenate((self.complete.ids, self.right_censored.ids)),
         )
-        self.rlc = Lifetimes(
+        self.rlc = Sample(
             np.concatenate(
                 [
                     self.complete.values,
@@ -66,20 +70,20 @@ class ObservedLifetimes:
             ),
             np.concatenate(
                 (
-                    self.complete.index,
-                    self.left_censored.index,
-                    self.right_censored.index,
+                    self.complete.ids,
+                    self.left_censored.ids,
+                    self.right_censored.ids,
                 )
             ),
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class Truncations:
     """BLABLABLA"""
 
-    left: Lifetimes
-    right: Lifetimes
+    left: Sample
+    right: Sample
 
 
 @dataclass
