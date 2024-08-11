@@ -13,7 +13,7 @@ import numpy as np
 from scipy.optimize import Bounds
 
 from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.typing import FloatArray
+
 from .distributions import DistributionFunctions
 
 
@@ -30,21 +30,21 @@ class CovarEffect(ParametricFunctions):
             np.full(self.nb_params, np.inf),
         )
 
-    def init_params(self, *args: Any) -> FloatArray:
+    def init_params(self, *args: Any) -> np.ndarray:
         return np.zeros(self.nb_params)
 
-    def g(self, covar: FloatArray) -> FloatArray:
+    def g(self, covar: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            covar (FloatArray): BLABLABLABLA
+            covar (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
 
-    def jac_g(self, covar: FloatArray) -> FloatArray:
+    def jac_g(self, covar: np.ndarray) -> np.ndarray:
         """
         Args:
             covar ():
@@ -85,7 +85,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         return self.extravars["covar"]
 
     @covar.setter
-    def covar(self, values: FloatArray) -> None:
+    def covar(self, values: np.ndarray) -> None:
         nb_covar = values.shape[-1]
         if values.shape[-1] != self.nb_covar:
             raise ValueError(
@@ -94,7 +94,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         self.extravars["covar"] = values
 
     @property
-    def coefficients(self) -> FloatArray:
+    def coefficients(self) -> np.ndarray:
         """
         Returns:
         """
@@ -132,7 +132,7 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         """
         return np.inf
 
-    def init_params(self, *args: Any) -> FloatArray:
+    def init_params(self, *args: Any) -> np.ndarray:
         return np.concatenate(
             (
                 self.covar_effect.init_params(*args),
@@ -158,58 +158,58 @@ class RegressionFunctions(ParametricLifetimeFunctions, ABC):
         return Bounds(lb, ub)
 
     @abstractmethod
-    def jac_hf(self, time: FloatArray) -> FloatArray:
+    def jac_hf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
 
     @abstractmethod
-    def jac_chf(self, time: FloatArray) -> FloatArray:
+    def jac_chf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
 
     @abstractmethod
-    def dhf(self, time: FloatArray) -> FloatArray:
+    def dhf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
 
     @abstractmethod
     def ichf(
         self,
-        cumulative_hazard_rate: FloatArray,
-    ) -> FloatArray:
+        cumulative_hazard_rate: np.ndarray,
+    ) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            cumulative_hazard_rate (Union[int, float, ArrayLike, FloatArray]): BLABLABLABLA
+            cumulative_hazard_rate (Union[int, float, ArrayLike, np.ndarray]): BLABLABLABLA
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
 
-    def isf(self, probability: FloatArray) -> FloatArray:
+    def isf(self, probability: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            probability (FloatArray): BLABLABLABLA
+            probability (np.ndarray): BLABLABLABLA
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         cumulative_hazard_rate = -np.log(probability)
         return self.ichf(cumulative_hazard_rate)
@@ -222,19 +222,19 @@ class ProportionalHazardFunctions(RegressionFunctions):
 
     def hf(
         self,
-        time: FloatArray,
-    ) -> FloatArray:
+        time: np.ndarray,
+    ) -> np.ndarray:
         return self.covar_effect.g(self.covar) * self.baseline.hf(time)
 
-    def chf(self, time: FloatArray) -> FloatArray:
+    def chf(self, time: np.ndarray) -> np.ndarray:
         return self.covar_effect.g(self.covar) * self.baseline.chf(time)
 
-    def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
+    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
         return self.baseline.ichf(
             cumulative_hazard_rate / self.covar_effect.g(self.covar)
         )
 
-    def jac_hf(self, time: FloatArray) -> FloatArray:
+    def jac_hf(self, time: np.ndarray) -> np.ndarray:
         return np.column_stack(
             (
                 self.covar_effect.jac_g(self.covar) * self.baseline.hf(time),
@@ -242,7 +242,7 @@ class ProportionalHazardFunctions(RegressionFunctions):
             )
         )
 
-    def jac_chf(self, time: FloatArray) -> FloatArray:
+    def jac_chf(self, time: np.ndarray) -> np.ndarray:
         return np.column_stack(
             (
                 self.covar_effect.jac_g(self.covar) * self.baseline.chf(time),
@@ -250,7 +250,7 @@ class ProportionalHazardFunctions(RegressionFunctions):
             )
         )
 
-    def dhf(self, time: FloatArray) -> FloatArray:
+    def dhf(self, time: np.ndarray) -> np.ndarray:
         return self.covar_effect.g(self.covar) * self.baseline.dhf(time)
 
 
@@ -259,20 +259,20 @@ class AFTFunctions(RegressionFunctions):
     BLABLABLABLA
     """
 
-    def hf(self, time: FloatArray) -> FloatArray:
+    def hf(self, time: np.ndarray) -> np.ndarray:
         t0 = time / self.covar_effect.g(self.covar)
         return self.baseline.hf(t0) / self.covar_effect.g(self.covar)
 
-    def chf(self, time: FloatArray) -> FloatArray:
+    def chf(self, time: np.ndarray) -> np.ndarray:
         t0 = time / self.covar_effect.g(self.covar)
         return self.baseline.chf(t0)
 
-    def ichf(self, cumulative_hazard_rate: FloatArray) -> FloatArray:
+    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
         return self.covar_effect.g(self.covar) * self.baseline.ichf(
             cumulative_hazard_rate
         )
 
-    def jac_hf(self, time: FloatArray) -> FloatArray:
+    def jac_hf(self, time: np.ndarray) -> np.ndarray:
         t0 = time / self.covar_effect.g(self.covar)
         return np.column_stack(
             (
@@ -283,7 +283,7 @@ class AFTFunctions(RegressionFunctions):
             )
         )
 
-    def jac_chf(self, time: FloatArray) -> FloatArray:
+    def jac_chf(self, time: np.ndarray) -> np.ndarray:
         t0 = time / self.covar_effect.g(self.covar)
         return np.column_stack(
             (
@@ -295,6 +295,6 @@ class AFTFunctions(RegressionFunctions):
             )
         )
 
-    def dhf(self, time: FloatArray) -> FloatArray:
+    def dhf(self, time: np.ndarray) -> np.ndarray:
         t0 = time / self.covar_effect.g(self.covar)
         return self.baseline.dhf(t0) / self.covar_effect.g(self.covar) ** 2

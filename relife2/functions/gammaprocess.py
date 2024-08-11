@@ -15,13 +15,12 @@ from scipy.optimize import Bounds, bisect
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 
 from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.typing import FloatArray
 
 
 class ShapeFunctions(ParametricFunctions, ABC):
     """BLABLABLA"""
 
-    def init_params(self, *args: Any) -> FloatArray:
+    def init_params(self, *args: Any) -> np.ndarray:
         return np.ones_like(self.params)
 
     @property
@@ -33,11 +32,11 @@ class ShapeFunctions(ParametricFunctions, ABC):
         )
 
     @abstractmethod
-    def nu(self, time: FloatArray) -> FloatArray:
+    def nu(self, time: np.ndarray) -> np.ndarray:
         """BLABLABLA"""
 
     @abstractmethod
-    def jac_nu(self, time: FloatArray) -> FloatArray:
+    def jac_nu(self, time: np.ndarray) -> np.ndarray:
         """BLABLABLA"""
 
 
@@ -49,10 +48,10 @@ class PowerShapeFunctions(ShapeFunctions):
     ):
         super().__init__(shape_rate=shape_rate, shape_power=shape_power)
 
-    def nu(self, time: FloatArray) -> FloatArray:
+    def nu(self, time: np.ndarray) -> np.ndarray:
         return self.shape_rate * time**self.shape_power
 
-    def jac_nu(self, time: FloatArray) -> FloatArray:
+    def jac_nu(self, time: np.ndarray) -> np.ndarray:
         return self.shape_rate * self.shape_power * time ** (self.shape_power - 1)
 
 
@@ -62,10 +61,10 @@ class PowerShapeFunctions(ShapeFunctions):
 #     def __init__(self, shape_exponent: Optional[float] = None):
 #         super().__init__(shape_exponent=shape_exponent)
 #
-#     def nu(self, time: FloatArray) -> FloatArray:
+#     def nu(self, time: np.ndarray) -> np.ndarray:
 #         return None
 #
-#     def jac_nu(self, time: FloatArray) -> FloatArray:
+#     def jac_nu(self, time: np.ndarray) -> np.ndarray:
 #         return None
 
 
@@ -125,7 +124,7 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
         """
         return (self.initial_resistance - self.load_threshold) * self.rate
 
-    def init_params(self, *args: Any) -> FloatArray:
+    def init_params(self, *args: Any) -> np.ndarray:
         """
         Args:
             *args ():
@@ -154,7 +153,7 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
         )
         return Bounds(lb, ub)
 
-    def pdf(self, time: FloatArray) -> FloatArray:
+    def pdf(self, time: np.ndarray) -> np.ndarray:
         """BLABLABLA"""
 
         res = -self.shape_function.jac_nu(time) * self.moore_jac_uppergamma_c(time)
@@ -166,14 +165,14 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
             res,
         )
 
-    def sf(self, time: FloatArray) -> FloatArray:
+    def sf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            Union[float, FloatArray]: BLABLABLABLA
+            Union[float, np.ndarray]: BLABLABLABLA
         """
         return gammainc(
             self.shape_function.nu(time),
@@ -182,10 +181,10 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
 
     def conditional_sf(
         self,
-        time: FloatArray,
-        conditional_time: FloatArray,
-        conditional_resistance: FloatArray,
-    ) -> FloatArray:
+        time: np.ndarray,
+        conditional_time: np.ndarray,
+        conditional_resistance: np.ndarray,
+    ) -> np.ndarray:
         """
         Args:
             time ():
@@ -200,7 +199,7 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
             (conditional_resistance - self.load_threshold) * self.rate,
         )
 
-    def _series_expansion(self, shape_values: FloatArray, tol: float) -> FloatArray:
+    def _series_expansion(self, shape_values: np.ndarray, tol: float) -> np.ndarray:
 
         # resistance_values - shape : (n,)
 
@@ -289,8 +288,8 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
         return s * d_f + f * d_s
 
     def _continued_fraction_expansion(
-        self, shape_values: FloatArray, tol: float
-    ) -> FloatArray:
+        self, shape_values: np.ndarray, tol: float
+    ) -> np.ndarray:
 
         # resistance_values - shape : (n,)
 
@@ -358,7 +357,7 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
 
         return -f * d_result - result * d_f
 
-    def moore_jac_uppergamma_c(self, time: FloatArray, tol: float = 1e-6) -> FloatArray:
+    def moore_jac_uppergamma_c(self, time: np.ndarray, tol: float = 1e-6) -> np.ndarray:
         """BLABLABLA"""
 
         # /!\ consider time as masked array
@@ -409,7 +408,7 @@ class GPFunctions(ParametricFunctions):
             GPDistributionFunctions(shape_function, rate),
         )
 
-    def init_params(self, *args: Any) -> FloatArray:
+    def init_params(self, *args: Any) -> np.ndarray:
         return self.process_lifetime_distribution.init_params(*args)
 
     @property
@@ -442,12 +441,12 @@ class GPFunctions(ParametricFunctions):
 
     def sample(
         self,
-        inspection_times: FloatArray,
+        inspection_times: np.ndarray,
         unit_ids=None,
         nb_sample=1,
         seed=None,
         add_death_time=True,
-    ) -> tuple[FloatArray]:
+    ) -> tuple[np.ndarray]:
         """
         inspection_times has 0 at first
         inspection_times is sorted with unit_ids

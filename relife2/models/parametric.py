@@ -3,9 +3,6 @@ from typing import Optional
 from relife2.functions import (
     AFTFunctions,
     CovarEffect,
-    ProportionalHazardFunctions,
-)
-from relife2.functions import (
     DistributionFunctions,
     ExponentialFunctions,
     GammaFunctions,
@@ -13,6 +10,7 @@ from relife2.functions import (
     GPDistributionFunctions,
     LogLogisticFunctions,
     PowerShapeFunctions,
+    ProportionalHazardFunctions,
     WeibullFunctions,
 )
 from relife2.models.core import ParametricLifetimeModel
@@ -33,9 +31,7 @@ class Weibull(ParametricLifetimeModel):
     functions: DistributionFunctions
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(
-            WeibullFunctions(shape=shape, rate=rate)
-        )
+        super().__init__(WeibullFunctions(shape=shape, rate=rate))
 
 
 class Gompertz(ParametricLifetimeModel):
@@ -44,9 +40,7 @@ class Gompertz(ParametricLifetimeModel):
     functions: DistributionFunctions
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(
-            GompertzFunctions(shape=shape, rate=rate)
-        )
+        super().__init__(GompertzFunctions(shape=shape, rate=rate))
 
 
 class Gamma(ParametricLifetimeModel):
@@ -55,9 +49,7 @@ class Gamma(ParametricLifetimeModel):
     functions: DistributionFunctions
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(
-            GammaFunctions(shape=shape, rate=rate)
-        )
+        super().__init__(GammaFunctions(shape=shape, rate=rate))
 
 
 class LogLogistic(ParametricLifetimeModel):
@@ -66,9 +58,7 @@ class LogLogistic(ParametricLifetimeModel):
     functions: DistributionFunctions
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(
-            LogLogisticFunctions(shape=shape, rate=rate)
-        )
+        super().__init__(LogLogisticFunctions(shape=shape, rate=rate))
 
 
 class PowerGPDistribution(ParametricLifetimeModel):

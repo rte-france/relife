@@ -40,7 +40,7 @@ def test_rvs(model):
 
 
 def test_mean(model):
-    assert super(type(model.functions), model.functions).mean() == pytest.approx(
+    assert np.squeeze(super(type(model.functions), model.functions).mean()) == pytest.approx(
         model.mean(), rel=1e-3
     )
 

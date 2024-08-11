@@ -15,8 +15,7 @@ from numpy import ma
 from numpy.typing import ArrayLike
 from scipy.optimize import Bounds, newton
 
-from relife2.functions.utils.integrations import gauss_legendre, quad_laguerre
-from relife2.typing import FloatArray
+from relife2.functions.maths.integrations import gauss_legendre, quad_laguerre
 
 
 class ParametricFunctions(ABC):
@@ -82,7 +81,7 @@ class ParametricFunctions(ABC):
         self.all_params: dict[str, Union[float, None]] = self.root_params.copy()
 
     @abstractmethod
-    def init_params(self, *args: Any) -> FloatArray:
+    def init_params(self, *args: Any) -> np.ndarray:
         """initialization of params values (usefull before fit)"""
 
     @property
@@ -107,7 +106,7 @@ class ParametricFunctions(ABC):
         return len(self.all_params)
 
     @property
-    def params(self) -> FloatArray:
+    def params(self) -> np.ndarray:
         """
         Returns:
             (np.ndarray) : parameters values
@@ -328,14 +327,14 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
             BLABLABLABLA
         """
 
-    def hf(self, time: FloatArray) -> FloatArray:
+    def hf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         if "pdf" in self._base_functions and "sf" in self._base_functions:
             return self.pdf(time) / self.sf(time)
@@ -354,14 +353,14 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         """
         )
 
-    def chf(self, time: FloatArray) -> FloatArray:
+    def chf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         if "sf" in self._base_functions:
             return -np.log(self.sf(time))
@@ -398,14 +397,14 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         """
         )
 
-    def sf(self, time: FloatArray) -> FloatArray:
+    def sf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         if "chf" in self._base_functions:
             return np.exp(-self.chf(time))
@@ -419,7 +418,7 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         """
         )
 
-    def pdf(self, time: FloatArray) -> FloatArray:
+    def pdf(self, time: np.ndarray) -> np.ndarray:
         """
 
         Args:
@@ -438,14 +437,14 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
             """
             ) from err
 
-    def mrl(self, time: FloatArray) -> FloatArray:
+    def mrl(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         masked_time: ma.MaskedArray = ma.MaskedArray(
             time, time >= self.support_upper_bound
@@ -471,7 +470,7 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         mrl = integration / self.sf(masked_time)
         return ma.filled(mrl, 0.0)
 
-    def moment(self, n: int) -> FloatArray:
+    def moment(self, n: int) -> np.ndarray:
         """
         BLABLABLA
         Args:
@@ -489,7 +488,7 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
             integrand, np.array(0.0), upper_bound, ndim=2
         ) + quad_laguerre(integrand, upper_bound, ndim=2)
 
-    def mean(self) -> FloatArray:
+    def mean(self) -> np.ndarray:
         """
         BLABLABLABLA
         Returns:
@@ -497,7 +496,7 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         """
         return self.moment(1)
 
-    def var(self) -> Union[float | FloatArray]:
+    def var(self) -> Union[float | np.ndarray]:
         """
         BLABLABLABLA
 
@@ -508,33 +507,33 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
 
     def isf(
         self,
-        probability: FloatArray,
-    ) -> FloatArray:
+        probability: np.ndarray,
+    ) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            probability (FloatArray): BLABLABLABLA
+            probability (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         return newton(
             lambda x: self.sf(x) - probability,
             x0=np.zeros_like(probability),
         )
 
-    def cdf(self, time: FloatArray) -> FloatArray:
+    def cdf(self, time: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            time (FloatArray): BLABLABLABLA
+            time (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         return 1 - self.sf(time)
 
-    def rvs(self, size: Optional[int] = 1, seed: Optional[int] = None) -> FloatArray:
+    def rvs(self, size: Optional[int] = 1, seed: Optional[int] = None) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
@@ -542,7 +541,7 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
             seed (Optional[int]): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         generator = np.random.RandomState(seed=seed)
         probability = generator.uniform(size=size)
@@ -550,19 +549,19 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
 
     def ppf(
         self,
-        probability: FloatArray,
-    ) -> FloatArray:
+        probability: np.ndarray,
+    ) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
-            probability (FloatArray): BLABLABLABLA
+            probability (np.ndarray): BLABLABLABLA
 
         Returns:
-            FloatArray: BLABLABLABLA
+            np.ndarray: BLABLABLABLA
         """
         return self.isf(1 - probability)
 
-    def median(self) -> FloatArray:
+    def median(self) -> np.ndarray:
         """
         BLABLABLABLA
 

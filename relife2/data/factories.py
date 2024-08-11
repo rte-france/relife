@@ -10,11 +10,67 @@ from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
 import numpy as np
-from numpy.typing import ArrayLike
 
-from relife2.typing import BoolArray, FloatArray
-from .dataclass import Deteriorations, LifetimeSample, Truncations, Sample
-from .tools import array_factory, lifetimes_compatibility
+from .dataclass import (
+    Deteriorations,
+    LifetimeSample,
+    Sample,
+    Truncations,
+    intersect_lifetimes,
+)
+
+
+def lifetimes_compatibility(
+    observed_lifetimes: LifetimeSample, truncations: Truncations
+) -> None:
+    """
+    Check the compatibility between each observed lifetimes and truncation values
+    Args:
+        observed_lifetimes ():
+        truncations ():
+    """
+
+    for attr_name in [
+        "complete",
+        "left_censored",
+        "right_censored",
+        "interval_censored",
+    ]:
+        lifetimes = getattr(observed_lifetimes, attr_name)
+        if len(truncations.left) != 0 and len(lifetimes) != 0:
+            left_truncated_lifetimes = intersect_lifetimes(lifetimes, truncations.left)
+            if len(left_truncated_lifetimes) != 0:
+                if np.any(
+                    np.min(
+                        np.where(
+                            left_truncated_lifetimes[0].values == 0,
+                            left_truncated_lifetimes[1].values,
+                            left_truncated_lifetimes[0].values,
+                        ),
+                        axis=1,
+                        keepdims=True,
+                    )
+                    < left_truncated_lifetimes[1].values
+                ):
+                    raise ValueError("Some lifetimes are under left truncation bounds")
+        if len(truncations.right) != 0 and len(lifetimes) != 0:
+            right_truncated_lifetimes = intersect_lifetimes(
+                lifetimes, truncations.right
+            )
+            if len(right_truncated_lifetimes) != 0:
+                if np.any(
+                    np.max(
+                        np.where(
+                            right_truncated_lifetimes[0].values == np.inf,
+                            right_truncated_lifetimes[1].values,
+                            right_truncated_lifetimes[0].values,
+                        ),
+                        axis=1,
+                        keepdims=True,
+                    )
+                    > right_truncated_lifetimes[1].values
+                ):
+                    raise ValueError("Some lifetimes are above right truncation bounds")
 
 
 class LifetimesFactory(ABC):
@@ -24,11 +80,11 @@ class LifetimesFactory(ABC):
 
     def __init__(
         self,
-        time: FloatArray,
-        event: Optional[BoolArray] = None,
-        entry: Optional[FloatArray] = None,
-        departure: Optional[FloatArray] = None,
-        **extravars: FloatArray,
+        time: np.ndarray,
+        event: Optional[np.ndarray] = None,
+        entry: Optional[np.ndarray] = None,
+        departure: Optional[np.ndarray] = None,
+        **extravars: np.ndarray,
     ):
 
         if entry is None:
@@ -41,10 +97,10 @@ class LifetimesFactory(ABC):
             event = np.ones((len(time), 1)).astype(np.bool_)
 
         self.time = time
-        self.event: BoolArray = event
-        self.entry: FloatArray = entry
-        self.departure: FloatArray = departure
-        self.extravars: dict[str, FloatArray] = extravars
+        self.event: np.ndarray = event.astype(np.bool_)
+        self.entry: np.ndarray = entry
+        self.departure: np.ndarray = departure
+        self.extravars: dict[str, np.ndarray] = extravars
 
         for values in (
             self.event,
@@ -87,17 +143,17 @@ class LifetimesFactory(ABC):
         """
 
     @abstractmethod
-    def get_left_truncations(self) -> FloatArray:
+    def get_left_truncations(self) -> np.ndarray:
         """
         Returns:
-            FloatArray: object containing left truncations values and index
+            np.ndarray: object containing left truncations values and index
         """
 
     @abstractmethod
-    def get_right_truncations(self) -> FloatArray:
+    def get_right_truncations(self) -> np.ndarray:
         """
         Returns:
-            FloatArray: object containing right truncations values and index
+            np.ndarray: object containing right truncations values and index
         """
 
     def __call__(
@@ -227,11 +283,11 @@ class LifetimeDataFactoryFrom2D(LifetimesFactory):
 
 
 def lifetime_factory_template(
-    time: ArrayLike,
-    event: Optional[ArrayLike] = None,
-    entry: Optional[ArrayLike] = None,
-    departure: Optional[ArrayLike] = None,
-    **extravars: FloatArray,
+    time: np.ndarray,
+    event: Optional[np.ndarray] = None,
+    entry: Optional[np.ndarray] = None,
+    departure: Optional[np.ndarray] = None,
+    **extravars: np.ndarray,
 ) -> Tuple[LifetimeSample, Truncations]:
     """
     Args:
@@ -243,18 +299,6 @@ def lifetime_factory_template(
     Returns:
 
     """
-
-    time = array_factory(time)
-
-    if event is not None:
-        event = array_factory(event).astype(np.bool_)
-
-    if entry is not None:
-        entry = array_factory(entry)
-
-    if departure is not None:
-        departure = array_factory(departure)
-
     factory: LifetimesFactory
     if time.shape[-1] == 1:
         factory = LifetimeDataFactoryFrom1D(time, event, entry, departure, **extravars)
@@ -264,9 +308,9 @@ def lifetime_factory_template(
 
 
 def deteriorations_factory(
-    deterioration_measurements: FloatArray,
-    inspection_times: FloatArray,
-    unit_ids: FloatArray,
+    deterioration_measurements: np.ndarray,
+    inspection_times: np.ndarray,
+    unit_ids: np.ndarray,
     initial_resistance: float,
 ):
     """

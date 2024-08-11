@@ -5,27 +5,26 @@ from relife2.data import intersect_lifetimes
 from relife2.data.factories import (
     LifetimeDataFactoryFrom1D,
     LifetimeDataFactoryFrom2D,
-    array_factory,
 )
 
 
 @pytest.fixture
 def example_1d_data():
     return {
-        "observed_lifetimes": array_factory(np.array([10, 11, 9, 10, 12, 13, 11])),
-        "event": array_factory(np.array([1, 0, 1, 0, 0, 0, 1])).astype(np.bool_),
-        "entry": array_factory(np.array([0, 0, 3, 5, 3, 1, 9])),
+        "observed_lifetimes": np.array([10, 11, 9, 10, 12, 13, 11]).reshape(-1, 1),
+        "event": np.array([1, 0, 1, 0, 0, 0, 1]).astype(np.bool_).reshape(-1, 1),
+        "entry": np.array([0, 0, 3, 5, 3, 1, 9]).reshape(-1, 1),
     }
 
 
 @pytest.fixture
 def example_2d_data():
     return {
-        "observed_lifetimes": array_factory(
-            np.array([[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]])
+        "observed_lifetimes": np.array(
+            [[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]]
         ),
-        "entry": array_factory(np.array([0, 0, 3, 5, 3, 1, 9])),
-        "departure": array_factory(np.array([4, np.inf, 7, 10, np.inf, 12, np.inf])),
+        "entry": np.array([0, 0, 3, 5, 3, 1, 9]).reshape(-1, 1),
+        "departure": np.array([4, np.inf, 7, 10, np.inf, 12, np.inf]).reshape(-1, 1),
     }
 
 

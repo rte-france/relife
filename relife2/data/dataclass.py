@@ -11,8 +11,6 @@ from typing import Any
 
 import numpy as np
 
-from relife2.typing import FloatArray, IntArray
-
 
 @dataclass
 class Sample:
@@ -20,8 +18,8 @@ class Sample:
     Object that encapsulates lifetime data values and corresponding units index
     """
 
-    values: FloatArray
-    ids: IntArray
+    values: np.ndarray
+    ids: np.ndarray  # arrays of int
     extravars: dict[str, Any] = field(
         default_factory=dict
     )  # any other data attached to values (e.g. covar values)
@@ -96,6 +94,36 @@ class LifetimeSample:
         )
 
 
+def intersect_lifetimes(*lifetimes: Sample) -> list[Sample]:
+    """
+    Args:
+        *lifetimes: LifetimeData object.s containing values of shape (n1, p1), (n2, p2), etc.
+
+    Returns:
+
+    Examples:
+        >>> lifetimes_1 = Sample(values = np.array([[1], [2]]), ids = np.array([3, 10]))
+        >>> lifetimes_2 = Sample(values = np.array([[3], [5]]), ids = np.array([10, 2]))
+        >>> intersect_lifetimes(lifetimes_1, lifetimes_2)
+        [Lifetimes(values=array([[2]]), index=array([10])), Lifetimes(values=array([[3]]), index=array([10]))]
+    """
+
+    inter_ids = np.array(
+        list(set.intersection(*[set(_lifetimes.ids) for _lifetimes in lifetimes]))
+    )
+    return [
+        Sample(
+            _lifetimes.values[np.isin(_lifetimes.ids, inter_ids)],
+            inter_ids,
+            {
+                k: v[np.isin(_lifetimes.ids, inter_ids)]
+                for k, v in _lifetimes.extravars.items()
+            },
+        )
+        for _lifetimes in lifetimes
+    ]
+
+
 @dataclass
 class Truncations:
     """BLABLABLA"""
@@ -108,9 +136,9 @@ class Truncations:
 class Deteriorations:
     """BLABLABLA"""
 
-    values: FloatArray  # R0 in first column (always)
-    times: FloatArray  # 0 in first column (always)
-    ids: IntArray
+    values: np.ndarray  # R0 in first column (always)
+    times: np.ndarray  # 0 in first column (always)
+    ids: np.ndarray
 
     def __post_init__(self):
         # self.values = np.ma.array(self.values, mask=np.isnan(self.values))

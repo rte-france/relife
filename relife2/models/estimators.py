@@ -12,9 +12,9 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from relife2.data import lifetime_factory_template
-from relife2.data.tools import array_factory
 
 from .core import Estimates, NonParametricEstimators
+from .io import array_factory
 
 
 def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:

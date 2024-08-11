@@ -16,9 +16,9 @@ from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
 from relife2.data.dataclass import Deteriorations, LifetimeSample, Truncations
-from relife2.typing import FloatArray
-from .core import ParametricFunctions, ParametricLifetimeFunctions
+
 from ..data.dataclass import Sample
+from .core import ParametricFunctions, ParametricLifetimeFunctions
 
 
 # Likelihood(FunctionsBridge)
@@ -34,7 +34,7 @@ class Likelihood(ParametricFunctions):
         super().__init__()
         self.add_functions("functions", functions)
 
-    def init_params(self, *args: Any) -> FloatArray:
+    def init_params(self, *args: Any) -> np.ndarray:
         return self.functions.init_params()
 
     @property
@@ -42,7 +42,7 @@ class Likelihood(ParametricFunctions):
         return self.functions.params_bounds
 
     @abstractmethod
-    def negative_log(self, params: FloatArray) -> float:
+    def negative_log(self, params: np.ndarray) -> float:
         """
         Args:
             params ():
@@ -130,7 +130,7 @@ class LikelihoodFromLifetimes(Likelihood):
         self._set_extravars(lifetimes)
         return -np.sum(self.functions.chf(lifetimes.values), dtype=np.float64)
 
-    def jac_d_contrib(self, lifetimes: Sample) -> FloatArray:
+    def jac_d_contrib(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -146,7 +146,7 @@ class LikelihoodFromLifetimes(Likelihood):
             axis=0,
         )
 
-    def jac_rc_contrib(self, lifetimes: Sample) -> FloatArray:
+    def jac_rc_contrib(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -161,7 +161,7 @@ class LikelihoodFromLifetimes(Likelihood):
             axis=0,
         )
 
-    def jac_lc_contrib(self, lifetimes: Sample) -> FloatArray:
+    def jac_lc_contrib(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -177,7 +177,7 @@ class LikelihoodFromLifetimes(Likelihood):
             axis=0,
         )
 
-    def jac_lt_contrib(self, lifetimes: Sample) -> FloatArray:
+    def jac_lt_contrib(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -194,7 +194,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def negative_log(
         self,
-        params: FloatArray,
+        params: np.ndarray,
     ) -> float:
         self.params = params
         return (
@@ -206,8 +206,8 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def jac_negative_log(
         self,
-        params: FloatArray,
-    ) -> Union[None, FloatArray]:
+        params: np.ndarray,
+    ) -> Union[None, np.ndarray]:
         """
 
         Args:
@@ -243,7 +243,7 @@ class LikelihoodFromDeteriorations(Likelihood):
         self.first_increment_uncertainty = first_increment_uncertainty
         self.measurement_tol = measurement_tol
 
-    def negative_log(self, params: FloatArray) -> float:
+    def negative_log(self, params: np.ndarray) -> float:
         """
         All deteriorations have R0 in first column
         All times have 0 in first column
