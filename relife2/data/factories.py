@@ -135,7 +135,14 @@ class LifetimeDataFactoryFrom1D(LifetimesFactory):
         return Sample(values, index, extravars)
 
     def get_left_censorships(self) -> Sample:
-        return Sample(np.empty((0, 1)), np.empty((0,), dtype=np.int64))
+        return Sample(
+            np.empty((0, 1), dtype=np.float64),
+            np.empty((0,), dtype=np.int64),
+            {
+                k: np.empty((0, v.shape[-1]), dtype=np.float64)
+                for k, v in self.extravars.items()
+            },
+        )
 
     def get_right_censorships(self) -> Sample:
         index = np.where(~self.event)[0]
@@ -154,12 +161,14 @@ class LifetimeDataFactoryFrom1D(LifetimesFactory):
     def get_left_truncations(self) -> Sample:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
-        return Sample(values, index)
+        extravars = {k: v[index] for k, v in self.extravars.items()}
+        return Sample(values, index, extravars)
 
     def get_right_truncations(self) -> Sample:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        return Sample(values, index)
+        extravars = {k: v[index] for k, v in self.extravars.items()}
+        return Sample(values, index, extravars)
 
 
 class LifetimeDataFactoryFrom2D(LifetimesFactory):
@@ -186,7 +195,8 @@ class LifetimeDataFactoryFrom2D(LifetimesFactory):
     ) -> Sample:
         index = np.where(self.time[:, 1] == np.inf)[0]
         values = self.time[index, 0, None]
-        return Sample(values, index)
+        extravars = {k: v[index] for k, v in self.extravars.items()}
+        return Sample(values, index, extravars)
 
     def get_interval_censorships(self) -> Sample:
         index = np.where(
@@ -205,13 +215,15 @@ class LifetimeDataFactoryFrom2D(LifetimesFactory):
 
     def get_left_truncations(self) -> Sample:
         index = np.where(self.entry > 0)[0]
-        values = self.entry[index]  # TODO : if None, should put 0s !!
-        return Sample(values, index)
+        values = self.entry[index]
+        extravars = {k: v[index] for k, v in self.extravars.items()}
+        return Sample(values, index, extravars)
 
     def get_right_truncations(self) -> Sample:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        return Sample(values, index)
+        extravars = {k: v[index] for k, v in self.extravars.items()}
+        return Sample(values, index, extravars)
 
 
 def lifetime_factory_template(

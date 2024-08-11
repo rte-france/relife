@@ -46,7 +46,7 @@ def baseline(request):
 
 @pytest.fixture(scope="module", params=[AFT, ProportionalHazard])
 def model(request, baseline):
-    return request.param(baseline, coefficients=[1.0, 1.0, 1.0])
+    return request.param(baseline, coefficients=(1.0, 1.0, 1.0))
 
 
 @pytest.fixture(scope="module")
@@ -56,12 +56,12 @@ def covar():
 
 @pytest.fixture(scope="module")
 def weibull_aft():
-    return AFT(Weibull())
+    return AFT(Weibull(), coefficients=(None, None, None))
 
 
 @pytest.fixture(scope="module")
 def weibull_pph():
-    return ProportionalHazard(Weibull())
+    return ProportionalHazard(Weibull(), coefficients=(None, None, None))
 
 
 # test functions

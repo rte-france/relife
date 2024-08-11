@@ -34,7 +34,10 @@ def intersect_lifetimes(*lifetimes: Sample) -> list[Sample]:
         Sample(
             _lifetimes.values[np.isin(_lifetimes.ids, inter_ids)],
             inter_ids,
-            {k: v[np.isin(_lifetimes.ids, inter_ids)] for k, v in _lifetimes.extravars},
+            {
+                k: v[np.isin(_lifetimes.ids, inter_ids)]
+                for k, v in _lifetimes.extravars.items()
+            },
         )
         for _lifetimes in lifetimes
     ]

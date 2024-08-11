@@ -59,6 +59,13 @@ class LifetimeSample:
                 axis=0,
             ),
             np.concatenate((self.complete.ids, self.right_censored.ids)),
+            {
+                k: np.concatenate(
+                    (self.complete.extravars[k], self.right_censored.extravars[k]),
+                    axis=0,
+                )
+                for k in self.complete.extravars.keys()
+            },
         )
         self.rlc = Sample(
             np.concatenate(
@@ -75,6 +82,17 @@ class LifetimeSample:
                     self.right_censored.ids,
                 )
             ),
+            {
+                k: np.concatenate(
+                    (
+                        self.complete.extravars[k],
+                        self.left_censored.extravars[k],
+                        self.right_censored.extravars[k],
+                    ),
+                    axis=0,
+                )
+                for k in self.complete.extravars.keys()
+            },
         )
 
 
