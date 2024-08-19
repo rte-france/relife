@@ -60,7 +60,7 @@ class GammaProcess(ParametricModel):
         Returns:
 
         """
-        return self.functions.sample(time, unit_ids, nb_sample, seed, add_death_time)
+        return self.function.sample(time, unit_ids, nb_sample, seed, add_death_time)
 
     def _init_likelihood(
         self,
@@ -78,7 +78,7 @@ class GammaProcess(ParametricModel):
                 """
             )
         return LikelihoodFromDeteriorations(
-            self.functions.copy(),
+            self.function.copy(),
             deterioration_data,
             first_increment_uncertainty=first_increment_uncertainty,
             measurement_tol=measurement_tol,
@@ -102,14 +102,14 @@ class GammaProcess(ParametricModel):
             array_factory(deterioration_measurements),
             array_factory(inspection_times),
             array_factory(unit_ids),
-            self.functions.process_lifetime_distribution.initial_resistance,
+            self.function.process_lifetime_distribution.initial_resistance,
         )
 
-        param0 = kwargs.pop("x0", self.functions.init_params())
+        param0 = kwargs.pop("x0", self.function.init_params())
 
         minimize_kwargs = {
             "method": kwargs.pop("method", "Nelder-Mead"),
-            "bounds": kwargs.pop("bounds", self.functions.params_bounds),
+            "bounds": kwargs.pop("bounds", self.function.params_bounds),
             "constraints": kwargs.pop("constraints", ()),
             "tol": kwargs.pop("tol", None),
             "callback": kwargs.pop("callback", None),

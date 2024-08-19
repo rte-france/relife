@@ -1,17 +1,17 @@
 # pylint: disable=missing-module-docstring
 from .distributions import (
-    DistributionFunctions,
-    ExponentialFunctions,
-    GammaFunctions,
-    GompertzFunctions,
-    LogLogisticFunctions,
-    WeibullFunctions,
+    DistributionFunction,
+    ExponentialFunction,
+    GammaFunction,
+    GompertzFunction,
+    LogLogisticFunction,
+    WeibullFunction,
 )
-from .gammaprocess import GPDistributionFunctions, GPFunctions, PowerShapeFunctions
+from .gammaprocess import GPDistributionFunction, GPFunction, PowerShapeFunction
 from .likelihoods import LikelihoodFromDeteriorations, LikelihoodFromLifetimes
 from .regressions import (
-    AFTFunctions,
+    AFTFunction,
     CovarEffect,
-    ProportionalHazardFunctions,
-    RegressionFunctions,
+    ProportionalHazardFunction,
+    RegressionFunction,
 )

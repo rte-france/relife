@@ -13,14 +13,14 @@ import numpy as np
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.functions.core import ParametricLifetimeFunctions
+from relife2.functions.core import ParametricLifetimeFunction
 
 from .maths.integrations import shifted_laguerre
 
 # pylint: disable=no-member
 
 
-class DistributionFunctions(ParametricLifetimeFunctions, ABC):
+class DistributionFunction(ParametricLifetimeFunction, ABC):
     """
     Object that computes every probability functions of a distribution model
     """
@@ -28,7 +28,7 @@ class DistributionFunctions(ParametricLifetimeFunctions, ABC):
     def init_params(self, *args: Any) -> np.ndarray:
         param0 = np.ones(self.nb_params)
         param0[-1] = 1 / np.median(args[0].values)
-        return param0
+        self.params = param0
 
     @property
     def params_bounds(self) -> Bounds:
@@ -112,7 +112,7 @@ class DistributionFunctions(ParametricLifetimeFunctions, ABC):
         return self.ichf(cumulative_hazard_rate)
 
 
-class ExponentialFunctions(DistributionFunctions):
+class ExponentialFunction(DistributionFunction):
     """
     BLABLABLABLA
     """
@@ -145,7 +145,7 @@ class ExponentialFunctions(DistributionFunctions):
         return np.zeros_like(time)
 
 
-class WeibullFunctions(DistributionFunctions):
+class WeibullFunction(DistributionFunction):
     """
     BLABLABLABLA
     """
@@ -203,7 +203,7 @@ class WeibullFunctions(DistributionFunctions):
         )
 
 
-class GompertzFunctions(DistributionFunctions):
+class GompertzFunction(DistributionFunction):
     """
     BLABLABLABLA
     """
@@ -256,7 +256,7 @@ class GompertzFunctions(DistributionFunctions):
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
 
-class GammaFunctions(DistributionFunctions):
+class GammaFunction(DistributionFunction):
     """
     BLABLABLABLA
     """
@@ -321,7 +321,7 @@ class GammaFunctions(DistributionFunctions):
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
 
-class LogLogisticFunctions(DistributionFunctions):
+class LogLogisticFunction(DistributionFunction):
     """
     BLABLABLABLA
     """

@@ -1,17 +1,16 @@
-from typing import Optional
+from typing import Optional, Sequence
 
 from relife2.functions import (
-    AFTFunctions,
-    CovarEffect,
-    DistributionFunctions,
-    ExponentialFunctions,
-    GammaFunctions,
-    GompertzFunctions,
-    GPDistributionFunctions,
-    LogLogisticFunctions,
-    PowerShapeFunctions,
-    ProportionalHazardFunctions,
-    WeibullFunctions,
+    AFTFunction,
+    DistributionFunction,
+    ExponentialFunction,
+    GammaFunction,
+    GompertzFunction,
+    GPDistributionFunction,
+    LogLogisticFunction,
+    PowerShapeFunction,
+    ProportionalHazardFunction,
+    WeibullFunction,
 )
 from relife2.models.core import ParametricLifetimeModel
 
@@ -19,46 +18,46 @@ from relife2.models.core import ParametricLifetimeModel
 class Exponential(ParametricLifetimeModel):
     """BLABLABLABLA"""
 
-    functions: DistributionFunctions
+    function: DistributionFunction
 
     def __init__(self, rate: Optional[float] = None):
-        super().__init__(ExponentialFunctions(rate=rate))
+        super().__init__(ExponentialFunction(rate=rate))
 
 
 class Weibull(ParametricLifetimeModel):
     """BLABLABLABLA"""
 
-    functions: DistributionFunctions
+    function: DistributionFunction
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(WeibullFunctions(shape=shape, rate=rate))
+        super().__init__(WeibullFunction(shape=shape, rate=rate))
 
 
 class Gompertz(ParametricLifetimeModel):
     """BLABLABLABLA"""
 
-    functions: DistributionFunctions
+    function: DistributionFunction
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(GompertzFunctions(shape=shape, rate=rate))
+        super().__init__(GompertzFunction(shape=shape, rate=rate))
 
 
 class Gamma(ParametricLifetimeModel):
     """BLABLABLABLA"""
 
-    functions: DistributionFunctions
+    function: DistributionFunction
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(GammaFunctions(shape=shape, rate=rate))
+        super().__init__(GammaFunction(shape=shape, rate=rate))
 
 
 class LogLogistic(ParametricLifetimeModel):
     """BLABLABLABLA"""
 
-    functions: DistributionFunctions
+    function: DistributionFunction
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__(LogLogisticFunctions(shape=shape, rate=rate))
+        super().__init__(LogLogisticFunction(shape=shape, rate=rate))
 
 
 class PowerGPDistribution(ParametricLifetimeModel):
@@ -72,33 +71,11 @@ class PowerGPDistribution(ParametricLifetimeModel):
     ):
 
         super().__init__(
-            GPDistributionFunctions(
-                PowerShapeFunctions(shape_rate=shape_rate, shape_power=shape_power),
+            GPDistributionFunction(
+                PowerShapeFunction(shape_rate=shape_rate, shape_power=shape_power),
                 rate,
             ),
         )
-
-
-def check_coefficients_args(
-    coefficients: Optional[
-        tuple[float | None] | list[float | None] | dict[str, float | None]
-    ] = None,
-) -> dict[str, float | None]:
-    """
-
-    Args:
-        coefficients ():
-
-    Returns:
-
-    """
-    if coefficients is None:
-        return {"coef_0": None}
-    if isinstance(coefficients, (list, tuple)):
-        return {f"coef_{i}": v for i, v in enumerate(coefficients)}
-    if isinstance(coefficients, dict):
-        return coefficients
-    raise ValueError("coefficients must be tuple, list or dict")
 
 
 class ProportionalHazard(ParametricLifetimeModel):
@@ -107,17 +84,9 @@ class ProportionalHazard(ParametricLifetimeModel):
     def __init__(
         self,
         baseline: ParametricLifetimeModel,
-        coefficients: Optional[
-            tuple[float | None] | list[float | None] | dict[str, float | None]
-        ] = None,
+        coef: Optional[Sequence[float | None]] = (),
     ):
-        coefficients = check_coefficients_args(coefficients)
-        super().__init__(
-            ProportionalHazardFunctions(
-                CovarEffect(**coefficients),
-                baseline.functions.copy(),
-            )
-        )
+        super().__init__(ProportionalHazardFunction(baseline.function.copy(), coef))
 
 
 class AFT(ParametricLifetimeModel):
@@ -126,14 +95,6 @@ class AFT(ParametricLifetimeModel):
     def __init__(
         self,
         baseline: ParametricLifetimeModel,
-        coefficients: Optional[
-            tuple[float | None] | list[float | None] | dict[str, float | None]
-        ] = None,
+        coef: Optional[Sequence[float | None]] = (),
     ):
-        coefficients = check_coefficients_args(coefficients)
-        super().__init__(
-            AFTFunctions(
-                CovarEffect(**coefficients),
-                baseline.functions.copy(),
-            )
-        )
+        super().__init__(AFTFunction(baseline.function.copy(), coef))

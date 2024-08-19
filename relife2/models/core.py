@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -16,8 +16,8 @@ from scipy.optimize import minimize
 
 from relife2.data import lifetime_factory_template
 from relife2.functions import LikelihoodFromLifetimes
-from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
-from relife2.models.io import preprocess_vars
+from relife2.functions.core import ParametricFunction, ParametricLifetimeFunction
+from relife2.models.io import are_all_args_given, array_factory
 
 _LIFETIME_FUNCTIONS_NAMES = [
     "sf",
@@ -37,34 +37,27 @@ _LIFETIME_FUNCTIONS_NAMES = [
 ]
 
 
-def are_params_set(functions: ParametricFunctions):
-    """
-    Args:
-        functions ():
-
-    Returns:
-    """
-    if None in functions.all_params.values():
-        params_to_set = " ".join(
-            [name for name, value in functions.all_params.items() if value is None]
-        )
-        raise ValueError(
-            f"Params {params_to_set} unset. Please set them first or fit the model."
-        )
-
-
 class ParametricModel:
     """Façade like Model type"""
 
-    def __init__(self, functions: ParametricFunctions):
-        self.functions = functions
+    def __init__(self, function: ParametricFunction):
+
+        self.params_set = False
+        if np.isnan(function.params).any() and not np.isnan(function.params).all():
+            raise ValueError(
+                "Can't instanciate partially initialized model. Set all params or instanciate empty model"
+            )
+        else:
+            self.params_set = True
+
+        self.function = function
 
     @property
     def params(self):
         """
         Returns:
         """
-        return self.functions.params
+        return self.function.params
 
     @params.setter
     def params(self, values: np.ndarray):
@@ -74,25 +67,25 @@ class ParametricModel:
 
         Returns:
         """
-        self.functions.params = values
+        self.function.params = values
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
         if name in self.__dict__:
             value = self.__dict__[name]
         else:
-            if not hasattr(self.functions, name):
+            if not hasattr(self.function, name):
                 raise AttributeError(f"{class_name} has no attribute named {name}")
-            value = getattr(self.functions, name)
+            value = getattr(self.function, name)
         return value
 
-    def __setattr__(self, name: str, value: Any):
-        if name == "functions":
-            super().__setattr__(name, value)
-        elif hasattr(self.functions, name):
-            setattr(self.functions, name, value)
-        else:
-            super().__setattr__(name, value)
+    # def __setattr__(self, name: str, value: Any):
+    #     if name in ("function", "params_set"):
+    #         super().__setattr__(name, value)
+    #     elif hasattr(self.function, name):
+    #         setattr(self.function, name, value)
+    #     else:
+    #         super().__setattr__(name, value)
 
     # def __repr__(self):
     #     class_name = type(self).__name__
@@ -100,7 +93,7 @@ class ParametricModel:
 
     def __str__(self):
         class_name = type(self).__name__
-        return f"{class_name}(\n" f" params = {self.functions.all_params}\n"
+        return f"{class_name}(\n" f" params = {self.function.all_params}\n"
 
 
 class ParametricLifetimeModel(ParametricModel, ABC):
@@ -108,43 +101,17 @@ class ParametricLifetimeModel(ParametricModel, ABC):
     Façade class for lifetime model (where functions is a LifetimeFunctions)
     """
 
-    functions: ParametricLifetimeFunctions
+    function: ParametricLifetimeFunction
 
     def __getattribute__(self, item):
         if item in _LIFETIME_FUNCTIONS_NAMES:
-            are_params_set(self.functions)
+            if not self.params_set:
+                raise ValueError(
+                    "Model parameters are empty, fit model first or instanciate new model with parameters"
+                )
         return super().__getattribute__(item)
 
-    def _set_extravars(self, **extravars: np.ndarray):
-        for name, extravar in extravars.items():
-            setattr(self.functions, name, extravar)
-
-    def get_likelihood(
-        self,
-        time: ArrayLike,
-        event: Optional[ArrayLike] = None,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        **extravars,
-    ) -> LikelihoodFromLifetimes:
-
-        time, event, entry, departure, extravars = preprocess_vars(
-            self.functions, time, event, entry, departure, **extravars
-        )
-        observed_lifetimes, truncations = lifetime_factory_template(
-            time,
-            event,
-            entry,
-            departure,
-            **extravars,
-        )
-        return LikelihoodFromLifetimes(
-            self.functions.copy(),
-            observed_lifetimes,
-            truncations,
-        )
-
-    def sf(self, time: ArrayLike, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def sf(self, time: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
         Args:
             time ():
@@ -152,13 +119,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        time, extravars = preprocess_vars(self.functions, time, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.sf(time))
+        time = array_factory(time)
+        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.sf(time))
 
-    def isf(
-        self, probability: ArrayLike, **extravars: ArrayLike
-    ) -> Union[float, np.ndarray]:
+    def isf(self, probability: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Args:
@@ -167,13 +134,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        probability, extravars = preprocess_vars(
-            self.functions, probability, **extravars
-        )
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.isf(probability))
+        probability = array_factory(probability)
+        args = [array_factory(arg, nb_units=probability.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.isf(probability))
 
-    def hf(self, time: ArrayLike, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def hf(self, time: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Args:
@@ -182,11 +149,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        time, extravars = preprocess_vars(self.functions, time, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.hf(time))
+        time = array_factory(time)
+        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.hf(time))
 
-    def chf(self, time: ArrayLike, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def chf(self, time: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Args:
@@ -195,11 +164,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        time, extravars = preprocess_vars(self.functions, time, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.chf(time))
+        time = array_factory(time)
+        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.chf(time))
 
-    def cdf(self, time: ArrayLike, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def cdf(self, time: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Args:
@@ -208,13 +179,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        time, extravars = preprocess_vars(self.functions, time, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.cdf(time))
+        time = array_factory(time)
+        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.cdf(time))
 
-    def pdf(
-        self, probability: ArrayLike, **extravars: ArrayLike
-    ) -> Union[float, np.ndarray]:
+    def pdf(self, probability: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Args:
@@ -223,13 +194,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        probability, extravars = preprocess_vars(
-            self.functions, probability, **extravars
-        )
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.pdf(probability))
+        probability = array_factory(probability)
+        args = [array_factory(arg, nb_units=probability.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.pdf(probability))
 
-    def ppf(self, time: ArrayLike, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def ppf(self, time: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Args:
@@ -238,11 +209,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        time, extravars = preprocess_vars(self.functions, time, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.ppf(time))
+        time = array_factory(time)
+        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.ppf(time))
 
-    def mrl(self, time: ArrayLike, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def mrl(self, time: ArrayLike, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Args:
@@ -252,12 +225,14 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        time, extravars = preprocess_vars(self.functions, time, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.mrl(time))
+        time = array_factory(time)
+        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.mrl(time))
 
     def ichf(
-        self, cumulative_hazard_rate: ArrayLike, **extravars: ArrayLike
+        self, cumulative_hazard_rate: ArrayLike, *args: ArrayLike
     ) -> Union[float, np.ndarray]:
         """
 
@@ -267,61 +242,67 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
 
         """
-        cumulative_hazard_rate, extravars = preprocess_vars(
-            self.functions, cumulative_hazard_rate, **extravars
-        )
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.ichf(cumulative_hazard_rate))
+        cumulative_hazard_rate = array_factory(cumulative_hazard_rate)
+        args = [
+            array_factory(arg, nb_units=cumulative_hazard_rate.shape[0]) for arg in args
+        ]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.ichf(cumulative_hazard_rate))
 
     def rvs(
         self,
         size: Optional[int] = 1,
         seed: Optional[int] = None,
-        **extravars: ArrayLike,
+        args: Optional[tuple[ArrayLike]] = (),
     ) -> Union[float, np.ndarray]:
         """
 
         Args:
             size ():
             seed ():
+            args ():
 
         Returns:
 
         """
-        extravars = preprocess_vars(self.functions, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.rvs(size=size, seed=seed))
+        args = [array_factory(arg) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.rvs(size=size, seed=seed))
 
-    def mean(self, **extravars: ArrayLike) -> Union[float, np.ndarray]:
-        """
-
-        Returns:
-
-        """
-        extravars = preprocess_vars(self.functions, **extravars)
-        self._set_extravars(**extravars)
-        print(np.squeeze(self.functions.mean()))
-        return np.squeeze(self.functions.mean())
-
-    def var(self, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def mean(self, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Returns:
 
         """
-        extravars = preprocess_vars(self.functions, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.var())
+        args = [array_factory(arg) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.mean())
 
-    def median(self, **extravars: ArrayLike) -> Union[float, np.ndarray]:
+    def var(self, *args: ArrayLike) -> Union[float, np.ndarray]:
         """
 
         Returns:
 
         """
-        extravars = preprocess_vars(self.functions, **extravars)
-        self._set_extravars(**extravars)
-        return np.squeeze(self.functions.median())
+        args = [array_factory(arg) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.var())
+
+    def median(self, *args: ArrayLike) -> Union[float, np.ndarray]:
+        """
+
+        Returns:
+
+        """
+        args = [array_factory(arg) for arg in args]
+        are_all_args_given(self.function, *args)
+        self.function.args = args
+        return np.squeeze(self.function.median())
 
     def fit(
         self,
@@ -329,8 +310,9 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         event: Optional[ArrayLike] = None,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
+        args: Optional[tuple[ArrayLike]] = (),
         inplace: bool = True,
-        **kwargs: Any,
+        **kwargs,
     ) -> np.ndarray:
         """
         BLABLABLABLA
@@ -339,41 +321,69 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             event (Optional[ArrayLike]):
             entry (Optional[ArrayLike]):
             departure (Optional[ArrayLike]):
+            args (Optional[tuple[ArrayLike]]):
             inplace (bool): (default is True)
 
         Returns:
             Parameters: optimum parameters found
         """
-        extravars = {k: kwargs[k] for k in self.extravars_names}
 
-        likelihood = self.get_likelihood(
+        time = array_factory(time)
+        if time.shape[-1] not in (1, 2):
+            raise ValueError(
+                f"time must be of shape compatible to (nb_units, 1) or (nb_units, 2), got {time.shape}"
+            )
+        if event is not None:
+            event = array_factory(event, nb_units=time.shape[0])
+        if entry is not None:
+            entry = array_factory(entry, nb_units=time.shape[0])
+        if departure is not None:
+            departure = array_factory(departure, nb_units=time.shape[0])
+
+        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
+
+        observed_lifetimes, truncations = lifetime_factory_template(
             time,
             event,
             entry,
             departure,
-            **extravars,
+            *args,
         )
+
+        optimized_function = self.function.copy()
+        optimized_function.args = [
+            np.empty_like(arg) for arg in args
+        ]  # used for init_params if it depends on args
+        optimized_function.init_params(observed_lifetimes.rlc)
+        param0 = optimized_function.params
+
+        likelihood = LikelihoodFromLifetimes(
+            optimized_function,
+            observed_lifetimes,
+            truncations,
+        )
+
         minimize_kwargs = {
             "method": kwargs.get("method", "L-BFGS-B"),
             "constraints": kwargs.get("constraints", ()),
             "tol": kwargs.get("tol", None),
             "callback": kwargs.get("callback", None),
             "options": kwargs.get("options", None),
-            "bounds": kwargs.get("bounds", self.functions.params_bounds),
+            "bounds": kwargs.get("bounds", optimized_function.params_bounds),
+            "x0": kwargs.get("x0", param0),
         }
-        param0 = kwargs.get(
-            "x0", likelihood.functions.init_params(likelihood.observed_lifetimes.rlc)
-        )
 
         optimizer = minimize(
             likelihood.negative_log,
-            param0,
+            minimize_kwargs.pop("x0"),
             jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
             **minimize_kwargs,
         )
 
         if inplace:
-            self.functions = likelihood.functions.copy()
+            self.function = likelihood.function.copy()
+            self.params_set = True
+
         return optimizer.x
 
 
@@ -397,7 +407,7 @@ class Estimates:
             raise ValueError("Incompatible timeline, values and se in Estimates")
 
 
-class NonParametricEstimators(ABC):
+class NonParametricLifetimeEstimators(ABC):
     """_summary_"""
 
     def __init__(

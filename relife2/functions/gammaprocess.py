@@ -14,10 +14,10 @@ import numpy as np
 from scipy.optimize import Bounds, bisect
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 
-from relife2.functions.core import ParametricFunctions, ParametricLifetimeFunctions
+from relife2.functions.core import ParametricFunction, ParametricLifetimeFunction
 
 
-class ShapeFunctions(ParametricFunctions, ABC):
+class ShapeFunction(ParametricFunction, ABC):
     """BLABLABLA"""
 
     def init_params(self, *args: Any) -> np.ndarray:
@@ -40,7 +40,7 @@ class ShapeFunctions(ParametricFunctions, ABC):
         """BLABLABLA"""
 
 
-class PowerShapeFunctions(ShapeFunctions):
+class PowerShapeFunction(ShapeFunction):
     """BLABLABLA"""
 
     def __init__(
@@ -68,12 +68,12 @@ class PowerShapeFunctions(ShapeFunctions):
 #         return None
 
 
-class GPDistributionFunctions(ParametricLifetimeFunctions):
+class GPDistributionFunction(ParametricLifetimeFunction):
     """BLABLABLA"""
 
     def __init__(
         self,
-        shape_function: ShapeFunctions,
+        shape_function: ShapeFunction,
         rate: Optional[float] = None,
     ):
         super().__init__(rate=rate)
@@ -393,19 +393,19 @@ class GPDistributionFunctions(ParametricLifetimeFunctions):
 
 
 # GammaProcessFunctions(FunctionsBridge, parametric.Functions)
-class GPFunctions(ParametricFunctions):
+class GPFunction(ParametricFunction):
     """BLABLABLA"""
 
     def __init__(
         self,
-        shape_function: ShapeFunctions,
+        shape_function: ShapeFunction,
         rate: Optional[float] = None,
     ):
 
         super().__init__()
         self.add_functions(
             "process_lifetime_distribution",
-            GPDistributionFunctions(shape_function, rate),
+            GPDistributionFunction(shape_function, rate),
         )
 
     def init_params(self, *args: Any) -> np.ndarray:

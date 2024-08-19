@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from dataclasses import dataclass, field
-from typing import Any
 
 import numpy as np
 
@@ -20,8 +19,8 @@ class Sample:
 
     values: np.ndarray
     ids: np.ndarray  # arrays of int
-    extravars: dict[str, Any] = field(
-        default_factory=dict
+    args: list[np.ndarray] = field(
+        default_factory=list
     )  # any other data attached to values (e.g. covar values)
 
     def __post_init__(self):
@@ -57,13 +56,13 @@ class LifetimeSample:
                 axis=0,
             ),
             np.concatenate((self.complete.ids, self.right_censored.ids)),
-            {
-                k: np.concatenate(
-                    (self.complete.extravars[k], self.right_censored.extravars[k]),
+            [
+                np.concatenate(
+                    (v, self.right_censored.args[i]),
                     axis=0,
                 )
-                for k in self.complete.extravars.keys()
-            },
+                for i, v in enumerate(self.complete.args)
+            ],
         )
         self.rlc = Sample(
             np.concatenate(
@@ -80,17 +79,17 @@ class LifetimeSample:
                     self.right_censored.ids,
                 )
             ),
-            {
-                k: np.concatenate(
+            [
+                np.concatenate(
                     (
-                        self.complete.extravars[k],
-                        self.left_censored.extravars[k],
-                        self.right_censored.extravars[k],
+                        v,
+                        self.left_censored.args[i],
+                        self.right_censored.args[i],
                     ),
                     axis=0,
                 )
-                for k in self.complete.extravars.keys()
-            },
+                for i, v in enumerate(self.complete.args)
+            ],
         )
 
 
@@ -115,10 +114,7 @@ def intersect_lifetimes(*lifetimes: Sample) -> list[Sample]:
         Sample(
             _lifetimes.values[np.isin(_lifetimes.ids, inter_ids)],
             inter_ids,
-            {
-                k: v[np.isin(_lifetimes.ids, inter_ids)]
-                for k, v in _lifetimes.extravars.items()
-            },
+            [v[np.isin(_lifetimes.ids, inter_ids)] for v in _lifetimes.args],
         )
         for _lifetimes in lifetimes
     ]

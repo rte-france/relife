@@ -13,7 +13,7 @@ from numpy.typing import ArrayLike
 
 from relife2.data import lifetime_factory_template
 
-from .core import Estimates, NonParametricEstimators
+from .core import Estimates, NonParametricLifetimeEstimators
 from .io import array_factory
 
 
@@ -35,7 +35,7 @@ def _nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarr
     return yp[np.searchsorted(xp, x)]
 
 
-class ECDF(NonParametricEstimators):
+class ECDF(NonParametricLifetimeEstimators):
     """_summary_"""
 
     def estimate(
@@ -84,7 +84,7 @@ class ECDF(NonParametricEstimators):
         )
 
 
-class KaplanMeier(NonParametricEstimators):
+class KaplanMeier(NonParametricLifetimeEstimators):
     """_summary_"""
 
     def estimate(
@@ -163,7 +163,7 @@ class KaplanMeier(NonParametricEstimators):
         )
 
 
-class NelsonAalen(NonParametricEstimators):
+class NelsonAalen(NonParametricLifetimeEstimators):
     """_summary_"""
 
     def estimate(
@@ -231,7 +231,7 @@ class NelsonAalen(NonParametricEstimators):
         )
 
 
-class Turnbull(NonParametricEstimators):
+class Turnbull(NonParametricLifetimeEstimators):
     """
     BLABLABLA
     """

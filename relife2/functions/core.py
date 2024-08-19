@@ -8,77 +8,176 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Union
+from itertools import chain
+from typing import Any, Iterator, Optional, Union
 
 import numpy as np
 from numpy import ma
-from numpy.typing import ArrayLike
 from scipy.optimize import Bounds, newton
 
 from relife2.functions.maths.integrations import gauss_legendre, quad_laguerre
 
 
-class ParametricFunctions(ABC):
-    """
-    Base class of objects implementing parametric functions.
-    ParametricFunctions have a tree structure of parameters allowing to compose functions with add_functions method.
-    Parameters can be called and set by their name.
+class Composite:
+    def __init__(self, **kwargs):
+        self._data: dict[str, Any] = {}
+        if kwargs:
+            self._data = kwargs
+        self.parent: Union["Composite", None] = None
+        self.leaves: dict[str, "Composite"] = {}
+        self._names, self._values = [], []
 
-    Examples:
-        >>> # ParametricFunctions types must implement init_params and params_bounds methods
-        ... # They are passed in this example just to show how main ParametricFunctions methods work
-        ... class MyFunctions(ParametricFunctions):
-        ...   def init_params(self):
-        ...       pass
-        ...   def params_bounds(self):
-        ...       pass
-        >>> f = MyFunctions(w1=1.0, w2=2.0) # a parametric functions made of two parameters
-        >>> print(f.params) # parameters are returned as np.ndarray
-        ... # doctest: +NORMALIZE_WHITESPACE
-        [1. 2.]
-        >>> g = MyFunctions(w3=3.0, w4=4, w5=5) # other parametric functions
-        >>> h = MyFunctions(w6=6)
-        >>> y = MyFunctions(w7=7.0)
-        >>> z = MyFunctions(w8=8.0)
-        >>> k = MyFunctions(w9=9.0)
-        >>> f.add_functions("g", g)
-        >>> h.add_functions("y", y) # compose functions
-        >>> h.add_functions("z", z)
-        >>> f.add_functions("h", h)
-        >>> f.add_functions("k", k)
-        >>> print(f) # functions are like tree in their structure of parameters
-        ... # doctest: +NORMALIZE_WHITESPACE
-        MyFunctions {'w1': 1.0, 'w2': 2.0},
-        |____g {'w3': 3.0, 'w4': 4.0, 'w5': 5.0},
-        |____h {'w6': 6.0},
-        |________y {'w7': 7.0},
-        |________z {'w8': 8.0},
-        |____k {'w9': 9.0},
-        >>> (f.params == np.array([1., 2., 3., 4., 5., 6., 7., 8., 9.])).all()
-        ... # but parameters are always seen as one np.ndarray object
-        ... # read from top to bottom and left to right
-        True
-        >>> f.w5 = 10.0 # parameters can be set by their name
-        >>> (f.params == np.array([1., 2., 3., 4., 10., 6., 7., 8., 9.])).all()
-        True
-        >>> print(f.leaves_functions["g"]) # in the backend functions are stored in a dict
-        MyFunctions {'w3': 3.0, 'w4': 4.0, 'w5': 10.0},
-        >>> print(hasattr(f, "h")) # functions are seen as attribute and can be resquested
-        True
-        >>> print(hasattr(f, "w5")) # even parameters are seen as attribute and can be requested
-        True
-    """
+    @property
+    def data(self):
+        """data of current node as dict"""
+        return self._data
 
-    def __init__(self, **kwparams: Union[float, None]):
+    @property
+    def names(self):
+        """keys of current and leaf nodes as list"""
+        return self._names
 
-        self.root_params: dict[str, Union[float, None]] = {}
-        for k, v in kwparams.items():
-            if v is not None:
-                self.root_params[k] = float(v)
-            else:
-                self.root_params[k] = v
-        self.leaves_functions: dict[str, "ParametricFunctions"] = {}
-        self.all_params: dict[str, Union[float, None]] = self.root_params.copy()
+    @property
+    def values(self):
+        """values of current and leaf nodes as list"""
+        return self._values
+
+    @values.setter
+    def values(self, new_values: list[Any]):
+        self._set_values(new_values)
+        self.update_parents()
+
+    def _set_values(self, new_values: list[Any]):
+        if len(new_values) != len(self):
+            raise ValueError(
+                f"values expects {len(self)} items but got {len(new_values)}"
+            )
+        self._values = new_values
+        pos = len(self._data)
+        self._data.update(zip(self._data, new_values[:pos]))
+        for leaf in self.leaves.values():
+            leaf._set_values(new_values[pos : pos + len(leaf)])
+            pos += len(leaf)
+
+    @names.setter
+    def names(self, new_names: list[str]):
+        self._set_names(new_names)
+        self.update_parents()
+
+    def _set_names(self, new_names: list[str]):
+        if len(new_names) != len(self):
+            raise ValueError(
+                f"names expects {len(self)} items but got {len(new_names)}"
+            )
+        self._names = new_names
+        pos = len(self._data)
+        self._data = {new_names[:pos][i]: v for i, v in self._data.values()}
+        for leaf in self.leaves.values():
+            leaf._set_names(new_names[pos : pos + len(leaf)])
+            pos += len(leaf)
+
+    @data.setter
+    def data(self, new_data: dict[str, Any]):
+        self._data = new_data
+        self.update()
+
+    def __len__(self):
+        return len(self._names)
+
+    def __contains__(self, item):
+        """contains only applies on current node"""
+        return item in self._data
+
+    def __getitem__(self, item):
+        return self._data[item]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+        self.update()
+
+    def __delitem__(self, key):
+        del self._data[key]
+        self.update()
+
+    def get_leaf(self, item):
+        return self.leaves[item]
+
+    def set_leaf(self, key, value):
+        if key not in self.leaves:
+            value.parent = self
+        self.leaves[key] = value
+        self.update()
+
+    def del_leaf(self, key):
+        del self.leaves[key]
+        self.update()
+
+    def _items_walk(self) -> Iterator:
+        """parallel walk through key value pairs"""
+        yield list(self._data.items())
+        for leaf in self.leaves.values():
+            yield list(chain.from_iterable(leaf._items_walk()))
+
+    def _all_items(self) -> Iterator:
+        return chain.from_iterable(self._items_walk())
+
+    def update_items(self):
+        """parallel iterations : faster than update_value followed by update_keys"""
+        try:
+            next(self._all_items())
+            _k, _v = zip(*self._all_items())
+            self._names = list(_k)
+            self._values = list(_v)
+        except StopIteration:
+            pass
+
+    def update_parents(self):
+        if self.parent is not None:
+            self.parent.update()
+
+    def update(self):
+        """update names and values of current and parent nodes"""
+        self.update_items()
+        self.update_parents()
+
+
+class ParametricFunction(ABC):
+    def __init__(self):
+        self._params = Composite()
+        self._args = Composite()
+        self.leaves: dict[str, "Composite"] = {}
+
+    @property
+    def params(self):
+        return np.array(self._params.values, dtype=np.float64)
+
+    @property
+    def args(self):
+        return self._args.values
+
+    @property
+    def params_names(self):
+        return self._params.names
+
+    @property
+    def args_names(self):
+        return self._args.names
+
+    @params.setter
+    def params(self, new_values):
+        self._params.values = new_values
+
+    @args.setter
+    def args(self, new_values):
+        self._args.values = new_values
+
+    @property
+    def nb_params(self):
+        return len(self._params)
+
+    @property
+    def nb_args(self):
+        return len(self._args)
 
     @abstractmethod
     def init_params(self, *args: Any) -> np.ndarray:
@@ -89,196 +188,63 @@ class ParametricFunctions(ABC):
     def params_bounds(self) -> Bounds:
         """BLABLABLA"""
 
-    @property
-    def params_names(self) -> tuple[str, ...]:
-        """
-        Returns:
-            tuple[str, ...]: param names
-        """
-        return tuple(self.all_params.keys())
+    def add_functions(self, **kwfunctions: "ParametricFunction"):
+        """add functions that can be called from node"""
+        for name in kwfunctions.keys():
+            if name in self._args.data:
+                raise ValueError(f"{name} already exists as arg name")
+            if name in self._params.data:
+                raise ValueError(f"{name} already exists as param name")
+            if name in self.leaves:
+                raise ValueError(f"{name} already exists as leaf function")
+        for name, function in kwfunctions.items():
+            self.leaves[name] = function
+            self._params.set_leaf(f"{name}.params", function._params)
+            self._args.set_leaf(f"{name}.args", function._args)
 
-    @property
-    def nb_params(self) -> int:
-        """
-        Returns:
-            int: nb of parameters (alias of len)
-        """
-        return len(self.all_params)
+    def new_args(self, **kwargs: np.ndarray):
+        """change local args (at node level)"""
+        for name in kwargs.keys():
+            if name in self._params.data:
+                raise ValueError(f"{name} already exists as param name")
+            if name in self.leaves.keys():
+                raise ValueError(f"{name} already exists as function name")
+        self._args.data = kwargs
 
-    @property
-    def params(self) -> np.ndarray:
-        """
-        Returns:
-            (np.ndarray) : parameters values
-        """
-        return np.array(tuple(self.all_params.values()), dtype=np.float64)
-
-    @params.setter
-    def params(self, values: ArrayLike) -> None:
-        """
-        Affects new values to Parameters attributes
-        Args:
-            values (Union[float, ArrayLike]):
-        """
-        values = np.asarray(values, dtype=np.float64).reshape(
-            -1,
-        )
-        if values.size != self.nb_params:
-            raise ValueError(
-                f"Can't set different number of params, expected {self.nb_params} param values, got {values.size}"
-            )
-
-        self.all_params.update(zip(self.all_params, values))
-        pos = len(self.root_params)
-        self.root_params.update(zip(self.root_params, values[:pos]))
-        for functions in self.leaves_functions.values():
-            functions.params = values[pos : pos + functions.nb_params]
-            pos += functions.nb_params
-
-    def add_params(self, **kwparams: Union[float, None]) -> None:
-        """
-        Args:
-            **kwparams ():
-
-        Returns:
-        """
-        if set(self.params_names) & set(kwparams.keys()):
-            raise ValueError("Can't add params when param names are already used")
-        pos = len(self.root_params)
-        root_params_items = list(self.root_params.items())
-        all_params_items = list(self.all_params.items())
-        items_to_insert = list(kwparams.items())
-        self.root_params = dict(
-            root_params_items[:pos] + items_to_insert + root_params_items[pos:]
-        )
-        self.all_params = dict(
-            all_params_items[:pos] + items_to_insert + all_params_items[pos:]
-        )
-
-    def add_functions(self, name: str, functions: "ParametricFunctions") -> None:
-        """
-        add leaf functions to tree
-        Appends another Parameters object to itself
-        Args:
-            name (str):
-            functions (ParametricFunctions): ParametricFunctions object to append
-        """
-        if set(self.params_names) & set(functions.params_names):
-            raise ValueError("Can't add functions having common param names")
-        self.leaves_functions[name] = functions
-        self.all_params.update(functions.all_params)
-
-    def _get_leaf_functions(self, name: str) -> Union[None, "ParametricFunctions"]:
-        leaves = []
-        queue = [self]
-        found_functions = None
-        while queue:
-            current_node = queue.pop(0)
-            if current_node is None:
-                continue
-            if not current_node.leaves_functions:
-                leaves.append(current_node)
-                continue
-            for leaf_name, leaf in current_node.leaves_functions.items():
-                if leaf_name == name:
-                    found_functions = leaf
-                    break
-                queue.append(leaf)
-        return found_functions
-
-    # def _set_leaf_functions(self, name: str, functions: "ParametricFunctions") -> None:
-    #     leaves = []
-    #     queue = [self]
-    #     pos = len(self.root_params)
-    #     functions_set = False
-    #     while queue:
-    #         current_node = queue.pop(0)
-    #         if current_node is None:
-    #             continue
-    #         if not current_node.leaves_functions:
-    #             leaves.append(current_node)
-    #             continue
-    #         for leaf_name, leaf in current_node.leaves_functions.items():
-    #             if leaf_name == name:
-    #                 all_params_items = list(self.all_params.items())
-    #                 items_to_insert = list(functions.all_params.items())
-    #
-    #                 all_params_items = (
-    #                     all_params_items[:pos]
-    #                     + items_to_insert
-    #                     + all_params_items[pos + leaf.nb_params :]
-    #                 )
-    #
-    #                 all_params_dict = dict(all_params_items)
-    #                 if len(all_params_dict) < len(all_params_items):
-    #                     raise ValueError(
-    #                         "Can't set functions having common param names with other functions"
-    #                     )
-    #                 self.all_params = all_params_dict
-    #                 current_node.leaves_functions[name] = functions
-    #                 queue = []
-    #                 functions_set = True
-    #                 break
-    #             queue.append(leaf)
-    #             pos += len(leaf.root_params)
-    #     if not functions_set:
-    #         raise ValueError(f"No functions named {name} was found")
+    def new_params(self, **kwparams):
+        """change local params structure (at node level)"""
+        for name in kwparams.keys():
+            if name in self._args.data:
+                raise ValueError(f"{name} already exists as arg name")
+            if name in self.leaves.keys():
+                raise ValueError(f"{name} already exists as function name")
+        self._params.data = kwparams
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
-        if name in super().__getattribute__("all_params"):
-            return super().__getattribute__("all_params")[name]
-        functions = self._get_leaf_functions(name)
-        if functions is None:
-            raise AttributeError(f"{class_name} has no attribute named {name}")
-        return functions
+        if name in super().__getattribute__("_params"):
+            return super().__getattribute__("_params")[name]
+        if name in super().__getattribute__("_args"):
+            return super().__getattribute__("_args")[name]
+        if name in super().__getattribute__("leaves"):
+            return super().__getattribute__("leaves")[name]
+        raise AttributeError(f"{class_name} has no attribute named {name}")
 
     def __setattr__(self, name: str, value: Any):
-        if name in ["all_params", "leaves_functions", "root_params"]:
+        if name in ["_args", "_params", "leaves"]:
             super().__setattr__(name, value)
-        elif name in self.all_params:
-            self.all_params[name] = float(value)
-            if name in self.root_params:
-                self.root_params[name] = float(value)
-            stop = False
-            while not stop:
-                for functions in self.leaves_functions.values():
-                    if name in functions.all_params:
-                        setattr(functions, name, float(value))
-                stop = True
-        # elif isinstance(value, ParametricFunctions):
-        #     self._set_leaf_functions(name, value)
-        elif isinstance(value, ParametricFunctions):
-            raise AttributeError(
-                "Can't set a functions. Recreate a Function object instead"
+        elif name in self._params:
+            self._params[name] = value
+        elif name in self._args:
+            self._args[name] = value
+        elif name in self.leaves:
+            raise ValueError(
+                "Can't modify leaf function. Recreate Function instance instead"
             )
         else:
             super().__setattr__(name, value)
-
-    def _get_functions_names(self, node):
-        leaf_names = {
-            key: type(value).__name__ for key, value in node.leaves_functions.items()
-        }
-        if not node.leaves_functions:
-            return leaf_names
-        if node.leaves_functions:
-            for leaf in node.leaves_functions.values():
-                leaf_names.update(self._get_functions_names(leaf))
-        return leaf_names
-
-    # def __repr__(self):
-    #     class_name = type(self).__name__
-    #     return f"{class_name}({self.all_params})"
-
-    def __str__(self):
-        class_name = type(self).__name__
-        return (
-            f"{class_name}(\n"
-            f" params = {self.all_params}\n"
-            f" functions = {self._get_functions_names(self)}\n)"
-        )
 
     def copy(self):
         """
@@ -288,7 +254,7 @@ class ParametricFunctions(ABC):
         return copy.deepcopy(self)
 
 
-class ParametricLifetimeFunctions(ParametricFunctions, ABC):
+class ParametricLifetimeFunction(ParametricFunction, ABC):
     """
     BLABLABLA
     """
@@ -297,19 +263,12 @@ class ParametricLifetimeFunctions(ParametricFunctions, ABC):
         self,
         **kwparams: Union[float, None],
     ):
-        super().__init__(**kwparams)
+        super().__init__()
+        self.new_params(**kwparams)
         self._base_functions: list[str] = []
         for name in ["sf", "hf", "chf", "pdf"]:
             if name in self.__class__.__dict__:
                 self._base_functions.append(name)
-
-        # any other values than time used as inputs in prob functions
-        # ex : covar
-        self.extravars: dict[str, Any] = {}
-
-    @property
-    def extravars_names(self):
-        return list(self.extravars.keys())
 
     @property
     @abstractmethod

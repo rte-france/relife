@@ -3,7 +3,7 @@ from collections.abc import Iterator
 
 import numpy as np
 
-from relife2.functions import DistributionFunctions, RegressionFunctions
+from relife2.functions import DistributionFunction, RegressionFunction
 
 
 class EventIterator(Iterator, ABC):
@@ -35,7 +35,7 @@ class DistributionIterator(EventIterator):
     """Concrete EventIterator for DistributionFunctions"""
 
     def __init__(
-        self, functions: DistributionFunctions, nb_samples, end_time, nb_assets=1
+        self, functions: DistributionFunction, nb_samples, end_time, nb_assets=1
     ):
         super().__init__(functions, nb_samples, nb_assets)
         self.end_time = end_time
@@ -59,7 +59,7 @@ class DistributionIterator(EventIterator):
 class RegressionIterator(EventIterator):
     """Concrete EventIterator for RegressionFunctions"""
 
-    def __init__(self, functions: RegressionFunctions, covar, nb_samples, end_time):
+    def __init__(self, functions: RegressionFunction, covar, nb_samples, end_time):
         super().__init__(functions, nb_samples, covar.shape[0])
         self.end_time = end_time
         self.durations = np.zeros(self.nb_assets * self.nb_samples)

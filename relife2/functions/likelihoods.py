@@ -18,11 +18,10 @@ from scipy.stats import gamma
 from relife2.data.dataclass import Deteriorations, LifetimeSample, Truncations
 
 from ..data.dataclass import Sample
-from .core import ParametricFunctions, ParametricLifetimeFunctions
+from .core import ParametricFunction, ParametricLifetimeFunction
 
 
-# Likelihood(FunctionsBridge)
-class Likelihood(ParametricFunctions):
+class Likelihood(ParametricFunction):
     """
     Class that instanciates likelihood base having finite number of parameters related to
     one parametric functions
@@ -30,16 +29,16 @@ class Likelihood(ParametricFunctions):
 
     hasjac: bool = False
 
-    def __init__(self, functions: ParametricFunctions):
+    def __init__(self, function: ParametricFunction):
         super().__init__()
-        self.add_functions("functions", functions)
+        self.add_functions(function=function)
 
     def init_params(self, *args: Any) -> np.ndarray:
-        return self.functions.init_params()
+        return self.function.init_params()
 
     @property
     def params_bounds(self) -> Bounds:
-        return self.functions.params_bounds
+        return self.function.params_bounds
 
     @abstractmethod
     def negative_log(self, params: np.ndarray) -> float:
@@ -59,22 +58,18 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def __init__(
         self,
-        functions: ParametricLifetimeFunctions,
+        function: ParametricLifetimeFunction,
         observed_lifetimes: LifetimeSample,
         truncations: Truncations,
     ):
-        super().__init__(functions)
+        super().__init__(function)
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
 
-        if hasattr(self.functions, "jac_hf") and hasattr(self.functions, "jac_chf"):
+        if hasattr(self.function, "jac_hf") and hasattr(self.function, "jac_chf"):
             self.hasjac = True
 
-    def _set_extravars(self, lifetimes: Sample):
-        for name, values in lifetimes.extravars.items():
-            setattr(self.functions, name, values)
-
-    def d_contrib(self, lifetimes: Sample) -> float:
+    def complete_contribs(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -83,10 +78,10 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
-        return -np.sum(np.log(self.functions.hf(lifetimes.values)))
+        self.function.args = lifetimes.args
+        return -np.sum(np.log(self.function.hf(lifetimes.values)))
 
-    def rc_contrib(self, lifetimes: Sample) -> float:
+    def right_censored_contribs(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -95,10 +90,10 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
-        return np.sum(self.functions.chf(lifetimes.values), dtype=np.float64)
+        self.function.args = lifetimes.args
+        return np.sum(self.function.chf(lifetimes.values), dtype=np.float64)
 
-    def lc_contrib(self, lifetimes: Sample) -> float:
+    def left_censored_contribs(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -107,18 +102,18 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
+        self.function.args = lifetimes.args
         return -np.sum(
             np.log(
                 -np.expm1(
-                    -self.functions.chf(
+                    -self.function.chf(
                         lifetimes.values,
                     )
                 )
             )
         )
 
-    def lt_contrib(self, lifetimes: Sample) -> float:
+    def left_truncations_contribs(self, lifetimes: Sample) -> float:
         """
 
         Args:
@@ -127,10 +122,10 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
-        return -np.sum(self.functions.chf(lifetimes.values), dtype=np.float64)
+        self.function.args = lifetimes.args
+        return -np.sum(self.function.chf(lifetimes.values), dtype=np.float64)
 
-    def jac_d_contrib(self, lifetimes: Sample) -> np.ndarray:
+    def jac_complete_contribs(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -139,14 +134,13 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
+        self.function.args = lifetimes.args
         return -np.sum(
-            self.functions.jac_hf(lifetimes.values)
-            / self.functions.hf(lifetimes.values),
+            self.function.jac_hf(lifetimes.values) / self.function.hf(lifetimes.values),
             axis=0,
         )
 
-    def jac_rc_contrib(self, lifetimes: Sample) -> np.ndarray:
+    def jac_right_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -155,13 +149,13 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
+        self.function.args = lifetimes.args
         return np.sum(
-            self.functions.jac_chf(lifetimes.values),
+            self.function.jac_chf(lifetimes.values),
             axis=0,
         )
 
-    def jac_lc_contrib(self, lifetimes: Sample) -> np.ndarray:
+    def jac_left_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -170,14 +164,14 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
+        self.function.args = lifetimes.args
         return -np.sum(
-            self.functions.jac_chf(lifetimes.values)
-            / np.expm1(self.functions.chf(lifetimes.values)),
+            self.function.jac_chf(lifetimes.values)
+            / np.expm1(self.function.chf(lifetimes.values)),
             axis=0,
         )
 
-    def jac_lt_contrib(self, lifetimes: Sample) -> np.ndarray:
+    def jac_left_truncations_contribs(self, lifetimes: Sample) -> np.ndarray:
         """
 
         Args:
@@ -186,9 +180,9 @@ class LikelihoodFromLifetimes(Likelihood):
         Returns:
 
         """
-        self._set_extravars(lifetimes)
+        self.function.args = lifetimes.args
         return -np.sum(
-            self.functions.jac_chf(lifetimes.values),
+            self.function.jac_chf(lifetimes.values),
             axis=0,
         )
 
@@ -197,11 +191,12 @@ class LikelihoodFromLifetimes(Likelihood):
         params: np.ndarray,
     ) -> float:
         self.params = params
+        print(self.complete_contribs(self.observed_lifetimes.complete))
         return (
-            self.d_contrib(self.observed_lifetimes.complete)
-            + self.rc_contrib(self.observed_lifetimes.rc)
-            + self.lc_contrib(self.observed_lifetimes.left_censored)
-            + self.lt_contrib(self.truncations.left)
+            self.complete_contribs(self.observed_lifetimes.complete)
+            + self.right_censored_contribs(self.observed_lifetimes.rc)
+            + self.left_censored_contribs(self.observed_lifetimes.left_censored)
+            + self.left_truncations_contribs(self.truncations.left)
         )
 
     def jac_negative_log(
@@ -221,10 +216,10 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         self.params = params
         return (
-            self.jac_d_contrib(self.observed_lifetimes.complete)
-            + self.jac_rc_contrib(self.observed_lifetimes.rc)
-            + self.jac_lc_contrib(self.observed_lifetimes.left_censored)
-            + self.jac_lt_contrib(self.truncations.left)
+            self.jac_complete_contribs(self.observed_lifetimes.complete)
+            + self.jac_right_censored_contribs(self.observed_lifetimes.rc)
+            + self.jac_left_censored_contribs(self.observed_lifetimes.left_censored)
+            + self.jac_left_truncations_contribs(self.truncations.left)
         )
 
 
@@ -233,7 +228,7 @@ class LikelihoodFromDeteriorations(Likelihood):
 
     def __init__(
         self,
-        functions: ParametricFunctions,
+        functions: ParametricFunction,
         deterioration_data: Deteriorations,
         first_increment_uncertainty: Optional[tuple] = None,
         measurement_tol: np.floating[Any] = np.finfo(float).resolution,
@@ -251,7 +246,8 @@ class LikelihoodFromDeteriorations(Likelihood):
         self.params = params
 
         delta_shape = np.diff(
-            self.functions.shape_function.nu(self.deterioration_data.times), axis=1
+            self.function.shape_function.nu(self.deterioration_data.times),
+            axis=1,
         )
 
         contributions = -(
@@ -274,14 +270,14 @@ class LikelihoodFromDeteriorations(Likelihood):
             gamma.cdf(
                 self.deterioration_data.increments + self.measurement_tol,
                 a=np.diff(
-                    self.functions.shape_function.nu(self.deterioration_data.times)
+                    self.function.shape_function.nu(self.deterioration_data.times)
                 ),
                 scale=1 / self.rate,
             )
             - gamma.cdf(
                 self.deterioration_data.increments - self.measurement_tol,
                 a=np.diff(
-                    self.functions.shape_function.nu(self.deterioration_data.times)
+                    self.function.shape_function.nu(self.deterioration_data.times)
                 ),
                 scale=1 / self.rate,
             ),
@@ -296,7 +292,7 @@ class LikelihoodFromDeteriorations(Likelihood):
         if self.first_increment_uncertainty is not None:
 
             first_inspections = self.deterioration_data.times[:, 1]
-            a = self.functions.shape_function.nu(first_inspections)
+            a = self.function.shape_function.nu(first_inspections)
             first_increment_contribution = -np.log(
                 gamma.cdf(
                     self.first_increment_uncertainty[1]

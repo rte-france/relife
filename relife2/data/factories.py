@@ -84,7 +84,7 @@ class LifetimesFactory(ABC):
         event: Optional[np.ndarray] = None,
         entry: Optional[np.ndarray] = None,
         departure: Optional[np.ndarray] = None,
-        **extravars: np.ndarray,
+        *args: np.ndarray,
     ):
 
         if entry is None:
@@ -100,19 +100,7 @@ class LifetimesFactory(ABC):
         self.event: np.ndarray = event.astype(np.bool_)
         self.entry: np.ndarray = entry
         self.departure: np.ndarray = departure
-        self.extravars: dict[str, np.ndarray] = extravars
-
-        for values in (
-            self.event,
-            self.entry,
-            self.departure,
-        ):
-            if values.shape != (len(self.time), 1):
-                raise ValueError("invalid argument shape")
-
-        for values in self.extravars.values():
-            if values.shape[0] != len(self.time):
-                raise ValueError("invalid extra var shape")
+        self.args: tuple[np.ndarray] = args
 
     @abstractmethod
     def get_complete(self) -> Sample:
@@ -187,44 +175,41 @@ class LifetimeDataFactoryFrom1D(LifetimesFactory):
     def get_complete(self) -> Sample:
         index = np.where(self.event)[0]
         values = self.time[index]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
     def get_left_censorships(self) -> Sample:
         return Sample(
             np.empty((0, 1), dtype=np.float64),
             np.empty((0,), dtype=np.int64),
-            {
-                k: np.empty((0, v.shape[-1]), dtype=np.float64)
-                for k, v in self.extravars.items()
-            },
+            [np.empty((0, v.shape[-1]), dtype=np.float64) for v in self.args],
         )
 
     def get_right_censorships(self) -> Sample:
         index = np.where(~self.event)[0]
         values = self.time[index]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
     def get_interval_censorships(self) -> Sample:
         rc_index = np.where(~self.event)[0]
         rc_values = np.c_[
             self.time[rc_index], np.ones(len(rc_index)) * np.inf
         ]  # add a column of inf
-        extravars = {k: v[rc_index] for k, v in self.extravars.items()}
-        return Sample(rc_values, rc_index, extravars)
+        args = [v[rc_index] for v in self.args]
+        return Sample(rc_values, rc_index, args)
 
     def get_left_truncations(self) -> Sample:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
     def get_right_truncations(self) -> Sample:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
 
 class LifetimeDataFactoryFrom2D(LifetimesFactory):
@@ -235,24 +220,24 @@ class LifetimeDataFactoryFrom2D(LifetimesFactory):
     def get_complete(self) -> Sample:
         index = np.where(self.time[:, 0] == self.time[:, 1])[0]
         values = self.time[index, 0, None]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
     def get_left_censorships(
         self,
     ) -> Sample:
         index = np.where(self.time[:, 0] == 0)[0]
         values = self.time[index, 1, None]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
     def get_right_censorships(
         self,
     ) -> Sample:
         index = np.where(self.time[:, 1] == np.inf)[0]
         values = self.time[index, 0, None]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
     def get_interval_censorships(self) -> Sample:
         index = np.where(
@@ -260,8 +245,8 @@ class LifetimeDataFactoryFrom2D(LifetimesFactory):
         )[0]
 
         values = self.time[index]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        lifetimes = Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        lifetimes = Sample(values, index, args)
         if len(lifetimes) != 0:
             if np.any(lifetimes.values[:, 0] >= lifetimes.values[:, 1]):
                 raise ValueError(
@@ -272,14 +257,14 @@ class LifetimeDataFactoryFrom2D(LifetimesFactory):
     def get_left_truncations(self) -> Sample:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
     def get_right_truncations(self) -> Sample:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
-        extravars = {k: v[index] for k, v in self.extravars.items()}
-        return Sample(values, index, extravars)
+        args = [v[index] for v in self.args]
+        return Sample(values, index, args)
 
 
 def lifetime_factory_template(
@@ -287,7 +272,7 @@ def lifetime_factory_template(
     event: Optional[np.ndarray] = None,
     entry: Optional[np.ndarray] = None,
     departure: Optional[np.ndarray] = None,
-    **extravars: np.ndarray,
+    *args: np.ndarray,
 ) -> Tuple[LifetimeSample, Truncations]:
     """
     Args:
@@ -301,9 +286,9 @@ def lifetime_factory_template(
     """
     factory: LifetimesFactory
     if time.shape[-1] == 1:
-        factory = LifetimeDataFactoryFrom1D(time, event, entry, departure, **extravars)
+        factory = LifetimeDataFactoryFrom1D(time, event, entry, departure, *args)
     else:
-        factory = LifetimeDataFactoryFrom2D(time, event, entry, departure, **extravars)
+        factory = LifetimeDataFactoryFrom2D(time, event, entry, departure, *args)
     return factory()
 
 

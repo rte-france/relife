@@ -46,7 +46,7 @@ def baseline(request):
 
 @pytest.fixture(scope="module", params=[AFT, ProportionalHazard])
 def model(request, baseline):
-    return request.param(baseline, coefficients=(1.0, 1.0, 1.0))
+    return request.param(baseline, (1.0, 1.0, 1.0))
 
 
 @pytest.fixture(scope="module")
@@ -56,40 +56,42 @@ def covar():
 
 @pytest.fixture(scope="module")
 def weibull_aft():
-    return AFT(Weibull(), coefficients=(None, None, None))
+    return AFT(Weibull())
 
 
 @pytest.fixture(scope="module")
 def weibull_pph():
-    return ProportionalHazard(Weibull(), coefficients=(None, None, None))
+    return ProportionalHazard(Weibull())
 
 
 # test functions
 
 
 def test_sf(model, covar):
-    assert model.sf(model.median(covar=covar), covar=covar) == pytest.approx(
-        0.5, rel=1e-3
-    )
+    assert model.sf(model.median(covar), covar) == pytest.approx(0.5, rel=1e-3)
 
 
 def test_rvs(model, covar):
     size = 10
-    assert model.rvs(covar=covar, size=size).shape == (covar.shape[0], size)
+    assert model.rvs(size, args=(covar,)).shape == (covar.shape[0], size)
 
 
 def test_mean(model, covar):
-    assert model.mean(covar=covar).shape[0] == covar.shape[0]
+    assert model.mean(covar).shape[0] == covar.shape[0]
 
 
 def fit_model(model, data):
     model.fit(
         data[0, :],
         event=data[1, :] == 1,
-        covar=zscore(
-            np.column_stack([boxcox(covar_values)[0] for covar_values in data[3:, :]])
-        ),
         entry=data[2, :],
+        args=(
+            zscore(
+                np.column_stack(
+                    [boxcox(covar_values)[0] for covar_values in data[3:, :]]
+                )
+            ),
+        ),
     )
     return model
 
