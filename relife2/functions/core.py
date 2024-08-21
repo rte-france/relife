@@ -20,17 +20,17 @@ from relife2.functions.maths.integrations import gauss_legendre, quad_laguerre
 
 class Composite:
     def __init__(self, **kwargs):
-        self._data: dict[str, Any] = {}
+        self._node_values: dict[str, Any] = {}
         if kwargs:
-            self._data = kwargs
+            self._node_values = kwargs
         self.parent: Union["Composite", None] = None
         self.leaves: dict[str, "Composite"] = {}
         self._names, self._values = [], []
 
     @property
-    def data(self):
+    def node_values(self):
         """data of current node as dict"""
-        return self._data
+        return self._node_values
 
     @property
     def names(self):
@@ -53,8 +53,8 @@ class Composite:
                 f"values expects {len(self)} items but got {len(new_values)}"
             )
         self._values = new_values
-        pos = len(self._data)
-        self._data.update(zip(self._data, new_values[:pos]))
+        pos = len(self._node_values)
+        self._node_values.update(zip(self._node_values, new_values[:pos]))
         for leaf in self.leaves.values():
             leaf._set_values(new_values[pos : pos + len(leaf)])
             pos += len(leaf)
@@ -70,15 +70,17 @@ class Composite:
                 f"names expects {len(self)} items but got {len(new_names)}"
             )
         self._names = new_names
-        pos = len(self._data)
-        self._data = {new_names[:pos][i]: v for i, v in self._data.values()}
+        pos = len(self._node_values)
+        self._node_values = {
+            new_names[:pos][i]: v for i, v in self._node_values.values()
+        }
         for leaf in self.leaves.values():
             leaf._set_names(new_names[pos : pos + len(leaf)])
             pos += len(leaf)
 
-    @data.setter
-    def data(self, new_data: dict[str, Any]):
-        self._data = new_data
+    @node_values.setter
+    def node_values(self, new_values: dict[str, Any]):
+        self._node_values = new_values
         self.update()
 
     def __len__(self):
@@ -86,17 +88,17 @@ class Composite:
 
     def __contains__(self, item):
         """contains only applies on current node"""
-        return item in self._data
+        return item in self._node_values
 
     def __getitem__(self, item):
-        return self._data[item]
+        return self._node_values[item]
 
     def __setitem__(self, key, value):
-        self._data[key] = value
+        self._node_values[key] = value
         self.update()
 
     def __delitem__(self, key):
-        del self._data[key]
+        del self._node_values[key]
         self.update()
 
     def get_leaf(self, item):
@@ -114,7 +116,7 @@ class Composite:
 
     def _items_walk(self) -> Iterator:
         """parallel walk through key value pairs"""
-        yield list(self._data.items())
+        yield list(self._node_values.items())
         for leaf in self.leaves.values():
             yield list(chain.from_iterable(leaf._items_walk()))
 
@@ -191,9 +193,9 @@ class ParametricFunction(ABC):
     def add_functions(self, **kwfunctions: "ParametricFunction"):
         """add functions that can be called from node"""
         for name in kwfunctions.keys():
-            if name in self._args.data:
+            if name in self._args.node_values:
                 raise ValueError(f"{name} already exists as arg name")
-            if name in self._params.data:
+            if name in self._params.node_values:
                 raise ValueError(f"{name} already exists as param name")
             if name in self.leaves:
                 raise ValueError(f"{name} already exists as leaf function")
@@ -205,20 +207,20 @@ class ParametricFunction(ABC):
     def new_args(self, **kwargs: np.ndarray):
         """change local args (at node level)"""
         for name in kwargs.keys():
-            if name in self._params.data:
+            if name in self._params.node_values:
                 raise ValueError(f"{name} already exists as param name")
             if name in self.leaves.keys():
                 raise ValueError(f"{name} already exists as function name")
-        self._args.data = kwargs
+        self._args.node_values = kwargs
 
     def new_params(self, **kwparams):
         """change local params structure (at node level)"""
         for name in kwparams.keys():
-            if name in self._args.data:
+            if name in self._args.node_values:
                 raise ValueError(f"{name} already exists as arg name")
             if name in self.leaves.keys():
                 raise ValueError(f"{name} already exists as function name")
-        self._params.data = kwparams
+        self._params.node_values = kwparams
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
