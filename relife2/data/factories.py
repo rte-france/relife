@@ -7,7 +7,8 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
+from typing import Optional, Sequence
+from typing import Tuple
 
 import numpy as np
 
@@ -84,7 +85,7 @@ class LifetimesFactory(ABC):
         event: Optional[np.ndarray] = None,
         entry: Optional[np.ndarray] = None,
         departure: Optional[np.ndarray] = None,
-        *args: np.ndarray,
+        args: Optional[Sequence[np.ndarray]] = (),
     ):
 
         if entry is None:
@@ -272,7 +273,7 @@ def lifetime_factory_template(
     event: Optional[np.ndarray] = None,
     entry: Optional[np.ndarray] = None,
     departure: Optional[np.ndarray] = None,
-    *args: np.ndarray,
+    args: Optional[Sequence[np.ndarray]] = (),
 ) -> Tuple[LifetimeSample, Truncations]:
     """
     Args:
@@ -280,15 +281,16 @@ def lifetime_factory_template(
         event ():
         entry ():
         departure ():
+        args ():
 
     Returns:
 
     """
     factory: LifetimesFactory
     if time.shape[-1] == 1:
-        factory = LifetimeDataFactoryFrom1D(time, event, entry, departure, *args)
+        factory = LifetimeDataFactoryFrom1D(time, event, entry, departure, args)
     else:
-        factory = LifetimeDataFactoryFrom2D(time, event, entry, departure, *args)
+        factory = LifetimeDataFactoryFrom2D(time, event, entry, departure, args)
     return factory()
 
 

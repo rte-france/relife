@@ -16,9 +16,8 @@ from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
 from relife2.data.dataclass import Deteriorations, LifetimeSample, Truncations
-
-from ..data.dataclass import Sample
 from .core import ParametricFunction, ParametricLifetimeFunction
+from ..data.dataclass import Sample
 
 
 class Likelihood(ParametricFunction):
@@ -191,7 +190,6 @@ class LikelihoodFromLifetimes(Likelihood):
         params: np.ndarray,
     ) -> float:
         self.params = params
-        print(self.complete_contribs(self.observed_lifetimes.complete))
         return (
             self.complete_contribs(self.observed_lifetimes.complete)
             + self.right_censored_contribs(self.observed_lifetimes.rc)

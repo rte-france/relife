@@ -14,10 +14,14 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
-from relife2.data import lifetime_factory_template
+from relife2.data.factories import lifetime_factory_template
 from relife2.functions import LikelihoodFromLifetimes
 from relife2.functions.core import ParametricFunction, ParametricLifetimeFunction
-from relife2.models.io import are_all_args_given, array_factory
+from relife2.models.io import (
+    are_all_args_given,
+    array_factory,
+    preprocess_lifetime_data,
+)
 
 _LIFETIME_FUNCTIONS_NAMES = [
     "sf",
@@ -327,27 +331,15 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         Returns:
             Parameters: optimum parameters found
         """
-
-        time = array_factory(time)
-        if time.shape[-1] not in (1, 2):
-            raise ValueError(
-                f"time must be of shape compatible to (nb_units, 1) or (nb_units, 2), got {time.shape}"
-            )
-        if event is not None:
-            event = array_factory(event, nb_units=time.shape[0])
-        if entry is not None:
-            entry = array_factory(entry, nb_units=time.shape[0])
-        if departure is not None:
-            departure = array_factory(departure, nb_units=time.shape[0])
-
-        args = [array_factory(arg, nb_units=time.shape[0]) for arg in args]
-
+        time, event, entry, departure, args = preprocess_lifetime_data(
+            time, event, entry, departure, args
+        )
         observed_lifetimes, truncations = lifetime_factory_template(
             time,
             event,
             entry,
             departure,
-            *args,
+            args,
         )
 
         optimized_function = self.function.copy()
