@@ -1,4 +1,5 @@
 # pylint: disable=missing-module-docstring
+from .addons import LeftTruncatedFunction, AgeReplacementFunction
 from .distributions import (
     DistributionFunction,
     ExponentialFunction,

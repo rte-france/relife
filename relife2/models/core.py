@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -49,7 +49,7 @@ class ParametricModel:
         self.params_set = False
         if np.isnan(function.params).any() and not np.isnan(function.params).all():
             raise ValueError(
-                "Can't instanciate partially initialized model. Set all params or instanciate empty model"
+                "Can't instanciate partially initialized model. Set all params or instanciate empty model and fit it"
             )
         else:
             self.params_set = True
@@ -314,7 +314,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         event: Optional[ArrayLike] = None,
         entry: Optional[ArrayLike] = None,
         departure: Optional[ArrayLike] = None,
-        args: Optional[tuple[ArrayLike]] = (),
+        args: Optional[Sequence[ArrayLike] | ArrayLike] = (),
         inplace: bool = True,
         **kwargs,
     ) -> np.ndarray:

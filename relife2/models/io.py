@@ -60,7 +60,7 @@ def preprocess_lifetime_data(
     event: Optional[ArrayLike] = None,
     entry: Optional[ArrayLike] = None,
     departure: Optional[ArrayLike] = None,
-    args: Optional[Sequence[ArrayLike]] = (),
+    args: Optional[Sequence[ArrayLike] | ArrayLike] = (),
 ):
     time = array_factory(time)
     if time.shape[-1] not in (1, 2):

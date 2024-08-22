@@ -11,6 +11,8 @@ from relife2.functions import (
     PowerShapeFunction,
     ProportionalHazardFunction,
     WeibullFunction,
+    LeftTruncatedFunction,
+    AgeReplacementFunction,
 )
 from relife2.models.core import ParametricLifetimeModel
 
@@ -98,3 +100,17 @@ class AFT(ParametricLifetimeModel):
         coef: Optional[Sequence[float | None]] = (),
     ):
         super().__init__(AFTFunction(baseline.function.copy(), coef))
+
+
+class LeftTruncated(ParametricLifetimeModel):
+    """BLABLABLABLA"""
+
+    def __init__(self, baseline: ParametricLifetimeModel):
+        super().__init__(LeftTruncatedFunction(baseline.function.copy()))
+
+
+class AgeReplacementModel(ParametricLifetimeModel):
+    """BLABLABLABLA"""
+
+    def __init__(self, baseline: ParametricLifetimeModel):
+        super().__init__(AgeReplacementFunction(baseline.function.copy()))
