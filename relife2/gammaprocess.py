@@ -14,10 +14,11 @@ import numpy as np
 from scipy.optimize import Bounds, bisect
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 
-from relife2.functions.core import ParametricFunction, ParametricLifetimeFunction
+from relife2.core import ParametricLifetimeModel
+from relife2.functions import ParametricFunctions
 
 
-class ShapeFunction(ParametricFunction, ABC):
+class ShapeFunctions(ParametricFunctions, ABC):
     """BLABLABLA"""
 
     def init_params(self, *args: Any) -> np.ndarray:
@@ -40,13 +41,14 @@ class ShapeFunction(ParametricFunction, ABC):
         """BLABLABLA"""
 
 
-class PowerShapeFunction(ShapeFunction):
+class PowerShape(ShapeFunctions):
     """BLABLABLA"""
 
     def __init__(
         self, shape_rate: Optional[float] = None, shape_power: Optional[float] = None
     ):
-        super().__init__(shape_rate=shape_rate, shape_power=shape_power)
+        super().__init__()
+        self.new_params(shape_rate=shape_rate, shape_power=shape_power)
 
     def nu(self, time: np.ndarray) -> np.ndarray:
         return self.shape_rate * time**self.shape_power
@@ -68,38 +70,19 @@ class PowerShapeFunction(ShapeFunction):
 #         return None
 
 
-class GPDistributionFunction(ParametricLifetimeFunction):
+class GammaProcessDistribution(ParametricLifetimeModel):
     """BLABLABLA"""
 
     def __init__(
         self,
-        shape_function: ShapeFunction,
+        shape_function: ShapeFunctions,
         rate: Optional[float] = None,
     ):
-        super().__init__(rate=rate)
-        self.add_functions("shape_function", shape_function)
+        super().__init__()
+        self.new_params(rate=rate)
+        self.add_functions(shape_function=shape_function)
         self.extras["initial_resistance"] = uniform(1, 2)
         self.extras["load_threshold"] = uniform(0, 1)
-
-    @property
-    def initial_resistance(self):
-        return self.extras["initial_resistance"]
-
-    @property
-    def load_threshold(self):
-        return self.extras["load_threshold"]
-
-    @initial_resistance.setter
-    def initial_resistance(self, value: float):
-        if not isinstance(value, float):
-            raise ValueError("initial_resistance must be float")
-        self.extras["initial_resistance"] = value
-
-    @load_threshold.setter
-    def load_threshold(self, value: float):
-        if not isinstance(value, float):
-            raise ValueError("load_threshold must be float")
-        self.extras["load_threshold"] = value
 
     @property
     def support_lower_bound(self):
@@ -153,7 +136,7 @@ class GPDistributionFunction(ParametricLifetimeFunction):
         )
         return Bounds(lb, ub)
 
-    def pdf(self, time: np.ndarray) -> np.ndarray:
+    def pdf(self, time: np.ndarray, l0: np.ndarray, r0: np.ndarray) -> np.ndarray:
         """BLABLABLA"""
 
         res = -self.shape_function.jac_nu(time) * self.moore_jac_uppergamma_c(time)
@@ -165,7 +148,7 @@ class GPDistributionFunction(ParametricLifetimeFunction):
             res,
         )
 
-    def sf(self, time: np.ndarray) -> np.ndarray:
+    def sf(self, time: np.ndarray, l0: np.ndarray, r0: np.ndarray) -> np.ndarray:
         """
         BLABLABLABLA
         Args:
@@ -184,6 +167,8 @@ class GPDistributionFunction(ParametricLifetimeFunction):
         time: np.ndarray,
         conditional_time: np.ndarray,
         conditional_resistance: np.ndarray,
+        l0: np.ndarray,
+        r0: np.ndarray,
     ) -> np.ndarray:
         """
         Args:
@@ -392,20 +377,31 @@ class GPDistributionFunction(ParametricLifetimeFunction):
         return result.reshape(time.shape)
 
 
-# GammaProcessFunctions(FunctionsBridge, parametric.Functions)
-class GPFunction(ParametricFunction):
-    """BLABLABLA"""
+class GammaProcess(ParametricFunctions):
+    """
+    BLABLABLABLA
+    """
+
+    shape_names: tuple = ("exponential", "power")
 
     def __init__(
         self,
-        shape_function: ShapeFunction,
+        shape: str,
         rate: Optional[float] = None,
+        **shape_params: Union[float, None],
     ):
-
         super().__init__()
+        # if shape == "exponential":
+        #     shape_functions = ExponentialShapeFunctions(**shape_params)
+        if shape == "power":
+            shape_functions = PowerShape(**shape_params)
+        else:
+            raise ValueError(
+                f"{shape} is not valid name for shape, only {self.shape_names} are allowed"
+            )
+        self.new_params(rate=rate)
         self.add_functions(
-            "process_lifetime_distribution",
-            GPDistributionFunction(shape_function, rate),
+            process_lifetime_distribution=GammaProcessDistribution(shape_functions)
         )
 
     def init_params(self, *args: Any) -> np.ndarray:
@@ -577,3 +573,72 @@ class GPFunction(ParametricFunction):
             nu = next_nu.copy()
 
         return res_deteriorations, res_times, res_unit_ids, res_sample_ids
+
+    def _init_likelihood(
+        self,
+        deterioration_data: Deteriorations,
+        first_increment_uncertainty,
+        measurement_tol,
+        **kwargs: Any,
+    ) -> LikelihoodFromDeteriorations:
+        if len(kwargs) != 0:
+            extra_args_names = tuple(kwargs.keys())
+            raise ValueError(
+                f"""
+                Distribution likelihood does not expect other data than lifetimes
+                Remove {extra_args_names} from kwargs.
+                """
+            )
+        return LikelihoodFromDeteriorations(
+            self.function.copy(),
+            deterioration_data,
+            first_increment_uncertainty=first_increment_uncertainty,
+            measurement_tol=measurement_tol,
+        )
+
+    def fit(
+        self,
+        deterioration_measurements: ArrayLike,
+        inspection_times: ArrayLike,
+        unit_ids: ArrayLike,
+        first_increment_uncertainty: Optional[tuple] = None,
+        measurement_tol: np.floating[Any] = np.finfo(float).resolution,
+        inplace: bool = True,
+        **kwargs: Any,
+    ) -> FloatArray:
+        """
+        BLABLABLABLA
+        """
+
+        deterioration_data = deteriorations_factory(
+            array_factory(deterioration_measurements),
+            array_factory(inspection_times),
+            array_factory(unit_ids),
+            self.function.process_lifetime_distribution.initial_resistance,
+        )
+
+        param0 = kwargs.pop("x0", self.function.init_params())
+
+        minimize_kwargs = {
+            "method": kwargs.pop("method", "Nelder-Mead"),
+            "bounds": kwargs.pop("bounds", self.function.params_bounds),
+            "constraints": kwargs.pop("constraints", ()),
+            "tol": kwargs.pop("tol", None),
+            "callback": kwargs.pop("callback", None),
+            "options": kwargs.pop("options", None),
+        }
+
+        likelihood = self._init_likelihood(
+            deterioration_data, first_increment_uncertainty, measurement_tol, **kwargs
+        )
+
+        optimizer = minimize(
+            likelihood.negative_log,
+            param0,
+            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
+            **minimize_kwargs,
+        )
+
+        if inplace:
+            self.params = optimizer.x
+        return optimizer.x

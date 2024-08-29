@@ -7,52 +7,141 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.functions.core import ParametricLifetimeFunction
+from relife2.core import ParametricLifetimeModel
+from relife2.maths.integrations import shifted_laguerre
+from .probabilities import default
 
-from .maths.integrations import shifted_laguerre
 
 # pylint: disable=no-member
 
 
-class DistributionFunction(ParametricLifetimeFunction, ABC):
+class Distribution(ParametricLifetimeModel, ABC):
     """
     Object that computes every probability functions of a distribution model
     """
 
-    def init_params(self, *args: Any) -> np.ndarray:
-        param0 = np.ones(self.nb_params)
-        param0[-1] = 1 / np.median(args[0].values)
-        self.params = param0
+    @default
+    def sf(self, time: np.ndarray) -> np.ndarray:
+        """
+        Args:
+            time ():
 
-    @property
-    def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
-        return Bounds(
-            np.full(self.nb_params, np.finfo(float).resolution),
-            np.full(self.nb_params, np.inf),
-        )
+        Returns:
+        """
 
-    @property
-    def support_lower_bound(self):
+    def isf(self, probability: np.ndarray) -> np.ndarray:
+        """
+        BLABLABLABLA
+        Args:
+            probability (np.ndarray): BLABLABLABLA
+        Returns:
+            np.ndarray: BLABLABLABLA
+        """
+        cumulative_hazard_rate = -np.log(probability)
+        return self.ichf(cumulative_hazard_rate)
+
+    @abstractmethod
+    def hf(self, time: np.ndarray) -> np.ndarray:
+        """
+        Args:
+            time ():
+
+        Returns:
+        """
+
+    @abstractmethod
+    def chf(self, time: np.ndarray) -> np.ndarray:
+        """
+        Args:
+            time ():
+
+        Returns:
+        """
+
+    @default
+    def cdf(self, time: np.ndarray) -> np.ndarray:
+        """
+
+        Args:
+            time ():
+
+        Returns:
+
+        """
+
+    @default
+    def pdf(self, time: np.ndarray) -> np.ndarray:
+        """
+        Args:
+            time ():
+
+        Returns:
+        """
+
+    @default
+    def ppf(self, probability, time: np.ndarray) -> np.ndarray:
+        """
+        Args:
+            probability ():
+            time ():
+
+        Returns:
+        """
+
+    @abstractmethod
+    def mrl(self, time: np.ndarray) -> np.ndarray:
+        """
+        Args:
+            time ():
+
+        Returns:
+        """
+
+    @default
+    def rvs(self, size: Optional[int] = 1, seed: Optional[int] = None):
+        """
+        Args:
+            size ():
+            seed ():
+
+        Returns:
+        """
+
+    @abstractmethod
+    def mean(self) -> np.ndarray:
         """
         Returns:
-            BLABLABLA
         """
-        return 0.0
 
-    @property
-    def support_upper_bound(self):
+    @abstractmethod
+    def var(self) -> np.ndarray:
         """
         Returns:
-            BLABLABLA
         """
-        return np.inf
+
+    @default
+    def median(self):
+        """
+        Returns:
+        """
+
+    @abstractmethod
+    def ichf(
+        self,
+        cumulative_hazard_rate: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Args:
+            cumulative_hazard_rate ():
+
+        Returns:
+        """
 
     @abstractmethod
     def jac_hf(self, time: np.ndarray) -> np.ndarray:
@@ -87,35 +176,44 @@ class DistributionFunction(ParametricLifetimeFunction, ABC):
             np.ndarray: BLABLABLABLA
         """
 
-    @abstractmethod
-    def ichf(
-        self,
-        cumulative_hazard_rate: np.ndarray,
-    ) -> np.ndarray:
+    def init_params(self, *args: Any):
+        param0 = np.ones(self.nb_params)
+        param0[-1] = 1 / np.median(args[0].values)
+        self.params = param0
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        return Bounds(
+            np.full(self.nb_params, np.finfo(float).resolution),
+            np.full(self.nb_params, np.inf),
+        )
+
+    @property
+    def support_lower_bound(self):
         """
-        BLABLABLABLA
-        Args:
-            cumulative_hazard_rate (Union[int, float, ArrayLike, np.ndarray]): BLABLABLABLA
         Returns:
-            np.ndarray: BLABLABLABLA
+            BLABLABLA
         """
+        return 0.0
 
-    def isf(self, probability: np.ndarray) -> np.ndarray:
+    @property
+    def support_upper_bound(self):
         """
-        BLABLABLABLA
-        Args:
-            probability (np.ndarray): BLABLABLABLA
         Returns:
-            np.ndarray: BLABLABLABLA
+            BLABLABLA
         """
-        cumulative_hazard_rate = -np.log(probability)
-        return self.ichf(cumulative_hazard_rate)
+        return np.inf
 
 
-class ExponentialFunction(DistributionFunction):
+class Exponential(Distribution):
     """
     BLABLABLABLA
     """
+
+    def __init__(self, rate: Optional[float] = None):
+        super().__init__()
+        self.new_params(rate=rate)
 
     def hf(self, time: np.ndarray) -> np.ndarray:
         return self.rate * np.ones_like(time)
@@ -145,10 +243,14 @@ class ExponentialFunction(DistributionFunction):
         return np.zeros_like(time)
 
 
-class WeibullFunction(DistributionFunction):
+class Weibull(Distribution):
     """
     BLABLABLABLA
     """
+
+    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+        super().__init__()
+        self.new_params(shape=shape, rate=rate)
 
     def hf(self, time: np.ndarray) -> np.ndarray:
         return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
@@ -203,10 +305,14 @@ class WeibullFunction(DistributionFunction):
         )
 
 
-class GompertzFunction(DistributionFunction):
+class Gompertz(Distribution):
     """
     BLABLABLABLA
     """
+
+    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+        super().__init__()
+        self.new_params(shape=shape, rate=rate)
 
     def init_params(self, *args: Any) -> np.ndarray:
         param0 = np.empty(self.nb_params, dtype=np.float64)
@@ -256,10 +362,14 @@ class GompertzFunction(DistributionFunction):
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
 
-class GammaFunction(DistributionFunction):
+class Gamma(Distribution):
     """
     BLABLABLABLA
     """
+
+    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+        super().__init__()
+        self.new_params(shape=shape, rate=rate)
 
     def _uppergamma(self, x: np.ndarray) -> np.ndarray:
         return gammaincc(self.shape, x) * gamma(self.shape)
@@ -320,11 +430,18 @@ class GammaFunction(DistributionFunction):
     def dhf(self, time: np.ndarray) -> np.ndarray:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
+    def mrl(self, time: np.ndarray) -> np.ndarray:
+        pass
 
-class LogLogisticFunction(DistributionFunction):
+
+class LogLogistic(Distribution):
     """
     BLABLABLABLA
     """
+
+    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+        super().__init__()
+        self.new_params(shape=shape, rate=rate)
 
     def hf(self, time: np.ndarray) -> np.ndarray:
         x = self.rate * time
@@ -337,13 +454,17 @@ class LogLogisticFunction(DistributionFunction):
     def mean(self) -> np.ndarray:
         b = np.pi / self.shape
         if self.shape <= 1:
-            raise ValueError(f"Expectancy only defined for c > 1: c = {self.shape}")
+            raise ValueError(
+                f"Expectancy only defined for shape > 1: shape = {self.shape}"
+            )
         return np.array(b / (self.rate * np.sin(b)))
 
     def var(self) -> np.ndarray:
         b = np.pi / self.shape
         if self.shape <= 2:
-            raise ValueError(f"Variance only defined for c > 2: c = {self.shape}")
+            raise ValueError(
+                f"Variance only defined for shape > 2: shape = {self.shape}"
+            )
         return np.array(
             (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
         )
@@ -380,3 +501,6 @@ class LogLogisticFunction(DistributionFunction):
             * (self.shape - 1 - x**self.shape)
             / (1 + x**self.shape) ** 2
         )
+
+    def mrl(self, time: np.ndarray) -> np.ndarray:
+        pass

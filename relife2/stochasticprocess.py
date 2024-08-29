@@ -4,19 +4,17 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
+from relife2.core import LifetimeModel
 from relife2.data import Deteriorations, deteriorations_factory
-from relife2.functions import (
+from relife2.io import array_factory
+from relife2.survival import (
     GPFunctions,
     LikelihoodFromDeteriorations,
     PowerShapeFunctions,
 )
-from relife2.typing import FloatArray
-
-from .core import ParametricModel
-from .io import array_factory
 
 
-class GammaProcess(ParametricModel):
+class GammaProcess(LifetimeModel):
     """
     BLABLABLABLA
     """

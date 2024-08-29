@@ -7,47 +7,16 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 import warnings
-from abc import abstractmethod
 from typing import Any, Optional, Union
 
 import numpy as np
-from scipy.optimize import Bounds
 from scipy.special import gamma as gamma_function
 from scipy.stats import gamma
 
+from relife2.core import LifetimeModel
 from relife2.data.dataclass import Deteriorations, LifetimeSample, Truncations
-from .core import ParametricFunction, ParametricLifetimeFunction
-from ..data.dataclass import Sample
-
-
-class Likelihood(ParametricFunction):
-    """
-    Class that instanciates likelihood base having finite number of parameters related to
-    one parametric functions
-    """
-
-    hasjac: bool = False
-
-    def __init__(self, function: ParametricFunction):
-        super().__init__()
-        self.add_functions(function=function)
-
-    def init_params(self, *args: Any) -> np.ndarray:
-        return self.function.init_params()
-
-    @property
-    def params_bounds(self) -> Bounds:
-        return self.function.params_bounds
-
-    @abstractmethod
-    def negative_log(self, params: np.ndarray) -> float:
-        """
-        Args:
-            params ():
-
-        Returns:
-            Negative log likelihood value given a set a parameters values
-        """
+from relife2.data.dataclass import Sample
+from relife2.functions import ParametricFunctions, Likelihood
 
 
 class LikelihoodFromLifetimes(Likelihood):
@@ -57,7 +26,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def __init__(
         self,
-        function: ParametricLifetimeFunction,
+        function: LifetimeModel,
         observed_lifetimes: LifetimeSample,
         truncations: Truncations,
     ):
@@ -68,120 +37,48 @@ class LikelihoodFromLifetimes(Likelihood):
         if hasattr(self.function, "jac_hf") and hasattr(self.function, "jac_chf"):
             self.hasjac = True
 
-    def complete_contribs(self, lifetimes: Sample) -> float:
-        """
+    def _complete_contribs(self, lifetimes: Sample) -> float:
+        return -np.sum(np.log(self.function.hf(lifetimes.values, *lifetimes.args)))
 
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
-        return -np.sum(np.log(self.function.hf(lifetimes.values)))
-
-    def right_censored_contribs(self, lifetimes: Sample) -> float:
-        """
-
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
-        return np.sum(self.function.chf(lifetimes.values), dtype=np.float64)
-
-    def left_censored_contribs(self, lifetimes: Sample) -> float:
-        """
-
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
-        return -np.sum(
-            np.log(
-                -np.expm1(
-                    -self.function.chf(
-                        lifetimes.values,
-                    )
-                )
-            )
-        )
-
-    def left_truncations_contribs(self, lifetimes: Sample) -> float:
-        """
-
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
-        return -np.sum(self.function.chf(lifetimes.values), dtype=np.float64)
-
-    def jac_complete_contribs(self, lifetimes: Sample) -> np.ndarray:
-        """
-
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
-        return -np.sum(
-            self.function.jac_hf(lifetimes.values) / self.function.hf(lifetimes.values),
-            axis=0,
-        )
-
-    def jac_right_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
-        """
-
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
+    def _right_censored_contribs(self, lifetimes: Sample) -> float:
         return np.sum(
-            self.function.jac_chf(lifetimes.values),
+            self.function.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+        )
+
+    def _left_censored_contribs(self, lifetimes: Sample) -> float:
+        return -np.sum(
+            np.log(-np.expm1(-self.function.chf(lifetimes.values, *lifetimes.args)))
+        )
+
+    def _left_truncations_contribs(self, lifetimes: Sample) -> float:
+        return -np.sum(
+            self.function.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+        )
+
+    def _jac_complete_contribs(self, lifetimes: Sample) -> np.ndarray:
+        self.function.args = lifetimes.args
+        return -np.sum(
+            self.function.jac_hf(lifetimes.values, *lifetimes.args)
+            / self.function.hf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
-    def jac_left_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
-        """
-
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
-        return -np.sum(
-            self.function.jac_chf(lifetimes.values)
-            / np.expm1(self.function.chf(lifetimes.values)),
+    def _jac_right_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
+        return np.sum(
+            self.function.jac_chf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
-    def jac_left_truncations_contribs(self, lifetimes: Sample) -> np.ndarray:
-        """
-
-        Args:
-            lifetimes ():
-
-        Returns:
-
-        """
-        self.function.args = lifetimes.args
+    def _jac_left_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
         return -np.sum(
-            self.function.jac_chf(lifetimes.values),
+            self.function.jac_chf(lifetimes.values, *lifetimes.args)
+            / np.expm1(self.function.chf(lifetimes.values, *lifetimes.args)),
+            axis=0,
+        )
+
+    def _jac_left_truncations_contribs(self, lifetimes: Sample) -> np.ndarray:
+        return -np.sum(
+            self.function.jac_chf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
@@ -191,10 +88,10 @@ class LikelihoodFromLifetimes(Likelihood):
     ) -> float:
         self.params = params
         return (
-            self.complete_contribs(self.observed_lifetimes.complete)
-            + self.right_censored_contribs(self.observed_lifetimes.rc)
-            + self.left_censored_contribs(self.observed_lifetimes.left_censored)
-            + self.left_truncations_contribs(self.truncations.left)
+            self._complete_contribs(self.observed_lifetimes.complete)
+            + self._right_censored_contribs(self.observed_lifetimes.rc)
+            + self._left_censored_contribs(self.observed_lifetimes.left_censored)
+            + self._left_truncations_contribs(self.truncations.left)
         )
 
     def jac_negative_log(
@@ -214,10 +111,10 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         self.params = params
         return (
-            self.jac_complete_contribs(self.observed_lifetimes.complete)
-            + self.jac_right_censored_contribs(self.observed_lifetimes.rc)
-            + self.jac_left_censored_contribs(self.observed_lifetimes.left_censored)
-            + self.jac_left_truncations_contribs(self.truncations.left)
+            self._jac_complete_contribs(self.observed_lifetimes.complete)
+            + self._jac_right_censored_contribs(self.observed_lifetimes.rc)
+            + self._jac_left_censored_contribs(self.observed_lifetimes.left_censored)
+            + self._jac_left_truncations_contribs(self.truncations.left)
         )
 
 
@@ -226,7 +123,7 @@ class LikelihoodFromDeteriorations(Likelihood):
 
     def __init__(
         self,
-        functions: ParametricFunction,
+        functions: ParametricFunctions,
         deterioration_data: Deteriorations,
         first_increment_uncertainty: Optional[tuple] = None,
         measurement_tol: np.floating[Any] = np.finfo(float).resolution,

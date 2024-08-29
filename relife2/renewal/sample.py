@@ -1,6 +1,6 @@
-from relife2.functions import DistributionFunction, RegressionFunction
-from relife2.functions.core import ParametricLifetimeFunction
+from relife2.survival.core import ParametricLifetimeModel
 
+from relife2.survival import Distribution, Regression
 from .aggregators import (
     EventSampling,
     SamplingWithAssets,
@@ -10,9 +10,9 @@ from .aggregators import (
 from .iterators import DistributionIterator, RegressionIterator
 
 
-def sample(functions: ParametricLifetimeFunction, *args, **kwargs) -> EventSampling:
+def sample(functions: ParametricLifetimeModel, *args, **kwargs) -> EventSampling:
     """Factory of EventSampling sequence object"""
-    if isinstance(functions, DistributionFunction):
+    if isinstance(functions, Distribution):
         values, samples_ids, assets_ids = aggregate_events(
             DistributionIterator(functions, *args, nb_assets=kwargs.get("nb_assets", 1))
         )
@@ -20,7 +20,7 @@ def sample(functions: ParametricLifetimeFunction, *args, **kwargs) -> EventSampl
             sampling = SamplingWithAssets(values, samples_ids, assets_ids)
         else:
             sampling = SamplingWithoutAssets(values, samples_ids, assets_ids)
-    elif isinstance(functions, RegressionFunction):
+    elif isinstance(functions, Regression):
         values, samples_ids, assets_ids = aggregate_events(
             RegressionIterator(functions, *args)
         )
