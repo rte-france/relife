@@ -2,17 +2,17 @@ from typing import Optional
 
 import numpy as np
 
-from relife2.core import (
+from .core import (
     LifetimeModel,
 )
 from .probabilities import default
 
 
-class AgeReplacementModel(LifetimeModel):
+class AgeReplacementModel:
 
     def __init__(self, baseline: LifetimeModel):
         super().__init__()
-        self.add_functions(baseline=baseline)
+        self.baseline = baseline
 
     def sf(self, time: np.ndarray, ar: np.ndarray, *args: np.ndarray) -> np.ndarray:
         return np.where(time < ar, self.baseline.sf(time, *args), 0)
@@ -194,10 +194,10 @@ class AgeReplacementModel(LifetimeModel):
     #     return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + w
 
 
-class LeftTruncated(LifetimeModel):
+class LeftTruncated:
     def __init__(self, baseline: LifetimeModel):
         super().__init__()
-        self.add_functions(baseline=baseline)
+        self.baseline = baseline
 
     @default
     def sf(self, time: np.ndarray, a0: np.ndarray, *args: np.ndarray) -> np.ndarray:

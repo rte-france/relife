@@ -1,1 +1,1 @@
-from relife2.distributions import Weibull
+from .parametric.distributions import Weibull

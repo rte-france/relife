@@ -13,9 +13,9 @@ import numpy as np
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.core import ParametricLifetimeModel
 from relife2.maths.integrations import shifted_laguerre
-from .probabilities import default
+from relife2.probabilities import default
+from .base import ParametricLifetimeModel
 
 
 # pylint: disable=no-member

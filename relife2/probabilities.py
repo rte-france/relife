@@ -13,8 +13,8 @@ import numpy as np
 from numpy import ma
 from scipy.optimize import newton
 
-from relife2.core import LifetimeModel
-from relife2.maths.integrations import gauss_legendre, quad_laguerre
+from .core import LifetimeModel
+from .maths.integrations import gauss_legendre, quad_laguerre
 
 
 def hf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:

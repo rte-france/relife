@@ -12,8 +12,9 @@ from typing import Any, Sequence, Optional
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife2.functions import ParametricFunctions
-from .probabilities import default
+from relife2.core import ParametricFunctions
+from relife2.probabilities import default
+from .base import ParametricLifetimeModel
 
 
 class CovarEffect(ParametricFunctions):

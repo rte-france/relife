@@ -11,11 +11,19 @@ from random import uniform
 from typing import Any, Optional, Union
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.optimize import Bounds, bisect
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
+from scipy.stats import gamma
 
-from relife2.core import ParametricLifetimeModel
-from relife2.functions import ParametricFunctions
+from relife2.core import (
+    ParametricFunctions,
+    ParametricModel,
+    Likelihood,
+)
+from relife2.data import deteriorations_factory, Deteriorations
+from relife2.io import array_factory
+from .base import ParametricLifetimeModel
 
 
 class ShapeFunctions(ParametricFunctions, ABC):
@@ -377,7 +385,94 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         return result.reshape(time.shape)
 
 
-class GammaProcess(ParametricFunctions):
+class LikelihoodFromDeteriorations(Likelihood):
+    """BLABLABLA"""
+
+    def __init__(
+        self,
+        functions: ParametricModel,
+        deterioration_data: Deteriorations,
+        first_increment_uncertainty: Optional[tuple] = None,
+        measurement_tol: np.floating[Any] = np.finfo(float).resolution,
+    ):
+        super().__init__(functions)
+        self.deterioration_data = deterioration_data
+        self.first_increment_uncertainty = first_increment_uncertainty
+        self.measurement_tol = measurement_tol
+
+    def negative_log(self, params: np.ndarray) -> float:
+        """
+        All deteriorations have R0 in first column
+        All times have 0 in first column
+        """
+        self.params = params
+
+        delta_shape = np.diff(
+            self.function.shape_function.nu(self.deterioration_data.times),
+            axis=1,
+        )
+
+        contributions = -(
+            delta_shape * np.log(self.rate)
+            + (delta_shape - 1)
+            * np.log(
+                self.deterioration_data.increments,
+                where=~self.deterioration_data.event,
+                out=np.zeros_like(delta_shape),
+            )
+            - self.rate * self.deterioration_data.increments
+            - np.log(
+                gamma_function(delta_shape),
+                where=~self.deterioration_data.event,
+                out=np.zeros_like(delta_shape),
+            )
+        )
+
+        censored_contributions = -np.log(
+            gamma.cdf(
+                self.deterioration_data.increments + self.measurement_tol,
+                a=np.diff(
+                    self.function.shape_function.nu(self.deterioration_data.times)
+                ),
+                scale=1 / self.rate,
+            )
+            - gamma.cdf(
+                self.deterioration_data.increments - self.measurement_tol,
+                a=np.diff(
+                    self.function.shape_function.nu(self.deterioration_data.times)
+                ),
+                scale=1 / self.rate,
+            ),
+            where=self.deterioration_data.event,
+            out=np.zeros_like(delta_shape),
+        )
+
+        contributions = np.where(
+            self.deterioration_data.event, censored_contributions, contributions
+        )
+
+        if self.first_increment_uncertainty is not None:
+
+            first_inspections = self.deterioration_data.times[:, 1]
+            a = self.function.shape_function.nu(first_inspections)
+            first_increment_contribution = -np.log(
+                gamma.cdf(
+                    self.first_increment_uncertainty[1]
+                    - self.deterioration_data.values[:, 1],
+                    a=a,
+                    scale=1 / self.rate,
+                )
+                - gamma.cdf(
+                    self.first_increment_uncertainty[0]
+                    - self.deterioration_data.values[:, 1],
+                    a=a,
+                    scale=1 / self.rate,
+                )
+            )
+            contributions[:, 0] = first_increment_contribution[:, None]
+
+
+class GammaProcess(ParametricModel):
     """
     BLABLABLABLA
     """

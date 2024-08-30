@@ -12,18 +12,12 @@ import inspect
 from abc import ABC
 from abc import abstractmethod
 from itertools import chain
-from typing import Any, Union, Iterator
-from typing import Optional, Sequence
+from typing import Any, Iterator, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
 from scipy.optimize import Bounds
-from scipy.optimize import minimize
 
-from relife2.data import lifetime_factory_template
-from relife2.functions import ParametricFunctions
-from relife2.io import array_factory, preprocess_lifetime_data
-from relife2.likelihoods import LikelihoodFromLifetimes
+from relife2.io import array_factory
 
 
 class Composite:
@@ -154,7 +148,7 @@ class Composite:
         self.update_parents()
 
 
-class ParametricFunctions:
+class ParametricFunctions(ABC):
     """
     Base class of all parametric functions grouped in one class. It makes easier to compose functions
     and to tune parametric structure of functions.
@@ -239,36 +233,6 @@ class ParametricFunctions:
         return copy.deepcopy(self)
 
 
-class Likelihood(ParametricFunctions):
-    """
-    Class that instanciates likelihood base having finite number of parameters related to
-    one parametric functions
-    """
-
-    hasjac: bool = False
-
-    def __init__(self, function: ParametricFunctions):
-        super().__init__()
-        self.add_functions(function=function)
-
-    def init_params(self, *args: Any) -> np.ndarray:
-        return self.function.init_params()
-
-    @property
-    def params_bounds(self) -> Bounds:
-        return self.function.params_bounds
-
-    @abstractmethod
-    def negative_log(self, params: np.ndarray) -> float:
-        """
-        Args:
-            params ():
-
-        Returns:
-            Negative log likelihood value given a set a parameters values
-        """
-
-
 _LIFETIME_FUNCTIONS_NAMES = [
     "sf",
     "isf",
@@ -343,11 +307,7 @@ class LifetimeModel(ParametricFunctions, ABC):
         return super().__getattribute__(item)
 
 
-class ParametricLifetimeModel(LifetimeModel, ABC):
-    """
-    Extended interface of LifetimeModel whose params can be estimated with fit method
-    """
-
+class ParametricModel(ParametricFunctions, ABC):
     @abstractmethod
     def init_params(self, *args: Any) -> np.ndarray:
         """initialization of params values (usefull before fit)"""
@@ -357,71 +317,30 @@ class ParametricLifetimeModel(LifetimeModel, ABC):
     def params_bounds(self) -> Bounds:
         """BLABLABLA"""
 
-    def fit(
-        self,
-        time: ArrayLike,
-        event: Optional[ArrayLike] = None,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        args: Optional[Sequence[ArrayLike] | ArrayLike] = (),
-        inplace: bool = True,
-        **kwargs,
-    ) -> np.ndarray:
+    @abstractmethod
+    def fit(self, *args, **kwargs):
+        """BLABLA"""
+
+
+class Likelihood(ParametricFunctions):
+    """
+    Class that instanciates likelihood base having finite number of parameters related to
+    one parametric functions
+    """
+
+    def __init__(self, model: ParametricModel):
+        super().__init__()
+        self.add_functions(function=model)
+        self.hasjac = False
+        if hasattr(self.function, "jac_hf") and hasattr(self.function, "jac_chf"):
+            self.hasjac = True
+
+    @abstractmethod
+    def negative_log(self, params: np.ndarray) -> float:
         """
-        BLABLABLABLA
         Args:
-            time (ArrayLike):
-            event (Optional[ArrayLike]):
-            entry (Optional[ArrayLike]):
-            departure (Optional[ArrayLike]):
-            args (Optional[tuple[ArrayLike]]):
-            inplace (bool): (default is True)
+            params ():
 
         Returns:
-            Parameters: optimum parameters found
+            Negative log likelihood value given a set a parameters values
         """
-        time, event, entry, departure, args = preprocess_lifetime_data(
-            time, event, entry, departure, args
-        )
-        observed_lifetimes, truncations = lifetime_factory_template(
-            time,
-            event,
-            entry,
-            departure,
-            args,
-        )
-
-        optimized_function = self.function.copy()
-        optimized_function.args = [
-            np.empty_like(arg) for arg in args
-        ]  # used for init_params if it depends on args
-        optimized_function.init_params(observed_lifetimes.rlc)
-        param0 = optimized_function.params
-
-        likelihood = LikelihoodFromLifetimes(
-            optimized_function,
-            observed_lifetimes,
-            truncations,
-        )
-
-        minimize_kwargs = {
-            "method": kwargs.get("method", "L-BFGS-B"),
-            "constraints": kwargs.get("constraints", ()),
-            "tol": kwargs.get("tol", None),
-            "callback": kwargs.get("callback", None),
-            "options": kwargs.get("options", None),
-            "bounds": kwargs.get("bounds", optimized_function.params_bounds),
-            "x0": kwargs.get("x0", param0),
-        }
-
-        optimizer = minimize(
-            likelihood.negative_log,
-            minimize_kwargs.pop("x0"),
-            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-            **minimize_kwargs,
-        )
-
-        if inplace:
-            self.params = likelihood.function.params
-
-        return optimizer.x
