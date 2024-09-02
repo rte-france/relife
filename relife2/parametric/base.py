@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
 
-from relife2.core import ParametricModel, Likelihood
+from relife2.core import ParametricModel, Likelihood, LifetimeInterface
 from relife2.data import lifetime_factory_template
 from relife2.data.dataclass import Sample, LifetimeSample, Truncations
 from relife2.io import preprocess_lifetime_data
@@ -28,11 +28,11 @@ class LikelihoodFromLifetimes(Likelihood):
         self.truncations = truncations
 
     def _complete_contribs(self, lifetimes: Sample) -> float:
-        return -np.sum(np.log(self.function.hf(lifetimes.values, *lifetimes.args)))
+        return -np.sum(np.log(self.model.hf(lifetimes.values, *lifetimes.args)))
 
     def _right_censored_contribs(self, lifetimes: Sample) -> float:
         return np.sum(
-            self.function.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+            self.model.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
         )
 
     def _left_censored_contribs(self, lifetimes: Sample) -> float:
@@ -42,33 +42,32 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def _left_truncations_contribs(self, lifetimes: Sample) -> float:
         return -np.sum(
-            self.function.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+            self.model.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
         )
 
     def _jac_complete_contribs(self, lifetimes: Sample) -> np.ndarray:
-        self.function.args = lifetimes.args
         return -np.sum(
-            self.function.jac_hf(lifetimes.values, *lifetimes.args)
-            / self.function.hf(lifetimes.values, *lifetimes.args),
+            self.model.jac_hf(lifetimes.values, *lifetimes.args)
+            / self.model.hf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
     def _jac_right_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
         return np.sum(
-            self.function.jac_chf(lifetimes.values, *lifetimes.args),
+            self.model.jac_chf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
     def _jac_left_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
         return -np.sum(
-            self.function.jac_chf(lifetimes.values, *lifetimes.args)
-            / np.expm1(self.function.chf(lifetimes.values, *lifetimes.args)),
+            self.model.jac_chf(lifetimes.values, *lifetimes.args)
+            / np.expm1(self.model.chf(lifetimes.values, *lifetimes.args)),
             axis=0,
         )
 
     def _jac_left_truncations_contribs(self, lifetimes: Sample) -> np.ndarray:
         return -np.sum(
-            self.function.jac_chf(lifetimes.values, *lifetimes.args),
+            self.model.jac_chf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
@@ -108,7 +107,7 @@ class LikelihoodFromLifetimes(Likelihood):
         )
 
 
-class ParametricLifetimeModel(ParametricModel, ABC):
+class ParametricLifetimeModel(LifetimeInterface, ParametricModel, ABC):
     """
     Extended interface of LifetimeModel whose params can be estimated with fit method
     """

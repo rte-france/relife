@@ -183,7 +183,7 @@ class ParametricFunctions(ABC):
     def nb_params(self):
         return len(self._params)
 
-    def add_functions(self, **kwfunctions: "ParametricFunctions"):
+    def compose_with(self, **kwfunctions: "ParametricFunctions"):
         """add functions that can be called from node"""
         for name in kwfunctions.keys():
             if name in self._params.node_data:
@@ -249,7 +249,7 @@ _LIFETIME_FUNCTIONS_NAMES = [
 ]
 
 
-class LifetimeModel(ParametricFunctions, ABC):
+class LifetimeInterface(ABC):
     """
     Base class controling that subclass interface are composed of expected probability functions
     """
@@ -308,6 +308,12 @@ class LifetimeModel(ParametricFunctions, ABC):
 
 
 class ParametricModel(ParametricFunctions, ABC):
+    def __init_subclass__(cls, **kwargs):
+        if "fit" not in cls.__dict__:
+            raise NotImplementedError
+
+        super().__init_subclass__(**kwargs)
+
     @abstractmethod
     def init_params(self, *args: Any) -> np.ndarray:
         """initialization of params values (usefull before fit)"""
@@ -316,10 +322,6 @@ class ParametricModel(ParametricFunctions, ABC):
     @abstractmethod
     def params_bounds(self) -> Bounds:
         """BLABLABLA"""
-
-    @abstractmethod
-    def fit(self, *args, **kwargs):
-        """BLABLA"""
 
 
 class Likelihood(ParametricFunctions):
@@ -330,7 +332,7 @@ class Likelihood(ParametricFunctions):
 
     def __init__(self, model: ParametricModel):
         super().__init__()
-        self.add_functions(function=model)
+        self.compose_with(model=model)
         self.hasjac = False
         if hasattr(self.function, "jac_hf") and hasattr(self.function, "jac_chf"):
             self.hasjac = True

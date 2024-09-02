@@ -13,11 +13,13 @@ import numpy as np
 from numpy import ma
 from scipy.optimize import newton
 
-from .core import LifetimeModel
+from .core import LifetimeInterface
 from .maths.integrations import gauss_legendre, quad_laguerre
 
 
-def hf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
+def hf(
+    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
+) -> np.ndarray:
     """
 
     Args:
@@ -49,7 +51,9 @@ def hf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.nd
     )
 
 
-def chf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
+def chf(
+    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
+) -> np.ndarray:
     """
 
     Args:
@@ -97,7 +101,9 @@ def chf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.n
     )
 
 
-def sf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
+def sf(
+    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
+) -> np.ndarray:
     """
 
     Args:
@@ -130,7 +136,9 @@ def sf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.nd
     )
 
 
-def pdf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
+def pdf(
+    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
+) -> np.ndarray:
     """
 
     Args:
@@ -155,7 +163,9 @@ def pdf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.n
         ) from err
 
 
-def mrl(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
+def mrl(
+    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
+) -> np.ndarray:
     """
 
     Args:
@@ -192,7 +202,7 @@ def mrl(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.n
     return ma.filled(mrl_values, 0.0)
 
 
-def moment(obj: LifetimeModel, n: int, *args: Any, **kwargs: Any) -> np.ndarray:
+def moment(obj: LifetimeInterface, n: int, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -214,7 +224,7 @@ def moment(obj: LifetimeModel, n: int, *args: Any, **kwargs: Any) -> np.ndarray:
     ) + quad_laguerre(integrand, upper_bound, ndim=2)
 
 
-def mean(obj: LifetimeModel, *args: Any, **kwargs: Any) -> np.ndarray:
+def mean(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -228,7 +238,7 @@ def mean(obj: LifetimeModel, *args: Any, **kwargs: Any) -> np.ndarray:
     return getattr(obj, "moment")(1, *args, **kwargs)
 
 
-def var(obj: LifetimeModel, *args: Any, **kwargs: Any) -> Union[float | np.ndarray]:
+def var(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> Union[float | np.ndarray]:
     """
 
     Args:
@@ -246,7 +256,7 @@ def var(obj: LifetimeModel, *args: Any, **kwargs: Any) -> Union[float | np.ndarr
 
 
 def isf(
-    obj: LifetimeModel,
+    obj: LifetimeInterface,
     probability: np.ndarray,
     *args: Any,
     **kwargs: Any,
@@ -269,7 +279,9 @@ def isf(
     )
 
 
-def cdf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
+def cdf(
+    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
+) -> np.ndarray:
     """
 
     Args:
@@ -285,7 +297,7 @@ def cdf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.n
 
 
 def rvs(
-    obj: LifetimeModel,
+    obj: LifetimeInterface,
     *args: Any,
     size: Optional[int] = 1,
     seed: Optional[int] = None,
@@ -309,7 +321,7 @@ def rvs(
 
 
 def ppf(
-    obj: LifetimeModel, probability: np.ndarray, *args: Any, **kwargs: Any
+    obj: LifetimeInterface, probability: np.ndarray, *args: Any, **kwargs: Any
 ) -> np.ndarray:
     """
 
@@ -325,7 +337,7 @@ def ppf(
     return getattr(obj, "isf")(1 - probability, *args, **kwargs)
 
 
-def median(obj: LifetimeModel, *args: Any, **kwargs: Any) -> np.ndarray:
+def median(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:

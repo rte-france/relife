@@ -88,7 +88,7 @@ class GammaProcessDistribution(ParametricLifetimeModel):
     ):
         super().__init__()
         self.new_params(rate=rate)
-        self.add_functions(shape_function=shape_function)
+        self.compose_with(shape_function=shape_function)
         self.extras["initial_resistance"] = uniform(1, 2)
         self.extras["load_threshold"] = uniform(0, 1)
 
@@ -495,7 +495,7 @@ class GammaProcess(ParametricModel):
                 f"{shape} is not valid name for shape, only {self.shape_names} are allowed"
             )
         self.new_params(rate=rate)
-        self.add_functions(
+        self.compose_with(
             process_lifetime_distribution=GammaProcessDistribution(shape_functions)
         )
 

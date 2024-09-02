@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Sequence, Optional
+from typing import Sequence, Optional
 
 import numpy as np
 from scipy.optimize import Bounds
@@ -26,16 +26,16 @@ class CovarEffect(ParametricFunctions):
         super().__init__()
         self.new_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
 
-    @property
-    def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
-        return Bounds(
-            np.full(self.nb_params, -np.inf),
-            np.full(self.nb_params, np.inf),
-        )
-
-    def init_params(self, *args):
-        self.new_params(**{f"coef_{i}": 0.0 for i in range(self.covar.shape[-1])})
+    # @property
+    # def params_bounds(self) -> Bounds:
+    #     """BLABLABLA"""
+    #     return Bounds(
+    #         np.full(self.nb_params, -np.inf),
+    #         np.full(self.nb_params, np.inf),
+    #     )
+    #
+    # def init_params(self, covar, *args):
+    #     self.new_params(**{f"coef_{i}": 0.0 for i in range(self.covar.shape[-1])})
 
     def g(self, covar: np.ndarray) -> np.ndarray:
         """
@@ -67,10 +67,33 @@ class Regression(ParametricLifetimeModel, ABC):
         coef: Sequence[float | None],
     ):
         super().__init__()
-        self.add_functions(
+        self.compose_with(
             covar_effect=CovarEffect(coef),
             baseline=baseline,
         )
+
+    def init_params(self, covar: np.ndarray, *args):
+        self.baseline.init_params(*args)
+        self.covar_effect.new_params(
+            **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
+        )
+
+    @property
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
+        lb = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, -np.inf),
+                self.baseline.params_bounds.lb,
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, np.inf),
+                self.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
 
     @default
     def sf(self, time: np.ndarray, covar: np.ndarray, *args: np.ndarray) -> np.ndarray:
@@ -287,27 +310,6 @@ class Regression(ParametricLifetimeModel, ABC):
 
         Returns:
         """
-
-    def init_params(self, *args: Any):
-        self.baseline.init_params(*args)
-        self.covar_effect.init_params(*args)
-
-    @property
-    def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
-        lb = np.concatenate(
-            (
-                self.covar_effect.params_bounds.lb,
-                self.baseline.params_bounds.lb,
-            )
-        )
-        ub = np.concatenate(
-            (
-                self.covar_effect.params_bounds.ub,
-                self.baseline.params_bounds.ub,
-            )
-        )
-        return Bounds(lb, ub)
 
     @property
     def support_lower_bound(self):

@@ -177,6 +177,8 @@ class Distribution(ParametricLifetimeModel, ABC):
         """
 
     def init_params(self, *args: Any):
+        if len(args) != 0:
+            raise ValueError("Unexpected arguments")
         param0 = np.ones(self.nb_params)
         param0[-1] = 1 / np.median(args[0].values)
         self.params = param0
