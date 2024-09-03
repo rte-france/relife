@@ -13,15 +13,15 @@ import numpy as np
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
+from relife2.core import ParametricLifetimeModel
 from relife2.maths.integrations import shifted_laguerre
 from relife2.probabilities import default
-from .base import ParametricLifetimeModel
 
 
 # pylint: disable=no-member
 
 
-class Distribution(ParametricLifetimeModel, ABC):
+class Distribution(ParametricLifetimeModel, ABC):  # , concrete=False):
     """
     Object that computes every probability functions of a distribution model
     """
@@ -176,11 +176,11 @@ class Distribution(ParametricLifetimeModel, ABC):
             np.ndarray: BLABLABLABLA
         """
 
-    def init_params(self, *args: Any):
+    def init_params(self, rlc, *args: Any):
         if len(args) != 0:
             raise ValueError("Unexpected arguments")
         param0 = np.ones(self.nb_params)
-        param0[-1] = 1 / np.median(args[0].values)
+        param0[-1] = 1 / np.median(rlc)
         self.params = param0
 
     @property

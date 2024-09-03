@@ -12,12 +12,11 @@ from typing import Sequence, Optional
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife2.core import ParametricFunctions
+from relife2.core import ParametricModule, ParametricLifetimeModel
 from relife2.probabilities import default
-from .base import ParametricLifetimeModel
 
 
-class CovarEffect(ParametricFunctions):
+class CovarEffect(ParametricModule):
     """
     Object that computes covariates effect functions
     """
@@ -73,10 +72,10 @@ class Regression(ParametricLifetimeModel, ABC):
         )
 
     def init_params(self, covar: np.ndarray, *args):
-        self.baseline.init_params(*args)
         self.covar_effect.new_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         )
+        self.baseline.init_params(*args)
 
     @property
     def params_bounds(self) -> Bounds:

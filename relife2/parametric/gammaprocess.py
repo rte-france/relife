@@ -17,16 +17,16 @@ from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 from scipy.stats import gamma
 
 from relife2.core import (
-    ParametricFunctions,
+    ParametricModule,
     ParametricModel,
     Likelihood,
+    ParametricLifetimeModel,
 )
 from relife2.data import deteriorations_factory, Deteriorations
 from relife2.io import array_factory
-from .base import ParametricLifetimeModel
 
 
-class ShapeFunctions(ParametricFunctions, ABC):
+class ShapeFunctions(ParametricModule, ABC):
     """BLABLABLA"""
 
     def init_params(self, *args: Any) -> np.ndarray:

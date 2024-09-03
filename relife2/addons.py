@@ -3,14 +3,14 @@ from typing import Optional
 import numpy as np
 
 from .core import (
-    LifetimeInterface,
+    LifetimeModel,
 )
 from .probabilities import default
 
 
-class AgeReplacementModel(LifetimeInterface):
+class AgeReplacementModel(LifetimeModel):
 
-    def __init__(self, baseline: LifetimeInterface):
+    def __init__(self, baseline: LifetimeModel):
         super().__init__()
         self.baseline = baseline
 
@@ -194,8 +194,8 @@ class AgeReplacementModel(LifetimeInterface):
     #     return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + w
 
 
-class LeftTruncated(LifetimeInterface):
-    def __init__(self, baseline: LifetimeInterface):
+class LeftTruncated(LifetimeModel):
+    def __init__(self, baseline: LifetimeModel):
         super().__init__()
         self.baseline = baseline
 

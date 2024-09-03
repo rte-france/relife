@@ -9,15 +9,19 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 import copy
 import functools
 import inspect
-from abc import ABC
-from abc import abstractmethod
+import warnings
+from abc import ABC, abstractmethod
 from itertools import chain
-from typing import Any, Iterator, Union
+from typing import Any, Iterator, Union, Optional, Sequence
 
 import numpy as np
-from scipy.optimize import Bounds
+from numpy.typing import ArrayLike
+from scipy.optimize import Bounds, minimize
 
-from relife2.io import array_factory
+from relife2.data import LifetimeSample, Truncations, lifetime_factory_template
+from relife2.data.dataclass import Sample
+from relife2.io import array_factory, preprocess_lifetime_data
+from relife2.protocols import LifetimeProtocol, ParametricModelProtocol
 
 
 class Composite:
@@ -148,7 +152,7 @@ class Composite:
         self.update_parents()
 
 
-class ParametricFunctions(ABC):
+class ParametricModule:
     """
     Base class of all parametric functions grouped in one class. It makes easier to compose functions
     and to tune parametric structure of functions.
@@ -158,7 +162,7 @@ class ParametricFunctions(ABC):
 
     def __init__(self):
         self._params = Composite()
-        self.leaves: dict[str, "ParametricFunctions"] = {}
+        self.leaves: dict[str, "ParametricModule"] = {}
 
     @property
     def all_params_set(self):
@@ -183,22 +187,20 @@ class ParametricFunctions(ABC):
     def nb_params(self):
         return len(self._params)
 
-    def compose_with(self, **kwfunctions: "ParametricFunctions"):
+    def compose_with(self, **kwmodule: "ParametricModule"):
         """add functions that can be called from node"""
-        for name in kwfunctions.keys():
+        for name in kwmodule.keys():
             if name in self._params.node_data:
                 raise ValueError(f"{name} already exists as param name")
             if name in self.leaves:
                 raise ValueError(f"{name} already exists as leaf function")
-        for name, function in kwfunctions.items():
-            self.leaves[name] = function
-            self._params.set_leaf(f"{name}.params", function._params)
+        for name, module in kwmodule.items():
+            self.leaves[name] = module
+            self._params.set_leaf(f"{name}.params", module._params)
 
     def new_params(self, **kwparams):
         """change local params structure (at node level)"""
         for name in kwparams.keys():
-            if name in self._args.node_data:
-                raise ValueError(f"{name} already exists as arg name")
             if name in self.leaves.keys():
                 raise ValueError(f"{name} already exists as function name")
         self._params.node_data = kwparams
@@ -228,95 +230,71 @@ class ParametricFunctions(ABC):
     def copy(self):
         """
         Returns:
-            ParametricFunctions : a copy of the ParametricFunctions object
+            ParametricModule : a copy of the ParametricFunctions object
         """
         return copy.deepcopy(self)
 
 
-_LIFETIME_FUNCTIONS_NAMES = [
-    "sf",
-    "isf",
-    "hf",
-    "chf",
-    "cdf",
-    "pdf",
-    "ppf",
-    "mrl",
-    "rvs",
-    "mean",
-    "var",
-    "median",
-]
-
-
-class LifetimeInterface(ABC):
+class LifetimeModel(ABC):
     """
     Base class controling that subclass interface are composed of expected probability functions
     """
 
-    def __init_subclass__(cls, **kwargs):
-        if not all(name in _LIFETIME_FUNCTIONS_NAMES for name in cls.__dict__):
-            raise NotImplementedError
-
+    def __init_subclass__(cls, concrete=True, **kwargs):
+        if concrete and not inspect.isabstract(cls):
+            if not issubclass(cls, LifetimeProtocol):
+                raise NotImplementedError(
+                    f"{cls} must implement protocols.LifetimeProtocol, at least one method is missing"
+                )
         super().__init_subclass__(**kwargs)
-
-    def __init__(self):
-        super().__init__()
-        self._base_functions: list[str] = []
-        for name in ["sf", "hf", "chf", "pdf"]:
-            if name in self.__class__.__dict__:
-                self._base_functions.append(name)
-
-    @property
-    @abstractmethod
-    def support_upper_bound(self, *args: Any):
-        """
-        Returns:
-            BLABLABLABLA
-        """
-
-    @property
-    @abstractmethod
-    def support_lower_bound(self, *args: Any):
-        """
-        Returns:
-            BLABLABLABLA
-        """
 
     def __getattribute__(self, item):
-        if item in _LIFETIME_FUNCTIONS_NAMES:
-            if not self.all_params_set:
-                raise ValueError(
-                    "Model parameters are empty, fit model first or instanciate new model with parameters"
-                )
+        if hasattr(LifetimeProtocol, item):
+            attr = super().__getattribute__(item)
+            if inspect.ismethod(attr):
 
-            @functools.wraps(item)
-            def wrapper(*args, **kwargs):
-                if "time" in inspect.signature(item).parameters:
-                    time_pos = list(inspect.signature(item).parameters).index("time")
-                    time = args[time_pos]
-                    time = array_factory(time)
-                    args = [
-                        array_factory(arg, nb_units=time.shape[0])
-                        for i, arg in enumerate(args)
-                        if i != time_pos
-                    ]
-                return np.squeeze(object.__getattribute__(self, item)(*args, **kwargs))
+                @functools.wraps(attr)
+                def wrapper(*args, **kwargs):
+                    if "time" in inspect.signature(attr).parameters:
+                        time_pos = list(inspect.signature(attr).parameters).index(
+                            "time"
+                        )
+                        time = args[time_pos]
+                        time = array_factory(time)
+                        args = [
+                            array_factory(arg, nb_units=time.shape[0])
+                            for i, arg in enumerate(args)
+                        ]
+                    if getattr(attr, "decorated_method", False):
+                        return attr(*args, **kwargs)
+                    else:
+                        return np.squeeze(attr(*args, **kwargs))
 
-            return wrapper
+                return wrapper
+            else:
+                return attr
         return super().__getattribute__(item)
 
+    @property
+    @abstractmethod
+    def support_upper_bound(self): ...
 
-class ParametricModel(ParametricFunctions, ABC):
-    def __init_subclass__(cls, **kwargs):
-        if "fit" not in cls.__dict__:
-            raise NotImplementedError
+    @property
+    @abstractmethod
+    def support_lower_bound(self): ...
 
+
+class ParametricModel(ParametricModule, ABC):
+    def __init_subclass__(cls, concrete=True, **kwargs):
+        if concrete and not inspect.isabstract(cls):
+            if not issubclass(cls, ParametricModelProtocol):
+                raise NotImplementedError(
+                    f"{cls} must implement protocols.ParametricModelProtocol, at least one method is missing"
+                )
         super().__init_subclass__(**kwargs)
 
     @abstractmethod
-    def init_params(self, *args: Any) -> np.ndarray:
-        """initialization of params values (usefull before fit)"""
+    def init_params(self, *args): ...
 
     @property
     @abstractmethod
@@ -324,7 +302,7 @@ class ParametricModel(ParametricFunctions, ABC):
         """BLABLABLA"""
 
 
-class Likelihood(ParametricFunctions):
+class Likelihood(ParametricModule, ABC):
     """
     Class that instanciates likelihood base having finite number of parameters related to
     one parametric functions
@@ -346,3 +324,170 @@ class Likelihood(ParametricFunctions):
         Returns:
             Negative log likelihood value given a set a parameters values
         """
+
+
+class LikelihoodFromLifetimes(Likelihood):
+    """
+    BLABLABLA
+    """
+
+    def __init__(
+        self,
+        model: "ParametricLifetimeModel",
+        observed_lifetimes: LifetimeSample,
+        truncations: Truncations,
+    ):
+        super().__init__(model)
+        self.observed_lifetimes = observed_lifetimes
+        self.truncations = truncations
+
+    def _complete_contribs(self, lifetimes: Sample) -> float:
+        return -np.sum(np.log(self.model.hf(lifetimes.values, *lifetimes.args)))
+
+    def _right_censored_contribs(self, lifetimes: Sample) -> float:
+        return np.sum(
+            self.model.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+        )
+
+    def _left_censored_contribs(self, lifetimes: Sample) -> float:
+        return -np.sum(
+            np.log(-np.expm1(-self.function.chf(lifetimes.values, *lifetimes.args)))
+        )
+
+    def _left_truncations_contribs(self, lifetimes: Sample) -> float:
+        return -np.sum(
+            self.model.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+        )
+
+    def _jac_complete_contribs(self, lifetimes: Sample) -> np.ndarray:
+        return -np.sum(
+            self.model.jac_hf(lifetimes.values, *lifetimes.args)
+            / self.model.hf(lifetimes.values, *lifetimes.args),
+            axis=0,
+        )
+
+    def _jac_right_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
+        return np.sum(
+            self.model.jac_chf(lifetimes.values, *lifetimes.args),
+            axis=0,
+        )
+
+    def _jac_left_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
+        return -np.sum(
+            self.model.jac_chf(lifetimes.values, *lifetimes.args)
+            / np.expm1(self.model.chf(lifetimes.values, *lifetimes.args)),
+            axis=0,
+        )
+
+    def _jac_left_truncations_contribs(self, lifetimes: Sample) -> np.ndarray:
+        return -np.sum(
+            self.model.jac_chf(lifetimes.values, *lifetimes.args),
+            axis=0,
+        )
+
+    def negative_log(
+        self,
+        params: np.ndarray,
+    ) -> float:
+        self.params = params
+        return (
+            self._complete_contribs(self.observed_lifetimes.complete)
+            + self._right_censored_contribs(self.observed_lifetimes.rc)
+            + self._left_censored_contribs(self.observed_lifetimes.left_censored)
+            + self._left_truncations_contribs(self.truncations.left)
+        )
+
+    def jac_negative_log(
+        self,
+        params: np.ndarray,
+    ) -> Union[None, np.ndarray]:
+        """
+
+        Args:
+            params ():
+
+        Returns:
+
+        """
+        if not self.hasjac:
+            warnings.warn("Model does not support jac negative likelihood natively")
+            return None
+        self.params = params
+        return (
+            self._jac_complete_contribs(self.observed_lifetimes.complete)
+            + self._jac_right_censored_contribs(self.observed_lifetimes.rc)
+            + self._jac_left_censored_contribs(self.observed_lifetimes.left_censored)
+            + self._jac_left_truncations_contribs(self.truncations.left)
+        )
+
+
+class ParametricLifetimeModel(LifetimeModel, ParametricModel, ABC):  # concrete=False):
+    """
+    Extended interface of LifetimeModel whose params can be estimated with fit method
+    """
+
+    def fit(
+        self,
+        time: ArrayLike,
+        event: Optional[ArrayLike] = None,
+        entry: Optional[ArrayLike] = None,
+        departure: Optional[ArrayLike] = None,
+        args: Optional[Sequence[ArrayLike] | ArrayLike] = (),
+        inplace: bool = True,
+        **kwargs,
+    ) -> np.ndarray:
+        """
+        BLABLABLABLA
+        Args:
+            time (ArrayLike):
+            event (Optional[ArrayLike]):
+            entry (Optional[ArrayLike]):
+            departure (Optional[ArrayLike]):
+            args (Optional[tuple[ArrayLike]]):
+            inplace (bool): (default is True)
+
+        Returns:
+            Parameters: optimum parameters found
+        """
+        time, event, entry, departure, args = preprocess_lifetime_data(
+            time, event, entry, departure, args
+        )
+        observed_lifetimes, truncations = lifetime_factory_template(
+            time,
+            event,
+            entry,
+            departure,
+            args,
+        )
+
+        optimized_model = self.copy()
+        optimized_model.init_params(observed_lifetimes.rlc, *args)
+        param0 = optimized_model.params
+
+        likelihood = LikelihoodFromLifetimes(
+            optimized_model,
+            observed_lifetimes,
+            truncations,
+        )
+
+        minimize_kwargs = {
+            "method": kwargs.get("method", "L-BFGS-B"),
+            "constraints": kwargs.get("constraints", ()),
+            "tol": kwargs.get("tol", None),
+            "callback": kwargs.get("callback", None),
+            "options": kwargs.get("options", None),
+            "bounds": kwargs.get("bounds", optimized_model.params_bounds),
+            "x0": kwargs.get("x0", param0),
+        }
+
+        optimizer = minimize(
+            likelihood.negative_log,
+            minimize_kwargs.pop("x0"),
+            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
+            **minimize_kwargs,
+        )
+
+        if inplace:
+            self.params = likelihood.params
+
+        return optimizer.x

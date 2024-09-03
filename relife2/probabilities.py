@@ -13,13 +13,11 @@ import numpy as np
 from numpy import ma
 from scipy.optimize import newton
 
-from .core import LifetimeInterface
+from .core import LifetimeModel
 from .maths.integrations import gauss_legendre, quad_laguerre
 
 
-def hf(
-    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
-) -> np.ndarray:
+def hf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -51,9 +49,7 @@ def hf(
     )
 
 
-def chf(
-    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
-) -> np.ndarray:
+def chf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -101,9 +97,7 @@ def chf(
     )
 
 
-def sf(
-    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
-) -> np.ndarray:
+def sf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -136,9 +130,7 @@ def sf(
     )
 
 
-def pdf(
-    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
-) -> np.ndarray:
+def pdf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -163,9 +155,7 @@ def pdf(
         ) from err
 
 
-def mrl(
-    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
-) -> np.ndarray:
+def mrl(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -202,7 +192,7 @@ def mrl(
     return ma.filled(mrl_values, 0.0)
 
 
-def moment(obj: LifetimeInterface, n: int, *args: Any, **kwargs: Any) -> np.ndarray:
+def moment(obj: LifetimeModel, n: int, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -224,7 +214,7 @@ def moment(obj: LifetimeInterface, n: int, *args: Any, **kwargs: Any) -> np.ndar
     ) + quad_laguerre(integrand, upper_bound, ndim=2)
 
 
-def mean(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> np.ndarray:
+def mean(obj: LifetimeModel, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -238,7 +228,7 @@ def mean(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> np.ndarray:
     return getattr(obj, "moment")(1, *args, **kwargs)
 
 
-def var(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> Union[float | np.ndarray]:
+def var(obj: LifetimeModel, *args: Any, **kwargs: Any) -> Union[float | np.ndarray]:
     """
 
     Args:
@@ -256,7 +246,7 @@ def var(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> Union[float | np.n
 
 
 def isf(
-    obj: LifetimeInterface,
+    obj: LifetimeModel,
     probability: np.ndarray,
     *args: Any,
     **kwargs: Any,
@@ -279,9 +269,7 @@ def isf(
     )
 
 
-def cdf(
-    obj: LifetimeInterface, time: np.ndarray, *args: Any, **kwargs: Any
-) -> np.ndarray:
+def cdf(obj: LifetimeModel, time: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -297,7 +285,7 @@ def cdf(
 
 
 def rvs(
-    obj: LifetimeInterface,
+    obj: LifetimeModel,
     *args: Any,
     size: Optional[int] = 1,
     seed: Optional[int] = None,
@@ -321,7 +309,7 @@ def rvs(
 
 
 def ppf(
-    obj: LifetimeInterface, probability: np.ndarray, *args: Any, **kwargs: Any
+    obj: LifetimeModel, probability: np.ndarray, *args: Any, **kwargs: Any
 ) -> np.ndarray:
     """
 
@@ -337,7 +325,7 @@ def ppf(
     return getattr(obj, "isf")(1 - probability, *args, **kwargs)
 
 
-def median(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> np.ndarray:
+def median(obj: LifetimeModel, *args: Any, **kwargs: Any) -> np.ndarray:
     """
 
     Args:
@@ -352,12 +340,13 @@ def median(obj: LifetimeInterface, *args: Any, **kwargs: Any) -> np.ndarray:
 
 
 def default(method):
-    functools.wraps(method)
 
+    @functools.wraps(method)
     def wrapper(self, *args: Any, **kwargs: Any):
         method_name = method.__name__
         if method_name not in globals():
             raise ValueError(f"{method_name} as no default implementation")
-        return globals()["default_functions"](method_name)(self, *args, **kwargs)
+        return globals()[method_name](self, *args, **kwargs)
 
+    wrapper.decorated_method = True
     return wrapper
