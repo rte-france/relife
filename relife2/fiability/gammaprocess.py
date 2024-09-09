@@ -79,7 +79,7 @@ class PowerShape(ShapeFunctions):
 
 
 class GammaProcessDistribution(
-    ParametricLifetimeModel[tuple[NDArray[np.float64], NDArray[np.float64]]]
+    ParametricLifetimeModel[*tuple[NDArray[np.float64], NDArray[np.float64]]]
 ):
     """BLABLABLA"""
 
