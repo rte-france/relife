@@ -7,8 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Sequence
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -85,7 +84,7 @@ class LifetimesFactory(ABC):
         event: Optional[np.ndarray] = None,
         entry: Optional[np.ndarray] = None,
         departure: Optional[np.ndarray] = None,
-        args: Optional[Sequence[np.ndarray]] = (),
+        args: tuple[np.ndarray, ...] | tuple[()] = (),
     ):
 
         if entry is None:
@@ -101,7 +100,7 @@ class LifetimesFactory(ABC):
         self.event: np.ndarray = event.astype(np.bool_)
         self.entry: np.ndarray = entry
         self.departure: np.ndarray = departure
-        self.args: tuple[np.ndarray] = args
+        self.args = args
 
     @abstractmethod
     def get_complete(self) -> Sample:
@@ -132,17 +131,17 @@ class LifetimesFactory(ABC):
         """
 
     @abstractmethod
-    def get_left_truncations(self) -> np.ndarray:
+    def get_left_truncations(self) -> Sample:
         """
         Returns:
-            np.ndarray: object containing left truncations values and index
+            Sample: object containing left truncations values and index
         """
 
     @abstractmethod
-    def get_right_truncations(self) -> np.ndarray:
+    def get_right_truncations(self) -> Sample:
         """
         Returns:
-            np.ndarray: object containing right truncations values and index
+            Sample: object containing right truncations values and index
         """
 
     def __call__(
@@ -273,7 +272,7 @@ def lifetime_factory_template(
     event: Optional[np.ndarray] = None,
     entry: Optional[np.ndarray] = None,
     departure: Optional[np.ndarray] = None,
-    args: Optional[Sequence[np.ndarray]] = (),
+    args: tuple[np.ndarray, ...] | tuple[()] = (),
 ) -> Tuple[LifetimeSample, Truncations]:
     """
     Args:

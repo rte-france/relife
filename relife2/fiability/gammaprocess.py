@@ -11,25 +11,25 @@ from random import uniform
 from typing import Any, Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
-from scipy.optimize import Bounds, bisect
+from numpy.typing import NDArray
+from scipy.optimize import Bounds, bisect, minimize
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 from scipy.stats import gamma
 
 from relife2.core import (
-    ParametricModule,
-    ParametricModel,
     Likelihood,
+    ParametricComponent,
     ParametricLifetimeModel,
+    ParametricModel,
 )
-from relife2.data import deteriorations_factory, Deteriorations
+from relife2.data import Deteriorations, deteriorations_factory
 from relife2.io import array_factory
 
 
-class ShapeFunctions(ParametricModule, ABC):
+class ShapeFunctions(ParametricComponent, ABC):
     """BLABLABLA"""
 
-    def init_params(self, *args: Any) -> np.ndarray:
+    def init_params(self, *args: Any) -> NDArray[np.float64]:
         return np.ones_like(self.params)
 
     @property
@@ -41,11 +41,11 @@ class ShapeFunctions(ParametricModule, ABC):
         )
 
     @abstractmethod
-    def nu(self, time: np.ndarray) -> np.ndarray:
+    def nu(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         """BLABLABLA"""
 
     @abstractmethod
-    def jac_nu(self, time: np.ndarray) -> np.ndarray:
+    def jac_nu(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         """BLABLABLA"""
 
 
@@ -58,10 +58,10 @@ class PowerShape(ShapeFunctions):
         super().__init__()
         self.new_params(shape_rate=shape_rate, shape_power=shape_power)
 
-    def nu(self, time: np.ndarray) -> np.ndarray:
+    def nu(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape_rate * time**self.shape_power
 
-    def jac_nu(self, time: np.ndarray) -> np.ndarray:
+    def jac_nu(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape_rate * self.shape_power * time ** (self.shape_power - 1)
 
 
@@ -71,14 +71,16 @@ class PowerShape(ShapeFunctions):
 #     def __init__(self, shape_exponent: Optional[float] = None):
 #         super().__init__(shape_exponent=shape_exponent)
 #
-#     def nu(self, time: np.ndarray) -> np.ndarray:
+#     def nu(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
 #         return None
 #
-#     def jac_nu(self, time: np.ndarray) -> np.ndarray:
+#     def jac_nu(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
 #         return None
 
 
-class GammaProcessDistribution(ParametricLifetimeModel):
+class GammaProcessDistribution(
+    ParametricLifetimeModel[tuple[NDArray[np.float64], NDArray[np.float64]]]
+):
     """BLABLABLA"""
 
     def __init__(
@@ -115,7 +117,7 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         """
         return (self.initial_resistance - self.load_threshold) * self.rate
 
-    def init_params(self, *args: Any) -> np.ndarray:
+    def init_params(self, *args: Any) -> NDArray[np.float64]:
         """
         Args:
             *args ():
@@ -144,7 +146,12 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         )
         return Bounds(lb, ub)
 
-    def pdf(self, time: np.ndarray, l0: np.ndarray, r0: np.ndarray) -> np.ndarray:
+    def pdf(
+        self,
+        time: NDArray[np.float64],
+        l0: NDArray[np.float64],
+        r0: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """BLABLABLA"""
 
         res = -self.shape_function.jac_nu(time) * self.moore_jac_uppergamma_c(time)
@@ -156,14 +163,19 @@ class GammaProcessDistribution(ParametricLifetimeModel):
             res,
         )
 
-    def sf(self, time: np.ndarray, l0: np.ndarray, r0: np.ndarray) -> np.ndarray:
+    def sf(
+        self,
+        time: NDArray[np.float64],
+        l0: NDArray[np.float64],
+        r0: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """
         BLABLABLABLA
         Args:
-            time (np.ndarray): BLABLABLABLA
+            time (NDArray[np.float64]): BLABLABLABLA
 
         Returns:
-            Union[float, np.ndarray]: BLABLABLABLA
+            Union[float, NDArray[np.float64]]: BLABLABLABLA
         """
         return gammainc(
             self.shape_function.nu(time),
@@ -172,12 +184,12 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
     def conditional_sf(
         self,
-        time: np.ndarray,
-        conditional_time: np.ndarray,
-        conditional_resistance: np.ndarray,
-        l0: np.ndarray,
-        r0: np.ndarray,
-    ) -> np.ndarray:
+        time: NDArray[np.float64],
+        conditional_time: NDArray[np.float64],
+        conditional_resistance: NDArray[np.float64],
+        l0: NDArray[np.float64],
+        r0: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """
         Args:
             time ():
@@ -192,7 +204,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
             (conditional_resistance - self.load_threshold) * self.rate,
         )
 
-    def _series_expansion(self, shape_values: np.ndarray, tol: float) -> np.ndarray:
+    def _series_expansion(
+        self, shape_values: NDArray[np.float64], tol: float
+    ) -> NDArray[np.float64]:
 
         # resistance_values - shape : (n,)
 
@@ -281,8 +295,8 @@ class GammaProcessDistribution(ParametricLifetimeModel):
         return s * d_f + f * d_s
 
     def _continued_fraction_expansion(
-        self, shape_values: np.ndarray, tol: float
-    ) -> np.ndarray:
+        self, shape_values: NDArray[np.float64], tol: float
+    ) -> NDArray[np.float64]:
 
         # resistance_values - shape : (n,)
 
@@ -350,7 +364,9 @@ class GammaProcessDistribution(ParametricLifetimeModel):
 
         return -f * d_result - result * d_f
 
-    def moore_jac_uppergamma_c(self, time: np.ndarray, tol: float = 1e-6) -> np.ndarray:
+    def moore_jac_uppergamma_c(
+        self, time: NDArray[np.float64], tol: float = 1e-6
+    ) -> NDArray[np.float64]:
         """BLABLABLA"""
 
         # /!\ consider time as masked array
@@ -400,7 +416,7 @@ class LikelihoodFromDeteriorations(Likelihood):
         self.first_increment_uncertainty = first_increment_uncertainty
         self.measurement_tol = measurement_tol
 
-    def negative_log(self, params: np.ndarray) -> float:
+    def negative_log(self, params: NDArray[np.float64]) -> float:
         """
         All deteriorations have R0 in first column
         All times have 0 in first column
@@ -499,7 +515,7 @@ class GammaProcess(ParametricModel):
             process_lifetime_distribution=GammaProcessDistribution(shape_functions)
         )
 
-    def init_params(self, *args: Any) -> np.ndarray:
+    def init_params(self, *args: Any) -> NDArray[np.float64]:
         return self.process_lifetime_distribution.init_params(*args)
 
     @property
@@ -532,12 +548,12 @@ class GammaProcess(ParametricModel):
 
     def sample(
         self,
-        inspection_times: np.ndarray,
+        inspection_times: NDArray[np.float64],
         unit_ids=None,
         nb_sample=1,
         seed=None,
         add_death_time=True,
-    ) -> tuple[np.ndarray]:
+    ) -> tuple[NDArray[np.float64]]:
         """
         inspection_times has 0 at first
         inspection_times is sorted with unit_ids
@@ -693,14 +709,14 @@ class GammaProcess(ParametricModel):
 
     def fit(
         self,
-        deterioration_measurements: ArrayLike,
-        inspection_times: ArrayLike,
-        unit_ids: ArrayLike,
+        deterioration_measurements: NDArray[np.float64],
+        inspection_times: NDArray[np.float64],
+        unit_ids: NDArray[np.float64],
         first_increment_uncertainty: Optional[tuple] = None,
         measurement_tol: np.floating[Any] = np.finfo(float).resolution,
         inplace: bool = True,
         **kwargs: Any,
-    ) -> FloatArray:
+    ) -> NDArray[np.float64]:
         """
         BLABLABLABLA
         """

@@ -1,6 +1,6 @@
+from relife2.survival import Distribution, Regression
 from relife2.survival.core import ParametricLifetimeModel
 
-from relife2.survival import Distribution, Regression
 from .aggregators import (
     EventSampling,
     SamplingWithAssets,

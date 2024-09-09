@@ -1,1 +1,1 @@
-from .parametric.distributions import Weibull
+from .fiability.distributions import Weibull

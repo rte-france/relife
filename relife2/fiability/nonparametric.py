@@ -1,26 +1,85 @@
+from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 
-from relife2.data import lifetime_factory_template
-from relife2.io import preprocess_lifetime_data, array_factory
-from relife2.nonparametric.base import (
-    NonParametricLifetimeEstimators,
-    Estimates,
-    nearest_1dinterp,
-)
+from relife2.data import dataclass, lifetime_factory_template
+from relife2.io import array_factory, preprocess_lifetime_data
+
+
+def nearest_1dinterp(
+    x: NDArray[np.float64], xp: NDArray[np.float64], yp: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    """Returns x nearest interpolation based on xp and yp data points
+    xp has to be monotonically increasing
+
+    Args:
+        x (NDArray[np.float64]): 1d x coordinates to interpolate
+        xp (NDArray[np.float64]): 1d known x coordinates
+        yp (NDArray[np.float64]): 1d known y coordinates
+
+    Returns:
+        NDArray[np.float64]: interpolation values of x
+    """
+    spacing = np.diff(xp) / 2
+    xp = xp + np.hstack([spacing, spacing[-1]])
+    yp = np.concatenate([yp, yp[-1, None]])
+    return yp[np.searchsorted(xp, x)]
+
+
+@dataclass
+class Estimates:
+    """
+    BLABLABLABLA
+    """
+
+    timeline: NDArray[np.float64]
+    values: NDArray[np.float64]
+    se: Optional[NDArray[np.float64]] = None
+
+    def __post_init__(self):
+        if self.se is None:
+            self.se = np.zeros_like(
+                self.values
+            )  # garder None/Nan efaire le changement de valeur au niveau du plot
+
+        if self.timeline.shape != self.values.shape != self.se:
+            raise ValueError("Incompatible timeline, values and se in Estimates")
+
+
+class NonParametricLifetimeEstimators(ABC):
+    """_summary_"""
+
+    def __init__(
+        self,
+    ):
+        self.estimations = {}
+
+    @abstractmethod
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.float64]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+    ) -> Estimates:
+        """_summary_
+
+        Returns:
+            Tuple[Estimates]: description
+        """
 
 
 class ECDF(NonParametricLifetimeEstimators):
     """_summary_"""
 
-    def estimate(
+    def fit(
         self,
-        time: ArrayLike,
-        event: Optional[ArrayLike] = None,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.float64]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
     ) -> None:
         """_summary_
 
@@ -46,7 +105,7 @@ class ECDF(NonParametricLifetimeEstimators):
         self.estimations["sf"] = Estimates(timeline, sf, se)
         self.estimations["cdf"] = Estimates(timeline, cdf, se)
 
-    def sf(self, t: ArrayLike) -> ArrayLike:
+    def sf(self, t: NDArray[np.float64]) -> NDArray[np.float64]:
         if "sf" not in self.estimations.keys():
             raise KeyError("sf values not yet estimated. First run ECDF.estimate(...)")
         t = array_factory(t)
@@ -54,7 +113,7 @@ class ECDF(NonParametricLifetimeEstimators):
             t, self.estimations["sf"].timeline, self.estimations["sf"].values
         )
 
-    def cdf(self, t: ArrayLike) -> ArrayLike:
+    def cdf(self, t: NDArray[np.float64]) -> NDArray[np.float64]:
         if "cdf" not in self.estimations.keys():
             raise KeyError("cdf values not yet estimated. First run ECDF.estimate(...)")
         t = array_factory(t)
@@ -66,12 +125,12 @@ class ECDF(NonParametricLifetimeEstimators):
 class KaplanMeier(NonParametricLifetimeEstimators):
     """_summary_"""
 
-    def estimate(
+    def fit(
         self,
-        time: ArrayLike,
-        event: Optional[ArrayLike] = None,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.float64]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
     ) -> None:
         """_summary_
 
@@ -134,7 +193,7 @@ class KaplanMeier(NonParametricLifetimeEstimators):
         timeline = np.insert(timeline, 0, 0)
         self.estimations["sf"] = Estimates(timeline, sf, se)
 
-    def sf(self, t: ArrayLike) -> ArrayLike:
+    def sf(self, t: NDArray[np.float64]) -> NDArray[np.float64]:
         if "sf" not in self.estimations.keys():
             raise KeyError(
                 "sf values not yet estimated. First run KaplanMeier.estimate(...)"
@@ -148,12 +207,12 @@ class KaplanMeier(NonParametricLifetimeEstimators):
 class NelsonAalen(NonParametricLifetimeEstimators):
     """_summary_"""
 
-    def estimate(
+    def fit(
         self,
-        time: ArrayLike,
-        event: Optional[ArrayLike] = None,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.float64]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
     ) -> None:
         """_summary_
 
@@ -206,7 +265,7 @@ class NelsonAalen(NonParametricLifetimeEstimators):
         timeline = np.insert(timeline, 0, 0)
         self.estimations["chf"] = Estimates(timeline, chf, se)
 
-    def chf(self, t: ArrayLike) -> ArrayLike:
+    def chf(self, t: NDArray[np.float64]) -> NDArray[np.float64]:
         if "chf" not in self.estimations.keys():
             raise KeyError(
                 "chf values not yet estimated. First run NelsonAalen.estimate(...)"
@@ -231,12 +290,12 @@ class Turnbull(NonParametricLifetimeEstimators):
         self.tol = tol
         self.lowmem = lowmem
 
-    def estimate(
+    def fit(
         self,
-        time: ArrayLike,
-        event: Optional[ArrayLike] = None,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.float64]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
     ) -> None:
         """_summary_
 
@@ -414,7 +473,7 @@ class Turnbull(NonParametricLifetimeEstimators):
             count += 1
         return s
 
-    def sf(self, t: ArrayLike) -> ArrayLike:
+    def sf(self, t: NDArray[np.float64]) -> NDArray[np.float64]:
         if "sf" not in self.estimations.keys():
             raise KeyError(
                 "sf values not yet estimated. First run Turnbull.estimate(...)"

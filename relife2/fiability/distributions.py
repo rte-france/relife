@@ -6,181 +6,53 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Optional
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
 from relife2.core import ParametricLifetimeModel
 from relife2.maths.integrations import shifted_laguerre
-from relife2.probabilities import default
-
 
 # pylint: disable=no-member
 
 
-class Distribution(ParametricLifetimeModel, ABC):  # , concrete=False):
+# Ts type var is a zero long tuple (see https://github.com/python/mypy/issues/16199)
+# note : Tuple[()] behaves differently (to follow)
+# no args are required
+class Distribution(ParametricLifetimeModel[()], ABC):
     """
     Object that computes every probability functions of a distribution model
     """
 
-    @default
-    def sf(self, time: np.ndarray) -> np.ndarray:
-        """
-        Args:
-            time ():
+    def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().sf(time)
 
-        Returns:
-        """
-
-    def isf(self, probability: np.ndarray) -> np.ndarray:
-        """
-        BLABLABLABLA
-        Args:
-            probability (np.ndarray): BLABLABLABLA
-        Returns:
-            np.ndarray: BLABLABLABLA
-        """
+    def isf(self, probability: NDArray[np.float64]) -> NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability)
         return self.ichf(cumulative_hazard_rate)
 
-    @abstractmethod
-    def hf(self, time: np.ndarray) -> np.ndarray:
-        """
-        Args:
-            time ():
+    def cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().cdf(time)
 
-        Returns:
-        """
+    def pdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().pdf(time)
 
-    @abstractmethod
-    def chf(self, time: np.ndarray) -> np.ndarray:
-        """
-        Args:
-            time ():
+    def ppf(self, probability: NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().ppf(probability)
 
-        Returns:
-        """
+    def rvs(self, *, size: Optional[int] = 1, seed: Optional[int] = None):
+        return super().rvs(size=size, seed=seed)
 
-    @default
-    def cdf(self, time: np.ndarray) -> np.ndarray:
-        """
-
-        Args:
-            time ():
-
-        Returns:
-
-        """
-
-    @default
-    def pdf(self, time: np.ndarray) -> np.ndarray:
-        """
-        Args:
-            time ():
-
-        Returns:
-        """
-
-    @default
-    def ppf(self, probability, time: np.ndarray) -> np.ndarray:
-        """
-        Args:
-            probability ():
-            time ():
-
-        Returns:
-        """
-
-    @abstractmethod
-    def mrl(self, time: np.ndarray) -> np.ndarray:
-        """
-        Args:
-            time ():
-
-        Returns:
-        """
-
-    @default
-    def rvs(self, size: Optional[int] = 1, seed: Optional[int] = None):
-        """
-        Args:
-            size ():
-            seed ():
-
-        Returns:
-        """
-
-    @abstractmethod
-    def mean(self) -> np.ndarray:
-        """
-        Returns:
-        """
-
-    @abstractmethod
-    def var(self) -> np.ndarray:
-        """
-        Returns:
-        """
-
-    @default
     def median(self):
-        """
-        Returns:
-        """
+        return super().mean()
 
-    @abstractmethod
-    def ichf(
-        self,
-        cumulative_hazard_rate: np.ndarray,
-    ) -> np.ndarray:
-        """
-        Args:
-            cumulative_hazard_rate ():
-
-        Returns:
-        """
-
-    @abstractmethod
-    def jac_hf(self, time: np.ndarray) -> np.ndarray:
-        """
-        BLABLABLABLA
-        Args:
-            time (np.ndarray): BLABLABLABLA
-
-        Returns:
-            np.ndarray: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def jac_chf(self, time: np.ndarray) -> np.ndarray:
-        """
-        BLABLABLABLA
-        Args:
-            time (np.ndarray): BLABLABLABLA
-
-        Returns:
-            np.ndarray: BLABLABLABLA
-        """
-
-    @abstractmethod
-    def dhf(self, time: np.ndarray) -> np.ndarray:
-        """
-        BLABLABLABLA
-        Args:
-            time (np.ndarray): BLABLABLABLA
-
-        Returns:
-            np.ndarray: BLABLABLABLA
-        """
-
-    def init_params(self, rlc, *args: Any):
-        if len(args) != 0:
-            raise ValueError("Unexpected arguments")
+    def init_params(self, lifetimes):
         param0 = np.ones(self.nb_params)
-        param0[-1] = 1 / np.median(rlc)
+        param0[-1] = 1 / np.median(lifetimes.rlc)
         self.params = param0
 
     @property
@@ -217,31 +89,31 @@ class Exponential(Distribution):
         super().__init__()
         self.new_params(rate=rate)
 
-    def hf(self, time: np.ndarray) -> np.ndarray:
+    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.rate * np.ones_like(time)
 
-    def chf(self, time: np.ndarray) -> np.ndarray:
+    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.rate * time
 
-    def mean(self) -> np.ndarray:
+    def mean(self) -> NDArray[np.float64]:
         return np.array(1 / self.rate)
 
-    def var(self) -> np.ndarray:
+    def var(self) -> NDArray[np.float64]:
         return np.array(1 / self.rate**2)
 
-    def mrl(self, time: np.ndarray) -> np.ndarray:
+    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return 1 / self.rate * np.ones_like(time)
 
-    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return cumulative_hazard_rate / self.rate
 
-    def jac_hf(self, time: np.ndarray) -> np.ndarray:
+    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.ones((time.size, 1))
 
-    def jac_chf(self, time: np.ndarray) -> np.ndarray:
+    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.ones((time.size, 1)) * time
 
-    def dhf(self, time: np.ndarray) -> np.ndarray:
+    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.zeros_like(time)
 
 
@@ -254,19 +126,19 @@ class Weibull(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def hf(self, time: np.ndarray) -> np.ndarray:
+    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
 
-    def chf(self, time: np.ndarray) -> np.ndarray:
+    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return (self.rate * time) ** self.shape
 
-    def mean(self) -> np.ndarray:
+    def mean(self) -> NDArray[np.float64]:
         return np.array(gamma(1 + 1 / self.shape) / self.rate)
 
-    def var(self) -> np.ndarray:
+    def var(self) -> NDArray[np.float64]:
         return np.array(gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2)
 
-    def mrl(self, time: np.ndarray) -> np.ndarray:
+    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return (
             gamma(1 / self.shape)
             / (self.rate * self.shape * self.sf(time))
@@ -276,10 +148,10 @@ class Weibull(Distribution):
             )
         )
 
-    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return cumulative_hazard_rate ** (1 / self.shape) / self.rate
 
-    def jac_hf(self, time: np.ndarray) -> np.ndarray:
+    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
 
         return np.column_stack(
             (
@@ -290,7 +162,7 @@ class Weibull(Distribution):
             )
         )
 
-    def jac_chf(self, time: np.ndarray) -> np.ndarray:
+    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.column_stack(
             (
                 np.log(self.rate * time) * (self.rate * time) ** self.shape,
@@ -298,7 +170,7 @@ class Weibull(Distribution):
             )
         )
 
-    def dhf(self, time: np.ndarray) -> np.ndarray:
+    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return (
             self.shape
             * (self.shape - 1)
@@ -316,8 +188,8 @@ class Gompertz(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def init_params(self, *args: Any) -> np.ndarray:
-        param0 = np.empty(self.nb_params, dtype=np.float64)
+    def init_params(self, *args: Any) -> NDArray[np.float64]:
+        param0 = np.empty(self.nb_params, dtype=float)
         rate = np.pi / (np.sqrt(6) * np.std(args[0].values))
         shape = np.exp(-rate * np.mean(args[0].values))
         param0[0] = shape
@@ -325,26 +197,26 @@ class Gompertz(Distribution):
 
         return param0
 
-    def hf(self, time: np.ndarray) -> np.ndarray:
+    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
 
-    def chf(self, time: np.ndarray) -> np.ndarray:
+    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * np.expm1(self.rate * time)
 
-    def mean(self) -> np.ndarray:
+    def mean(self) -> NDArray[np.float64]:
         return np.array(np.exp(self.shape) * exp1(self.shape) / self.rate)
 
-    def var(self) -> np.ndarray:
+    def var(self) -> NDArray[np.float64]:
         return np.array(polygamma(1, 1).item() / self.rate**2)
 
-    def mrl(self, time: np.ndarray) -> np.ndarray:
+    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
 
-    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
-    def jac_hf(self, time: np.ndarray) -> np.ndarray:
+    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.column_stack(
             (
                 self.rate * np.exp(self.rate * time),
@@ -352,7 +224,7 @@ class Gompertz(Distribution):
             )
         )
 
-    def jac_chf(self, time: np.ndarray) -> np.ndarray:
+    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.column_stack(
             (
                 np.expm1(self.rate * time),
@@ -360,7 +232,7 @@ class Gompertz(Distribution):
             )
         )
 
-    def dhf(self, time: np.ndarray) -> np.ndarray:
+    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
 
@@ -373,34 +245,34 @@ class Gamma(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def _uppergamma(self, x: np.ndarray) -> np.ndarray:
+    def _uppergamma(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
         return gammaincc(self.shape, x) * gamma(self.shape)
 
-    def _jac_uppergamma_shape(self, x: np.ndarray) -> np.ndarray:
+    def _jac_uppergamma_shape(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
         return shifted_laguerre(
             lambda s: np.log(s) * s ** (self.shape - 1),
             x,
             ndim=np.ndim(x),
         )
 
-    def hf(self, time: np.ndarray) -> np.ndarray:
+    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
 
-    def chf(self, time: np.ndarray) -> np.ndarray:
+    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
-    def mean(self) -> np.ndarray:
+    def mean(self) -> NDArray[np.float64]:
         return np.array(self.shape / self.rate)
 
-    def var(self) -> np.ndarray:
+    def var(self) -> NDArray[np.float64]:
         return np.array(self.shape / (self.rate**2))
 
-    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
 
-    def jac_hf(self, time: np.ndarray) -> np.ndarray:
+    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
 
         x = self.rate * time
         return (
@@ -418,8 +290,8 @@ class Gamma(Distribution):
 
     def jac_chf(
         self,
-        time: np.ndarray,
-    ) -> np.ndarray:
+        time: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         x = self.rate * time
         return np.column_stack(
             (
@@ -429,11 +301,11 @@ class Gamma(Distribution):
             )
         )
 
-    def dhf(self, time: np.ndarray) -> np.ndarray:
+    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
-    def mrl(self, time: np.ndarray) -> np.ndarray:
-        pass
+    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().mrl(time)
 
 
 class LogLogistic(Distribution):
@@ -445,15 +317,15 @@ class LogLogistic(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def hf(self, time: np.ndarray) -> np.ndarray:
+    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
         return self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape)
 
-    def chf(self, time: np.ndarray) -> np.ndarray:
+    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
         return np.array(np.log(1 + x**self.shape))
 
-    def mean(self) -> np.ndarray:
+    def mean(self) -> NDArray[np.float64]:
         b = np.pi / self.shape
         if self.shape <= 1:
             raise ValueError(
@@ -461,7 +333,7 @@ class LogLogistic(Distribution):
             )
         return np.array(b / (self.rate * np.sin(b)))
 
-    def var(self) -> np.ndarray:
+    def var(self) -> NDArray[np.float64]:
         b = np.pi / self.shape
         if self.shape <= 2:
             raise ValueError(
@@ -471,10 +343,10 @@ class LogLogistic(Distribution):
             (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
         )
 
-    def ichf(self, cumulative_hazard_rate: np.ndarray) -> np.ndarray:
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
-    def jac_hf(self, time: np.ndarray) -> np.ndarray:
+    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
         return np.column_stack(
             (
@@ -485,7 +357,7 @@ class LogLogistic(Distribution):
             )
         )
 
-    def jac_chf(self, time: np.ndarray) -> np.ndarray:
+    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
         return np.column_stack(
             (
@@ -494,7 +366,7 @@ class LogLogistic(Distribution):
             )
         )
 
-    def dhf(self, time: np.ndarray) -> np.ndarray:
+    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
         return (
             self.shape
@@ -504,5 +376,5 @@ class LogLogistic(Distribution):
             / (1 + x**self.shape) ** 2
         )
 
-    def mrl(self, time: np.ndarray) -> np.ndarray:
-        pass
+    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().mrl(time)

@@ -7,21 +7,20 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 import copy
-import functools
-import inspect
 import warnings
 from abc import ABC, abstractmethod
 from itertools import chain
-from typing import Any, Iterator, Union, Optional, Sequence
+from typing import Any, Generic, Iterator, Optional, TypeVarTuple, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
-from scipy.optimize import Bounds, minimize
+from numpy import ma
+from numpy.typing import NDArray
+from scipy.optimize import Bounds, minimize, newton
 
 from relife2.data import LifetimeSample, Truncations, lifetime_factory_template
 from relife2.data.dataclass import Sample
-from relife2.io import array_factory, preprocess_lifetime_data
-from relife2.protocols import LifetimeProtocol, ParametricModelProtocol
+from relife2.io import preprocess_lifetime_data
+from relife2.maths.integrations import gauss_legendre, quad_laguerre
 
 
 class Composite:
@@ -31,11 +30,11 @@ class Composite:
     """
 
     def __init__(self, **kwargs):
-        self._node_data: dict[str, Any] = {}
+        self._node_data = {}
         if kwargs:
             self._node_data = kwargs
-        self.parent: Union["Composite", None] = None
-        self.leaves: dict[str, "Composite"] = {}
+        self.parent = None
+        self.leaves = {}
         self._names, self._values = [], []
 
     @property
@@ -43,10 +42,20 @@ class Composite:
         """data of current node as dict"""
         return self._node_data
 
+    @node_data.setter
+    def node_data(self, new_values: dict[str, Any]):
+        self._node_data = new_values
+        self.update()
+
     @property
     def names(self):
         """keys of current and leaf nodes as list"""
         return self._names
+
+    @names.setter
+    def names(self, new_names: list[str]):
+        self.set_names(new_names)
+        self.update_parents()
 
     @property
     def values(self):
@@ -55,10 +64,10 @@ class Composite:
 
     @values.setter
     def values(self, new_values: list[Any]):
-        self._set_values(new_values)
+        self.set_values(new_values)
         self.update_parents()
 
-    def _set_values(self, new_values: list[Any]):
+    def set_values(self, new_values: list[Any]):
         if len(new_values) != len(self):
             raise ValueError(
                 f"values expects {len(self)} items but got {len(new_values)}"
@@ -67,15 +76,10 @@ class Composite:
         pos = len(self._node_data)
         self._node_data.update(zip(self._node_data, new_values[:pos]))
         for leaf in self.leaves.values():
-            leaf._set_values(new_values[pos : pos + len(leaf)])
+            leaf.set_values(new_values[pos : pos + len(leaf)])
             pos += len(leaf)
 
-    @names.setter
-    def names(self, new_names: list[str]):
-        self._set_names(new_names)
-        self.update_parents()
-
-    def _set_names(self, new_names: list[str]):
+    def set_names(self, new_names: list[str]):
         if len(new_names) != len(self):
             raise ValueError(
                 f"names expects {len(self)} items but got {len(new_names)}"
@@ -84,13 +88,8 @@ class Composite:
         pos = len(self._node_data)
         self._node_data = {new_names[:pos][i]: v for i, v in self._node_data.values()}
         for leaf in self.leaves.values():
-            leaf._set_names(new_names[pos : pos + len(leaf)])
+            leaf.set_names(new_names[pos : pos + len(leaf)])
             pos += len(leaf)
-
-    @node_data.setter
-    def node_data(self, new_values: dict[str, Any]):
-        self._node_data = new_values
-        self.update()
 
     def __len__(self):
         return len(self._names)
@@ -123,20 +122,20 @@ class Composite:
         del self.leaves[key]
         self.update()
 
-    def _items_walk(self) -> Iterator:
+    def items_walk(self) -> Iterator:
         """parallel walk through key value pairs"""
         yield list(self._node_data.items())
         for leaf in self.leaves.values():
-            yield list(chain.from_iterable(leaf._items_walk()))
+            yield list(chain.from_iterable(leaf.items_walk()))
 
-    def _all_items(self) -> Iterator:
-        return chain.from_iterable(self._items_walk())
+    def all_items(self) -> Iterator:
+        return chain.from_iterable(self.items_walk())
 
     def update_items(self):
         """parallel iterations : faster than update_value followed by update_keys"""
         try:
-            next(self._all_items())
-            _k, _v = zip(*self._all_items())
+            next(self.all_items())
+            _k, _v = zip(*self.all_items())
             self._names = list(_k)
             self._values = list(_v)
         except StopIteration:
@@ -152,7 +151,7 @@ class Composite:
         self.update_parents()
 
 
-class ParametricModule:
+class ParametricComponent:
     """
     Base class of all parametric functions grouped in one class. It makes easier to compose functions
     and to tune parametric structure of functions.
@@ -162,7 +161,7 @@ class ParametricModule:
 
     def __init__(self):
         self._params = Composite()
-        self.leaves: dict[str, "ParametricModule"] = {}
+        self.leaves = {}
 
     @property
     def all_params_set(self):
@@ -175,26 +174,26 @@ class ParametricModule:
     def params(self):
         return np.array(self._params.values, dtype=np.float64)
 
-    @property
-    def params_names(self):
-        return self._params.names
-
     @params.setter
     def params(self, new_values):
         self._params.values = new_values
 
     @property
+    def params_names(self):
+        return self._params.names
+
+    @property
     def nb_params(self):
         return len(self._params)
 
-    def compose_with(self, **kwmodule: "ParametricModule"):
+    def compose_with(self, **kwcomponents: "ParametricComponent"):
         """add functions that can be called from node"""
-        for name in kwmodule.keys():
+        for name in kwcomponents.keys():
             if name in self._params.node_data:
                 raise ValueError(f"{name} already exists as param name")
             if name in self.leaves:
                 raise ValueError(f"{name} already exists as leaf function")
-        for name, module in kwmodule.items():
+        for name, module in kwcomponents.items():
             self.leaves[name] = module
             self._params.set_leaf(f"{name}.params", module._params)
 
@@ -230,50 +229,173 @@ class ParametricModule:
     def copy(self):
         """
         Returns:
-            ParametricModule : a copy of the ParametricFunctions object
+            ParametricComponent : a copy of the ParametricFunctions object
         """
         return copy.deepcopy(self)
 
 
-class LifetimeModel(ABC):
+Ts = TypeVarTuple("Ts")
+
+
+class LifetimeModel(Generic[*Ts], ABC):
     """
     Base class controling that subclass interface are composed of expected probability functions
     """
 
-    def __init_subclass__(cls, concrete=True, **kwargs):
-        if concrete and not inspect.isabstract(cls):
-            if not issubclass(cls, LifetimeProtocol):
-                raise NotImplementedError(
-                    f"{cls} must implement protocols.LifetimeProtocol, at least one method is missing"
+    def hf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+        if "pdf" in self.__class__.__dict__ and "sf" in self.__class__.__dict__:
+            return self.pdf(time, *args) / self.sf(time, *args)
+        if "sf" in self.__class__.__dict__:
+            raise NotImplementedError(
+                """
+                ReLife does not implement hf as the derivate of chf yet. Consider adding it in future versions
+                see: https://docs.scipy.org/doc/scipy-1.11.4/reference/generated/scipy.misc.derivative.html
+                or : https://github.com/maroba/findiff
+                """
+            )
+        class_name = type(self).__name__
+        raise NotImplementedError(
+            f"""
+            {class_name} must implement hf function
+            """
+        )
+
+    def chf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+        if "sf" in self.__class__.__dict__:
+            return -np.log(self.sf(time, *args))
+        if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
+            return -np.log(self.pdf(time, *args) / self.hf(time, *args))
+        if "hf" in self.__class__.__dict__:
+            lower_bound = np.zeros_like(time)
+            upper_bound = np.broadcast_to(
+                np.asarray(self.isf(np.array(1e-4), *args)),
+                time.shape,
+            )
+            masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
+                upper_bound, time >= self.support_upper_bound
+            )
+            masked_lower_bound: ma.MaskedArray = ma.MaskedArray(
+                lower_bound, time >= self.support_upper_bound
+            )
+            integration = gauss_legendre(
+                self.hf,
+                masked_lower_bound,
+                masked_upper_bound,
+                ndim=2,
+            ) + quad_laguerre(
+                self.hf,
+                masked_upper_bound,
+                ndim=2,
+            )
+            return ma.filled(integration, 1.0)
+        class_name = type(self).__name__
+        raise NotImplementedError(
+            f"""
+        {class_name} must implement chf or at least hf function
+        """
+        )
+
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64], *args: *Ts):
+        raise NotImplementedError
+
+    def sf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+        if "chf" in self.__class__.__dict__:
+            return np.exp(
+                -self.chf(
+                    time,
+                    *args,
                 )
-        super().__init_subclass__(**kwargs)
+            )
+        if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
+            return self.pdf(time, *args) / self.hf(time, *args)
 
-    def __getattribute__(self, item):
-        if hasattr(LifetimeProtocol, item):
-            attr = super().__getattribute__(item)
-            if inspect.ismethod(attr):
+        class_name = type(self).__name__
+        raise NotImplementedError(
+            f"""
+        {class_name} must implement sf function
+        """
+        )
 
-                @functools.wraps(attr)
-                def wrapper(*args, **kwargs):
-                    if "time" in inspect.signature(attr).parameters:
-                        time_pos = list(inspect.signature(attr).parameters).index(
-                            "time"
-                        )
-                        time = args[time_pos]
-                        time = array_factory(time)
-                        args = [
-                            array_factory(arg, nb_units=time.shape[0])
-                            for i, arg in enumerate(args)
-                        ]
-                    if getattr(attr, "decorated_method", False):
-                        return attr(*args, **kwargs)
-                    else:
-                        return np.squeeze(attr(*args, **kwargs))
+    def pdf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+        try:
+            return self.sf(time, *args) * self.hf(time, *args)
+        except NotImplementedError as err:
+            class_name = type(self).__name__
+            raise NotImplementedError(
+                f"""
+            {class_name} must implement pdf or the above functions
+            """
+            ) from err
 
-                return wrapper
-            else:
-                return attr
-        return super().__getattribute__(item)
+    def mrl(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+        masked_time: ma.MaskedArray = ma.MaskedArray(
+            time, time >= self.support_upper_bound
+        )
+        upper_bound = np.broadcast_to(
+            np.asarray(self.isf(np.array(1e-4), *args)),
+            time.shape,
+        )
+        masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
+            upper_bound, time >= self.support_upper_bound
+        )
+
+        def integrand(x):
+            return (x - masked_time) * self.pdf(x, *args)
+
+        integration = gauss_legendre(
+            integrand,
+            masked_time,
+            masked_upper_bound,
+            ndim=2,
+        ) + quad_laguerre(
+            integrand,
+            masked_upper_bound,
+            ndim=2,
+        )
+        mrl_values = integration / self.sf(masked_time, *args)
+        return ma.filled(mrl_values, 0.0)
+
+    def moment(self, n: int, *args: *Ts) -> NDArray[np.float64]:
+        upper_bound = self.isf(np.array(1e-4), *args)
+
+        def integrand(x):
+            return x**n * self.pdf(x, *args)
+
+        return gauss_legendre(
+            integrand, np.array(0.0), upper_bound, ndim=2
+        ) + quad_laguerre(integrand, upper_bound, ndim=2)
+
+    def mean(self, *args: *Ts) -> NDArray[np.float64]:
+        return self.moment(1, *args)
+
+    def var(self, *args: *Ts) -> NDArray[np.float64]:
+        return self.moment(2, *args) - self.moment(1, *args) ** 2
+
+    def isf(
+        self,
+        probability: NDArray[np.float64],
+        *args: *Ts,
+    ):
+        return newton(
+            lambda x: self.sf(x, *args) - probability,
+            x0=np.zeros_like(probability),
+        )
+
+    def cdf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+        return 1 - self.sf(time, *args)
+
+    def rvs(
+        self, *args: *Ts, size: Optional[int] = 1, seed: Optional[int] = None
+    ) -> NDArray[np.float64]:
+        generator = np.random.RandomState(seed=seed)
+        probability = generator.uniform(size=size)
+        return self.isf(probability, *args)
+
+    def ppf(self, probability: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+        return self.isf(1 - probability, *args)
+
+    def median(self, *args: *Ts) -> NDArray[np.float64]:
+        return self.ppf(np.array(0.5), *args)
 
     @property
     @abstractmethod
@@ -284,15 +406,7 @@ class LifetimeModel(ABC):
     def support_lower_bound(self): ...
 
 
-class ParametricModel(ParametricModule, ABC):
-    def __init_subclass__(cls, concrete=True, **kwargs):
-        if concrete and not inspect.isabstract(cls):
-            if not issubclass(cls, ParametricModelProtocol):
-                raise NotImplementedError(
-                    f"{cls} must implement protocols.ParametricModelProtocol, at least one method is missing"
-                )
-        super().__init_subclass__(**kwargs)
-
+class ParametricModel(ParametricComponent, ABC):
     @abstractmethod
     def init_params(self, *args): ...
 
@@ -301,8 +415,18 @@ class ParametricModel(ParametricModule, ABC):
     def params_bounds(self) -> Bounds:
         """BLABLABLA"""
 
+    @abstractmethod
+    def fit(self, *args, **kwargs):
+        """
+        Args:
+            *args ():
+            **kwargs ():
 
-class Likelihood(ParametricModule, ABC):
+        Returns:
+        """
+
+
+class Likelihood(ParametricComponent, ABC):
     """
     Class that instanciates likelihood base having finite number of parameters related to
     one parametric functions
@@ -316,7 +440,7 @@ class Likelihood(ParametricModule, ABC):
             self.hasjac = True
 
     @abstractmethod
-    def negative_log(self, params: np.ndarray) -> float:
+    def negative_log(self, params: NDArray[np.float64]) -> float:
         """
         Args:
             params ():
@@ -359,27 +483,27 @@ class LikelihoodFromLifetimes(Likelihood):
             self.model.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
         )
 
-    def _jac_complete_contribs(self, lifetimes: Sample) -> np.ndarray:
+    def _jac_complete_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
         return -np.sum(
             self.model.jac_hf(lifetimes.values, *lifetimes.args)
             / self.model.hf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
-    def _jac_right_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
+    def _jac_right_censored_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
         return np.sum(
             self.model.jac_chf(lifetimes.values, *lifetimes.args),
             axis=0,
         )
 
-    def _jac_left_censored_contribs(self, lifetimes: Sample) -> np.ndarray:
+    def _jac_left_censored_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
         return -np.sum(
             self.model.jac_chf(lifetimes.values, *lifetimes.args)
             / np.expm1(self.model.chf(lifetimes.values, *lifetimes.args)),
             axis=0,
         )
 
-    def _jac_left_truncations_contribs(self, lifetimes: Sample) -> np.ndarray:
+    def _jac_left_truncations_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
         return -np.sum(
             self.model.jac_chf(lifetimes.values, *lifetimes.args),
             axis=0,
@@ -387,7 +511,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def negative_log(
         self,
-        params: np.ndarray,
+        params: NDArray[np.float64],
     ) -> float:
         self.params = params
         return (
@@ -399,8 +523,8 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def jac_negative_log(
         self,
-        params: np.ndarray,
-    ) -> Union[None, np.ndarray]:
+        params: NDArray[np.float64],
+    ) -> Union[None, NDArray[np.float64]]:
         """
 
         Args:
@@ -421,33 +545,36 @@ class LikelihoodFromLifetimes(Likelihood):
         )
 
 
-class ParametricLifetimeModel(LifetimeModel, ParametricModel, ABC):  # concrete=False):
+class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
     """
     Extended interface of LifetimeModel whose params can be estimated with fit method
     """
 
+    @abstractmethod
+    def init_params(self, lifetimes: LifetimeSample):
+        """"""
+
     def fit(
         self,
-        time: ArrayLike,
-        event: Optional[ArrayLike] = None,
-        entry: Optional[ArrayLike] = None,
-        departure: Optional[ArrayLike] = None,
-        args: Optional[Sequence[ArrayLike] | ArrayLike] = (),
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.float64]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
         inplace: bool = True,
-        **kwargs,
-    ) -> np.ndarray:
+        **kwargs: Any,
+    ) -> NDArray[np.float64]:
         """
-        BLABLABLABLA
         Args:
-            time (ArrayLike):
-            event (Optional[ArrayLike]):
-            entry (Optional[ArrayLike]):
-            departure (Optional[ArrayLike]):
-            args (Optional[tuple[ArrayLike]]):
-            inplace (bool): (default is True)
+            time ():
+            event ():
+            entry ():
+            departure ():
+            args ():
+            inplace ():
+            **kwargs ():
 
         Returns:
-            Parameters: optimum parameters found
         """
         time, event, entry, departure, args = preprocess_lifetime_data(
             time, event, entry, departure, args
@@ -461,7 +588,7 @@ class ParametricLifetimeModel(LifetimeModel, ParametricModel, ABC):  # concrete=
         )
 
         optimized_model = self.copy()
-        optimized_model.init_params(observed_lifetimes.rlc, *args)
+        optimized_model.init_params(observed_lifetimes)
         param0 = optimized_model.params
 
         likelihood = LikelihoodFromLifetimes(

@@ -1,7 +1,7 @@
 import nox
 
 
-@nox.session(tags=["style", "reformat"])
+@nox.session(tags=["reformat"])
 def black(session):
     session.install("black")
     session.run("black", "noxfile.py")
@@ -22,7 +22,7 @@ def lint(session):
     session.run("pylint", "--extension-pkg-whitelist=numpy", "relife2/.")
 
 
-@nox.session(tags=["style"])
+@nox.session(tags=["type"])
 def mypy(session):
     requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
     session.install(*requirements)
