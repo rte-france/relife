@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Sequence, TypeVarTuple
+from typing import Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -20,12 +20,10 @@ Ts = TypeVarTuple("Ts")
 
 
 class CovarEffect(ParametricComponent):
-    """
-    Object that computes covariates effect functions
-    """
-
-    def __init__(self, coef: Sequence[float | None]):
+    def __init__(self, coef: Optional[tuple[float, ...]]):
         super().__init__()
+        if coef is None:
+            coef = (None,)
         self.new_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
 
     def g(self, covar: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -41,9 +39,6 @@ class CovarEffect(ParametricComponent):
         return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
 
     def jac_g(self, covar: NDArray[np.float64]) -> NDArray[np.float64]:
-        """
-        Returns:
-        """
         return covar * self.g(covar)
 
 
@@ -55,14 +50,10 @@ class Regression(
     ],
     ABC,
 ):
-    """
-    Object that computes every probability functions of a regression model
-    """
-
     def __init__(
         self,
         baseline: ParametricLifetimeModel[*tuple[NDArray[np.float64], ...]],
-        coef: Sequence[float | None],
+        coef: Optional[tuple[float, ...]] = None,
     ):
         super().__init__()
         self.compose_with(
@@ -70,15 +61,14 @@ class Regression(
             baseline=baseline,
         )
 
-    def init_params(self, lifetimes: LifetimeSample):
+    def init_params(self, lifetimes: LifetimeSample) -> None:
         self.covar_effect.new_params(
-            **{f"coef_{i}": 0.0 for i in range(lifetimes.rlc.args.shape[-1])}
+            **{f"coef_{i}": 0.0 for i in range(lifetimes.rlc.args[0].shape[-1])}
         )
         self.baseline.init_params(lifetimes)
 
     @property
     def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
         lb = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, -np.inf),
@@ -172,15 +162,7 @@ class Regression(
         cumulative_hazard_rate: NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: * tuple[NDArray[np.float64], ...],
-    ) -> NDArray[np.float64]:
-        """
-        Args:
-            cumulative_hazard_rate ():
-            covar ():
-            *args ():
-
-        Returns:
-        """
+    ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_hf(
@@ -188,16 +170,7 @@ class Regression(
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: * tuple[NDArray[np.float64], ...],
-    ) -> NDArray[np.float64]:
-        """
-        Args:
-            time ():
-            covar ():
-            *args ():
-
-        Returns:
-
-        """
+    ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_chf(
@@ -205,15 +178,7 @@ class Regression(
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: * tuple[NDArray[np.float64], ...],
-    ) -> NDArray[np.float64]:
-        """
-        Args:
-            time ():
-            covar ():
-            *args ():
-
-        Returns:
-        """
+    ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def dhf(
@@ -221,37 +186,18 @@ class Regression(
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: * tuple[NDArray[np.float64], ...],
-    ) -> NDArray[np.float64]:
-        """
-        Args:
-            time ():
-            covar ():
-            *args ():
-
-        Returns:
-        """
+    ) -> NDArray[np.float64]: ...
 
     @property
     def support_lower_bound(self):
-        """
-        Returns:
-            BLABLABLABLA
-        """
         return 0.0
 
     @property
     def support_upper_bound(self):
-        """
-        Returns:
-            BLABLABLABLA
-        """
         return np.inf
 
 
 class ProportionalHazard(Regression):
-    """
-    BLABLABLABLA
-    """
 
     def hf(
         self,
@@ -315,9 +261,6 @@ class ProportionalHazard(Regression):
 
 
 class AFT(Regression):
-    """
-    BLABLABLABLA
-    """
 
     def hf(
         self,

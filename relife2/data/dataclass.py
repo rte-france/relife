@@ -9,6 +9,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 from dataclasses import dataclass, field
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 @dataclass
@@ -17,21 +18,19 @@ class Sample:
     Object that encapsulates lifetime data values and corresponding units index
     """
 
-    values: np.ndarray
-    ids: np.ndarray  # arrays of int
-    args: list[np.ndarray] = field(
+    values: NDArray[np.float64]
+    ids: NDArray[np.int64]  # arrays of int
+    args: list[NDArray[np.float64]] = field(
         default_factory=list
     )  # any other data attached to values (e.g. covar values)
 
     def __post_init__(self):
-        if self.values.ndim != 2:
-            raise ValueError("Invalid LifetimeData values number of dimensions")
+        if self.values.ndim == 1:
+            self.values = self.values.reshape(-1, 1)
         if self.ids.ndim != 1:
             raise ValueError("Invalid LifetimeData unit_ids number of dimensions")
         if len(self.values) != len(self.ids):
             raise ValueError("Incompatible lifetime values and unit_ids")
-        if np.all(self.values == 0, axis=1).any():
-            raise ValueError("Lifetimes values must be greater than 0")
 
     def __len__(self) -> int:
         return len(self.values)
@@ -101,15 +100,15 @@ def intersect_lifetimes(*lifetimes: Sample) -> list[Sample]:
     Returns:
 
     Examples:
-        >>> lifetimes_1 = Sample(values = np.array([[1], [2]]), ids = np.array([3, 10]))
-        >>> lifetimes_2 = Sample(values = np.array([[3], [5]]), ids = np.array([10, 2]))
+        >>> lifetimes_1 = Sample(values = np.array([[1.], [2.]]), ids = np.array([3, 10]))
+        >>> lifetimes_2 = Sample(values = np.array([[3.], [5.]]), ids = np.array([10, 2]))
         >>> intersect_lifetimes(lifetimes_1, lifetimes_2)
         [Lifetimes(values=array([[2]]), index=array([10])), Lifetimes(values=array([[3]]), index=array([10]))]
     """
 
     inter_ids = np.array(
         list(set.intersection(*[set(_lifetimes.ids) for _lifetimes in lifetimes]))
-    )
+    ).astype(np.int64)
     return [
         Sample(
             _lifetimes.values[np.isin(_lifetimes.ids, inter_ids)],

@@ -1,13 +1,5 @@
-"""
-This module defines probability functions used in distributions
-
-Copyright (c) 2022, RTE (https://www.rte-france.com)
-See AUTHORS.txt
-SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
-"""
-
 from abc import ABC
-from typing import Any, Optional
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,19 +7,14 @@ from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
 from relife2.core import ParametricLifetimeModel
+from relife2.data import LifetimeSample
 from relife2.maths.integrations import shifted_laguerre
-
-# pylint: disable=no-member
 
 
 # Ts type var is a zero long tuple (see https://github.com/python/mypy/issues/16199)
 # note : Tuple[()] behaves differently (to follow)
 # no args are required
 class Distribution(ParametricLifetimeModel[()], ABC):
-    """
-    Object that computes every probability functions of a distribution model
-    """
-
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return super().sf(time)
 
@@ -48,11 +35,11 @@ class Distribution(ParametricLifetimeModel[()], ABC):
         return super().rvs(size=size, seed=seed)
 
     def median(self):
-        return super().mean()
+        return super().median()
 
-    def init_params(self, lifetimes):
+    def init_params(self, lifetimes: LifetimeSample) -> None:
         param0 = np.ones(self.nb_params)
-        param0[-1] = 1 / np.median(lifetimes.rlc)
+        param0[-1] = 1 / np.median(lifetimes.rlc.values)
         self.params = param0
 
     @property
@@ -65,26 +52,14 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
     @property
     def support_lower_bound(self):
-        """
-        Returns:
-            BLABLABLA
-        """
         return 0.0
 
     @property
     def support_upper_bound(self):
-        """
-        Returns:
-            BLABLABLA
-        """
         return np.inf
 
 
 class Exponential(Distribution):
-    """
-    BLABLABLABLA
-    """
-
     def __init__(self, rate: Optional[float] = None):
         super().__init__()
         self.new_params(rate=rate)
@@ -118,10 +93,6 @@ class Exponential(Distribution):
 
 
 class Weibull(Distribution):
-    """
-    BLABLABLABLA
-    """
-
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
@@ -180,22 +151,17 @@ class Weibull(Distribution):
 
 
 class Gompertz(Distribution):
-    """
-    BLABLABLABLA
-    """
-
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def init_params(self, *args: Any) -> NDArray[np.float64]:
+    def init_params(self, lifetime: LifetimeSample) -> None:
         param0 = np.empty(self.nb_params, dtype=float)
-        rate = np.pi / (np.sqrt(6) * np.std(args[0].values))
-        shape = np.exp(-rate * np.mean(args[0].values))
+        rate = np.pi / (np.sqrt(6) * np.std(lifetime.rlc.values))
+        shape = np.exp(-rate * np.mean(lifetime.rlc.values))
         param0[0] = shape
         param0[1] = rate
-
-        return param0
+        self.params = param0
 
     def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
@@ -237,10 +203,6 @@ class Gompertz(Distribution):
 
 
 class Gamma(Distribution):
-    """
-    BLABLABLABLA
-    """
-
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
@@ -309,10 +271,6 @@ class Gamma(Distribution):
 
 
 class LogLogistic(Distribution):
-    """
-    BLABLABLABLA
-    """
-
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)

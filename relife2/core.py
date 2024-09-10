@@ -1,11 +1,3 @@
-"""
-This module defines fundamental types of statistical models used in survival analysis
-
-Copyright (c) 2022, RTE (https://www.rte-france.com)
-See AUTHORS.txt
-SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
-"""
-
 import copy
 import warnings
 from abc import ABC, abstractmethod
@@ -19,16 +11,10 @@ from scipy.optimize import Bounds, minimize, newton
 
 from relife2.data import LifetimeSample, Truncations, lifetime_factory_template
 from relife2.data.dataclass import Sample
-from relife2.io import preprocess_lifetime_data
 from relife2.maths.integrations import gauss_legendre, quad_laguerre
 
 
 class Composite:
-    """
-    Composite pattern used to structure dictionaries of values in a tree structure
-    (used to store models' parameters)
-    """
-
     def __init__(self, **kwargs):
         self._node_data = {}
         if kwargs:
@@ -152,23 +138,9 @@ class Composite:
 
 
 class ParametricComponent:
-    """
-    Base class of all parametric functions grouped in one class. It makes easier to compose functions
-    and to tune parametric structure of functions.
-
-    main methods are : new_params and add_functions
-    """
-
     def __init__(self):
         self._params = Composite()
         self.leaves = {}
-
-    @property
-    def all_params_set(self):
-        return (
-            np.isnan(self._params.values).any()
-            and not np.isnan(self._params.values).all()
-        )
 
     @property
     def params(self):
@@ -185,6 +157,10 @@ class ParametricComponent:
     @property
     def nb_params(self):
         return len(self._params)
+
+    @property
+    def all_params_set(self):
+        return np.isnan(self.params).any() and not np.isnan(self.params).all()
 
     def compose_with(self, **kwcomponents: "ParametricComponent"):
         """add functions that can be called from node"""
@@ -227,10 +203,6 @@ class ParametricComponent:
             super().__setattr__(name, value)
 
     def copy(self):
-        """
-        Returns:
-            ParametricComponent : a copy of the ParametricFunctions object
-        """
         return copy.deepcopy(self)
 
 
@@ -238,9 +210,19 @@ Ts = TypeVarTuple("Ts")
 
 
 class LifetimeModel(Generic[*Ts], ABC):
-    """
-    Base class controling that subclass interface are composed of expected probability functions
-    """
+    # def __init_subclass__(cls, **kwargs):
+    #     """
+    #     TODO : something to parse *args names and to fill args_names and nb_args
+    #     see Descriptors
+    #     """
+    #
+    # @property
+    # def args_names(self):
+    #     return self._args.names
+    #
+    # @property
+    # def nb_args(self):
+    #     return len(self._args)
 
     def hf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
         if "pdf" in self.__class__.__dict__ and "sf" in self.__class__.__dict__:
@@ -353,7 +335,7 @@ class LifetimeModel(Generic[*Ts], ABC):
             ndim=2,
         )
         mrl_values = integration / self.sf(masked_time, *args)
-        return ma.filled(mrl_values, 0.0)
+        return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *Ts) -> NDArray[np.float64]:
         upper_bound = self.isf(np.array(1e-4), *args)
@@ -361,9 +343,10 @@ class LifetimeModel(Generic[*Ts], ABC):
         def integrand(x):
             return x**n * self.pdf(x, *args)
 
-        return gauss_legendre(
-            integrand, np.array(0.0), upper_bound, ndim=2
-        ) + quad_laguerre(integrand, upper_bound, ndim=2)
+        return np.squeeze(
+            gauss_legendre(integrand, np.array(0.0), upper_bound, ndim=2)
+            + quad_laguerre(integrand, upper_bound, ndim=2)
+        )
 
     def mean(self, *args: *Ts) -> NDArray[np.float64]:
         return self.moment(1, *args)
@@ -408,7 +391,7 @@ class LifetimeModel(Generic[*Ts], ABC):
 
 class ParametricModel(ParametricComponent, ABC):
     @abstractmethod
-    def init_params(self, *args): ...
+    def init_params(self, *args: Any) -> None: ...
 
     @property
     @abstractmethod
@@ -416,7 +399,7 @@ class ParametricModel(ParametricComponent, ABC):
         """BLABLABLA"""
 
     @abstractmethod
-    def fit(self, *args, **kwargs):
+    def fit(self, *args: Any, **kwargs: Any) -> NDArray[np.float64]:
         """
         Args:
             *args ():
@@ -427,16 +410,11 @@ class ParametricModel(ParametricComponent, ABC):
 
 
 class Likelihood(ParametricComponent, ABC):
-    """
-    Class that instanciates likelihood base having finite number of parameters related to
-    one parametric functions
-    """
-
     def __init__(self, model: ParametricModel):
         super().__init__()
         self.compose_with(model=model)
         self.hasjac = False
-        if hasattr(self.function, "jac_hf") and hasattr(self.function, "jac_chf"):
+        if hasattr(self.model, "jac_hf") and hasattr(self.model, "jac_chf"):
             self.hasjac = True
 
     @abstractmethod
@@ -451,10 +429,6 @@ class Likelihood(ParametricComponent, ABC):
 
 
 class LikelihoodFromLifetimes(Likelihood):
-    """
-    BLABLABLA
-    """
-
     def __init__(
         self,
         model: "ParametricLifetimeModel",
@@ -475,7 +449,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def _left_censored_contribs(self, lifetimes: Sample) -> float:
         return -np.sum(
-            np.log(-np.expm1(-self.function.chf(lifetimes.values, *lifetimes.args)))
+            np.log(-np.expm1(-self.model.chf(lifetimes.values, *lifetimes.args)))
         )
 
     def _left_truncations_contribs(self, lifetimes: Sample) -> float:
@@ -546,18 +520,28 @@ class LikelihoodFromLifetimes(Likelihood):
 
 
 class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
-    """
-    Extended interface of LifetimeModel whose params can be estimated with fit method
-    """
+    # def __init_subclass__(cls, **kwargs):
+    #     """
+    #     TODO : something to parse *args names and to fill args_names and nb_args
+    #     see Descriptors
+    #     """
+    #
+    # @property
+    # def args_names(self):
+    #     return self._args.names
+    #
+    # @property
+    # def nb_args(self):
+    #     return len(self._args)
 
     @abstractmethod
-    def init_params(self, lifetimes: LifetimeSample):
+    def init_params(self, lifetimes: LifetimeSample) -> None:
         """"""
 
     def fit(
         self,
         time: NDArray[np.float64],
-        event: Optional[NDArray[np.float64]] = None,
+        event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
@@ -576,9 +560,6 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
 
         Returns:
         """
-        time, event, entry, departure, args = preprocess_lifetime_data(
-            time, event, entry, departure, args
-        )
         observed_lifetimes, truncations = lifetime_factory_template(
             time,
             event,
@@ -589,7 +570,6 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
 
         optimized_model = self.copy()
         optimized_model.init_params(observed_lifetimes)
-        param0 = optimized_model.params
 
         likelihood = LikelihoodFromLifetimes(
             optimized_model,
@@ -604,7 +584,7 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
             "callback": kwargs.get("callback", None),
             "options": kwargs.get("options", None),
             "bounds": kwargs.get("bounds", optimized_model.params_bounds),
-            "x0": kwargs.get("x0", param0),
+            "x0": kwargs.get("x0", optimized_model.params),
         }
 
         optimizer = minimize(
@@ -615,6 +595,21 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
         )
 
         if inplace:
+            self.init_params(observed_lifetimes)
             self.params = likelihood.params
 
         return optimizer.x
+
+    def __getattribute__(self, item):
+        """control if params are set"""
+
+        if (
+            not item.startswith("_")
+            and not not item.startswith("__")
+            and hasattr(LifetimeModel, item)
+        ):
+            if not self.all_params_set:
+                raise ValueError(
+                    f"Can't call {item} if one model params is not set. Instanciate fully parametrized model or fit it"
+                )
+        return super().__getattribute__(item)

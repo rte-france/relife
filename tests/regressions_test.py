@@ -73,7 +73,7 @@ def test_sf(model, covar):
 
 def test_rvs(model, covar):
     size = 10
-    assert model.rvs(size, args=(covar,)).shape == (covar.shape[0], size)
+    assert model.rvs(covar, size=size).shape == (covar.shape[0], size)
 
 
 def test_mean(model, covar):

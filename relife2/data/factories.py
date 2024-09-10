@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .dataclass import (
     Deteriorations,
@@ -80,11 +81,11 @@ class LifetimesFactory(ABC):
 
     def __init__(
         self,
-        time: np.ndarray,
-        event: Optional[np.ndarray] = None,
-        entry: Optional[np.ndarray] = None,
-        departure: Optional[np.ndarray] = None,
-        args: tuple[np.ndarray, ...] | tuple[()] = (),
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
     ):
 
         if entry is None:
@@ -268,11 +269,11 @@ class LifetimeDataFactoryFrom2D(LifetimesFactory):
 
 
 def lifetime_factory_template(
-    time: np.ndarray,
-    event: Optional[np.ndarray] = None,
-    entry: Optional[np.ndarray] = None,
-    departure: Optional[np.ndarray] = None,
-    args: tuple[np.ndarray, ...] | tuple[()] = (),
+    time: NDArray[np.float64],
+    event: Optional[NDArray[np.bool_]] = None,
+    entry: Optional[NDArray[np.float64]] = None,
+    departure: Optional[NDArray[np.float64]] = None,
+    args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
 ) -> Tuple[LifetimeSample, Truncations]:
     """
     Args:
@@ -286,10 +287,14 @@ def lifetime_factory_template(
 
     """
     factory: LifetimesFactory
-    if time.shape[-1] == 1:
+    if time.ndim == 1:
         factory = LifetimeDataFactoryFrom1D(time, event, entry, departure, args)
-    else:
+    elif time.ndim == 2:
+        if time.shape[-1] != 2:
+            raise ValueError("If time ndim is 2, time shape must be (n, 2)")
         factory = LifetimeDataFactoryFrom2D(time, event, entry, departure, args)
+    else:
+        raise ValueError("time ndim must be 1 or 2")
     return factory()
 
 
