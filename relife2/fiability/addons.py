@@ -5,10 +5,10 @@ from relife2.core import LifetimeModel
 
 
 class AgeReplacementModel(
-    LifetimeModel[*tuple[NDArray[np.float64], tuple[NDArray[np.float64], ...]]]
+    LifetimeModel[*tuple[NDArray[np.float64], *tuple[NDArray[np.float64], ...]]]
 ):
 
-    def __init__(self, baseline: LifetimeModel[tuple[NDArray[np.float64], ...]]):
+    def __init__(self, baseline: LifetimeModel[*tuple[NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
 
@@ -16,7 +16,7 @@ class AgeReplacementModel(
         self,
         time: NDArray[np.float64],
         ar: NDArray[np.float64],
-        *args: tuple[NDArray[np.float64], ...],
+        *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]:
         return np.where(time < ar, self.baseline.sf(time, *args), 0)
 
@@ -24,7 +24,7 @@ class AgeReplacementModel(
         self,
         probability: NDArray[np.float64],
         ar: NDArray[np.float64],
-        *args: tuple[NDArray[np.float64], ...],
+        *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]:
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
@@ -32,11 +32,11 @@ class AgeReplacementModel(
         self,
         time: NDArray[np.float64],
         ar: NDArray[np.float64],
-        *args: tuple[NDArray[np.float64], ...],
+        *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]:
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
-    def support_upper_bound(self, ar: tuple[NDArray[np.float64], ...]):
+    def support_upper_bound(self, ar: NDArray[np.float64]):
         return np.minimum(ar, self.baseline.support_upper_bound)
 
     def support_lower_bound(self):
@@ -60,9 +60,9 @@ class AgeReplacementModel(
 
 
 class LeftTruncated(
-    LifetimeModel[*tuple[NDArray[np.float64], tuple[NDArray[np.float64], ...]]]
+    LifetimeModel[*tuple[NDArray[np.float64], *tuple[NDArray[np.float64], ...]]]
 ):
-    def __init__(self, baseline: LifetimeModel[tuple[NDArray[np.float64], ...]]):
+    def __init__(self, baseline: LifetimeModel[*tuple[NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
 
@@ -70,7 +70,7 @@ class LeftTruncated(
         self,
         probability: NDArray[np.float64],
         a0: NDArray[np.float64],
-        *args: tuple[NDArray[np.float64], ...],
+        *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability)
         return self.ichf(cumulative_hazard_rate, a0, *args)
@@ -79,7 +79,7 @@ class LeftTruncated(
         self,
         time: NDArray[np.float64],
         a0: NDArray[np.float64],
-        *args: tuple[NDArray[np.float64], ...],
+        *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]:
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
@@ -87,7 +87,7 @@ class LeftTruncated(
         self,
         time: NDArray[np.float64],
         a0: NDArray[np.float64],
-        *args: tuple[NDArray[np.float64], ...],
+        *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]:
         return self.baseline.hf(a0 + time, *args)
 
@@ -95,7 +95,7 @@ class LeftTruncated(
         self,
         cumulative_hazard_rate: NDArray[np.float64],
         a0: NDArray[np.float64],
-        *args: tuple[NDArray[np.float64], ...],
+        *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]:
         return (
             self.baseline.ichf(
