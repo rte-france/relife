@@ -3,14 +3,14 @@ from collections.abc import Iterator
 
 import numpy as np
 
-from relife2.survival import Distribution, Regression
+from relife2.fiability import Distribution, Regression
 
 
 class EventIterator(Iterator, ABC):
     """Iterator pattern expecting nb of samples and optionally a nb of assets"""
 
-    def __init__(self, functions, nb_samples, nb_assets):
-        self.functions = functions
+    def __init__(self, model, nb_samples, nb_assets):
+        self.model = model
         self.nb_samples = nb_samples
         self.nb_assets = nb_assets
 
@@ -34,8 +34,8 @@ def transform_1d_index(index, nb_samples, nb_assets):
 class DistributionIterator(EventIterator):
     """Concrete EventIterator for DistributionFunctions"""
 
-    def __init__(self, functions: Distribution, nb_samples, end_time, nb_assets=1):
-        super().__init__(functions, nb_samples, nb_assets)
+    def __init__(self, model: Distribution, nb_samples, end_time, nb_assets=1):
+        super().__init__(model, nb_samples, nb_assets)
         self.end_time = end_time
         self.durations = np.zeros(self.nb_assets * self.nb_samples)
 
@@ -44,7 +44,7 @@ class DistributionIterator(EventIterator):
         unfailed_samples = self.durations < self.end_time
         if unfailed_samples.any():
             rvs_size = np.sum(unfailed_samples)
-            event_times = self.functions.rvs(size=rvs_size).reshape(-1)
+            event_times = self.model.rvs(size=rvs_size).reshape(-1)
             self.durations[unfailed_samples] += event_times
             samples_ids, assets_ids = transform_1d_index(
                 unfailed_samples, self.nb_samples, self.nb_assets
@@ -57,11 +57,11 @@ class DistributionIterator(EventIterator):
 class RegressionIterator(EventIterator):
     """Concrete EventIterator for RegressionFunctions"""
 
-    def __init__(self, functions: Regression, covar, nb_samples, end_time):
-        super().__init__(functions, nb_samples, covar.shape[0])
+    def __init__(self, model: Regression, covar, nb_samples, end_time):
+        super().__init__(model, nb_samples, covar.shape[0])
         self.end_time = end_time
         self.durations = np.zeros(self.nb_assets * self.nb_samples)
-        self.functions.covar = covar
+        self.covar = covar
 
     def __next__(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         # shape : (nb_assets * nb_samples)
@@ -69,7 +69,7 @@ class RegressionIterator(EventIterator):
         if unfailed_samples.any():
             # shape : (nb_assets, nb_samples)
             rvs_size = self.nb_samples
-            event_times = self.functions.rvs(size=rvs_size).reshape(-1)[
+            event_times = self.model.rvs(self.covar, size=rvs_size).reshape(-1)[
                 unfailed_samples
             ]
             self.durations[unfailed_samples] += event_times

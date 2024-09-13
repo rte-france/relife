@@ -8,18 +8,22 @@ def black(session):
     session.run("black", "relife2/.")
 
 
-@nox.session(tags=["style", "reformat"])
+@nox.session(tags=["reformat"])
 def isort(session):
     session.install("isort")
     session.run("isort", "relife2/.")
 
 
-@nox.session(tags=["style"])
+@nox.session(tags=["lint"])
 def lint(session):
     requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
     session.install(*requirements)
     session.install("pylint")
-    session.run("pylint", "--extension-pkg-whitelist=numpy", "relife2/.")
+    if session.posargs:
+        args = session.posargs
+    else:
+        args = ()
+    session.run("pylint", "--extension-pkg-whitelist=numpy", "relife2/.", *args)
 
 
 @nox.session(tags=["type"])
@@ -27,4 +31,8 @@ def mypy(session):
     requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
     session.install(*requirements)
     session.install("mypy")
-    session.run("mypy", "relife2/.")
+    if session.posargs:
+        args = session.posargs
+    else:
+        args = ()
+    session.run("mypy", *args, "relife2/.")

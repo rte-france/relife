@@ -1,1 +1,1 @@
-from .sample import sample
+from .old_sample import sample
