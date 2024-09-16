@@ -6,7 +6,7 @@ from typing import TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.core import ParametricLifetimeModel, ParametricModel
+from relife2.core import ParametricModel, LifetimeModel
 
 T = TypeVar("T")
 
@@ -48,7 +48,7 @@ class SampleIterator(Iterator[SampleData], ABC):
 class LifetimeSampleIterator(SampleIterator):
     def __init__(
         self,
-        model: ParametricLifetimeModel,
+        model: LifetimeModel,
         size: int,
         end_time: float,
         nb_assets: int = 1,
@@ -90,8 +90,8 @@ class LifetimeSampleIterator(SampleIterator):
 def aggregate(iterator: SampleIterator) -> SampleData:
     """function that aggregates results of EventIterator iterations in arrays, sorted by samples_ids and assets_ids"""
     values = np.array([], dtype=np.float64)
-    samples_index = np.array([], dtype=np.float64)
-    assets_index = np.array([], dtype=np.float64)
+    samples_index = np.array([], dtype=np.int64)
+    assets_index = np.array([], dtype=np.int64)
     for event in iterator:
         values = np.concatenate((values, event.values))
         samples_index = np.concatenate((samples_index, event.samples_index))
@@ -171,8 +171,8 @@ class SampleIterable:
         return {"values": values, "nb_events": nb_events}
 
 
-def lifetimes_sample(
-    model: ParametricLifetimeModel,
+def sample_lifetimes(
+    model: LifetimeModel,
     size: int,
     end_time: float,
     nb_assets: int = 1,

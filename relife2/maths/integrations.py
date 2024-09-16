@@ -6,10 +6,14 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
+from functools import singledispatch
 from typing import Callable
 
 import numpy as np
 from numpy.typing import NDArray
+
+from relife2.core import LifetimeModel
+from relife2.fiability.addons import AgeReplacementModel
 
 FloatArray = NDArray[np.float64]
 
@@ -163,3 +167,42 @@ def shifted_laguerre(
     return gauss_laguerre(
         lambda x: func(x + lower_bound) * np.exp(-lower_bound), ndim=ndim, deg=deg
     )
+
+
+@singledispatch
+def ls_integrate(
+    model: LifetimeModel,
+    func: Callable,
+    lower_bound,
+    upper_bound,
+    *args,
+    ndim: int = 0,
+    deg: int = 100,
+):
+    ub = model.support_upper_bound
+    b = np.minimum(ub, upper_bound)
+    f = lambda x, *args: func(x) * model.pdf(x, *args)
+    if np.all(np.isinf(b)):
+        b = model.isf(1e-4, *args)
+        res = quad_laguerre(f, b, ndim=ndim, deg=deg)
+    else:
+        res = 0
+    return gauss_legendre(f, lower_bound, b, ndim=ndim, deg=deg) + res
+
+
+@ls_integrate.register
+def _(
+    model: AgeReplacementModel,
+    func: Callable,
+    lower_bound,
+    upper_bound,
+    *args,
+    ndim: int = 0,
+    deg: int = 100,
+):
+    ar = args[0]
+    ub = model.support_upper_bound(ar, *args)
+    b = np.minimum(ub, upper_bound)
+    f = lambda x, *args: func(x) * model.baseline.pdf(x, *args)
+    w = np.where(b == ar, func(ar) * model.baseline.sf(ar, *args), 0)
+    return gauss_legendre(f, lower_bound, b, ndim=ndim, deg=deg) + w
