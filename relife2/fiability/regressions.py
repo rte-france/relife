@@ -20,10 +20,8 @@ Ts = TypeVarTuple("Ts")
 
 
 class CovarEffect(ParametricComponent):
-    def __init__(self, coef: Optional[tuple[float, ...]]):
+    def __init__(self, coef: tuple[float, ...] | tuple[None] = (None,)):
         super().__init__()
-        if coef is None:
-            coef = (None,)
         self.new_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
 
     def g(self, covar: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -53,7 +51,7 @@ class Regression(
     def __init__(
         self,
         baseline: ParametricLifetimeModel[*tuple[NDArray[np.float64], ...]],
-        coef: Optional[tuple[float, ...]] = None,
+        coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__()
         self.compose_with(
@@ -188,13 +186,13 @@ class Regression(
         *args: * tuple[NDArray[np.float64], ...],
     ) -> NDArray[np.float64]: ...
 
-    @property
-    def support_lower_bound(self):
-        return 0.0
-
-    @property
-    def support_upper_bound(self):
-        return np.inf
+    # @property
+    # def support_lower_bound(self):
+    #     return 0.0
+    #
+    # @property
+    # def support_upper_bound(self):
+    #     return np.inf
 
 
 class ProportionalHazard(Regression):

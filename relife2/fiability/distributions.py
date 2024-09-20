@@ -50,13 +50,13 @@ class Distribution(ParametricLifetimeModel[()], ABC):
             np.full(self.nb_params, np.inf),
         )
 
-    @property
-    def support_lower_bound(self):
-        return 0.0
-
-    @property
-    def support_upper_bound(self):
-        return np.inf
+    # @property
+    # def support_lower_bound(self):
+    #     return 0.0
+    #
+    # @property
+    # def support_upper_bound(self):
+    #     return np.inf
 
 
 class Exponential(Distribution):

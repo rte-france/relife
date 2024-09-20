@@ -1,7 +1,10 @@
+from typing import Callable
+
 import numpy as np
 from numpy.typing import NDArray
 
 from relife2.core import LifetimeModel
+from relife2.maths.integrations import gauss_legendre
 
 
 class AgeReplacementModel(
@@ -36,27 +39,58 @@ class AgeReplacementModel(
     ) -> NDArray[np.float64]:
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
-    def support_upper_bound(self, ar: NDArray[np.float64]):
-        return np.minimum(ar, self.baseline.support_upper_bound)
+    def moment(
+        self, n: int, ar: NDArray[np.float64], *args: * tuple[NDArray[np.float64], ...]
+    ) -> NDArray[np.float64]:
+        return self.ls_integrate(
+            lambda x: x**n,
+            np.array(0.0),
+            ar,
+            *args,
+        )
 
-    def support_lower_bound(self):
-        return self.baseline.support_upper_bound()
+    def mrl(
+        self, time, ar: NDArray[np.float64], *args: * tuple[NDArray[np.float64], ...]
+    ) -> NDArray[np.float64]:
 
-    # def ls_integrate(
-    #     self,
-    #     func: Callable,
-    #     a: NDArray[np.float64],
-    #     b: NDArray[np.float64],
-    #     ar: NDArray[np.float64],
-    #     *args: NDArray[np.float64],
-    #     ndim: int = 0,
-    #     deg: int = 100
-    # ) -> NDArray[np.float64]:
-    #     ub = self.support_upper_bound(ar, *args)
-    #     b = np.minimum(ub, b)
-    #     f = lambda x, *args: func(x) * self.baseline.pdf(x, *args)
-    #     w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
-    #     return gauss_legendre(f, a, b, *args, ndim=ndim, deg=deg) + w
+        ub = np.array(np.inf)
+        mask = time >= ar
+        if np.any(mask):
+            time, ub = np.broadcast_arrays(time, ub)
+            time = np.ma.MaskedArray(time, mask)
+            ub = np.ma.MaskedArray(ub, mask)
+        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args) / self.sf(
+            time, ar, *args
+        )
+        return np.ma.filled(mu, 0)
+
+    def ls_integrate(
+        self,
+        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        a: NDArray[np.float64],
+        b: NDArray[np.float64],
+        ar: NDArray[np.float64],
+        *args: * tuple[NDArray[np.float64], ...],
+        ndim: int = 0,
+        deg: int = 100,
+    ) -> NDArray[np.float64]:
+
+        ub = np.minimum(np.inf, ar)
+        b = np.minimum(ub, b)
+        a, b = np.atleast_2d(*np.broadcast_arrays(a, b))
+        args_2d = np.atleast_2d(*args)
+        if isinstance(args_2d, np.ndarray):
+            args_2d = (args_2d,)
+
+        def integrand(
+            x: NDArray[np.float64], *_: * tuple[NDArray[np.float64], ...]
+        ) -> NDArray[np.float64]:
+            return np.atleast_2d(func(x) * self.baseline.pdf(x, *_))
+
+        w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *args_2d), 0)
+        return np.squeeze(
+            gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg) + w
+        )
 
 
 class LeftTruncated(
@@ -104,10 +138,10 @@ class LeftTruncated(
             - a0
         )
 
-    @property
-    def support_upper_bound(self):
-        return self.baseline.support_upper_bound
-
-    @property
-    def support_lower_bound(self):
-        return self.baseline.support_upper_bound
+    # @property
+    # def support_upper_bound(self):
+    #     return self.baseline.support_upper_bound
+    #
+    # @property
+    # def support_lower_bound(self):
+    #     return self.baseline.support_upper_bound

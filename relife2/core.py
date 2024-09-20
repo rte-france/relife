@@ -2,10 +2,9 @@ import copy
 import warnings
 from abc import ABC, abstractmethod
 from itertools import chain
-from typing import Any, Generic, Iterator, Optional, TypeVarTuple, Union
+from typing import Any, Callable, Generic, Iterator, Optional, TypeVarTuple, Union
 
 import numpy as np
-from numpy import ma
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize, newton
 
@@ -248,28 +247,9 @@ class LifetimeModel(Generic[*Ts], ABC):
         if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
             return -np.log(self.pdf(time, *args) / self.hf(time, *args))
         if "hf" in self.__class__.__dict__:
-            lower_bound = np.zeros_like(time)
-            upper_bound = np.broadcast_to(
-                np.asarray(self.isf(np.array(1e-4), *args)),
-                time.shape,
+            return self.ls_integrate(
+                lambda x: self.hf(x, *args), np.array(0.0), np.array(np.inf), *args
             )
-            masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
-                upper_bound, time >= self.support_upper_bound
-            )
-            masked_lower_bound: ma.MaskedArray = ma.MaskedArray(
-                lower_bound, time >= self.support_upper_bound
-            )
-            integration = gauss_legendre(
-                self.hf,
-                masked_lower_bound,
-                masked_upper_bound,
-                ndim=2,
-            ) + quad_laguerre(
-                self.hf,
-                masked_upper_bound,
-                ndim=2,
-            )
-            return ma.filled(integration, 1.0)
         class_name = type(self).__name__
         raise NotImplementedError(
             f"""
@@ -310,43 +290,55 @@ class LifetimeModel(Generic[*Ts], ABC):
             ) from err
 
     def mrl(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
-        masked_time: ma.MaskedArray = ma.MaskedArray(
-            time, time >= self.support_upper_bound
-        )
-        upper_bound = np.broadcast_to(
-            np.asarray(self.isf(np.array(1e-4), *args)),
-            time.shape,
-        )
-        masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
-            upper_bound, time >= self.support_upper_bound
-        )
 
-        def integrand(x):
-            return (x - masked_time) * self.pdf(x, *args)
+        return self.ls_integrate(
+            lambda x: x - time, time, np.array(np.inf), *args
+        ) / self.sf(time, *args)
 
-        integration = gauss_legendre(
-            integrand,
-            masked_time,
-            masked_upper_bound,
-            ndim=2,
-        ) + quad_laguerre(
-            integrand,
-            masked_upper_bound,
-            ndim=2,
-        )
-        mrl_values = integration / self.sf(masked_time, *args)
-        return np.squeeze(ma.filled(mrl_values, 0.0))
+        # masked_time: ma.MaskedArray = ma.MaskedArray(
+        #     time, time >= self.support_upper_bound
+        # )
+        # upper_bound = np.broadcast_to(
+        #     np.asarray(self.isf(np.array(1e-4), *args)),
+        #     time.shape,
+        # )
+        # masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
+        #     upper_bound, time >= self.support_upper_bound
+        # )
+        #
+        # def integrand(x):
+        #     return (x - masked_time) * self.pdf(x, *args)
+        #
+        # integration = gauss_legendre(
+        #     integrand,
+        #     masked_time,
+        #     masked_upper_bound,
+        #     ndim=2,
+        # ) + quad_laguerre(
+        #     integrand,
+        #     masked_upper_bound,
+        #     ndim=2,
+        # )
+        # mrl_values = integration / self.sf(masked_time, *args)
+        # return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *Ts) -> NDArray[np.float64]:
-        upper_bound = self.isf(np.array(1e-4), *args)
-
-        def integrand(x):
-            return x**n * self.pdf(x, *args)
-
-        return np.squeeze(
-            gauss_legendre(integrand, np.array(0.0), upper_bound, ndim=2)
-            + quad_laguerre(integrand, upper_bound, ndim=2)
+        return self.ls_integrate(
+            lambda x: x**n,
+            np.array(0.0),
+            np.array(np.inf),
+            *args,
         )
+
+        # upper_bound = self.isf(np.array(1e-4), *args)
+        #
+        # def integrand(x):
+        #     return x**n * self.pdf(x, *args)
+        #
+        # return np.squeeze(
+        #     gauss_legendre(integrand, np.array(0.0), upper_bound, ndim=2)
+        #     + quad_laguerre(integrand, upper_bound, ndim=2)
+        # )
 
     def mean(self, *args: *Ts) -> NDArray[np.float64]:
         return self.moment(1, *args)
@@ -380,13 +372,34 @@ class LifetimeModel(Generic[*Ts], ABC):
     def median(self, *args: *Ts) -> NDArray[np.float64]:
         return self.ppf(np.array(0.5), *args)
 
-    @property
-    @abstractmethod
-    def support_upper_bound(self): ...
+    def ls_integrate(
+        self,
+        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        a: NDArray[np.float64],
+        b: NDArray[np.float64],
+        *args: *Ts,
+        deg: int = 100,
+    ) -> NDArray[np.float64]:
 
-    @property
-    @abstractmethod
-    def support_lower_bound(self): ...
+        b = np.minimum(np.inf, b)
+        a, b = np.atleast_2d(*np.broadcast_arrays(a, b))
+        args_2d = np.atleast_2d(*args)  # type: ignore # Ts can't be bounded with current TypeVarTuple
+        if isinstance(args_2d, np.ndarray):
+            args_2d = (args_2d,)
+
+        def integrand(x: NDArray[np.float64], *_: *Ts) -> NDArray[np.float64]:
+            return np.atleast_2d(func(x) * self.pdf(x, *_))
+
+        if np.all(np.isinf(b)):
+            b = np.atleast_2d(self.isf(np.array(1e-4), *args_2d))
+            return np.squeeze(
+                gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
+                + quad_laguerre(integrand, b, *args_2d, ndim=2, deg=deg)
+            )
+        else:
+            return np.squeeze(
+                gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
+            )
 
 
 class ParametricModel(ParametricComponent, ABC):

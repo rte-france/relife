@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVarTuple, Tuple
+from typing import Generic, Tuple, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray

@@ -6,7 +6,7 @@ from typing import TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.core import ParametricModel, LifetimeModel
+from relife2.core import LifetimeModel, ParametricModel
 
 T = TypeVar("T")
 
