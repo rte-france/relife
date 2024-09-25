@@ -1,125 +1,128 @@
-from abc import ABC, abstractmethod
-from collections.abc import Iterator
-from dataclasses import dataclass
-from typing import TypeVar
+from functools import wraps
+from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.core import LifetimeModel, ParametricModel
-
-T = TypeVar("T")
+from relife2.core import LifetimeModel
 
 
-@dataclass(frozen=True)
-class SampleData:
-    values: NDArray[np.float64]
-    samples_index: NDArray[np.int64]
-    assets_index: NDArray[np.int64]
+def lifetime_rvs(
+    model: LifetimeModel,
+    nb_samples: int,
+    nb_assets: int,
+    args: tuple[NDArray[np.float64], ...] = (),
+):
+    if bool(args) and args[0].ndim == 2:
+        if nb_assets != args[0].shape[0]:
+            raise ValueError
+        rvs_size = nb_samples  # rvs size
+    else:
+        rvs_size = nb_samples * nb_assets
+
+    yield model.rvs(*args, size=rvs_size)
 
 
-class SampleIterator(Iterator[SampleData], ABC):
-    """Iterator pattern expecting nb of samples and optionally a nb of assets"""
-
-    def __init__(
-        self,
-        model: ParametricModel,
-        nb_samples: int,
-        nb_assets: int = 1,
-        args: tuple[NDArray[np.float64], ...] = (),
-    ):
-        if bool(args) and args[0].ndim == 2:
-            if nb_assets != 1 and nb_assets != args[0].shape[0]:
-                raise ValueError
-            nb_assets = args[0].shape[0]
-            self.size = nb_samples
-        else:
-            self.size = nb_samples * nb_assets
-        self.nb_samples = nb_samples
-        self.nb_assets = nb_assets
-        self.model = model
-        self.args = args
-
-    @abstractmethod
-    def __next__(self) -> SampleData: ...
+def lifetimes_generator(
+    model, model_args, nb_samples, nb_assets, initmodel=None, initmodel_args=()
+):
+    if initmodel is not None:
+        yield from lifetime_rvs(initmodel, nb_samples, nb_assets, initmodel_args)
+    while True:
+        yield from lifetime_rvs(model, nb_samples, nb_assets, model_args)
 
 
-# concrete SampleIterator
-class LifetimeSampleIterator(SampleIterator):
+def argscheck(method: Callable) -> Callable:
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        for key, value in kwargs.items():
+            if key.endswith("_args"):
+                for array in value:
+                    if array.shape[0] != self.nb_assets:
+                        raise ValueError(
+                            f"Expected {self.nb_assets} nb assets but got {array.shape[0]} in {key}"
+                        )
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
+class LifetimesSampler:
+
     def __init__(
         self,
         model: LifetimeModel,
-        size: int,
-        end_time: float,
         nb_assets: int = 1,
-        args: tuple[NDArray[np.float64], ...] = (),
+        initmodel: Optional[LifetimeModel] = None,
     ):
-        super().__init__(model, size, nb_assets, args)
+        # nb_assets is mandotory to control all model's information coherence
+        # and allow model with ndim 2 args and initmodel without args
+        # see how it is used in lifetime_rvs
 
-        self.end_time = end_time
-        self.spent_time = np.zeros(self.nb_samples * self.nb_assets)
-        self.samples_index, self.assets_index = np.unravel_index(
+        self.model = model
+        self.initmodel = initmodel
+        self.nb_assets = nb_assets
+
+        self.values = None
+        self.nb_samples = None
+        self.samples_index = None
+        self.assets_index = None
+        self.flatten_samples_index = None
+
+    @argscheck
+    def sample(
+        self,
+        nb_samples: int,
+        end_time: float,
+        model_args: tuple[NDArray[np.float64], ...] = (),
+        initmodel_args: tuple[NDArray[np.float64], ...] = (),
+    ):
+
+        self.nb_samples = nb_samples
+
+        spent_time = np.zeros(self.nb_samples * self.nb_assets)
+        all_samples_index, all_assets_index = np.unravel_index(
             np.arange(self.nb_samples * self.nb_assets),
             (self.nb_samples, self.nb_assets),
         )
 
-    def __iter__(self):
-        return self
+        generator = lifetimes_generator(
+            self.model,
+            model_args,
+            self.nb_samples,
+            self.nb_assets,
+            initmodel=self.initmodel,
+            initmodel_args=initmodel_args,
+        )
 
-    def __next__(
-        self,
-    ) -> SampleData:
-        # shape : (nb_assets * nb_samples)
-        still_valid = self.spent_time < self.end_time
-        if still_valid.any():
-            # shape : (nb_assets, nb_samples)
-            event_times = self.model.rvs(*self.args, size=self.size).reshape(-1)[
-                still_valid
-            ]
-            self.spent_time[still_valid] += event_times
-            return SampleData(
-                event_times,
-                self.samples_index[still_valid],
-                self.assets_index[still_valid],
+        values = np.array([], dtype=np.float64)
+        samples_index = np.array([], dtype=np.int64)
+        assets_index = np.array([], dtype=np.int64)
+
+        still_valid = spent_time < end_time
+        while still_valid.any():
+            event_times = next(generator).reshape(-1)[still_valid]
+            spent_time[still_valid] += event_times
+            values = np.concatenate((values, event_times))
+            samples_index = np.concatenate(
+                (samples_index, all_samples_index[still_valid])
             )
-        else:
-            raise StopIteration
+            assets_index = np.concatenate((assets_index, all_assets_index[still_valid]))
+            still_valid = spent_time < end_time
 
+        sorted_index = np.lexsort((assets_index, samples_index))
 
-# generic aggregator function of SampleData
-def aggregate(iterator: SampleIterator) -> SampleData:
-    """function that aggregates results of EventIterator iterations in arrays, sorted by samples_ids and assets_ids"""
-    values = np.array([], dtype=np.float64)
-    samples_index = np.array([], dtype=np.int64)
-    assets_index = np.array([], dtype=np.int64)
-    for event in iterator:
-        values = np.concatenate((values, event.values))
-        samples_index = np.concatenate((samples_index, event.samples_index))
-        assets_index = np.concatenate((assets_index, event.assets_index))
-    sorted_index = np.lexsort((assets_index, samples_index))
-    values = values[sorted_index]
-    samples_index = samples_index[sorted_index]
-    assets_index = assets_index[sorted_index]
-    return SampleData(values, samples_index, assets_index)
+        self.values = values[sorted_index]
+        self.samples_index = samples_index[sorted_index]
+        self.assets_index = assets_index[sorted_index]
 
-
-# generic SampleIterable class
-class SampleIterable:
-
-    def __init__(self, data: SampleData):
-        self.data = data
-        self.nb_samples = len(
-            np.unique(self.data.samples_index, return_counts=True)[-1]
-        )
-        self.nb_assets = len(np.unique(self.data.assets_index, return_counts=True)[-1])
         self.flatten_samples_index = (
-            np.where(self.data.samples_index[:-1] != self.data.samples_index[1:])[0] + 1
+            np.where(self.samples_index[:-1] != self.samples_index[1:])[0] + 1
         )
-        # self.assets_partitions = (
-        #     np.where(self.data.assets_index[:-1] != self.data.assets_index[1:])[0] + 1
-        # )
 
     def __len__(self):
+        if self.nb_samples is None:
+            return 0
         if self.nb_assets == 1:
             return self.nb_samples
         else:
@@ -127,11 +130,14 @@ class SampleIterable:
 
     @property
     def mean_number_of_events(self):
+        if self.nb_samples is None:
+            raise ValueError
+
         return np.mean(
             np.diff(
                 self.flatten_samples_index,
                 prepend=0,
-                append=len(self.data.values) - 1,
+                append=len(self.values) - 1,
             )
         )
 
@@ -152,7 +158,7 @@ class SampleIterable:
                 slice_index = slice(start, stop)
             else:
                 slice_index = slice(start, None)
-        return self.data.values[slice_index], self.data.assets_index[slice_index]
+        return self.values[slice_index], self.assets_index[slice_index]
 
     def __getitem__(self, index: int):
         try:
@@ -169,15 +175,3 @@ class SampleIterable:
             )
             nb_events = list(map(len, values))
         return {"values": values, "nb_events": nb_events}
-
-
-def sample_lifetimes(
-    model: LifetimeModel,
-    size: int,
-    end_time: float,
-    nb_assets: int = 1,
-    args: tuple[NDArray[np.float64], ...] = (),
-):
-    return SampleIterable(
-        aggregate(LifetimeSampleIterator(model, size, end_time, nb_assets, args))
-    )
