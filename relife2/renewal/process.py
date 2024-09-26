@@ -102,13 +102,12 @@ class RenewalLifetimeProcess:
         self,
         nb_samples: int,
         end_time: float,
-        nb_assets: int = 1,
         args: Optional[ArgsDict] = None,
     ) -> LifetimesSampler:
         if args is None:
             args = {}
         sampler = LifetimesSampler(
-            self.model, nb_assets=nb_assets, initmodel=self.initmodel
+            self.model, nb_assets=self.nb_assets, initmodel=self.initmodel
         )
         sampler.sample(
             nb_samples,
@@ -166,12 +165,23 @@ class RenewalRewardLifetimeProcess:
                 evaluated_func=self._reward_partial_expectation,
             )
 
+    def _asymptotic_expected_total_reward(
+        self, timeline: NDArray[np.float64], args: ArgsDict
+    ):
+        pass
+
     @argscheck
     def expected_total_reward(
-        self, timeline: NDArray[np.float64], args: Optional[ArgsDict] = None
+        self,
+        timeline: NDArray[np.float64],
+        args: Optional[ArgsDict] = None,
+        asymptotic: bool = False,
     ):
         if args is None:
             args = {}
+        if asymptotic:
+            return self._asymptotic_expected_total_reward(timeline, args)
+
         if self.initmodel is None:
             return self._expected_total_reward(
                 timeline,
@@ -192,3 +202,33 @@ class RenewalRewardLifetimeProcess:
                     args.get("discount"),
                 ),
             )
+
+    def _asymptotic_expected_equivalent_annual_worth(
+        self, timeline: NDArray[np.float64], args: ArgsDict
+    ):
+        pass
+
+    @argscheck
+    def expected_equivalent_annual_worth(
+        self,
+        timeline: NDArray[np.float64],
+        args: Optional[ArgsDict] = None,
+        asymptotic: bool = False,
+    ):
+        if args is None:
+            args = {}
+        if asymptotic:
+            return self._asymptotic_expected_equivalent_annual_worth(timeline, args)
+        pass
+
+    @argscheck
+    def asymptotic_expected_equivalent_annual_worth(
+        self, timeline: NDArray[np.float64], args: Optional[ArgsDict] = None
+    ):
+        pass
+
+    @argscheck
+    def sample(self, nb_samples, end_time, args: Optional[ArgsDict] = None):
+        if args is None:
+            args = {}
+        pass
