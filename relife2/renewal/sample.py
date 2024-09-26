@@ -1,50 +1,38 @@
-from functools import wraps
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife2.core import LifetimeModel
+from relife2.renewal.args import ArgsDict, argscheck
 
 
 def lifetime_rvs(
     model: LifetimeModel,
     nb_samples: int,
     nb_assets: int,
-    args: tuple[NDArray[np.float64], ...] = (),
+    args: tuple[NDArray[np.float64], ...],
 ):
     if bool(args) and args[0].ndim == 2:
-        if nb_assets != args[0].shape[0]:
-            raise ValueError
         rvs_size = nb_samples  # rvs size
     else:
         rvs_size = nb_samples * nb_assets
-
     yield model.rvs(*args, size=rvs_size)
 
 
 def lifetimes_generator(
-    model, model_args, nb_samples, nb_assets, initmodel=None, initmodel_args=()
+    model,
+    nb_samples,
+    nb_assets,
+    args: ArgsDict,
+    initmodel=None,
 ):
     if initmodel is not None:
-        yield from lifetime_rvs(initmodel, nb_samples, nb_assets, initmodel_args)
+        yield from lifetime_rvs(
+            initmodel, nb_samples, nb_assets, args.get("initmodel", ())
+        )
     while True:
-        yield from lifetime_rvs(model, nb_samples, nb_assets, model_args)
-
-
-def argscheck(method: Callable) -> Callable:
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        for key, value in kwargs.items():
-            if key.endswith("_args"):
-                for array in value:
-                    if array.shape[0] != self.nb_assets:
-                        raise ValueError(
-                            f"Expected {self.nb_assets} nb assets but got {array.shape[0]} in {key}"
-                        )
-        return method(self, *args, **kwargs)
-
-    return wrapper
+        yield from lifetime_rvs(model, nb_samples, nb_assets, args.get("model", ()))
 
 
 class LifetimesSampler:
@@ -74,9 +62,10 @@ class LifetimesSampler:
         self,
         nb_samples: int,
         end_time: float,
-        model_args: tuple[NDArray[np.float64], ...] = (),
-        initmodel_args: tuple[NDArray[np.float64], ...] = (),
+        args: Optional[ArgsDict] = None,
     ):
+        if args is None:
+            args = {}
 
         self.nb_samples = nb_samples
 
@@ -88,11 +77,10 @@ class LifetimesSampler:
 
         generator = lifetimes_generator(
             self.model,
-            model_args,
             self.nb_samples,
             self.nb_assets,
+            args,
             initmodel=self.initmodel,
-            initmodel_args=initmodel_args,
         )
 
         values = np.array([], dtype=np.float64)
