@@ -43,9 +43,7 @@ class CovarEffect(ParametricComponent):
 # Ts type var is tuple[NDArray[np.float64], tuple[NDArray[np.float64], ...]]
 # first element type is NDArray[np.float64] and any other args are NDArray[np.float64]
 class Regression(
-    ParametricLifetimeModel[
-        *tuple[NDArray[np.float64], *tuple[NDArray[np.float64], ...]]
-    ],
+    ParametricLifetimeModel[NDArray[np.float64], *tuple[NDArray[np.float64], ...]],
     ABC,
 ):
     def __init__(

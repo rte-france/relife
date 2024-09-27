@@ -8,7 +8,7 @@ from relife2.maths.integrations import gauss_legendre
 
 
 class AgeReplacementModel(
-    LifetimeModel[*tuple[NDArray[np.float64], *tuple[NDArray[np.float64], ...]]]
+    LifetimeModel[NDArray[np.float64], *tuple[NDArray[np.float64], ...]]
 ):
 
     def __init__(self, baseline: LifetimeModel[*tuple[NDArray[np.float64], ...]]):
@@ -94,7 +94,7 @@ class AgeReplacementModel(
 
 
 class LeftTruncated(
-    LifetimeModel[*tuple[NDArray[np.float64], *tuple[NDArray[np.float64], ...]]]
+    LifetimeModel[NDArray[np.float64], *tuple[NDArray[np.float64], ...]]
 ):
     def __init__(self, baseline: LifetimeModel[*tuple[NDArray[np.float64], ...]]):
         super().__init__()

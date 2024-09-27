@@ -1,4 +1,6 @@
-from typing import Optional
+from collections.abc import Iterator
+from dataclasses import dataclass
+from typing import Optional, TypeVarTuple, Generic, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -6,13 +8,40 @@ from numpy.typing import NDArray
 from relife2.core import LifetimeModel
 from relife2.renewal.args import ArgsDict, argscheck
 
+Data = TypeVarTuple("Data")
+
+
+@dataclass
+class SampleData(Generic[*Data]):
+    data: Tuple[*Data]
+    samples_index: NDArray[np.int64]
+    assets_index: NDArray[np.int64]
+    flatten_samples_index: Optional[NDArray[np.int64]] = None  # put in iterable
+    isclosed: bool = False
+
+    def populate(self, samples_index, assets_index, *new_data: *Data):
+        if self.isclosed:
+            raise ValueError
+        self.samples_index = np.concatenate((self.samples_index, samples_index))
+        self.assets_index = np.concatenate((self.assets_index, assets_index))
+        self.data = tuple(
+            (np.concatenate((self.data[i], d)) for i, d in enumerate(new_data))
+        )
+
+    def close(self):
+        sorted_index = np.lexsort((self.assets_index, self.samples_index))
+        self.samples_index = self.samples_index[sorted_index]
+        self.assets_index = self.assets_index[sorted_index]
+        self.data = tuple((d[sorted_index] for d in self.data))
+        self.isclosed = True
+
 
 def lifetime_rvs(
     model: LifetimeModel,
     nb_samples: int,
     nb_assets: int,
     args: tuple[NDArray[np.float64], ...],
-):
+) -> Iterator[NDArray[np.float64]]:
     if bool(args) and args[0].ndim == 2:
         rvs_size = nb_samples  # rvs size
     else:
@@ -26,7 +55,7 @@ def lifetimes_generator(
     nb_assets,
     args: ArgsDict,
     initmodel=None,
-):
+) -> Iterator[NDArray[np.float64]]:
     if initmodel is not None:
         yield from lifetime_rvs(
             initmodel, nb_samples, nb_assets, args.get("initmodel", ())
@@ -40,6 +69,7 @@ class LifetimesSampler:
     def __init__(
         self,
         model: LifetimeModel,
+        nb_samples: int,
         nb_assets: int = 1,
         initmodel: Optional[LifetimeModel] = None,
     ):
@@ -50,12 +80,7 @@ class LifetimesSampler:
         self.model = model
         self.initmodel = initmodel
         self.nb_assets = nb_assets
-
-        self.values = None
-        self.nb_samples = None
-        self.samples_index = None
-        self.assets_index = None
-        self.flatten_samples_index = None
+        self.nb_samples = nb_samples
 
     @argscheck
     def sample(
@@ -63,7 +88,7 @@ class LifetimesSampler:
         nb_samples: int,
         end_time: float,
         args: Optional[ArgsDict] = None,
-    ):
+    ) -> SampleData[NDArray]:
         if args is None:
             args = {}
 
@@ -75,6 +100,11 @@ class LifetimesSampler:
             (self.nb_samples, self.nb_assets),
         )
 
+        sample_data = SampleData(
+            tuple(np.array([], dtype=np.float64)),
+            np.array([], dtype=np.int64),
+            np.array([], dtype=np.int64),
+        )
         generator = lifetimes_generator(
             self.model,
             self.nb_samples,
@@ -82,30 +112,29 @@ class LifetimesSampler:
             args,
             initmodel=self.initmodel,
         )
-
-        values = np.array([], dtype=np.float64)
-        samples_index = np.array([], dtype=np.int64)
-        assets_index = np.array([], dtype=np.int64)
-
         still_valid = spent_time < end_time
         while still_valid.any():
             event_times = next(generator).reshape(-1)[still_valid]
             spent_time[still_valid] += event_times
-            values = np.concatenate((values, event_times))
-            samples_index = np.concatenate(
-                (samples_index, all_samples_index[still_valid])
+            sample_data.populate(
+                all_samples_index[still_valid],
+                all_assets_index[still_valid],
+                event_times,
             )
-            assets_index = np.concatenate((assets_index, all_assets_index[still_valid]))
             still_valid = spent_time < end_time
+        sample_data.close()
 
-        sorted_index = np.lexsort((assets_index, samples_index))
 
-        self.values = values[sorted_index]
-        self.samples_index = samples_index[sorted_index]
-        self.assets_index = assets_index[sorted_index]
-
+class SampleIterable(Generic[*Data]):
+    def __init__(self, container: SampleData[*Data]):
+        if not container.isclosed:
+            raise ValueError
+        self.container = container
         self.flatten_samples_index = (
-            np.where(self.samples_index[:-1] != self.samples_index[1:])[0] + 1
+            np.where(
+                self.container.samples_index[:-1] != self.container.samples_index[1:]
+            )[0]
+            + 1
         )
 
     def __len__(self):
@@ -116,20 +145,7 @@ class LifetimesSampler:
         else:
             return self.nb_assets
 
-    @property
-    def mean_number_of_events(self):
-        if self.nb_samples is None:
-            raise ValueError
-
-        return np.mean(
-            np.diff(
-                self.flatten_samples_index,
-                prepend=0,
-                append=len(self.values) - 1,
-            )
-        )
-
-    def __get(self, index: int):
+    def __get(self, index: int) -> Tuple[NDArray[np.int64], *Data]:
         if self.flatten_samples_index.size == 0:
             slice_index = slice(None, None)
         else:
@@ -148,7 +164,7 @@ class LifetimesSampler:
                 slice_index = slice(start, None)
         return self.values[slice_index], self.assets_index[slice_index]
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> Tuple[*Data]:
         try:
             values, assets_index = self.__get(index)
         except IndexError as err:
@@ -163,3 +179,24 @@ class LifetimesSampler:
             )
             nb_events = list(map(len, values))
         return {"values": values, "nb_events": nb_events}
+
+
+class LifetimesIterable(SampleIterable[NDArray]):
+    @property
+    def mean_number_of_events(self):
+        if self.nb_samples is None:
+            raise ValueError
+
+        return np.mean(
+            np.diff(
+                self.flatten_samples_index,
+                prepend=0,
+                append=len(self.values) - 1,
+            )
+        )
+
+
+class LifetimesRewardsIterable(
+    SampleIterable[NDArray[np.float64], NDArray[np.float64]]
+):
+    pass
