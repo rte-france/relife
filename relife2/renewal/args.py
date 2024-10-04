@@ -4,6 +4,9 @@ from typing import Callable, TypedDict
 import numpy as np
 from numpy.typing import NDArray
 
+# for generic TypedDict see : https://github.com/python/mypy/pull/13389 (python 3.11+)
+
+
 ArgsDict = TypedDict(
     "ArgsDict",
     {

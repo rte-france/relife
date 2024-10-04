@@ -3,8 +3,8 @@ from typing import Callable
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.core import LifetimeModel
 from relife2.maths.integrations import gauss_legendre
+from relife2.model import LifetimeModel
 
 
 class AgeReplacementModel(

@@ -1,18 +1,18 @@
 from functools import partial, wraps
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.core import LifetimeModel
+from relife2.discount import Discount, ExponentialDiscounting
+from relife2.model import LifetimeModel
 from relife2.renewal.args import ArgsDict, argscheck
-from relife2.renewal.discounts import Discount, ExponentialDiscounting
-from relife2.renewal.equations import (
-    renewal_equation_solver,
+from relife2.renewal.equation import (
     delayed_renewal_equation_solver,
+    renewal_equation_solver,
 )
-from relife2.renewal.rewards import Reward
 from relife2.renewal.sample import LifetimesSampler
+from relife2.reward import Reward
 
 
 def reward_partial_expectation(

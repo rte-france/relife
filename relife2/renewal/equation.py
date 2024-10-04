@@ -3,7 +3,7 @@ from typing import Callable, Optional, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.core import LifetimeModel
+from relife2.model import LifetimeModel
 
 Ts = TypeVarTuple("Ts")
 

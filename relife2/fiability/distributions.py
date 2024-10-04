@@ -6,9 +6,9 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.core import ParametricLifetimeModel
 from relife2.data import LifetimeSample
 from relife2.maths.integrations import shifted_laguerre
+from relife2.model import ParametricLifetimeModel
 
 
 # Ts type var is a zero long tuple (see https://github.com/python/mypy/issues/16199)

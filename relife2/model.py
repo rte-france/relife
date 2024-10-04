@@ -205,10 +205,10 @@ class ParametricComponent:
         return copy.deepcopy(self)
 
 
-Ts = TypeVarTuple("Ts")
+Args = TypeVarTuple("Args")
 
 
-class LifetimeModel(Generic[*Ts], ABC):
+class LifetimeModel(Generic[*Args]):
     # def __init_subclass__(cls, **kwargs):
     #     """
     #     TODO : something to parse *args names and to fill args_names and nb_args
@@ -223,7 +223,7 @@ class LifetimeModel(Generic[*Ts], ABC):
     # def nb_args(self):
     #     return len(self._args)
 
-    def hf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+    def hf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         if "pdf" in self.__class__.__dict__ and "sf" in self.__class__.__dict__:
             return self.pdf(time, *args) / self.sf(time, *args)
         if "sf" in self.__class__.__dict__:
@@ -241,7 +241,7 @@ class LifetimeModel(Generic[*Ts], ABC):
             """
         )
 
-    def chf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+    def chf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         if "sf" in self.__class__.__dict__:
             return -np.log(self.sf(time, *args))
         if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
@@ -257,10 +257,10 @@ class LifetimeModel(Generic[*Ts], ABC):
         """
         )
 
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64], *args: *Ts):
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64], *args: *Args):
         raise NotImplementedError
 
-    def sf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+    def sf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         if "chf" in self.__class__.__dict__:
             return np.exp(
                 -self.chf(
@@ -278,7 +278,7 @@ class LifetimeModel(Generic[*Ts], ABC):
         """
         )
 
-    def pdf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+    def pdf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         try:
             return self.sf(time, *args) * self.hf(time, *args)
         except NotImplementedError as err:
@@ -289,7 +289,7 @@ class LifetimeModel(Generic[*Ts], ABC):
             """
             ) from err
 
-    def mrl(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+    def mrl(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
 
         return self.ls_integrate(
             lambda x: x - time, time, np.array(np.inf), *args
@@ -322,7 +322,7 @@ class LifetimeModel(Generic[*Ts], ABC):
         # mrl_values = integration / self.sf(masked_time, *args)
         # return np.squeeze(ma.filled(mrl_values, 0.0))
 
-    def moment(self, n: int, *args: *Ts) -> NDArray[np.float64]:
+    def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         return self.ls_integrate(
             lambda x: x**n,
             np.array(0.0),
@@ -340,36 +340,38 @@ class LifetimeModel(Generic[*Ts], ABC):
         #     + quad_laguerre(integrand, upper_bound, ndim=2)
         # )
 
-    def mean(self, *args: *Ts) -> NDArray[np.float64]:
+    def mean(self, *args: *Args) -> NDArray[np.float64]:
         return self.moment(1, *args)
 
-    def var(self, *args: *Ts) -> NDArray[np.float64]:
+    def var(self, *args: *Args) -> NDArray[np.float64]:
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
     def isf(
         self,
         probability: NDArray[np.float64],
-        *args: *Ts,
+        *args: *Args,
     ):
         return newton(
             lambda x: self.sf(x, *args) - probability,
             x0=np.zeros_like(probability),
         )
 
-    def cdf(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+    def cdf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         return 1 - self.sf(time, *args)
 
     def rvs(
-        self, *args: *Ts, size: Optional[int] = 1, seed: Optional[int] = None
+        self, *args: *Args, size: Optional[int] = 1, seed: Optional[int] = None
     ) -> NDArray[np.float64]:
         generator = np.random.RandomState(seed=seed)
         probability = generator.uniform(size=size)
         return self.isf(probability, *args)
 
-    def ppf(self, probability: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
+    def ppf(
+        self, probability: NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
-    def median(self, *args: *Ts) -> NDArray[np.float64]:
+    def median(self, *args: *Args) -> NDArray[np.float64]:
         return self.ppf(np.array(0.5), *args)
 
     def ls_integrate(
@@ -377,7 +379,7 @@ class LifetimeModel(Generic[*Ts], ABC):
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
         a: NDArray[np.float64],
         b: NDArray[np.float64],
-        *args: *Ts,
+        *args: *Args,
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
@@ -387,7 +389,7 @@ class LifetimeModel(Generic[*Ts], ABC):
         if isinstance(args_2d, np.ndarray):
             args_2d = (args_2d,)
 
-        def integrand(x: NDArray[np.float64], *_: *Ts) -> NDArray[np.float64]:
+        def integrand(x: NDArray[np.float64], *_: *Args) -> NDArray[np.float64]:
             return np.atleast_2d(func(x) * self.pdf(x, *_))
 
         if np.all(np.isinf(b)):
@@ -532,7 +534,7 @@ class LikelihoodFromLifetimes(Likelihood):
         )
 
 
-class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
+class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
     # def __init_subclass__(cls, **kwargs):
     #     """
     #     TODO : something to parse *args names and to fill args_names and nb_args

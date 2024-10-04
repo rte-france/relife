@@ -1,22 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Tuple, TypeVarTuple
+from typing import Generic, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 
-Ts = TypeVarTuple("Ts")
+DArgs = TypeVarTuple("DArgs")
 
 
-class Discount(Generic[*Ts], ABC):
+class Discount(Generic[*DArgs], ABC):
     @abstractmethod
-    def factor(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]: ...
+    def factor(
+        self, time: NDArray[np.float64], *args: *DArgs
+    ) -> NDArray[np.float64]: ...
 
     @abstractmethod
-    def rate(self, time: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]: ...
+    def rate(self, time: NDArray[np.float64], *args: *DArgs) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def annuity_factor(
-        self, time: NDArray[np.float64], *args: *Ts
+        self, time: NDArray[np.float64], *args: *DArgs
     ) -> NDArray[np.float64]: ...
 
 
@@ -55,7 +57,7 @@ class HyperbolicDiscounting(Discount[float]):
         return np.where(mask, time, np.log1p(beta * time) / beta)
 
 
-class GeneralizedHyperbolicDiscounting(Discount[*Tuple[float, float]]):
+class GeneralizedHyperbolicDiscounting(Discount[float, float]):
 
     def factor(
         self,

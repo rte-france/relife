@@ -13,8 +13,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from relife2.core import ParametricComponent, ParametricLifetimeModel
 from relife2.data import LifetimeSample
+from relife2.model import ParametricComponent, ParametricLifetimeModel
 
 Ts = TypeVarTuple("Ts")
 
