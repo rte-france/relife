@@ -1,11 +1,12 @@
 from dataclasses import dataclass, field, fields, replace
-from typing import Optional, Self, Iterator
+from typing import Coroutine, Iterator, Self
 
 import numpy as np
 from numpy.typing import NDArray
 
+from relife2.discount import Discount
 from relife2.model import LifetimeModel
-from relife2.renewal.args import ArgsDict, argscheck
+from relife2.reward import Reward
 
 
 # lifetime ~ durations
@@ -14,14 +15,23 @@ from relife2.renewal.args import ArgsDict, argscheck
 
 @dataclass
 class GeneratedData:
-    samples: NDArray[np.int64] = field(repr=False)
-    assets: NDArray[np.int64] = field(repr=False)
+    samples: NDArray[np.int64] = field(repr=False, default_factory=np.ndarray([]))
+    assets: NDArray[np.int64] = field(repr=False, default_factory=np.ndarray([]))
     nb_samples: int = field(init=False)
     nb_assets: int = field(init=False)
     samples_index: int = field(init=False, repr=False)
     assets_index: int = field(init=False, repr=False)
+    closed: bool = field(init=False, repr=False, default=False)
 
-    def __post_init__(self):
+    def update(self, *field_values):
+        i = 0
+        for _field in fields(self):
+            if _field.init:
+                v = getattr(self, _field.name)
+                setattr(self, _field.name, np.concatenate((v, field_values[i])))
+                i += 1
+
+    def close(self):
         self.samples_index = np.unique(self.samples)
         self.assets_index = np.unique(self.assets)
         self.nb_samples = len(self.samples_index)
@@ -33,10 +43,20 @@ class GeneratedData:
                 v = getattr(self, _field.name)
                 setattr(self, _field.name, v[sorted_index])
 
+        self.closed = True
+
     def __len__(self):
+        if not self.closed:
+            raise ValueError(
+                f"Can't call len on unclosed {self.__class__.__name__} object"
+            )
         return self.nb_samples * self.nb_assets
 
     def split(self, sample_only=False, asset_only=False) -> Iterator[Self]:
+        if not self.closed:
+            raise ValueError(
+                f"Can't call split on unclosed {self.__class__.__name__} object"
+            )
         if sample_only and asset_only:
             raise ValueError(
                 "sample_only and asset_only can't be true at the same time"
@@ -62,6 +82,10 @@ class GeneratedData:
     def __getitem__(
         self, key: int | slice | tuple[int, int] | tuple[slice, slice]
     ) -> Self:
+        if not self.closed:
+            raise ValueError(
+                f"Can't slice on unclosed {self.__class__.__name__} object"
+            )
         if not isinstance(key, tuple):
             key = (key, None)
         if len(key) > 2:
@@ -113,8 +137,8 @@ class GeneratedData:
 
 @dataclass
 class GeneratedLifetime(GeneratedData):
-    time: NDArray[np.float64] = field(repr=False)
-    lifetime: NDArray[np.float64] = field(repr=False)
+    time: NDArray[np.float64] = field(repr=False, default_factory=np.ndarray([]))
+    lifetime: NDArray[np.float64] = field(repr=False, default_factory=np.ndarray([]))
 
     @property
     def nb_events(self) -> int:
@@ -126,8 +150,8 @@ class GeneratedLifetime(GeneratedData):
 
 
 @dataclass
-class LifetimeRewardSample(GeneratedLifetime):
-    reward: NDArray[np.float64] = field(repr=False)
+class GeneratedRewardLifetime(GeneratedLifetime):
+    reward: NDArray[np.float64] = field(repr=False, default_factory=np.ndarray([]))
 
     def cumulative_reward(self) -> float:
         return np.insert(self.reward.cumsum(), 0, 0)
@@ -136,147 +160,95 @@ class LifetimeRewardSample(GeneratedLifetime):
         return np.insert(self.reward.cumsum(), 0, 0) / self.nb_samples
 
 
-def lifetime_rvs(
-    model: LifetimeModel,
-    nb_samples: int,
-    nb_assets: int,
-    args: tuple[NDArray[np.float64], ...],
-) -> Iterator[NDArray[np.float64]]:
+def coroutine(func):
+    def starter(*args, **kwargs):
+        gen = func(*args, **kwargs)
+        next(gen)
+        return gen
+
+    return starter
+
+
+@coroutine
+def lifetimes_sampler(
+    nb_samples,
+    nb_assets,
+    model,
+    args: tuple[NDArray[np.float64, ...]] = (),
+) -> Coroutine[
+    tuple[NDArray[np.float64], NDArray[np.float64]], NDArray[np.float64], None
+]:
+    """
+    advantage compared to simple function returning times and lifetimes :
+    avoid computing rvs_size and passing nb_samples, nb_assets, model and args each time
+
+    why not using partial function instead ?
+
+    generator
+        receiving : times
+        yielding : incremented times and lifetimes
+    """
+
+    times = None
+    lifetimes = None
+
     if bool(args) and args[0].ndim == 2:
         rvs_size = nb_samples  # rvs size
     else:
         rvs_size = nb_samples * nb_assets
-    yield model.rvs(*args, size=rvs_size)
+
+    while True:
+        times = (
+            yield times,
+            lifetimes,
+        )  # return times and lifetimes when receiving times
+        lifetimes = model.rvs(*args, size=rvs_size).reshape(-1)
+        times += lifetimes
 
 
-def lifetime_generator(
-    model,
+@coroutine
+def lifetimes_rewards_sampler(
     nb_samples,
     nb_assets,
-    args: ArgsDict,
-    initmodel=None,
-) -> Iterator[NDArray[np.float64]]:
-    if initmodel is not None:
-        yield from lifetime_rvs(
-            initmodel, nb_samples, nb_assets, args.get("initmodel", ())
-        )
-    while True:
-        yield from lifetime_rvs(model, nb_samples, nb_assets, args.get("model", ()))
-
-
-# method of renewal process directly
-@argscheck
-def sample(
-    nb_samples: int,
-    nb_assets: int,
+    end_time,
     model: LifetimeModel,
-    end_time: float,
-    *,
-    args: Optional[ArgsDict] = None,
-    initmodel: Optional[LifetimeModel] = None,
-) -> GeneratedLifetime:
-    if args is None:
-        args = {}
+    reward: Reward,
+    discount: Discount,
+    model_args: tuple[NDArray[np.float64, ...]] = (),
+    reward_args: tuple[NDArray[np.float64, ...]] = (),
+    discount_args: tuple[NDArray[np.float64, ...]] = (),
+) -> Coroutine[
+    tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]],
+    NDArray[np.float64],
+    None,
+]:  # YieldType, SendType, ReturnType
+    """
+    generator
+        receiving : times
+        yielding : incremented times, lifetimes and rewards
+    """
 
-    all_samples, all_assets = np.unravel_index(
-        np.arange(nb_samples * nb_assets),
-        (nb_samples, nb_assets),
+    # block A
+    times = None
+    lifetimes = None
+    rewards = None
+
+    lifetimes_generator = lifetimes_sampler(
+        nb_samples, nb_assets, end_time, model, model_args
     )
 
-    generator = lifetime_generator(
-        model,
-        nb_samples,
-        nb_assets,
-        args,
-        initmodel=initmodel,
-    )
-    spent_time = np.zeros(nb_samples * nb_assets)
-    time = np.array([], dtype=np.float64)
-    lifetime = np.array([], dtype=np.float64)
-    samples = np.array([], dtype=np.int64)
-    assets = np.array([], dtype=np.int64)
-
-    still_valid = spent_time < end_time
-    while still_valid.any():
-        new_lifetime = next(generator).reshape(-1)
-        spent_time += new_lifetime
-        time = np.concatenate((time, spent_time[still_valid]))
-        lifetime = np.concatenate((lifetime, new_lifetime[still_valid]))
-        samples = np.concatenate((samples, all_samples[still_valid]))
-        assets = np.concatenate((assets, all_assets[still_valid]))
-        still_valid = spent_time < end_time
-
-    return GeneratedLifetime(samples, assets, time, lifetime)
-
-
-#
-# class LifetimeRewardSampler(DataSampler[LifetimeModel, LifetimeRewardSample]):
-#     def __init__(
-#         self,
-#         nb_samples: int,
-#         nb_assets: int,
-#         model: Model,
-#         reward: Reward,
-#         end_time: float,
-#         discount: Discount = ExponentialDiscounting(),
-#         *,
-#         args: Optional[ArgsDict] = None,
-#         initmodel: Optional[Model] = None,
-#         initreward: Optional[Reward] = None,
-#     ):
-#         super().__init__(nb_samples, nb_assets, model, args=args, initmodel=initmodel)
-#         self.end_time = end_time
-#         self.reward = reward
-#         self.discount = discount
-#         self.initreward = initreward
-#
-#     @argscheck
-#     def sample(
-#         self,
-#     ) -> LifetimeRewardSample:
-#
-#         all_samples_index, all_assets_index = np.unravel_index(
-#             np.arange(self.nb_samples * self.nb_assets),
-#             (self.nb_samples, self.nb_assets),
-#         )
-#
-#         generator = lifetime_generator(
-#             self.model,
-#             self.nb_samples,
-#             self.nb_assets,
-#             self.args,
-#             initmodel=self.initmodel,
-#         )
-#         time = np.zeros(self.nb_samples * self.nb_assets)
-#         lifetime = np.array([], dtype=np.float64)
-#         reward = np.array([], dtype=np.float64)
-#         samples = np.array([], dtype=np.int64)
-#         assets = np.array([], dtype=np.int64)
-#
-#         still_valid = time < self.end_time
-#         while still_valid.any():
-#             new_lifetime = next(generator).reshape(-1)
-#             time[still_valid] += new_lifetime[still_valid]
-#
-#             # init reward
-#             new_reward = (
-#                 np.array(
-#                     self.reward(
-#                         new_lifetime.reshape(-1, 1),
-#                         *self.args.get("reward", ()),
-#                     ).swapaxes(-2, -1)
-#                     * self.discount.factor(time, *self.args.get("discount", ())),
-#                     ndmin=3,
-#                 )
-#                 .sum(axis=0)
-#                 .ravel()
-#             )
-#
-#             time = np.c_[time, time[still_valid]]
-#             lifetime = np.c_[lifetime, new_lifetime[still_valid]]
-#             reward = np.c_[reward, new_reward[still_valid]]
-#             samples = np.c_[samples, all_samples_index[still_valid]]
-#             assets = np.c_[assets, all_assets_index[still_valid]]
-#             still_valid = time < self.end_time
-#
-#         return LifetimeRewardSample(samples, assets, time, lifetime, reward)
+    while True:
+        times = yield times, lifetimes, rewards
+        times, lifetimes = lifetimes_generator.send(times)
+        rewards = (
+            np.array(
+                reward(
+                    lifetimes.reshape(-1, 1),
+                    *reward_args,
+                ).swapaxes(-2, -1)
+                * discount.factor(times, *discount_args),
+                ndmin=3,
+            )
+            .sum(axis=0)
+            .ravel()
+        )

@@ -46,9 +46,9 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    initmodel: LifetimeModel,
+    delayed_model: LifetimeModel,
     evaluated_func: Optional[Callable[[NDArray[np.float64], *Ts], NDArray[np.float64]]],
-    initmodel_args: tuple[*Ts] = (),
+    delayed_model_args: tuple[*Ts] = (),
     evaluated_func_args: tuple[*Ts] = (),
     discount_factor: Optional[
         Callable[[NDArray[np.float64], *Ts], NDArray[np.float64]]
@@ -57,8 +57,8 @@ def delayed_renewal_equation_solver(
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f1 = initmodel.cdf(timeline, *initmodel_args)
-    f1m = initmodel.cdf(tm, *initmodel_args)
+    f1 = delayed_model.cdf(timeline, *delayed_model_args)
+    f1m = delayed_model.cdf(tm, *delayed_model_args)
     y1 = evaluated_func(timeline, *evaluated_func_args)
 
     if discount_factor is not None:

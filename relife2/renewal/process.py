@@ -6,12 +6,17 @@ from numpy.typing import NDArray
 
 from relife2.discount import Discount, ExponentialDiscounting
 from relife2.model import LifetimeModel
-from relife2.renewal.args import ArgsDict, argscheck
+from relife2.renewal.args import argscheck
 from relife2.renewal.equation import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
-from relife2.renewal.sample import LifetimesSampler
+from relife2.renewal.sample import (
+    GeneratedLifetime,
+    GeneratedRewardLifetime,
+    lifetimes_rewards_sampler,
+    lifetimes_sampler,
+)
 from relife2.reward import Reward
 
 
@@ -43,20 +48,22 @@ def exponentialdiscount(method: Callable) -> Callable:
     return wrapper
 
 
-class RenewalLifetimeProcess:
+class RenewalProcess:
+
+    generated_data = GeneratedLifetime
 
     def __init__(
         self,
         model: LifetimeModel,
         *,
-        initmodel: Optional[LifetimeModel] = None,
+        delayed_model: Optional[LifetimeModel] = None,
         nb_assets: Optional[int] = 1,
     ):
         self.model = model
-        self.initmodel = initmodel
+        self.delayed_model = delayed_model
         self.nb_assets = nb_assets
 
-        if self.initmodel is None:
+        if self.delayed_model is None:
             self._renewal_function = partial(
                 renewal_equation_solver,
                 cdf=self.model.cdf,
@@ -72,44 +79,63 @@ class RenewalLifetimeProcess:
             self._renewal_function = partial(
                 renewal_equation_solver,
                 cdf=self.model.cdf,
-                evaluated_func=self.initmodel.cdf,
+                evaluated_func=self.delayed_model.cdf,
             )
 
             self._renewal_density = partial(
                 renewal_equation_solver,
                 cdf=self.model.cdf,
-                evaluated_func=self.initmodel.pdf,
+                evaluated_func=self.delayed_model.pdf,
             )
+
+    def sample_coroutine(self, delayed=False):
+        if delayed:
+            return partial(
+                lifetimes_sampler, nb_assets=self.nb_assets, model=self.delayed_model
+            )
+        return partial(lifetimes_sampler, nb_assets=self.nb_assets, model=self.model)
 
     @argscheck
     def renewal_function(
-        self, timeline: NDArray[np.float64], *, args: Optional[ArgsDict] = None
+        self,
+        timeline: NDArray[np.float64],
+        *,
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
     ):
-        if args is None:
-            args = {}
-        if self.initmodel is None:
-            evaluated_func_args = args.get("model", ())
+        if self.delayed_model is None:
+            evaluated_func_args = model_args
         else:
-            evaluated_func_args = args.get("initmodel", ())
+            evaluated_func_args = delayed_model_args
         return self._renewal_function(
             timeline,
-            cdf_args=args.get("model", ()),
+            cdf_args=model_args,
             evaluated_func_args=evaluated_func_args,
         )
 
     @argscheck
     def renewal_density(
-        self, timeline: NDArray[np.float64], *, args: Optional[ArgsDict] = None
+        self,
+        timeline: NDArray[np.float64],
+        *,
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
     ):
-        if args is None:
-            args = {}
-        if self.initmodel is None:
-            evaluated_func_args = args.get("model", ())
+        if self.delayed_model is None:
+            evaluated_func_args = model_args
         else:
-            evaluated_func_args = args.get("initmodel", ())
+            evaluated_func_args = delayed_model_args
         return self._renewal_density(
             timeline,
-            cdf_args=args.get("model", ()),
+            cdf_args=model_args,
             evaluated_func_args=evaluated_func_args,
         )
 
@@ -119,41 +145,69 @@ class RenewalLifetimeProcess:
         nb_samples: int,
         end_time: float,
         *,
-        args: Optional[ArgsDict] = None,
-    ) -> LifetimesSampler:
-        if args is None:
-            args = {}
-        sampler = LifetimesSampler(
-            self.model, nb_assets=self.nb_assets, initmodel=self.initmodel
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+    ) -> GeneratedLifetime:
+
+        all_samples, all_assets = np.unravel_index(
+            np.arange(nb_samples * self.nb_assets),
+            (nb_samples, self.nb_assets),
         )
-        sampler.sample(
-            nb_samples,
-            end_time,
-            model_args=args.get("model", ()),
-            initmodel_args=args.get("initmodel", ()),
-        )
-        return sampler
+        times = np.zeros_like(nb_samples, self.nb_assets)
+        container = self.generated_data()
+        still_valid = times < end_time
+
+        if self.delayed_model:
+            coroutine = self.sample_coroutine(delayed=True)(
+                nb_samples, end_time, delayed_model_args
+            )
+            times, *other = coroutine.send(times)
+            container.update(
+                times[still_valid],
+                *tuple((x[still_valid] for x in other)),
+                all_samples[still_valid],
+                all_assets[still_valid],
+            )
+
+        coroutine = self.sample_coroutine()(nb_samples, end_time, model_args)
+
+        while np.any(still_valid):
+            times, *other = coroutine.send(times)
+            container.update(
+                times[still_valid],
+                *tuple((x[still_valid] for x in other)),
+                all_samples[still_valid],
+                all_assets[still_valid],
+            )
+        coroutine.close()
+        container.close()
+        return container
 
 
-class RenewalRewardLifetimeProcess:
+class RenewalRewardProcess(RenewalProcess):
+
+    generated_data = GeneratedRewardLifetime
+
     def __init__(
         self,
         model: LifetimeModel,
         reward: Reward,
         discount: Discount = ExponentialDiscounting(),
         *,
-        initmodel: Optional[LifetimeModel] = None,
-        initreward: Optional[Reward] = None,
+        delayed_model: Optional[LifetimeModel] = None,
+        delayed_reward: Optional[Reward] = None,
         nb_assets: Optional[int] = 1,
     ):
-        self.model = model
+        super().__init__(model, delayed_model=delayed_model, nb_assets=nb_assets)
         self.reward = reward
         self.discount = discount
-        self.initmodel = initmodel
-        self.initreward = initreward
-        self.nb_assets = nb_assets
+        self.delayed_reward = delayed_reward
 
-        if self.initmodel is None:
+        if self.delayed_model is None:
             self._reward_partial_expectation = partial(
                 reward_partial_expectation,
                 model=self.model,
@@ -161,19 +215,54 @@ class RenewalRewardLifetimeProcess:
                 discount=self.discount,
             )
         else:
-            if self.initreward is None:
-                self.initreward = self.reward
+            if self.delayed_reward is None:
+                self.delayed_reward = self.reward
 
             self._reward_partial_expectation = partial(
                 reward_partial_expectation,
-                model=self.initmodel,
-                reward=self.initreward,
+                model=self.delayed_model,
+                reward=self.delayed_reward,
                 discount=self.discount,
             )
 
+    def sample_coroutine(self, delayed=False):
+        if delayed:
+            return partial(
+                lifetimes_rewards_sampler,
+                nb_assets=self.nb_assets,
+                model=self.delayed_model,
+                reward=self.delayed_reward,
+                discount=self.discount,
+            )
+        return partial(
+            lifetimes_rewards_sampler,
+            nb_assets=self.nb_assets,
+            model=self.model,
+            reward=self.reward,
+            discount=self.discount,
+        )
+
     @exponentialdiscount
-    def _asymptotic_expected_total_reward(self, args: ArgsDict):
-        rate = args.get("discount", (0.0,))[0]
+    def asymptotic_expected_total_reward(
+        self,
+        *,
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        discount_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+    ):
+        rate = discount_args[0]
         mask = rate <= 0
         rate = np.ma.MaskedArray(rate, mask)
 
@@ -181,30 +270,24 @@ class RenewalRewardLifetimeProcess:
             return self.discount.factor(x, rate)
 
         def y(x):
-            return self.discount.factor(x, rate) * self.reward(
-                x, *args.get("reward", ())
-            )
+            return self.discount.factor(x, rate) * self.reward(x, *reward_args)
 
-        lf = self.model.ls_integrate(
-            f, np.array(0.0), np.array(np.inf), *args.get("model", ())
-        )
-        ly = self.model.ls_integrate(
-            y, np.array(0.0), np.array(np.inf), *args.get("model", ())
-        )
+        lf = self.model.ls_integrate(f, np.array(0.0), np.array(np.inf), *model_args)
+        ly = self.model.ls_integrate(y, np.array(0.0), np.array(np.inf), *model_args)
         z = ly / (1 - lf)
 
-        if self.initmodel is not None:
+        if self.delayed_model is not None:
 
             def y1(x):
                 return self.discount.factor(x, rate) * self.reward(
-                    x, *args.get("initreward", ())
+                    x, *delayed_reward_args
                 )
 
-            lf1 = self.initmodel.ls_integrate(
-                f, np.array(0.0), np.array(np.inf), *args.get("initmodel", ())
+            lf1 = self.delayed_model.ls_integrate(
+                f, np.array(0.0), np.array(np.inf), *delayed_model_args
             )
-            ly1 = self.initmodel.ls_integrate(
-                y1, np.array(0.0), np.array(np.inf), *args.get("initmodel", ())
+            ly1 = self.delayed_model.ls_integrate(
+                y1, np.array(0.0), np.array(np.inf), *delayed_model_args
             )
             z = ly1 + z * lf1
         return np.where(mask, np.inf, z)
@@ -212,116 +295,138 @@ class RenewalRewardLifetimeProcess:
     @argscheck
     def expected_total_reward(
         self,
-        timeline: Optional[NDArray[np.float64]] = None,
+        timeline: NDArray[np.float64],
         /,
         *,
-        args: Optional[ArgsDict] = None,
-        asymptotic: bool = False,
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        discount_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
     ):
-        if args is None:
-            args = {}
-        if asymptotic:
-            return self._asymptotic_expected_total_reward(args)
-        else:
-            if timeline is None:
-                raise ValueError(
-                    "If not asymptotic expected_total_reward requires timeline as first argument"
-                )
 
         z = renewal_equation_solver(
             timeline,
             self.model,
             evaluated_func=self._reward_partial_expectation(
                 timeline,
-                model_args=args.get("model", ()),
-                reward_args=args.get("reward", ()),
-                disount_args=args.get("discount", ()),
+                model_args=model_args,
+                reward_args=reward_args,
+                disount_args=discount_args,
             ),
-            model_args=args.get("model", ()),
+            model_args=model_args,
             discount_factor=self.discount,
-            discount_factor_args=args.get("discount", ()),
+            discount_factor_args=discount_args,
         )
 
-        if self.initmodel is None:
+        if self.delayed_model is None:
             return z
         else:
             return delayed_renewal_equation_solver(
                 timeline,
                 z,
-                self.initmodel,
+                self.delayed_model,
                 evaluated_func=self._reward_partial_expectation(
                     timeline,
-                    model_args=args.get("initmodel", ()),
-                    reward_args=args.get("initreward", ()),
-                    disount_args=args.get("discount", ()),
+                    model_args=delayed_model_args,
+                    reward_args=delayed_reward_args,
+                    disount_args=discount_args,
                 ),
-                initmodel_args=args.get("initmodel", ()),
+                delayed_model_args=delayed_model_args,
                 discount_factor=self.discount,
-                discount_factor_args=args.get("discount", ()),
+                discount_factor_args=discount_args,
             )
 
     @exponentialdiscount
-    def _asymptotic_expected_equivalent_annual_worth(self, args: ArgsDict):
-        rate = args.get("discount", (0.0,))[0]
+    def asymptotic_expected_equivalent_annual_worth(
+        self,
+        *,
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        discount_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+    ):
+        rate = discount_args[0]
         mask = rate <= 0
         rate = np.ma.MaskedArray(rate, mask)
 
-        q = rate * self._asymptotic_expected_total_reward(args)
+        q = rate * self.asymptotic_expected_total_reward(
+            model_args=model_args,
+            reward_args=reward_args,
+            discount_args=discount_args,
+            delayed_model_args=delayed_model_args,
+            delayed_reward_args=delayed_reward_args,
+        )
         q0 = self.model.ls_integrate(
-            lambda x: self.reward(x, *args.get("reward", ())),
+            lambda x: self.reward(x, *reward_args),
             np.array(0.0),
             np.array(np.inf),
-            *args.get("model", ()),
-        ) / self.model.mean(*args.get("model", ()))
+            *model_args,
+        ) / self.model.mean(*model_args)
         return np.where(mask, q0, q)
 
     @argscheck
     def expected_equivalent_annual_worth(
         self,
-        timeline: Optional[NDArray[np.float64]] = None,
+        timeline: NDArray[np.float64],
         /,
         *,
-        args: Optional[ArgsDict] = None,
-        asymptotic: bool = False,
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        discount_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
     ):
-        if args is None:
-            args = {}
-        if asymptotic:
-            return self._asymptotic_expected_equivalent_annual_worth(args)
-        else:
-            if timeline is None:
-                raise ValueError(
-                    "If not asymptotic expected_equivalent_annual_worth requires timeline as first argument"
-                )
 
-        z = self.expected_total_reward(timeline, args=args, asymptotic=False)
-        af = self.discount.annuity_factor(timeline, *args.get("discount", ()))
+        z = self.expected_total_reward(
+            timeline,
+            model_args=model_args,
+            reward_args=reward_args,
+            discount_args=discount_args,
+            delayed_model_args=delayed_model_args,
+            delayed_reward_args=delayed_reward_args,
+        )
+        af = self.discount.annuity_factor(timeline, *discount_args)
         mask = af == 0.0
         af = np.ma.masked_where(mask, af)
         q = z / af
-        if self.initmodel is None:
-            q0 = self.reward(np.array(0.0), *args.get("reward", ())) * self.model.pdf(
-                np.array(0.0), *args.get("model", ())
+        if self.delayed_model is None:
+            q0 = self.reward(np.array(0.0), *reward_args) * self.model.pdf(
+                np.array(0.0), *model_args
             )
         else:
-            q0 = self.initreward(
-                np.array(0.0), *args.get("initreward", ())
-            ) * self.initmodel.pdf(np.array(0.0), *args.get("initmodel", ()))
+            q0 = self.delayed_reward(
+                np.array(0.0), *delayed_reward_args
+            ) * self.delayed_model.pdf(np.array(0.0), *delayed_model_args)
         return np.where(mask, q0, q)
-
-    @argscheck
-    def sample(self, nb_samples, end_time, args: Optional[ArgsDict] = None):
-        if args is None:
-            args = {}
-        rewards = (
-            np.array(
-                self.reward(
-                    data.durations.reshape(-1, 1),
-                    *args_take(data.indices, *reward_args),
-                ).swapaxes(-2, -1)
-                * self.discount.factor(data.times, *discount_args),
-                ndmin=3,
-            )
-            .sum(axis=0)
-            .ravel()
-        )

@@ -12,12 +12,12 @@ from typing import Any, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from relife2.io import array_factory
 from scipy.optimize import Bounds, bisect, minimize
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 from scipy.stats import gamma
 
 from relife2.data import Deteriorations, deteriorations_factory
+from relife2.io import array_factory
 from relife2.model import (
     Likelihood,
     ParametricComponent,
