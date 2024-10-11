@@ -153,6 +153,10 @@ class RenewalProcess:
         ] = None,
     ) -> GeneratedLifetime:
 
+        # if one wants to make sample more generatic :
+        #   stop criteria must be in routine, not here.
+        #   parametrization of coroutine must be made elsewhere
+
         all_samples, all_assets = np.unravel_index(
             np.arange(nb_samples * self.nb_assets),
             (nb_samples, self.nb_assets),
@@ -162,8 +166,11 @@ class RenewalProcess:
         still_valid = times < end_time
 
         if self.delayed_model:
-            coroutine = self.sample_coroutine(delayed=True)(
-                nb_samples, end_time, delayed_model_args
+            coroutine = lifetimes_sampler(
+                nb_samples,
+                self.nb_assets,
+                self.delayed_model,
+                delayed_model_args,
             )
             times, *other = coroutine.send(times)
             container.update(
@@ -173,7 +180,9 @@ class RenewalProcess:
                 all_assets[still_valid],
             )
 
-        coroutine = self.sample_coroutine()(nb_samples, end_time, model_args)
+        coroutine = lifetimes_sampler(
+            nb_samples, self.nb_assets, self.model, model_args
+        )
 
         while np.any(still_valid):
             times, *other = coroutine.send(times)
@@ -191,12 +200,12 @@ class RenewalProcess:
 class RenewalRewardProcess(RenewalProcess):
 
     generated_data = GeneratedRewardLifetime
+    discount = ExponentialDiscounting()
 
     def __init__(
         self,
         model: LifetimeModel,
         reward: Reward,
-        discount: Discount = ExponentialDiscounting(),
         *,
         delayed_model: Optional[LifetimeModel] = None,
         delayed_reward: Optional[Reward] = None,
@@ -204,7 +213,6 @@ class RenewalRewardProcess(RenewalProcess):
     ):
         super().__init__(model, delayed_model=delayed_model, nb_assets=nb_assets)
         self.reward = reward
-        self.discount = discount
         self.delayed_reward = delayed_reward
 
         if self.delayed_model is None:
@@ -242,7 +250,6 @@ class RenewalRewardProcess(RenewalProcess):
             discount=self.discount,
         )
 
-    @exponentialdiscount
     def asymptotic_expected_total_reward(
         self,
         *,
@@ -347,7 +354,6 @@ class RenewalRewardProcess(RenewalProcess):
                 discount_factor_args=discount_args,
             )
 
-    @exponentialdiscount
     def asymptotic_expected_equivalent_annual_worth(
         self,
         *,

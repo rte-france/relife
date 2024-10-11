@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, fields, replace
-from typing import Coroutine, Iterator, Self
+from typing import Coroutine, Iterator, Self, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -174,7 +174,7 @@ def lifetimes_sampler(
     nb_samples,
     nb_assets,
     model,
-    args: tuple[NDArray[np.float64, ...]] = (),
+    args: tuple[NDArray[np.float64], ...] = (),
 ) -> Coroutine[
     tuple[NDArray[np.float64], NDArray[np.float64]], NDArray[np.float64], None
 ]:
@@ -189,7 +189,7 @@ def lifetimes_sampler(
         yielding : incremented times and lifetimes
     """
 
-    times = None
+    failure_times = None
     lifetimes = None
 
     if bool(args) and args[0].ndim == 2:
@@ -198,25 +198,24 @@ def lifetimes_sampler(
         rvs_size = nb_samples * nb_assets
 
     while True:
-        times = (
-            yield times,
+        failure_times = (
+            yield failure_times,
             lifetimes,
         )  # return times and lifetimes when receiving times
-        lifetimes = model.rvs(*args, size=rvs_size).reshape(-1)
-        times += lifetimes
+        lifetimes = model.rvs(*args, size=rvs_size).reshape((nb_assets, nb_samples))
+        failure_times += lifetimes
 
 
 @coroutine
 def lifetimes_rewards_sampler(
     nb_samples,
     nb_assets,
-    end_time,
     model: LifetimeModel,
     reward: Reward,
     discount: Discount,
-    model_args: tuple[NDArray[np.float64, ...]] = (),
-    reward_args: tuple[NDArray[np.float64, ...]] = (),
-    discount_args: tuple[NDArray[np.float64, ...]] = (),
+    model_args: tuple[NDArray[np.float64], ...] = (),
+    reward_args: tuple[NDArray[np.float64], ...] = (),
+    discount_args: tuple[NDArray[np.float64], ...] = (),
 ) -> Coroutine[
     tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]],
     NDArray[np.float64],
@@ -229,26 +228,119 @@ def lifetimes_rewards_sampler(
     """
 
     # block A
-    times = None
+    failure_times = None
     lifetimes = None
-    rewards = None
+    total_rewards = None
 
-    lifetimes_generator = lifetimes_sampler(
-        nb_samples, nb_assets, end_time, model, model_args
-    )
+    lifetimes_generator = lifetimes_sampler(nb_samples, nb_assets, model, model_args)
 
     while True:
-        times = yield times, lifetimes, rewards
-        times, lifetimes = lifetimes_generator.send(times)
-        rewards = (
-            np.array(
-                reward(
-                    lifetimes.reshape(-1, 1),
-                    *reward_args,
-                ).swapaxes(-2, -1)
-                * discount.factor(times, *discount_args),
-                ndmin=3,
-            )
-            .sum(axis=0)
-            .ravel()
+        failure_times = yield failure_times, lifetimes, total_rewards
+        failure_times, lifetimes = lifetimes_generator.send(failure_times)
+        rewards = reward(lifetimes, *reward_args)
+        if total_rewards is None:
+            total_rewards = rewards
+        discounts = discount.factor(failure_times, *discount_args)
+        total_rewards += rewards * discounts
+
+
+def sample_lifetimes(
+    model: LifetimeModel,
+    nb_samples: int,
+    nb_assets: int,
+    end_time: float,
+    *,
+    delayed_model: Optional[LifetimeModel] = None,
+    model_args: tuple[NDArray[np.float64], ...] = (),
+    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+):
+
+    times = np.zeros((nb_assets, nb_samples))
+    still_valid = times < end_time
+
+    if delayed_model:
+        sampler = lifetimes_sampler(
+            nb_samples,
+            nb_assets,
+            delayed_model,
+            delayed_model_args,
         )
+        times, lifetimes = sampler.send(times)
+        assets, samples = np.where(still_valid)
+        yield times[still_valid], lifetimes[still_valid], samples, assets
+        sampler.close()
+
+    sampler = lifetimes_sampler(nb_samples, nb_assets, model, model_args)
+
+    while np.any(still_valid):
+        times, lifetimes = sampler.send(times)
+        assets, samples = np.where(still_valid)
+        yield times[still_valid], lifetimes[still_valid], samples, assets
+        still_valid = times < end_time
+
+    sampler.close()
+    return
+
+
+def sample_lifetimes_and_rewards(
+    model: LifetimeModel,
+    reward: Reward,
+    discount: Discount,
+    nb_samples: int,
+    nb_assets: int,
+    end_time: float,
+    *,
+    delayed_model: Optional[LifetimeModel] = None,
+    delayed_reward: Optional[Reward] = None,
+    model_args: tuple[NDArray[np.float64], ...] = (),
+    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+    reward_args: tuple[NDArray[np.float64], ...] = (),
+    delayed_reward_args: tuple[NDArray[np.float64], ...] = (),
+    discount_args: tuple[NDArray[np.float64], ...] = (),
+):
+
+    if delayed_reward is None:
+        delayed_reward = reward
+
+    times = np.zeros((nb_assets, nb_samples))
+    still_valid = times < end_time
+
+    if delayed_model:
+        sampler = lifetimes_rewards_sampler(
+            nb_samples,
+            nb_assets,
+            delayed_model,
+            delayed_reward,
+            discount,
+            delayed_model_args,
+            delayed_reward_args,
+            discount_args,
+        )
+        times, lifetimes, rewards = sampler.send(times)
+        assets, samples = np.where(still_valid)
+        yield times[still_valid], lifetimes[still_valid], rewards[
+            still_valid
+        ], samples, assets
+        sampler.close()
+
+    sampler = lifetimes_rewards_sampler(
+        nb_samples,
+        nb_assets,
+        model,
+        reward,
+        discount,
+        model_args,
+        reward_args,
+        discount_args,
+    )
+
+    while np.any(still_valid):
+        times, lifetimes, rewards = sampler.send(times)
+        assets, samples = np.where(still_valid)
+        yield times[still_valid], lifetimes[still_valid], rewards[
+            still_valid
+        ], samples, assets
+        still_valid = times < end_time
+
+    sampler.close()
+    return
