@@ -88,13 +88,6 @@ class RenewalProcess:
                 evaluated_func=self.delayed_model.pdf,
             )
 
-    def sample_coroutine(self, delayed=False):
-        if delayed:
-            return partial(
-                lifetimes_sampler, nb_assets=self.nb_assets, model=self.delayed_model
-            )
-        return partial(lifetimes_sampler, nb_assets=self.nb_assets, model=self.model)
-
     @argscheck
     def renewal_function(
         self,
@@ -153,46 +146,23 @@ class RenewalProcess:
         ] = None,
     ) -> GeneratedLifetime:
 
-        # if one wants to make sample more generatic :
-        #   stop criteria must be in routine, not here.
-        #   parametrization of coroutine must be made elsewhere
-
-        all_samples, all_assets = np.unravel_index(
-            np.arange(nb_samples * self.nb_assets),
-            (nb_samples, self.nb_assets),
-        )
-        times = np.zeros_like(nb_samples, self.nb_assets)
         container = self.generated_data()
-        still_valid = times < end_time
-
-        if self.delayed_model:
-            coroutine = lifetimes_sampler(
-                nb_samples,
-                self.nb_assets,
-                self.delayed_model,
-                delayed_model_args,
-            )
-            times, *other = coroutine.send(times)
+        for failure_times, lifetimes, still_valid in lifetimes_sampler(
+            self.model,
+            nb_samples,
+            self.nb_assets,
+            end_time=end_time,
+            model_args=model_args,
+            delayed_model=self.delayed_model,
+            delayed_model_args=delayed_model_args,
+        ):
+            assets, samples = np.where(still_valid)
             container.update(
-                times[still_valid],
-                *tuple((x[still_valid] for x in other)),
-                all_samples[still_valid],
-                all_assets[still_valid],
+                failure_times[still_valid],
+                lifetimes[still_valid],
+                samples,
+                assets,
             )
-
-        coroutine = lifetimes_sampler(
-            nb_samples, self.nb_assets, self.model, model_args
-        )
-
-        while np.any(still_valid):
-            times, *other = coroutine.send(times)
-            container.update(
-                times[still_valid],
-                *tuple((x[still_valid] for x in other)),
-                all_samples[still_valid],
-                all_assets[still_valid],
-            )
-        coroutine.close()
         container.close()
         return container
 
@@ -232,23 +202,6 @@ class RenewalRewardProcess(RenewalProcess):
                 reward=self.delayed_reward,
                 discount=self.discount,
             )
-
-    def sample_coroutine(self, delayed=False):
-        if delayed:
-            return partial(
-                lifetimes_rewards_sampler,
-                nb_assets=self.nb_assets,
-                model=self.delayed_model,
-                reward=self.delayed_reward,
-                discount=self.discount,
-            )
-        return partial(
-            lifetimes_rewards_sampler,
-            nb_assets=self.nb_assets,
-            model=self.model,
-            reward=self.reward,
-            discount=self.discount,
-        )
 
     def asymptotic_expected_total_reward(
         self,
@@ -436,3 +389,57 @@ class RenewalRewardProcess(RenewalProcess):
                 np.array(0.0), *delayed_reward_args
             ) * self.delayed_model.pdf(np.array(0.0), *delayed_model_args)
         return np.where(mask, q0, q)
+
+    @argscheck
+    def sample(
+        self,
+        nb_samples: int,
+        end_time: float,
+        *,
+        model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        discount_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_model_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+        delayed_reward_args: Optional[
+            NDArray[np.float64] | tuple[NDArray[np.float64], ...]
+        ] = None,
+    ):
+        container = self.generated_data()
+        for (
+            failure_times,
+            lifetimes,
+            total_rewards,
+            still_valid,
+        ) in lifetimes_rewards_sampler(
+            self.model,
+            self.reward,
+            self.discount,
+            nb_samples,
+            self.nb_assets,
+            end_time=end_time,
+            model_args=model_args,
+            reward_args=reward_args,
+            discount_args=discount_args,
+            delayed_model=self.delayed_model,
+            delayed_model_args=delayed_model_args,
+            delayed_reward=self.delayed_reward,
+            delayed_reward_args=delayed_reward_args,
+        ):
+            assets, samples = np.where(still_valid)
+            container.update(
+                failure_times[still_valid],
+                lifetimes[still_valid],
+                total_rewards[still_valid],
+                samples,
+                assets,
+            )
+        container.close()
+        return container
