@@ -1,5 +1,4 @@
-from dataclasses import dataclass, field, fields, replace
-from typing import Iterator, Optional, Self
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,83 +7,165 @@ from relife2.discount import Discount
 from relife2.model import LifetimeModel
 from relife2.reward import Reward
 
+
 # lifetime ~ durations
 # time ~ times
 
 
-@dataclass
-class GeneratedData:
-    samples: NDArray[np.int64] = field(repr=False, default_factory=np.ndarray([]))
-    assets: NDArray[np.int64] = field(repr=False, default_factory=np.ndarray([]))
-    nb_samples: int = field(init=False)
-    nb_assets: int = field(init=False)
-    samples_index: int = field(init=False, repr=False)
-    assets_index: int = field(init=False, repr=False)
-    closed: bool = field(init=False, repr=False, default=False)
+def model_rvs(
+    model,
+    size,
+    args=(),
+):
+    return model.rvs(*args, size=size)
 
-    def update(self, *field_values):
-        i = 0
-        for _field in fields(self):
-            if _field.init:
-                v = getattr(self, _field.name)
-                setattr(self, _field.name, np.concatenate((v, field_values[i])))
-                i += 1
 
-    def close(self):
+def rvs_size(
+    nb_samples,
+    nb_assets,
+    model_args: tuple[NDArray[np.float64], ...] = (),
+):
+    if bool(model_args) and model_args[0].ndim == 2:
+        size = nb_samples  # rvs size
+    else:
+        size = nb_samples * nb_assets
+    return size
+
+
+def compute_rewards(
+    reward,
+    lifetimes,
+    args=(),
+):
+    return reward(lifetimes, *args)
+
+
+def lifetimes_generator(
+    model,
+    nb_samples,
+    nb_assets,
+    end_time,
+    *,
+    model_args: tuple[NDArray[np.float64], ...] = (),
+    delayed_model: Optional[LifetimeModel] = None,
+    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+):
+    failure_times = np.zeros((nb_assets, nb_samples))
+    still_valid = failure_times < end_time
+
+    def sample_routine(target_model, args):
+        nonlocal failure_times  # modify these variables
+        lifetimes = model_rvs(target_model, size, args=args).reshape(
+            (nb_assets, nb_samples)
+        )
+        failure_times += lifetimes
+        return lifetimes, failure_times, still_valid
+
+    if delayed_model:
+        size = rvs_size(nb_samples, nb_assets, delayed_model_args)
+        yield sample_routine(delayed_model, delayed_model_args)
+        still_valid = failure_times < end_time
+
+    size = rvs_size(nb_samples, nb_assets, model_args)
+    while np.any(still_valid):
+        yield sample_routine(model, model_args)
+        still_valid = failure_times < end_time
+
+
+def lifetimes_rewards_generator(
+    model: LifetimeModel,
+    reward: Reward,
+    discount: Discount,
+    nb_samples: int,
+    nb_assets: int,
+    end_time: float,
+    *,
+    model_args: tuple[NDArray[np.float64], ...] = (),
+    reward_args: tuple[NDArray[np.float64], ...] = (),
+    discount_args: tuple[NDArray[np.float64], ...] = (),
+    delayed_model: Optional[LifetimeModel] = None,
+    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+    delayed_reward: Optional[Reward] = None,
+    delayed_reward_args: tuple[NDArray[np.float64], ...] = (),
+):
+    failure_times = np.zeros((nb_assets, nb_samples))
+    total_rewards = np.zeros((nb_assets, nb_samples))
+    still_valid = failure_times < end_time
+
+    lifetimes_gen = lifetimes_generator(
+        model,
+        nb_samples,
+        nb_assets,
+        end_time,
+        model_args=model_args,
+        delayed_model=delayed_model,
+        delayed_model_args=delayed_model_args,
+    )
+
+    def sample_routine(target_reward, args):
+        nonlocal failure_times, total_rewards, still_valid  # modify these variables
+        lifetimes, failure_times, still_valid = next(lifetimes_gen)
+        rewards = target_reward(lifetimes, *args)
+        discounts = discount.factor(failure_times, *discount_args)
+        total_rewards += rewards * discounts
+        return lifetimes, failure_times, total_rewards, still_valid
+
+    if delayed_reward is None:
+        delayed_reward = reward
+        delayed_reward_args = reward_args
+
+    if delayed_model:
+        try:
+            yield sample_routine(delayed_reward, delayed_reward_args)
+        except StopIteration:
+            return
+
+    while np.any(still_valid):
+        try:
+            yield sample_routine(reward, reward_args)
+        except StopIteration:
+            return
+
+
+class DataIterable:
+
+    def __init__(
+        self,
+        samples: NDArray[np.float64],
+        assets: NDArray[np.float64],
+        /,
+        *data: NDArray[np.float64],
+    ):
+        self.samples = samples
+        self.assets = assets
+        self.data = data
+
         self.samples_index = np.unique(self.samples)
         self.assets_index = np.unique(self.assets)
         self.nb_samples = len(self.samples_index)
         self.nb_assets = len(self.assets_index)
 
-        sorted_index = np.lexsort((self.assets, self.samples))
-        for _field in fields(self):
-            if _field.init:
-                v = getattr(self, _field.name)
-                setattr(self, _field.name, v[sorted_index])
-
-        self.closed = True
-
     def __len__(self):
-        if not self.closed:
-            raise ValueError(
-                f"Can't call len on unclosed {self.__class__.__name__} object"
-            )
-        return self.nb_samples * self.nb_assets
+        return self.nb_samples
 
-    def split(self, sample_only=False, asset_only=False) -> Iterator[Self]:
-        if not self.closed:
-            raise ValueError(
-                f"Can't call split on unclosed {self.__class__.__name__} object"
-            )
-        if sample_only and asset_only:
-            raise ValueError(
-                "sample_only and asset_only can't be true at the same time"
-            )
-        current_fields = {
-            _field.name: getattr(self, _field.name)
-            for _field in fields(self)
-            if _field.init
-        }
-        if sample_only:
-            for index in self.samples_index:
-                yield replace(
-                    self,
-                    **{k: v[self.samples == index] for k, v in current_fields.items()},
+    def __iter__(self) -> dict[str, list[NDArray[np.float64]]]:
+        for sample in self.samples_index:
+            res = []
+            for v in self.data:
+                res.append(
+                    tuple(
+                        v[self.samples == sample][
+                            self.assets[self.samples == sample] == asset
+                        ]
+                        for asset in self.assets_index
+                    )
                 )
-        if asset_only:
-            for index in self.assets_index:
-                yield replace(
-                    self,
-                    **{k: v[self.assets == index] for k, v in current_fields.items()},
-                )
+
+            yield tuple(res)
 
     def __getitem__(
         self, key: int | slice | tuple[int, int] | tuple[slice, slice]
-    ) -> Self:
-        if not self.closed:
-            raise ValueError(
-                f"Can't slice on unclosed {self.__class__.__name__} object"
-            )
+    ) -> dict[str, list[NDArray[np.float64] | NDArray[np.float64]]]:
         if not isinstance(key, tuple):
             key = (key, None)
         if len(key) > 2:
@@ -107,168 +188,137 @@ class GeneratedData:
                     f"index {key[0]} is out of bounds for {self.__class__.__name__} with {self.nb_samples} nb samples"
                 )
             samples_mask = self.samples == key[0]
-        changes = {
-            _field.name: getattr(self, _field.name)[samples_mask]
-            for _field in fields(self)
-            if _field.init
-        }
+
+        res = []
+        for v in self.data:
+            res.append(
+                tuple(
+                    v[samples_mask][self.assets[samples_mask] == asset]
+                    for asset in self.assets_index
+                )
+            )
 
         if key[1] is not None:
-            if isinstance(key[0], slice):
-                assets_mask = np.isin(
-                    changes["assets"],
-                    range(
-                        key[1].start if key[1].start else 0,
-                        key[1].stop if key[1].stop else self.nb_assets,
-                        key[1].step if key[1].step else 1,
-                    ),
+            try:
+                res = [v[key[1]] for v in res]
+            except IndexError:
+                raise IndexError(
+                    f"index {key[1]} is out of bounds for {self.__class__.__name__} with {self.nb_assets} nb assets"
                 )
-            else:
-                if key[1] not in self.assets_index:
-                    raise IndexError(
-                        f"index {key[1]} is out of bounds for {self.__class__.__name__} with {self.nb_assets} nb assets"
-                    )
-                assets_mask = changes["assets"] == key[1]
-            changes = {k: v[assets_mask] for k, v in changes.items()}
 
-        return replace(self, **changes)
+        return tuple(res)
 
 
-@dataclass
-class GeneratedLifetime(GeneratedData):
-    time: NDArray[np.float64] = field(repr=False, default_factory=np.ndarray([]))
-    lifetime: NDArray[np.float64] = field(repr=False, default_factory=np.ndarray([]))
-
-    @property
-    def nb_events(self) -> int:
-        return np.sum(np.unique(self.samples, return_counts=True)[-1])
-
-    @property
-    def mean_number_of_events(self) -> float:
-        return np.mean(np.unique(self.samples, return_counts=True)[-1])
-
-
-@dataclass
-class GeneratedRewardLifetime(GeneratedLifetime):
-    reward: NDArray[np.float64] = field(repr=False, default_factory=np.ndarray([]))
-
-    def cumulative_reward(self) -> float:
-        return np.insert(self.reward.cumsum(), 0, 0)
-
-    def mean_cumulative_reward(self) -> float:
-        return np.insert(self.reward.cumsum(), 0, 0) / self.nb_samples
-
-
-def rvs_size(
-    nb_samples,
-    nb_assets,
-    model_args: tuple[NDArray[np.float64], ...] = (),
-):
-    if bool(model_args) and model_args[0].ndim == 2:
-        size = nb_samples  # rvs size
-    else:
-        size = nb_samples * nb_assets
-    return size
-
-
-def model_rvs(
-    model,
-    size,
-    args=(),
-):
-    return model.rvs(*args, size=size)
-
-
-def compute_rewards(
-    reward,
-    lifetimes,
-    args=(),
-):
-    return reward(lifetimes, *args)
-
-
-def lifetimes_sampler(
-    model,
-    nb_samples,
-    nb_assets,
-    end_time,
-    *,
-    model_args: tuple[NDArray[np.float64], ...] = (),
-    delayed_model: Optional[LifetimeModel] = None,
-    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
-):
-    failure_times = np.zeros((nb_assets, nb_samples))
-    still_valid = failure_times < end_time
-
-    def sample_routine(target_model, args):
-        nonlocal failure_times  # modify these variables
-        lifetimes = model_rvs(target_model, size, args=args).reshape(
-            (nb_assets, nb_samples)
-        )
-        failure_times += lifetimes
-        return failure_times, lifetimes, still_valid
-
-    if delayed_model:
-        size = rvs_size(nb_samples, nb_assets, delayed_model_args)
-        yield sample_routine(delayed_model, delayed_model_args)
-        still_valid = failure_times < end_time
-
-    size = rvs_size(nb_samples, nb_assets, model_args)
-    while np.any(still_valid):
-        yield sample_routine(model, model_args)
-        still_valid = failure_times < end_time
-
-
-def lifetimes_rewards_sampler(
-    model: LifetimeModel,
-    reward: Reward,
-    discount: Discount,
-    nb_samples: int,
-    nb_assets: int,
-    end_time: float,
-    *,
-    model_args: tuple[NDArray[np.float64], ...] = (),
-    reward_args: tuple[NDArray[np.float64], ...] = (),
-    discount_args: tuple[NDArray[np.float64], ...] = (),
-    delayed_model: Optional[LifetimeModel] = None,
-    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
-    delayed_reward: Optional[Reward] = None,
-    delayed_reward_args: tuple[NDArray[np.float64], ...] = (),
-):
-    failure_times = np.zeros((nb_assets, nb_samples))
-    total_rewards = np.zeros((nb_assets, nb_samples))
-    still_valid = failure_times < end_time
-
-    lifetimes_gen = lifetimes_sampler(
+class LifetimesIterable(DataIterable):
+    def __init__(
+        self,
         model,
         nb_samples,
         nb_assets,
         end_time,
-        model_args=model_args,
-        delayed_model=delayed_model,
-        delayed_model_args=delayed_model_args,
-    )
+        *,
+        model_args: tuple[NDArray[np.float64], ...] = (),
+        delayed_model: Optional[LifetimeModel] = None,
+        delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+    ):
+        lifetimes = np.array([], dtype=np.float64)
+        failure_times = np.array([], dtype=np.float64)
+        samples = np.array([], dtype=np.int64)
+        assets = np.array([], dtype=np.int64)
 
-    def sample_routine(target_reward, args):
-        nonlocal failure_times, total_rewards, still_valid  # modify these variables
-        failure_times, lifetimes, still_valid = next(lifetimes_gen)
-        rewards = target_reward(lifetimes, *args)
-        discounts = discount.factor(failure_times, *discount_args)
-        total_rewards += rewards * discounts
-        return failure_times, lifetimes, total_rewards, still_valid
+        for _lifetimes, _failure_times, still_valid in lifetimes_generator(
+            model,
+            nb_samples,
+            nb_assets,
+            end_time,
+            model_args=model_args,
+            delayed_model=delayed_model,
+            delayed_model_args=delayed_model_args,
+        ):
+            lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid].reshape(-1)))
+            failure_times = np.concatenate(
+                (failure_times, _failure_times[still_valid].reshape(-1))
+            )
+            _assets, _samples = np.where(still_valid)
+            samples = np.concatenate((samples, _samples))
+            assets = np.concatenate((assets, _assets))
 
-    if delayed_reward is None:
-        delayed_reward = reward
-        delayed_reward_args = reward_args
+        sorted_index = np.lexsort((assets, samples))
+        lifetimes = lifetimes[sorted_index]
+        failure_times = failure_times[sorted_index]
+        samples = samples[sorted_index]
+        assets = assets[sorted_index]
 
-    if delayed_model:
-        try:
-            yield sample_routine(delayed_reward, delayed_reward_args)
-        except StopIteration:
-            return
+        super().__init__(samples, assets, lifetimes, failure_times)
 
-    while np.any(still_valid):
-        try:
-            yield sample_routine(reward, reward_args)
-        except StopIteration:
-            return
+
+class RewardedLifetimesIterable(DataIterable):
+    def __init__(
+        self,
+        model: LifetimeModel,
+        reward: Reward,
+        discount: Discount,
+        nb_samples: int,
+        nb_assets: int,
+        end_time: float,
+        *,
+        model_args: tuple[NDArray[np.float64], ...] = (),
+        reward_args: tuple[NDArray[np.float64], ...] = (),
+        discount_args: tuple[NDArray[np.float64], ...] = (),
+        delayed_model: Optional[LifetimeModel] = None,
+        delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+        delayed_reward: Optional[Reward] = None,
+        delayed_reward_args: tuple[NDArray[np.float64], ...] = (),
+    ):
+
+        failure_times = np.array([], dtype=np.float64)
+        lifetimes = np.array([], dtype=np.float64)
+        total_rewards = np.array([], dtype=np.float64)
+        samples = np.array([], dtype=np.int64)
+        assets = np.array([], dtype=np.int64)
+
+        for (
+            _lifetimes,
+            _failure_times,
+            _total_rewards,
+            still_valid,
+        ) in lifetimes_rewards_generator(
+            model,
+            reward,
+            discount,
+            nb_samples,
+            nb_assets,
+            end_time,
+            model_args=model_args,
+            reward_args=reward_args,
+            discount_args=discount_args,
+            delayed_model=delayed_model,
+            delayed_model_args=delayed_model_args,
+            delayed_reward=delayed_reward,
+            delayed_reward_args=delayed_reward_args,
+        ):
+            lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid].reshape(-1)))
+            failure_times = np.concatenate(
+                (failure_times, _failure_times[still_valid].reshape(-1))
+            )
+            total_rewards = np.concatenate(
+                (total_rewards, _total_rewards[still_valid].reshape(-1))
+            )
+            _assets, _samples = np.where(still_valid)
+            samples = np.concatenate((samples, _samples))
+            assets = np.concatenate((assets, _assets))
+
+        sorted_index = np.lexsort((assets, samples))
+        lifetimes = lifetimes[sorted_index]
+        failure_times = failure_times[sorted_index]
+        total_rewards = total_rewards[sorted_index]
+        samples = samples[sorted_index]
+        assets = assets[sorted_index]
+
+        super().__init__(
+            samples,
+            assets,
+            lifetimes,
+            failure_times,
+            total_rewards,
+        )
