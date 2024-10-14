@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife2.model import LifetimeModel
+from relife2.renewal.discounting import Discounting
 
 Ts = TypeVarTuple("Ts")
 
@@ -11,21 +12,21 @@ Ts = TypeVarTuple("Ts")
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
     model: LifetimeModel,
-    evaluated_func: Optional[Callable[[NDArray[np.float64], *Ts], NDArray[np.float64]]],
-    model_args: tuple[*Ts] = (),
-    evaluated_func_args: tuple[*Ts] = (),
-    discount_factor: Optional[
-        Callable[[NDArray[np.float64], *Ts], NDArray[np.float64]]
-    ] = None,
-    discount_factor_args: tuple[*Ts] = (),
+    evaluated_func: Callable[
+        [NDArray[np.float64], *tuple[NDArray[np.float64], ...]], NDArray[np.float64]
+    ],
+    model_args: tuple[NDArray[np.float64], ...] = (),
+    evaluated_func_args: tuple[NDArray[np.float64], ...] = (),
+    discounting: Optional[Discounting] = None,
+    discounting_args: tuple[NDArray[np.float64], ...] = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
     f = model.cdf(timeline, *model_args)
     fm = model.cdf(tm, *model_args)
     y = evaluated_func(timeline, *evaluated_func_args)
-    if discount_factor is not None:
-        d = discount_factor(timeline, *discount_factor_args)
+    if discounting is not None:
+        d = discounting.factor(timeline, *discounting_args)
     else:
         d = np.ones_like(f)
     z = np.empty(y.shape)
@@ -47,13 +48,13 @@ def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
     delayed_model: LifetimeModel,
-    evaluated_func: Optional[Callable[[NDArray[np.float64], *Ts], NDArray[np.float64]]],
-    delayed_model_args: tuple[*Ts] = (),
-    evaluated_func_args: tuple[*Ts] = (),
-    discount_factor: Optional[
-        Callable[[NDArray[np.float64], *Ts], NDArray[np.float64]]
-    ] = None,
-    discount_factor_args: tuple[*Ts] = (),
+    evaluated_func: Callable[
+        [NDArray[np.float64], *tuple[NDArray[np.float64], ...]], NDArray[np.float64]
+    ],
+    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+    evaluated_func_args: tuple[NDArray[np.float64], ...] = (),
+    discounting: Optional[Discounting] = None,
+    discounting_args: tuple[float, ...] = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
@@ -61,8 +62,8 @@ def delayed_renewal_equation_solver(
     f1m = delayed_model.cdf(tm, *delayed_model_args)
     y1 = evaluated_func(timeline, *evaluated_func_args)
 
-    if discount_factor is not None:
-        d = discount_factor(timeline, *discount_factor_args)
+    if discounting is not None:
+        d = discounting.factor(timeline, *discounting_args)
     else:
         d = np.ones_like(f1)
     z1 = np.empty(y1.shape)

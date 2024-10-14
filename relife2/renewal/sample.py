@@ -3,9 +3,9 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.discount import Discount
 from relife2.model import LifetimeModel
-from relife2.reward import Reward
+from relife2.renewal.discounting import Discounting
+from relife2.renewal.reward import Reward
 
 
 # lifetime ~ durations
@@ -75,7 +75,7 @@ def lifetimes_generator(
 def lifetimes_rewards_generator(
     model: LifetimeModel,
     reward: Reward,
-    discount: Discount,
+    discount: Discounting,
     nb_samples: int,
     nb_assets: int,
     end_time: float,
@@ -131,8 +131,8 @@ class DataIterable:
 
     def __init__(
         self,
-        samples: NDArray[np.float64],
-        assets: NDArray[np.float64],
+        samples: NDArray[np.int64],
+        assets: NDArray[np.int64],
         /,
         *data: NDArray[np.float64],
     ):
@@ -257,7 +257,7 @@ class RewardedLifetimesIterable(DataIterable):
         self,
         model: LifetimeModel,
         reward: Reward,
-        discount: Discount,
+        discount: Discounting,
         nb_samples: int,
         nb_assets: int,
         end_time: float,
