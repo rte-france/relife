@@ -1,11 +1,11 @@
-from typing import Optional, TypeVarTuple
+from typing import Optional, TypeVarTuple, Generator, Generic
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife2.model import LifetimeModel
-from relife2.renewal.discounting import Discounting
-from relife2.renewal.reward import Reward
+from relife2.renewal.discountings import Discounting
+from relife2.renewal.rewards import Reward
 
 ModelArgs = TypeVarTuple("ModelArgs")
 DelayedModelArgs = TypeVarTuple("DelayedModelArgs")
@@ -51,7 +51,7 @@ def lifetimes_generator(
     model_args: tuple[*ModelArgs] | tuple[()] = (),
     delayed_model: Optional[LifetimeModel[*DelayedModelArgs]] = None,
     delayed_model_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
-):
+) -> Generator[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]:
     failure_times = np.zeros((nb_assets, nb_samples))
     still_valid = failure_times < end_time
 
@@ -77,7 +77,7 @@ def lifetimes_generator(
 def lifetimes_rewards_generator(
     model: LifetimeModel[*ModelArgs],
     reward: Reward[*RewardArgs],
-    discount: Discounting[*DiscountingArgs],
+    discounting: Discounting[*DiscountingArgs],
     nb_samples: int,
     nb_assets: int,
     end_time: float,
@@ -89,7 +89,14 @@ def lifetimes_rewards_generator(
     delayed_model_args: tuple[*DelayedModelArgs] | tuple[()] = (),
     delayed_reward: Optional[Reward[*DelayedRewardArgs]] = None,
     delayed_reward_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
-):
+) -> Generator[
+    tuple[
+        NDArray[np.float64],
+        NDArray[np.float64],
+        NDArray[np.float64],
+        NDArray[np.float64],
+    ]
+]:
     failure_times = np.zeros((nb_assets, nb_samples))
     total_rewards = np.zeros((nb_assets, nb_samples))
     still_valid = failure_times < end_time
@@ -108,8 +115,8 @@ def lifetimes_rewards_generator(
         nonlocal failure_times, total_rewards, still_valid  # modify these variables
         lifetimes, failure_times, still_valid = next(lifetimes_gen)
         rewards = target_reward(lifetimes, *args)
-        discounts = discount.factor(failure_times, *discount_args)
-        total_rewards += rewards * discounts
+        discountings = discounting.factor(failure_times, *discount_args)
+        total_rewards += rewards * discountings
         return lifetimes, failure_times, total_rewards, still_valid
 
     if delayed_reward is None:
@@ -129,14 +136,17 @@ def lifetimes_rewards_generator(
             return
 
 
-class DataIterable:
+Data = TypeVarTuple("Data")
+
+
+class DataIterable(Generic[*Data]):
 
     def __init__(
         self,
         samples: NDArray[np.int64],
         assets: NDArray[np.int64],
         /,
-        *data: NDArray[np.float64],
+        *data: *Data,
     ):
         self.samples = samples
         self.assets = assets
@@ -147,10 +157,10 @@ class DataIterable:
         self.nb_samples = len(self.samples_index)
         self.nb_assets = len(self.assets_index)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.nb_samples
 
-    def __iter__(self) -> dict[str, list[NDArray[np.float64]]]:
+    def __iter__(self) -> Generator[tuple[*Data]]:
         for sample in self.samples_index:
             res = []
             for v in self.data:
@@ -167,7 +177,7 @@ class DataIterable:
 
     def __getitem__(
         self, key: int | slice | tuple[int, int] | tuple[slice, slice]
-    ) -> dict[str, list[NDArray[np.float64] | NDArray[np.float64]]]:
+    ) -> tuple[*Data]:
         if not isinstance(key, tuple):
             key = (key, None)
         if len(key) > 2:
@@ -211,7 +221,7 @@ class DataIterable:
         return tuple(res)
 
 
-class LifetimesIterable(DataIterable):
+class LifetimesIterable(DataIterable[NDArray[np.float64], NDArray[np.float64]]):
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
@@ -254,12 +264,14 @@ class LifetimesIterable(DataIterable):
         super().__init__(samples, assets, lifetimes, failure_times)
 
 
-class RewardedLifetimesIterable(DataIterable):
+class RewardedLifetimesIterable(
+    DataIterable[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+):
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
         reward: Reward[*RewardArgs],
-        discount: Discounting[*DiscountingArgs],
+        discounting: Discounting[*DiscountingArgs],
         nb_samples: int,
         nb_assets: int,
         end_time: float,
@@ -287,7 +299,7 @@ class RewardedLifetimesIterable(DataIterable):
         ) in lifetimes_rewards_generator(
             model,
             reward,
-            discount,
+            discounting,
             nb_samples,
             nb_assets,
             end_time,
