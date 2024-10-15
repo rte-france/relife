@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,23 +7,25 @@ from relife2.model import LifetimeModel
 from relife2.renewal.discounting import Discounting
 from relife2.renewal.reward import Reward
 
-
-# lifetime ~ durations
-# time ~ times
+ModelArgs = TypeVarTuple("ModelArgs")
+DelayedModelArgs = TypeVarTuple("DelayedModelArgs")
+RewardArgs = TypeVarTuple("RewardArgs")
+DelayedRewardArgs = TypeVarTuple("DelayedRewardArgs")
+DiscountingArgs = TypeVarTuple("DiscountingArgs")
 
 
 def model_rvs(
-    model,
-    size,
-    args=(),
+    model: LifetimeModel[*ModelArgs],
+    size: int,
+    args: tuple[*ModelArgs] | tuple[()] = (),
 ):
     return model.rvs(*args, size=size)
 
 
 def rvs_size(
-    nb_samples,
-    nb_assets,
-    model_args: tuple[NDArray[np.float64], ...] = (),
+    nb_samples: int,
+    nb_assets: int,
+    model_args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
 ):
     if bool(model_args) and model_args[0].ndim == 2:
         size = nb_samples  # rvs size
@@ -33,22 +35,22 @@ def rvs_size(
 
 
 def compute_rewards(
-    reward,
-    lifetimes,
-    args=(),
+    reward: Reward[*RewardArgs],
+    lifetimes: NDArray[np.float64],
+    args: tuple[*RewardArgs] | tuple[()] = (),
 ):
     return reward(lifetimes, *args)
 
 
 def lifetimes_generator(
-    model,
-    nb_samples,
-    nb_assets,
-    end_time,
+    model: LifetimeModel[*ModelArgs],
+    nb_samples: int,
+    nb_assets: int,
+    end_time: float,
     *,
-    model_args: tuple[NDArray[np.float64], ...] = (),
-    delayed_model: Optional[LifetimeModel] = None,
-    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+    model_args: tuple[*ModelArgs] | tuple[()] = (),
+    delayed_model: Optional[LifetimeModel[*DelayedModelArgs]] = None,
+    delayed_model_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
 ):
     failure_times = np.zeros((nb_assets, nb_samples))
     still_valid = failure_times < end_time
@@ -73,20 +75,20 @@ def lifetimes_generator(
 
 
 def lifetimes_rewards_generator(
-    model: LifetimeModel,
-    reward: Reward,
-    discount: Discounting,
+    model: LifetimeModel[*ModelArgs],
+    reward: Reward[*RewardArgs],
+    discount: Discounting[*DiscountingArgs],
     nb_samples: int,
     nb_assets: int,
     end_time: float,
     *,
-    model_args: tuple[NDArray[np.float64], ...] = (),
-    reward_args: tuple[NDArray[np.float64], ...] = (),
-    discount_args: tuple[NDArray[np.float64], ...] = (),
-    delayed_model: Optional[LifetimeModel] = None,
-    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
-    delayed_reward: Optional[Reward] = None,
-    delayed_reward_args: tuple[NDArray[np.float64], ...] = (),
+    model_args: tuple[*ModelArgs] | tuple[()] = (),
+    reward_args: tuple[*RewardArgs] | tuple[()] = (),
+    discount_args: tuple[*DiscountingArgs] | tuple[()] = (),
+    delayed_model: Optional[LifetimeModel[*DelayedModelArgs]] = None,
+    delayed_model_args: tuple[*DelayedModelArgs] | tuple[()] = (),
+    delayed_reward: Optional[Reward[*DelayedRewardArgs]] = None,
+    delayed_reward_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
 ):
     failure_times = np.zeros((nb_assets, nb_samples))
     total_rewards = np.zeros((nb_assets, nb_samples))
@@ -212,14 +214,14 @@ class DataIterable:
 class LifetimesIterable(DataIterable):
     def __init__(
         self,
-        model,
-        nb_samples,
-        nb_assets,
-        end_time,
+        model: LifetimeModel[*ModelArgs],
+        nb_samples: int,
+        nb_assets: int,
+        end_time: float,
         *,
-        model_args: tuple[NDArray[np.float64], ...] = (),
-        delayed_model: Optional[LifetimeModel] = None,
-        delayed_model_args: tuple[NDArray[np.float64], ...] = (),
+        model_args: tuple[*ModelArgs] | tuple[()] = (),
+        delayed_model: Optional[LifetimeModel[*DelayedModelArgs]] = None,
+        delayed_model_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
     ):
         lifetimes = np.array([], dtype=np.float64)
         failure_times = np.array([], dtype=np.float64)
@@ -255,20 +257,20 @@ class LifetimesIterable(DataIterable):
 class RewardedLifetimesIterable(DataIterable):
     def __init__(
         self,
-        model: LifetimeModel,
-        reward: Reward,
-        discount: Discounting,
+        model: LifetimeModel[*ModelArgs],
+        reward: Reward[*RewardArgs],
+        discount: Discounting[*DiscountingArgs],
         nb_samples: int,
         nb_assets: int,
         end_time: float,
         *,
-        model_args: tuple[NDArray[np.float64], ...] = (),
-        reward_args: tuple[NDArray[np.float64], ...] = (),
-        discount_args: tuple[NDArray[np.float64], ...] = (),
-        delayed_model: Optional[LifetimeModel] = None,
-        delayed_model_args: tuple[NDArray[np.float64], ...] = (),
-        delayed_reward: Optional[Reward] = None,
-        delayed_reward_args: tuple[NDArray[np.float64], ...] = (),
+        model_args: tuple[*ModelArgs] | tuple[()] = (),
+        reward_args: tuple[*RewardArgs] | tuple[()] = (),
+        discount_args: tuple[*DiscountingArgs] | tuple[()] = (),
+        delayed_model: Optional[LifetimeModel[*DelayedModelArgs]] = None,
+        delayed_model_args: tuple[*DelayedModelArgs] | tuple[()] = (),
+        delayed_reward: Optional[Reward[*DelayedRewardArgs]] = None,
+        delayed_reward_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
     ):
 
         failure_times = np.array([], dtype=np.float64)

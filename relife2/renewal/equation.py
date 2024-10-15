@@ -6,19 +6,23 @@ from numpy.typing import NDArray
 from relife2.model import LifetimeModel
 from relife2.renewal.discounting import Discounting
 
-Ts = TypeVarTuple("Ts")
+ModelArgs = TypeVarTuple("ModelArgs")
+DelayedModelArgs = TypeVarTuple("DelayedModelArgs")
+RewardArgs = TypeVarTuple("RewardArgs")
+DelayedRewardArgs = TypeVarTuple("DelayedRewardArgs")
+DiscountingArgs = TypeVarTuple("DiscountingArgs")
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    model: LifetimeModel,
+    model: LifetimeModel[*ModelArgs],
     evaluated_func: Callable[
-        [NDArray[np.float64], *tuple[NDArray[np.float64], ...]], NDArray[np.float64]
+        [NDArray[np.float64], *tuple[*ModelArgs]], NDArray[np.float64]
     ],
-    model_args: tuple[NDArray[np.float64], ...] = (),
-    evaluated_func_args: tuple[NDArray[np.float64], ...] = (),
-    discounting: Optional[Discounting] = None,
-    discounting_args: tuple[NDArray[np.float64], ...] = (),
+    model_args: tuple[*ModelArgs] | tuple[()] = (),
+    evaluated_func_args: tuple[*ModelArgs] | tuple[()] = (),
+    discounting: Optional[Discounting[*DiscountingArgs]] = None,
+    discounting_args: tuple[*DiscountingArgs] | tuple[()] = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
@@ -47,14 +51,14 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    delayed_model: LifetimeModel,
+    delayed_model: LifetimeModel[*DelayedModelArgs],
     evaluated_func: Callable[
-        [NDArray[np.float64], *tuple[NDArray[np.float64], ...]], NDArray[np.float64]
+        [NDArray[np.float64], *tuple[*DelayedModelArgs]], NDArray[np.float64]
     ],
-    delayed_model_args: tuple[NDArray[np.float64], ...] = (),
-    evaluated_func_args: tuple[NDArray[np.float64], ...] = (),
-    discounting: Optional[Discounting] = None,
-    discounting_args: tuple[float, ...] = (),
+    delayed_model_args: tuple[*DelayedModelArgs] | tuple[()] = (),
+    evaluated_func_args: tuple[*DelayedModelArgs] | tuple[()] = (),
+    discounting: Optional[Discounting[*DiscountingArgs]] = None,
+    discounting_args: tuple[*DiscountingArgs] | tuple[()] = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
