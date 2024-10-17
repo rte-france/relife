@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, fields
+from functools import singledispatchmethod
 from typing import Optional, TypeVarTuple, Iterator
 
 import numpy as np
@@ -6,6 +7,13 @@ from numpy.typing import NDArray
 
 from relife2.model import LifetimeModel
 from relife2.renewal.discountings import Discounting
+from relife2.renewal.policy import (
+    Policy,
+    OneCycleRunToFailure,
+    OneCycleAgeReplacementPolicy,
+    RunToFailure,
+)
+from relife2.renewal.process import RenewalProcess, RenewalRewardProcess
 from relife2.renewal.rewards import Reward
 
 ModelArgs = TypeVarTuple("ModelArgs")
@@ -251,6 +259,155 @@ class RenewalRewardData(RenewalData):
         times = np.insert(self.event_times[s], 0, 0)
         z = np.insert(self.total_rewards[s].cumsum(), 0, 0) / self.nb_samples
         return times, z
+
+
+class Sampler:
+    """
+    benefits of decoupling sample from other class:
+    1. avoid polluting RenewalProcess with sample making inheritance
+    between RenewalProcess and RenewalRewardProcess wrong (LSP) : signature overridden because of reward_args, etc.
+    2. avoid having sample method that returns different dataclass and possibly non "to_lifetime_data" compatible
+    => all sample returns CountData type that can be converted to lifetime data (easier to understand)
+    3. meaningly speaking, one may not expect RenewalProcess or Policy object having a "sample" in its interface
+    4. (3 bis) if RenewalProcess and Policy have "sample", why not LifetimeModel ? => Sampler accept LifetimeModel too
+    """
+
+    def __init__(
+        self,
+        end_time: float,
+        nb_sample: int,
+        *,
+        random_state: Optional[int] = None,
+    ):
+        self.end_time = end_time
+        self.nb_sample = nb_sample
+        self.random_state = random_state
+        self.sample_result, self.events, self.args, self.a0 = None, None, None, None
+
+    def run(
+        self, target_obj: LifetimeModel | RenewalProcess | Policy, **kwargs
+    ) -> CountData:
+        """
+        Args:
+            target_obj (): obj used to sample
+            **kwargs (): arguments needed by policy or renewal process
+        Returns:
+        """
+        try:
+            self.sample_result, self.events, self.args, self.a0 = self.sample(
+                target_obj, **kwargs
+            )
+        except NotImplementedError:
+            raise NotImplementedError(
+                f"Cannot run sampler on {type(target_obj)} object"
+            )
+        return self.sample_result
+
+    @singledispatchmethod
+    def sample(
+        self,
+        target_obj,
+        **kwargs,
+    ) -> tuple[
+        CountData,
+        Optional[NDArray[np.float64]],
+        Optional[NDArray[np.float64]],
+        Optional[NDArray[np.float64]],
+    ]:
+        """
+        Args:
+            target_obj (): obj used to sample
+            **kwargs (): arguments needed by policy or renewal process
+        Returns:
+        """
+        raise NotImplementedError
+
+    @sample.register
+    def _(self, target_obj: LifetimeModel, **kwargs):
+        pass
+
+    @sample.register
+    def _(self, target_obj: RenewalProcess, **kwargs):
+        pass
+
+    @sample.register
+    def _(self, target_obj: RenewalRewardProcess, **kwargs):
+        pass
+
+    @sample.register
+    def _(self, target_obj: OneCycleRunToFailure, **kwargs):
+        pass
+
+    @sample.register
+    def _(self, target_obj: OneCycleAgeReplacementPolicy, **kwargs):
+        pass
+
+    @sample.register
+    def _(self, target_obj: RunToFailure, **kwargs):
+        pass
+
+    def to_lifetime_data(self):
+        pass
+
+        # if tf is None or tf > self.T:
+        #     tf = self.T
+        # if t0 >= tf:
+        #     raise ValueError("`t0` must be strictly lesser than `tf`")
+        #
+        # # Filtering sample and sorting by times
+        # s = self.samples == sample if sample is not None else Ellipsis
+        # order = np.argsort(self.times[s])
+        # indices = self.indices[s][order]
+        # samples = self.samples[s][order]
+        # uindices = np.ravel_multi_index(
+        #     (indices, samples), (self.n_indices, self.n_samples)
+        # )
+        # times = self.times[s][order]
+        # durations = self.durations[s][order] + self.a0[s][order]
+        # events = self.events[s][order]
+        #
+        # # Indices of interest
+        # ind0 = (times > t0) & (
+        #     times <= tf
+        # )  # Indices of replacement occuring inside the obervation window
+        # ind1 = (
+        #     times > tf
+        # )  # Indices of replacement occuring after the observation window which include right censoring
+        #
+        # # Replacements occuring inside the observation window
+        # time0 = durations[ind0]
+        # event0 = events[ind0]
+        # entry0 = np.zeros(time0.size)
+        # _, LT = np.unique(
+        #     uindices[ind0], return_index=True
+        # )  # get the indices of the first replacements ocurring in the observation window
+        # b0 = (
+        #     times[ind0][LT] - durations[ind0][LT]
+        # )  # time at birth for the firt replacements
+        # entry0[LT] = np.where(b0 >= t0, 0, t0 - b0)
+        # args0 = args_take(indices[ind0], *self.args)
+        #
+        # # Right censoring
+        # _, RC = np.unique(uindices[ind1], return_index=True)
+        # bf = (
+        #     times[ind1][RC] - durations[ind1][RC]
+        # )  # time at birth for the right censored
+        # b1 = bf[
+        #     bf < tf
+        # ]  # ensure that time of birth for the right censored is not equal to tf.
+        # time1 = tf - b1
+        # event1 = np.zeros(b1.size)
+        # entry1 = np.where(b1 >= t0, 0, t0 - b1)
+        # args1 = args_take(indices[ind1][RC][bf < tf], *self.args)
+        #
+        # # Concatenate
+        # time = np.concatenate((time0, time1))
+        # event = np.concatenate((event0, event1))
+        # entry = np.concatenate((entry0, entry1))
+        # args = tuple(
+        #     np.concatenate((arg0, arg1), axis=0) for arg0, arg1 in zip(args0, args1)
+        # )
+        # return LifetimeData(time, event, entry, args)
 
 
 #     lifetimes = np.array([], dtype=np.float64)
