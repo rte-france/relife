@@ -14,6 +14,7 @@ from relife2.renewal.policy import (
     RunToFailure,
 )
 from relife2.renewal.process import RenewalRewardProcess, RenewalProcess
+from relife2.renewal.rewards import run_to_failure_cost
 from relife2.renewal.sampling import (
     lifetimes_rewards_generator,
     RenewalData,
@@ -211,15 +212,36 @@ class Simulator:
             ] = 0
 
     @sample.register
-    def _(self, target_obj: OneCycleRunToFailure, **kwargs):
+    def _(self, source: OneCycleRunToFailure, **kwargs):
+        generator = lifetimes_rewards_generator(
+            source.model,
+            run_to_failure_cost,
+            exponential_discounting,
+            self.nb_samples,
+            self.nb_assets,
+            np.inf,
+            model_args=source.model_args,
+            reward_args=(kwargs["cf"],),
+            discount_args=(kwargs["rate"],),
+        )
+
+        lifetimes, event_times, total_rewards, order, still_valid = next(generator)
+        assets, samples = np.where(still_valid)
+        assets.astype(np.int64)
+        samples.astype(np.int64)
+
+        count_data = RenewalRewardData(
+            samples, assets, order, event_times, lifetimes, total_rewards
+        )
+        events = np.ones(len(count_data))
+        return count_data, events
+
+    @sample.register
+    def _(self, source: OneCycleAgeReplacementPolicy, **kwargs: Any):
         pass
 
     @sample.register
-    def _(self, target_obj: OneCycleAgeReplacementPolicy, **kwargs):
-        pass
-
-    @sample.register
-    def _(self, target_obj: RunToFailure, **kwargs):
+    def _(self, source: RunToFailure, **kwargs: Any):
         pass
 
     def to_lifetime_data(self):

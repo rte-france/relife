@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -137,6 +137,15 @@ class LeftTruncated(
             )
             - a0
         )
+
+    def rvs(
+        self,
+        a0: NDArray[np.float64],
+        *args: * tuple[NDArray[np.float64], ...],
+        size: Optional[int] = 1,
+        seed: Optional[int] = None,
+    ) -> NDArray[np.float64]:
+        return self.baseline.rvs(*(a0, *args), size=size, seed=seed) + a0
 
     # @property
     # def support_upper_bound(self):

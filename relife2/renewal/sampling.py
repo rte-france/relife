@@ -4,6 +4,7 @@ from typing import Optional, TypeVarTuple, Iterator
 import numpy as np
 from numpy.typing import NDArray
 
+from relife2.fiability.addons import AgeReplacementModel, LeftTruncated
 from relife2.model import LifetimeModel
 from relife2.renewal.discountings import Discounting
 from relife2.renewal.rewards import Reward
@@ -43,6 +44,42 @@ def compute_rewards(
     return reward(lifetimes, *args)
 
 
+def compute_events(
+    lifetimes: NDArray[np.float64],
+    model : LifetimeModel,
+    model_args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
+) -> NDArray[np.bool_]:
+    """
+    tag lifetimes as being right censored or not depending on model used
+    """
+    events = np.ones_like(lifetimes, dtype=np.bool_)
+    ar = 0.
+    if isinstance(model, AgeReplacementModel):
+        ar = model_args[0]
+    if hasattr(model, "baseline"):
+        if isinstance(getattr(model, "baseline"), AgeReplacementModel):
+            ar = model_args[1]
+    events[lifetimes < ar] = False
+    return events
+
+
+def rectify_lifetimes(
+    lifetimes: NDArray[np.float64],
+    model : LifetimeModel,
+    model_args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
+):
+    """
+    retify lifetimes
+    """
+    a0 = 0.
+    if isinstance(model, LeftTruncated):
+        a0 = model_args[0]
+    if hasattr(model, "baseline"):
+        if isinstance(getattr(model, "baseline"), LeftTruncated):
+            a0 = model_args[1]
+    return lifetimes + a0
+
+
 def lifetimes_generator(
     model: LifetimeModel[*ModelArgs],
     nb_samples: int,
@@ -72,12 +109,15 @@ def lifetimes_generator(
         )
         event_times += lifetimes
         order += 1
+        events = compute_events(lifetimes, target_model, args)
         still_valid = event_times < end_time
-        return lifetimes, event_times, order, still_valid
+        return lifetimes, event_times, events, still_valid
 
     if delayed_model:
         size = rvs_size(nb_samples, nb_assets, delayed_model_args)
         gen_data = sample_routine(delayed_model, delayed_model_args)
+        if isinstance(delayed_model, LeftTruncated):
+
         if np.any(gen_data[-1]) > 0:
             yield gen_data
         else:
@@ -238,6 +278,9 @@ class CountDataIterable:
 @dataclass
 class RenewalData(CountData):
     lifetimes: NDArray[np.float64] = field(repr=False)
+    events: NDArray[np.float64] = field(
+        repr=False
+    )  # event indicators (right censored or not)
 
 
 @dataclass
