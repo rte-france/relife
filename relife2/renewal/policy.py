@@ -1,4 +1,4 @@
-from typing import TypeVarTuple, Optional, Protocol
+from typing import TypeVarTuple, Optional, Protocol, TypeVar, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,14 +12,28 @@ from relife2.renewal.rewards import (
     age_replacement_cost,
 )
 
-ModelArgs = TypeVarTuple("ModelArgs")
+M = TypeVar("M", tuple[NDArray[np.float64], ...], tuple[()])
+M1 = TypeVar("M1", tuple[NDArray[np.float64], ...], tuple[()])
+R = TypeVar("R", tuple[NDArray[np.float64], ...], tuple[()])
+R1 = TypeVar("R1", tuple[NDArray[np.float64], ...], tuple[()])
+D = TypeVar("D", tuple[NDArray[np.float64], ...], tuple[()])
 
 T = TypeVarTuple("T")
 
 
+class PolicyArgs(TypedDict):
+    model_args: M
+    delayed_model_args: M1
+    reward_args: R
+    delayed_reward_args: R1
+
+
 # policy class are just facade class of one RenewalRewardProcess with more "financial" methods names
 # and ergonomic parametrization (named parameters instead of generic tuple)
-class Policy(Protocol[*T]):
+class Policy(Protocol[M, M1, R, R1]):
+
+    args: PolicyArgs
+
     def expected_total_cost(
         self, timeline, rate: NDArray[np.float64], *args: *T
     ) -> NDArray[np.float64]: ...
@@ -42,8 +56,8 @@ class OneCycleRunToFailure:
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
-        model_args: tuple[*ModelArgs] | tuple[()] = (),
+        model: LifetimeModel[*M],
+        model_args: M = (),
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
     ) -> None:
@@ -134,8 +148,8 @@ class OneCycleAgeReplacementPolicy:
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
-        model_args: tuple[*ModelArgs] | tuple[()] = (),
+        model: LifetimeModel[*M],
+        model_args: M = (),
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
     ) -> None:
@@ -208,16 +222,12 @@ class OneCycleAgeReplacementPolicy:
         )
 
 
-DelayedModelArgs = TypeVarTuple("DelayedModelArgs")
-DelayedRewardArgs = TypeVarTuple("DelayedRewardArgs")
-
-
 class RunToFailure:
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
-        model_args: tuple[*ModelArgs] | tuple[()] = (),
+        model: LifetimeModel[*M],
+        model_args: M = (),
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
     ) -> None:
@@ -234,8 +244,8 @@ class RunToFailure:
 
     def add_delayed_model(
         self,
-        model: LifetimeModel[*DelayedModelArgs],
-        model_args: tuple[*DelayedModelArgs] | tuple[()] = (),
+        model: LifetimeModel[*M1],
+        model_args: M1 = (),
         a0: Optional[NDArray[np.float64]] = None,
     ):
         if a0 is not None:
