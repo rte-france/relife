@@ -6,21 +6,21 @@ from numpy.typing import NDArray
 
 from relife2.fiability.addons import AgeReplacementModel
 from relife2.model import LifetimeModel
-from relife2.renewal.discountings import exponential_discounting
-from relife2.renewal.policy import (
-    Policy,
+from relife2.renewal.discounts import exponential_discount
+from relife2.renewal.policies import (
     OneCycleAgeReplacementPolicy,
     OneCycleRunToFailure,
+    Policy,
     RunToFailure,
 )
-from relife2.renewal.process import RenewalRewardProcess, RenewalProcess
+from relife2.renewal.process import RenewalProcess, RenewalRewardProcess
 from relife2.renewal.rewards import run_to_failure_cost
 from relife2.renewal.sampling import (
-    lifetimes_rewards_generator,
-    RenewalData,
-    lifetimes_generator,
     CountData,
+    RenewalData,
     RenewalRewardData,
+    lifetimes_generator,
+    lifetimes_rewards_generator,
 )
 
 
@@ -173,7 +173,7 @@ class Simulator:
         ) in lifetimes_rewards_generator(
             source.model,
             source.reward,
-            exponential_discounting,
+            exponential_discount,
             self.nb_samples,
             self.nb_assets,
             end_time=self.end_time,
@@ -216,7 +216,7 @@ class Simulator:
         generator = lifetimes_rewards_generator(
             source.model,
             run_to_failure_cost,
-            exponential_discounting,
+            exponential_discount,
             self.nb_samples,
             self.nb_assets,
             np.inf,

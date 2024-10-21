@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 DArgs = TypeVarTuple("DArgs")
 
 
-class Discounting(Generic[*DArgs], ABC):
+class Discount(Generic[*DArgs], ABC):
     @abstractmethod
     def factor(
         self, time: NDArray[np.float64], *args: *DArgs
@@ -22,7 +22,7 @@ class Discounting(Generic[*DArgs], ABC):
     ) -> NDArray[np.float64]: ...
 
 
-class ExponentialDiscounting(Discounting[float | NDArray[np.float64]]):
+class ExponentialDiscount(Discount[float | NDArray[np.float64]]):
     def factor(
         self,
         time: NDArray[np.float64],
@@ -47,7 +47,7 @@ class ExponentialDiscounting(Discounting[float | NDArray[np.float64]]):
         return np.where(mask, time, (1 - np.exp(-rate * time)) / rate)
 
 
-class HyperbolicDiscounting(Discounting[float | NDArray[np.float64]]):
+class HyperbolicDiscount(Discount[float | NDArray[np.float64]]):
 
     def factor(
         self,
@@ -73,8 +73,8 @@ class HyperbolicDiscounting(Discounting[float | NDArray[np.float64]]):
         return np.where(mask, time, np.log1p(beta * time) / beta)
 
 
-class GeneralizedHyperbolicDiscounting(
-    Discounting[float | NDArray[np.float64], float | NDArray[np.float64]]
+class GeneralizedHyperbolicDiscount(
+    Discount[float | NDArray[np.float64], float | NDArray[np.float64]]
 ):
 
     def factor(
@@ -105,7 +105,7 @@ class GeneralizedHyperbolicDiscounting(
         eta = np.ma.MaskedArray(eta, mask_eta)
         return np.where(
             mask_eta,
-            HyperbolicDiscounting.annuity_factor(time, beta),
+            HyperbolicDiscount.annuity_factor(time, beta),
             np.where(
                 mask_beta,
                 time,
@@ -114,6 +114,6 @@ class GeneralizedHyperbolicDiscounting(
         )
 
 
-exponential_discounting = ExponentialDiscounting()
-hyperbolic_discounting = HyperbolicDiscounting()
-generalized_hyperbolic_discounting = GeneralizedHyperbolicDiscounting()
+exponential_discount = ExponentialDiscount()
+hyperbolic_discount = HyperbolicDiscount()
+generalized_hyperbolic_discount = GeneralizedHyperbolicDiscount()

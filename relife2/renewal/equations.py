@@ -1,35 +1,35 @@
-from typing import Callable, Optional, TypeVarTuple
+from typing import Callable, Optional, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife2.model import LifetimeModel
-from relife2.renewal.discountings import Discounting
+from relife2.renewal.discounts import Discount
 
-ModelArgs = TypeVarTuple("ModelArgs")
-DelayedModelArgs = TypeVarTuple("DelayedModelArgs")
-RewardArgs = TypeVarTuple("RewardArgs")
-DelayedRewardArgs = TypeVarTuple("DelayedRewardArgs")
-DiscountingArgs = TypeVarTuple("DiscountingArgs")
+M = TypeVar("M", tuple[NDArray[np.float64], ...], tuple[()])
+M1 = TypeVar("M1", tuple[NDArray[np.float64], ...], tuple[()])
+R = TypeVar("R", tuple[NDArray[np.float64], ...], tuple[()])
+R1 = TypeVar("R1", tuple[NDArray[np.float64], ...], tuple[()])
+D = TypeVar("D", tuple[NDArray[np.float64], ...], tuple[()])
 
 
 # make evaluated func  Callable[[array], array] only and do partial elsewhere
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*ModelArgs],
+    model: LifetimeModel[*M],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
-    model_args: tuple[*ModelArgs] | tuple[()] = (),
-    discounting: Optional[Discounting[*DiscountingArgs]] = None,
-    discounting_args: tuple[*DiscountingArgs] | tuple[()] = (),
+    model_args: M = (),
+    discount: Optional[Discount[*D]] = None,
+    discount_args: D = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
     f = model.cdf(timeline, *model_args)
     fm = model.cdf(tm, *model_args)
     y = evaluated_func(timeline)
-    if discounting is not None:
-        d = discounting.factor(timeline, *discounting_args)
+    if discount is not None:
+        d = discount.factor(timeline, *discount_args)
     else:
         d = np.ones_like(f)
     z = np.empty(y.shape)
@@ -50,20 +50,20 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    delayed_model: LifetimeModel[*DelayedModelArgs],
+    model1: LifetimeModel[*M1],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    delayed_model_args: tuple[*DelayedModelArgs] | tuple[()] = (),
-    discounting: Optional[Discounting[*DiscountingArgs]] = None,
-    discounting_args: tuple[*DiscountingArgs] | tuple[()] = (),
+    delayed_model_args: M1 = (),
+    discount: Optional[Discount[*D]] = None,
+    discount_args: D = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f1 = delayed_model.cdf(timeline, *delayed_model_args)
-    f1m = delayed_model.cdf(tm, *delayed_model_args)
+    f1 = model1.cdf(timeline, *delayed_model_args)
+    f1m = model1.cdf(tm, *delayed_model_args)
     y1 = evaluated_func(timeline)
 
-    if discounting is not None:
-        d = discounting.factor(timeline, *discounting_args)
+    if discount is not None:
+        d = discount.factor(timeline, *discount_args)
     else:
         d = np.ones_like(f1)
     z1 = np.empty(y1.shape)

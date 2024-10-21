@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field, fields
-from typing import Optional, TypeVarTuple, Iterator
+from typing import Iterator, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.fiability.addons import AgeReplacementModel, LeftTruncated
+from relife2.fiability.addons import AgeReplacementModel
 from relife2.model import LifetimeModel
-from relife2.renewal.discountings import Discounting
+from relife2.renewal.discounts import Discount
 from relife2.renewal.rewards import Reward
 
 ModelArgs = TypeVarTuple("ModelArgs")
@@ -46,38 +46,18 @@ def compute_rewards(
 
 def compute_events(
     lifetimes: NDArray[np.float64],
-    model : LifetimeModel,
+    model: LifetimeModel,
     model_args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
 ) -> NDArray[np.bool_]:
     """
     tag lifetimes as being right censored or not depending on model used
     """
     events = np.ones_like(lifetimes, dtype=np.bool_)
-    ar = 0.
+    ar = 0.0
     if isinstance(model, AgeReplacementModel):
         ar = model_args[0]
-    if hasattr(model, "baseline"):
-        if isinstance(getattr(model, "baseline"), AgeReplacementModel):
-            ar = model_args[1]
     events[lifetimes < ar] = False
     return events
-
-
-def rectify_lifetimes(
-    lifetimes: NDArray[np.float64],
-    model : LifetimeModel,
-    model_args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
-):
-    """
-    retify lifetimes
-    """
-    a0 = 0.
-    if isinstance(model, LeftTruncated):
-        a0 = model_args[0]
-    if hasattr(model, "baseline"):
-        if isinstance(getattr(model, "baseline"), LeftTruncated):
-            a0 = model_args[1]
-    return lifetimes + a0
 
 
 def lifetimes_generator(
@@ -116,8 +96,6 @@ def lifetimes_generator(
     if delayed_model:
         size = rvs_size(nb_samples, nb_assets, delayed_model_args)
         gen_data = sample_routine(delayed_model, delayed_model_args)
-        if isinstance(delayed_model, LeftTruncated):
-
         if np.any(gen_data[-1]) > 0:
             yield gen_data
         else:
@@ -136,7 +114,7 @@ def lifetimes_generator(
 def lifetimes_rewards_generator(
     model: LifetimeModel[*ModelArgs],
     reward: Reward[*RewardArgs],
-    discounting: Discounting[*DiscountingArgs],
+    discounting: Discount[*DiscountingArgs],
     nb_samples: int,
     nb_assets: int,
     end_time: float,
@@ -171,11 +149,11 @@ def lifetimes_rewards_generator(
 
     def sample_routine(target_reward, args):
         nonlocal total_rewards  # modify these variables
-        lifetimes, event_times, order, still_valid = next(lifetimes_gen)
+        lifetimes, event_times, events, still_valid = next(lifetimes_gen)
         rewards = target_reward(lifetimes, *args)
         discountings = discounting.factor(event_times, *discount_args)
         total_rewards += rewards * discountings
-        return lifetimes, event_times, total_rewards, order, still_valid
+        return lifetimes, event_times, total_rewards, events, still_valid
 
     if delayed_reward is None:
         delayed_reward = reward
@@ -278,7 +256,7 @@ class CountDataIterable:
 @dataclass
 class RenewalData(CountData):
     lifetimes: NDArray[np.float64] = field(repr=False)
-    events: NDArray[np.float64] = field(
+    events: NDArray[np.bool_] = field(
         repr=False
     )  # event indicators (right censored or not)
 
