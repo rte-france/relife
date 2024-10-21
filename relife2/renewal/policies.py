@@ -8,7 +8,7 @@ from relife2.model import LifetimeModel
 from relife2.renewal.discounts import Discount, exponential_discount
 from relife2.renewal.process import RenewalRewardProcess, reward_partial_expectation
 from relife2.renewal.rewards import Reward, age_replacement_cost, run_to_failure_cost
-from relife2.renewal.sampling import lifetimes_rewards_generator, RenewalRewardData
+from relife2.renewal.sampling import RenewalRewardData, lifetimes_rewards_generator
 
 M = TypeVar("M", tuple[NDArray[np.float64], ...], tuple[()])
 M1 = TypeVar("M1", tuple[NDArray[np.float64], ...], tuple[()])
@@ -37,11 +37,15 @@ class Policy(Protocol[M, M1, R, R1, D]):
     reward1: Optional[Reward[*R1]] = None
     nb_assets: int = 1
 
-    def expected_total_cost(self, timeline) -> NDArray[np.float64]: ...
+    def expected_total_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]: ...
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]: ...
 
-    def expected_equivalent_annual_cost(self, timeline) -> NDArray[np.float64]: ...
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]: ...
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]: ...
 
@@ -225,14 +229,14 @@ class RunToFailure(Generic[M, M1]):
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
         model1: Optional[LifetimeModel[*M1]] = None,
-        delayed_model_args: M1 = (),
+        model1_args: M1 = (),
         cf1: Optional[NDArray[np.float64]] = None,
     ) -> None:
 
         if a0 is not None:
             if model1 is not None:
                 model1 = LeftTruncated(model1)
-                delayed_model_args = (a0, *delayed_model_args)
+                model1_args = (a0, *model1_args)
             else:
                 model = LeftTruncated(model)
                 model_args = (a0, *model_args)
@@ -241,8 +245,8 @@ class RunToFailure(Generic[M, M1]):
         self.args["model"] = model_args
         self.args["reward"] = (cf,)
         self.args["discount"] = (rate,)
-        if delayed_model_args is not None:
-            self.args["model1"] = delayed_model_args
+        if model1_args is not None:
+            self.args["model1"] = model1_args
         if cf1 is not None:
             self.args["reward1"] = (cf1,)
         self.nb_assets = nb_assets
@@ -255,9 +259,9 @@ class RunToFailure(Generic[M, M1]):
             reward_args=self.args["reward"],
             discount_rate=rate,
             model1=self.model1,
-            delayed_model_args=self.args["model1"],
+            model1_args=self.args["model1"],
             reward1=run_to_failure_cost,
-            delayed_reward_args=self.args["reward1"],
+            reward1_args=self.args["reward1"],
         )
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:

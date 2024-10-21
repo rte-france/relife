@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, fields
-from typing import Iterator, Optional, TypeVarTuple
+from typing import Iterator, Optional, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,17 +9,17 @@ from relife2.model import LifetimeModel
 from relife2.renewal.discounts import Discount
 from relife2.renewal.rewards import Reward
 
-ModelArgs = TypeVarTuple("ModelArgs")
-DelayedModelArgs = TypeVarTuple("DelayedModelArgs")
-RewardArgs = TypeVarTuple("RewardArgs")
-DelayedRewardArgs = TypeVarTuple("DelayedRewardArgs")
-DiscountingArgs = TypeVarTuple("DiscountingArgs")
+M = TypeVar("M", tuple[NDArray[np.float64], ...], tuple[()])
+M1 = TypeVar("M1", tuple[NDArray[np.float64], ...], tuple[()])
+R = TypeVar("R", tuple[NDArray[np.float64], ...], tuple[()])
+R1 = TypeVar("R1", tuple[NDArray[np.float64], ...], tuple[()])
+D = TypeVar("D", tuple[NDArray[np.float64], ...], tuple[()])
 
 
 def model_rvs(
-    model: LifetimeModel[*ModelArgs],
+    model: LifetimeModel[*M],
     size: int,
-    args: tuple[*ModelArgs] | tuple[()] = (),
+    args: M = (),
 ):
     return model.rvs(*args, size=size)
 
@@ -27,7 +27,7 @@ def model_rvs(
 def rvs_size(
     nb_samples: int,
     nb_assets: int,
-    model_args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
+    model_args: M = (),
 ):
     if bool(model_args) and model_args[0].ndim == 2:
         size = nb_samples  # rvs size
@@ -37,17 +37,17 @@ def rvs_size(
 
 
 def compute_rewards(
-    reward: Reward[*RewardArgs],
+    reward: Reward[*R],
     lifetimes: NDArray[np.float64],
-    args: tuple[*RewardArgs] | tuple[()] = (),
+    args: R = (),
 ):
     return reward(lifetimes, *args)
 
 
 def compute_events(
     lifetimes: NDArray[np.float64],
-    model: LifetimeModel,
-    model_args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
+    model: LifetimeModel[*M],
+    model_args: M = (),
 ) -> NDArray[np.bool_]:
     """
     tag lifetimes as being right censored or not depending on model used
@@ -61,14 +61,14 @@ def compute_events(
 
 
 def lifetimes_generator(
-    model: LifetimeModel[*ModelArgs],
+    model: LifetimeModel[*M],
     nb_samples: int,
     nb_assets: int,
     end_time: float,
     *,
-    model_args: tuple[*ModelArgs] | tuple[()] = (),
-    delayed_model: Optional[LifetimeModel[*DelayedModelArgs]] = None,
-    delayed_model_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
+    model_args: M = (),
+    model1: Optional[LifetimeModel[*M1]] = None,
+    model1_args: M1 = (),
 ) -> Iterator[
     tuple[
         NDArray[np.float64],
@@ -93,9 +93,9 @@ def lifetimes_generator(
         still_valid = event_times < end_time
         return lifetimes, event_times, events, still_valid
 
-    if delayed_model:
-        size = rvs_size(nb_samples, nb_assets, delayed_model_args)
-        gen_data = sample_routine(delayed_model, delayed_model_args)
+    if model1:
+        size = rvs_size(nb_samples, nb_assets, model1_args)
+        gen_data = sample_routine(model1, model1_args)
         if np.any(gen_data[-1]) > 0:
             yield gen_data
         else:
@@ -112,20 +112,20 @@ def lifetimes_generator(
 
 
 def lifetimes_rewards_generator(
-    model: LifetimeModel[*ModelArgs],
-    reward: Reward[*RewardArgs],
-    discounting: Discount[*DiscountingArgs],
+    model: LifetimeModel[*M],
+    reward: Reward[*R],
+    discounting: Discount[*D],
     nb_samples: int,
     nb_assets: int,
     end_time: float,
     *,
-    model_args: tuple[*ModelArgs] | tuple[()] = (),
-    reward_args: tuple[*RewardArgs] | tuple[()] = (),
-    discount_args: tuple[*DiscountingArgs] | tuple[()] = (),
-    delayed_model: Optional[LifetimeModel[*DelayedModelArgs]] = None,
-    delayed_model_args: tuple[*DelayedModelArgs] | tuple[()] = (),
-    delayed_reward: Optional[Reward[*DelayedRewardArgs]] = None,
-    delayed_reward_args: tuple[*DelayedRewardArgs] | tuple[()] = (),
+    model_args: M = (),
+    reward_args: R = (),
+    discount_args: D = (),
+    model1: Optional[LifetimeModel[*M1]] = None,
+    model1_args: M1 = (),
+    reward1: Optional[Reward[*R1]] = None,
+    reward1_args: R1 = (),
 ) -> Iterator[
     tuple[
         NDArray[np.float64],
@@ -143,8 +143,8 @@ def lifetimes_rewards_generator(
         nb_assets,
         end_time,
         model_args=model_args,
-        delayed_model=delayed_model,
-        delayed_model_args=delayed_model_args,
+        model1=model1,
+        model1_args=model1_args,
     )
 
     def sample_routine(target_reward, args):
@@ -155,13 +155,13 @@ def lifetimes_rewards_generator(
         total_rewards += rewards * discountings
         return lifetimes, event_times, total_rewards, events, still_valid
 
-    if delayed_reward is None:
-        delayed_reward = reward
-        delayed_reward_args = reward_args
+    if reward1 is None:
+        reward1 = reward
+        reward1_args = reward_args
 
-    if delayed_model:
+    if model1:
         try:
-            yield sample_routine(delayed_reward, delayed_reward_args)
+            yield sample_routine(reward1, reward1_args)
         except StopIteration:
             return
 
