@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field, fields
 from typing import Iterator, Optional, TypeVar
 
 import numpy as np
@@ -173,38 +172,45 @@ def lifetimes_rewards_generator(
     return
 
 
-@dataclass
+class Array1DField:
+    """
+    data descriptor preventing field attribute to be set
+    + avoid repeating code when using property decorator
+    """
+
+    def __init__(self, *, dtype):
+        self._default = np.array([], dtype=dtype)
+
+    def __set_name__(self, owner, name):
+        self.public_name = name
+        self.private_name = "_" + name
+
+    def __get__(self, obj, type):
+        if obj is None:
+            return self._default
+        return getattr(obj, self.private_name, self._default)
+
+    def __set__(self, obj, value):
+        raise AttributeError(f"{self.public_name} can't be set")
+
+
 class CountData:
-    samples: NDArray[np.int64] = field(repr=False)  # samples index
-    assets: NDArray[np.int64] = field(repr=False)  # assets index
-    order: NDArray[np.int64] = field(repr=False)  # order index
-    event_times: NDArray[np.float64] = field(repr=False)
+    """
+    descriptor so that they can only be filled through populate method
+    in order to control way CountData object are made
+    only _hidden version can be set
+    """
 
-    nb_samples: int = field(init=False)
-    nb_assets: int = field(init=False)
-    samples_index: NDArray[np.int64] = field(
-        init=False, repr=False
-    )  # unique samples index
-    assets_index: NDArray[np.int64] = field(
-        init=False, repr=False
-    )  # unique assets index
+    samples: Array1DField = Array1DField(dtype=np.int64)
+    assets: Array1DField = Array1DField(dtype=np.int64)
+    order: Array1DField = Array1DField(dtype=np.int64)
+    event_times: Array1DField = Array1DField(dtype=np.float64)
 
-    def __post_init__(self):
-        fields_values = [
-            getattr(self, _field.name) for _field in fields(self) if _field.init
-        ]
-        if not all(arr.ndim == 1 for arr in fields_values):
-            raise ValueError("All array values must be 1d")
-        if not len(set(arr.shape[0] for arr in fields_values)) == 1:
-            raise ValueError("All array values must have the same shape")
-
-        self.samples_index = np.unique(self.samples)
-        self.assets_index = np.unique(self.assets)
-        self.nb_samples = len(self.samples_index)
-        self.nb_assets = len(self.assets_index)
-
-    def __len__(self) -> int:
-        return self.nb_samples * self.nb_assets
+    def __init__(self, nb_samples: int, nb_assets: int):
+        self.nb_samples = nb_samples
+        self.nb_assets = nb_assets
+        self._populate_call = 0
+        self.fields = []
 
     def number_of_events(
         self, sample: int
@@ -222,28 +228,59 @@ class CountData:
     def iter(self):
         return CountDataIterable(self)
 
+    def populate(
+        self,
+        samples: NDArray[np.int64],
+        assets: NDArray[np.int64],
+        event_times: NDArray[np.float64],
+        **kwdata: NDArray[np.float64 | np.bool_],
+    ):
+        if not set(self.fields) != set(kwdata.keys()):
+            raise ValueError(f"expected only {set(self.fields)}")
+
+        fields_values = (samples, assets, event_times, *kwdata.values())
+        if not all(arr.ndim == 1 for arr in fields_values):
+            raise ValueError("all arrays must be 1d")
+        if not len(set(arr.shape[0] for arr in fields_values)) == 1:
+            raise ValueError("all arrays must have the same shape")
+
+        self._samples = np.concatenate((self.samples, samples))
+        self._assets = np.concatenate((self.assets, assets))
+        self._order = np.concatenate(
+            (self.order, np.ones_like(samples) * self._populate_call)
+        )
+        self._event_times = np.concatenate((self.event_times, event_times))
+
+        for k, v in kwdata.items():
+            old_v = getattr(self, k)
+            setattr(self, "_" + k, np.concatenate((old_v, v)))
+
+        self._populate_call += 1
+
 
 class CountDataIterable:
     def __init__(self, data: CountData):
-        self.data = data
 
-        sorted_index = np.lexsort(
-            (self.data.order, self.data.assets, self.data.samples)
-        )
+        self.samples_index = np.unique(data.samples)
+        self.assets_index = np.unique(data.assets)
+        self.nb_samples = len(self.samples_index)
+        self.nb_assets = len(self.assets_index)
+
+        sorted_index = np.lexsort((data.order, data.assets, data.samples))
+
         self.sorted_fields = {
-            _field.name: getattr(self.data, _field.name).copy()[sorted_index]
-            for _field in fields(self.data)
-            if _field.init
+            field_name: getattr(data, field_name).copy()[sorted_index]
+            for field_name in data.fields
         }
 
     def __len__(self) -> int:
-        return self.data.nb_samples * self.data.nb_assets
+        return self.nb_samples * self.nb_assets
 
     def __iter__(self) -> Iterator[tuple[int, int, dict[str, NDArray[np.float64]]]]:
 
-        for sample in self.data.samples_index:
+        for sample in self.samples_index:
             sample_mask = self.sorted_fields["samples"] == sample
-            for asset in self.data.assets_index:
+            for asset in self.assets_index:
                 asset_mask = self.sorted_fields["assets"][sample_mask] == asset
                 values_dict = {
                     k: v[sample_mask][asset_mask]
@@ -253,17 +290,23 @@ class CountDataIterable:
                 yield int(sample), int(asset), values_dict
 
 
-@dataclass
 class RenewalData(CountData):
-    lifetimes: NDArray[np.float64] = field(repr=False)
-    events: NDArray[np.bool_] = field(
-        repr=False
+    lifetimes: Array1DField = Array1DField(dtype=np.float64)
+    events: Array1DField = Array1DField(
+        dtype=np.bool_
     )  # event indicators (right censored or not)
 
+    def __init__(self, nb_samples: int, nb_assets: int):
+        super().__init__(nb_samples, nb_assets)
+        self.fields.extend(["lifetimes", "events"])
 
-@dataclass
+
 class RenewalRewardData(RenewalData):
-    total_rewards: NDArray[np.float64] = field(repr=False)
+    total_rewards: Array1DField = Array1DField(dtype=np.float64)
+
+    def __init__(self, nb_samples: int, nb_assets: int):
+        super().__init__(nb_samples, nb_assets)
+        self.fields.append("total_rewards")
 
     def cum_total_rewards(
         self, sample: int

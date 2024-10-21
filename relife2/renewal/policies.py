@@ -117,6 +117,8 @@ class OneCycleRunToFailure(Generic[M]):
         self,
         nb_samples: int,
     ):
+
+        count_data = RenewalRewardData(nb_samples, self.nb_assets)
         generator = lifetimes_rewards_generator(
             self.model,
             self.reward,
@@ -129,19 +131,18 @@ class OneCycleRunToFailure(Generic[M]):
             discount_args=self.args["discount"],
         )
 
-        *gen_data, still_valid = next(generator)
+        lifetimes, event_times, total_rewards, events, still_valid = next(generator)
         assets, samples = np.where(still_valid)
-        assets.astype(np.int64)
-        samples.astype(np.int64)
-        lifetimes = gen_data[0][still_valid]
-        event_times = gen_data[1][still_valid]
-        total_rewards = gen_data[2][still_valid]
-        events = gen_data[3][still_valid]
-        order = np.zeros_like(lifetimes)
-
-        return RenewalRewardData(
-            samples, assets, order, event_times, lifetimes, events, total_rewards
+        count_data.populate(
+            samples,
+            assets,
+            event_times[still_valid],
+            lifetimes=lifetimes[still_valid],
+            events=events[still_valid],
+            total_rewards=total_rewards[still_valid],
         )
+
+        return count_data
 
 
 class OneCycleAgeReplacementPolicy(Generic[M]):

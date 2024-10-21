@@ -127,35 +127,25 @@ class RenewalProcess(Generic[M, M1]):
         self,
         nb_samples: int,
         end_time: float,
-    ) -> RenewalRewardData:
+    ) -> RenewalData:
 
-        lifetimes = np.array([], dtype=np.float64)
-        event_times = np.array([], dtype=np.float64)
-        events = np.array([], dtype=np.bool_)
-        samples = np.array([], dtype=np.int64)
-        assets = np.array([], dtype=np.int64)
-        order = np.array([], dtype=np.int64)
+        count_data = RenewalData(nb_samples, self.nb_assets)
 
-        for i, (*gen_data, still_valid) in enumerate(
-            lifetimes_generator(
-                self.model,
-                nb_samples,
-                self.nb_assets,
-                end_time,
-                model_args=self.args["model"],
-                model1=self.model1,
-                model1_args=self.args["model1"],
-            )
+        for lifetimes, event_times, events, still_valid in lifetimes_generator(
+            self.model,
+            nb_samples,
+            self.nb_assets,
+            end_time,
+            model_args=self.args["model"],
+            model1=self.model1,
+            model1_args=self.args["model1"],
         ):
-            lifetimes = np.concatenate((lifetimes, gen_data[0][still_valid]))
-            event_times = np.concatenate((event_times, gen_data[1][still_valid]))
-            events = np.concatenate((events, gen_data[2][still_valid]))
-            order = np.ones_like(lifetimes) * i
-            _assets, _samples = np.where(still_valid)
-            samples = np.concatenate((samples, _samples))
-            assets = np.concatenate((assets, _assets))
+            assets, samples = np.where(still_valid)
+            count_data.populate(
+                samples, assets, event_times[still_valid], events=events[still_valid]
+            )
 
-        return RenewalData(samples, assets, order, event_times, lifetimes, events)
+        return count_data
 
 
 def reward_partial_expectation(
@@ -322,43 +312,38 @@ class RenewalRewardProcess(RenewalProcess[M, M1], Generic[M, M1, R, R1]):
         return np.where(mask, q0, q)
 
     def sample(self, nb_samples: int, end_time: float) -> RenewalRewardData:
-        lifetimes = np.array([], dtype=np.float64)
-        event_times = np.array([], dtype=np.float64)
-        total_rewards = np.array([], dtype=np.float64)
-        events = np.array([], dtype=np.bool_)
-        samples = np.array([], dtype=np.int64)
-        assets = np.array([], dtype=np.int64)
-        order = np.array([], dtype=np.int64)
 
-        for i, (
-            *gen_data,
+        count_data = RenewalRewardData(nb_samples, self.nb_assets)
+
+        for (
+            lifetimes,
+            event_times,
+            total_rewards,
+            events,
             still_valid,
-        ) in enumerate(
-            lifetimes_rewards_generator(
-                self.model,
-                self.reward,
-                exponential_discount,
-                nb_samples,
-                self.nb_assets,
-                end_time=end_time,
-                model_args=self.args["model"],
-                reward_args=self.args["reward"],
-                discount_args=self.args["discount"],
-                model1=self.model1,
-                model1_args=self.args["model1"],
-                reward1=self.reward1,
-                reward1_args=self.args["reward1"],
-            )
+        ) in lifetimes_rewards_generator(
+            self.model,
+            self.reward,
+            exponential_discount,
+            nb_samples,
+            self.nb_assets,
+            end_time=end_time,
+            model_args=self.args["model"],
+            reward_args=self.args["reward"],
+            discount_args=self.args["discount"],
+            model1=self.model1,
+            model1_args=self.args["model1"],
+            reward1=self.reward1,
+            reward1_args=self.args["reward1"],
         ):
-            lifetimes = np.concatenate((lifetimes, gen_data[0][still_valid]))
-            event_times = np.concatenate((event_times, gen_data[1][still_valid]))
-            total_rewards = np.concatenate((total_rewards, gen_data[2][still_valid]))
-            events = np.concatenate((events, gen_data[3][still_valid]))
-            order = np.concatenate((order, np.ones_like(lifetimes) * i))
-            _assets, _samples = np.where(still_valid)
-            samples = np.concatenate((samples, _samples))
-            assets = np.concatenate((assets, _assets))
+            assets, samples = np.where(still_valid)
+            count_data.populate(
+                samples,
+                assets,
+                event_times[still_valid],
+                lifetimes=lifetimes[still_valid],
+                events=events[still_valid],
+                total_rewards=total_rewards[still_valid],
+            )
 
-        return RenewalRewardData(
-            samples, assets, order, event_times, lifetimes, events, total_rewards
-        )
+        return count_data
