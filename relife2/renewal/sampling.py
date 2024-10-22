@@ -1,4 +1,5 @@
-from typing import Iterator, Optional, TypeVar
+from dataclasses import field, fields, dataclass
+from typing import Iterator, Optional, TypeVar, Generic
 
 import numpy as np
 from numpy.typing import NDArray
@@ -172,45 +173,38 @@ def lifetimes_rewards_generator(
     return
 
 
-class Array1DField:
-    """
-    data descriptor preventing field attribute to be set
-    + avoid repeating code when using property decorator
-    """
-
-    def __init__(self, *, dtype):
-        self._default = np.array([], dtype=dtype)
-
-    def __set_name__(self, owner, name):
-        self.public_name = name
-        self.private_name = "_" + name
-
-    def __get__(self, obj, type):
-        if obj is None:
-            return self._default
-        return getattr(obj, self.private_name, self._default)
-
-    def __set__(self, obj, value):
-        raise AttributeError(f"{self.public_name} can't be set")
-
-
+@dataclass
 class CountData:
-    """
-    descriptor so that they can only be filled through populate method
-    in order to control way CountData object are made
-    only _hidden version can be set
-    """
+    samples: NDArray[np.int64] = field(repr=False)  # samples index
+    assets: NDArray[np.int64] = field(repr=False)  # assets index
+    order: NDArray[np.int64] = field(repr=False)  # order index
+    event_times: NDArray[np.float64] = field(repr=False)
 
-    samples: Array1DField = Array1DField(dtype=np.int64)
-    assets: Array1DField = Array1DField(dtype=np.int64)
-    order: Array1DField = Array1DField(dtype=np.int64)
-    event_times: Array1DField = Array1DField(dtype=np.float64)
+    nb_samples: int = field(init=False)
+    nb_assets: int = field(init=False)
+    samples_index: NDArray[np.int64] = field(
+        init=False, repr=False
+    )  # unique samples index
+    assets_index: NDArray[np.int64] = field(
+        init=False, repr=False
+    )  # unique assets index
 
-    def __init__(self, nb_samples: int, nb_assets: int):
-        self.nb_samples = nb_samples
-        self.nb_assets = nb_assets
-        self._populate_call = 0
-        self.fields = []
+    def __post_init__(self):
+        fields_values = [
+            getattr(self, _field.name) for _field in fields(self) if _field.init
+        ]
+        if not all(arr.ndim == 1 for arr in fields_values):
+            raise ValueError("All array values must be 1d")
+        if not len(set(arr.shape[0] for arr in fields_values)) == 1:
+            raise ValueError("All array values must have the same shape")
+
+        self.samples_index = np.unique(self.samples)
+        self.assets_index = np.unique(self.assets)
+        self.nb_samples = len(self.samples_index)
+        self.nb_assets = len(self.assets_index)
+
+    def __len__(self) -> int:
+        return self.nb_samples * self.nb_assets
 
     def number_of_events(
         self, sample: int
@@ -228,59 +222,28 @@ class CountData:
     def iter(self):
         return CountDataIterable(self)
 
-    def populate(
-        self,
-        samples: NDArray[np.int64],
-        assets: NDArray[np.int64],
-        event_times: NDArray[np.float64],
-        **kwdata: NDArray[np.float64 | np.bool_],
-    ):
-        if not set(self.fields) != set(kwdata.keys()):
-            raise ValueError(f"expected only {set(self.fields)}")
-
-        fields_values = (samples, assets, event_times, *kwdata.values())
-        if not all(arr.ndim == 1 for arr in fields_values):
-            raise ValueError("all arrays must be 1d")
-        if not len(set(arr.shape[0] for arr in fields_values)) == 1:
-            raise ValueError("all arrays must have the same shape")
-
-        self._samples = np.concatenate((self.samples, samples))
-        self._assets = np.concatenate((self.assets, assets))
-        self._order = np.concatenate(
-            (self.order, np.ones_like(samples) * self._populate_call)
-        )
-        self._event_times = np.concatenate((self.event_times, event_times))
-
-        for k, v in kwdata.items():
-            old_v = getattr(self, k)
-            setattr(self, "_" + k, np.concatenate((old_v, v)))
-
-        self._populate_call += 1
-
 
 class CountDataIterable:
     def __init__(self, data: CountData):
+        self.data = data
 
-        self.samples_index = np.unique(data.samples)
-        self.assets_index = np.unique(data.assets)
-        self.nb_samples = len(self.samples_index)
-        self.nb_assets = len(self.assets_index)
-
-        sorted_index = np.lexsort((data.order, data.assets, data.samples))
-
+        sorted_index = np.lexsort(
+            (self.data.order, self.data.assets, self.data.samples)
+        )
         self.sorted_fields = {
-            field_name: getattr(data, field_name).copy()[sorted_index]
-            for field_name in data.fields
+            _field.name: getattr(self.data, _field.name).copy()[sorted_index]
+            for _field in fields(self.data)
+            if _field.init
         }
 
     def __len__(self) -> int:
-        return self.nb_samples * self.nb_assets
+        return self.data.nb_samples * self.data.nb_assets
 
     def __iter__(self) -> Iterator[tuple[int, int, dict[str, NDArray[np.float64]]]]:
 
-        for sample in self.samples_index:
+        for sample in self.data.samples_index:
             sample_mask = self.sorted_fields["samples"] == sample
-            for asset in self.assets_index:
+            for asset in self.data.assets_index:
                 asset_mask = self.sorted_fields["assets"][sample_mask] == asset
                 values_dict = {
                     k: v[sample_mask][asset_mask]
@@ -290,23 +253,101 @@ class CountDataIterable:
                 yield int(sample), int(asset), values_dict
 
 
-class RenewalData(CountData):
-    lifetimes: Array1DField = Array1DField(dtype=np.float64)
-    events: Array1DField = Array1DField(
-        dtype=np.bool_
+@dataclass
+class RenewalData(CountData, Generic[M, M1]):
+    lifetimes: NDArray[np.float64] = field(repr=False)
+    events: NDArray[np.bool_] = field(
+        repr=False
     )  # event indicators (right censored or not)
+    model_args: M = field(repr=False)
+    model1_args: M1 = field(repr=False)
 
-    def __init__(self, nb_samples: int, nb_assets: int):
-        super().__init__(nb_samples, nb_assets)
-        self.fields.extend(["lifetimes", "events"])
+    def to_lifetime_data(self, t0: float = 0, tf: float = None, sample: int = None):
+        """Builds a lifetime data sample.
+
+        Parameters
+        ----------
+        t0 : float, optional
+            Start of the observation period, by default 0.
+        tf : float, optional
+            End of the observation period, by default the time at the end of the
+            observation.
+        sample : int, optional
+            Index of the sample, by default all sample are mixed.
+
+        Returns
+        -------
+        LifetimeData
+            The lifetime data sample built from the observation period `[t0,tf]`
+            of the renewal process.
+
+        Raises
+        ------
+        ValueError
+            if `t0` is greater than `tf`.
+        """
+        if t0 >= tf:
+            raise ValueError("`t0` must be strictly lesser than `tf`")
+
+        # Filtering sample and sorting by times
+        s = self.samples == sample if sample is not None else Ellipsis
+        order = np.argsort(self.times[s])
+        indices = self.indices[s][order]
+        samples = self.samples[s][order]
+        uindices = np.ravel_multi_index(
+            (indices, samples), (self.n_indices, self.n_samples)
+        )
+        times = self.times[s][order]
+        durations = self.durations[s][order] + self.a0[s][order]
+        events = self.events[s][order]
+
+        # Indices of interest
+        ind0 = (times > t0) & (
+            times <= tf
+        )  # Indices of replacement occuring inside the obervation window
+        ind1 = (
+            times > tf
+        )  # Indices of replacement occuring after the observation window which include right censoring
+
+        # Replacements occuring inside the observation window
+        time0 = durations[ind0]
+        event0 = events[ind0]
+        entry0 = np.zeros(time0.size)
+        _, LT = np.unique(
+            uindices[ind0], return_index=True
+        )  # get the indices of the first replacements ocurring in the observation window
+        b0 = (
+            times[ind0][LT] - durations[ind0][LT]
+        )  # time at birth for the firt replacements
+        entry0[LT] = np.where(b0 >= t0, 0, t0 - b0)
+        args0 = args_take(indices[ind0], *self.args)
+
+        # Right censoring
+        _, RC = np.unique(uindices[ind1], return_index=True)
+        bf = (
+            times[ind1][RC] - durations[ind1][RC]
+        )  # time at birth for the right censored
+        b1 = bf[
+            bf < tf
+        ]  # ensure that time of birth for the right censored is not equal to tf.
+        time1 = tf - b1
+        event1 = np.zeros(b1.size)
+        entry1 = np.where(b1 >= t0, 0, t0 - b1)
+        args1 = args_take(indices[ind1][RC][bf < tf], *self.args)
+
+        # Concatenate
+        time = np.concatenate((time0, time1))
+        event = np.concatenate((event0, event1))
+        entry = np.concatenate((entry0, entry1))
+        args = tuple(
+            np.concatenate((arg0, arg1), axis=0) for arg0, arg1 in zip(args0, args1)
+        )
+        return LifetimeData(time, event, entry, args)
 
 
-class RenewalRewardData(RenewalData):
-    total_rewards: Array1DField = Array1DField(dtype=np.float64)
-
-    def __init__(self, nb_samples: int, nb_assets: int):
-        super().__init__(nb_samples, nb_assets)
-        self.fields.append("total_rewards")
+@dataclass
+class RenewalRewardData(RenewalData[M, M1], Generic[M, M1]):
+    total_rewards: NDArray[np.float64] = field(repr=False)
 
     def cum_total_rewards(
         self, sample: int
