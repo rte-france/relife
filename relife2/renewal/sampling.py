@@ -177,7 +177,9 @@ def lifetimes_rewards_generator(
 class CountData:
     samples: NDArray[np.int64] = field(repr=False)  # samples index
     assets: NDArray[np.int64] = field(repr=False)  # assets index
-    order: NDArray[np.int64] = field(repr=False)  # order index
+    order: NDArray[np.int64] = field(
+        repr=False
+    )  # order index (order in generation process)
     event_times: NDArray[np.float64] = field(repr=False)
 
     nb_samples: int = field(init=False)
@@ -259,67 +261,59 @@ class RenewalData(CountData, Generic[M, M1]):
     events: NDArray[np.bool_] = field(
         repr=False
     )  # event indicators (right censored or not)
-    model_args: M = field(repr=False)
-    model1_args: M1 = field(repr=False)
 
-    def to_lifetime_data(self, t0: float = 0, tf: float = None, sample: int = None):
-        """Builds a lifetime data sample.
+    # TODO: remove model, model_args from there. Not needed
+    # 1. if init_params uses *args (see model.py) then
+    # 2. init_params in Regression does not rely on covar stored in Sample
+    # 3. Sample does not need to store args
+    # 4. to_lifetime_data only returns a object constructing on time, event, entry only
+    def to_lifetime_data(
+        self,
+        model: LifetimeModel[*M],
+        model_args: M = (),
+        t0: float = 0,
+        tf: Optional[float] = None,
+        sample: Optional[int] = None,
+        model1: Optional[LifetimeModel[*M1]] = None,
+        model1_args: M1 = (),
+    ):
 
-        Parameters
-        ----------
-        t0 : float, optional
-            Start of the observation period, by default 0.
-        tf : float, optional
-            End of the observation period, by default the time at the end of the
-            observation.
-        sample : int, optional
-            Index of the sample, by default all sample are mixed.
-
-        Returns
-        -------
-        LifetimeData
-            The lifetime data sample built from the observation period `[t0,tf]`
-            of the renewal process.
-
-        Raises
-        ------
-        ValueError
-            if `t0` is greater than `tf`.
-        """
         if t0 >= tf:
             raise ValueError("`t0` must be strictly lesser than `tf`")
 
         # Filtering sample and sorting by times
         s = self.samples == sample if sample is not None else Ellipsis
-        order = np.argsort(self.times[s])
-        indices = self.indices[s][order]
+        order = np.argsort(self.event_times[s])
+        indices = self.assets[s][order]
         samples = self.samples[s][order]
         uindices = np.ravel_multi_index(
-            (indices, samples), (self.n_indices, self.n_samples)
+            (indices, samples), (self.nb_assets, self.nb_samples)
         )
-        times = self.times[s][order]
-        durations = self.durations[s][order] + self.a0[s][order]
+        event_times = self.event_times[s][order]
+        lifetimes = self.lifetimes[s][order]
         events = self.events[s][order]
+        order = self.order[s][order]
 
         # Indices of interest
-        ind0 = (times > t0) & (
-            times <= tf
+        ind0 = (event_times > t0) & (
+            event_times <= tf
         )  # Indices of replacement occuring inside the obervation window
         ind1 = (
-            times > tf
+            event_times > tf
         )  # Indices of replacement occuring after the observation window which include right censoring
 
         # Replacements occuring inside the observation window
-        time0 = durations[ind0]
+        time0 = lifetimes[ind0]
         event0 = events[ind0]
         entry0 = np.zeros(time0.size)
         _, LT = np.unique(
             uindices[ind0], return_index=True
         )  # get the indices of the first replacements ocurring in the observation window
         b0 = (
-            times[ind0][LT] - durations[ind0][LT]
+            event_times[ind0][LT] - lifetimes[ind0][LT]
         )  # time at birth for the firt replacements
         entry0[LT] = np.where(b0 >= t0, 0, t0 - b0)
+
         args0 = args_take(indices[ind0], *self.args)
 
         # Right censoring

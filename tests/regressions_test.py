@@ -85,7 +85,7 @@ def fit_model(model, data):
         data[0, :],
         event=data[1, :] == 1,
         entry=data[2, :],
-        args=(
+        model_args=(
             zscore(
                 np.column_stack(
                     [boxcox(covar_values)[0] for covar_values in data[3:, :]]

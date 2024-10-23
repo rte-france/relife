@@ -443,10 +443,110 @@ class Likelihood(ParametricComponent, ABC):
         """
 
 
+class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
+    # def __init_subclass__(cls, **kwargs):
+    #     """
+    #     TODO : something to parse *args names and to fill args_names and nb_args
+    #     see Descriptors
+    #     """
+    #
+    # @property
+    # def args_names(self):
+    #     return self._args.names
+    #
+    # @property
+    # def nb_args(self):
+    #     return len(self._args)
+
+    @abstractmethod
+    def init_params(self, lifetimes: LifetimeSample) -> None:
+        """"""
+
+    # or init_params(self, lifetimes: LifetimeSample, *args : *Args) -> None ?
+
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        model_args: tuple[*Args] | tuple[()] = (),
+        inplace: bool = True,
+        **kwargs: Any,
+    ) -> NDArray[np.float64]:
+        """
+        Args:
+            time ():
+            event ():
+            entry ():
+            departure ():
+            model_args ():
+            inplace ():
+            **kwargs ():
+
+        Returns:
+        """
+        observed_lifetimes, truncations = lifetime_factory_template(
+            time,
+            event,
+            entry,
+            departure,
+            model_args,  # must be removed (constraint because of Regression, consequence in to_lifetime_rvs)
+        )
+
+        optimized_model = self.copy()
+        optimized_model.init_params(observed_lifetimes)
+        # or just optimized_model.init_params(observed_lifetimes, *model_args)
+
+        likelihood = LikelihoodFromLifetimes(
+            optimized_model,
+            observed_lifetimes,
+            truncations,
+        )
+
+        minimize_kwargs = {
+            "method": kwargs.get("method", "L-BFGS-B"),
+            "constraints": kwargs.get("constraints", ()),
+            "tol": kwargs.get("tol", None),
+            "callback": kwargs.get("callback", None),
+            "options": kwargs.get("options", None),
+            "bounds": kwargs.get("bounds", optimized_model.params_bounds),
+            "x0": kwargs.get("x0", optimized_model.params),
+        }
+
+        optimizer = minimize(
+            likelihood.negative_log,
+            minimize_kwargs.pop("x0"),
+            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
+            **minimize_kwargs,
+        )
+
+        if inplace:
+            self.init_params(observed_lifetimes)
+            # or just self.init_params(observed_lifetimes, *model_args)
+            self.params = likelihood.params
+
+        return optimizer.x
+
+    def __getattribute__(self, item):
+        """control if params are set"""
+
+        if (
+            not item.startswith("_")
+            and not not item.startswith("__")
+            and hasattr(LifetimeModel, item)
+        ):
+            if not self.all_params_set:
+                raise ValueError(
+                    f"Can't call {item} if one model params is not set. Instanciate fully parametrized model or fit it"
+                )
+        return super().__getattribute__(item)
+
+
 class LikelihoodFromLifetimes(Likelihood):
     def __init__(
         self,
-        model: "ParametricLifetimeModel",
+        model: ParametricLifetimeModel,
         observed_lifetimes: LifetimeSample,
         truncations: Truncations,
     ):
@@ -532,99 +632,3 @@ class LikelihoodFromLifetimes(Likelihood):
             + self._jac_left_censored_contribs(self.observed_lifetimes.left_censored)
             + self._jac_left_truncations_contribs(self.truncations.left)
         )
-
-
-class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
-    # def __init_subclass__(cls, **kwargs):
-    #     """
-    #     TODO : something to parse *args names and to fill args_names and nb_args
-    #     see Descriptors
-    #     """
-    #
-    # @property
-    # def args_names(self):
-    #     return self._args.names
-    #
-    # @property
-    # def nb_args(self):
-    #     return len(self._args)
-
-    @abstractmethod
-    def init_params(self, lifetimes: LifetimeSample) -> None:
-        """"""
-
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        event: Optional[NDArray[np.bool_]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-        args: tuple[NDArray[np.float64], ...] | tuple[()] = (),
-        inplace: bool = True,
-        **kwargs: Any,
-    ) -> NDArray[np.float64]:
-        """
-        Args:
-            time ():
-            event ():
-            entry ():
-            departure ():
-            args ():
-            inplace ():
-            **kwargs ():
-
-        Returns:
-        """
-        observed_lifetimes, truncations = lifetime_factory_template(
-            time,
-            event,
-            entry,
-            departure,
-            args,
-        )
-
-        optimized_model = self.copy()
-        optimized_model.init_params(observed_lifetimes)
-
-        likelihood = LikelihoodFromLifetimes(
-            optimized_model,
-            observed_lifetimes,
-            truncations,
-        )
-
-        minimize_kwargs = {
-            "method": kwargs.get("method", "L-BFGS-B"),
-            "constraints": kwargs.get("constraints", ()),
-            "tol": kwargs.get("tol", None),
-            "callback": kwargs.get("callback", None),
-            "options": kwargs.get("options", None),
-            "bounds": kwargs.get("bounds", optimized_model.params_bounds),
-            "x0": kwargs.get("x0", optimized_model.params),
-        }
-
-        optimizer = minimize(
-            likelihood.negative_log,
-            minimize_kwargs.pop("x0"),
-            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-            **minimize_kwargs,
-        )
-
-        if inplace:
-            self.init_params(observed_lifetimes)
-            self.params = likelihood.params
-
-        return optimizer.x
-
-    def __getattribute__(self, item):
-        """control if params are set"""
-
-        if (
-            not item.startswith("_")
-            and not not item.startswith("__")
-            and hasattr(LifetimeModel, item)
-        ):
-            if not self.all_params_set:
-                raise ValueError(
-                    f"Can't call {item} if one model params is not set. Instanciate fully parametrized model or fit it"
-                )
-        return super().__getattribute__(item)

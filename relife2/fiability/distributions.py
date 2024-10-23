@@ -155,10 +155,10 @@ class Gompertz(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def init_params(self, lifetime: LifetimeSample) -> None:
+    def init_params(self, lifetimes: LifetimeSample) -> None:
         param0 = np.empty(self.nb_params, dtype=float)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetime.rlc.values))
-        shape = np.exp(-rate * np.mean(lifetime.rlc.values))
+        rate = np.pi / (np.sqrt(6) * np.std(lifetimes.rlc.values))
+        shape = np.exp(-rate * np.mean(lifetimes.rlc.values))
         param0[0] = shape
         param0[1] = rate
         self.params = param0

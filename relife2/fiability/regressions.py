@@ -57,7 +57,9 @@ class Regression(
             baseline=baseline,
         )
 
-    def init_params(self, lifetimes: LifetimeSample) -> None:
+    def init_params(
+        self, lifetimes: LifetimeSample
+    ) -> None:  # why not adding covar, *args like in sf ?
         self.covar_effect.new_params(
             **{f"coef_{i}": 0.0 for i in range(lifetimes.rlc.args[0].shape[-1])}
         )
