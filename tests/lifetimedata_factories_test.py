@@ -42,20 +42,20 @@ def test_1d_data(example_1d_data):
     observed_lifetimes, truncations = factory()
 
     assert np.all(
-        observed_lifetimes.complete.ids == np.array([0, 2, 6]).astype(np.int64)
+        observed_lifetimes.complete.index == np.array([0, 2, 6]).astype(np.int64)
     )
     assert np.all(
         observed_lifetimes.complete.values
         == np.array([10, 9, 11]).astype(np.float64).reshape(-1, 1)
     )
 
-    assert np.all(observed_lifetimes.right_censored.ids == np.array([1, 3, 4, 5]))
+    assert np.all(observed_lifetimes.right_censored.index == np.array([1, 3, 4, 5]))
     assert np.all(
         observed_lifetimes.right_censored.values
         == np.array([11, 10, 12, 13]).astype(np.float64).reshape(-1, 1)
     )
 
-    assert np.all(truncations.left.ids == np.array([2, 3, 4, 5, 6]).astype(np.int64))
+    assert np.all(truncations.left.index == np.array([2, 3, 4, 5, 6]).astype(np.int64))
     assert np.all(
         truncations.left.values
         == np.array([3, 5, 3, 1, 9]).astype(np.float64).reshape(-1, 1)
@@ -92,21 +92,21 @@ def test_2d_data(example_2d_data):
     observed_lifetimes, truncations = factory()
 
     assert np.all(
-        observed_lifetimes.left_censored.ids == np.array([1]).astype(np.int64)
+        observed_lifetimes.left_censored.index == np.array([1]).astype(np.int64)
     )
     assert np.all(
         observed_lifetimes.left_censored.values
         == np.array([4]).astype(np.float64).reshape(-1, 1)
     )
 
-    assert np.all(observed_lifetimes.right_censored.ids == np.array([3]))
+    assert np.all(observed_lifetimes.right_censored.index == np.array([3]))
     assert np.all(
         observed_lifetimes.right_censored.values
         == np.array([7]).astype(np.float64).reshape(-1, 1)
     )
 
     assert np.all(
-        observed_lifetimes.interval_censored.ids
+        observed_lifetimes.interval_censored.index
         == np.array([0, 1, 3, 5, 6]).astype(np.int64)
     )
     assert np.all(
@@ -119,7 +119,7 @@ def test_2d_data(example_2d_data):
     assert np.all(
         intersect_lifetimes(truncations.left, observed_lifetimes.interval_censored)[
             1
-        ].ids
+        ].index
         == np.array([3, 5, 6]).astype(np.int64)
     )
 
@@ -137,6 +137,8 @@ def test_2d_data(example_2d_data):
         == np.array([7]).astype(np.float64).reshape(-1, 1)
     )
     assert np.all(
-        intersect_lifetimes(observed_lifetimes.right_censored, truncations.left)[0].ids
+        intersect_lifetimes(observed_lifetimes.right_censored, truncations.left)[
+            0
+        ].index
         == np.array([3]).astype(np.int64)
     )

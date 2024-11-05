@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.data import dataclass, lifetime_factory_template
+from relife2.data import lifetime_factory_template
 from relife2.io import array_factory, preprocess_lifetime_data
 
 
@@ -156,7 +156,7 @@ class KaplanMeier(NonParametricLifetimeEstimators):
         complete_observation_indic = np.zeros_like(
             observed_lifetimes.rlc.values
         )  # just creating an array to fill it next line
-        complete_observation_indic[observed_lifetimes.complete.ids] = 1
+        complete_observation_indic[observed_lifetimes.complete.index] = 1
         np.add.at(death_set, timeline_indexes, complete_observation_indic.flatten())
         x_in = np.histogram(
             np.concatenate(
@@ -237,7 +237,7 @@ class NelsonAalen(NonParametricLifetimeEstimators):
         complete_observation_indic = np.zeros_like(
             observed_lifetimes.rlc.values
         )  # just creating an array to fill it next line
-        complete_observation_indic[observed_lifetimes.complete.ids] = 1
+        complete_observation_indic[observed_lifetimes.complete.index] = 1
         np.add.at(death_set, timeline_indexes, complete_observation_indic.flatten())
         x_in = np.histogram(
             np.concatenate(

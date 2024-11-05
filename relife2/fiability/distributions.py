@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife2.data import LifetimeSample
+from relife2.data import LifetimeData
 from relife2.maths.integrations import shifted_laguerre
 from relife2.model import ParametricLifetimeModel
 
@@ -37,7 +37,7 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     def median(self):
         return super().median()
 
-    def init_params(self, lifetimes: LifetimeSample) -> None:
+    def init_params(self, lifetimes: LifetimeData) -> None:
         param0 = np.ones(self.nb_params)
         param0[-1] = 1 / np.median(lifetimes.rlc.values)
         self.params = param0
@@ -155,7 +155,7 @@ class Gompertz(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def init_params(self, lifetimes: LifetimeSample) -> None:
+    def init_params(self, lifetimes: LifetimeData) -> None:
         param0 = np.empty(self.nb_params, dtype=float)
         rate = np.pi / (np.sqrt(6) * np.std(lifetimes.rlc.values))
         shape = np.exp(-rate * np.mean(lifetimes.rlc.values))

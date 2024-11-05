@@ -1,9 +1,10 @@
 from functools import partial, wraps
-from typing import Callable, Generic, Optional, ParamSpec, TypedDict, TypeVar
+from typing import Callable, Optional, ParamSpec, TypedDict, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
+from relife2.data import RenewalData, RenewalRewardData
 from relife2.model import LifetimeModel
 from relife2.renewal.discounts import Discount, exponential_discount
 from relife2.renewal.equations import (
@@ -11,21 +12,29 @@ from relife2.renewal.equations import (
     renewal_equation_solver,
 )
 from relife2.renewal.rewards import Reward
-from relife2.renewal.sampling import (
-    RenewalData,
-    RenewalRewardData,
-    lifetimes_generator,
-    lifetimes_rewards_generator,
-)
+from relife2.renewal.sampling import lifetimes_generator, lifetimes_rewards_generator
 
-M = TypeVar("M", tuple[NDArray[np.float64], ...], tuple[()])
-M1 = TypeVar("M1", tuple[NDArray[np.float64], ...], tuple[()])
-R = TypeVar("R", tuple[NDArray[np.float64], ...], tuple[()])
-R1 = TypeVar("R1", tuple[NDArray[np.float64], ...], tuple[()])
-D = TypeVar("D", tuple[NDArray[np.float64], ...], tuple[()])
+ModelArgs = tuple[NDArray[np.float64], ...]
+Model1Args = tuple[NDArray[np.float64], ...]
+RewardArgs = tuple[NDArray[np.float64], ...]
+Reward1Args = tuple[NDArray[np.float64], ...]
+DiscountArgs = tuple[NDArray[np.float64], ...]
 
 P = ParamSpec("P")
 T = TypeVar("T")
+
+
+class RenewalProcessArgs(TypedDict):
+    model: ModelArgs
+    model1: Model1Args
+
+
+class RenewalRewardProcessArgs(TypedDict):
+    model: ModelArgs
+    model1: Model1Args
+    discount: DiscountArgs
+    reward: RewardArgs
+    reward1: Reward1Args
 
 
 def argscheck(method: Callable[P, T]) -> Callable[P, T]:
@@ -62,24 +71,17 @@ def argscheck(method: Callable[P, T]) -> Callable[P, T]:
     return wrapper
 
 
-class RenewalProcessArgs(TypedDict, Generic[M, M1]):
-    model: M
-    model1: M1
-
-
-# make partial in method only : do not split in multiple functions
-class RenewalProcess(Generic[M, M1]):
-
+class RenewalProcess:
     args: RenewalProcessArgs
 
     def __init__(
         self,
-        model: LifetimeModel[*M],
+        model: LifetimeModel[*ModelArgs],
         *,
         nb_assets: int = 1,
-        model_args: M = (),
-        model1: Optional[LifetimeModel[*M1]] = None,
-        delayed_model_args: M1 = (),
+        model_args: ModelArgs = (),
+        model1: Optional[LifetimeModel[*Model1Args]] = None,
+        delayed_model_args: Model1Args = (),
     ):
         self.model = model
         self.model1 = model1
@@ -127,7 +129,7 @@ class RenewalProcess(Generic[M, M1]):
         self,
         nb_samples: int,
         end_time: float,
-    ) -> RenewalData[M, M1]:
+    ) -> RenewalData:
 
         lifetimes = np.array([], dtype=np.float64)
         event_times = np.array([], dtype=np.float64)
@@ -162,53 +164,41 @@ class RenewalProcess(Generic[M, M1]):
             event_times,
             lifetimes,
             events,
-            self.args["model"],
-            self.args["model1"],
         )
 
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*M],
-    reward: Reward[*R],
-    discount: Discount[*D],
+    model: LifetimeModel[*ModelArgs],
+    reward: Reward[*RewardArgs],
+    discount: Discount[*DiscountArgs],
     *,
-    model_args: M = (),
-    reward_args: R = (),
-    discount_args: D = (),
+    model_args: ModelArgs = (),
+    reward_args: RewardArgs = (),
+    discount_args: DiscountArgs = (),
 ) -> np.ndarray:
-
     def func(x):
         return reward(x, *reward_args) * discount.factor(x, *discount_args)
 
     return model.ls_integrate(func, np.zeros_like(timeline), timeline, *model_args)
 
 
-class RenewalRewardProcessArgs(TypedDict, Generic[M, M1, R, R1, D]):
-    model: M
-    model1: M1
-    discount: D
-    reward: R
-    reward1: R1
-
-
-class RenewalRewardProcess(RenewalProcess[M, M1], Generic[M, M1, R, R1]):
-
+class RenewalRewardProcess(RenewalProcess):
     args: RenewalRewardProcessArgs
 
     def __init__(
         self,
-        model: LifetimeModel[*M],
-        reward: Reward[*R],
+        model: LifetimeModel[*ModelArgs],
+        reward: Reward[*RewardArgs],
         *,
         nb_assets: int = 1,
-        model_args: M = (),
-        reward_args: R = (),
+        model_args: ModelArgs = (),
+        reward_args: RewardArgs = (),
         discount_rate: float | NDArray[np.float64] = 0.0,
-        model1: Optional[LifetimeModel[*M1]] = None,
-        model1_args: M1 = (),
-        reward1: Optional[Reward[*R1]] = None,
-        reward1_args: R1 = (),
+        model1: Optional[LifetimeModel[*Model1Args]] = None,
+        model1_args: Model1Args = (),
+        reward1: Optional[Reward[*Reward1Args]] = None,
+        reward1_args: Reward1Args = (),
     ):
         super().__init__(model, nb_assets=nb_assets, model1=model1)
         self.reward = reward
@@ -330,7 +320,7 @@ class RenewalRewardProcess(RenewalProcess[M, M1], Generic[M, M1, R, R1]):
         ) / self.model.mean(*self.args["model"])
         return np.where(mask, q0, q)
 
-    def sample(self, nb_samples: int, end_time: float) -> RenewalRewardData[M, M1]:
+    def sample(self, nb_samples: int, end_time: float) -> RenewalRewardData:
         lifetimes = np.array([], dtype=np.float64)
         event_times = np.array([], dtype=np.float64)
         total_rewards = np.array([], dtype=np.float64)
@@ -375,7 +365,5 @@ class RenewalRewardProcess(RenewalProcess[M, M1], Generic[M, M1, R, R1]):
             event_times,
             lifetimes,
             events,
-            self.args["model"],
-            self.args["model1"],
             total_rewards,
         )

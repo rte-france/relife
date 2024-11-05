@@ -8,8 +8,12 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize, newton
 
-from relife2.data import LifetimeSample, Truncations, lifetime_factory_template
-from relife2.data.dataclass import Sample
+from relife2.data import (
+    IndexedData,
+    LifetimeData,
+    Truncations,
+    lifetime_factory_template,
+)
 from relife2.maths.integrations import gauss_legendre, quad_laguerre
 
 
@@ -205,10 +209,10 @@ class ParametricComponent:
         return copy.deepcopy(self)
 
 
-Args = TypeVarTuple("Args")
+ModelArgs = TypeVarTuple("ModelArgs")
 
 
-class LifetimeModel(Generic[*Args]):
+class LifetimeModel(Generic[*ModelArgs]):
     # def __init_subclass__(cls, **kwargs):
     #     """
     #     TODO : something to parse *args names and to fill args_names and nb_args
@@ -223,7 +227,7 @@ class LifetimeModel(Generic[*Args]):
     # def nb_args(self):
     #     return len(self._args)
 
-    def hf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def hf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         if "pdf" in self.__class__.__dict__ and "sf" in self.__class__.__dict__:
             return self.pdf(time, *args) / self.sf(time, *args)
         if "sf" in self.__class__.__dict__:
@@ -241,7 +245,7 @@ class LifetimeModel(Generic[*Args]):
             """
         )
 
-    def chf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def chf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         if "sf" in self.__class__.__dict__:
             return -np.log(self.sf(time, *args))
         if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
@@ -257,10 +261,10 @@ class LifetimeModel(Generic[*Args]):
         """
         )
 
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64], *args: *Args):
+    def ichf(self, cumulative_hazard_rate: NDArray[np.float64], *args: *ModelArgs):
         raise NotImplementedError
 
-    def sf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def sf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         if "chf" in self.__class__.__dict__:
             return np.exp(
                 -self.chf(
@@ -278,7 +282,7 @@ class LifetimeModel(Generic[*Args]):
         """
         )
 
-    def pdf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def pdf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         try:
             return self.sf(time, *args) * self.hf(time, *args)
         except NotImplementedError as err:
@@ -289,7 +293,7 @@ class LifetimeModel(Generic[*Args]):
             """
             ) from err
 
-    def mrl(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def mrl(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
 
         return self.ls_integrate(
             lambda x: x - time, time, np.array(np.inf), *args
@@ -322,7 +326,7 @@ class LifetimeModel(Generic[*Args]):
         # mrl_values = integration / self.sf(masked_time, *args)
         # return np.squeeze(ma.filled(mrl_values, 0.0))
 
-    def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
+    def moment(self, n: int, *args: *ModelArgs) -> NDArray[np.float64]:
         return self.ls_integrate(
             lambda x: x**n,
             np.array(0.0),
@@ -340,38 +344,38 @@ class LifetimeModel(Generic[*Args]):
         #     + quad_laguerre(integrand, upper_bound, ndim=2)
         # )
 
-    def mean(self, *args: *Args) -> NDArray[np.float64]:
+    def mean(self, *args: *ModelArgs) -> NDArray[np.float64]:
         return self.moment(1, *args)
 
-    def var(self, *args: *Args) -> NDArray[np.float64]:
+    def var(self, *args: *ModelArgs) -> NDArray[np.float64]:
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
     def isf(
         self,
         probability: NDArray[np.float64],
-        *args: *Args,
+        *args: *ModelArgs,
     ):
         return newton(
             lambda x: self.sf(x, *args) - probability,
             x0=np.zeros_like(probability),
         )
 
-    def cdf(self, time: NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def cdf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         return 1 - self.sf(time, *args)
 
     def rvs(
-        self, *args: *Args, size: Optional[int] = 1, seed: Optional[int] = None
+        self, *args: *ModelArgs, size: Optional[int] = 1, seed: Optional[int] = None
     ) -> NDArray[np.float64]:
         generator = np.random.RandomState(seed=seed)
         probability = generator.uniform(size=size)
         return self.isf(probability, *args)
 
     def ppf(
-        self, probability: NDArray[np.float64], *args: *Args
+        self, probability: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
-    def median(self, *args: *Args) -> NDArray[np.float64]:
+    def median(self, *args: *ModelArgs) -> NDArray[np.float64]:
         return self.ppf(np.array(0.5), *args)
 
     def ls_integrate(
@@ -379,7 +383,7 @@ class LifetimeModel(Generic[*Args]):
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
         a: NDArray[np.float64],
         b: NDArray[np.float64],
-        *args: *Args,
+        *args: *ModelArgs,
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
@@ -389,7 +393,7 @@ class LifetimeModel(Generic[*Args]):
         if isinstance(args_2d, np.ndarray):
             args_2d = (args_2d,)
 
-        def integrand(x: NDArray[np.float64], *_: *Args) -> NDArray[np.float64]:
+        def integrand(x: NDArray[np.float64], *_: *ModelArgs) -> NDArray[np.float64]:
             return np.atleast_2d(func(x) * self.pdf(x, *_))
 
         if np.all(np.isinf(b)):
@@ -443,7 +447,7 @@ class Likelihood(ParametricComponent, ABC):
         """
 
 
-class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
+class ParametricLifetimeModel(LifetimeModel[*ModelArgs], ParametricModel, ABC):
     # def __init_subclass__(cls, **kwargs):
     #     """
     #     TODO : something to parse *args names and to fill args_names and nb_args
@@ -459,10 +463,8 @@ class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
     #     return len(self._args)
 
     @abstractmethod
-    def init_params(self, lifetimes: LifetimeSample) -> None:
+    def init_params(self, lifetimes: LifetimeData, *args: *ModelArgs) -> None:
         """"""
-
-    # or init_params(self, lifetimes: LifetimeSample, *args : *Args) -> None ?
 
     def fit(
         self,
@@ -470,7 +472,7 @@ class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-        model_args: tuple[*Args] | tuple[()] = (),
+        model_args: tuple[*ModelArgs] | tuple[()] = (),
         inplace: bool = True,
         **kwargs: Any,
     ) -> NDArray[np.float64]:
@@ -491,17 +493,14 @@ class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
             event,
             entry,
             departure,
-            model_args,  # must be removed (constraint because of Regression, consequence in to_lifetime_rvs)
         )
 
         optimized_model = self.copy()
-        optimized_model.init_params(observed_lifetimes)
+        optimized_model.init_params(observed_lifetimes, *model_args)
         # or just optimized_model.init_params(observed_lifetimes, *model_args)
 
         likelihood = LikelihoodFromLifetimes(
-            optimized_model,
-            observed_lifetimes,
-            truncations,
+            optimized_model, observed_lifetimes, truncations, model_args=model_args
         )
 
         minimize_kwargs = {
@@ -522,7 +521,7 @@ class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
         )
 
         if inplace:
-            self.init_params(observed_lifetimes)
+            self.init_params(observed_lifetimes, *model_args)
             # or just self.init_params(observed_lifetimes, *model_args)
             self.params = likelihood.params
 
@@ -544,57 +543,99 @@ class ParametricLifetimeModel(LifetimeModel[*Args], ParametricModel, ABC):
 
 
 class LikelihoodFromLifetimes(Likelihood):
+    args: tuple[NDArray[np.float64], ...]
+
     def __init__(
         self,
-        model: ParametricLifetimeModel,
-        observed_lifetimes: LifetimeSample,
+        model: ParametricLifetimeModel[*tuple[NDArray[np.float64], ...]],
+        observed_lifetimes: LifetimeData,
         truncations: Truncations,
+        model_args: tuple[NDArray[np.float64], ...] = (),
     ):
         super().__init__(model)
         self.observed_lifetimes = observed_lifetimes
         self.truncations = truncations
+        self.args = model_args
 
-    def _complete_contribs(self, lifetimes: Sample) -> float:
-        return -np.sum(np.log(self.model.hf(lifetimes.values, *lifetimes.args)))
+    def _complete_contribs(self, lifetimes: IndexedData) -> float:
+        return -np.sum(
+            np.log(
+                self.model.hf(
+                    lifetimes.values, *(args[lifetimes.index] for args in self.args)
+                )
+            )
+        )
 
-    def _right_censored_contribs(self, lifetimes: Sample) -> float:
+    def _right_censored_contribs(self, lifetimes: IndexedData) -> float:
         return np.sum(
-            self.model.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+            self.model.chf(
+                lifetimes.values, *(args[lifetimes.index] for args in self.args)
+            ),
+            dtype=np.float64,
         )
 
-    def _left_censored_contribs(self, lifetimes: Sample) -> float:
+    def _left_censored_contribs(self, lifetimes: IndexedData) -> float:
         return -np.sum(
-            np.log(-np.expm1(-self.model.chf(lifetimes.values, *lifetimes.args)))
+            np.log(
+                -np.expm1(
+                    -self.model.chf(
+                        lifetimes.values, *(args[lifetimes.index] for args in self.args)
+                    )
+                )
+            )
         )
 
-    def _left_truncations_contribs(self, lifetimes: Sample) -> float:
+    def _left_truncations_contribs(self, lifetimes: IndexedData) -> float:
         return -np.sum(
-            self.model.chf(lifetimes.values, *lifetimes.args), dtype=np.float64
+            self.model.chf(
+                lifetimes.values, *(args[lifetimes.index] for args in self.args)
+            ),
+            dtype=np.float64,
         )
 
-    def _jac_complete_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
+    def _jac_complete_contribs(self, lifetimes: IndexedData) -> NDArray[np.float64]:
         return -np.sum(
-            self.model.jac_hf(lifetimes.values, *lifetimes.args)
-            / self.model.hf(lifetimes.values, *lifetimes.args),
+            self.model.jac_hf(
+                lifetimes.values, *(args[lifetimes.index] for args in self.args)
+            )
+            / self.model.hf(
+                lifetimes.values, *(args[lifetimes.index] for args in self.args)
+            ),
             axis=0,
         )
 
-    def _jac_right_censored_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
+    def _jac_right_censored_contribs(
+        self, lifetimes: IndexedData
+    ) -> NDArray[np.float64]:
         return np.sum(
-            self.model.jac_chf(lifetimes.values, *lifetimes.args),
+            self.model.jac_chf(
+                lifetimes.values, *(args[lifetimes.index] for args in self.args)
+            ),
             axis=0,
         )
 
-    def _jac_left_censored_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
+    def _jac_left_censored_contribs(
+        self, lifetimes: IndexedData
+    ) -> NDArray[np.float64]:
         return -np.sum(
-            self.model.jac_chf(lifetimes.values, *lifetimes.args)
-            / np.expm1(self.model.chf(lifetimes.values, *lifetimes.args)),
+            self.model.jac_chf(
+                lifetimes.values, *(args[lifetimes.index] for args in self.args)
+            )
+            / np.expm1(
+                self.model.chf(
+                    lifetimes.values, *(args[lifetimes.index] for args in self.args)
+                )
+            ),
             axis=0,
         )
 
-    def _jac_left_truncations_contribs(self, lifetimes: Sample) -> NDArray[np.float64]:
+    def _jac_left_truncations_contribs(
+        self, lifetimes: IndexedData
+    ) -> NDArray[np.float64]:
         return -np.sum(
-            self.model.jac_chf(lifetimes.values, *lifetimes.args),
+            self.model.jac_chf(
+                lifetimes.values, *(args[lifetimes.index] for args in self.args)
+            ),
             axis=0,
         )
 

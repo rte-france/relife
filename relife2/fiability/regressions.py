@@ -13,7 +13,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from relife2.data import LifetimeSample
+from relife2.data import LifetimeData
 from relife2.model import ParametricComponent, ParametricLifetimeModel
 
 Ts = TypeVarTuple("Ts")
@@ -58,12 +58,15 @@ class Regression(
         )
 
     def init_params(
-        self, lifetimes: LifetimeSample
-    ) -> None:  # why not adding covar, *args like in sf ?
+        self,
+        lifetimes: LifetimeData,
+        covar: NDArray[np.float64],
+        *args: * tuple[NDArray[np.float64], ...],
+    ) -> None:
         self.covar_effect.new_params(
-            **{f"coef_{i}": 0.0 for i in range(lifetimes.rlc.args[0].shape[-1])}
+            **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         )
-        self.baseline.init_params(lifetimes)
+        self.baseline.init_params(lifetimes, *args)
 
     @property
     def params_bounds(self) -> Bounds:
