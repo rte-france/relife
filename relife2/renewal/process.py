@@ -1,5 +1,5 @@
 from functools import partial, wraps
-from typing import Callable, Optional, ParamSpec, TypedDict, TypeVar
+from typing import Callable, Optional, ParamSpec, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,27 +14,8 @@ from relife2.renewal.equations import (
 from relife2.renewal.rewards import Reward
 from relife2.renewal.sampling import lifetimes_generator, lifetimes_rewards_generator
 
-ModelArgs = tuple[NDArray[np.float64], ...]
-Model1Args = tuple[NDArray[np.float64], ...]
-RewardArgs = tuple[NDArray[np.float64], ...]
-Reward1Args = tuple[NDArray[np.float64], ...]
-DiscountArgs = tuple[NDArray[np.float64], ...]
-
 P = ParamSpec("P")
 T = TypeVar("T")
-
-
-class RenewalProcessArgs(TypedDict):
-    model: ModelArgs
-    model1: Model1Args
-
-
-class RenewalRewardProcessArgs(TypedDict):
-    model: ModelArgs
-    model1: Model1Args
-    discount: DiscountArgs
-    reward: RewardArgs
-    reward1: Reward1Args
 
 
 def argscheck(method: Callable[P, T]) -> Callable[P, T]:
