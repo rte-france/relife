@@ -1,12 +1,13 @@
 from pathlib import Path
 
 import numpy as np
+from numpy.typing import NDArray
 
 
-def load_power_transformer() -> np.ndarray:
+def load_power_transformer() -> NDArray[np.float64]:
     """BLABLA"""
     data = np.loadtxt(
-        Path(Path(__file__).parent, "power_transformer.csv"),
+        Path(Path(__file__).parents[1], "datasets/power_transformer.csv"),
         delimiter=",",
         skiprows=1,
         unpack=True,
@@ -15,22 +16,11 @@ def load_power_transformer() -> np.ndarray:
     return data
 
 
-def load_insulator_string() -> np.ndarray:
+def load_insulator_string() -> NDArray[np.float64]:
     """BLABLA"""
 
     data = np.loadtxt(
-        Path(Path(__file__).parent, "insulator_string.csv"),
-        delimiter=",",
-        skiprows=1,
-        unpack=True,
-    )
-    return data
-
-def load_circuit_breaker() -> np.ndarray:
-    """BLABLA"""
-
-    data = np.loadtxt(
-        Path(Path(__file__).parent, "circuit_breaker.csv"),
+        Path(Path(__file__).parents[1], "datasets/insulator_string.csv"),
         delimiter=",",
         skiprows=1,
         unpack=True,
@@ -38,14 +28,26 @@ def load_circuit_breaker() -> np.ndarray:
     return data
 
 
-def load_input_turnbull() -> np.ndarray:
+def load_circuit_breaker() -> NDArray[np.float64]:
+    """BLABLA"""
+
+    data = np.loadtxt(
+        Path(Path(__file__).parents[1], "datasets/circuit_breaker.csv"),
+        delimiter=",",
+        skiprows=1,
+        unpack=True,
+    )
+    return data
+
+
+def load_input_turnbull() -> NDArray[np.float64]:
     """_summary_
 
     Returns:
         np.ndarray: _description_
     """
     data = np.loadtxt(
-        Path(Path(__file__).parent, "input_turnbull.csv"),
+        Path(Path(__file__).parents[1], "datasets/input_turnbull.csv"),
         delimiter=",",
         skiprows=1,
         unpack=True,

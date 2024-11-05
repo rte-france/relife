@@ -5,14 +5,23 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife2.data import RenewalData, RenewalRewardData
-from relife2.model import LifetimeModel
-from relife2.renewal.discounts import Discount, exponential_discount
-from relife2.renewal.equations import (
+from relife2.fiability.model import LifetimeModel
+from relife2.renewal.discount import Discount, exponential_discount
+from relife2.renewal.equation import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
-from relife2.renewal.rewards import Reward
+from relife2.renewal.reward import Reward
 from relife2.renewal.sampling import lifetimes_generator, lifetimes_rewards_generator
+from relife2.typing import (
+    DiscountArgs,
+    Model1Args,
+    ModelArgs,
+    RenewalProcessArgs,
+    RenewalRewardProcessArgs,
+    Reward1Args,
+    RewardArgs,
+)
 
 P = ParamSpec("P")
 T = TypeVar("T")

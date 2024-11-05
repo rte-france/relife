@@ -1,27 +1,22 @@
-from typing import Callable, Optional, TypeVar
+from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.model import LifetimeModel
-from relife2.renewal.discounts import Discount
-
-M = TypeVar("M", tuple[NDArray[np.float64], ...], tuple[()])
-M1 = TypeVar("M1", tuple[NDArray[np.float64], ...], tuple[()])
-R = TypeVar("R", tuple[NDArray[np.float64], ...], tuple[()])
-R1 = TypeVar("R1", tuple[NDArray[np.float64], ...], tuple[()])
-D = TypeVar("D", tuple[NDArray[np.float64], ...], tuple[()])
+from relife2.fiability.model import LifetimeModel
+from relife2.renewal.discount import Discount
+from relife2.typing import DiscountArgs, Model1Args, ModelArgs
 
 
 # make evaluated func  Callable[[array], array] only and do partial elsewhere
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*M],
+    model: LifetimeModel[*ModelArgs],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
-    model_args: M = (),
-    discount: Optional[Discount[*D]] = None,
-    discount_args: D = (),
+    model_args: ModelArgs = (),
+    discount: Optional[Discount[*DiscountArgs]] = None,
+    discount_args: DiscountArgs = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
@@ -50,11 +45,11 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    model1: LifetimeModel[*M1],
+    model1: LifetimeModel[*Model1Args],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    delayed_model_args: M1 = (),
-    discount: Optional[Discount[*D]] = None,
-    discount_args: D = (),
+    delayed_model_args: Model1Args = (),
+    discount: Optional[Discount[*DiscountArgs]] = None,
+    discount_args: DiscountArgs = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])

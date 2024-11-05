@@ -14,7 +14,8 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
 from relife2.data import LifetimeData
-from relife2.model import ParametricComponent, ParametricLifetimeModel
+from relife2.fiability.model import ParametricComponent, ParametricLifetimeModel
+from relife2.typing import ModelArgs
 
 Ts = TypeVarTuple("Ts")
 
@@ -43,12 +44,12 @@ class CovarEffect(ParametricComponent):
 # Ts type var is tuple[NDArray[np.float64], tuple[NDArray[np.float64], ...]]
 # first element type is NDArray[np.float64] and any other args are NDArray[np.float64]
 class Regression(
-    ParametricLifetimeModel[NDArray[np.float64], *tuple[NDArray[np.float64], ...]],
+    ParametricLifetimeModel[NDArray[np.float64], *ModelArgs],
     ABC,
 ):
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*tuple[NDArray[np.float64], ...]],
+        baseline: ParametricLifetimeModel[*ModelArgs],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__()
@@ -61,7 +62,7 @@ class Regression(
         self,
         lifetimes: LifetimeData,
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> None:
         self.covar_effect.new_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
@@ -88,7 +89,7 @@ class Regression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return super().sf(time, covar, *args)
 
@@ -96,7 +97,7 @@ class Regression(
         self,
         probability: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability)
         return self.ichf(cumulative_hazard_rate, covar, *args)
@@ -105,7 +106,7 @@ class Regression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return super().cdf(time, covar, *args)
 
@@ -113,7 +114,7 @@ class Regression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return super().pdf(time, covar, *args)
 
@@ -121,7 +122,7 @@ class Regression(
         self,
         probability: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return super().ppf(probability, covar, *args)
 
@@ -129,31 +130,29 @@ class Regression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return super().mrl(time, covar, *args)
 
     def rvs(
         self,
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
         size: Optional[int] = 1,
         seed: Optional[int] = None,
     ):
         return super().rvs(covar, *args, size=size, seed=seed)
 
     def mean(
-        self, covar: NDArray[np.float64], *args: * tuple[NDArray[np.float64], ...]
+        self, covar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
         return super().mean(covar, *args)
 
-    def var(
-        self, covar: NDArray[np.float64], *args: * tuple[NDArray[np.float64], ...]
-    ) -> NDArray[np.float64]:
+    def var(self, covar: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         return super().var(covar, *args)
 
     def median(
-        self, covar: NDArray[np.float64], *args: * tuple[NDArray[np.float64], ...]
+        self, covar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
         return super().median(covar, *args)
 
@@ -162,7 +161,7 @@ class Regression(
         self,
         cumulative_hazard_rate: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
@@ -170,7 +169,7 @@ class Regression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
@@ -178,7 +177,7 @@ class Regression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
@@ -186,7 +185,7 @@ class Regression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]: ...
 
     # @property
@@ -204,7 +203,7 @@ class ProportionalHazard(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
@@ -212,7 +211,7 @@ class ProportionalHazard(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
@@ -220,7 +219,7 @@ class ProportionalHazard(Regression):
         self,
         cumulative_hazard_rate: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return self.baseline.ichf(
             cumulative_hazard_rate / self.covar_effect.g(covar), *args
@@ -230,7 +229,7 @@ class ProportionalHazard(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return np.column_stack(
             (
@@ -243,7 +242,7 @@ class ProportionalHazard(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return np.column_stack(
             (
@@ -256,7 +255,7 @@ class ProportionalHazard(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
 
@@ -267,7 +266,7 @@ class AFT(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
@@ -276,7 +275,7 @@ class AFT(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
@@ -285,7 +284,7 @@ class AFT(Regression):
         self,
         cumulative_hazard_rate: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.ichf(
             cumulative_hazard_rate, *args
@@ -295,7 +294,7 @@ class AFT(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
@@ -311,7 +310,7 @@ class AFT(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
@@ -328,7 +327,7 @@ class AFT(Regression):
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: * tuple[NDArray[np.float64], ...],
+        *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2

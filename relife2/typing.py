@@ -20,6 +20,14 @@ class RenewalProcessArgs(TypedDict):
 class RenewalRewardProcessArgs(TypedDict):
     model: ModelArgs
     model1: Model1Args
-    discount: DiscountArgs
     reward: RewardArgs
     reward1: Reward1Args
+    discount: DiscountArgs
+
+
+class PolicyArgs(TypedDict, total=False):
+    model: ModelArgs
+    model1: Model1Args
+    reward: RewardArgs
+    reward1: Reward1Args
+    discount: DiscountArgs

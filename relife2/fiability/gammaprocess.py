@@ -17,13 +17,13 @@ from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 from scipy.stats import gamma
 
 from relife2.data import Deteriorations, deteriorations_factory
-from relife2.io import array_factory
-from relife2.model import (
+from relife2.fiability.model import (
     Likelihood,
     ParametricComponent,
     ParametricLifetimeModel,
     ParametricModel,
 )
+from relife2.io import array_factory
 
 
 class ShapeFunctions(ParametricComponent, ABC):

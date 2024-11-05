@@ -1,2 +1,2 @@
-from .fiability.distributions import Exponential, Gamma, Gompertz, LogLogistic, Weibull
-from .fiability.regressions import AFT, ProportionalHazard
+from .fiability.distribution import Exponential, Gamma, Gompertz, LogLogistic, Weibull
+from .fiability.regression import AFT, ProportionalHazard

@@ -1,40 +1,35 @@
-from typing import Generic, Optional, Protocol, TypedDict, TypeVar
+from typing import Optional, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.fiability.addons import LeftTruncated
-from relife2.model import LifetimeModel
-from relife2.renewal.discounts import Discount, exponential_discount
+from relife2.data import RenewalRewardData
+from relife2.fiability.addon import LeftTruncated
+from relife2.fiability.model import LifetimeModel
+from relife2.renewal.discount import Discount, exponential_discount
 from relife2.renewal.process import RenewalRewardProcess, reward_partial_expectation
-from relife2.renewal.rewards import Reward, age_replacement_cost, run_to_failure_cost
-from relife2.renewal.sampling import RenewalRewardData, lifetimes_rewards_generator
-
-M = TypeVar("M", tuple[NDArray[np.float64], ...], tuple[()])
-M1 = TypeVar("M1", tuple[NDArray[np.float64], ...], tuple[()])
-R = TypeVar("R", tuple[NDArray[np.float64], ...], tuple[()])
-R1 = TypeVar("R1", tuple[NDArray[np.float64], ...], tuple[()])
-D = TypeVar("D", tuple[NDArray[np.float64], ...], tuple[()])
-
-
-class PolicyArgs(TypedDict, Generic[M, M1, R, R1, D], total=False):
-    model: M
-    model1: M1
-    reward: R
-    reward1: R1
-    discount: D
+from relife2.renewal.reward import Reward, age_replacement_cost, run_to_failure_cost
+from relife2.renewal.sampling import lifetimes_rewards_generator
+from relife2.typing import (
+    DiscountArgs,
+    Model1Args,
+    ModelArgs,
+    PolicyArgs,
+    Reward1Args,
+    RewardArgs,
+)
 
 
 # policy class are just facade class of one RenewalRewardProcess with more "financial" methods names
 # and ergonomic parametrization (named parameters instead of generic tuple)
-class Policy(Protocol[M, M1, R, R1, D]):
+class Policy(Protocol):
 
     args: PolicyArgs
-    model: LifetimeModel[*M]
-    reward: Reward[*R]
-    discount: Discount[*D]
-    model1: Optional[LifetimeModel[*M1]] = None
-    reward1: Optional[Reward[*R1]] = None
+    model: LifetimeModel[*ModelArgs]
+    reward: Reward[*RewardArgs]
+    discount: Discount[*DiscountArgs]
+    model1: Optional[LifetimeModel[*Model1Args]] = None
+    reward1: Optional[Reward[*Reward1Args]] = None
     nb_assets: int = 1
 
     def expected_total_cost(
@@ -50,11 +45,11 @@ class Policy(Protocol[M, M1, R, R1, D]):
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]: ...
 
 
-class OneCycleRunToFailure(Generic[M]):
+class OneCycleRunToFailure:
     """One cyle run-to-failure policy."""
 
     args: PolicyArgs
-    model: LifetimeModel[*M]
+    model: LifetimeModel[*ModelArgs]
     reward = run_to_failure_cost
     discount = exponential_discount
     model1 = None
@@ -63,10 +58,10 @@ class OneCycleRunToFailure(Generic[M]):
 
     def __init__(
         self,
-        model: LifetimeModel[*M],
+        model: LifetimeModel[*ModelArgs],
         cf: NDArray[np.float64],
         rate: NDArray[np.float64],
-        model_args: M = (),
+        model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
     ) -> None:
@@ -116,7 +111,7 @@ class OneCycleRunToFailure(Generic[M]):
     def sample(
         self,
         nb_samples: int,
-    ) -> RenewalRewardData[M, tuple[()]]:
+    ) -> RenewalRewardData:
         generator = lifetimes_rewards_generator(
             self.model,
             self.reward,
@@ -146,16 +141,14 @@ class OneCycleRunToFailure(Generic[M]):
             event_times,
             lifetimes,
             events,
-            self.args["model"],
-            self.args["model1"],
             total_rewards,
         )
 
 
-class OneCycleAgeReplacementPolicy(Generic[M]):
+class OneCycleAgeReplacementPolicy:
 
     args: PolicyArgs
-    model: LifetimeModel[*M]
+    model: LifetimeModel[*ModelArgs]
     reward = age_replacement_cost
     discount = exponential_discount
     model1 = None
@@ -164,12 +157,12 @@ class OneCycleAgeReplacementPolicy(Generic[M]):
 
     def __init__(
         self,
-        model: LifetimeModel[*M],
+        model: LifetimeModel[*ModelArgs],
         ar: NDArray[np.float64],
         cf: NDArray[np.float64],
         cp: NDArray[np.float64],
         rate: NDArray[np.float64],
-        model_args: M = (),
+        model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
     ) -> None:
@@ -218,26 +211,26 @@ class OneCycleAgeReplacementPolicy(Generic[M]):
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
 
-class RunToFailure(Generic[M, M1]):
+class RunToFailure:
 
     args: PolicyArgs
-    model: LifetimeModel[*M]
+    model: LifetimeModel[*ModelArgs]
     reward = run_to_failure_cost
     discount = exponential_discount
-    model1: Optional[LifetimeModel[*M1]] = None
+    model1: Optional[LifetimeModel[*Model1Args]] = None
     reward1 = run_to_failure_cost
     nb_assets: int = 1
 
     def __init__(
         self,
-        model: LifetimeModel[*M],
+        model: LifetimeModel[*ModelArgs],
         cf: NDArray[np.float64],
         rate: NDArray[np.float64],
-        model_args: M = (),
+        model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[*M1]] = None,
-        model1_args: M1 = (),
+        model1: Optional[LifetimeModel[*Model1Args]] = None,
+        model1_args: Model1Args = (),
         cf1: Optional[NDArray[np.float64]] = None,
     ) -> None:
 

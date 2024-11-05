@@ -1,2 +1,2 @@
-from .distributions import Distribution
-from .regressions import Regression
+from .distribution import Distribution
+from .regression import Regression

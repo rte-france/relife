@@ -3,16 +3,11 @@ from typing import Iterator, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.fiability.addons import AgeReplacementModel
-from relife2.model import LifetimeModel
-from relife2.renewal.discounts import Discount
-from relife2.renewal.rewards import Reward
-
-ModelArgs = tuple[NDArray[np.float64], ...]
-Model1Args = tuple[NDArray[np.float64], ...]
-RewardArgs = tuple[NDArray[np.float64], ...]
-Reward1Args = tuple[NDArray[np.float64], ...]
-DiscountArgs = tuple[NDArray[np.float64], ...]
+from relife2.fiability.addon import AgeReplacementModel
+from relife2.fiability.model import LifetimeModel
+from relife2.renewal.discount import Discount
+from relife2.renewal.reward import Reward
+from relife2.typing import DiscountArgs, Model1Args, ModelArgs, Reward1Args, RewardArgs
 
 
 def model_rvs(

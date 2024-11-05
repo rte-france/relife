@@ -13,12 +13,6 @@ from typing import Iterator, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-ModelArgs = tuple[NDArray[np.float64], ...]
-Model1Args = tuple[NDArray[np.float64], ...]
-RewardArgs = tuple[NDArray[np.float64], ...]
-Reward1Args = tuple[NDArray[np.float64], ...]
-DiscountArgs = tuple[NDArray[np.float64], ...]
-
 
 @dataclass
 class IndexedData:
@@ -534,7 +528,6 @@ class RenewalData(CountData):
         tf: Optional[float] = None,
         sample: Optional[int] = None,
     ) -> LifetimeData:
-
         if t0 >= tf:
             raise ValueError("`t0` must be strictly lesser than `tf`")
 

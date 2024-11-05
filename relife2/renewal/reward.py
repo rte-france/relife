@@ -1,13 +1,13 @@
-from typing import Protocol, TypeVarTuple
+from typing import Protocol
 
 import numpy as np
 from numpy.typing import NDArray
 
-Ts = TypeVarTuple("Ts")
+from relife2.typing import VariadicArgs
 
 
-class Reward(Protocol[*Ts]):
-    def __call__(self, lifetimes: NDArray[np.float64], *args: *Ts): ...
+class Reward(Protocol[*VariadicArgs]):
+    def __call__(self, lifetimes: NDArray[np.float64], *args: *VariadicArgs): ...
 
 
 class RunToFailureCost(Reward[NDArray[np.float64]]):

@@ -14,7 +14,7 @@ from relife2.data import (
     Truncations,
     lifetime_factory_template,
 )
-from relife2.maths.integrations import gauss_legendre, quad_laguerre
+from relife2.maths.integration import gauss_legendre, quad_laguerre
 from relife2.typing import VariadicArgs
 
 
