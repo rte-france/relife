@@ -225,6 +225,13 @@ class LifetimeModel(Generic[*VariadicArgs]):
     # def nb_args(self):
     #     return len(self._args)
 
+    def __new__(cls, *args, **kwargs):
+        if cls is LifetimeModel:
+            raise TypeError(
+                f"Can't instantiate class LifetimeModel, only subclass of LifetimeModel can"
+            )
+        return object.__new__(cls)
+
     def hf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
