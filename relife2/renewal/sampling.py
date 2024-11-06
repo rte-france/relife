@@ -73,16 +73,14 @@ def lifetimes_generator(
 ]:
 
     event_times = np.zeros((nb_assets, nb_samples))
-    order = np.zeros((nb_assets, nb_samples))
     still_valid = event_times < end_time
 
     def sample_routine(target_model, args):
-        nonlocal event_times, order, still_valid  # modify these variables
+        nonlocal event_times, still_valid  # modify these variables
         lifetimes = model_rvs(target_model, size, args=args).reshape(
             (nb_assets, nb_samples)
         )
         event_times += lifetimes
-        order += 1
         events = compute_events(lifetimes, target_model, args)
         still_valid = event_times < end_time
         return lifetimes, event_times, events, still_valid

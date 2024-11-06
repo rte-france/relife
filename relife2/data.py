@@ -455,8 +455,8 @@ class CountData:
         if not len(set(arr.shape[0] for arr in fields_values)) == 1:
             raise ValueError("All array values must have the same shape")
 
-        self.samples_index = np.unique(self.samples)
-        self.assets_index = np.unique(self.assets)
+        self.samples_index = np.unique(self.samples)  # samples unique index
+        self.assets_index = np.unique(self.assets)  # assets unique index
         self.nb_samples = len(self.samples_index)
         self.nb_assets = len(self.assets_index)
 
