@@ -18,7 +18,7 @@ from relife2.maths.integration import gauss_legendre, quad_laguerre
 from relife2.typing import VariadicArgs
 
 
-class Composite:
+class Parameters:
     def __init__(self, **kwargs):
         self._node_data = {}
         if kwargs:
@@ -143,7 +143,7 @@ class Composite:
 
 class ParametricComponent:
     def __init__(self):
-        self._params = Composite()
+        self._params = Parameters()
         self.leaves = {}
 
     @property
@@ -201,7 +201,7 @@ class ParametricComponent:
             self._params[name] = value
         elif name in self.leaves:
             raise ValueError(
-                "Can't modify leaf function. Recreate Function instance instead"
+                "Can't modify leaf ParametricComponent. Recreate ParametricComponent instance instead"
             )
         else:
             super().__setattr__(name, value)
