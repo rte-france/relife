@@ -60,14 +60,14 @@ class Regression(
 
     def init_params(
         self,
-        lifetimes: LifetimeData,
+        lifetime_data: LifetimeData,
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> None:
         self.covar_effect.new_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         )
-        self.baseline.init_params(lifetimes, *args)
+        self.baseline.init_params(lifetime_data, *args)
 
     @property
     def params_bounds(self) -> Bounds:

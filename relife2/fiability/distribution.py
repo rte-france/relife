@@ -37,9 +37,9 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     def median(self):
         return super().median()
 
-    def init_params(self, lifetimes: LifetimeData) -> None:
+    def init_params(self, lifetime_data: LifetimeData) -> None:
         param0 = np.ones(self.nb_params)
-        param0[-1] = 1 / np.median(lifetimes.rlc.values)
+        param0[-1] = 1 / np.median(lifetime_data.rlc.values)
         self.params = param0
 
     @property
@@ -155,10 +155,10 @@ class Gompertz(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def init_params(self, lifetimes: LifetimeData) -> None:
+    def init_params(self, lifetime_data: LifetimeData) -> None:
         param0 = np.empty(self.nb_params, dtype=float)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetimes.rlc.values))
-        shape = np.exp(-rate * np.mean(lifetimes.rlc.values))
+        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.rlc.values))
+        shape = np.exp(-rate * np.mean(lifetime_data.rlc.values))
         param0[0] = shape
         param0[1] = rate
         self.params = param0
