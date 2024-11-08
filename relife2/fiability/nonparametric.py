@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.data import lifetimedata_factory
+from relife2.data import lifetime_data_factory
 from relife2.io import array_factory, preprocess_lifetime_data
 
 
@@ -89,7 +89,7 @@ class ECDF(NonParametricLifetimeEstimators):
         time, event, entry, departure, _ = preprocess_lifetime_data(
             time, event, entry, departure
         )
-        observed_lifetimes, truncations = lifetimedata_factory(
+        observed_lifetimes, truncations = lifetime_data_factory(
             time,
             event,
             entry,
@@ -140,7 +140,7 @@ class KaplanMeier(NonParametricLifetimeEstimators):
         time, event, entry, departure, _ = preprocess_lifetime_data(
             time, event, entry, departure
         )
-        observed_lifetimes, truncations = lifetimedata_factory(
+        observed_lifetimes, truncations = lifetime_data_factory(
             time,
             event,
             entry,
@@ -222,7 +222,7 @@ class NelsonAalen(NonParametricLifetimeEstimators):
         time, event, entry, departure, _ = preprocess_lifetime_data(
             time, event, entry, departure
         )
-        observed_lifetimes, truncations = lifetimedata_factory(
+        observed_lifetimes, truncations = lifetime_data_factory(
             time,
             event,
             entry,
@@ -305,7 +305,7 @@ class Turnbull(NonParametricLifetimeEstimators):
         time, event, entry, departure, _ = preprocess_lifetime_data(
             time, event, entry, departure
         )
-        observed_lifetimes, truncations = lifetimedata_factory(
+        observed_lifetimes, truncations = lifetime_data_factory(
             time,
             event,
             entry,

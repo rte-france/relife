@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize, newton
 
-from relife2.data import LifetimeData, lifetimedata_factory
+from relife2.data import LifetimeData, lifetime_data_factory
 from relife2.maths.integration import gauss_legendre, quad_laguerre
 from relife2.typing import VariadicArgs
 
@@ -500,7 +500,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
 
         Returns:
         """
-        lifetime_data = lifetimedata_factory(
+        lifetime_data = lifetime_data_factory(
             time,
             event,
             entry,

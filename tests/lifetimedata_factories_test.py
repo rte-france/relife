@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from relife2.data import (
-    LifetimeDataReaderFrom1D,
-    LifetimeDataReaderFrom2D,
+    Lifetime1DReader,
+    Lifetime2DReader,
     LifetimeData,
 )
 
@@ -33,7 +33,7 @@ def example_2d_data():
 
 
 def test_1d_data(example_1d_data):
-    reader = LifetimeDataReaderFrom1D(
+    reader = Lifetime1DReader(
         example_1d_data["observed_lifetimes"],
         event=example_1d_data["event"],
         entry=example_1d_data["entry"],
@@ -69,28 +69,28 @@ def test_1d_data(example_1d_data):
     )
 
     assert np.all(
-        lifetime_data.complete.intersection(lifetime_data.left_truncated)[0].values
-        == np.array([9, 11]).astype(np.float64).reshape(-1, 1)
+        lifetime_data.complete.intersection(lifetime_data.left_truncated).values[:, 0]
+        == np.array([9, 11]).astype(np.float64)
     )
 
     assert np.all(
-        lifetime_data.complete.intersection(lifetime_data.left_truncated)[1].values
-        == np.array([3, 9]).astype(np.float64).reshape(-1, 1)
+        lifetime_data.complete.intersection(lifetime_data.left_truncated).values[:, 1]
+        == np.array([3, 9]).astype(np.float64)
     )
 
     assert np.all(
-        lifetime_data.left_truncated.intersection(lifetime_data.complete)[0].values
-        == np.array([3, 9]).astype(np.float64).reshape(-1, 1)
+        lifetime_data.left_truncated.intersection(lifetime_data.complete).values[:, 0]
+        == np.array([3, 9]).astype(np.float64)
     )
 
     assert np.all(
-        lifetime_data.left_truncated.intersection(lifetime_data.complete)[1].values
-        == np.array([9, 11]).astype(np.float64).reshape(-1, 1)
+        lifetime_data.left_truncated.intersection(lifetime_data.complete).values[:, 1]
+        == np.array([9, 11]).astype(np.float64)
     )
 
 
 def test_2d_data(example_2d_data):
-    reader = LifetimeDataReaderFrom2D(
+    reader = Lifetime2DReader(
         example_2d_data["observed_lifetimes"],
         entry=example_2d_data["entry"],
         departure=example_2d_data["departure"],
@@ -131,26 +131,24 @@ def test_2d_data(example_2d_data):
     )
 
     assert np.all(
-        lifetime_data.left_truncated.intersection(lifetime_data.interval_censored)[
-            1
-        ].index
+        lifetime_data.left_truncated.intersection(lifetime_data.interval_censored).index
         == np.array([3, 5, 6]).astype(np.int64)
     )
 
     assert np.all(
-        lifetime_data.left_truncated.intersection(lifetime_data.interval_censored)[
-            1
-        ].values
+        lifetime_data.left_truncated.intersection(
+            lifetime_data.interval_censored
+        ).values[:, 1:]
         == np.array([[7, np.inf], [2, 10], [10, 11]]).astype(np.float64)
     )
 
     assert np.all(
-        lifetime_data.right_censored.intersection(lifetime_data.left_truncated)[
-            0
-        ].values
-        == np.array([7]).astype(np.float64).reshape(-1, 1)
+        lifetime_data.right_censored.intersection(lifetime_data.left_truncated).values[
+            :, 0
+        ]
+        == np.array([7]).astype(np.float64)
     )
     assert np.all(
-        lifetime_data.right_censored.intersection(lifetime_data.left_truncated)[0].index
+        lifetime_data.right_censored.intersection(lifetime_data.left_truncated).index
         == np.array([3]).astype(np.int64)
     )
