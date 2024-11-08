@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from abc import abstractmethod
 from dataclasses import dataclass, field, fields
+from itertools import filterfalse
 from typing import Iterator, Optional, Protocol, Self
 
 import numpy as np
@@ -101,7 +102,8 @@ class LifetimeData:
                             np.where(
                                 intersect_data.values[:, [0]] == 0,
                                 intersect_data.values[:, [-2]],
-                                np.min(intersect_data.values[:, :-1], axis=1, keepdims=True), # min of all cols but last
+                                np.min(intersect_data.values[:, :-1], axis=1, keepdims=True),
+                                # min of all cols but last
                             )
                             < intersect_data.values[:, [-1]]  # then check if any is under left truncation bound
                     ):
@@ -117,7 +119,8 @@ class LifetimeData:
                             np.where(
                                 intersect_data.values[:, [-2]] == np.inf,
                                 intersect_data.values[:, [0]],
-                                np.max(intersect_data.values[:, :-1], axis=1, keepdims=True), # max of all cols but last
+                                np.max(intersect_data.values[:, :-1], axis=1, keepdims=True),
+                                # max of all cols but last
                             )
                             > intersect_data.values[:, [-1]]  # then check if any is above right truncation bound
                     ):
@@ -426,8 +429,13 @@ class CountData:
         counts = np.arange(times.size) / self.nb_samples
         return times, counts
 
-    def iter(self):
-        return CountDataIterable(self)
+    def iter(self, sample: Optional[int] = None):
+        if sample is None:
+            return CountDataIterable(self)
+        else:
+            if sample not in self.samples_index:
+                raise ValueError(f"{sample} is not part of samples index")
+            return filterfalse(lambda x: x[0] != sample, CountDataIterable(self))
 
 
 class CountDataIterable:
@@ -438,7 +446,7 @@ class CountDataIterable:
             (self.data.order, self.data.assets, self.data.samples)
         )
         self.sorted_fields = {
-            _field.name: getattr(self.data, _field.name).copy()[sorted_index]
+            _field.name: getattr(self.data, _field.name)[sorted_index].copy()
             for _field in fields(self.data)
             if _field.init
         }
@@ -455,7 +463,7 @@ class CountDataIterable:
                 values_dict = {
                     k: v[sample_mask][asset_mask]
                     for k, v in self.sorted_fields.items()
-                    if k not in ("samples", "assets", "events")
+                    if k not in ("samples", "assets", "order")
                 }
                 yield int(sample), int(asset), values_dict
 
@@ -467,68 +475,44 @@ class RenewalData(CountData):
         repr=False
     )  # event indicators (right censored or not)
 
-    # TODO: remove model, model_args from there. Not needed
-    # 1. if init_params uses *args (see model.py) then
-    # 2. init_params in Regression does not rely on covar stored in Sample
-    # 3. Sample does not need to store args
-    # 4. to_lifetime_data only returns a object constructing on time, event, entry only
     def to_lifetime_data(
             self,
             t0: float = 0,
             tf: Optional[float] = None,
             sample: Optional[int] = None,
     ) -> LifetimeData:
+
         if t0 >= tf:
-            raise ValueError("`t0` must be strictly lesser than `tf`")
+            raise ValueError("`t0` must be strictly lower than `tf`")
 
-        # Filtering sample and sorting by times
-        s = self.samples == sample if sample is not None else Ellipsis
-        order = np.argsort(self.event_times[s])
-        indices = self.assets[s][order]
-        samples = self.samples[s][order]
-        uindices = np.ravel_multi_index(
-            (indices, samples), (self.nb_assets, self.nb_samples)
-        )
-        event_times = self.event_times[s][order]
-        lifetimes = self.lifetimes[s][order]
-        events = self.events[s][order]
+        time = np.array([], dtype=np.float64)
+        event = np.array([], dtype=np.bool_)
+        entry = np.array([], dtype=np.float64)
 
-        # Indices of interest
-        ind0 = (event_times > t0) & (
-                event_times <= tf
-        )  # Indices of replacement occuring inside the obervation window
-        ind1 = (
-                event_times > tf
-        )  # Indices of replacement occuring after the observation window which include right censoring
+        for _, _, values_dict in self.iter(sample=sample):
+            # Indices of replacement occuring inside the obervation window
+            ind0 = (values_dict["event_times"] > t0) & (values_dict["event_times"] <= tf)
+            # Indices of replacement occuring after the observation window which include right censoring
+            ind1 = values_dict["event_times"] > tf
 
-        # Replacements occuring inside the observation window
-        time0 = lifetimes[ind0]
-        event0 = events[ind0]
-        entry0 = np.zeros(time0.size)
-        _, lt = np.unique(
-            uindices[ind0], return_index=True
-        )  # get the indices of the first replacements ocurring in the observation window
-        b0 = (
-                event_times[ind0][lt] - lifetimes[ind0][lt]
-        )  # time at birth for the firt replacements
-        entry0[lt] = np.where(b0 >= t0, 0, t0 - b0)
+            if ind0:
+                # Replacements occuring inside the observation window
+                _time = values_dict["lifetimes"][ind0]
+                _event = values_dict["events"][ind0]
+                _entry = np.zeros(_time.size)
+                # time at birth for the firt replacements
+                b0 = values_dict["event_times"][ind0][0] - [ind0][0]
+                if b0 < t0:
+                    _entry[0] = t0 - b0
+                time = np.concatenate((time, _time))
+                event = np.concatenate((event, _event))
+                entry = np.concatenate((entry, _entry))
 
-        # Right censoring
-        _, rc = np.unique(uindices[ind1], return_index=True)
-        bf = (
-                event_times[ind1][rc] - lifetimes[ind1][rc]
-        )  # time at birth for the right censored
-        b1 = bf[
-            bf < tf
-            ]  # ensure that time of birth for the right censored is not equal to tf.
-        time1 = tf - b1
-        event1 = np.zeros(b1.size)
-        entry1 = np.where(b1 >= t0, 0, t0 - b1)
-
-        # Concatenate
-        time = np.concatenate((time0, time1))
-        event = np.concatenate((event0, event1))
-        entry = np.concatenate((entry0, entry1))
+            if ind1:
+                bf = values_dict["event_times"][ind1][0]
+                time = np.append(time, bf - tf)
+                event = np.append(event, False)
+                entry = np.append(entry, 0.)
 
         return lifetime_data_factory(time, event, entry)
 
