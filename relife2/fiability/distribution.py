@@ -65,6 +65,12 @@ class Exponential(Distribution):
         self.new_params(rate=rate)
 
     def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        Args:
+            time (NDArray[np.float64]):
+        Returns:
+
+        """
         return self.rate * np.ones_like(time)
 
     def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
