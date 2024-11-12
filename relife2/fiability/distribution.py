@@ -65,11 +65,23 @@ class Exponential(Distribution):
         self.new_params(rate=rate)
 
     def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        """
-        Args:
-            time (NDArray[np.float64]):
-        Returns:
+        """Cumulative hazard function.
 
+        The cumulative hazard function of an exponential distribution
+
+        Parameters
+        ----------
+        time : numpy array of floats
+            Elapsed time.
+
+        Returns
+        -------
+        numpy array of floats
+            Cumulative hazard function at each given time.
+
+        Notes
+        -----
+        `time` and `*args` arrays must be broadcastable
         """
         return self.rate * np.ones_like(time)
 

@@ -230,6 +230,27 @@ class LifetimeModel(Generic[*VariadicArgs]):
     def hf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """Cumulative hazard function.
+
+        The cumulative hazard function is the integral of the hazard function.
+
+        Parameters
+        ----------
+        time : numpy array of floats
+            Elapsed time.
+        *args : any other numpy arrays of floats
+            Extra arguments required in addition of time.
+
+        Returns
+        -------
+        numpy array of floats
+            Cumulative hazard function at each given time.
+
+        Notes
+        -----
+        `time` and `*args` arrays must be broadcastable
+        """
+
         if "pdf" in self.__class__.__dict__ and "sf" in self.__class__.__dict__:
             return self.pdf(time, *args) / self.sf(time, *args)
         if "sf" in self.__class__.__dict__:
@@ -488,18 +509,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         inplace: bool = True,
         **kwargs: Any,
     ) -> NDArray[np.float64]:
-        """
-        Args:
-            time ():
-            event ():
-            entry ():
-            departure ():
-            model_args ():
-            inplace ():
-            **kwargs ():
 
-        Returns:
-        """
         lifetime_data = lifetime_data_factory(
             time,
             event,
