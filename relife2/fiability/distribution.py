@@ -60,6 +60,39 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
 
 class Exponential(Distribution):
+    """
+    see : https://github.com/pandas-dev/pandas/blob/0691c5cf90477d3503834d983f69350f250a6ff7/pandas/core/frame.py#L509-L12664
+    see : https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame
+
+
+    Exponential probability distribution
+
+    Parameters
+    ----------
+    rate : float
+        rate parameter
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+
+
+    Examples
+    --------
+    Constructing DataFrame from a dictionary.
+
+    >>> model = Exponential(0.75)
+    >>> time = np.arange(0, 10)
+    >>>
+    array([1.        , 0.47236655, 0.22313016, 0.10539922, 0.04978707,
+           0.02351775, 0.011109  , 0.00524752, 0.00247875, 0.00117088])
+
+
+    Notice that only asset is used here. To pass mulitply assets, use 2d time array
+
+    """
+
     def __init__(self, rate: Optional[float] = None):
         super().__init__()
         self.new_params(rate=rate)

@@ -230,25 +230,24 @@ class LifetimeModel(Generic[*VariadicArgs]):
     def hf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Cumulative hazard function.
-
-        The cumulative hazard function is the integral of the hazard function.
+        """Hazard function.
 
         Parameters
         ----------
         time : numpy array of floats
             Elapsed time.
-        *args : any other numpy arrays of floats
-            Extra arguments required in addition of time.
+        *args : any other numpy arrays of floats needed
+            Extra arguments required in addition of `time`. Must be
+            broadcastable to `time`.
 
         Returns
         -------
         numpy array of floats
-            Cumulative hazard function at each given time.
+            Hazard function at each given time.
 
         Notes
         -----
-        `time` and `*args` arrays must be broadcastable
+        The hazard function is the derivative of the cumulative hazard function.
         """
 
         if "pdf" in self.__class__.__dict__ and "sf" in self.__class__.__dict__:
@@ -271,6 +270,26 @@ class LifetimeModel(Generic[*VariadicArgs]):
     def chf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """Cumulative hazard function.
+
+        Parameters
+        ----------
+        time : (N,) or (M,N) np.array of floats
+            Elapsed time. If the shape given is (N,), one asset and N points of measure are considered
+            To consider M assets with respectively N points of measure, pass an array of shape (M, N).
+        *args : any other numpy arrays of floats needed
+            Extra arguments required in addition of `time` (e.g. covariates). Each argument must be
+            broadcastable to `time`.
+
+        Returns
+        -------
+        (N,) or (M,N) np.array of floats
+            Cumulative hazard function at each given time.
+
+        Notes
+        -----
+        The cumulative hazard function is the integral of the hazard function.
+        """
         if "sf" in self.__class__.__dict__:
             return -np.log(self.sf(time, *args))
         if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
@@ -453,11 +472,14 @@ class ParametricModel(ParametricComponent, ABC):
     @abstractmethod
     def fit(self, *args: Any, **kwargs: Any) -> NDArray[np.float64]:
         """
-        Args:
-            *args ():
-            **kwargs ():
+        Parameters
+        ----------
+        args :
+        kwargs :
 
-        Returns:
+        Returns
+        -------
+
         """
 
 
@@ -497,7 +519,16 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
 
     @abstractmethod
     def init_params(self, lifetime_data: LifetimeData, *args: *VariadicArgs) -> None:
-        """"""
+        """
+        Parameters
+        ----------
+        lifetime_data : LifetimeData object
+        args : tuple of numpy arrays
+
+        Returns
+        -------
+
+        """
 
     def fit(
         self,
