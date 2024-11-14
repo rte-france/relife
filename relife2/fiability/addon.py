@@ -92,7 +92,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         )
 
 
-class LeftTruncated(LifetimeModel[NDArray[np.float64], *ModelArgs]):
+class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
         super().__init__()
         self.baseline = baseline

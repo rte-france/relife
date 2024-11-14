@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife2.data import RenewalRewardData
-from relife2.fiability.addon import LeftTruncated
+from relife2.fiability.addon import LeftTruncatedModel
 from relife2.fiability.model import LifetimeModel
 from relife2.renewal.discount import Discount, exponential_discount
 from relife2.renewal.process import RenewalRewardProcess, reward_partial_expectation
@@ -66,7 +66,7 @@ class OneCycleRunToFailure:
         a0: Optional[NDArray[np.float64]] = None,
     ) -> None:
         if a0 is not None:
-            model = LeftTruncated(model)
+            model = LeftTruncatedModel(model)
             model_args = (a0, *model_args)
         self.model = model
         self.model_args = model_args
@@ -167,7 +167,7 @@ class OneCycleAgeReplacementPolicy:
         a0: Optional[NDArray[np.float64]] = None,
     ) -> None:
         if a0 is not None:
-            model = LeftTruncated(model)
+            model = LeftTruncatedModel(model)
             model_args = (a0, *model_args)
         self.model = model
         self.nb_assets = nb_assets
@@ -236,10 +236,10 @@ class RunToFailure:
 
         if a0 is not None:
             if model1 is not None:
-                model1 = LeftTruncated(model1)
+                model1 = LeftTruncatedModel(model1)
                 model1_args = (a0, *model1_args)
             else:
-                model = LeftTruncated(model)
+                model = LeftTruncatedModel(model)
                 model_args = (a0, *model_args)
         self.model = model
         self.model1 = model1

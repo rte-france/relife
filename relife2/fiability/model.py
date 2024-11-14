@@ -1,14 +1,14 @@
 import copy
-import warnings
 from abc import ABC, abstractmethod
 from itertools import chain
-from typing import Any, Callable, Generic, Iterator, Optional, Union
+from typing import Any, Callable, Generic, Iterator, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize, newton
 
 from relife2.data import LifetimeData, lifetime_data_factory
+from relife2.fiability.likelihood import LikelihoodFromLifetimes
 from relife2.maths.integration import gauss_legendre, quad_laguerre
 from relife2.typing import VariadicArgs
 
@@ -136,7 +136,7 @@ class Parameters:
         self.update_parents()
 
 
-class ParametricComponent:
+class ParametricModel:
     def __init__(self):
         self._params = Parameters()
         self.leaves = {}
@@ -161,7 +161,7 @@ class ParametricComponent:
     def all_params_set(self):
         return np.isnan(self.params).any() and not np.isnan(self.params).all()
 
-    def compose_with(self, **kwcomponents: "ParametricComponent"):
+    def compose_with(self, **kwcomponents: "ParametricModel"):
         """add functions that can be called from node"""
         for name in kwcomponents.keys():
             if name in self._params.node_data:
@@ -460,46 +460,23 @@ class LifetimeModel(Generic[*VariadicArgs]):
             )
 
 
-class ParametricModel(ParametricComponent, ABC):
-    @abstractmethod
-    def init_params(self, *args: Any) -> None: ...
-
-    @property
-    @abstractmethod
-    def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
-
-    @abstractmethod
-    def fit(self, *args: Any, **kwargs: Any) -> NDArray[np.float64]:
-        """
-        Parameters
-        ----------
-        args :
-        kwargs :
-
-        Returns
-        -------
-
-        """
-
-
-class Likelihood(ParametricComponent, ABC):
-    def __init__(self, model: ParametricModel):
-        super().__init__()
-        self.compose_with(model=model)
-        self.hasjac = False
-        if hasattr(self.model, "jac_hf") and hasattr(self.model, "jac_chf"):
-            self.hasjac = True
-
-    @abstractmethod
-    def negative_log(self, params: NDArray[np.float64]) -> float:
-        """
-        Args:
-            params ():
-
-        Returns:
-            Negative log likelihood value given a set a parameters values
-        """
+# class ParametricModel(ParametricFunctions, ABC):
+#     @abstractmethod
+#     def init_params(self, *args: Any) -> None: ...
+#
+#
+#     @abstractmethod
+#     def fit(self, *args: Any, **kwargs: Any) -> NDArray[np.float64]:
+#         """
+#         Parameters
+#         ----------
+#         args :
+#         kwargs :
+#
+#         Returns
+#         -------
+#
+#         """
 
 
 class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC):
@@ -516,6 +493,11 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
     # @property
     # def nb_args(self):
     #     return len(self._args)
+
+    @property
+    @abstractmethod
+    def params_bounds(self) -> Bounds:
+        """BLABLABLA"""
 
     @abstractmethod
     def init_params(self, lifetime_data: LifetimeData, *args: *VariadicArgs) -> None:
@@ -593,151 +575,3 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
                     f"Can't call {item} if one model params is not set. Instanciate fully parametrized model or fit it"
                 )
         return super().__getattribute__(item)
-
-
-class LikelihoodFromLifetimes(Likelihood):
-
-    def __init__(
-        self,
-        model: ParametricLifetimeModel[*tuple[NDArray[np.float64], ...]],
-        lifetime_data: LifetimeData,
-        model_args: tuple[NDArray[np.float64], ...] = (),
-    ):
-        super().__init__(model)
-        self.lifetime_data = lifetime_data
-        self.model_args = model_args
-
-    def _complete_contribs(self, lifetime_data: LifetimeData) -> float:
-        return -np.sum(
-            np.log(
-                self.model.hf(
-                    lifetime_data.complete.values,
-                    *(args[lifetime_data.complete.index] for args in self.model_args),
-                )
-            )
-        )
-
-    def _right_censored_contribs(self, lifetime_data: LifetimeData) -> float:
-        return np.sum(
-            self.model.chf(
-                lifetime_data.rc.values,
-                *(args[lifetime_data.rc.index] for args in self.model_args),
-            ),
-            dtype=np.float64,
-        )
-
-    def _left_censored_contribs(self, lifetime_data: LifetimeData) -> float:
-        return -np.sum(
-            np.log(
-                -np.expm1(
-                    -self.model.chf(
-                        lifetime_data.left_censored.values,
-                        *(
-                            args[lifetime_data.left_censored.index]
-                            for args in self.model_args
-                        ),
-                    )
-                )
-            )
-        )
-
-    def _left_truncations_contribs(self, lifetime_data: LifetimeData) -> float:
-        return -np.sum(
-            self.model.chf(
-                lifetime_data.left_truncated.values,
-                *(args[lifetime_data.left_truncated.index] for args in self.model_args),
-            ),
-            dtype=np.float64,
-        )
-
-    def _jac_complete_contribs(
-        self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
-        return -np.sum(
-            self.model.jac_hf(
-                lifetime_data.complete.values,
-                *(args[lifetime_data.complete.index] for args in self.model_args),
-            )
-            / self.model.hf(
-                lifetime_data.complete.values,
-                *(args[lifetime_data.complete.index] for args in self.model_args),
-            ),
-            axis=0,
-        )
-
-    def _jac_right_censored_contribs(
-        self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
-        return np.sum(
-            self.model.jac_chf(
-                lifetime_data.rc.values,
-                *(args[lifetime_data.rc.index] for args in self.model_args),
-            ),
-            axis=0,
-        )
-
-    def _jac_left_censored_contribs(
-        self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
-        return -np.sum(
-            self.model.jac_chf(
-                lifetime_data.left_censored.values,
-                *(args[lifetime_data.left_censored.index] for args in self.model_args),
-            )
-            / np.expm1(
-                self.model.chf(
-                    lifetime_data.left_censored.values,
-                    *(
-                        args[lifetime_data.left_censored.index]
-                        for args in self.model_args
-                    ),
-                )
-            ),
-            axis=0,
-        )
-
-    def _jac_left_truncations_contribs(
-        self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
-        return -np.sum(
-            self.model.jac_chf(
-                lifetime_data.left_truncated.values,
-                *(args[lifetime_data.left_truncated.index] for args in self.model_args),
-            ),
-            axis=0,
-        )
-
-    def negative_log(
-        self,
-        params: NDArray[np.float64],
-    ) -> float:
-        self.params = params
-        return (
-            self._complete_contribs(self.lifetime_data)
-            + self._right_censored_contribs(self.lifetime_data)
-            + self._left_censored_contribs(self.lifetime_data)
-            + self._left_truncations_contribs(self.lifetime_data)
-        )
-
-    def jac_negative_log(
-        self,
-        params: NDArray[np.float64],
-    ) -> Union[None, NDArray[np.float64]]:
-        """
-
-        Args:
-            params ():
-
-        Returns:
-
-        """
-        if not self.hasjac:
-            warnings.warn("Model does not support jac negative likelihood natively")
-            return None
-        self.params = params
-        return (
-            self._jac_complete_contribs(self.lifetime_data)
-            + self._jac_right_censored_contribs(self.lifetime_data)
-            + self._jac_left_censored_contribs(self.lifetime_data)
-            + self._jac_left_truncations_contribs(self.lifetime_data)
-        )

@@ -12,6 +12,7 @@ from typing import Any, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from relife2.io import array_factory
 from scipy.optimize import Bounds, bisect, minimize
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 from scipy.stats import gamma
@@ -19,14 +20,12 @@ from scipy.stats import gamma
 from relife2.data import Deteriorations, deteriorations_factory
 from relife2.fiability.model import (
     Likelihood,
-    ParametricComponent,
     ParametricLifetimeModel,
     ParametricModel,
 )
-from relife2.io import array_factory
 
 
-class ShapeFunctions(ParametricComponent, ABC):
+class ShapeFunctions(ParametricModel, ABC):
     """BLABLABLA"""
 
     def init_params(self, *args: Any) -> NDArray[np.float64]:

@@ -14,13 +14,13 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
 from relife2.data import LifetimeData
-from relife2.fiability.model import ParametricComponent, ParametricLifetimeModel
+from relife2.fiability.model import ParametricModel, ParametricLifetimeModel
 from relife2.typing import ModelArgs
 
 Ts = TypeVarTuple("Ts")
 
 
-class CovarEffect(ParametricComponent):
+class CovarEffect(ParametricModel):
     def __init__(self, coef: tuple[float, ...] | tuple[None] = (None,)):
         super().__init__()
         self.new_params(**{f"coef_{i}": v for i, v in enumerate(coef)})

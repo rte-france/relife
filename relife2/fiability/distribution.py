@@ -61,10 +61,6 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
 class Exponential(Distribution):
     """
-    see : https://github.com/pandas-dev/pandas/blob/0691c5cf90477d3503834d983f69350f250a6ff7/pandas/core/frame.py#L509-L12664
-    see : https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame
-
-
     Exponential probability distribution
 
     Parameters
@@ -76,21 +72,23 @@ class Exponential(Distribution):
     See Also
     --------
     regression.AFT : AFT regression
-
+    regression.ProportionalHazard : AFT regression
 
     Examples
     --------
-    Constructing DataFrame from a dictionary.
+    Constructing exponential model with rate of 0.75.
 
     >>> model = Exponential(0.75)
-    >>> time = np.arange(0, 10)
-    >>>
-    array([1.        , 0.47236655, 0.22313016, 0.10539922, 0.04978707,
-           0.02351775, 0.011109  , 0.00524752, 0.00247875, 0.00117088])
+    >>> time = np.linspace(3, 10, num=5)
+    >>> model.sf(time)
+    array([0.10539922, 0.02836782, 0.00763509, 0.00205496, 0.00055308]))
 
+    Notice that only one asset is considered here. To pass another asset using broadcasting, use a 2d time array
 
-    Notice that only asset is used here. To pass mulitply assets, use 2d time array
-
+    >>> time = np.linspace([3, 5], [10, 10], num=5, axis=1)
+    >>> model.sf(time)
+    array([[0.10539922, 0.02836782, 0.00763509, 0.00205496, 0.00055308],
+           [0.02351775, 0.00920968, 0.00360656, 0.00141235, 0.00055308]])
     """
 
     def __init__(self, rate: Optional[float] = None):
