@@ -158,7 +158,7 @@ class ParametricModel:
         return len(self._params)
 
     @property
-    def all_params_set(self):
+    def _all_params_set(self):
         return np.isnan(self.params).any() and not np.isnan(self.params).all()
 
     def compose_with(self, **kwcomponents: "ParametricModel"):
@@ -502,11 +502,14 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
     @abstractmethod
     def init_params(self, lifetime_data: LifetimeData, *args: *VariadicArgs) -> None:
         """
+        Initialize parameters values before fitting
+
         Parameters
         ----------
         lifetime_data : LifetimeData object
+            lalal.
         args : tuple of numpy arrays
-
+            lala.
         Returns
         -------
 
@@ -570,7 +573,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             and not not item.startswith("__")
             and hasattr(LifetimeModel, item)
         ):
-            if not self.all_params_set:
+            if not self._all_params_set:
                 raise ValueError(
                     f"Can't call {item} if one model params is not set. Instanciate fully parametrized model or fit it"
                 )
