@@ -142,7 +142,15 @@ class ParametricModel:
         self.leaves = {}
 
     @property
-    def params(self):
+    def params(self) -> NDArray[np.float64]:
+        """
+        Returns parameters values of the model.
+
+        Returns
+        -------
+        params : numpy array of floats
+            Parameters values
+        """
         return np.array(self._params.values, dtype=np.float64)
 
     @params.setter

@@ -92,6 +92,11 @@ class Exponential(Distribution):
     """
 
     def __init__(self, rate: Optional[float] = None):
+        """
+        Parameters
+        ----------
+        rate :
+        """
         super().__init__()
         self.new_params(rate=rate)
 
@@ -117,6 +122,24 @@ class Exponential(Distribution):
         return self.rate * np.ones_like(time)
 
     def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Cumulative hazard function.
+
+        Parameters
+        ----------
+        time : ndarray of shape (n, ) or (m, n)
+            Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
+            To consider m assets with respectively n points of measure,
+            pass an array of shape (m, n).
+
+        Returns
+        -------
+        ndarray of shape (n, ) or (m, n)
+            Cumulative hazard function at each given time.
+
+        Notes
+        -----
+        The cumulative hazard function is the integral of the hazard function.
+        """
         return self.rate * time
 
     def mean(self) -> NDArray[np.float64]:
