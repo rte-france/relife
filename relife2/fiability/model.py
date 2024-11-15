@@ -10,7 +10,7 @@ from scipy.optimize import Bounds, minimize, newton
 from relife2.data import LifetimeData, lifetime_data_factory
 from relife2.fiability.likelihood import LikelihoodFromLifetimes
 from relife2.maths.integration import gauss_legendre, quad_laguerre
-from relife2.typing import VariadicArgs
+from relife2.types import VariadicArgs
 
 
 class Parameters:

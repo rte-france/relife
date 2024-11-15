@@ -13,7 +13,7 @@ from relife2.renewal.equation import (
 )
 from relife2.renewal.reward import Reward
 from relife2.renewal.sampling import lifetimes_generator, lifetimes_rewards_generator
-from relife2.typing import (
+from relife2.types import (
     DiscountArgs,
     Model1Args,
     ModelArgs,

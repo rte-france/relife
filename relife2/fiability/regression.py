@@ -15,7 +15,7 @@ from scipy.optimize import Bounds
 
 from relife2.data import LifetimeData
 from relife2.fiability.model import ParametricModel, ParametricLifetimeModel
-from relife2.typing import ModelArgs
+from relife2.types import ModelArgs
 
 Ts = TypeVarTuple("Ts")
 

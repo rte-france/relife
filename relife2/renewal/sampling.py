@@ -7,7 +7,7 @@ from relife2.fiability.addon import AgeReplacementModel
 from relife2.fiability.model import LifetimeModel
 from relife2.renewal.discount import Discount
 from relife2.renewal.reward import Reward
-from relife2.typing import DiscountArgs, Model1Args, ModelArgs, Reward1Args, RewardArgs
+from relife2.types import DiscountArgs, Model1Args, ModelArgs, Reward1Args, RewardArgs
 
 
 def model_rvs(

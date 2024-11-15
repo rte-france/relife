@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from relife2.fiability.model import LifetimeModel
 from relife2.maths.integration import gauss_legendre
-from relife2.typing import ModelArgs
+from relife2.types import ModelArgs
 
 
 class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):

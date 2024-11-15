@@ -15,6 +15,10 @@ from relife2.maths.integration import shifted_laguerre
 # note : Tuple[()] behaves differently (to follow)
 # no args are required
 class Distribution(ParametricLifetimeModel[()], ABC):
+    """
+    Base class of distribution model.
+    """
+
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return super().sf(time)
 
@@ -59,13 +63,16 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     #     return np.inf
 
 
+Distribution.sf.__doc__ = "hohohoo"
+
+
 class Exponential(Distribution):
     """
-    Exponential probability distribution
+    Exponential probability distribution.
 
     Parameters
     ----------
-    rate : float
+    rate : float, optional
         rate parameter
 
 
@@ -95,7 +102,8 @@ class Exponential(Distribution):
         """
         Parameters
         ----------
-        rate :
+        rate : float, optional
+            rate parameter
         """
         super().__init__()
         self.new_params(rate=rate)

@@ -10,7 +10,7 @@ from relife2.renewal.discount import Discount, exponential_discount
 from relife2.renewal.process import RenewalRewardProcess, reward_partial_expectation
 from relife2.renewal.reward import Reward, age_replacement_cost, run_to_failure_cost
 from relife2.renewal.sampling import lifetimes_rewards_generator
-from relife2.typing import (
+from relife2.types import (
     DiscountArgs,
     Model1Args,
     ModelArgs,
