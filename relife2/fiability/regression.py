@@ -12,6 +12,7 @@ from typing import Optional, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
+from typing_extensions import override
 
 from relife2.data import LifetimeData
 from relife2.fiability.model import ParametricModel, ParametricLifetimeModel
@@ -85,6 +86,7 @@ class Regression(
         )
         return Bounds(lb, ub)
 
+    @override
     def sf(
         self,
         time: NDArray[np.float64],
@@ -93,6 +95,7 @@ class Regression(
     ) -> NDArray[np.float64]:
         return super().sf(time, covar, *args)
 
+    @override
     def isf(
         self,
         probability: NDArray[np.float64],
@@ -102,6 +105,7 @@ class Regression(
         cumulative_hazard_rate = -np.log(probability)
         return self.ichf(cumulative_hazard_rate, covar, *args)
 
+    @override
     def cdf(
         self,
         time: NDArray[np.float64],
@@ -118,6 +122,7 @@ class Regression(
     ) -> NDArray[np.float64]:
         return super().pdf(time, covar, *args)
 
+    @override
     def ppf(
         self,
         probability: NDArray[np.float64],
@@ -126,6 +131,7 @@ class Regression(
     ) -> NDArray[np.float64]:
         return super().ppf(probability, covar, *args)
 
+    @override
     def mrl(
         self,
         time: NDArray[np.float64],
@@ -134,6 +140,7 @@ class Regression(
     ) -> NDArray[np.float64]:
         return super().mrl(time, covar, *args)
 
+    @override
     def rvs(
         self,
         covar: NDArray[np.float64],
@@ -143,14 +150,17 @@ class Regression(
     ):
         return super().rvs(covar, *args, size=size, seed=seed)
 
+    @override
     def mean(
         self, covar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
         return super().mean(covar, *args)
 
+    @override
     def var(self, covar: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         return super().var(covar, *args)
 
+    @override
     def median(
         self, covar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:

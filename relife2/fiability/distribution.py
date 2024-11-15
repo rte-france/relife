@@ -1,10 +1,11 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
+from typing_extensions import override
 
 from relife2.data import LifetimeData
 from relife2.fiability.model import ParametricLifetimeModel
@@ -20,21 +21,36 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     """
 
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        blablal.
+
+        Parameters
+        ----------
+        time :
+
+        Returns
+        -------
+
+        """
         return super().sf(time)
 
+    @override
     def isf(self, probability: NDArray[np.float64]) -> NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability)
         return self.ichf(cumulative_hazard_rate)
 
+    @override
     def cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return super().cdf(time)
 
     def pdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return super().pdf(time)
 
+    @override
     def ppf(self, probability: NDArray[np.float64]) -> NDArray[np.float64]:
         return super().ppf(probability)
 
+    @override
     def rvs(self, *, size: Optional[int] = 1, seed: Optional[int] = None):
         return super().rvs(size=size, seed=seed)
 
@@ -54,16 +70,29 @@ class Distribution(ParametricLifetimeModel[()], ABC):
             np.full(self.nb_params, np.inf),
         )
 
-    # @property
-    # def support_lower_bound(self):
-    #     return 0.0
-    #
-    # @property
-    # def support_upper_bound(self):
-    #     return np.inf
+    @abstractmethod
+    def ichf(
+        self,
+        cumulative_hazard_rate: NDArray[np.float64],
+    ) -> NDArray[np.float64]: ...
 
+    @abstractmethod
+    def jac_hf(
+        self,
+        time: NDArray[np.float64],
+    ) -> NDArray[np.float64]: ...
 
-Distribution.sf.__doc__ = "hohohoo"
+    @abstractmethod
+    def jac_chf(
+        self,
+        time: NDArray[np.float64],
+    ) -> NDArray[np.float64]: ...
+
+    @abstractmethod
+    def dhf(
+        self,
+        time: NDArray[np.float64],
+    ) -> NDArray[np.float64]: ...
 
 
 class Exponential(Distribution):
@@ -150,12 +179,15 @@ class Exponential(Distribution):
         """
         return self.rate * time
 
+    @override
     def mean(self) -> NDArray[np.float64]:
         return np.array(1 / self.rate)
 
+    @override
     def var(self) -> NDArray[np.float64]:
         return np.array(1 / self.rate**2)
 
+    @override
     def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return 1 / self.rate * np.ones_like(time)
 
@@ -183,12 +215,15 @@ class Weibull(Distribution):
     def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return (self.rate * time) ** self.shape
 
+    @override
     def mean(self) -> NDArray[np.float64]:
         return np.array(gamma(1 + 1 / self.shape) / self.rate)
 
+    @override
     def var(self) -> NDArray[np.float64]:
         return np.array(gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2)
 
+    @override
     def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return (
             gamma(1 / self.shape)
@@ -249,12 +284,15 @@ class Gompertz(Distribution):
     def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * np.expm1(self.rate * time)
 
+    @override
     def mean(self) -> NDArray[np.float64]:
         return np.array(np.exp(self.shape) * exp1(self.shape) / self.rate)
 
+    @override
     def var(self) -> NDArray[np.float64]:
         return np.array(polygamma(1, 1).item() / self.rate**2)
 
+    @override
     def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
@@ -305,9 +343,11 @@ class Gamma(Distribution):
         x = self.rate * time
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
+    @override
     def mean(self) -> NDArray[np.float64]:
         return np.array(self.shape / self.rate)
 
+    @override
     def var(self) -> NDArray[np.float64]:
         return np.array(self.shape / (self.rate**2))
 
@@ -346,6 +386,7 @@ class Gamma(Distribution):
     def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
+    @override
     def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return super().mrl(time)
 
@@ -363,6 +404,7 @@ class LogLogistic(Distribution):
         x = self.rate * time
         return np.array(np.log(1 + x**self.shape))
 
+    @override
     def mean(self) -> NDArray[np.float64]:
         b = np.pi / self.shape
         if self.shape <= 1:
@@ -371,6 +413,7 @@ class LogLogistic(Distribution):
             )
         return np.array(b / (self.rate * np.sin(b)))
 
+    @override
     def var(self) -> NDArray[np.float64]:
         b = np.pi / self.shape
         if self.shape <= 2:
@@ -414,5 +457,6 @@ class LogLogistic(Distribution):
             / (1 + x**self.shape) ** 2
         )
 
+    @override
     def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return super().mrl(time)

@@ -213,7 +213,7 @@ class ParametricModel:
         return copy.deepcopy(self)
 
 
-class LifetimeModel(Generic[*VariadicArgs]):
+class LifetimeModel(Generic[*VariadicArgs], ABC):
     # def __init_subclass__(cls, **kwargs):
     #     """
     #     TODO : something to parse *args names and to fill args_names and nb_args
@@ -228,39 +228,13 @@ class LifetimeModel(Generic[*VariadicArgs]):
     # def nb_args(self):
     #     return len(self._args)
 
-    def __new__(cls, *args, **kwargs):
-        if cls is LifetimeModel:
-            raise TypeError(
-                f"Can't instantiate class LifetimeModel, only subclass of LifetimeModel can"
-            )
-        return object.__new__(cls)
-
+    @abstractmethod
     def hf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Hazard function.
-
-        Parameters
-        ----------
-        time : numpy array of floats
-            Elapsed time.
-        *args : any other numpy arrays of floats needed
-            Extra arguments required in addition of `time`. Must be
-            broadcastable to `time`.
-
-        Returns
-        -------
-        numpy array of floats
-            Hazard function at each given time.
-
-        Notes
-        -----
-        The hazard function is the derivative of the cumulative hazard function.
-        """
-
-        if "pdf" in self.__class__.__dict__ and "sf" in self.__class__.__dict__:
+        if hasattr(self, "pdf") and hasattr(self, "sf"):
             return self.pdf(time, *args) / self.sf(time, *args)
-        if "sf" in self.__class__.__dict__:
+        if hasattr(self, "sf"):
             raise NotImplementedError(
                 """
                 ReLife does not implement hf as the derivate of chf yet. Consider adding it in future versions
@@ -271,71 +245,52 @@ class LifetimeModel(Generic[*VariadicArgs]):
         class_name = type(self).__name__
         raise NotImplementedError(
             f"""
-            {class_name} must implement hf function
+            {class_name} must implement concrete hf function
             """
         )
 
+    @abstractmethod
     def chf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Cumulative hazard function.
 
-        Parameters
-        ----------
-        time : (N,) or (M,N) np.array of floats
-            Elapsed time. If the shape given is (N,), one asset and N points of measure are considered
-            To consider M assets with respectively N points of measure, pass an array of shape (M, N).
-        *args : any other numpy arrays of floats needed
-            Extra arguments required in addition of `time` (e.g. covariates). Each argument must be
-            broadcastable to `time`.
-
-        Returns
-        -------
-        (N,) or (M,N) np.array of floats
-            Cumulative hazard function at each given time.
-
-        Notes
-        -----
-        The cumulative hazard function is the integral of the hazard function.
-        """
-        if "sf" in self.__class__.__dict__:
+        if hasattr(self, "sf"):
             return -np.log(self.sf(time, *args))
-        if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
+        if hasattr(self, "pdf") and hasattr(self, "hf"):
             return -np.log(self.pdf(time, *args) / self.hf(time, *args))
-        if "hf" in self.__class__.__dict__:
+        if hasattr(self, "hf"):
             return self.ls_integrate(
                 lambda x: self.hf(x, *args), np.array(0.0), np.array(np.inf), *args
             )
         class_name = type(self).__name__
         raise NotImplementedError(
             f"""
-        {class_name} must implement chf or at least hf function
+        {class_name} must implement concrete chf or at least concrete hf function
         """
         )
 
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64], *args: *VariadicArgs):
-        raise NotImplementedError
-
+    @abstractmethod
     def sf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        if "chf" in self.__class__.__dict__:
+        if hasattr(self, "chf"):
             return np.exp(
                 -self.chf(
                     time,
                     *args,
                 )
             )
-        if "pdf" in self.__class__.__dict__ and "hf" in self.__class__.__dict__:
+        if hasattr(self, "pdf") and hasattr(self, "hf"):
             return self.pdf(time, *args) / self.hf(time, *args)
 
         class_name = type(self).__name__
         raise NotImplementedError(
             f"""
-        {class_name} must implement sf function
+        {class_name} must implement concrete sf function
         """
         )
 
+    @abstractmethod
     def pdf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
