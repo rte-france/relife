@@ -215,6 +215,26 @@ class ProportionalHazard(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
+        """Hazard function.
+
+        The hazard function of the regression
+
+        Parameters
+        ----------
+        time : numpy array of floats
+            Elapsed time.
+        covar : numpy array of floats
+            Covariates values.
+
+        Returns
+        -------
+        numpy array of floats
+            Hazard values at each given time.
+
+        Notes
+        -----
+        `time`, `covar` and any `*args` arrays must be broadcastable
+        """
         return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
     def chf(
