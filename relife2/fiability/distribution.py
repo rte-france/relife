@@ -71,12 +71,6 @@ class Distribution(ParametricLifetimeModel[()], ABC):
         )
 
     @abstractmethod
-    def ichf(
-        self,
-        cumulative_hazard_rate: NDArray[np.float64],
-    ) -> NDArray[np.float64]: ...
-
-    @abstractmethod
     def jac_hf(
         self,
         time: NDArray[np.float64],
@@ -221,6 +215,7 @@ class Exponential(Distribution):
         """
         return 1 / self.rate * np.ones_like(time)
 
+    @override
     def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return cumulative_hazard_rate / self.rate
 
@@ -330,6 +325,7 @@ class Weibull(Distribution):
             )
         )
 
+    @override
     def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return cumulative_hazard_rate ** (1 / self.shape) / self.rate
 
@@ -459,6 +455,7 @@ class Gompertz(Distribution):
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
 
+    @override
     def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
@@ -565,6 +562,7 @@ class Gamma(Distribution):
         """
         return np.array(self.shape / (self.rate**2))
 
+    @override
     def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
 
@@ -704,6 +702,7 @@ class LogLogistic(Distribution):
             (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
         )
 
+    @override
     def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 

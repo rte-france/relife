@@ -167,14 +167,6 @@ class Regression(
         return super().median(covar, *args)
 
     @abstractmethod
-    def ichf(
-        self,
-        cumulative_hazard_rate: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        *args: *ModelArgs,
-    ) -> NDArray[np.float64]: ...
-
-    @abstractmethod
     def jac_hf(
         self,
         time: NDArray[np.float64],
@@ -245,6 +237,7 @@ class ProportionalHazard(Regression):
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
+    @override
     def ichf(
         self,
         cumulative_hazard_rate: NDArray[np.float64],
@@ -310,6 +303,7 @@ class AFT(Regression):
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
 
+    @override
     def ichf(
         self,
         cumulative_hazard_rate: NDArray[np.float64],

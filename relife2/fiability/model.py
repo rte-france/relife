@@ -373,6 +373,16 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
             x0=np.zeros_like(probability),
         )
 
+    def ichf(
+        self,
+        cumulative_hazard_rate: NDArray[np.float64],
+        *args: *VariadicArgs,
+    ):
+        return newton(
+            lambda x: self.chf(x, *args) - cumulative_hazard_rate,
+            x0=np.zeros_like(cumulative_hazard_rate),
+        )
+
     def cdf(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:

@@ -2,6 +2,8 @@ from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.optimize import newton
+from typing_extensions import override
 
 from relife2.fiability.model import LifetimeModel
 from relife2.maths.integration import gauss_legendre
@@ -22,6 +24,19 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     ) -> NDArray[np.float64]:
         return np.where(time < ar, self.baseline.sf(time, *args), 0)
 
+    # TODO : correct formula ? if not, does AgeReplacementModel have to be LifetimeModel ?
+    def hf(
+        self, time: NDArray[np.float64], ar: NDArray[np.float64], *args: *ModelArgs
+    ) -> NDArray[np.float64]:
+        return self.baseline.hf(time, *args)
+
+    # TODO : correct formula ? if not, does AgeReplacementModel have to be LifetimeModel ?
+    def chf(
+        self, time: NDArray[np.float64], ar: NDArray[np.float64], *args: *ModelArgs
+    ) -> NDArray[np.float64]:
+        return self.baseline.chf(time, *args)
+
+    @override
     def isf(
         self,
         probability: NDArray[np.float64],
@@ -38,6 +53,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     ) -> NDArray[np.float64]:
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
+    @override
     def moment(
         self, n: int, ar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
@@ -48,6 +64,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
             *args,
         )
 
+    @override
     def mrl(
         self, time: NDArray[np.float64], ar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
@@ -63,6 +80,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         )
         return np.ma.filled(mu, 0)
 
+    @override
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
@@ -96,6 +114,18 @@ class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
         super().__init__()
         self.baseline = baseline
+
+    # TODO : correct formula ? if not, does LeftTruncatedModel have to be LifetimeModel ?
+    def sf(
+        self, time: NDArray[np.float64], a0: NDArray[np.float64], *args: *ModelArgs
+    ) -> NDArray[np.float64]:
+        pass
+
+    # TODO : correct formula ? if not, does LeftTruncatedModel have to be LifetimeModel ?
+    def pdf(
+        self, time: NDArray[np.float64], a0: NDArray[np.float64], *args: *ModelArgs
+    ) -> NDArray[np.float64]:
+        pass
 
     def isf(
         self,
@@ -144,10 +174,45 @@ class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     ) -> NDArray[np.float64]:
         return self.baseline.rvs(*(a0, *args), size=size, seed=seed) + a0
 
-    # @property
-    # def support_upper_bound(self):
-    #     return self.baseline.support_upper_bound
-    #
-    # @property
-    # def support_lower_bound(self):
-    #     return self.baseline.support_upper_bound
+
+class EquilibriumDistribution(LifetimeModel[*ModelArgs]):
+    def __init__(self, baseline: LifetimeModel[*ModelArgs]):
+        super().__init__()
+        self.baseline = baseline
+
+    def sf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        return 1 - self.cdf(time, *args)
+
+    @override
+    def cdf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        args_2d = np.atleast_2d(*args)
+        if isinstance(args_2d, np.ndarray):
+            args_2d = (args_2d,)
+        return gauss_legendre(
+            self.baseline.sf, 0, time, *args_2d, ndim=2
+        ) / self.baseline.mean(*args_2d)
+
+    def pdf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        return self.baseline.sf(time, *args) / self.baseline.mean(*args)
+
+    def hf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        return 1 / self.baseline.mrl(time, *args)
+
+    def chf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        return -np.log(self.sf(time, *args))
+
+    @override
+    def isf(
+        self, probability: NDArray[np.float64], *args: *ModelArgs
+    ) -> NDArray[np.float64]:
+        return newton(
+            lambda x: self.sf(x, *args) - probability,
+            self.baseline.isf(probability, *args),
+            args=args,
+        )
+
+    @override
+    def ichf(
+        self, cumulative_hazard_rate: NDArray[np.float64], *args: *ModelArgs
+    ) -> NDArray[np.float64]:
+        return self.isf(np.exp(-cumulative_hazard_rate), *args)
