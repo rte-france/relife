@@ -5,6 +5,7 @@ from numpy.typing import NDArray
 
 VariadicArgs = TypeVarTuple("VariadicArgs")
 
+# tuple consisting of zero or more NDArray[np.float64]
 ModelArgs = tuple[NDArray[np.float64], ...]
 Model1Args = tuple[NDArray[np.float64], ...]
 RewardArgs = tuple[NDArray[np.float64], ...]

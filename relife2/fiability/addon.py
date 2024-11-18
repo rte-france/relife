@@ -60,6 +60,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         return self.ls_integrate(
             lambda x: x**n,
             np.array(0.0),
+            np.array(np.inf),
             ar,
             *args,
         )

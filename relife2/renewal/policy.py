@@ -54,7 +54,6 @@ class OneCycleRunToFailure:
     discount = exponential_discount
     model1 = None
     reward1 = None
-    nb_assets: int = 1
 
     def __init__(
         self,
@@ -69,11 +68,8 @@ class OneCycleRunToFailure:
             model = LeftTruncatedModel(model)
             model_args = (a0, *model_args)
         self.model = model
-        self.model_args = model_args
         self.nb_assets = nb_assets
-        self.args["model"] = model_args
-        self.args["reward"] = (cf,)
-        self.args["discount"] = (rate,)
+        self.args = {"model": model_args, "reward": (cf,), "discount": (rate,)}
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return reward_partial_expectation(
@@ -81,7 +77,7 @@ class OneCycleRunToFailure:
             self.model,
             run_to_failure_cost,
             exponential_discount,
-            model_args=self.model_args,
+            model_args=self.args["model"],
             reward_args=self.args["reward"],
             discount_args=self.args["discount"],
         )
@@ -171,9 +167,11 @@ class OneCycleAgeReplacementPolicy:
             model_args = (a0, *model_args)
         self.model = model
         self.nb_assets = nb_assets
-        self.args["model"] = (ar, *model_args)
-        self.args["reward"] = (ar, cf, cp)
-        self.args["discount"] = (rate,)
+        self.args = {
+            "model": (ar, *model_args),
+            "reward": (ar, cf, cp),
+            "discount": (rate,),
+        }
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return reward_partial_expectation(
@@ -243,9 +241,7 @@ class RunToFailure:
                 model_args = (a0, *model_args)
         self.model = model
         self.model1 = model1
-        self.args["model"] = model_args
-        self.args["reward"] = (cf,)
-        self.args["discount"] = (rate,)
+        self.args = {"model": model_args, "reward": (cf,), "discount": (rate,)}
         if model1_args is not None:
             self.args["model1"] = model1_args
         if cf1 is not None:

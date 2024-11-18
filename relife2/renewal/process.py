@@ -71,13 +71,12 @@ class RenewalProcess:
         nb_assets: int = 1,
         model_args: ModelArgs = (),
         model1: Optional[LifetimeModel[*Model1Args]] = None,
-        delayed_model_args: Model1Args = (),
+        model1_args: Model1Args = (),
     ):
         self.model = model
         self.model1 = model1
         self.nb_assets = nb_assets
-        self.args["model"] = model_args
-        self.args["model1"] = delayed_model_args
+        self.args = {"model": model_args, "model1": model1_args}
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         if self.model1 is None:
@@ -193,11 +192,13 @@ class RenewalRewardProcess(RenewalProcess):
         super().__init__(model, nb_assets=nb_assets, model1=model1)
         self.reward = reward
         self.reward1 = reward1
-        self.args["model"] = model_args
-        self.args["model1"] = model1_args
-        self.args["reward"] = reward_args
-        self.args["discount"] = (discount_rate,)
-        self.args["reward1"] = reward1_args
+        self.args = {
+            "model": model_args,
+            "model1": model1_args,
+            "reward": reward_args,
+            "discount": (discount_rate,),
+            "reward1": reward1_args,
+        }
 
     def expected_total_reward(
         self, timeline: NDArray[np.float64]
