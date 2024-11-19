@@ -33,16 +33,35 @@ class Policy(Protocol):
     nb_assets: int = 1
 
     def expected_total_cost(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
-
-    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]: ...
+        self, timeline: NDArray[np.float64] # tf: float, period:float=1 
+    ) -> NDArray[np.float64]:
+        """warning: tf > 0, period > 0, dt is deduced from period and is < 0.5"""
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]: ...
 
+    def expected_number_of_replacements(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]: ...
+
+    def expected_number_of_failures(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]: ...
+
+    def expected_number_of_preventive_replacements(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]: ...
+
+    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]: ...
+
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]: ...
+
+    def sample(
+        self,
+        nb_samples: int,
+    ) -> RenewalRewardData: ...
+
 
 
 class OneCycleRunToFailure:
