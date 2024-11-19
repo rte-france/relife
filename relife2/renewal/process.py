@@ -107,6 +107,7 @@ class RenewalProcess:
                 lambda time, args: self.model1.pdf(time, *args),
                 args=self.args["model1"],
             )
+
         return renewal_equation_solver(
             timeline,
             self.model,

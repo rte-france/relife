@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
-from typing import Protocol, Union
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,7 +10,7 @@ from numpy.typing import NDArray
 from relife2.data import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife2.fiability.model import ParametricModel, ParametricLifetimeModel
+    from relife2.fiability.model import ParametricLifetimeModel, ParametricModel
 
 
 class Likelihood(Protocol):

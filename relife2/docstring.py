@@ -1,10 +1,9 @@
 import inspect
 from typing import Callable
 
-from numpydoc.docscrape import NumpyDocString
-
 from fiability.distribution import Exponential
 from fiability.model import LifetimeModel
+from numpydoc.docscrape import NumpyDocString
 
 
 def set_lifetime_method_docstring(method: Callable) -> str:

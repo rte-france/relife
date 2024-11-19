@@ -94,9 +94,9 @@ class OneCycleRunToFailure:
             / exponential_discount.annuity_factor(x, *self.args["discount"])
         )
         mask = timeline < dt
-        q0 = self.model.cdf(dt, *self.model_args) * f(dt)
+        q0 = self.model.cdf(dt, *self.args["model"]) * f(dt)
         return q0 + np.where(
-            mask, 0, self.model.ls_integrate(f, dt, timeline, *self.model_args)
+            mask, 0, self.model.ls_integrate(f, dt, timeline, *self.args["model"])
         )
 
     def asymptotic_expected_equivalent_annual_cost(

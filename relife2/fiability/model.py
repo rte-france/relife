@@ -259,8 +259,11 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         if hasattr(self, "pdf") and hasattr(self, "hf"):
             return -np.log(self.pdf(time, *args) / self.hf(time, *args))
         if hasattr(self, "hf"):
-            return self.ls_integrate(
-                lambda x: self.hf(x, *args), np.array(0.0), np.array(np.inf), *args
+            return np.broadcast_to(
+                self.ls_integrate(
+                    lambda x: self.hf(x, *args), np.array(0.0), np.array(np.inf), *args
+                ),
+                np.broadcast(time, *args).shape,
             )
         class_name = type(self).__name__
         raise NotImplementedError(
@@ -307,10 +310,11 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def mrl(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-
-        return self.ls_integrate(
-            lambda x: x - time, time, np.array(np.inf), *args
-        ) / self.sf(time, *args)
+        ls = np.squeeze(
+            self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
+        )
+        sf = self.sf(time, *args)
+        return np.broadcast_to(ls, sf.shape) / sf
 
         # masked_time: ma.MaskedArray = ma.MaskedArray(
         #     time, time >= self.support_upper_bound
@@ -340,12 +344,17 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *VariadicArgs) -> NDArray[np.float64]:
-        return self.ls_integrate(
-            lambda x: x**n,
-            np.array(0.0),
-            np.array(np.inf),
-            *args,
+        return np.squeeze(
+            self.ls_integrate(
+                lambda x: x**n,
+                np.array(0.0),
+                np.array(np.inf),
+                *args,
+            )
         )
+        # if bool(args):
+        #     return np.broadcast_to(ls, np.broadcast(*args).shape)
+        # return ls
 
         # upper_bound = self.isf(np.array(1e-4), *args)
         #
@@ -423,14 +432,11 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
         if np.all(np.isinf(b)):
             b = np.atleast_2d(self.isf(np.array(1e-4), *args_2d))
-            return np.squeeze(
-                gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
-                + quad_laguerre(integrand, b, *args_2d, ndim=2, deg=deg)
-            )
+            return gauss_legendre(
+                integrand, a, b, *args_2d, ndim=2, deg=deg
+            ) + quad_laguerre(integrand, b, *args_2d, ndim=2, deg=deg)
         else:
-            return np.squeeze(
-                gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
-            )
+            return gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
 
 
 # class ParametricModel(ParametricFunctions, ABC):

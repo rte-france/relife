@@ -106,9 +106,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
             return np.atleast_2d(func(x) * self.baseline.pdf(x, *_))
 
         w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *args_2d), 0)
-        return np.squeeze(
-            gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg) + w
-        )
+        return gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg) + w
 
 
 class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
