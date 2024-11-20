@@ -185,14 +185,23 @@ class EquilibriumDistribution(LifetimeModel[*ModelArgs]):
     @override
     def cdf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         args_2d = np.atleast_2d(*args)
+        time_2d = np.atleast_2d(time)
         if isinstance(args_2d, np.ndarray):
             args_2d = (args_2d,)
-        return gauss_legendre(
-            self.baseline.sf, 0, time, *args_2d, ndim=2
+        res = gauss_legendre(
+            self.baseline.sf, 0, time_2d, *args_2d, ndim=2
         ) / self.baseline.mean(*args_2d)
+        if np.broadcast(time, *args).ndim < res.ndim:
+            return np.squeeze(res)
+        return res
 
     def pdf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
-        return self.baseline.sf(time, *args) / self.baseline.mean(*args)
+        # self.baseline.mean can squeeze -> broadcast error (origin : ls_integrate output shape)
+        mean = self.baseline.mean(*args)
+        sf = self.baseline.sf(time, *args)
+        if mean.ndim < sf.ndim:  # valid if mean cannot have more than 2 dim
+            mean = np.reshape(mean, (1, -1))
+        return sf / mean
 
     def hf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         return 1 / self.baseline.mrl(time, *args)

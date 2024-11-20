@@ -259,12 +259,18 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         if hasattr(self, "pdf") and hasattr(self, "hf"):
             return -np.log(self.pdf(time, *args) / self.hf(time, *args))
         if hasattr(self, "hf"):
-            return np.broadcast_to(
-                self.ls_integrate(
-                    lambda x: self.hf(x, *args), np.array(0.0), np.array(np.inf), *args
-                ),
-                np.broadcast(time, *args).shape,
+            raise NotImplementedError(
+                """
+                ReLife does not implement chf as the integration of hf yet. Consider adding it in future versions
+                """
             )
+        #
+        #     return self.ls_integrate(
+        #         lambda x: self.hf(x, *args),
+        #         np.array(0.0),
+        #         np.array(np.inf),
+        #         *args,
+        #     )
         class_name = type(self).__name__
         raise NotImplementedError(
             f"""
@@ -310,11 +316,16 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def mrl(
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        ls = np.squeeze(
-            self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
-        )
         sf = self.sf(time, *args)
-        return np.broadcast_to(ls, sf.shape) / sf
+        ls = self.ls_integrate(
+            lambda x: x - time,
+            time,
+            np.array(np.inf),
+            *args,  # broadcast_to=sf.shape
+        )
+        if sf.ndim < ls.ndim:
+            return np.squeeze(ls / sf)
+        return ls / sf
 
         # masked_time: ma.MaskedArray = ma.MaskedArray(
         #     time, time >= self.support_upper_bound
@@ -344,14 +355,16 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *VariadicArgs) -> NDArray[np.float64]:
-        return np.squeeze(
-            self.ls_integrate(
-                lambda x: x**n,
-                np.array(0.0),
-                np.array(np.inf),
-                *args,
-            )
+        ls = self.ls_integrate(
+            lambda x: x**n,
+            np.array(0.0),
+            np.array(np.inf),
+            *args,
         )
+        if np.broadcast(*args).ndim < ls.ndim:
+            return np.squeeze(ls)
+        return ls
+
         # if bool(args):
         #     return np.broadcast_to(ls, np.broadcast(*args).shape)
         # return ls
@@ -419,7 +432,22 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         b: NDArray[np.float64],
         *args: *VariadicArgs,
         deg: int = 100,
+        # broadcast_to: Optional[tuple[int, int]] = None,
     ) -> NDArray[np.float64]:
+        """
+        Parameters
+        ----------
+        func :
+        a :
+        b :
+        args :
+        deg :
+        broadcast_to :
+
+        Returns
+        -------
+            2d array (by default). broadcast_to to squeeze and broadcast to another shape
+        """
 
         b = np.minimum(np.inf, b)
         a, b = np.atleast_2d(*np.broadcast_arrays(a, b))
@@ -432,11 +460,19 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
         if np.all(np.isinf(b)):
             b = np.atleast_2d(self.isf(np.array(1e-4), *args_2d))
-            return gauss_legendre(
+            integration = gauss_legendre(
                 integrand, a, b, *args_2d, ndim=2, deg=deg
             ) + quad_laguerre(integrand, b, *args_2d, ndim=2, deg=deg)
         else:
-            return gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
+            integration = gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
+
+        # if broadcast_to is not None:
+        #     try:
+        #         integration = np.broadcast_to(np.squeeze(integration), broadcast_to)
+        #     except ValueError:
+        #         raise ValueError("broadcast_to shape value is incompatible")
+
+        return integration
 
 
 # class ParametricModel(ParametricFunctions, ABC):
