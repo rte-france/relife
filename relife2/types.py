@@ -10,7 +10,7 @@ ModelArgs = tuple[NDArray[np.float64], ...]
 Model1Args = tuple[NDArray[np.float64], ...]
 RewardArgs = tuple[NDArray[np.float64], ...]
 Reward1Args = tuple[NDArray[np.float64], ...]
-DiscountArgs = tuple[NDArray[np.float64], ...]
+DiscountArgs = tuple[float, ...]
 
 
 class RenewalProcessArgs(TypedDict):

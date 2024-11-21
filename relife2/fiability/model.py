@@ -264,13 +264,6 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
                 ReLife does not implement chf as the integration of hf yet. Consider adding it in future versions
                 """
             )
-        #
-        #     return self.ls_integrate(
-        #         lambda x: self.hf(x, *args),
-        #         np.array(0.0),
-        #         np.array(np.inf),
-        #         *args,
-        #     )
         class_name = type(self).__name__
         raise NotImplementedError(
             f"""
@@ -317,14 +310,9 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         self, time: NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
         sf = self.sf(time, *args)
-        ls = self.ls_integrate(
-            lambda x: x - time,
-            time,
-            np.array(np.inf),
-            *args,  # broadcast_to=sf.shape
-        )
-        if sf.ndim < ls.ndim:
-            return np.squeeze(ls / sf)
+        ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
+        if sf.ndim < 2:  # 2d to 1d or 0d
+            ls = np.squeeze(ls)
         return ls / sf
 
         # masked_time: ma.MaskedArray = ma.MaskedArray(
@@ -361,8 +349,9 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
             np.array(np.inf),
             *args,
         )
-        if np.broadcast(*args).ndim < ls.ndim:
-            return np.squeeze(ls)
+        ndim = max(map(np.ndim, args), default=0)
+        if ndim < 2:  # 2d to 1d or 0d
+            ls = np.squeeze(ls)
         return ls
 
         # if bool(args):
@@ -433,16 +422,18 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         *args: *VariadicArgs,
         deg: int = 100,
         # broadcast_to: Optional[tuple[int, int]] = None,
+        # ndim: Optional[int] = None,
     ) -> NDArray[np.float64]:
         """
         Parameters
         ----------
+        ndim :
         func :
         a :
         b :
         args :
         deg :
-        broadcast_to :
+        ndim : optional, desired output array dim (<= 2)
 
         Returns
         -------
@@ -466,13 +457,23 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         else:
             integration = gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
 
+        # if ndim is not None:
+        #     if ndim > 2:
+        #         raise ValueError("ndim can't be greater than 2")
+        #     try:
+        #         integration = np.reshape(
+        #             integration, (-1,) + (1,) * (ndim - 1) if ndim > 0 else ()
+        #         )
+        #     except ValueError:
+        #         raise ValueError("incompatible ndim value")
+
+        return integration
+
         # if broadcast_to is not None:
         #     try:
         #         integration = np.broadcast_to(np.squeeze(integration), broadcast_to)
         #     except ValueError:
         #         raise ValueError("broadcast_to shape value is incompatible")
-
-        return integration
 
 
 # class ParametricModel(ParametricFunctions, ABC):

@@ -191,16 +191,21 @@ class EquilibriumDistribution(LifetimeModel[*ModelArgs]):
         res = gauss_legendre(
             self.baseline.sf, 0, time_2d, *args_2d, ndim=2
         ) / self.baseline.mean(*args_2d)
-        if np.broadcast(time, *args).ndim < res.ndim:
-            return np.squeeze(res)
+        # reshape 2d -> final_dim
+        ndim = max(map(np.ndim, (time, *args)), default=0)
+        if ndim < 2:
+            res = np.squeeze(res)
         return res
 
     def pdf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
         # self.baseline.mean can squeeze -> broadcast error (origin : ls_integrate output shape)
         mean = self.baseline.mean(*args)
         sf = self.baseline.sf(time, *args)
-        if mean.ndim < sf.ndim:  # valid if mean cannot have more than 2 dim
-            mean = np.reshape(mean, (1, -1))
+        if mean.ndim < sf.ndim:  # if args is empty, sf can have more dim than mean
+            if sf.ndim == 1:
+                mean = np.reshape(mean, (-1,))
+            if sf.ndim == 2:
+                mean = np.broadcast_to(mean, (sf.shape[0], -1))
         return sf / mean
 
     def hf(self, time: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:

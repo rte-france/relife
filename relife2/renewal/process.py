@@ -170,11 +170,20 @@ def reward_partial_expectation(
     def func(x):
         return reward(x, *reward_args) * discount.factor(x, *discount_args)
 
-    return model.ls_integrate(func, np.zeros_like(timeline), timeline, *model_args)
+    ls = model.ls_integrate(func, np.zeros_like(timeline), timeline, *model_args)
+    # reshape 2d -> final_dim
+    ndim = max(map(np.ndim, (timeline, *model_args, *reward_args)), default=0)
+    if ndim < 2:
+        ls = np.squeeze(ls)
+    return ls
 
 
 class RenewalRewardProcess(RenewalProcess):
     args: RenewalRewardProcessArgs
+    discount: Discount[float] = exponential_discount
+    # TODO: make RenewalRewardProcess accept other discount as parameter
+    #  change asymptotic_expected_equivalent_annual_worth
+    #  change asymptotic_expected_total_reward
 
     def __init__(
         self,
@@ -184,7 +193,7 @@ class RenewalRewardProcess(RenewalProcess):
         nb_assets: int = 1,
         model_args: ModelArgs = (),
         reward_args: RewardArgs = (),
-        discount_rate: float | NDArray[np.float64] = 0.0,
+        discount_rate: float = 0.0,
         model1: Optional[LifetimeModel[*Model1Args]] = None,
         model1_args: Model1Args = (),
         reward1: Optional[Reward[*Reward1Args]] = None,
@@ -211,13 +220,13 @@ class RenewalRewardProcess(RenewalProcess):
                 reward_partial_expectation,
                 model=self.model,
                 reward=self.reward,
-                discount=exponential_discount,
+                discount=self.discount,
                 model_args=self.args["model"],
                 reward_args=self.args["reward"],
-                disounting_args=self.args["discount"],
+                discount_args=self.args["discount"],
             ),
             model_args=self.args["model"],
-            discount=exponential_discount,
+            discount=self.discount,
             discount_args=self.args["discount"],
         )
 
@@ -232,13 +241,13 @@ class RenewalRewardProcess(RenewalProcess):
                     reward_partial_expectation,
                     model=self.model1,
                     reward=self.reward1,
-                    discount=exponential_discount,
+                    discount=self.discount,
                     model_args=self.args["model1"],
                     reward_args=self.args["reward1"],
-                    disount_args=self.args["discount"],
+                    discount_args=self.args["discount"],
                 ),
-                delayed_model_args=self.args["model1"],
-                discount=exponential_discount,
+                model1_args=self.args["model1"],
+                discount=self.discount,
                 discount_args=self.args["discount"],
             )
 
@@ -249,12 +258,10 @@ class RenewalRewardProcess(RenewalProcess):
         rate = np.ma.MaskedArray(self.args["discount"][0], mask)
 
         def f(x):
-            return exponential_discount.factor(x, rate)
+            return self.discount.factor(x, rate)
 
         def y(x):
-            return exponential_discount.factor(x, rate) * self.reward(
-                x, *self.args["reward"]
-            )
+            return self.discount.factor(x, rate) * self.reward(x, *self.args["reward"])
 
         lf = self.model.ls_integrate(
             f, np.array(0.0), np.array(np.inf), *self.args["model"]
@@ -267,7 +274,7 @@ class RenewalRewardProcess(RenewalProcess):
         if self.model1 is not None:
 
             def y1(x):
-                return exponential_discount.factor(x, rate) * self.reward(
+                return self.discount.factor(x, rate) * self.reward(
                     x, *self.args["reward1"]
                 )
 
@@ -285,7 +292,7 @@ class RenewalRewardProcess(RenewalProcess):
     ) -> NDArray[np.float64]:
 
         z = self.expected_total_reward(timeline)
-        af = exponential_discount.annuity_factor(timeline, *self.args["discount"])
+        af = self.discount.annuity_factor(timeline, *self.args["discount"])
         mask = af == 0.0
         af = np.ma.masked_where(mask, af)
         q = z / af
@@ -328,7 +335,7 @@ class RenewalRewardProcess(RenewalProcess):
             lifetimes_rewards_generator(
                 self.model,
                 self.reward,
-                exponential_discount,
+                self.discount,
                 nb_samples,
                 self.nb_assets,
                 end_time=end_time,

@@ -9,7 +9,8 @@ import pytest
 
 from relife2 import AgeReplacementModel, EquilibriumDistribution
 from relife2 import Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
-from relife2.renewal.process import RenewalProcess
+from relife2.renewal.process import RenewalProcess, RenewalRewardProcess
+from relife2.renewal.reward import run_to_failure_cost
 
 
 # fixtures
@@ -75,15 +76,19 @@ def test_renewal_process(model_and_args):
     assert y[..., -1:] == pytest.approx(y0, rel=1e-4)
 
 
-# def test_renewal_reward_process(model_and_args):
-#     t = np.arange(0, 100, 0.5)
-#     model, model_args = model_and_args
-#     reward = FailureCost()
-#     reward_args = (1,)
-#     rrp = RenewalRewardProcess(model, reward)
-#     m = rrp.renewal_function(t, model_args)
-#     z = rrp.expected_total_reward(t, model_args, reward_args)
-#     assert m == pytest.approx(z, rel=1e-4)
+def test_renewal_reward_process(model_and_args):
+    t = np.arange(0, 100, 0.5)
+    model, model_args = model_and_args
+    reward = run_to_failure_cost
+    reward_args = (1,)
+    rrp = RenewalRewardProcess(
+        model, reward, model_args=model_args, reward_args=reward_args
+    )
+    m = rrp.renewal_function(t)
+    z = rrp.expected_total_reward(t)
+    assert m == pytest.approx(z, rel=1e-4)
+
+
 #
 #
 # def test_renewal_reward_process_vec(model_and_args):
