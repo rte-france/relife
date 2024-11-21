@@ -89,26 +89,27 @@ def test_renewal_reward_process(model_and_args):
     assert m == pytest.approx(z, rel=1e-4)
 
 
-#
-#
-# def test_renewal_reward_process_vec(model_and_args):
-#     t = np.arange(0, 100, 0.5)
-#     n = 3
-#     cf = 1
-#     rate = 0.04
-#     model, model_args = model_and_args
-#     reward = FailureCost()
-#     reward_args0 = (n * cf,)
-#     reward_args = (cf,)
-#     discount_args0 = (rate,)
-#     discount_args = (np.repeat(rate, n).reshape(-1, 1, 1),)
-#     rrp = RenewalRewardProcess(model, reward)
-#     z0 = np.atleast_2d(
-#         rrp.expected_total_reward(
-#             t, model_args, reward_args0, discount_args=discount_args0
-#         )
-#     )
-#     z = rrp.expected_total_reward(
-#         t, model_args, reward_args, discount_args=discount_args
-#     )
-#     assert z0 == pytest.approx(z.sum(axis=0), rel=1e-4)
+def test_renewal_reward_process_vec(model_and_args):
+    t = np.arange(0, 100, 0.5)
+    n = 3
+    cf0 = 1
+    rate = 0.04
+    model, model_args = model_and_args
+    rrp0 = RenewalRewardProcess(
+        model,
+        run_to_failure_cost,
+        model_args=model_args,
+        reward_args=(cf0,),
+        discount_rate=rate,
+    )
+    rrp = RenewalRewardProcess(
+        model,
+        run_to_failure_cost,
+        model_args=model_args,
+        reward_args=(np.full((n, 1), cf0),),
+        discount_rate=rate,
+    )
+    z0 = rrp0.expected_total_reward(t)
+    z = rrp.expected_total_reward(t)
+
+    assert z0 == pytest.approx(sum(z), rel=1e-4)

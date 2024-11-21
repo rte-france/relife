@@ -2,6 +2,7 @@ from typing import Optional, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.optimize import optimize
 
 from relife2.data import RenewalRewardData
 from relife2.fiability.addon import LeftTruncatedModel
@@ -23,7 +24,6 @@ from relife2.types import (
 # policy class are just facade class of one RenewalRewardProcess with more "financial" methods names
 # and ergonomic parametrization (named parameters instead of generic tuple)
 class Policy(Protocol):
-
     args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
     reward: Reward[*RewardArgs]
@@ -33,7 +33,7 @@ class Policy(Protocol):
     nb_assets: int = 1
 
     def expected_total_cost(
-        self, timeline: NDArray[np.float64] # tf: float, period:float=1 
+        self, timeline: NDArray[np.float64]  # tf: float, period:float=1
     ) -> NDArray[np.float64]:
         """warning: tf > 0, period > 0, dt is deduced from period and is < 0.5"""
 
@@ -63,6 +63,12 @@ class Policy(Protocol):
     ) -> RenewalRewardData: ...
 
 
+# def reshape_args(nb_assets: int, *args: NDArray[np.float64]):
+#     if nb_assets == 1:
+#         for arg in args:
+#             if arg.ndim == 0:
+#                 arg = np.reshape(arg, (-1,))
+
 
 class OneCycleRunToFailure:
     """One cyle run-to-failure policy."""
@@ -88,6 +94,7 @@ class OneCycleRunToFailure:
             model_args = (a0, *model_args)
         self.model = model
         self.nb_assets = nb_assets
+        # TODO: args_reshape (reshape and control array dim with respect to nb_assets)
         self.args = {"model": model_args, "reward": (cf,), "discount": (rate,)}
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -161,7 +168,6 @@ class OneCycleRunToFailure:
 
 
 class OneCycleAgeReplacementPolicy:
-
     args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
     reward = age_replacement_cost
@@ -186,6 +192,7 @@ class OneCycleAgeReplacementPolicy:
             model_args = (a0, *model_args)
         self.model = model
         self.nb_assets = nb_assets
+        # TODO: args_reshape (reshape and control array dim with respect to nb_assets)
         self.args = {
             "model": (ar, *model_args),
             "reward": (ar, cf, cp),
@@ -227,9 +234,60 @@ class OneCycleAgeReplacementPolicy:
     ) -> NDArray[np.float64]:
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
+    def _optimal_age_replacement(self):
+        _, cf, cp = self.args["reward"]
+        rate = self.args["discount"][0]
+
+        cf, cp = np.array(cf, ndmin=3), np.array(cp, ndmin=3)
+        x0 = np.minimum(np.sum(cp, axis=0) / np.sum(cf - cp, axis=0), 1)
+        if np.size(x0) == 1:
+            x0 = np.tile(x0, (self.nb_assets, 1))
+
+        def eq(a):
+            return np.sum(
+                self.discount.factor(a, rate)
+                / self.discount.annuity_factor(a, rate)
+                * (
+                    (cf - cp) * self.model.hf(a, *self.args["model"])
+                    - cp / self.discount.annuity_factor(a, rate)
+                ),
+                axis=0,
+            )
+
+        ar = optimize.newton(eq, x0)
+        return ar.squeeze() if np.size(ar) == 1 else ar
+
+    def fit(
+        self, cf: np.ndarray = None, cp: np.ndarray = None, rate: np.ndarray = None
+    ) -> OneCycleAgeReplacementPolicy:
+        """Computes and sets the optimal age of replacement for each asset.
+
+        Parameters
+        ----------
+        cf : float, 2D array or 3D array, optional
+            Costs of failures, by default None.
+        cp : float, 2D array or 3D array, optional
+            Costs of preventive replacements, by default None.
+        rate : float, 2D array or 3D array, optional
+            Discount rate, by default None.
+
+        Returns
+        -------
+        self
+            The fitted policy as the current object.
+
+        Notes
+        -----
+        If an argument is None, the value of the class attribute is taken.
+        """
+        _, cf, cp, rate = self._parse_policy_args(None, cf, cp, rate)
+        self.ar = self.optimal_replacement_age(
+            self.model.baseline, cf, cp, rate, self.args
+        )
+        return self
+
 
 class RunToFailure:
-
     args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
     reward = run_to_failure_cost
@@ -260,6 +318,7 @@ class RunToFailure:
                 model_args = (a0, *model_args)
         self.model = model
         self.model1 = model1
+        # TODO: args_reshape (reshape and control array dim with respect to nb_assets)
         self.args = {"model": model_args, "reward": (cf,), "discount": (rate,)}
         if model1_args is not None:
             self.args["model1"] = model1_args
