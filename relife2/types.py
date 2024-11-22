@@ -1,4 +1,4 @@
-from typing import TypedDict, TypeVarTuple
+from typing import TypedDict, TypeVarTuple, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -6,11 +6,11 @@ from numpy.typing import NDArray
 VariadicArgs = TypeVarTuple("VariadicArgs")
 
 # tuple consisting of zero or more NDArray[np.float64]
-ModelArgs = tuple[NDArray[np.float64], ...]
-Model1Args = tuple[NDArray[np.float64], ...]
-RewardArgs = tuple[NDArray[np.float64], ...]
-Reward1Args = tuple[NDArray[np.float64], ...]
-DiscountArgs = tuple[float, ...]
+ModelArgs = tuple[Optional[NDArray[np.float64]], ...]
+Model1Args = tuple[Optional[NDArray[np.float64]], ...]
+RewardArgs = tuple[Optional[NDArray[np.float64]], ...]
+Reward1Args = tuple[Optional[NDArray[np.float64]], ...]
+DiscountArgs = tuple[Optional[float], ...]
 
 
 class RenewalProcessArgs(TypedDict):

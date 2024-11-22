@@ -57,6 +57,8 @@ def model_and_args(baseline, regression, age_replacement_model):
     if age_replacement_model is not None:
         tmax = model.isf(0.75, *args)
         model = age_replacement_model(model)
+        if not isinstance(tmax, np.ndarray):
+            tmax = np.array(tmax)
         args = (tmax,) + args
     return model, args
 
@@ -91,10 +93,18 @@ def test_renewal_reward_process(model_and_args):
 
 def test_renewal_reward_process_vec(model_and_args):
     t = np.arange(0, 100, 0.5)
-    n = 3
     cf0 = 1
     rate = 0.04
     model, model_args = model_and_args
+
+    nb_assets = max(
+        tuple(map(lambda x: x.shape[0] if x.ndim >= 1 else 1, model_args)), default=1
+    )
+    n = (
+        5 if nb_assets == 1 else nb_assets
+    )  # vectorizes in 5 assets else equals the number of assets (could be a float too)
+    cf = cf0 / n
+
     rrp0 = RenewalRewardProcess(
         model,
         run_to_failure_cost,
@@ -106,10 +116,15 @@ def test_renewal_reward_process_vec(model_and_args):
         model,
         run_to_failure_cost,
         model_args=model_args,
-        reward_args=(np.full((n, 1), cf0),),
+        reward_args=(np.full((n, 1), cf),),
         discount_rate=rate,
     )
     z0 = rrp0.expected_total_reward(t)
     z = rrp.expected_total_reward(t)
 
-    assert z0 == pytest.approx(sum(z), rel=1e-4)
+    # if one asset, then z has 2 dim with n lines of expected_total_reward
+    if nb_assets == 1:
+        assert z0 == pytest.approx(z.sum(axis=0), rel=1e-4)
+    # if assets, then z0 has already nb_assets lines of expected_total_reward on first dim
+    else:
+        assert z0 == pytest.approx(n * z, rel=1e-4)

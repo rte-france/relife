@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Optional, Protocol
 
 import numpy as np
@@ -5,7 +6,7 @@ from numpy.typing import NDArray
 from scipy.optimize import optimize
 
 from relife2.data import RenewalRewardData
-from relife2.fiability.addon import LeftTruncatedModel
+from relife2.fiability.addon import LeftTruncatedModel, AgeReplacementModel
 from relife2.fiability.model import LifetimeModel
 from relife2.renewal.discount import Discount, exponential_discount
 from relife2.renewal.process import RenewalRewardProcess, reward_partial_expectation
@@ -32,11 +33,20 @@ class Policy(Protocol):
     reward1: Optional[Reward[*Reward1Args]] = None
     nb_assets: int = 1
 
+    @property
+    def _all_params_set(self):
+        for v in self.args.values():
+            if None in v:
+                return False
+        return True
+
+    @abstractmethod
     def expected_total_cost(
         self, timeline: NDArray[np.float64]  # tf: float, period:float=1
     ) -> NDArray[np.float64]:
         """warning: tf > 0, period > 0, dt is deduced from period and is < 0.5"""
 
+    @abstractmethod
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]: ...
@@ -53,14 +63,31 @@ class Policy(Protocol):
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]: ...
 
+    @abstractmethod
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]: ...
 
+    @abstractmethod
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]: ...
 
+    @abstractmethod
     def sample(
         self,
         nb_samples: int,
     ) -> RenewalRewardData: ...
+
+    def __getattribute__(self, item):
+        """control if params are set"""
+
+        if (
+            not item.startswith("_")
+            and not not item.startswith("__")
+            and hasattr(Policy, item)
+        ):
+            if not self._all_params_set:
+                raise ValueError(
+                    f"Can't call {item} if policy params are not set. If fit exists, you may need to fit it first"
+                )
+        return super().__getattribute__(item)
 
 
 # def reshape_args(nb_assets: int, *args: NDArray[np.float64]):
@@ -70,7 +97,7 @@ class Policy(Protocol):
 #                 arg = np.reshape(arg, (-1,))
 
 
-class OneCycleRunToFailure:
+class OneCycleRunToFailure(Policy):
     """One cyle run-to-failure policy."""
 
     args: PolicyArgs
@@ -145,15 +172,14 @@ class OneCycleRunToFailure:
             reward_args=self.args["reward"],
             discount_args=self.args["discount"],
         )
-
-        *gen_data, still_valid = next(generator)
+        _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
         assets, samples = np.where(still_valid)
         assets.astype(np.int64)
         samples.astype(np.int64)
-        lifetimes = gen_data[0][still_valid]
-        event_times = gen_data[1][still_valid]
-        total_rewards = gen_data[2][still_valid]
-        events = gen_data[3][still_valid]
+        lifetimes = _lifetimes[still_valid]
+        event_times = _event_times[still_valid]
+        total_rewards = _total_rewards[still_valid]
+        events = _events[still_valid]
         order = np.zeros_like(lifetimes)
 
         return RenewalRewardData(
@@ -167,8 +193,9 @@ class OneCycleRunToFailure:
         )
 
 
-class OneCycleAgeReplacementPolicy:
-    args: PolicyArgs
+class OneCycleAgeReplacementPolicy(Policy):
+
+    args: Optional[PolicyArgs]
     model: LifetimeModel[*ModelArgs]
     reward = age_replacement_cost
     discount = exponential_discount
@@ -179,10 +206,11 @@ class OneCycleAgeReplacementPolicy:
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
-        ar: NDArray[np.float64],
         cf: NDArray[np.float64],
         cp: NDArray[np.float64],
         rate: NDArray[np.float64],
+        *,
+        ar: Optional[NDArray[np.float64]] = None,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[NDArray[np.float64]] = None,
@@ -190,9 +218,10 @@ class OneCycleAgeReplacementPolicy:
         if a0 is not None:
             model = LeftTruncatedModel(model)
             model_args = (a0, *model_args)
-        self.model = model
+        self.model = AgeReplacementModel(model)
         self.nb_assets = nb_assets
         # TODO: args_reshape (reshape and control array dim with respect to nb_assets)
+
         self.args = {
             "model": (ar, *model_args),
             "reward": (ar, cf, cp),
@@ -234,7 +263,43 @@ class OneCycleAgeReplacementPolicy:
     ) -> NDArray[np.float64]:
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
-    def _optimal_age_replacement(self):
+    def sample(self, nb_samples: int) -> RenewalRewardData:
+        generator = lifetimes_rewards_generator(
+            self.model,
+            self.reward,
+            self.discount,
+            nb_samples,
+            self.nb_assets,
+            np.inf,
+            model_args=self.args["model"],
+            reward_args=self.args["reward"],
+            discount_args=self.args["discount"],
+        )
+        _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
+        assets, samples = np.where(still_valid)
+        assets.astype(np.int64)
+        samples.astype(np.int64)
+        lifetimes = _lifetimes[still_valid]
+        event_times = _event_times[still_valid]
+        total_rewards = _total_rewards[still_valid]
+        events = _events[still_valid]
+        order = np.zeros_like(lifetimes)
+
+        return RenewalRewardData(
+            samples,
+            assets,
+            order,
+            event_times,
+            lifetimes,
+            events,
+            total_rewards,
+        )
+
+    def fit(
+        self,
+        inplace: Optional[bool] = True,
+    ) -> NDArray[np.float64]:
+
         _, cf, cp = self.args["reward"]
         rate = self.args["discount"][0]
 
@@ -255,36 +320,11 @@ class OneCycleAgeReplacementPolicy:
             )
 
         ar = optimize.newton(eq, x0)
-        return ar.squeeze() if np.size(ar) == 1 else ar
 
-    def fit(
-        self, cf: np.ndarray = None, cp: np.ndarray = None, rate: np.ndarray = None
-    ) -> OneCycleAgeReplacementPolicy:
-        """Computes and sets the optimal age of replacement for each asset.
+        if inplace:
+            self.args["reward"] = (ar, cf, cp)
 
-        Parameters
-        ----------
-        cf : float, 2D array or 3D array, optional
-            Costs of failures, by default None.
-        cp : float, 2D array or 3D array, optional
-            Costs of preventive replacements, by default None.
-        rate : float, 2D array or 3D array, optional
-            Discount rate, by default None.
-
-        Returns
-        -------
-        self
-            The fitted policy as the current object.
-
-        Notes
-        -----
-        If an argument is None, the value of the class attribute is taken.
-        """
-        _, cf, cp, rate = self._parse_policy_args(None, cf, cp, rate)
-        self.ar = self.optimal_replacement_age(
-            self.model.baseline, cf, cp, rate, self.args
-        )
-        return self
+        return ar
 
 
 class RunToFailure:
@@ -352,3 +392,6 @@ class RunToFailure:
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.rrp.asymptotic_expected_equivalent_annual_worth()
+
+    def sample(self, nb_samples: int, end_time: float) -> RenewalRewardData:
+        return self.rrp.sample(nb_samples, end_time)
