@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 
 from relife2.data import RenewalRewardData
-from relife2.fiability.addon import LeftTruncatedModel, AgeReplacementModel
+from relife2.fiability.addon import AgeReplacementModel, LeftTruncatedModel
 from relife2.fiability.model import LifetimeModel
 from relife2.renewal.discount import Discount, exponential_discount
 from relife2.renewal.process import RenewalRewardProcess, reward_partial_expectation

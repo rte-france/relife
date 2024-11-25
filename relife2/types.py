@@ -1,4 +1,4 @@
-from typing import TypedDict, TypeVarTuple, Optional
+from typing import Optional, TypedDict, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
