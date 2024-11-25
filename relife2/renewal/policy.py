@@ -3,7 +3,7 @@ from typing import Optional, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import optimize
+from scipy.optimize import newton
 
 from relife2.data import RenewalRewardData
 from relife2.fiability.addon import LeftTruncatedModel, AgeReplacementModel
@@ -68,12 +68,6 @@ class Policy(Protocol):
 
     @abstractmethod
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]: ...
-
-    @abstractmethod
-    def sample(
-        self,
-        nb_samples: int,
-    ) -> RenewalRewardData: ...
 
     def __getattribute__(self, item):
         """control if params are set"""
@@ -195,7 +189,7 @@ class OneCycleRunToFailure(Policy):
 
 class OneCycleAgeReplacementPolicy(Policy):
 
-    args: Optional[PolicyArgs]
+    args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
     reward = age_replacement_cost
     discount = exponential_discount
@@ -303,8 +297,8 @@ class OneCycleAgeReplacementPolicy(Policy):
         _, cf, cp = self.args["reward"]
         rate = self.args["discount"][0]
 
-        cf, cp = np.array(cf, ndmin=3), np.array(cp, ndmin=3)
-        x0 = np.minimum(np.sum(cp, axis=0) / np.sum(cf - cp, axis=0), 1)
+        cf_3d, cp_3d = np.array(cf, ndmin=3), np.array(cp, ndmin=3)
+        x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
         if np.size(x0) == 1:
             x0 = np.tile(x0, (self.nb_assets, 1))
 
@@ -313,16 +307,17 @@ class OneCycleAgeReplacementPolicy(Policy):
                 self.discount.factor(a, rate)
                 / self.discount.annuity_factor(a, rate)
                 * (
-                    (cf - cp) * self.model.hf(a, *self.args["model"])
-                    - cp / self.discount.annuity_factor(a, rate)
+                    (cf_3d - cp_3d) * self.model.hf(a, *self.args["model"])
+                    - cp_3d / self.discount.annuity_factor(a, rate)
                 ),
                 axis=0,
             )
 
-        ar = optimize.newton(eq, x0)
+        ar = np.asarray(newton(eq, x0), dtype=np.float64)
 
         if inplace:
             self.args["reward"] = (ar, cf, cp)
+            self.args["model"] = (ar,) + self.args["model"][1:]
 
         return ar
 
@@ -359,11 +354,13 @@ class RunToFailure:
         self.model = model
         self.model1 = model1
         # TODO: args_reshape (reshape and control array dim with respect to nb_assets)
-        self.args = {"model": model_args, "reward": (cf,), "discount": (rate,)}
-        if model1_args is not None:
-            self.args["model1"] = model1_args
-        if cf1 is not None:
-            self.args["reward1"] = (cf1,)
+        self.args = {
+            "model": model_args,
+            "reward": (cf,),
+            "discount": (rate,),
+            "model1": model1_args if model1_args is not None else (),
+            "reward1": (cf1,) if cf1 is not None else (),
+        }
         self.nb_assets = nb_assets
 
         self.rrp = RenewalRewardProcess(
