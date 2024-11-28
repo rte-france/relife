@@ -91,7 +91,7 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
 class Exponential(Distribution):
     """
-    Exponential probability distribution.
+    Exponential lifetime distribution.
 
     Parameters
     ----------
@@ -113,7 +113,7 @@ class Exponential(Distribution):
     >>> model.sf(time)
     array([0.10539922, 0.02836782, 0.00763509, 0.00205496, 0.00055308]))
 
-    Notice that only one asset is considered here. To pass another asset using broadcasting, use a 2d time array
+    Notice that only one asset is considered here. To pass another asset, use a 2d time array
 
     >>> time = np.linspace([3, 5], [10, 10], num=5, axis=1)
     >>> model.sf(time)
@@ -230,6 +230,23 @@ class Exponential(Distribution):
 
 
 class Weibull(Distribution):
+    """
+    Weibull lifetime distribution.
+
+    Parameters
+    ----------
+    shape : float, optional
+        shape parameter
+    rate : float, optional
+        rate parameter
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+    regression.ProportionalHazard : AFT regression
+    """
+
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
@@ -358,6 +375,23 @@ class Weibull(Distribution):
 
 
 class Gompertz(Distribution):
+    """
+    Gompertz lifetime distribution.
+
+    Parameters
+    ----------
+    shape : float, optional
+        shape parameter
+    rate : float, optional
+        rate parameter
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+    regression.ProportionalHazard : AFT regression
+    """
+
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
@@ -480,6 +514,23 @@ class Gompertz(Distribution):
 
 
 class Gamma(Distribution):
+    """
+    Gamma lifetime distribution.
+
+    Parameters
+    ----------
+    shape : float, optional
+        shape parameter
+    rate : float, optional
+        rate parameter
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+    regression.ProportionalHazard : AFT regression
+    """
+
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
@@ -618,6 +669,23 @@ class Gamma(Distribution):
 
 
 class LogLogistic(Distribution):
+    """
+    Log-logistic probability distribution.
+
+    Parameters
+    ----------
+    shape : float, optional
+        shape parameter
+    rate : float, optional
+        rate parameter
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+    regression.ProportionalHazard : AFT regression
+    """
+
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
