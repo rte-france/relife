@@ -343,6 +343,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *VariadicArgs) -> NDArray[np.float64]:
+        if n < 1:
+            raise ValueError("order of the moment must be at least 1")
         ls = self.ls_integrate(
             lambda x: x**n,
             np.array(0.0),

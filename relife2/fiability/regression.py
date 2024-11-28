@@ -200,6 +200,21 @@ class Regression(
 
 
 class ProportionalHazard(Regression):
+    """
+    Proportional hazard regression.
+
+    Parameters
+    ----------
+    baseline : ParametricLifetimeModel
+        Any parametric lifetime model
+    coef : tuple of floats (values can be none), optional
+        Coefficients values of the covariates effect
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+    """
 
     def hf(
         self,
@@ -284,6 +299,21 @@ class ProportionalHazard(Regression):
 
 
 class AFT(Regression):
+    """
+    Accelerated failure time regression.
+
+    Parameters
+    ----------
+    baseline : ParametricLifetimeModel
+        Any parametric lifetime model
+    coef : tuple of floats (values can be none), optional
+        Coefficients values of the covariates effect
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+    """
 
     def hf(
         self,

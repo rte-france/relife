@@ -81,17 +81,76 @@ class Distribution(ParametricLifetimeModel[()], ABC):
         return super().cdf(time)
 
     def pdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Probability density function.
+
+        The probability density function of the distribution
+
+        Parameters
+        ----------
+        time : ndarray of shape (n, ) or (m, n)
+            Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
+            To consider m assets with respectively n points of measure,
+            pass an array of shape (m, n).
+
+        Returns
+        -------
+        ndarray of shape (n, ) or (m, n)
+            The probability density function evaluated at each given time.
+        """
         return super().pdf(time)
 
     @override
     def ppf(self, probability: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Percent point function.
+
+        The percent point function of the distribution. It corresponds to the inverse of
+        the cumulative distribution function
+
+        Parameters
+        ----------
+        probability : ndarray of shape (n, ) or (m, n)
+            Probability values. If the given shape is (n, ), one asset and n points of measure are considered
+            To consider m assets with respectively n points of measure,
+            pass an array of shape (m, n).
+
+        Returns
+        -------
+        ndarray of shape (n, ) or (m, n)
+            Quantile corresponding to probability.
+        """
         return super().ppf(probability)
 
     @override
     def rvs(self, *, size: Optional[int] = 1, seed: Optional[int] = None):
         return super().rvs(size=size, seed=seed)
 
-    def median(self):
+    @override
+    def moment(self, n: int) -> NDArray[np.float64]:
+        """
+        n-th order moment of the distribution.
+
+        Parameters
+        ----------
+        n : int
+            Order of the moment, at least 1.
+
+        Returns
+        -------
+        ndarray of shape (0, )
+            n-th order moment of the distribution.
+        """
+
+        return super().moment(n)
+
+    @override
+    def median(self) -> NDArray[np.float64]:
+        """Median of the distribution.
+
+        Returns
+        -------
+        ndarray of shape (0,)
+            Median value.
+        """
         return super().median()
 
     def init_params(self, lifetime_data: LifetimeData) -> None:
