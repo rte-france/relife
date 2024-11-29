@@ -144,12 +144,19 @@ class ParametricModel:
     @property
     def params(self) -> NDArray[np.float64]:
         """
-        Returns parameters values of the model.
+        Parameters values.
 
         Returns
         -------
-        params : numpy array of floats
-            Parameters values
+        ndarray of float
+            Parameters values of the model
+
+        Notes
+        -----
+        If parameter values are not set, they are encoded as `np.nan` value.
+
+        Parameters can be set with `params` setter, fitting the model if `fit` exists or specifying
+        all parameters values when the model object is initialized.
         """
         return np.array(self._params.values, dtype=np.float64)
 
@@ -159,10 +166,32 @@ class ParametricModel:
 
     @property
     def params_names(self):
+        """
+        Parameters names.
+
+        Returns
+        -------
+        list of str
+            Parameters names
+
+        Notes
+        -----
+        Parameters can be get by their name at instance level.
+
+        """
         return self._params.names
 
     @property
     def nb_params(self):
+        """
+        Number of parameters.
+
+        Returns
+        -------
+        int
+            Number of parameters
+
+        """
         return len(self._params)
 
     @property
@@ -210,6 +239,13 @@ class ParametricModel:
             super().__setattr__(name, value)
 
     def copy(self):
+        """
+        Copy object.
+
+        Returns
+        -------
+            A independant copied instance.
+        """
         return copy.deepcopy(self)
 
 
@@ -402,7 +438,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         return 1 - self.sf(time, *args)
 
     def rvs(
-        self, *args: *VariadicArgs, size: Optional[int] = 1, seed: Optional[int] = None
+        self, *args: *VariadicArgs, size: int = 1, seed: Optional[int] = None
     ) -> NDArray[np.float64]:
         generator = np.random.RandomState(seed=seed)
         probability = generator.uniform(size=size)
@@ -423,23 +459,38 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         b: NDArray[np.float64],
         *args: *VariadicArgs,
         deg: int = 100,
-        # broadcast_to: Optional[tuple[int, int]] = None,
-        # ndim: Optional[int] = None,
     ) -> NDArray[np.float64]:
         """
+        Lebesgue-Stieltjes integration.
+
+        The Lebesgue-Stieljes intregration of a function with respect to the lifetime model
+        taking into account the probability density function and jumps
+
         Parameters
         ----------
-        ndim :
-        func :
-        a :
-        b :
-        args :
-        deg :
-        ndim : optional, desired output array dim (<= 2)
+        func : callable (in : 1 ndarray, out : 1 ndarray)
+            The callable must have only one ndarray object as argument and returns one ndarray object
+        a : ndarray (max dim of 2)
+            Lower bound(s) of integration.
+        b : ndarray (max dim of 2)
+            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.
+        args : ndarray (max dim of 2)
+            Other arguments needed by the lifetime model (eg. covariates)
+        deg : int, default 100
+            Degree of the polynomials interpolation
 
         Returns
         -------
-            2d array (by default). broadcast_to to squeeze and broadcast to another shape
+        2d ndarray
+             The numerical integration of `func` from `a` to `b`
+
+
+        Notes
+        -----
+        `ls_integrate` operations rely on arguments number of dimensions passed in `a`, `b`, `*args` or
+        any other variable referenced in `func`. Because `func` callable is not easy to inspect, either one must specify
+        the maximum number of dimensions used (0, 1 or 2), or `ls_integrate` converts all these objects to 2d-array.
+        Currently, the second option is prefered. That's why, returns are always 2d-array.
         """
 
         b = np.minimum(np.inf, b)
@@ -543,6 +594,46 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         inplace: bool = True,
         **kwargs: Any,
     ) -> NDArray[np.float64]:
+        """
+        Estimation of lifetime model parameters with respect to lifetime data.
+
+
+        Parameters
+        ----------
+        time : ndarray (1d or 2d)
+            Observed lifetime values.
+        event : ndarray of boolean values (1d), default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : ndarray of float (1d), default is None
+            Left truncations applied to lifetime values.
+        departure : ndarray of float (1d), default is None
+            Right truncations applied to lifetime values.
+        model_args : tuple of ndarray, default is None
+            Other arguments needed by the lifetime model.
+        inplace : boolean, default is True
+            If true, parameters of the lifetime model will be replaced by estimated paramters.
+        **kwargs
+            Extra arguments used by `scipy.minimize`. Default values are:
+                - `method` : `"L-BFGS-B"`
+                - `contraints` : `()`
+                - `tol` : `None`
+                - `callback` : `None`
+                - `options` : `None`
+                - `bounds` : `self.params_bounds`
+                - `x0` : `self.init_params`
+
+        Returns
+        -------
+        ndarray of float
+            Estimated parameters.
+
+        Notes
+        -----
+        Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
+        format that allows to pass other information as left-censored or interval-censored values. In this case,
+        `event` is not needed as 2d-array encodes right-censored values by itself.
+
+        """
 
         lifetime_data = lifetime_data_factory(
             time,

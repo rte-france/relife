@@ -121,7 +121,23 @@ class Distribution(ParametricLifetimeModel[()], ABC):
         return super().ppf(probability)
 
     @override
-    def rvs(self, *, size: Optional[int] = 1, seed: Optional[int] = None):
+    def rvs(self, *, size: int = 1, seed: Optional[int] = None):
+        """
+        Random variable sampling.
+
+        Parameters
+        ----------
+        size : int, default 1
+            Sized of the generated sample.
+        seed : int, default None
+            Random seed.
+
+        Returns
+        -------
+        ndarray of shape (size, )
+            Sample of random lifetimes.
+        """
+
         return super().rvs(size=size, seed=seed)
 
     @override
