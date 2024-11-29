@@ -1,15 +1,15 @@
 from dataclasses import dataclass, field
-from typing import Any, Protocol, Iterator
+from typing import Any, Iterator, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-from relife2 import LifetimeModel, ParametricLifetimeModel, Exponential
+from relife2 import Exponential, LifetimeModel, ParametricLifetimeModel
 from relife2.data import CountData, LifetimeData, lifetime_data_factory
 from relife2.fiability.likelihood import LikelihoodFromLifetimes
 from relife2.renewal.reward import Reward
-from relife2.types import ModelArgs, VariadicArgs, RewardArgs
+from relife2.types import ModelArgs, RewardArgs, VariadicArgs
 
 
 class StochasticProcess(Protocol):
