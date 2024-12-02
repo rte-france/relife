@@ -1,31 +1,12 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from functools import wraps
+from typing import Optional, TypedDict, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife2.data import LifetimeData, lifetime_data_factory
-
-
-def nearest_1dinterp(
-    x: NDArray[np.float64], xp: NDArray[np.float64], yp: NDArray[np.float64]
-) -> NDArray[np.float64]:
-    """Returns x nearest interpolation based on xp and yp data points
-    xp has to be monotonically increasing
-
-    Args:
-        x (NDArray[np.float64]): 1d x coordinates to interpolate
-        xp (NDArray[np.float64]): 1d known x coordinates
-        yp (NDArray[np.float64]): 1d known y coordinates
-
-    Returns:
-        NDArray[np.float64]: interpolation values of x
-    """
-    spacing = np.diff(xp) / 2
-    xp += np.hstack([spacing, spacing[-1]])
-    yp = np.concatenate([yp, yp[-1, None]])
-    return yp[np.searchsorted(xp, x)]
 
 
 @dataclass
@@ -47,39 +28,29 @@ class Estimates:
         if self.timeline.shape != self.values.shape != self.se:
             raise ValueError("Incompatible timeline, values and se in Estimates")
 
+    def nearest_1dinterp(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Returns x nearest interpolation based on timeline and values data points
+        timeline has to be monotonically increasing
 
-class Estimations:
+        Args:
+            x (NDArray[np.float64]): 1d x coordinates to interpolate
 
-    def __init__(self, *names: str):
-        self.names = names
-        self.values = {k: None for k in names}
-
-    def __contains__(self, item) -> bool:
-        return item in self.values
-
-    def __get__(self, obj, objtype=None) -> dict[str, Optional[Estimates]]:
-        return self.values
-
-    def __set__(self, obj, value: dict[str, Optional[Estimates]]):
-        if not isinstance(value, dict):
-            raise ValueError
-        if not tuple(value.keys()) == self.names:
-            raise ValueError
-        for v in value.values():
-            if not isinstance(v, Estimates) or not None:
-                raise ValueError
-        self.values = value
-
-    def __getitem__(self, item: str) -> Estimates | None:
-        return self.values[item]
-
-    def __setitem__(self, key, value: Estimates):
-        if not isinstance(value, Estimates):
-            raise ValueError
-        self.values[key] = value
+        Returns:
+            NDArray[np.float64]: interpolation values of x
+        """
+        spacing = np.diff(self.timeline) / 2
+        xp = np.hstack([spacing, spacing[-1]]) + self.timeline
+        yp = np.concatenate([self.values, self.values[-1, None]])
+        return yp[np.searchsorted(xp, x)]
 
 
-class NonParametricLifetimeEstimator(ABC):
+class Estimations(TypedDict, total=False):
+    sf: Optional[Estimates]
+    chf: Optional[Estimates]
+    cdf: Optional[Estimates]
+
+
+class NonParametricLifetimeEstimator(Protocol):
     """_summary_"""
 
     estimations: Estimations
@@ -98,29 +69,24 @@ class NonParametricLifetimeEstimator(ABC):
             Tuple[Estimates]: description
         """
 
-    def __getattr__(self, name: str):
-        if name in self.estimations:
 
-            def wrapper(time: NDArray[np.float64]):
-                return nearest_1dinterp(
-                    time, self.estimations[name].timeline, self.estimations[name].values
-                )
+def estimated(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if self.estimations.get(method.__name__) is None:
+            return ValueError(
+                f"{self.__class__.__name__} instance has not been fitted yet, call fit first"
+            )
+        return method(self, *args, **kwargs)
 
-            if self.estimations[name] is None:
-                return ValueError(
-                    f"{self.__class__.__name__} has not been fitted yet, call fit first"
-                )
-
-            return wrapper
-
-        raise AttributeError(
-            f"{self.__class__.__name__} has no attribute called {name}"
-        )
+    return wrapper
 
 
 class ECDF(NonParametricLifetimeEstimator):
 
-    estimations = Estimations("sf", "cdf")
+    def __init__(self):
+        super().__init__()
+        self.estimations = {"sf": None, "cdf": None}
 
     def fit(
         self,
@@ -150,16 +116,20 @@ class ECDF(NonParametricLifetimeEstimator):
         self.estimations["sf"] = Estimates(timeline, sf, se)
         self.estimations["cdf"] = Estimates(timeline, cdf, se)
 
+    @estimated
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return super().sf(time)
+        return self.estimations["sf"].nearest_1dinterp(time)
 
+    @estimated
     def cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return super().cdf(time)
+        return self.estimations["cdf"].nearest_1dinterp(time)
 
 
 class KaplanMeier(NonParametricLifetimeEstimator):
 
-    estimations = Estimations("sf")
+    def __init__(self):
+        super().__init__()
+        self.estimations = {"sf": None}
 
     def fit(
         self,
@@ -226,13 +196,16 @@ class KaplanMeier(NonParametricLifetimeEstimator):
         timeline = np.insert(timeline, 0, 0)
         self.estimations["sf"] = Estimates(timeline, sf, se)
 
+    @estimated
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return super().sf(time)
+        return self.estimations["sf"].nearest_1dinterp(time)
 
 
 class NelsonAalen(NonParametricLifetimeEstimator):
 
-    estimations = Estimations("chf")
+    def __init__(self):
+        super().__init__()
+        self.estimations = {"chf": None}
 
     def fit(
         self,
@@ -290,13 +263,12 @@ class NelsonAalen(NonParametricLifetimeEstimator):
         timeline = np.insert(timeline, 0, 0)
         self.estimations["chf"] = Estimates(timeline, chf, se)
 
+    @estimated
     def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return super().chf(time)
+        return self.estimations["chf"].nearest_1dinterp(time)
 
 
 class Turnbull(NonParametricLifetimeEstimator):
-
-    estimations = Estimations("sf")
 
     def __init__(
         self,
@@ -304,6 +276,7 @@ class Turnbull(NonParametricLifetimeEstimator):
         lowmem: Optional[bool] = False,
     ):
         super().__init__()
+        self.estimations = {"sf": None}
         self.tol = tol
         self.lowmem = lowmem
 
@@ -365,7 +338,6 @@ class Turnbull(NonParametricLifetimeEstimator):
                             timeline_temp[1:]
                             <= lifetime_data.interval_censored.values[:, 1][i]
                         )
-                        is True
                     )[0][[0, -1]]
                 )
             event_occurence = np.array(event_occurence)
@@ -415,11 +387,14 @@ class Turnbull(NonParametricLifetimeEstimator):
             ]
             d = np.repeat(0, timeline_len - 1)
             for i in range(len_censored_data):
-                d += np.append(
-                    np.insert(
-                        x[i] / x[i].sum(), 0, np.repeat(0, event_occurence[i][0])
+                d = np.add(
+                    d,
+                    np.append(
+                        np.insert(
+                            x[i] / x[i].sum(), 0, np.repeat(0, event_occurence[i][0])
+                        ),
+                        np.repeat(0, timeline_len - event_occurence[i][1] - 2),
                     ),
-                    np.repeat(0, timeline_len - event_occurence[i][1] - 2),
                 )
             d += d_tilde
             y = np.cumsum(d[::-1])[::-1]
@@ -482,5 +457,6 @@ class Turnbull(NonParametricLifetimeEstimator):
             count += 1
         return s
 
+    @estimated
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return super().sf(time)
+        return self.estimations["sf"].nearest_1dinterp(time)
