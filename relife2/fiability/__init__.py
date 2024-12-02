@@ -1,2 +1,3 @@
-from .distribution import Distribution
-from .regression import Regression
+from .extramodel import AgeReplacementModel, LeftTruncatedModel
+from .likelihood import Likelihood, LikelihoodFromLifetimes
+from .model import LifetimeModel, ParametricLifetimeModel, ParametricModel

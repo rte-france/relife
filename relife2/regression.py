@@ -15,8 +15,8 @@ from scipy.optimize import Bounds
 from typing_extensions import override
 
 from relife2.data import LifetimeData
-from relife2.fiability.model import ParametricLifetimeModel, ParametricModel
-from relife2.types import ModelArgs
+from relife2.fiability import ParametricLifetimeModel, ParametricModel
+from relife2.utils.types import ModelArgs
 
 Ts = TypeVarTuple("Ts")
 

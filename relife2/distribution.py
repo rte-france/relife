@@ -8,7 +8,7 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygam
 from typing_extensions import override
 
 from relife2.data import LifetimeData
-from relife2.fiability.model import ParametricLifetimeModel
+from relife2.fiability import ParametricLifetimeModel
 from relife2.maths.integration import shifted_laguerre
 
 

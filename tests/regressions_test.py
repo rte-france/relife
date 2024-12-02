@@ -19,7 +19,7 @@ from relife2 import (
     Gompertz,
     Gamma,
 )
-from relife2.dataset import load_insulator_string
+from relife2.utils.dataset import load_insulator_string
 
 
 # fixtures

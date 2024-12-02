@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from relife2 import Weibull, Gompertz, Gamma, LogLogistic
-from relife2.renewal.policy import (
+from relife2.policy import (
     OneCycleRunToFailure,
     RunToFailure,
     OneCycleAgeReplacementPolicy,

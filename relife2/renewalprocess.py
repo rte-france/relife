@@ -5,15 +5,17 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife2.data import RenewalData, RenewalRewardData
-from relife2.fiability.model import LifetimeModel
-from relife2.renewal.discount import Discount, exponential_discount
-from relife2.renewal.equation import (
+from relife2.fiability import LifetimeModel
+from relife2.renewal import (
+    Discount,
+    Reward,
     delayed_renewal_equation_solver,
+    exponential_discount,
+    lifetimes_generator,
+    lifetimes_rewards_generator,
     renewal_equation_solver,
 )
-from relife2.renewal.reward import Reward
-from relife2.renewal.sampling import lifetimes_generator, lifetimes_rewards_generator
-from relife2.types import (
+from relife2.utils.types import (
     DiscountArgs,
     Model1Args,
     ModelArgs,
@@ -287,7 +289,7 @@ class RenewalRewardProcess(RenewalProcess):
             z = ly1 + z * lf1
         return np.where(mask, np.inf, z)
 
-    def expected_equivalent_annual_worth(
+    def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
 
@@ -306,7 +308,7 @@ class RenewalRewardProcess(RenewalProcess):
             )
         return np.where(mask, q0, q)
 
-    def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         mask = self.args["discount"][0] <= 0
         discount_rate = np.ma.MaskedArray(self.args["discount"][0], mask)
 

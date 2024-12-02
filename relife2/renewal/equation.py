@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from relife2.fiability.model import LifetimeModel
 from relife2.renewal.discount import Discount
-from relife2.types import DiscountArgs, Model1Args, ModelArgs
+from relife2.utils.types import DiscountArgs, Model1Args, ModelArgs
 
 
 # make evaluated func  Callable[[array], array] only and do partial elsewhere

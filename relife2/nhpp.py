@@ -5,11 +5,15 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-from relife2 import Exponential, LifetimeModel, ParametricLifetimeModel
+from relife2 import Exponential
 from relife2.data import CountData, LifetimeData, lifetime_data_factory
-from relife2.fiability.likelihood import LikelihoodFromLifetimes
-from relife2.renewal.reward import Reward
-from relife2.types import ModelArgs, RewardArgs, VariadicArgs
+from relife2.fiability import (
+    LifetimeModel,
+    LikelihoodFromLifetimes,
+    ParametricLifetimeModel,
+)
+from relife2.renewal import Reward
+from relife2.utils.types import ModelArgs, RewardArgs, VariadicArgs
 
 
 class StochasticProcess(Protocol):
@@ -18,7 +22,7 @@ class StochasticProcess(Protocol):
     def sample(self, nb_sample: int) -> CountData: ...
 
 
-def _nhpp_data_factory_nhpp(
+def nhpp_data_factory(
     ages: NDArray[np.float64],
     assets: NDArray[np.int64],
 ) -> LifetimeData:
@@ -48,11 +52,7 @@ def _nhpp_data_factory_nhpp(
     time = np.delete(time, changing_asset_ind)
     event = np.delete(event, changing_asset_ind)
 
-    return lifetime_data_factory(
-        time,
-        event,
-        entry,
-    )
+    return time, event, entry
 
 
 # TODO : pass it as ParametricModel to compose_with and access params
@@ -60,6 +60,12 @@ class NHPP:
 
     def __init__(self, model: ParametricLifetimeModel[*ModelArgs]):
         self.model = model
+
+    def intensity(self, time: np.ndarray, *args: *ModelArgs) -> np.ndarray:
+        return self.model.hf(time, *args)
+
+    def cumulative_intensity(self, time: np.ndarray, *args: *ModelArgs) -> np.ndarray:
+        return self.model.chf(time, *args)
 
     def fit(
         self,
@@ -69,7 +75,8 @@ class NHPP:
         inplace: bool = True,
         **kwargs: Any,
     ) -> NDArray[np.float64]:
-        lifetime_data = _nhpp_data_factory_nhpp(ages, assets)
+
+        lifetime_data = lifetime_data_factory(nhpp_data_factory(ages, assets))
 
         optimized_model = self.model.copy()
         optimized_model.init_params(lifetime_data, *model_args)

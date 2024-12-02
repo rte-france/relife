@@ -3,7 +3,7 @@ import pytest
 
 from relife2 import ECDF, KaplanMeier, NelsonAalen, Turnbull
 from relife2 import Weibull
-from relife2.dataset import load_power_transformer, load_input_turnbull
+from relife2.utils.dataset import load_power_transformer, load_input_turnbull
 
 
 @pytest.fixture

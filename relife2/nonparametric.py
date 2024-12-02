@@ -1,12 +1,13 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import wraps
-from typing import Optional, TypedDict, Protocol
+from typing import Optional, Protocol, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife2.data import LifetimeData, lifetime_data_factory
+from relife2.nhpp import nhpp_data_factory
 
 
 @dataclass
@@ -460,3 +461,19 @@ class Turnbull(NonParametricLifetimeEstimator):
     @estimated
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.estimations["sf"].nearest_1dinterp(time)
+
+
+class NonParametricNHPP:
+
+    def __init__(self):
+        self.nelson_aalen = NelsonAalen()
+
+    def fit(
+        self,
+        ages: NDArray[np.float64],
+        assets: NDArray[np.float64],
+    ) -> None:
+        self.nelson_aalen.fit(nhpp_data_factory(ages, assets))
+
+    def chf(self, time):
+        return self.nelson_aalen.chf(time)

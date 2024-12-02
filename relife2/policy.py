@@ -6,13 +6,16 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 
 from relife2.data import RenewalRewardData
-from relife2.fiability.addon import AgeReplacementModel, LeftTruncatedModel
-from relife2.fiability.model import LifetimeModel
-from relife2.renewal.discount import Discount, exponential_discount
-from relife2.renewal.process import RenewalRewardProcess, reward_partial_expectation
-from relife2.renewal.reward import Reward, age_replacement_cost, run_to_failure_cost
-from relife2.renewal.sampling import lifetimes_rewards_generator
-from relife2.types import (
+from relife2.fiability import AgeReplacementModel, LeftTruncatedModel, LifetimeModel
+from relife2.renewal import (
+    Discount,
+    Reward,
+    age_replacement_cost,
+    exponential_discount,
+    lifetimes_rewards_generator,
+    run_to_failure_cost,
+)
+from relife2.utils.types import (
     DiscountArgs,
     Model1Args,
     ModelArgs,
@@ -20,6 +23,8 @@ from relife2.types import (
     Reward1Args,
     RewardArgs,
 )
+
+from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
 
 
 # policy class are just facade class of one RenewalRewardProcess with more "financial" methods names
@@ -322,7 +327,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         return ar
 
 
-class RunToFailure:
+class RunToFailure(Policy):
     args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
     reward = run_to_failure_cost
@@ -385,10 +390,100 @@ class RunToFailure:
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
-        return self.rrp.expected_equivalent_annual_worth(timeline)
+        return self.rrp.expected_equivalent_annual_cost(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        return self.rrp.asymptotic_expected_equivalent_annual_worth()
+        return self.rrp.asymptotic_expected_equivalent_annual_cost()
 
     def sample(self, nb_samples: int, end_time: float) -> RenewalRewardData:
         return self.rrp.sample(nb_samples, end_time)
+
+
+class AgeReplacementPolicy(Policy):
+    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        pass
+
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        pass
+
+
+# class TPolicy:
+#     # WARNING: can't be of type Policy
+#     # does not have Reward object
+#
+#     args: PolicyArgs
+#     model: LifetimeModel[*ModelArgs]
+#     reward = age_replacement_cost
+#     discount = exponential_discount
+#     model1 = None
+#     reward1 = None
+#     nb_assets: int = 1
+#
+#     def __init__(
+#         self,
+#         model: LifetimeModel[*ModelArgs],
+#         c0: NDArray[np.float64],
+#         cr: NDArray[np.float64],
+#         rate: NDArray[np.float64],
+#         *,
+#         ar: Optional[NDArray[np.float64]] = None,
+#         model_args: ModelArgs = (),
+#         nb_assets: int = 1,
+#     ) -> None:
+#         self.model = model
+#         self.nb_assets = nb_assets
+#
+#         self.args = {
+#             "model": (*model_args,),
+#             "reward": (c0, cr),
+#             "discount": (rate,),
+#         }
+#
+#     def intensity(self, time, *args):
+#         self.model.hf(time, *args)
+#
+#     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+#         pass
+#
+#     def expected_equivalent_annual_cost(
+#         self, timeline: NDArray[np.float64]
+#     ) -> NDArray[np.float64]:
+#         pass
+#
+#     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+#         pass
+#
+#     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+#         pass
+#
+#     def fit(
+#         self,
+#         inplace: bool = True,
+#     ) -> np.ndarray:
+#         x0 = self.model.mean()
+#         if rate != 0:
+#
+#             def dcost(a, model, cr, c0, rate):
+#                 ndim = args_ndim(a, cr, c0, rate, *args)
+#                 f = lambda t: np.exp(-rate * t) * model.hf(t)
+#                 return (
+#                     (1 - np.exp(-rate * a)) / rate * model.hf(a)
+#                     - gauss_legendre(f, 0, a, ndim=ndim)
+#                     - c0 / cr
+#                 )
+#
+#         else:
+#
+#             def dcost(a, model, cr, c0, rate):
+#                 return a * model.hf(a) - model.chf(a) - c0 / cr
+#
+#         ar = newton(dcost, x0, args=(model, cr, c0, rate))
+#         return ar.squeeze() if np.size(ar) == 1 else ar
