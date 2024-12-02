@@ -10,6 +10,7 @@ from scipy.optimize import Bounds, minimize, newton
 from relife2.data import LifetimeData, lifetime_data_factory
 from relife2.fiability.likelihood import LikelihoodFromLifetimes
 from relife2.maths.integration import gauss_legendre, quad_laguerre
+from relife2.utils.plot import PlotAccessor, DistributionPlots
 from relife2.utils.types import VariadicArgs
 
 
@@ -527,6 +528,10 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         #         integration = np.broadcast_to(np.squeeze(integration), broadcast_to)
         #     except ValueError:
         #         raise ValueError("broadcast_to shape value is incompatible")
+
+    @property
+    def plot(self) -> PlotAccessor:
+        return DistributionPlots(self)
 
 
 # class ParametricModel(ParametricFunctions, ABC):

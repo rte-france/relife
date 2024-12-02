@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from relife2.data import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife2.fiability.model import ParametricLifetimeModel, ParametricModel
+    from relife2.fiability import ParametricLifetimeModel, ParametricModel
 
 
 class Likelihood(Protocol):
