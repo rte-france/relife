@@ -7,9 +7,9 @@ from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 from typing_extensions import override
 
-from relife2.data import LifetimeData
 from relife2.fiability import ParametricLifetimeModel
-from relife2.maths.integration import shifted_laguerre
+from relife2.utils.data import LifetimeData
+from relife2.utils.integration import shifted_laguerre
 
 
 # Ts type var is a zero long tuple (see https://github.com/python/mypy/issues/16199)
@@ -199,6 +199,20 @@ class Distribution(ParametricLifetimeModel[()], ABC):
         self,
         time: NDArray[np.float64],
     ) -> NDArray[np.float64]: ...
+
+    def jac_sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Jacobian of the parametric survival function with respect to params."""
+        return -self.jac_chf(time) * self.sf(time)
+
+    def jac_cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Jacobian of the parametric cumulative distribution function with
+        respect to params."""
+        return -self.jac_sf(time)
+
+    def jac_pdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Jacobian of the parametric probability density function with respect to
+        params."""
+        return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
 
 
 class Exponential(Distribution):

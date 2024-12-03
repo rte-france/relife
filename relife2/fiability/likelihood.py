@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Protocol, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.data import LifetimeData
+from relife2.utils.data import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife2.fiability import ParametricLifetimeModel, ParametricModel

@@ -7,10 +7,10 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize, newton
 
-from relife2.data import LifetimeData, lifetime_data_factory
 from relife2.fiability.likelihood import LikelihoodFromLifetimes
-from relife2.maths.integration import gauss_legendre, quad_laguerre
-from relife2.utils.plot import PlotAccessor, DistributionPlots
+from relife2.utils.data import LifetimeData, lifetime_data_factory
+from relife2.utils.integration import gauss_legendre, quad_laguerre
+from relife2.utils.plot import PlotAccessor
 from relife2.utils.types import VariadicArgs
 
 
@@ -531,7 +531,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     @property
     def plot(self) -> PlotAccessor:
-        return DistributionPlots(self)
+        return PlotAccessor(self)
 
 
 # class ParametricModel(ParametricFunctions, ABC):

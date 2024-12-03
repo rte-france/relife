@@ -6,7 +6,7 @@ from scipy.optimize import newton
 from typing_extensions import override
 
 from relife2.fiability.model import LifetimeModel
-from relife2.maths.integration import gauss_legendre
+from relife2.utils.integration import gauss_legendre
 from relife2.utils.types import ModelArgs
 
 

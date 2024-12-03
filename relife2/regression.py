@@ -14,8 +14,8 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife2.data import LifetimeData
 from relife2.fiability import ParametricLifetimeModel, ParametricModel
+from relife2.utils.data import LifetimeData
 from relife2.utils.types import ModelArgs
 
 Ts = TypeVarTuple("Ts")
@@ -189,6 +189,37 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]: ...
+
+    def jac_sf(
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        *args: *ModelArgs,
+    ) -> NDArray[np.float64]:
+        """Jacobian of the parametric survival function with respect to params."""
+        return -self.jac_chf(time, covar, *args) * self.sf(time, covar, *args)
+
+    def jac_cdf(
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        *args: *ModelArgs,
+    ) -> NDArray[np.float64]:
+        """Jacobian of the parametric cumulative distribution function with
+        respect to params."""
+        return -self.jac_sf(time, covar, *args)
+
+    def jac_pdf(
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        *args: *ModelArgs,
+    ) -> NDArray[np.float64]:
+        """Jacobian of the parametric probability density function with respect to
+        params."""
+        return self.jac_hf(time, covar, *args) * self.sf(
+            time, covar, *args
+        ) + self.jac_sf(time, covar, *args) * self.hf(time, covar, *args)
 
     # @property
     # def support_lower_bound(self):

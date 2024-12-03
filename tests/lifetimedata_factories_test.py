@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife2.data import (
+from relife2.utils.data import (
     Lifetime1DReader,
     Lifetime2DReader,
     LifetimeData,

@@ -5,7 +5,6 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife2.data import RenewalRewardData
 from relife2.fiability import AgeReplacementModel, LeftTruncatedModel, LifetimeModel
 from relife2.renewal import (
     Discount,
@@ -15,6 +14,7 @@ from relife2.renewal import (
     lifetimes_rewards_generator,
     run_to_failure_cost,
 )
+from relife2.utils.data import RenewalRewardData
 from relife2.utils.types import (
     DiscountArgs,
     Model1Args,
@@ -23,7 +23,6 @@ from relife2.utils.types import (
     Reward1Args,
     RewardArgs,
 )
-
 from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
 
 

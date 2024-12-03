@@ -6,8 +6,8 @@ from typing import Optional, Protocol, TypedDict
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.data import LifetimeData, lifetime_data_factory
 from relife2.nhpp import nhpp_data_factory
+from relife2.utils.data import LifetimeData, lifetime_data_factory
 
 
 @dataclass
