@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import warnings
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Protocol, Union
+from typing import TYPE_CHECKING, Protocol, override
 
 import numpy as np
 from numpy.typing import NDArray
@@ -20,6 +19,10 @@ class Likelihood(Protocol):
     def params(self) -> NDArray[np.float64]:  # read only property allowed with Protocol
         return self.model.params
 
+    @property
+    def hasjac(self) -> bool:
+        return False
+
     @abstractmethod
     def negative_log(self, params: NDArray[np.float64]) -> float:
         """
@@ -29,6 +32,20 @@ class Likelihood(Protocol):
         Returns:
             Negative log likelihood value given a set a parameters values
         """
+
+    def jac_negative_log(
+        self,
+        params: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
+        """
+        Args:
+            params ():
+
+        Returns:
+            Negative log likelihood value given a set a parameters values
+        """
+
+        raise NotImplementedError
 
 
 class LikelihoodFromLifetimes(Likelihood):
@@ -43,8 +60,9 @@ class LikelihoodFromLifetimes(Likelihood):
         self.lifetime_data = lifetime_data
         self.model_args = model_args
 
+    @override
     @property
-    def hasjac(self):
+    def hasjac(self) -> bool:
         return hasattr(self.model, "jac_hf") and hasattr(self.model, "jac_chf")
 
     def _complete_contribs(self, lifetime_data: LifetimeData) -> float:
@@ -159,21 +177,15 @@ class LikelihoodFromLifetimes(Likelihood):
             + self._left_truncations_contribs(self.lifetime_data)
         )
 
+    @override
     def jac_negative_log(
         self,
         params: NDArray[np.float64],
-    ) -> Union[None, NDArray[np.float64]]:
-        """
-
-        Args:
-            params ():
-
-        Returns:
-
-        """
+    ) -> NDArray[np.float64]:
         if not self.hasjac:
-            warnings.warn("Model does not support jac negative likelihood natively")
-            return None
+            raise AttributeError(
+                f"No support of jac negative likelihood for {self.model.__class__.__name__}"
+            )
         self.model.params = params
         return (
             self._jac_complete_contribs(self.lifetime_data)

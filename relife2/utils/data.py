@@ -74,12 +74,16 @@ class IndexedData:
 class LifetimeData:
     """BLABLABLA"""
 
-    complete: IndexedData  # values shape (m, 1)
-    left_censored: IndexedData  # values shape (m, 1)
-    right_censored: IndexedData  # values shape (m, 1)
-    interval_censored: IndexedData  # values shape (m, 2)
-    left_truncated: IndexedData  # values shape (m, 1)
-    right_truncated: IndexedData  # values shape (m, 1)
+    nb_samples: int
+    complete: IndexedData = field(repr=False)  # values shape (m, 1)
+    left_censored: IndexedData = field(repr=False)  # values shape (m, 1)
+    right_censored: IndexedData = field(repr=False)  # values shape (m, 1)
+    interval_censored: IndexedData = field(repr=False)  # values shape (m, 2)
+    left_truncated: IndexedData = field(repr=False)  # values shape (m, 1)
+    right_truncated: IndexedData = field(repr=False)  # values shape (m, 1)
+
+    def __len__(self):
+        return self.nb_samples
 
     def __post_init__(self):
         self.rc = self.complete.union(self.right_censored)
@@ -335,6 +339,7 @@ def lifetime_data_factory(
         raise ValueError("time ndim must be 1 or 2")
 
     return LifetimeData(
+        len(time),
         reader.get_complete(),
         reader.get_left_censorships(),
         reader.get_right_censorships(),

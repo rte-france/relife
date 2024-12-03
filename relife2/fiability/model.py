@@ -1,14 +1,16 @@
 import copy
 from abc import ABC, abstractmethod
+from dataclasses import field, dataclass, asdict
 from itertools import chain
-from typing import Any, Callable, Generic, Iterator, Optional
+from typing import Any, Callable, Generic, Iterator, Optional, Self
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, minimize, newton
+from scipy.optimize import Bounds, minimize, newton, OptimizeResult
 
 from relife2.fiability.likelihood import LikelihoodFromLifetimes
 from relife2.utils.data import LifetimeData, lifetime_data_factory
+from relife2.utils.hessian import hessian_from_likelihood
 from relife2.utils.integration import gauss_legendre, quad_laguerre
 from relife2.utils.plot import PlotAccessor
 from relife2.utils.types import VariadicArgs
@@ -534,23 +536,75 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         return PlotAccessor(self)
 
 
-# class ParametricModel(ParametricFunctions, ABC):
-#     @abstractmethod
-#     def init_params(self, *args: Any) -> None: ...
-#
-#
-#     @abstractmethod
-#     def fit(self, *args: Any, **kwargs: Any) -> NDArray[np.float64]:
-#         """
-#         Parameters
-#         ----------
-#         args :
-#         kwargs :
-#
-#         Returns
-#         -------
-#
-#         """
+@dataclass
+class FittingResults:
+    """Fitting results of the parametric model."""
+
+    nb_samples: int  #: Number of observations (samples).
+
+    opt: OptimizeResult = field(
+        repr=False
+    )  #: Optimization result (see scipy.optimize.OptimizeResult doc).
+
+    jac: Optional[NDArray[np.float64]] = field(
+        repr=False, default=None
+    )  #: Jacobian of the negative log-likelihood with the lifetime data.
+    var: Optional[NDArray[np.float64]] = field(
+        repr=False, default=None
+    )  #: Covariance matrix (computed as the inverse of the Hessian matrix)
+    se: NDArray[np.float64] = field(
+        init=False, repr=False, default=None
+    )  #: Standard error, square root of the diagonal of the covariance matrix.
+
+    nb_params: int = field(init=False)  #: Number of parameters.
+    AIC: float = field(init=False)  #: Akaike Information Criterion.
+    AICc: float = field(
+        init=False
+    )  #: Akaike Information Criterion with a correction for small sample sizes.
+    BIC: float = field(init=False)  #: Bayesian Information Criterion.
+
+    def __post_init__(self):
+        self.nb_params = self.opt.x.size
+        self.AIC = 2 * self.nb_params + 2 * self.opt.fun
+        self.AICc = self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (
+            self.nb_samples - self.nb_params - 1
+        )
+        self.BIC = np.log(self.nb_samples) * self.nb_params + 2 * self.opt.fun
+
+        self.se = None
+        if self.var is not None:
+            self.se = np.sqrt(np.diag(self.var))
+
+    def standard_error(self, jac_f: np.ndarray) -> np.ndarray:
+        """Standard error estimation function.
+
+        Parameters
+        ----------
+        jac_f : 1D array
+            The Jacobian of a function f with respect to params.
+
+        Returns
+        -------
+        1D array
+            Standard error for f(params).
+
+        References
+        ----------
+        .. [1] Meeker, W. Q., Escobar, L. A., & Pascual, F. G. (2022).
+            Statistical methods for reliability data. John Wiley & Sons.
+        """
+        # [1] equation B.10 in Appendix
+        return np.sqrt(np.einsum("ni,ij,nj->n", jac_f, self.var, jac_f))
+
+    def asdict(self) -> dict:
+        """converts FittingResult into a dictionary.
+
+        Returns
+        -------
+        dict
+            Returns the fitting result as a dictionary.
+        """
+        return asdict(self)
 
 
 class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC):
@@ -589,6 +643,10 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
 
         """
 
+    @property
+    def _default_hess_scheme(self) -> str:
+        return "cs"
+
     def fit(
         self,
         time: NDArray[np.float64],
@@ -598,7 +656,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         model_args: tuple[*VariadicArgs] = (),
         inplace: bool = True,
         **kwargs: Any,
-    ) -> NDArray[np.float64]:
+    ) -> Self:
         """
         Estimation of lifetime model parameters with respect to lifetime data.
 
@@ -671,13 +729,33 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
             **minimize_kwargs,
         )
+        jac = likelihood.jac_negative_log(optimizer.x)
+        var = np.linalg.inv(
+            hessian_from_likelihood(self._default_hess_scheme)(likelihood)
+        )
+
+        optimized_model._fitting_results = FittingResults(
+            len(lifetime_data), optimizer, jac, var
+        )
 
         if inplace:
             self.init_params(lifetime_data, *model_args)
             # or just self.init_params(observed_lifetimes, *model_args)
-            self.params = likelihood.params
+            self.params = optimized_model.params
+            self._fitting_results = FittingResults(
+                len(lifetime_data), optimizer, jac, var
+            )
 
-        return optimizer.x
+        return optimized_model
+
+    @property
+    def fitting_results(self) -> FittingResults:
+        try:
+            return getattr(self, "_fitting_results")
+        except AttributeError:
+            raise AttributeError(
+                "Instance has not FittingResults yet. Fit model first."
+            )
 
     def __getattribute__(self, item):
         """control if params are set"""

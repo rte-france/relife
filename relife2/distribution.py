@@ -838,6 +838,11 @@ class Gamma(Distribution):
             ndim=np.ndim(x),
         )
 
+    @override
+    @property
+    def _default_hess_scheme(self) -> str:
+        return "2-point"
+
     def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         """Hazard function.
 
