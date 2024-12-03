@@ -214,8 +214,8 @@ def hessian_cs(
         size = likelihood.params.size
         hess = np.empty((size, size))
         u = eps * 1j * np.eye(size)
-        init_params = likelihood.params.copy()
-        params = likelihood.params.copy()
+        init_params = likelihood.params.astype(np.complex64, copy=True)
+        params = likelihood.params.astype(np.complex64, copy=True)
         for i in range(size):
             for j in range(i, size):
                 params += u[i]

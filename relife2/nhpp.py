@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Iterator, Protocol
 
 import numpy as np
@@ -55,6 +55,20 @@ def nhpp_data_factory(
     return time, event, entry
 
 
+@dataclass
+class NHPPData(CountData):
+    # durations in post_init ?
+
+    def number_of_repairs(self):
+        pass
+
+    def mean_number_of_repairs(self):
+        pass
+
+    def to_nhpp_data(self):
+        pass
+
+
 # TODO : pass it as ParametricModel to compose_with and access params
 class NHPP:
 
@@ -66,6 +80,9 @@ class NHPP:
 
     def cumulative_intensity(self, time: np.ndarray, *args: *ModelArgs) -> np.ndarray:
         return self.model.chf(time, *args)
+
+    def sample(self, nb_sample: int, end_time: float) -> NHPPData:
+        pass
 
     def fit(
         self,
@@ -153,7 +170,6 @@ def nhpp_generator(
     tuple[
         NDArray[np.float64],
         NDArray[np.float64],
-        NDArray[np.float64],
     ]
 ]:
     hpp_event_times = np.zeros((nb_assets, nb_samples))
@@ -167,9 +183,8 @@ def nhpp_generator(
         )
         hpp_event_times += lifetimes
         event_times = target_model.ichf(hpp_event_times, *args)
-        ages = np.diff(event_times, axis=0, prepend=0)
         still_valid = event_times < end_time
-        return ages, event_times, still_valid
+        return event_times, still_valid
 
     size = rvs_size(nb_samples, nb_assets, model_args)
     while True:
@@ -179,11 +194,3 @@ def nhpp_generator(
         else:
             break
     return
-
-
-@dataclass
-class NHPPData(CountData):
-    ages: NDArray[np.float64] = field(repr=False)
-
-    def to_nhpp_data(self):
-        pass

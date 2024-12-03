@@ -624,6 +624,8 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
     # def nb_args(self):
     #     return len(self._args)
 
+    fitting_results: FittingResults | None
+
     def __init__(self):
         super().__init__()
         self.fitting_results = None

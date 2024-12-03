@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Optional, Protocol
 
 import numpy as np
@@ -23,12 +23,26 @@ from relife2.utils.types import (
     Reward1Args,
     RewardArgs,
 )
+from .nhpp import NHPP
 from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
+from .utils.integration import gauss_legendre
+
+
+class Policy(Protocol):
+
+    def expected_total_cost(
+        self, timeline: NDArray[np.float64]  # tf: float, period:float=1
+    ) -> NDArray[np.float64]:
+        """warning: tf > 0, period > 0, dt is deduced from period and is < 0.5"""
+
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]: ...
 
 
 # policy class are just facade class of one RenewalRewardProcess with more "financial" methods names
 # and ergonomic parametrization (named parameters instead of generic tuple)
-class Policy(Protocol):
+class RenewalProcessPolicy(ABC):
     args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
     reward: Reward[*RewardArgs]
@@ -44,13 +58,11 @@ class Policy(Protocol):
                 return False
         return True
 
-    @abstractmethod
     def expected_total_cost(
         self, timeline: NDArray[np.float64]  # tf: float, period:float=1
     ) -> NDArray[np.float64]:
         """warning: tf > 0, period > 0, dt is deduced from period and is < 0.5"""
 
-    @abstractmethod
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]: ...
@@ -88,14 +100,7 @@ class Policy(Protocol):
         return super().__getattribute__(item)
 
 
-# def reshape_args(nb_assets: int, *args: NDArray[np.float64]):
-#     if nb_assets == 1:
-#         for arg in args:
-#             if arg.ndim == 0:
-#                 arg = np.reshape(arg, (-1,))
-
-
-class OneCycleRunToFailure(Policy):
+class OneCycleRunToFailure(RenewalProcessPolicy):
     """One cyle run-to-failure policy."""
 
     args: PolicyArgs
@@ -191,7 +196,7 @@ class OneCycleRunToFailure(Policy):
         )
 
 
-class OneCycleAgeReplacementPolicy(Policy):
+class OneCycleAgeReplacementPolicy(RenewalProcessPolicy):
 
     args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
@@ -326,7 +331,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         return ar
 
 
-class RunToFailure(Policy):
+class RunToFailure(RenewalProcessPolicy):
     args: PolicyArgs
     model: LifetimeModel[*ModelArgs]
     reward = run_to_failure_cost
@@ -398,7 +403,7 @@ class RunToFailure(Policy):
         return self.rrp.sample(nb_samples, end_time)
 
 
-class AgeReplacementPolicy(Policy):
+class AgeReplacementPolicy(RenewalProcessPolicy):
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         pass
 
@@ -414,75 +419,96 @@ class AgeReplacementPolicy(Policy):
         pass
 
 
-# class TPolicy:
-#     # WARNING: can't be of type Policy
-#     # does not have Reward object
-#
-#     args: PolicyArgs
-#     model: LifetimeModel[*ModelArgs]
-#     reward = age_replacement_cost
-#     discount = exponential_discount
-#     model1 = None
-#     reward1 = None
-#     nb_assets: int = 1
-#
-#     def __init__(
-#         self,
-#         model: LifetimeModel[*ModelArgs],
-#         c0: NDArray[np.float64],
-#         cr: NDArray[np.float64],
-#         rate: NDArray[np.float64],
-#         *,
-#         ar: Optional[NDArray[np.float64]] = None,
-#         model_args: ModelArgs = (),
-#         nb_assets: int = 1,
-#     ) -> None:
-#         self.model = model
-#         self.nb_assets = nb_assets
-#
-#         self.args = {
-#             "model": (*model_args,),
-#             "reward": (c0, cr),
-#             "discount": (rate,),
-#         }
-#
-#     def intensity(self, time, *args):
-#         self.model.hf(time, *args)
-#
-#     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-#         pass
-#
-#     def expected_equivalent_annual_cost(
-#         self, timeline: NDArray[np.float64]
-#     ) -> NDArray[np.float64]:
-#         pass
-#
-#     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
-#         pass
-#
-#     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-#         pass
-#
-#     def fit(
-#         self,
-#         inplace: bool = True,
-#     ) -> np.ndarray:
-#         x0 = self.model.mean()
-#         if rate != 0:
-#
-#             def dcost(a, model, cr, c0, rate):
-#                 ndim = args_ndim(a, cr, c0, rate, *args)
-#                 f = lambda t: np.exp(-rate * t) * model.hf(t)
-#                 return (
-#                     (1 - np.exp(-rate * a)) / rate * model.hf(a)
-#                     - gauss_legendre(f, 0, a, ndim=ndim)
-#                     - c0 / cr
-#                 )
-#
-#         else:
-#
-#             def dcost(a, model, cr, c0, rate):
-#                 return a * model.hf(a) - model.chf(a) - c0 / cr
-#
-#         ar = newton(dcost, x0, args=(model, cr, c0, rate))
-#         return ar.squeeze() if np.size(ar) == 1 else ar
+class TPolicy:
+
+    discount = exponential_discount
+    nb_assets: int = 1
+
+    def __init__(
+        self,
+        nhpp: NHPP,
+        c0: NDArray[np.float64],
+        cr: NDArray[np.float64],
+        rate: float,
+        *,
+        ar: Optional[NDArray[np.float64]] = None,
+        nhpp_args: ModelArgs = (),
+        nb_assets: int = 1,
+    ) -> None:
+        self.nhpp = nhpp
+        self.nhpp_args = nhpp_args
+        self.nb_assets = nb_assets
+        self.rate = rate
+        self.ar = ar
+        self.c0 = c0
+        self.cr = cr
+
+    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        pass
+
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def number_of_replacements(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def expected_number_of_repairs(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        pass
+
+    def fit(
+        self,
+        inplace: bool = True,
+    ) -> np.ndarray:
+        x0 = self.nhpp.model.mean()
+
+        cr_2d, c0_2d, *nhpp_args_2d = np.atleast_2d(self.cr, self.c0, *self.nhpp_args)
+        if isinstance(nhpp_args_2d, np.ndarray):
+            nhpp_args_2d = (nhpp_args_2d,)
+
+        if self.rate != 0:
+
+            def dcost(a):
+                a = np.atleast_2d(a)
+                f = lambda t: np.exp(-self.rate * t) * self.nhpp.intensity(
+                    t, *nhpp_args_2d
+                )
+                return (
+                    (1 - np.exp(-self.rate * a))
+                    / self.rate
+                    * self.nhpp.intensity(a, *nhpp_args_2d)
+                    - gauss_legendre(f, np.array(0.0), a, ndim=2)
+                    - c0_2d / cr_2d
+                )
+
+        else:
+
+            def dcost(a):
+                a = np.atleast_2d(a)
+                return (
+                    a * self.nhpp.intensity(a, *nhpp_args_2d)
+                    - self.nhpp.cumulative_intensity(a, *nhpp_args_2d)
+                    - c0_2d / cr_2d
+                )
+
+        ar = newton(dcost, x0)
+
+        ndim = max(map(np.ndim, (self.c0, self.cr, *self.nhpp_args)), default=0)
+        if ndim < 2:
+            ar = np.squeeze(ar)
+
+        if inplace:
+            self.ar = ar
+
+        return ar
