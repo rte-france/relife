@@ -8,9 +8,11 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize, newton, OptimizeResult
 
-from relife2.fiability.likelihood import LikelihoodFromLifetimes
+from relife2.fiability.likelihood import (
+    LikelihoodFromLifetimes,
+    hessian_from_likelihood,
+)
 from relife2.utils.data import LifetimeData, lifetime_data_factory
-from relife2.utils.hessian import hessian_from_likelihood
 from relife2.utils.integration import gauss_legendre, quad_laguerre
 from relife2.utils.plot import PlotAccessor
 from relife2.utils.types import VariadicArgs
@@ -622,6 +624,10 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
     # def nb_args(self):
     #     return len(self._args)
 
+    def __init__(self):
+        super().__init__()
+        self.fitting_results = None
+
     @property
     @abstractmethod
     def params_bounds(self) -> Bounds:
@@ -734,7 +740,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             hessian_from_likelihood(self._default_hess_scheme)(likelihood)
         )
 
-        optimized_model._fitting_results = FittingResults(
+        optimized_model.fitting_results = FittingResults(
             len(lifetime_data), optimizer, jac, var
         )
 
@@ -742,20 +748,11 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             self.init_params(lifetime_data, *model_args)
             # or just self.init_params(observed_lifetimes, *model_args)
             self.params = optimized_model.params
-            self._fitting_results = FittingResults(
+            self.fitting_results = FittingResults(
                 len(lifetime_data), optimizer, jac, var
             )
 
         return optimized_model
-
-    @property
-    def fitting_results(self) -> FittingResults:
-        try:
-            return getattr(self, "_fitting_results")
-        except AttributeError:
-            raise AttributeError(
-                "Instance has not FittingResults yet. Fit model first."
-            )
 
     def __getattribute__(self, item):
         """control if params are set"""

@@ -141,14 +141,14 @@ class BoundPlot:
 
 class PlotDescriptor:
     def __set_name__(self, owner, name):
-        self.fname = name
+        self.name = name
 
     def __get__(self, obj, objtype=None):
         from relife2.distribution import Distribution  # avoid circular import
         from relife2.regression import Regression
 
         if isinstance(obj.model, Distribution):
-            return BoundPlot(obj.model, prob_func_plot, self.fname)
+            return BoundPlot(obj.model, prob_func_plot, self.name)
         if isinstance(obj.model, Regression):
             pass
         raise NotImplementedError("No plot")
