@@ -555,7 +555,7 @@ class FittingResults:
         repr=False, default=None
     )  #: Covariance matrix (computed as the inverse of the Hessian matrix)
     se: NDArray[np.float64] = field(
-        init=False, repr=False, default=None
+        init=False, repr=False
     )  #: Standard error, square root of the diagonal of the covariance matrix.
 
     nb_params: int = field(init=False)  #: Number of parameters.

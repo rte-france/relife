@@ -100,17 +100,17 @@ def prob_func_plot(
         print(timeline, args)
 
     y = f(timeline, *args)
+    se = None
     if alpha_ci is not None and hasattr(model, "fitting_results"):
-        i0 = 0
-        se = np.empty_like(timeline, float)
-        if timeline[0] == 0:
-            i0 = 1
-            se[0] = 0
-        se[i0:] = model.fitting_results.standard_error(
-            jac_f(model.fitting_results.opt.x, timeline[i0:].reshape(-1, 1), *args)
-        )
-    else:
-        se = None
+        if model.fitting_results.standard_error is not None:
+            i0 = 0
+            se = np.empty_like(timeline, float)
+            if timeline[0] == 0:
+                i0 = 1
+                se[0] = 0
+            se[i0:] = model.fitting_results.standard_error(
+                jac_f(model.fitting_results.opt.x, timeline[i0:].reshape(-1, 1), *args)
+            )
 
     bounds = (0, 1) if fname in ["sf", "cdf"] else (0, np.inf)
 
