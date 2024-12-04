@@ -1,12 +1,12 @@
 import copy
 from abc import ABC, abstractmethod
-from dataclasses import field, dataclass, asdict
+from dataclasses import asdict, dataclass, field
 from itertools import chain
 from typing import Any, Callable, Generic, Iterator, Optional, Self
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, minimize, newton, OptimizeResult
+from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
 from relife2.fiability.likelihood import (
     LikelihoodFromLifetimes,

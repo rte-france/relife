@@ -130,7 +130,7 @@ class RenewalProcess:
         assets = np.array([], dtype=np.int64)
         order = np.array([], dtype=np.int64)
 
-        for i, (*gen_data, still_valid) in enumerate(
+        for i, (_lifetimes, _event_times, _events, still_valid) in enumerate(
             lifetimes_generator(
                 self.model,
                 nb_samples,
@@ -141,10 +141,10 @@ class RenewalProcess:
                 model1_args=self.args["model1"],
             )
         ):
-            lifetimes = np.concatenate((lifetimes, gen_data[0][still_valid]))
-            event_times = np.concatenate((event_times, gen_data[1][still_valid]))
-            events = np.concatenate((events, gen_data[2][still_valid]))
-            order = np.ones_like(lifetimes) * i
+            lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid]))
+            event_times = np.concatenate((event_times, _event_times[still_valid]))
+            events = np.concatenate((events, _events[still_valid]))
+            order = np.concatenate((order, np.ones_like(_lifetimes[still_valid]) * i))
             _assets, _samples = np.where(still_valid)
             samples = np.concatenate((samples, _samples))
             assets = np.concatenate((assets, _assets))
@@ -183,9 +183,6 @@ def reward_partial_expectation(
 class RenewalRewardProcess(RenewalProcess):
     args: RenewalRewardProcessArgs
     discount: Discount[float] = exponential_discount
-    # TODO: make RenewalRewardProcess accept other discount as parameter
-    #  change asymptotic_expected_equivalent_annual_worth
-    #  change asymptotic_expected_total_reward
 
     def __init__(
         self,
@@ -331,7 +328,10 @@ class RenewalRewardProcess(RenewalProcess):
         order = np.array([], dtype=np.int64)
 
         for i, (
-            *gen_data,
+            _lifetimes,
+            _event_times,
+            _total_rewards,
+            _events,
             still_valid,
         ) in enumerate(
             lifetimes_rewards_generator(
@@ -350,11 +350,11 @@ class RenewalRewardProcess(RenewalProcess):
                 reward1_args=self.args["reward1"],
             )
         ):
-            lifetimes = np.concatenate((lifetimes, gen_data[0][still_valid]))
-            event_times = np.concatenate((event_times, gen_data[1][still_valid]))
-            total_rewards = np.concatenate((total_rewards, gen_data[2][still_valid]))
-            events = np.concatenate((events, gen_data[3][still_valid]))
-            order = np.concatenate((order, np.ones_like(lifetimes) * i))
+            lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid]))
+            event_times = np.concatenate((event_times, _event_times[still_valid]))
+            total_rewards = np.concatenate((total_rewards, _total_rewards[still_valid]))
+            events = np.concatenate((events, _events[still_valid]))
+            order = np.concatenate((order, np.ones_like(_lifetimes[still_valid]) * i))
             _assets, _samples = np.where(still_valid)
             samples = np.concatenate((samples, _samples))
             assets = np.concatenate((assets, _assets))

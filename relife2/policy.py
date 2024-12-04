@@ -13,10 +13,8 @@ from relife2.renewal import (
     run_to_failure_cost,
 )
 from relife2.utils.data import RenewalRewardData
-from relife2.utils.types import (
-    Model1Args,
-    ModelArgs,
-)
+from relife2.utils.types import Model1Args, ModelArgs
+
 from .nhpp import NHPP
 from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
 from .utils.integration import gauss_legendre
@@ -283,6 +281,8 @@ class OneCycleAgeReplacementPolicy(Policy):
 
 
 class RunToFailure(Policy):
+    """run to failure policy (facade object to an underlying renewal reward process)"""
+
     reward = run_to_failure_cost
     discount = exponential_discount
     model1: Optional[LifetimeModel[*Model1Args]] = None
