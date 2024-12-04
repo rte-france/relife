@@ -396,8 +396,8 @@ def deteriorations_factory(
 
 @dataclass
 class CountData:
-    samples: NDArray[np.int64] = field(repr=False)  # samples index
-    assets: NDArray[np.int64] = field(repr=False)  # assets index
+    samples_index: NDArray[np.int64] = field(repr=False)  # samples index
+    assets_index: NDArray[np.int64] = field(repr=False)  # assets index
     order: NDArray[np.int64] = field(
         repr=False
     )  # order index (order in generation process)
@@ -405,10 +405,10 @@ class CountData:
 
     nb_samples: int = field(init=False)
     nb_assets: int = field(init=False)
-    samples_index: NDArray[np.int64] = field(
+    samples_unique_index: NDArray[np.int64] = field(
         init=False, repr=False
     )  # unique samples index
-    assets_index: NDArray[np.int64] = field(
+    assets_unique_index: NDArray[np.int64] = field(
         init=False, repr=False
     )  # unique assets index
 
@@ -421,10 +421,12 @@ class CountData:
         if not len(set(arr.shape[0] for arr in fields_values)) == 1:
             raise ValueError("All array values must have the same shape")
 
-        self.samples_index = np.unique(self.samples)  # samples unique index
-        self.assets_index = np.unique(self.assets)  # assets unique index
-        self.nb_samples = len(self.samples_index)
-        self.nb_assets = len(self.assets_index)
+        self.samples_unique_index = np.unique(
+            self.samples_index
+        )  # samples unique index
+        self.assets_unique_index = np.unique(self.assets_index)  # assets unique index
+        self.nb_samples = len(self.samples_unique_index)
+        self.nb_assets = len(self.assets_unique_index)
 
     def __len__(self) -> int:
         return self.nb_samples * self.nb_assets
@@ -432,7 +434,7 @@ class CountData:
     def number_of_events(
         self, sample: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        ind = self.samples == sample
+        ind = self.samples_index == sample
         times = np.insert(np.sort(self.event_times[ind]), 0, 0)
         counts = np.arange(times.size)
         return times, counts
@@ -446,7 +448,7 @@ class CountData:
         if sample is None:
             return CountDataIterable(self)
         else:
-            if sample not in self.samples_index:
+            if sample not in self.samples_unique_index:
                 raise ValueError(f"{sample} is not part of samples index")
             return filterfalse(lambda x: x[0] != sample, CountDataIterable(self))
 
@@ -456,7 +458,7 @@ class CountDataIterable:
         self.data = data
 
         sorted_index = np.lexsort(
-            (self.data.order, self.data.assets, self.data.samples)
+            (self.data.order, self.data.assets_index, self.data.samples_index)
         )
         self.sorted_fields = {
             _field.name: getattr(self.data, _field.name)[sorted_index].copy()
@@ -469,9 +471,9 @@ class CountDataIterable:
 
     def __iter__(self) -> Iterator[tuple[int, int, dict[str, NDArray[np.float64]]]]:
 
-        for sample in self.data.samples_index:
+        for sample in self.data.samples_unique_index:
             sample_mask = self.sorted_fields["samples"] == sample
-            for asset in self.data.assets_index:
+            for asset in self.data.assets_unique_index:
                 asset_mask = self.sorted_fields["assets"][sample_mask] == asset
                 values_dict = {
                     k: v[sample_mask][asset_mask]
@@ -539,7 +541,7 @@ class RenewalRewardData(RenewalData):
     def cum_total_rewards(
         self, sample: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        ind = self.samples == sample
+        ind = self.samples_index == sample
         s = np.argsort(self.event_times[ind])
         times = np.insert(self.event_times[ind][s], 0, 0)
         z = np.insert(self.total_rewards[ind][s].cumsum(), 0, 0)

@@ -14,7 +14,6 @@ from relife2.renewal import (
 )
 from relife2.utils.data import RenewalRewardData
 from relife2.utils.types import Model1Args, ModelArgs
-
 from .nhpp import NHPP
 from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
 from .utils.integration import gauss_legendre
@@ -129,9 +128,9 @@ class OneCycleRunToFailure(Policy):
             discount_args=(self.rate,),
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
-        assets, samples = np.where(still_valid)
-        assets.astype(np.int64)
-        samples.astype(np.int64)
+        assets_index, samples_index = np.where(still_valid)
+        assets_index.astype(np.int64)
+        samples_index.astype(np.int64)
         lifetimes = _lifetimes[still_valid]
         event_times = _event_times[still_valid]
         total_rewards = _total_rewards[still_valid]
@@ -139,8 +138,8 @@ class OneCycleRunToFailure(Policy):
         order = np.zeros_like(lifetimes)
 
         return RenewalRewardData(
-            samples,
-            assets,
+            samples_index,
+            assets_index,
             order,
             event_times,
             lifetimes,
@@ -231,9 +230,9 @@ class OneCycleAgeReplacementPolicy(Policy):
             discount_args=(self.rate,),
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
-        assets, samples = np.where(still_valid)
-        assets.astype(np.int64)
-        samples.astype(np.int64)
+        assets_index, samples_index = np.where(still_valid)
+        assets_index.astype(np.int64)
+        samples_index.astype(np.int64)
         lifetimes = _lifetimes[still_valid]
         event_times = _event_times[still_valid]
         total_rewards = _total_rewards[still_valid]
@@ -241,8 +240,8 @@ class OneCycleAgeReplacementPolicy(Policy):
         order = np.zeros_like(lifetimes)
 
         return RenewalRewardData(
-            samples,
-            assets,
+            samples_index,
+            assets_index,
             order,
             event_times,
             lifetimes,

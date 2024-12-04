@@ -24,11 +24,3 @@ class RenewalRewardProcessArgs(TypedDict):
     reward: RewardArgs
     reward1: Reward1Args
     discount: DiscountArgs
-
-
-class PolicyArgs(TypedDict, total=False):
-    model: ModelArgs
-    model1: Model1Args
-    reward: RewardArgs
-    reward1: Reward1Args
-    discount: DiscountArgs
