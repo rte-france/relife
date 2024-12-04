@@ -42,12 +42,24 @@ class CovarEffect(ParametricModel):
         return covar * self.g(covar)
 
 
-# Ts type var is tuple[NDArray[np.float64], tuple[NDArray[np.float64], ...]]
-# first element type is NDArray[np.float64] and any other args are NDArray[np.float64]
 class Regression(
     ParametricLifetimeModel[NDArray[np.float64], *ModelArgs],
     ABC,
 ):
+    """
+    Parameters
+    ----------
+    baseline : ParametricLifetimeModel
+        Any parametric lifetime model
+    coef : tuple of floats (values can be none), optional
+        Coefficients values of the covariates effect
+
+
+    See Also
+    --------
+    regression.AFT : AFT regression
+    """
+
     def __init__(
         self,
         baseline: ParametricLifetimeModel[*ModelArgs],
@@ -196,7 +208,25 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the parametric survival function with respect to params."""
+        """Jacobian of the survival function
+
+        Jacobian with respect to model parameters.
+
+        Parameters
+        ----------
+        time : np.darray of shape (n, ) or (m, n)
+            Elapsed time.
+        covar : np.darray of shape (k, ) or (m, k)
+            Covariates values.
+        *args : variable number of np.darray
+            Any other variables needed by the model
+
+        Returns
+        -------
+        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
+            The values of the jacobian at each n points (eventually for m assets).
+
+        """
         return -self.jac_chf(time, covar, *args) * self.sf(time, covar, *args)
 
     def jac_cdf(
@@ -205,8 +235,24 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the parametric cumulative distribution function with
-        respect to params."""
+        """Jacobian of the cumulative distribution function.
+
+        Jacobian with respect to model parameters.
+
+        Parameters
+        ----------
+        time : np.darray of shape (n, ) or (m, n)
+            Elapsed time.
+        covar : np.darray of shape (k, ) or (m, k)
+            Covariates values.
+        *args : variable number of np.darray
+            Any other variables needed by the model
+
+        Returns
+        -------
+        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
+            The values of the jacobian at each n points (eventually for m assets).
+        """
         return -self.jac_sf(time, covar, *args)
 
     def jac_pdf(
@@ -215,36 +261,33 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the parametric probability density function with respect to
-        params."""
+        """Jacobian of the probability density function.
+
+        Jacobian with respect to model parameters.
+
+        Parameters
+        ----------
+        time : np.darray of shape (n, ) or (m, n)
+            Elapsed time.
+        covar : np.darray of shape (k, ) or (m, k)
+            Covariates values.
+        *args : variable number of np.darray
+            Any other variables needed by the model
+
+        Returns
+        -------
+        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
+            The values of the jacobian at each n points (eventually for m assets).
+        """
+
         return self.jac_hf(time, covar, *args) * self.sf(
             time, covar, *args
         ) + self.jac_sf(time, covar, *args) * self.hf(time, covar, *args)
-
-    # @property
-    # def support_lower_bound(self):
-    #     return 0.0
-    #
-    # @property
-    # def support_upper_bound(self):
-    #     return np.inf
 
 
 class ProportionalHazard(Regression):
     """
     Proportional hazard regression.
-
-    Parameters
-    ----------
-    baseline : ParametricLifetimeModel
-        Any parametric lifetime model
-    coef : tuple of floats (values can be none), optional
-        Coefficients values of the covariates effect
-
-
-    See Also
-    --------
-    regression.AFT : AFT regression
     """
 
     def hf(
@@ -259,10 +302,13 @@ class ProportionalHazard(Regression):
 
         Parameters
         ----------
-        time : numpy array of floats
+        time : np.darray
             Elapsed time.
-        covar : numpy array of floats
+        covar : np.darray
             Covariates values.
+        *args : variable number of np.darray
+            Any other variables needed by the model
+
 
         Returns
         -------
@@ -332,18 +378,6 @@ class ProportionalHazard(Regression):
 class AFT(Regression):
     """
     Accelerated failure time regression.
-
-    Parameters
-    ----------
-    baseline : ParametricLifetimeModel
-        Any parametric lifetime model
-    coef : tuple of floats (values can be none), optional
-        Coefficients values of the covariates effect
-
-
-    See Also
-    --------
-    regression.AFT : AFT regression
     """
 
     def hf(

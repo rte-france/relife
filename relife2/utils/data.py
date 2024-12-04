@@ -6,10 +6,10 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from dataclasses import dataclass, field, fields
 from itertools import filterfalse
-from typing import Iterator, Optional, Protocol, Self
+from typing import Iterator, Optional, Protocol, Self, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -395,7 +395,7 @@ def deteriorations_factory(
 
 
 @dataclass
-class CountData:
+class CountData(ABC):
     samples_index: NDArray[np.int64] = field(repr=False)  # samples index
     assets_index: NDArray[np.int64] = field(repr=False)  # assets index
     order: NDArray[np.int64] = field(
@@ -444,43 +444,41 @@ class CountData:
         counts = np.arange(times.size) / self.nb_samples
         return times, counts
 
-    def iter(self, sample: Optional[int] = None):
-        if sample is None:
-            return CountDataIterable(self)
-        else:
-            if sample not in self.samples_unique_index:
-                raise ValueError(f"{sample} is not part of samples index")
-            return filterfalse(lambda x: x[0] != sample, CountDataIterable(self))
+    @abstractmethod
+    def iter(self, sample: Optional[int] = None) -> "CountDataIterable": ...
 
 
 class CountDataIterable:
-    def __init__(self, data: CountData):
+    def __init__(self, data: CountData, field_names: Sequence[str]):
+        """
+        Parameters
+        ----------
+        data :
+        field_names : fields iterate on
+        """
+
         self.data = data
 
         sorted_index = np.lexsort(
             (self.data.order, self.data.assets_index, self.data.samples_index)
         )
-        self.sorted_fields = {
-            _field.name: getattr(self.data, _field.name)[sorted_index].copy()
-            for _field in fields(self.data)
-            if _field.init
-        }
+        self.sorted_fields = tuple(
+            (getattr(self.data, name)[sorted_index].copy() for name in field_names)
+        )
 
     def __len__(self) -> int:
         return self.data.nb_samples * self.data.nb_assets
 
-    def __iter__(self) -> Iterator[tuple[int, int, dict[str, NDArray[np.float64]]]]:
+    def __iter__(self) -> Iterator[tuple[int, int, *tuple[NDArray[np.float64], ...]]]:
 
         for sample in self.data.samples_unique_index:
-            sample_mask = self.sorted_fields["samples"] == sample
+            sample_mask = self.sorted_fields["samples_index"] == sample
             for asset in self.data.assets_unique_index:
-                asset_mask = self.sorted_fields["assets"][sample_mask] == asset
-                values_dict = {
-                    k: v[sample_mask][asset_mask]
-                    for k, v in self.sorted_fields.items()
-                    if k not in ("samples", "assets", "order")
-                }
-                yield int(sample), int(asset), values_dict
+                asset_mask = self.sorted_fields["assets_index"][sample_mask] == asset
+                itervalues = tuple(
+                    (v[sample_mask][asset_mask]) for v in self.sorted_fields
+                )
+                yield int(sample), int(asset), *itervalues
 
 
 @dataclass
@@ -490,12 +488,50 @@ class RenewalData(CountData):
         repr=False
     )  # event indicators (right censored or not)
 
+    # necessary to store reference to model_args used to sample (to_lifetime_data)
+    model_args: tuple[NDArray[np.float64], ...] = field(repr=False)
+
+    def iter(self, sample: Optional[int] = None):
+        if sample is None:
+            return CountDataIterable(self, ("lifetimes", "events"))
+        else:
+            if sample not in self.samples_unique_index:
+                raise ValueError(f"{sample} is not part of samples index")
+            return filterfalse(
+                lambda x: x[0] != sample,
+                CountDataIterable(self, ("lifetimes", "events")),
+            )
+
     def to_lifetime_data(
         self,
         t0: float = 0,
         tf: Optional[float] = None,
         sample: Optional[int] = None,
-    ) -> LifetimeData:
+    ) -> tuple[
+        NDArray[np.float64],
+        NDArray[np.float64],
+        NDArray[np.float64],
+        None,
+        NDArray[np.float64],
+    ]:
+        """
+        consider only model_args (not model1_args)
+        if t0 is lower than first event_times => raise  Error
+
+        Parameters
+        ----------
+        t0 : start (time) of the observation period
+        tf : end (time) of the observation period
+        sample :
+
+        Returns
+        -------
+
+        """
+
+        max_event_time = np.max(self.event_times)
+        if tf > max_event_time:
+            tf = max_event_time
 
         if t0 >= tf:
             raise ValueError("`t0` must be strictly lower than `tf`")
@@ -503,35 +539,54 @@ class RenewalData(CountData):
         time = np.array([], dtype=np.float64)
         event = np.array([], dtype=np.bool_)
         entry = np.array([], dtype=np.float64)
+        model_args_2d = np.atleast_2d(self.model_args)
+        returned_model_args = [
+            np.empty((0, arg.shape[-1]), dtype=np.float64) for arg in model_args_2d
+        ]
 
-        for _, _, values_dict in self.iter(sample=sample):
+        for _, asset, lifetimes, event_times in self.iter(sample=sample):
+
             # Indices of replacement occuring inside the obervation window
-            ind0 = (values_dict["event_times"] > t0) & (
-                values_dict["event_times"] <= tf
-            )
+            ind0 = (event_times > t0) & (event_times <= tf)
             # Indices of replacement occuring after the observation window which include right censoring
-            ind1 = values_dict["event_times"] > tf
+            ind1 = event_times > tf
 
-            if ind0:
-                # Replacements occuring inside the observation window
-                _time = values_dict["lifetimes"][ind0]
-                _event = values_dict["events"][ind0]
-                _entry = np.zeros(_time.size)
+            # Replacements occuring inside the observation window
+            time0 = lifetimes[ind0]
+            event0 = event_times[ind0]
+            entry0 = np.zeros(time0.size)
+
+            if np.any(ind0):
                 # time at birth for the firt replacements
-                b0 = values_dict["event_times"][ind0][0] - [ind0][0]
+                b0 = event_times[ind0][0] - time0[0]
                 if b0 < t0:
-                    _entry[0] = t0 - b0
-                time = np.concatenate((time, _time))
-                event = np.concatenate((event, _event))
-                entry = np.concatenate((entry, _entry))
+                    entry0[0] = t0 - b0
 
-            if ind1:
-                bf = values_dict["event_times"][ind1][0]
-                time = np.append(time, bf - tf)
-                event = np.append(event, False)
-                entry = np.append(entry, 0.0)
+            time = np.concatenate((time, time0))
+            event = np.concatenate((event, event0))
+            entry = np.concatenate((entry, entry0))
+            returned_model_args = [
+                np.vstack((x, np.tile(arg[asset], (time0.size, 1))))
+                for x, arg in zip(returned_model_args, model_args_2d)
+            ]
 
-        return lifetime_data_factory(time, event, entry)
+            if np.any(ind0) and np.any(ind1):
+                # time at birth for the right censored
+                bf = event_times[ind1][0] - time0[-1]
+                if tf > bf:
+                    time = np.append(time, tf - bf)
+                    event = np.append(event, False)
+                    entry = np.append(entry, 0.0)
+                    returned_model_args = [
+                        np.vstack((x, arg[[asset]]))
+                        for x, arg in zip(returned_model_args, model_args_2d)
+                    ]
+
+        assert len(time) == len(event) == len(entry)
+
+        departure = None
+
+        return time, event, entry, departure, returned_model_args
 
 
 @dataclass
