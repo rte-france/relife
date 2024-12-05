@@ -156,6 +156,8 @@ class RenewalProcess:
             event_times,
             lifetimes,
             events,
+            model_args=self.args["model"],
+            with_model1=self.model1 is not None,
         )
 
 
@@ -366,5 +368,7 @@ class RenewalRewardProcess(RenewalProcess):
             event_times,
             lifetimes,
             events,
-            total_rewards,
+            model_args=self.args["model"],
+            with_model1=self.model1 is not None,
+            total_rewards=total_rewards,
         )

@@ -142,6 +142,8 @@ class OneCycleRunToFailure(Policy):
             event_times,
             lifetimes,
             events,
+            self.model_args,
+            False,
             total_rewards,
         )
 
@@ -242,6 +244,8 @@ class OneCycleAgeReplacementPolicy(Policy):
             event_times,
             lifetimes,
             events,
+            self.model_args,
+            False,
             total_rewards,
         )
 

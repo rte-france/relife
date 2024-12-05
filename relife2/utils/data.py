@@ -14,6 +14,8 @@ from typing import Iterator, Optional, Protocol, Self, Sequence
 import numpy as np
 from numpy.typing import NDArray
 
+from relife2.utils.types import ModelArgs
+
 
 @dataclass
 class IndexedData:
@@ -488,8 +490,10 @@ class RenewalData(CountData):
         repr=False
     )  # event indicators (right censored or not)
 
+    model_args: ModelArgs = field(repr=False)
+    with_model1: bool = field(repr=False)
+
     # necessary to store reference to model_args used to sample (to_lifetime_data)
-    model_args: tuple[NDArray[np.float64], ...] = field(repr=False)
 
     def iter(self, sample: Optional[int] = None):
         if sample is None:
@@ -502,7 +506,7 @@ class RenewalData(CountData):
                 CountDataIterable(self, ("lifetimes", "events")),
             )
 
-    def to_lifetime_data(
+    def to_fit(
         self,
         t0: float = 0,
         tf: Optional[float] = None,
@@ -550,6 +554,11 @@ class RenewalData(CountData):
             ind0 = (event_times > t0) & (event_times <= tf)
             # Indices of replacement occuring after the observation window which include right censoring
             ind1 = event_times > tf
+
+            if self.with_model1:
+                # remove first cycle data
+                ind0[0] = False
+                ind1[0] = False
 
             # Replacements occuring inside the observation window
             time0 = lifetimes[ind0]
