@@ -13,7 +13,21 @@ from relife2.utils.data import LifetimeData, lifetime_data_factory
 @dataclass
 class Estimates:
     """
-    BLABLABLABLA
+    Stores the estimates for a non-parametric lifetime model.
+
+    Parameters
+    ----------
+    timeline : np.ndarray of shape (n, )
+        The timeline of the estimates.
+    values : np.ndarray of shape (n, )
+        The estimated values.
+    se : np.ndarray of shape (n, ), optional
+        The standard errors of the estimates. If not provided, defaults to an array of zeros.
+
+    Raises
+    ------
+    ValueError
+        If the shapes of `timeline`, `values`, and `se` are not compatible.
     """
 
     timeline: NDArray[np.float64]
@@ -46,13 +60,33 @@ class Estimates:
 
 
 class Estimations(TypedDict, total=False):
+    """
+    Typed dictionary for storing different types of estimates.
+
+    Attributes
+    ----------
+    sf : Estimates, optional
+        Survival function estimates.
+    chf : Estimates, optional
+        Cumulative hazard function estimates.
+    cdf : Estimates, optional
+        Cumulative distribution function estimates.
+    """
+
     sf: Optional[Estimates]
     chf: Optional[Estimates]
     cdf: Optional[Estimates]
 
 
 class NonParametricLifetimeEstimator(Protocol):
-    """_summary_"""
+    """
+    Non-parametric lifetime estimator.
+
+    Attributes
+    ----------
+    estimations : Estimations
+        The estimations produced when fitting the estimator.
+    """
 
     estimations: Estimations
 
@@ -64,10 +98,20 @@ class NonParametricLifetimeEstimator(Protocol):
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
     ) -> None:
-        """_summary_
+        """
+        Compute the non-parametric estimations with respect to lifetime data.
 
-        Returns:
-            Tuple[Estimates]: description
+        Parameters
+        ----------
+        time : ndarray (1d or 2d)
+            Observed lifetime values.
+        event : ndarray of boolean values (1d), default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : ndarray of float (1d), default is None
+            Left truncations applied to lifetime values.
+        departure : ndarray of float (1d), default is None
+            Right truncations applied to lifetime values.
+
         """
 
 
@@ -119,10 +163,34 @@ class ECDF(NonParametricLifetimeEstimator):
 
     @estimated
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Survival function.
+
+        Parameters
+        ----------
+        time : np.ndarray of shape (n, )
+            The times at which to estimate the survival function.
+
+        Returns
+        -------
+        np.ndarray of shape (n, )
+            The estimated survival probabilities at each time.
+        """
         return self.estimations["sf"].nearest_1dinterp(time)
 
     @estimated
     def cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Cumulative hazard function.
+
+        Parameters
+        ----------
+        time : np.ndarray of shape (n, )
+            The times at which to estimate the cumulative hazard function.
+
+        Returns
+        -------
+        np.ndarray of shape (n, )
+            The estimated cumulative hazard values at each time.
+        """
         return self.estimations["cdf"].nearest_1dinterp(time)
 
 
@@ -199,6 +267,18 @@ class KaplanMeier(NonParametricLifetimeEstimator):
 
     @estimated
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Survival function.
+
+        Parameters
+        ----------
+        time : np.ndarray of shape (n, )
+            The times at which to estimate the survival function.
+
+        Returns
+        -------
+        np.ndarray of shape (n, )
+            The estimated survival probabilities at each time.
+        """
         return self.estimations["sf"].nearest_1dinterp(time)
 
 
@@ -266,6 +346,18 @@ class NelsonAalen(NonParametricLifetimeEstimator):
 
     @estimated
     def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Cumulative hazard function.
+
+        Parameters
+        ----------
+        time : np.ndarray of shape (n, )
+            The times at which to estimate the cumulative hazard function.
+
+        Returns
+        -------
+        np.ndarray of shape (n, )
+            The estimated cumulative hazard values at each time.
+        """
         return self.estimations["chf"].nearest_1dinterp(time)
 
 
@@ -460,6 +552,18 @@ class Turnbull(NonParametricLifetimeEstimator):
 
     @estimated
     def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Survival function.
+
+        Parameters
+        ----------
+        time : np.ndarray of shape (n, )
+            The times at which to estimate the survival function.
+
+        Returns
+        -------
+        np.ndarray of shape (n, )
+            The estimated survival probabilities at each time.
+        """
         return self.estimations["sf"].nearest_1dinterp(time)
 
 
@@ -476,4 +580,16 @@ class NonParametricNHPP:
         self.nelson_aalen.fit(nhpp_data_factory(ages, assets))
 
     def chf(self, time):
+        """Cumulative hazard function.
+
+        Parameters
+        ----------
+        time : np.ndarray of shape (n, )
+            The times at which to estimate the cumulative hazard function.
+
+        Returns
+        -------
+        np.ndarray of shape (n, )
+            The estimated cumulative hazard values at each time.
+        """
         return self.nelson_aalen.chf(time)
