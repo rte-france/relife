@@ -20,8 +20,9 @@ def model_rvs(
     model: LifetimeModel[*ModelArgs],
     size: int,
     args: ModelArgs = (),
+    seed: Optional[int] = None,
 ):
-    return model.rvs(*args, size=size)
+    return model.rvs(*args, size=size, seed=seed)
 
 
 def rvs_size(
@@ -69,6 +70,7 @@ def lifetimes_generator(
     model_args: ModelArgs = (),
     model1: Optional[LifetimeModel[*Model1Args]] = None,
     model1_args: Model1Args = (),
+    seed: Optional[int] = None,
 ) -> Iterator[
     tuple[
         NDArray[np.float64],
@@ -83,7 +85,7 @@ def lifetimes_generator(
 
     def sample_routine(target_model, args):
         nonlocal event_times, still_valid  # modify these variables
-        lifetimes = model_rvs(target_model, size, args=args).reshape(
+        lifetimes = model_rvs(target_model, size, args=args, seed=seed).reshape(
             (nb_assets, nb_samples)
         )
         event_times += lifetimes
@@ -124,6 +126,7 @@ def lifetimes_rewards_generator(
     model1_args: Model1Args = (),
     reward1: Optional[Reward[*Reward1Args]] = None,
     reward1_args: Reward1Args = (),
+    seed: Optional[int] = None,
 ) -> Iterator[
     tuple[
         NDArray[np.float64],
@@ -143,6 +146,7 @@ def lifetimes_rewards_generator(
         model_args=model_args,
         model1=model1,
         model1_args=model1_args,
+        seed=seed,
     )
 
     def sample_routine(target_reward, args):

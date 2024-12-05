@@ -1,5 +1,5 @@
 import functools
-from typing import Optional, Protocol
+from typing import Optional, Protocol, Self, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,7 +12,7 @@ from relife2.renewal import (
     lifetimes_rewards_generator,
     run_to_failure_cost,
 )
-from relife2.utils.data import RenewalRewardData
+from relife2.utils.data import CountData, RenewalRewardData
 from relife2.utils.types import Model1Args, ModelArgs
 from .nhpp import NHPP
 from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
@@ -32,6 +32,12 @@ class Policy(Protocol):
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]: ...
+
+    def sample(
+        self,
+        nb_samples: int,
+        seed: Optional[int] = None,
+    ) -> CountData: ...
 
 
 def ifset(*param_names: str):
@@ -113,6 +119,7 @@ class OneCycleRunToFailure(Policy):
     def sample(
         self,
         nb_samples: int,
+        seed: Optional[int] = None,
     ) -> RenewalRewardData:
         generator = lifetimes_rewards_generator(
             self.model,
@@ -124,6 +131,7 @@ class OneCycleRunToFailure(Policy):
             model_args=self.model_args,
             reward_args=(self.cf,),
             discount_args=(self.discount_rate,),
+            seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
         assets_index, samples_index = np.where(still_valid)
@@ -171,11 +179,14 @@ class OneCycleAgeReplacementPolicy(Policy):
         self.model = AgeReplacementModel(model)
         self.nb_assets = nb_assets
 
-        self.model_args = model_args
         self.ar = ar
         self.cf = cf
         self.cp = cp
         self.discount_rate = discount_rate
+        self.model_args = model_args
+
+        if self.ar is not None:
+            self.model_args = (self.ar,) + self.model_args
 
     @ifset("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -215,7 +226,11 @@ class OneCycleAgeReplacementPolicy(Policy):
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
     @ifset("ar")
-    def sample(self, nb_samples: int) -> RenewalRewardData:
+    def sample(
+        self,
+        nb_samples: int,
+        seed: Optional[int] = None,
+    ) -> RenewalRewardData:
         generator = lifetimes_rewards_generator(
             self.model,
             self.reward,
@@ -226,6 +241,7 @@ class OneCycleAgeReplacementPolicy(Policy):
             model_args=self.model_args,
             reward_args=(self.ar, self.cf, self.cp),
             discount_args=(self.discount_rate,),
+            seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
         assets_index, samples_index = np.where(still_valid)
@@ -249,10 +265,11 @@ class OneCycleAgeReplacementPolicy(Policy):
             total_rewards,
         )
 
+    @ifset("rrp")
     def fit(
         self,
         inplace: Optional[bool] = True,
-    ) -> NDArray[np.float64]:
+    ) -> Union[Self, None]:
 
         cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
         x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
@@ -273,10 +290,24 @@ class OneCycleAgeReplacementPolicy(Policy):
         ar = np.asarray(newton(eq, x0), dtype=np.float64)
 
         if inplace:
+            if self.ar is not None:
+                self.model_args = (ar,) + self.model_args[1:]
+            else:
+                self.model_args = (ar,) + self.model_args
             self.ar = ar
-            self.model_args = (ar,) + self.model_args[1:]
 
-        return ar
+        else:
+            return OneCycleAgeReplacementPolicy(
+                self.model,
+                self.cf,
+                self.cp,
+                self.discount_rate,
+                ar=ar,
+                model_args=(
+                    self.model_args[1:] if self.ar is not None else self.model_args
+                ),
+                nb_assets=self.nb_assets,
+            )
 
 
 class RunToFailure(Policy):
@@ -340,8 +371,13 @@ class RunToFailure(Policy):
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.rrp.asymptotic_expected_equivalent_annual_cost()
 
-    def sample(self, nb_samples: int, end_time: float) -> RenewalRewardData:
-        return self.rrp.sample(nb_samples, end_time)
+    def sample(
+        self,
+        nb_samples: int,
+        end_time: float,
+        seed: Optional[int] = None,
+    ) -> RenewalRewardData:
+        return self.rrp.sample(nb_samples, end_time, seed=seed)
 
     def expected_number_of_replacements(
         self, timeline: NDArray[np.float64]
@@ -395,42 +431,135 @@ class AgeReplacementPolicy(Policy):
 
         self.nb_assets = nb_assets
 
-        self.rrp = RenewalRewardProcess(
-            self.model,
-            run_to_failure_cost,
-            nb_assets=self.nb_assets,
-            model_args=self.model_args,
-            reward_args=(self.cf,),
-            discount_rate=self.discount_rate,
-            model1=self.model1,
-            model1_args=self.model1_args,
-        )
+        self.rrp = None
+        if self.ar is not None:
+            self.rrp = RenewalRewardProcess(
+                self.model,
+                run_to_failure_cost,
+                nb_assets=self.nb_assets,
+                model_args=self.model_args,
+                reward_args=(self.ar, self.cf, self.cp),
+                discount_rate=self.discount_rate,
+                model1=self.model1,
+                model1_args=self.model1_args,
+            )
+            self.model_args = (self.ar,) + self.model_args
 
+    @ifset("rrp")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        pass
+        return self.rrp.expected_total_reward(timeline)
 
+    @ifset("rrp")
     def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        return self.rrp.expected_equivalent_annual_cost(timeline)
+
+    @ifset("rrp")
+    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        return self.rrp.asymptotic_expected_total_reward()
+
+    @ifset("rrp")
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        return self.rrp.asymptotic_expected_equivalent_annual_cost()
+
+    def expected_number_of_replacements(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
         pass
 
-    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
-        pass
-
-    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        pass
-
-    def expected_number_of_replacements(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
-
     def expected_number_of_failures(
         self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
+    ) -> NDArray[np.float64]:
+        pass
 
     def expected_number_of_preventive_replacements(
         self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
+    ) -> NDArray[np.float64]:
+        pass
+
+    def fit(
+        self,
+        inplace: Optional[bool] = True,
+    ) -> Union[Self, None]:
+
+        cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
+        x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
+        if np.size(x0) == 1:
+            x0 = np.tile(x0, (self.nb_assets, 1))
+
+        ndim = max(
+            map(np.ndim, (cf_3d, cp_3d, self.discount_rate, *self.model_args)),
+            default=0,
+        )
+
+        def eq(a):
+            f = gauss_legendre(
+                lambda x: self.discount(x, self.discount_rate)
+                * self.model.sf(x, *self.model_args),
+                0,
+                a,
+                ndim=ndim,
+            )
+            g = gauss_legendre(
+                lambda x: self.discount(x, self.discount_rate)
+                * self.model.pdf(x, *self.model_args),
+                0,
+                a,
+                ndim=ndim,
+            )
+            return np.sum(
+                self.discount(a, self.discount_rate)
+                * (
+                    (cf_3d - cp_3d) * (self.model.hf(a, *self.model_args) * f - g)
+                    - cp_3d
+                )
+                / f**2,
+                axis=0,
+            )
+
+        ar = newton(eq, x0)
+        if np.size(ar) == 1:
+            ar = np.squeeze(ar)
+
+        if inplace:
+            if self.ar is not None:
+                self.model_args = (ar,) + self.model_args[1:]
+            else:
+                self.model_args = (ar,) + self.model_args
+            self.ar = ar
+            self.rrp = RenewalRewardProcess(
+                self.model,
+                run_to_failure_cost,
+                nb_assets=self.nb_assets,
+                model_args=self.model_args,
+                reward_args=(self.ar, self.cf, self.cp),
+                discount_rate=self.discount_rate,
+                model1=self.model1,
+                model1_args=self.model1_args,
+            )
+        else:
+            return AgeReplacementPolicy(
+                self.model,
+                self.cf,
+                self.cp,
+                ar,
+                discount_rate=self.discount_rate,
+                model_args=(
+                    self.model_args[1:] if self.ar is not None else self.model_args
+                ),
+                model1=self.model1,
+                model1_args=self.model1_args,
+            )
+
+    @ifset("rrp")
+    def sample(
+        self,
+        nb_samples: int,
+        end_time: float,
+        seed: Optional[int] = None,
+    ) -> RenewalRewardData:
+        return self.rrp.sample(nb_samples, end_time, seed=seed)
 
 
 class TPolicy(Policy):

@@ -2,7 +2,7 @@ import copy
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from itertools import chain
-from typing import Any, Callable, Generic, Iterator, Optional, Self
+from typing import Any, Callable, Generic, Iterator, Optional, Self, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -664,7 +664,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         model_args: tuple[*VariadicArgs] = (),
         inplace: bool = True,
         **kwargs: Any,
-    ) -> Self:
+    ) -> Union[Self, None]:
         """
         Estimation of lifetime model parameters with respect to lifetime data.
 
@@ -753,8 +753,8 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             self.fitting_results = FittingResults(
                 len(lifetime_data), optimizer, jac, var
             )
-
-        return optimized_model
+        else:
+            return optimized_model
 
     def __getattribute__(self, item):
         """control if params are set"""

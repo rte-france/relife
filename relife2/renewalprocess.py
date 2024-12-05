@@ -121,6 +121,7 @@ class RenewalProcess:
         self,
         nb_samples: int,
         end_time: float,
+        seed: Optional[int] = None,
     ) -> RenewalData:
 
         lifetimes = np.array([], dtype=np.float64)
@@ -139,6 +140,7 @@ class RenewalProcess:
                 model_args=self.args["model"],
                 model1=self.model1,
                 model1_args=self.args["model1"],
+                seed=seed,
             )
         ):
             lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid]))
@@ -320,7 +322,12 @@ class RenewalRewardProcess(RenewalProcess):
         ) / self.model.mean(*self.args["model"])
         return np.where(mask, q0, q)
 
-    def sample(self, nb_samples: int, end_time: float) -> RenewalRewardData:
+    def sample(
+        self,
+        nb_samples: int,
+        end_time: float,
+        seed: Optional[int] = None,
+    ) -> RenewalRewardData:
         lifetimes = np.array([], dtype=np.float64)
         event_times = np.array([], dtype=np.float64)
         total_rewards = np.array([], dtype=np.float64)
@@ -350,6 +357,7 @@ class RenewalRewardProcess(RenewalProcess):
                 model1_args=self.args["model1"],
                 reward1=self.reward1,
                 reward1_args=self.args["reward1"],
+                seed=seed,
             )
         ):
             lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid]))

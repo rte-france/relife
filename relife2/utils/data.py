@@ -6,7 +6,7 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, fields
 from itertools import filterfalse
 from typing import Iterator, Optional, Protocol, Self, Sequence
@@ -418,9 +418,18 @@ class CountData(ABC):
         fields_values = [
             getattr(self, _field.name) for _field in fields(self) if _field.init
         ]
-        if not all(arr.ndim == 1 for arr in fields_values):
+        if not all(
+            arr.ndim == 1 for arr in fields_values if isinstance(arr, np.ndarray)
+        ):
             raise ValueError("All array values must be 1d")
-        if not len(set(arr.shape[0] for arr in fields_values)) == 1:
+        if (
+            not len(
+                set(
+                    arr.shape[0] for arr in fields_values if isinstance(arr, np.ndarray)
+                )
+            )
+            == 1
+        ):
             raise ValueError("All array values must have the same shape")
 
         self.samples_unique_index = np.unique(
@@ -458,15 +467,13 @@ class CountDataIterable:
         data :
         field_names : fields iterate on
         """
-
         self.data = data
-
-        sorted_index = np.lexsort(
-            (self.data.order, self.data.assets_index, self.data.samples_index)
-        )
+        sorted_index = np.lexsort((data.order, data.assets_index, data.samples_index))
         self.sorted_fields = tuple(
-            (getattr(self.data, name)[sorted_index].copy() for name in field_names)
+            (getattr(data, name)[sorted_index].copy() for name in field_names)
         )
+        self.samples_index = data.samples_index[sorted_index].copy()
+        self.assets_index = data.assets_index[sorted_index].copy()
 
     def __len__(self) -> int:
         return self.data.nb_samples * self.data.nb_assets
@@ -474,9 +481,9 @@ class CountDataIterable:
     def __iter__(self) -> Iterator[tuple[int, int, *tuple[NDArray[np.float64], ...]]]:
 
         for sample in self.data.samples_unique_index:
-            sample_mask = self.sorted_fields["samples_index"] == sample
+            sample_mask = self.samples_index == sample
             for asset in self.data.assets_unique_index:
-                asset_mask = self.sorted_fields["assets_index"][sample_mask] == asset
+                asset_mask = self.assets_index[sample_mask] == asset
                 itervalues = tuple(
                     (v[sample_mask][asset_mask]) for v in self.sorted_fields
                 )
@@ -540,62 +547,99 @@ class RenewalData(CountData):
         if t0 >= tf:
             raise ValueError("`t0` must be strictly lower than `tf`")
 
-        time = np.array([], dtype=np.float64)
-        event = np.array([], dtype=np.bool_)
-        entry = np.array([], dtype=np.float64)
-        model_args_2d = np.atleast_2d(self.model_args)
-        returned_model_args = [
-            np.empty((0, arg.shape[-1]), dtype=np.float64) for arg in model_args_2d
-        ]
+        # Filtering sample and sorting by times
 
-        for _, asset, lifetimes, event_times in self.iter(sample=sample):
+        # sorted_index = np.lexsort((self.order, self.assets_index, self.samples_index))
+        #
+        # samples_index = self.samples_index[sorted_index]
+        # assets_index = self.assets_index[sorted_index]
+        # order = self.order[sorted_index]
+        # event_times = self.event_times[sorted_index]
+        # lifetimes = self.lifetimes[sorted_index]
+        # events = self.events[sorted_index]
+        #
+        # s = self.samples_index == sample if sample is not None else Ellipsis
+        #
+        # samples_index = samples_index[s]
+        # assets_index = assets_index[s]
+        # order = order[s]
+        # event_times = event_times[s]
+        # lifetimes = lifetimes[s]
+        # events = events[s]
 
-            # Indices of replacement occuring inside the obervation window
-            ind0 = (event_times > t0) & (event_times <= tf)
-            # Indices of replacement occuring after the observation window which include right censoring
-            ind1 = event_times > tf
+        s = self.samples_index == sample if sample is not None else Ellipsis
+        sort_index = np.argsort(self.event_times[s])
+        indices = self.assets_index[s][sort_index]
+        samples = self.samples_index[s][sort_index]
+        uindices = np.ravel_multi_index(
+            (indices, samples), (self.nb_assets, self.nb_samples)
+        )
+        times = self.event_times[s][sort_index]
+        durations = self.lifetimes[s][sort_index]
+        events = self.events[s][sort_index]
+        order = self.order[s][sort_index]
 
-            if self.with_model1:
-                # remove first cycle data
-                ind0[0] = False
-                ind1[0] = False
+        # Indices of interest
+        ind0 = (times > t0) & (
+            times <= tf
+        )  # Indices of replacement occuring inside the obervation window
+        ind1 = (
+            times > tf
+        )  # Indices of replacement occuring after the observation window which include right censoring
 
-            # Replacements occuring inside the observation window
-            time0 = lifetimes[ind0]
-            event0 = event_times[ind0]
-            entry0 = np.zeros(time0.size)
+        if self.with_model1:  # remove first cycle data
+            ind0[order[ind0] == 0] = False
+            ind1[order[ind1] == 0] = False
 
-            if np.any(ind0):
-                # time at birth for the firt replacements
-                b0 = event_times[ind0][0] - time0[0]
-                if b0 < t0:
-                    entry0[0] = t0 - b0
+        # Replacements occuring inside the observation window
+        time0 = durations[ind0]
+        event0 = events[ind0]
+        entry0 = np.zeros(time0.size)
+        _, lt = np.unique(  # LT is a sorted index (LT.shape == ind0.shape)
+            uindices[ind0], return_index=True
+        )  # get the indices of the first replacements ocurring in the observation window
 
-            time = np.concatenate((time, time0))
-            event = np.concatenate((event, event0))
-            entry = np.concatenate((entry, entry0))
-            returned_model_args = [
-                np.vstack((x, np.tile(arg[asset], (time0.size, 1))))
-                for x, arg in zip(returned_model_args, model_args_2d)
-            ]
+        b0 = (
+            times[ind0][lt] - durations[ind0][lt]
+        )  # time at birth for the firt replacements
+        entry0[lt] = np.where(b0 >= t0, 0, t0 - b0)
+        args0 = tuple(
+            (
+                np.take(arg, indices[ind0], axis=0)
+                for arg in np.atleast_2d(self.model_args)
+                if bool(self.model_args)
+            )
+        )
 
-            if np.any(ind0) and np.any(ind1):
-                # time at birth for the right censored
-                bf = event_times[ind1][0] - time0[-1]
-                if tf > bf:
-                    time = np.append(time, tf - bf)
-                    event = np.append(event, False)
-                    entry = np.append(entry, 0.0)
-                    returned_model_args = [
-                        np.vstack((x, arg[[asset]]))
-                        for x, arg in zip(returned_model_args, model_args_2d)
-                    ]
+        # Right censoring
+        _, rc = np.unique(uindices[ind1], return_index=True)
+        bf = (
+            times[ind1][rc] - durations[ind1][rc]
+        )  # time at birth for the right censored
+        b1 = bf[
+            bf < tf
+        ]  # ensure that time of birth for the right censored is not equal to tf.
+        time1 = tf - b1
+        event1 = np.zeros(b1.size)
+        entry1 = np.where(b1 >= t0, 0, t0 - b1)
+        args1 = tuple(
+            (
+                np.take(arg, indices[ind1][rc][bf < tf], axis=0)
+                for arg in np.atleast_2d(self.model_args)
+                if bool(self.model_args)
+            )
+        )
 
-        assert len(time) == len(event) == len(entry)
-
+        # Concatenate
+        time = np.concatenate((time0, time1))
+        event = np.concatenate((event0, event1))
+        entry = np.concatenate((entry0, entry1))
         departure = None
+        args = tuple(
+            np.concatenate((arg0, arg1), axis=0) for arg0, arg1 in zip(args0, args1)
+        )
 
-        return time, event, entry, departure, returned_model_args
+        return time, event, entry, departure, args
 
 
 @dataclass
