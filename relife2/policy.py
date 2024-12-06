@@ -204,10 +204,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         self.cf = cf
         self.cp = cp
         self.discount_rate = discount_rate
-        self.model_args = model_args
-
-        if self.ar is not None:
-            self.model_args = (self.ar,) + self.model_args
+        self.model_args = (ar,) + model_args
 
     @ifset("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -286,10 +283,9 @@ class OneCycleAgeReplacementPolicy(Policy):
             total_rewards,
         )
 
-    @ifset("rrp")
     def fit(
         self,
-        inplace: Optional[bool] = True,
+        inplace: Optional[bool] = False,
     ) -> Union[Self, None]:
 
         cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
@@ -302,7 +298,7 @@ class OneCycleAgeReplacementPolicy(Policy):
                 self.discount.factor(a, self.discount_rate)
                 / self.discount.annuity_factor(a, self.discount_rate)
                 * (
-                    (cf_3d - cp_3d) * self.model.hf(a, *self.model_args)
+                    (cf_3d - cp_3d) * self.model.baseline.hf(a, *self.model_args[1:])
                     - cp_3d / self.discount.annuity_factor(a, self.discount_rate)
                 ),
                 axis=0,
@@ -311,22 +307,16 @@ class OneCycleAgeReplacementPolicy(Policy):
         ar = np.asarray(newton(eq, x0), dtype=np.float64)
 
         if inplace:
-            if self.ar is not None:
-                self.model_args = (ar,) + self.model_args[1:]
-            else:
-                self.model_args = (ar,) + self.model_args
+            self.model_args = (ar,) + self.model_args[1:]
             self.ar = ar
-
         else:
             return OneCycleAgeReplacementPolicy(
-                self.model,
+                self.model.baseline,
                 self.cf,
                 self.cp,
                 self.discount_rate,
                 ar=ar,
-                model_args=(
-                    self.model_args[1:] if self.ar is not None else self.model_args
-                ),
+                model_args=self.model_args[1:],
                 nb_assets=self.nb_assets,
             )
 
@@ -424,6 +414,7 @@ class AgeReplacementPolicy(Policy):
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         ar: float | NDArray[np.float64] = None,
+        ar1: float | NDArray[np.float64] = None,
         discount_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
@@ -435,25 +426,36 @@ class AgeReplacementPolicy(Policy):
         if a0 is not None:
             if model1 is not None:
                 raise ValueError("model1 and a0 can't be set together")
-            model1 = LeftTruncatedModel(model)
+            model1 = AgeReplacementModel(LeftTruncatedModel(model))
             model1_args = (a0, *model_args)
+        elif model1 is not None:
+            model1 = AgeReplacementModel(model1)
+        elif model1 is None and ar1 is not None:
+            raise ValueError("model1 is not set, ar1 is useless")
 
-        self.model = model
+        self.model = AgeReplacementModel(model)
         self.model1 = model1
 
         self.cf = cf
         self.cp = cp
         self.ar = ar
-
+        self.ar1 = ar1
         self.discount_rate = discount_rate
 
-        self.model_args = model_args
-        self.model1_args = model1_args
+        self.model_args = (ar,) + model_args
+        self.model1_args = (ar1,) + model1_args if model1_args else None
 
         self.nb_assets = nb_assets
 
         self.rrp = None
+        parametrized = False
         if self.ar is not None:
+            parametrized = True
+            if self.model1 is not None:
+                if self.ar1 is None:
+                    parametrized = False
+
+        if parametrized:
             self.rrp = RenewalRewardProcess(
                 self.model,
                 run_to_failure_cost,
@@ -464,7 +466,6 @@ class AgeReplacementPolicy(Policy):
                 model1=self.model1,
                 model1_args=self.model1_args,
             )
-            self.model_args = (self.ar,) + self.model_args
 
     @ifset("rrp")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -501,7 +502,7 @@ class AgeReplacementPolicy(Policy):
 
     def fit(
         self,
-        inplace: Optional[bool] = True,
+        inplace: Optional[bool] = False,
     ) -> Union[Self, None]:
 
         cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
@@ -510,29 +511,30 @@ class AgeReplacementPolicy(Policy):
             x0 = np.tile(x0, (self.nb_assets, 1))
 
         ndim = max(
-            map(np.ndim, (cf_3d, cp_3d, self.discount_rate, *self.model_args)),
+            map(np.ndim, (cf_3d, cp_3d, self.discount_rate, *self.model_args[1:])),
             default=0,
         )
 
         def eq(a):
             f = gauss_legendre(
-                lambda x: self.discount(x, self.discount_rate)
-                * self.model.sf(x, *self.model_args),
+                lambda x: self.discount.factor(x, self.discount_rate)
+                * self.model.baseline.sf(x, *self.model_args[1:]),
                 0,
                 a,
                 ndim=ndim,
             )
             g = gauss_legendre(
-                lambda x: self.discount(x, self.discount_rate)
-                * self.model.pdf(x, *self.model_args),
+                lambda x: self.discount.factor(x, self.discount_rate)
+                * self.model.baseline.pdf(x, *self.model_args[1:]),
                 0,
                 a,
                 ndim=ndim,
             )
             return np.sum(
-                self.discount(a, self.discount_rate)
+                self.discount.factor(a, self.discount_rate)
                 * (
-                    (cf_3d - cp_3d) * (self.model.hf(a, *self.model_args) * f - g)
+                    (cf_3d - cp_3d)
+                    * (self.model.baseline.hf(a, *self.model_args[1:]) * f - g)
                     - cp_3d
                 )
                 / f**2,
@@ -543,12 +545,22 @@ class AgeReplacementPolicy(Policy):
         if np.size(ar) == 1:
             ar = np.squeeze(ar)
 
+        ar1 = None
+        if self.model1 is not None:
+            onecycle = OneCycleAgeReplacementPolicy(
+                self.model1.baseline,
+                self.cf,
+                self.cp,
+                self.discount_rate,
+                model_args=self.model1_args[1:],
+            ).fit()
+            ar1 = onecycle.ar
+
         if inplace:
-            if self.ar is not None:
-                self.model_args = (ar,) + self.model_args[1:]
-            else:
-                self.model_args = (ar,) + self.model_args
             self.ar = ar
+            self.ar1 = ar1
+            self.model_args = (ar,) + self.model_args[1:]
+            self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
             self.rrp = RenewalRewardProcess(
                 self.model,
                 run_to_failure_cost,
@@ -561,16 +573,15 @@ class AgeReplacementPolicy(Policy):
             )
         else:
             return AgeReplacementPolicy(
-                self.model,
+                self.model.baseline,
                 self.cf,
                 self.cp,
-                ar,
+                ar=ar,
+                ar1=ar1,
                 discount_rate=self.discount_rate,
-                model_args=(
-                    self.model_args[1:] if self.ar is not None else self.model_args
-                ),
-                model1=self.model1,
-                model1_args=self.model1_args,
+                model_args=self.model_args[1:],
+                model1=self.model1.baseline if self.model1 else None,
+                model1_args=self.model1_args[1:] if self.model1 else None,
             )
 
     @ifset("rrp")

@@ -58,7 +58,7 @@ class LikelihoodFromLifetimes(Likelihood):
         lifetime_data: LifetimeData,
         model_args: tuple[NDArray[np.float64], ...] = (),
     ):
-        self.model = model
+        self.model = model.copy()  # a copy is made as likelihood modifies model.params
         self.lifetime_data = lifetime_data
         self.model_args = model_args
 
@@ -214,16 +214,14 @@ def hessian_cs(
         size = likelihood.params.size
         hess = np.empty((size, size))
         u = eps * 1j * np.eye(size)
-        init_params = likelihood.params.astype(np.complex64, copy=True)
-        params = likelihood.params.astype(np.complex64, copy=True)
+        params = likelihood.params.copy()
         for i in range(size):
             for j in range(i, size):
-                params += u[i]
-                hess[i, j] = np.imag(likelihood.jac_negative_log(params)[j]) / eps
-                params = init_params
+                hess[i, j] = (
+                    np.imag(likelihood.jac_negative_log(params + u[i])[j]) / eps
+                )
                 if i != j:
                     hess[j, i] = hess[i, j]
-
         return hess
     return None
 

@@ -1,6 +1,6 @@
 import copy
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, InitVar
 from itertools import chain
 from typing import Any, Callable, Generic, Iterator, Optional, Self, Union
 
@@ -14,7 +14,7 @@ from relife2.fiability.likelihood import (
 )
 from relife2.utils.data import LifetimeData, lifetime_data_factory
 from relife2.utils.integration import gauss_legendre, quad_laguerre
-from relife2.utils.plot import PlotAccessor
+from relife2.utils.plot import PlotSurvivalFunc
 from relife2.utils.types import VariadicArgs
 
 
@@ -534,23 +534,19 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         #         raise ValueError("broadcast_to shape value is incompatible")
 
     @property
-    def plot(self) -> PlotAccessor:
-        return PlotAccessor(self)
+    def plot(self) -> PlotSurvivalFunc:
+        return PlotSurvivalFunc(self)
 
 
 @dataclass
 class FittingResults:
     """Fitting results of the parametric model."""
 
-    nb_samples: int  #: Number of observations (samples).
+    nb_samples: InitVar[int]  #: Number of observations (samples).
 
-    opt: OptimizeResult = field(
+    opt: InitVar[OptimizeResult] = field(
         repr=False
     )  #: Optimization result (see scipy.optimize.OptimizeResult doc).
-
-    jac: Optional[NDArray[np.float64]] = field(
-        repr=False, default=None
-    )  #: Jacobian of the negative log-likelihood with the lifetime data.
     var: Optional[NDArray[np.float64]] = field(
         repr=False, default=None
     )  #: Covariance matrix (computed as the inverse of the Hessian matrix)
@@ -565,13 +561,13 @@ class FittingResults:
     )  #: Akaike Information Criterion with a correction for small sample sizes.
     BIC: float = field(init=False)  #: Bayesian Information Criterion.
 
-    def __post_init__(self):
-        self.nb_params = self.opt.x.size
-        self.AIC = 2 * self.nb_params + 2 * self.opt.fun
+    def __post_init__(self, nb_samples, opt):
+        self.nb_params = opt.x.size
+        self.AIC = 2 * self.nb_params + 2 * opt.fun
         self.AICc = self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (
-            self.nb_samples - self.nb_params - 1
+            nb_samples - self.nb_params - 1
         )
-        self.BIC = np.log(self.nb_samples) * self.nb_params + 2 * self.opt.fun
+        self.BIC = np.log(nb_samples) * self.nb_params + 2 * opt.fun
 
         self.se = None
         if self.var is not None:
@@ -662,7 +658,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         model_args: tuple[*VariadicArgs] = (),
-        inplace: bool = True,
+        inplace: bool = False,
         **kwargs: Any,
     ) -> Union[Self, None]:
         """
@@ -737,22 +733,21 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
             **minimize_kwargs,
         )
+        optimized_model.params = optimizer.x
         jac = likelihood.jac_negative_log(optimizer.x)
         var = np.linalg.inv(
             hessian_from_likelihood(self._default_hess_scheme)(likelihood)
         )
 
         optimized_model.fitting_results = FittingResults(
-            len(lifetime_data), optimizer, jac, var
+            len(lifetime_data), optimizer, var
         )
 
         if inplace:
             self.init_params(lifetime_data, *model_args)
             # or just self.init_params(observed_lifetimes, *model_args)
             self.params = optimized_model.params
-            self.fitting_results = FittingResults(
-                len(lifetime_data), optimizer, jac, var
-            )
+            self.fitting_results = FittingResults(len(lifetime_data), optimizer, var)
         else:
             return optimized_model
 
