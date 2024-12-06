@@ -43,7 +43,7 @@ class Estimates:
         if self.timeline.shape != self.values.shape != self.se:
             raise ValueError("Incompatible timeline, values and se in Estimates")
 
-    def nearest_1dinterp(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def nearest_1dinterp(self, x: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Returns x nearest interpolation based on timeline and values data points
         timeline has to be monotonically increasing
 
@@ -56,7 +56,7 @@ class Estimates:
         spacing = np.diff(self.timeline) / 2
         xp = np.hstack([spacing, spacing[-1]]) + self.timeline
         yp = np.concatenate([self.values, self.values[-1, None]])
-        return yp[np.searchsorted(xp, x)]
+        return yp[np.searchsorted(xp, np.asarray(x))]
 
 
 class Estimations(TypedDict, total=False):
@@ -162,7 +162,7 @@ class ECDF(NonParametricLifetimeEstimator):
         self.estimations["cdf"] = Estimates(timeline, cdf, se)
 
     @estimated
-    def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Survival function.
 
         Parameters
@@ -178,7 +178,7 @@ class ECDF(NonParametricLifetimeEstimator):
         return self.estimations["sf"].nearest_1dinterp(time)
 
     @estimated
-    def cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
         Parameters
@@ -266,7 +266,7 @@ class KaplanMeier(NonParametricLifetimeEstimator):
         self.estimations["sf"] = Estimates(timeline, sf, se)
 
     @estimated
-    def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Survival function.
 
         Parameters
@@ -345,7 +345,7 @@ class NelsonAalen(NonParametricLifetimeEstimator):
         self.estimations["chf"] = Estimates(timeline, chf, se)
 
     @estimated
-    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
         Parameters
@@ -375,7 +375,7 @@ class Turnbull(NonParametricLifetimeEstimator):
 
     def fit(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
@@ -551,7 +551,7 @@ class Turnbull(NonParametricLifetimeEstimator):
         return s
 
     @estimated
-    def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Survival function.
 
         Parameters

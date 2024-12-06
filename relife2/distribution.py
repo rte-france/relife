@@ -20,87 +20,87 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     Base class of distribution model.
     """
 
-    def sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Survival function.
 
         The survival function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Survival function values at each given time.
         """
         return super().sf(time)
 
     @override
-    def isf(self, probability: NDArray[np.float64]) -> NDArray[np.float64]:
+    def isf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Inverse survival function.
 
         The survival function of the distribution
 
         Parameters
         ----------
-        probability : ndarray of shape (n, ) or (m, n)
+        probability : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Complement quantile corresponding to probability.
         """
         cumulative_hazard_rate = -np.log(probability)
         return self.ichf(cumulative_hazard_rate)
 
     @override
-    def cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative distribution function.
 
         The survival function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative distribution function values at each given time.
         """
         return super().cdf(time)
 
-    def pdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Probability density function.
 
         The probability density function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             The probability density function evaluated at each given time.
         """
         return super().pdf(time)
 
     @override
-    def ppf(self, probability: NDArray[np.float64]) -> NDArray[np.float64]:
+    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Percent point function.
 
         The percent point function of the distribution. It corresponds to the inverse of
@@ -108,14 +108,14 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
         Parameters
         ----------
-        probability : ndarray of shape (n, ) or (m, n)
+        probability : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Quantile corresponding to probability.
         """
         return super().ppf(probability)
@@ -185,31 +185,31 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     @abstractmethod
     def jac_hf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_chf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def dhf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
     ) -> NDArray[np.float64]: ...
 
-    def jac_sf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the parametric survival function with respect to params."""
         return -self.jac_chf(time) * self.sf(time)
 
-    def jac_cdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the parametric cumulative distribution function with
         respect to params."""
         return -self.jac_sf(time)
 
-    def jac_pdf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the parametric probability density function with respect to
         params."""
         return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
@@ -257,38 +257,38 @@ class Exponential(Distribution):
         super().__init__()
         self.new_params(rate=rate)
 
-    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Hazard function.
 
         The hazard function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Hazard values at each given time.
         """
         return self.rate * np.ones_like(time)
 
-    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative hazard values at each given time.
 
         Notes
@@ -324,88 +324,90 @@ class Exponential(Distribution):
         return np.array(1 / self.rate**2)
 
     @override
-    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Mean residual life.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Mean residual life values.
         """
         return 1 / self.rate * np.ones_like(time)
 
     @override
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
+    def ichf(
+        self, cumulative_hazard_rate: float | NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         """Inverse cumulative hazard function.
 
         Parameters
         ----------
-        Cumulative hazard rate : ndarray of shape (n, ) or (m, n)
+        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)
             Cumulative hazard rate values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Inverse cumulative hazard values, i.e. time.
         """
         return cumulative_hazard_rate / self.rate
 
-    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         return np.ones((time.size, 1))
 
-    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the cumulative hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         return np.ones((time.size, 1)) * time
 
-    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Derivative of the hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Derivative values with respect to time.
         """
         return np.zeros_like(time)
@@ -433,38 +435,38 @@ class Weibull(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Hazard function.
 
         The hazard function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Hazard values at each given time.
         """
         return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
 
-    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative hazard values at each given time.
 
         Notes
@@ -500,19 +502,19 @@ class Weibull(Distribution):
         return np.array(gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2)
 
     @override
-    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Mean residual life.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Mean residual life values.
         """
         return (
@@ -525,36 +527,38 @@ class Weibull(Distribution):
         )
 
     @override
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
+    def ichf(
+        self, cumulative_hazard_rate: float | NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         """Inverse cumulative hazard function.
 
         Parameters
         ----------
-        Cumulative hazard rate : ndarray of shape (n, ) or (m, n)
+        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)
             Cumulative hazard rate values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Inverse cumulative hazard values, i.e. time.
         """
         return cumulative_hazard_rate ** (1 / self.shape) / self.rate
 
-    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         return np.column_stack(
@@ -566,19 +570,19 @@ class Weibull(Distribution):
             )
         )
 
-    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the cumulative hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         return np.column_stack(
@@ -588,19 +592,19 @@ class Weibull(Distribution):
             )
         )
 
-    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Derivative of the hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Derivative values with respect to time.
         """
         return (
@@ -641,38 +645,38 @@ class Gompertz(Distribution):
         param0[1] = rate
         self.params = param0
 
-    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Hazard function.
 
         The hazard function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Hazard values at each given time.
         """
         return self.shape * self.rate * np.exp(self.rate * time)
 
-    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative hazard values at each given time.
 
         Notes
@@ -708,55 +712,57 @@ class Gompertz(Distribution):
         return np.array(polygamma(1, 1).item() / self.rate**2)
 
     @override
-    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Mean residual life.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Mean residual life values.
         """
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
 
     @override
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
+    def ichf(
+        self, cumulative_hazard_rate: float | NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         """Inverse cumulative hazard function.
 
         Parameters
         ----------
-        Cumulative hazard rate : ndarray of shape (n, ) or (m, n)
+        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)
             Cumulative hazard rate values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Inverse cumulative hazard values, i.e. time.
         """
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
-    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         return np.column_stack(
@@ -766,19 +772,19 @@ class Gompertz(Distribution):
             )
         )
 
-    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the cumulative hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         return np.column_stack(
@@ -788,19 +794,19 @@ class Gompertz(Distribution):
             )
         )
 
-    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Derivative of the hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Derivative values with respect to time.
         """
         return self.shape * self.rate**2 * np.exp(self.rate * time)
@@ -843,39 +849,39 @@ class Gamma(Distribution):
     def _default_hess_scheme(self) -> str:
         return "2-point"
 
-    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Hazard function.
 
         The hazard function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Hazard values at each given time.
         """
         x = self.rate * time
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
 
-    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative hazard values at each given time.
 
         Notes
@@ -912,36 +918,38 @@ class Gamma(Distribution):
         return np.array(self.shape / (self.rate**2))
 
     @override
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
+    def ichf(
+        self, cumulative_hazard_rate: float | NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         """Inverse cumulative hazard function.
 
         Parameters
         ----------
-        Cumulative hazard rate : ndarray of shape (n, ) or (m, n)
+        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)
             Cumulative hazard rate values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Inverse cumulative hazard values, i.e. time.
         """
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
 
-    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         x = self.rate * time
@@ -960,20 +968,20 @@ class Gamma(Distribution):
 
     def jac_chf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
     ) -> NDArray[np.float64]:
         """Jacobian of the cumulative hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         x = self.rate * time
@@ -985,37 +993,37 @@ class Gamma(Distribution):
             )
         )
 
-    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Derivative of the hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Derivative values with respect to time.
         """
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
     @override
-    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Mean residual life.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Mean residual life values.
         """
         return super().mrl(time)
@@ -1043,39 +1051,39 @@ class LogLogistic(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Hazard function.
 
         The hazard function of the distribution
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Hazard values at each given time.
         """
         x = self.rate * time
         return self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape)
 
-    def chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative hazard values at each given time.
 
         Notes
@@ -1124,36 +1132,38 @@ class LogLogistic(Distribution):
         )
 
     @override
-    def ichf(self, cumulative_hazard_rate: NDArray[np.float64]) -> NDArray[np.float64]:
+    def ichf(
+        self, cumulative_hazard_rate: float | NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         """Inverse cumulative hazard function.
 
         Parameters
         ----------
-        Cumulative hazard rate : ndarray of shape (n, ) or (m, n)
+        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)
             Cumulative hazard rate values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Inverse cumulative hazard values, i.e. time.
         """
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
-    def jac_hf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         x = self.rate * time
@@ -1166,19 +1176,19 @@ class LogLogistic(Distribution):
             )
         )
 
-    def jac_chf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Jacobian of the cumulative hazard function.
 
         Parameters
         ----------
-        Elapsed time : ndarray of shape (n, ) or (m, n)
+        Elapsed time : float or ndarray, shape (n, ) or (m, n)
             Probability values. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Jacobian values, here gradient values at each given time.
         """
         x = self.rate * time
@@ -1189,19 +1199,19 @@ class LogLogistic(Distribution):
             )
         )
 
-    def dhf(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Derivative of the hazard function.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Derivative values with respect to time.
         """
         x = self.rate * time
@@ -1214,19 +1224,19 @@ class LogLogistic(Distribution):
         )
 
     @override
-    def mrl(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Mean residual life.
 
         Parameters
         ----------
-        time : ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time. If the given shape is (n, ), one asset and n points of measure are considered
             To consider m assets with respectively n points of measure,
             pass an array of shape (m, n).
 
         Returns
         -------
-        ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Mean residual life values.
         """
         return super().mrl(time)

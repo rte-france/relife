@@ -271,7 +271,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     @abstractmethod
     def hf(
-        self, time: NDArray[np.float64], *args: *VariadicArgs
+        self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
         if hasattr(self, "pdf") and hasattr(self, "sf"):
             return self.pdf(time, *args) / self.sf(time, *args)
@@ -292,7 +292,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     @abstractmethod
     def chf(
-        self, time: NDArray[np.float64], *args: *VariadicArgs
+        self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
 
         if hasattr(self, "sf"):
@@ -314,7 +314,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     @abstractmethod
     def sf(
-        self, time: NDArray[np.float64], *args: *VariadicArgs
+        self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
         if hasattr(self, "chf"):
             return np.exp(
@@ -335,7 +335,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     @abstractmethod
     def pdf(
-        self, time: NDArray[np.float64], *args: *VariadicArgs
+        self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
         try:
             return self.sf(time, *args) * self.hf(time, *args)
@@ -348,7 +348,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
             ) from err
 
     def mrl(
-        self, time: NDArray[np.float64], *args: *VariadicArgs
+        self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
@@ -419,7 +419,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     def isf(
         self,
-        probability: NDArray[np.float64],
+        probability: float | NDArray[np.float64],
         *args: *VariadicArgs,
     ):
         return newton(
@@ -429,7 +429,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     def ichf(
         self,
-        cumulative_hazard_rate: NDArray[np.float64],
+        cumulative_hazard_rate: float | NDArray[np.float64],
         *args: *VariadicArgs,
     ):
         return newton(
@@ -438,7 +438,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         )
 
     def cdf(
-        self, time: NDArray[np.float64], *args: *VariadicArgs
+        self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
         return 1 - self.sf(time, *args)
 
@@ -450,7 +450,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         return self.isf(probability, *args)
 
     def ppf(
-        self, probability: NDArray[np.float64], *args: *VariadicArgs
+        self, probability: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
@@ -460,8 +460,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: NDArray[np.float64],
-        b: NDArray[np.float64],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
         *args: *VariadicArgs,
         deg: int = 100,
     ) -> NDArray[np.float64]:

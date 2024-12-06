@@ -61,6 +61,27 @@ def ifset(*param_names: str):
 
 
 class OneCycleRunToFailure(Policy):
+    """
+    One cycle run-to-failure policy.
+
+    A policy for running assets to failure within one cycle.
+
+    Parameters:
+    -----------
+    model : LifetimeModel
+        The lifetime model of the assets.
+    cf : np.ndarray of shape
+        The cost function array.
+    discount_rate : NDArray[np.float64]
+        The discount rate array.
+    model_args : ModelArgs, optional
+        Additional arguments for the model.
+    nb_assets : int, optional
+        Number of assets (default is 1).
+    a0 : Optional[NDArray[np.float64]], optional
+        Initial condition array (default is None).
+    """
+
     reward = run_to_failure_cost
     discount = exponential_discount
     model1 = None
@@ -68,11 +89,11 @@ class OneCycleRunToFailure(Policy):
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
-        cf: NDArray[np.float64],
-        discount_rate: NDArray[np.float64],
+        cf: float | NDArray[np.float64],
+        discount_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
-        a0: Optional[NDArray[np.float64]] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         if a0 is not None:
             model = LeftTruncatedModel(model)
@@ -164,14 +185,14 @@ class OneCycleAgeReplacementPolicy(Policy):
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
-        cf: NDArray[np.float64],
-        cp: NDArray[np.float64],
-        discount_rate: NDArray[np.float64],
+        cf: float | NDArray[np.float64],
+        cp: float | NDArray[np.float64],
+        discount_rate: float,
         *,
-        ar: Optional[NDArray[np.float64]] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
-        a0: Optional[NDArray[np.float64]] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         if a0 is not None:
             model = LeftTruncatedModel(model)
@@ -319,11 +340,11 @@ class RunToFailure(Policy):
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
-        cf: NDArray[np.float64],
-        rate: NDArray[np.float64],
+        cf: float | NDArray[np.float64],
+        rate: float | NDArray[np.float64],
         model_args: ModelArgs = (),
         nb_assets: int = 1,
-        a0: Optional[NDArray[np.float64]] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
         model1: Optional[LifetimeModel[*Model1Args]] = None,
         model1_args: Model1Args = (),
     ) -> None:
@@ -400,13 +421,13 @@ class AgeReplacementPolicy(Policy):
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
-        cf: NDArray[np.float64],
-        cp: NDArray[np.float64],
-        ar: NDArray[np.float64] = None,
-        discount_rate: NDArray[np.float64] = 0,
+        cf: float | NDArray[np.float64],
+        cp: float | NDArray[np.float64],
+        ar: float | NDArray[np.float64] = None,
+        discount_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
-        a0: Optional[NDArray[np.float64]] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
         model1: Optional[LifetimeModel[*Model1Args]] = None,
         model1_args: Model1Args = (),
     ) -> None:

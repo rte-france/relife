@@ -161,7 +161,7 @@ class Regression(
     @override
     def sf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -170,7 +170,7 @@ class Regression(
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -179,7 +179,7 @@ class Regression(
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Survival probabilities at each given time.
         """
         return super().sf(time, covar, *args)
@@ -187,7 +187,7 @@ class Regression(
     @override
     def isf(
         self,
-        probability: NDArray[np.float64],
+        probability: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -196,7 +196,7 @@ class Regression(
 
         Parameters
         ----------
-        probability : np.ndarray of shape (n, ) or (m, n)
+        probability : float or ndarray, shape (n, ) or (m, n)
             Survival probabilities.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -205,7 +205,7 @@ class Regression(
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Time values corresponding to the given survival probabilities.
         """
         cumulative_hazard_rate = -np.log(probability)
@@ -214,7 +214,7 @@ class Regression(
     @override
     def cdf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -223,7 +223,7 @@ class Regression(
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -232,14 +232,14 @@ class Regression(
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative probabilities at each given time.
         """
         return super().cdf(time, covar, *args)
 
     def pdf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -248,7 +248,7 @@ class Regression(
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -257,7 +257,7 @@ class Regression(
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Probability densities at each given time.
         """
         return super().pdf(time, covar, *args)
@@ -265,7 +265,7 @@ class Regression(
     @override
     def ppf(
         self,
-        probability: NDArray[np.float64],
+        probability: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -274,7 +274,7 @@ class Regression(
 
         Parameters
         ----------
-        probability : np.ndarray of shape (n, ) or (m, n)
+        probability : float or ndarray, shape (n, ) or (m, n)
             Cumulative probabilities.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -283,7 +283,7 @@ class Regression(
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Time values corresponding to the given cumulative probabilities.
         """
         return super().ppf(probability, covar, *args)
@@ -291,7 +291,7 @@ class Regression(
     @override
     def mrl(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -300,7 +300,7 @@ class Regression(
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -309,7 +309,7 @@ class Regression(
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Mean residual life values at each given time.
         """
         return super().mrl(time, covar, *args)
@@ -407,7 +407,7 @@ class Regression(
     @abstractmethod
     def jac_hf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -416,7 +416,7 @@ class Regression(
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -432,7 +432,7 @@ class Regression(
     @abstractmethod
     def jac_chf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -457,7 +457,7 @@ class Regression(
     @abstractmethod
     def dhf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -466,7 +466,7 @@ class Regression(
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -475,13 +475,13 @@ class Regression(
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Derivative values with respect to time.
         """
 
     def jac_sf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -508,7 +508,7 @@ class Regression(
 
     def jac_cdf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -534,7 +534,7 @@ class Regression(
 
     def jac_pdf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -573,7 +573,7 @@ class ProportionalHazard(Regression):
 
     def hf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -604,7 +604,7 @@ class ProportionalHazard(Regression):
 
     def chf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -612,7 +612,7 @@ class ProportionalHazard(Regression):
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -621,7 +621,7 @@ class ProportionalHazard(Regression):
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative hazard values at each given time.
         """
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
@@ -629,7 +629,7 @@ class ProportionalHazard(Regression):
     @override
     def ichf(
         self,
-        cumulative_hazard_rate: NDArray[np.float64],
+        cumulative_hazard_rate: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -637,7 +637,7 @@ class ProportionalHazard(Regression):
 
         Parameters
         ----------
-        cumulative_hazard_rate : np.ndarray of shape (n, ) or (m, n)
+        cumulative_hazard_rate : float or ndarray, shape (n, ) or (m, n)
             Cumulative hazard rate values.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -646,7 +646,7 @@ class ProportionalHazard(Regression):
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Inverse cumulative hazard values, i.e., time.
         """
         return self.baseline.ichf(
@@ -655,7 +655,7 @@ class ProportionalHazard(Regression):
 
     def jac_hf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -668,7 +668,7 @@ class ProportionalHazard(Regression):
 
     def jac_chf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -681,7 +681,7 @@ class ProportionalHazard(Regression):
 
     def dhf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -695,7 +695,7 @@ class AFT(Regression):
 
     def hf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -705,7 +705,7 @@ class AFT(Regression):
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -714,7 +714,7 @@ class AFT(Regression):
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Hazard values at each given time.
 
         Notes
@@ -726,7 +726,7 @@ class AFT(Regression):
 
     def chf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -734,7 +734,7 @@ class AFT(Regression):
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -743,7 +743,7 @@ class AFT(Regression):
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Cumulative hazard values at each given time.
         """
         t0 = time / self.covar_effect.g(covar)
@@ -752,7 +752,7 @@ class AFT(Regression):
     @override
     def ichf(
         self,
-        cumulative_hazard_rate: NDArray[np.float64],
+        cumulative_hazard_rate: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -760,7 +760,7 @@ class AFT(Regression):
 
         Parameters
         ----------
-        cumulative_hazard_rate : np.ndarray of shape (n, ) or (m, n)
+        cumulative_hazard_rate : float or ndarray, shape (n, ) or (m, n)
             Cumulative hazard rate values.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -769,7 +769,7 @@ class AFT(Regression):
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Inverse cumulative hazard values, i.e., time.
         """
         return self.covar_effect.g(covar) * self.baseline.ichf(
@@ -778,7 +778,7 @@ class AFT(Regression):
 
     def jac_hf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -786,7 +786,7 @@ class AFT(Regression):
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -810,7 +810,7 @@ class AFT(Regression):
 
     def jac_chf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -818,7 +818,7 @@ class AFT(Regression):
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -843,7 +843,7 @@ class AFT(Regression):
 
     def dhf(
         self,
-        time: NDArray[np.float64],
+        time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
@@ -851,7 +851,7 @@ class AFT(Regression):
 
         Parameters
         ----------
-        time : np.ndarray of shape (n, ) or (m, n)
+        time : float or ndarray, shape (n, ) or (m, n)
             Elapsed time.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
@@ -860,7 +860,7 @@ class AFT(Regression):
 
         Returns
         -------
-        np.ndarray of shape (n, ) or (m, n)
+        ndarray of shape (), (n, ) or (m, n)
             Derivative values with respect to time.
         """
         t0 = time / self.covar_effect.g(covar)
