@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
-from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
+from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife2.fiability import ParametricLifetimeModel
@@ -700,16 +700,16 @@ class Gompertz(Distribution):
         """
         return np.array(np.exp(self.shape) * exp1(self.shape) / self.rate)
 
-    @override
-    def var(self) -> NDArray[np.float64]:
-        """Variance of the distribution.
-
-        Returns
-        -------
-        ndarray of shape (0,)
-            Variance value.
-        """
-        return np.array(polygamma(1, 1).item() / self.rate**2)
+    # @override
+    # def var(self) -> NDArray[np.float64]:
+    #     """Variance of the distribution.
+    #
+    #     Returns
+    #     -------
+    #     ndarray of shape (0,)
+    #         Variance value.
+    #     """
+    #     return np.array(polygamma(1, 1).item() / self.rate**2)
 
     @override
     def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:

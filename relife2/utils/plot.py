@@ -121,15 +121,16 @@ def param_funcprob_plot(
     y = f(timeline, *model_args)
     se = None
     if alpha_ci is not None and hasattr(model, "fitting_results"):
-        if model.fitting_results.se is not None:
-            i0 = 0
-            se = np.empty_like(timeline)
-            if timeline[0] == 0:
-                i0 = 1
-                se[0] = 0
-            se[i0:] = model.fitting_results.standard_error(
-                jac_f(timeline[i0:].reshape(-1, 1), *model_args)
-            )
+        if model.fitting_results is not None:
+            if model.fitting_results.se is not None:
+                i0 = 0
+                se = np.empty_like(timeline)
+                if timeline[0] == 0:
+                    i0 = 1
+                    se[0] = 0
+                se[i0:] = model.fitting_results.standard_error(
+                    jac_f(timeline[i0:].reshape(-1, 1), *model_args)
+                )
 
     bounds = (0, 1) if fname in ["sf", "cdf"] else (0, np.inf)
 

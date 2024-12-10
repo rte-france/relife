@@ -458,7 +458,7 @@ class AgeReplacementPolicy(Policy):
         if parametrized:
             self.rrp = RenewalRewardProcess(
                 self.model,
-                run_to_failure_cost,
+                age_replacement_cost,
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
@@ -563,7 +563,7 @@ class AgeReplacementPolicy(Policy):
             self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
             self.rrp = RenewalRewardProcess(
                 self.model,
-                run_to_failure_cost,
+                age_replacement_cost,
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
