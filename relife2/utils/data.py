@@ -63,13 +63,20 @@ class IndexedData:
         )
 
     def union(*others: Self) -> Self:
-        return IndexedData(
-            np.concatenate(
-                [other.values for other in others],
-                axis=0,
-            ),
-            np.concatenate([other.index for other in others]),
+        # return IndexedData(
+        #     np.concatenate(
+        #         [other.values for other in others],
+        #         axis=0,
+        #     ),
+        #     np.concatenate([other.index for other in others]),
+        # )
+        values = np.concatenate(
+            [other.values for other in others],
+            axis=0,
         )
+        index = np.concatenate([other.index for other in others])
+        sort_ind = np.argsort(index)
+        return IndexedData(values[sort_ind], index[sort_ind])
 
 
 @dataclass
