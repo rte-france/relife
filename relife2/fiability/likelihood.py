@@ -172,6 +172,19 @@ class LikelihoodFromLifetimes(Likelihood):
         params: NDArray[np.float64],
     ) -> float:
         self.model.params = params
+        print("complete :", self._complete_contribs(self.lifetime_data))
+        print("RC :", self._right_censored_contribs(self.lifetime_data))
+        print("LC :", self._left_censored_contribs(self.lifetime_data))
+        print("LT :", self._left_truncations_contribs(self.lifetime_data))
+        print(
+            "total :",
+            (
+                self._complete_contribs(self.lifetime_data)
+                + self._right_censored_contribs(self.lifetime_data)
+                + self._left_censored_contribs(self.lifetime_data)
+                + self._left_truncations_contribs(self.lifetime_data)
+            ),
+        )
         return (
             self._complete_contribs(self.lifetime_data)
             + self._right_censored_contribs(self.lifetime_data)
@@ -246,7 +259,7 @@ def hessian_2point(
         for i in range(size):
             hess[i] = approx_fprime(
                 params,
-                likelihood.jac_negative_log(params)[i],
+                lambda params: likelihood.jac_negative_log(params)[i],
                 eps,
             )
         return hess

@@ -88,7 +88,7 @@ class LifetimeData:
         return self.nb_samples
 
     def __post_init__(self):
-        self.rc = self.complete.union(self.right_censored)
+        self.rc = self.right_censored.union(self.complete)
         self.rlc = self.complete.union(self.left_censored, self.right_censored)
 
         # sanity check that observed lifetimes are inside truncation bounds
@@ -504,13 +504,13 @@ class RenewalData(CountData):
 
     def iter(self, sample: Optional[int] = None):
         if sample is None:
-            return CountDataIterable(self, ("lifetimes", "events"))
+            return CountDataIterable(self, ("event_times", "lifetimes", "events"))
         else:
             if sample not in self.samples_unique_index:
                 raise ValueError(f"{sample} is not part of samples index")
             return filterfalse(
                 lambda x: x[0] != sample,
-                CountDataIterable(self, ("lifetimes", "events")),
+                CountDataIterable(self, ("event_times", "lifetimes", "events")),
             )
 
     def to_fit(

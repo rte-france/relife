@@ -163,10 +163,10 @@ class ParametricModel:
         Parameters can be set with `params` setter, fitting the model if `fit` exists or specifying
         all parameters values when the model object is initialized.
         """
-        return np.array(self._params.values, dtype=np.float64)
+        return np.array(self._params.values)
 
     @params.setter
-    def params(self, new_values):
+    def params(self, new_values: NDArray[np.float64]):
         self._params.values = new_values
 
     @property
@@ -734,7 +734,6 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             **minimize_kwargs,
         )
         optimized_model.params = optimizer.x
-        jac = likelihood.jac_negative_log(optimizer.x)
         var = np.linalg.inv(
             hessian_from_likelihood(self._default_hess_scheme)(likelihood)
         )

@@ -92,6 +92,7 @@ def fit_model(model, data):
                 )
             ),
         ),
+        inplace=True,
     )
     return model
 
