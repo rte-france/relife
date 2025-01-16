@@ -96,6 +96,9 @@ class NonParametricLifetimeEstimator(Protocol):
 
 
 class ECDF(NonParametricLifetimeEstimator):
+    """
+    Empirical Cumulative Distribution Function.
+    """
 
     def __init__(self):
         super().__init__()
@@ -122,7 +125,8 @@ class ECDF(NonParametricLifetimeEstimator):
             Left truncations applied to lifetime values.
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
-
+        inplace : boolean, default is True
+            If true, estimations are stored in the object
         """
 
         lifetime_data = lifetime_data_factory(
@@ -181,6 +185,42 @@ class ECDF(NonParametricLifetimeEstimator):
 
 
 class KaplanMeier(NonParametricLifetimeEstimator):
+    r"""Kaplan-Meier estimator.
+
+    Compute the non-parametric Kaplan-Meier estimator (also known as the product
+    limit estimator) of the survival function from lifetime data.
+
+    Notes
+    -----
+    For a given time instant :math:`t` and :math:`n` total observations, this
+    estimator is defined as:
+
+    .. math::
+
+        \hat{S}(t) = \prod_{i: t_i \leq t} \left( 1 - \frac{d_i}{n_i}\right)
+
+    where :math:`d_i` is the number of failures until :math:`t_i` and
+    :math:`n_i` is the number of assets at risk just prior to :math:`t_i`.
+
+    The variance estimation is obtained by:
+
+    .. math::
+
+        \widehat{Var}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{i: t_i \leq t}
+        \frac{d_i}{n_i(n_i - d_i)}
+
+    which is often referred to as Greenwood's formula.
+
+    References
+    ----------
+    .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
+        data. John Wiley & Sons.
+
+    .. [2] Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
+        incomplete observations. Journal of the American statistical
+        association, 53(282), 457-481.
+
+    """
 
     def __init__(self):
         super().__init__()
@@ -207,7 +247,8 @@ class KaplanMeier(NonParametricLifetimeEstimator):
             Left truncations applied to lifetime values.
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
-
+        inplace : boolean, default is True
+            If true, estimations are stored in the object
         """
 
         lifetime_data = lifetime_data_factory(
@@ -287,6 +328,42 @@ class KaplanMeier(NonParametricLifetimeEstimator):
 
 
 class NelsonAalen(NonParametricLifetimeEstimator):
+    r"""Nelson-Aalen estimator.
+
+    Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
+    function from lifetime data.
+
+    Notes
+    -----
+    For a given time instant :math:`t` and :math:`n` total observations, this
+    estimator is defined as:
+
+    .. math::
+
+        \hat{H}(t) = \sum_{i: t_i \leq t} \frac{d_i}{n_i}
+
+    where :math:`d_i` is the number of failures until :math:`t_i` and
+    :math:`n_i` is the number of assets at risk just prior to :math:`t_i`.
+
+    The variance estimation is obtained by:
+
+    .. math::
+
+        \widehat{Var}[\hat{H}(t)] = \sum_{i: t_i \leq t} \frac{d_i}{n_i^2}
+
+    Note that the alternative survivor function estimate:
+
+    .. math::
+
+        \tilde{S}(t) = \exp{(-\hat{H}(t))}
+
+    is sometimes suggested for the continuous-time case.
+
+    References
+    ----------
+    .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
+        data. John Wiley & Sons.
+    """
 
     def __init__(self):
         super().__init__()
@@ -313,7 +390,8 @@ class NelsonAalen(NonParametricLifetimeEstimator):
             Left truncations applied to lifetime values.
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
-
+        inplace : boolean, default is True
+            If true, estimations are stored in the object
         """
 
         lifetime_data = lifetime_data_factory(
@@ -384,6 +462,7 @@ class NelsonAalen(NonParametricLifetimeEstimator):
 
 
 class Turnbull(NonParametricLifetimeEstimator):
+    """Turnbull estimator"""
 
     def __init__(
         self,
@@ -403,10 +482,22 @@ class Turnbull(NonParametricLifetimeEstimator):
         departure: Optional[NDArray[np.float64]] = None,
         inplace: bool = False,
     ) -> Union[Self, None]:
-        """_summary_
+        """
+        Compute the non-parametric estimations with respect to lifetime data.
 
-        Returns:
-            FloatArray: _description_"""
+        Parameters
+        ----------
+        time : ndarray (1d or 2d)
+            Observed lifetime values.
+        event : ndarray of boolean values (1d), default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : ndarray of float (1d), default is None
+            Left truncations applied to lifetime values.
+        departure : ndarray of float (1d), default is None
+            Right truncations applied to lifetime values.
+        inplace : boolean, default is True
+            If true, estimations are stored in the object
+        """
 
         lifetime_data = lifetime_data_factory(
             time,

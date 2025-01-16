@@ -122,8 +122,7 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
     @override
     def rvs(self, *, size: int = 1, seed: Optional[int] = None):
-        """
-        Random variable sampling.
+        """Random variable sampling.
 
         Parameters
         ----------

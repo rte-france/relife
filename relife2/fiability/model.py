@@ -370,7 +370,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def chf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """
+        """Cumulative hazard function.
 
         Parameters
         ----------
@@ -380,7 +380,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            Cumulative hazard values at each given time.
         """
 
         if hasattr(self, "sf"):
@@ -404,7 +405,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def sf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """
+        """Survival function.
 
         Parameters
         ----------
@@ -414,7 +415,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            Survival function values at each given time.
         """
         if hasattr(self, "chf"):
             return np.exp(
@@ -437,7 +439,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def pdf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """
+        """Probability density function.
 
         Parameters
         ----------
@@ -447,7 +449,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            The probability density function evaluated at each given time.
         """
         try:
             return self.sf(time, *args) * self.hf(time, *args)
@@ -462,7 +465,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def mrl(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """
+        """Mean residual life.
 
         Parameters
         ----------
@@ -472,7 +475,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            Mean residual life values.
         """
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
@@ -508,16 +512,17 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *VariadicArgs) -> NDArray[np.float64]:
-        """
+        """n-th order moment
 
         Parameters
         ----------
-        n :
-        args :
+        n : order of the moment, at least 1.
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (0, )
+            n-th order moment.
         """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
@@ -547,28 +552,30 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # )
 
     def mean(self, *args: *VariadicArgs) -> NDArray[np.float64]:
-        """
+        """Mean.
 
         Parameters
         ----------
-        args :
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (0,)
+            Mean value.
         """
         return self.moment(1, *args)
 
     def var(self, *args: *VariadicArgs) -> NDArray[np.float64]:
-        """
+        """Variance.
 
         Parameters
         ----------
-        args :
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (0,)
+            Variance value.
         """
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
@@ -577,16 +584,17 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         probability: float | NDArray[np.float64],
         *args: *VariadicArgs,
     ):
-        """
+        """Inverse survival function.
 
         Parameters
         ----------
-        probability :
-        args :
+        probability : float or ndarray, shape (n, ) or (m, n)
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            Complement quantile corresponding to probability.
         """
         return newton(
             lambda x: self.sf(x, *args) - probability,
@@ -598,16 +606,17 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         cumulative_hazard_rate: float | NDArray[np.float64],
         *args: *VariadicArgs,
     ):
-        """
+        """Inverse cumulative hazard function.
 
         Parameters
         ----------
-        cumulative_hazard_rate :
-        args :
+        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            Inverse cumulative hazard values, i.e. time.
         """
         return newton(
             lambda x: self.chf(x, *args) - cumulative_hazard_rate,
@@ -617,33 +626,37 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def cdf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """
+        """Cumulative distribution function.
 
         Parameters
         ----------
-        time :
-        args :
+        time : float or ndarray, shape (n, ) or (m, n)
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            Cumulative distribution function values at each given time.
         """
         return 1 - self.sf(time, *args)
 
     def rvs(
         self, *args: *VariadicArgs, size: int = 1, seed: Optional[int] = None
     ) -> NDArray[np.float64]:
-        """
+        """Random variable sampling.
 
         Parameters
         ----------
-        args :
-        size :
-        seed :
+        *args : variadic arguments required by the function
+        size : int, default 1
+            Sized of the generated sample.
+        seed : int, default None
+            Random seed.
 
         Returns
         -------
-
+        ndarray of shape (size, )
+            Sample of random lifetimes.
         """
         generator = np.random.RandomState(seed=seed)
         probability = generator.uniform(size=size)
@@ -652,29 +665,31 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def ppf(
         self, probability: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """
+        """Percent point function.
 
         Parameters
         ----------
-        probability :
-        args :
+        probability : float or ndarray, shape (n, ) or (m, n)
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (), (n, ) or (m, n)
+            Quantile corresponding to probability.
         """
         return self.isf(1 - probability, *args)
 
     def median(self, *args: *VariadicArgs) -> NDArray[np.float64]:
-        """
+        """Median
 
         Parameters
         ----------
-        args :
+        *args : variadic arguments required by the function
 
         Returns
         -------
-
+        ndarray of shape (0,)
+            Median value.
         """
         return self.ppf(np.array(0.5), *args)
 
@@ -756,12 +771,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     @property
     def plot(self) -> PlotSurvivalFunc:
-        """
-
-        Returns
-        -------
-
-        """
+        """Plot"""
         return PlotSurvivalFunc(self)
 
 
@@ -833,6 +843,13 @@ class FittingResults:
 
 
 class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC):
+    """
+    Base class to create a parametric lifetime model
+
+    A parametric lifetime model is an ``LifetimeModel`` having parameters that can
+    be estimated, i.e. it has a `fit` method.
+    """
+
     # def __init_subclass__(cls, **kwargs):
     #     """
     #     TODO : something to parse *args names and to fill args_names and nb_args
@@ -856,12 +873,19 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
     @property
     @abstractmethod
     def params_bounds(self) -> Bounds:
-        """BLABLABLA"""
+        """Bounds of the parameters
+
+        Returns
+        -------
+        Bounds
+            The lower and upper bounds for the parameters.
+        """
 
     @abstractmethod
     def init_params(self, lifetime_data: LifetimeData, *args: *VariadicArgs) -> None:
-        """
-        Initialize parameters values before fitting
+        """Initialization of the parameters
+
+        Initialize parameters values with respect to lifetime data.
 
         Parameters
         ----------
@@ -869,9 +893,6 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             lalal.
         args : tuple of numpy arrays
             lala.
-        Returns
-        -------
-
         """
 
     @property
@@ -905,7 +926,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         model_args : tuple of ndarray, default is None
             Other arguments needed by the lifetime model.
         inplace : boolean, default is True
-            If true, parameters of the lifetime model will be replaced by estimated paramters.
+            If true, parameters of the lifetime model will be replaced by estimated parameters.
         **kwargs
             Extra arguments used by `scipy.minimize`. Default values are:
                 - `method` : `"L-BFGS-B"`

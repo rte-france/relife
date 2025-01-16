@@ -61,13 +61,12 @@ def ifset(*param_names: str):
 
 
 class OneCycleRunToFailure(Policy):
-    """
-    One cycle run-to-failure policy.
+    r"""One cyle run-to-failure policy
 
     A policy for running assets to failure within one cycle.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     model : LifetimeModel
         The lifetime model of the assets.
     cf : np.ndarray of shape
@@ -80,6 +79,14 @@ class OneCycleRunToFailure(Policy):
         Number of assets (default is 1).
     a0 : Optional[NDArray[np.float64]], optional
         Initial condition array (default is None).
+
+
+    References
+    ----------
+    .. [1] Coolen-Schrijner, P., & Coolen, F. P. A. (2006). On optimality
+        criteria for age replacement. Proceedings of the Institution of
+        Mechanical Engineers, Part O: Journal of Risk and Reliability,
+        220(1), 21-29
     """
 
     reward = run_to_failure_cost
@@ -178,6 +185,19 @@ class OneCycleRunToFailure(Policy):
 
 
 class OneCycleAgeReplacementPolicy(Policy):
+    r"""One-cyle age replacement policy.
+
+    The asset is disposed at a fixed age `ar` with costs `cp` or upon failure
+    with costs `cf` if earlier.
+
+    References
+    ----------
+    .. [1] Coolen-Schrijner, P., & Coolen, F. P. A. (2006). On optimality
+        criteria for age replacement. Proceedings of the Institution of
+        Mechanical Engineers, Part O: Journal of Risk and Reliability,
+        220(1), 21-29
+    """
+
     reward = age_replacement_cost
     discount = exponential_discount
     model1 = None
@@ -322,7 +342,17 @@ class OneCycleAgeReplacementPolicy(Policy):
 
 
 class RunToFailure(Policy):
-    """run to failure policy (facade object to an underlying renewal reward process)"""
+    r"""Run-to-failure renewal policy.
+
+    Renewal reward process where assets are replaced on failure with costs
+    `cf`.
+
+    References
+    ----------
+    .. [1] Van der Weide, J. A. M., & Van Noortwijk, J. M. (2008). Renewal
+        theory with exponential and hyperbolic discounting. Probability in
+        the Engineering and Informational Sciences, 22(1), 53-74.
+    """
 
     reward = run_to_failure_cost
     discount = exponential_discount
@@ -404,6 +434,17 @@ class RunToFailure(Policy):
 
 
 class AgeReplacementPolicy(Policy):
+    r"""Time based replacement policy.
+
+    Renewal reward process where assets are replaced at a fixed age `ar`
+    with costs `cp` or upon failure with costs `cf` if earlier.
+
+    References
+    ----------
+    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
+        Maintenance optimization. Encyclopedia of Statistics in Quality and
+        Reliability, 1000-1008.
+    """
 
     reward = age_replacement_cost
     discount = exponential_discount

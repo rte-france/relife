@@ -137,7 +137,7 @@ class Regression(
     @property
     def params_bounds(self) -> Bounds:
         """
-        Get the parameter bounds for the regression model.
+        Bounds of the parameters.
 
         Returns
         -------
