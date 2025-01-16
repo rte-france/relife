@@ -75,7 +75,9 @@ class IndexedData:
             axis=0,
         )
         index = np.concatenate([other.index for other in others])
-        sort_ind = np.argsort(index)
+        sort_ind = np.argsort(
+            index
+        )  # FIXME: orders of the values seems to affects estimations of the parameters in Regression
         return IndexedData(values[sort_ind], index[sort_ind])
 
 

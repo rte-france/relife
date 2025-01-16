@@ -19,6 +19,12 @@ from relife2.utils.types import VariadicArgs
 
 
 class Parameters:
+    """
+    Tree-structured parameters.
+
+    Every ``ParametricModel`` are composed of ``Parameters`` instance.
+    """
+
     def __init__(self, **kwargs):
         self._node_data = {}
         if kwargs:
@@ -142,6 +148,12 @@ class Parameters:
 
 
 class ParametricModel:
+    """
+    Base class to create a parametric model.
+
+    Any parametric model must inherit from `ParametricModel`.
+    """
+
     def __init__(self):
         self._params = Parameters()
         self.leaves = {}
@@ -153,15 +165,15 @@ class ParametricModel:
 
         Returns
         -------
-        ndarray of float
+        ndarray
             Parameters values of the model
 
         Notes
         -----
         If parameter values are not set, they are encoded as `np.nan` value.
 
-        Parameters can be set with `params` setter, fitting the model if `fit` exists or specifying
-        all parameters values when the model object is initialized.
+        Parameters can be by manually setting`params` through its setter, fitting the model if `fit` exists or
+        by specifying all parameters values when the model object is initialized.
         """
         return np.array(self._params.values)
 
@@ -181,8 +193,7 @@ class ParametricModel:
 
         Notes
         -----
-        Parameters can be get by their name at instance level.
-
+        Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
         return self._params.names
 
@@ -194,7 +205,7 @@ class ParametricModel:
         Returns
         -------
         int
-            Number of parameters
+            Number of parameters.
 
         """
         return len(self._params)
@@ -203,8 +214,31 @@ class ParametricModel:
     def _all_params_set(self):
         return np.isnan(self.params).any() and not np.isnan(self.params).all()
 
-    def compose_with(self, **kwcomponents: "ParametricModel"):
-        """add functions that can be called from node"""
+    def compose_with(self, **kwcomponents: Self):
+        """Compose with new ``ParametricModel`` instance(s).
+
+        This method must be seen as standard function composition exept that objects are not
+        functions but group of functions (as object encapsulates functions). When you
+        compose your ``ParametricModel`` instance with new one(s), the followings happen :
+
+        - each new parameters are added to the current ``Parameters`` instance
+        - each new `ParametricModel` instance is accessible as a standard attribute
+
+        Like so, you can request new `ParametricModel` components in current `ParametricModel`
+        instance while setting and getting all parameters. This is usefull when `ParametricModel`
+        can be seen as a nested function (see `Regression`).
+
+        Parameters
+        ----------
+        **kwcomponents : variadic named ``ParametricModel`` instance
+
+            Instance names (keys) are followed by the instances themself (values).
+
+        Notes
+        -----
+        If one wants to pass a `dict` of key-value, make sure to unpack the dict
+        with `**` operator or you will get a nasty `TypeError`.
+        """
         for name in kwcomponents.keys():
             if name in self._params.node_data:
                 raise ValueError(f"{name} already exists as param name")
@@ -214,8 +248,26 @@ class ParametricModel:
             self.leaves[name] = module
             self._params.set_leaf(f"{name}.params", module._params)
 
-    def new_params(self, **kwparams):
-        """change local params structure (at node level)"""
+    def new_params(self, **kwparams: float):
+        """Change local parameters structure.
+
+        This method only affects **local** parameters. `ParametricModel` components are not
+        affected. This is usefull when one wants to change model parameters for any reason. For
+        instance `Regression` models use `new_params` to change number of regression coefficients
+        depending on the number of covariates that are passed to the `fit` method.
+
+        Parameters
+        ----------
+        **kwparams : variadic named floats corresponding to new parameters
+
+            Float names (keys) are followed by float instances (values).
+
+        Notes
+        -----
+        If one wants to pass a `dict` of key-value, make sure to unpack the dict
+        with `**` operator or you will get a nasty `TypeError`.
+        """
+
         for name in kwparams.keys():
             if name in self.leaves.keys():
                 raise ValueError(f"{name} already exists as function name")
@@ -245,16 +297,24 @@ class ParametricModel:
 
     def copy(self):
         """
-        Copy object.
+        Copy current instance.
 
         Returns
         -------
-            A independant copied instance.
+            An independant copied instance.
         """
         return copy.deepcopy(self)
 
 
 class LifetimeModel(Generic[*VariadicArgs], ABC):
+    """
+    Base class to create a lifetime model.
+
+    A lifetime model is an object that can answer to traditional lifetime probability
+    functions (``sf``, ``hf`` etc.) and other common probabilitu functions (``pdf``,
+    ``cdf``, etc.).
+    """
+
     # def __init_subclass__(cls, **kwargs):
     #     """
     #     TODO : something to parse *args names and to fill args_names and nb_args
@@ -273,6 +333,22 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def hf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """
+        Hazard function.
+
+        The hazard function of the distribution
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (n, ) or (m, n)
+            Elapsed time.
+        *args : variadic arguments required by the function
+
+        Returns
+        -------
+        ndarray of shape (), (n, ) or (m, n)
+            Hazard values at each given time.
+        """
         if hasattr(self, "pdf") and hasattr(self, "sf"):
             return self.pdf(time, *args) / self.sf(time, *args)
         if hasattr(self, "sf"):
@@ -294,6 +370,18 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def chf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (n, ) or (m, n)
+            Elapsed time.
+        *args : variadic arguments required by the function
+
+        Returns
+        -------
+
+        """
 
         if hasattr(self, "sf"):
             return -np.log(self.sf(time, *args))
@@ -316,6 +404,18 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def sf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (n, ) or (m, n)
+            Elapsed time.
+        *args : variadic arguments required by the function
+
+        Returns
+        -------
+
+        """
         if hasattr(self, "chf"):
             return np.exp(
                 -self.chf(
@@ -337,6 +437,18 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def pdf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (n, ) or (m, n)
+            Elapsed time.
+        *args : variadic arguments required by the function
+
+        Returns
+        -------
+
+        """
         try:
             return self.sf(time, *args) * self.hf(time, *args)
         except NotImplementedError as err:
@@ -350,6 +462,18 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def mrl(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (n, ) or (m, n)
+            Elapsed time.
+        *args : variadic arguments required by the function
+
+        Returns
+        -------
+
+        """
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
         if sf.ndim < 2:  # 2d to 1d or 0d
@@ -384,6 +508,17 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *VariadicArgs) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        n :
+        args :
+
+        Returns
+        -------
+
+        """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
         ls = self.ls_integrate(
@@ -412,9 +547,29 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # )
 
     def mean(self, *args: *VariadicArgs) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        args :
+
+        Returns
+        -------
+
+        """
         return self.moment(1, *args)
 
     def var(self, *args: *VariadicArgs) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        args :
+
+        Returns
+        -------
+
+        """
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
     def isf(
@@ -422,6 +577,17 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         probability: float | NDArray[np.float64],
         *args: *VariadicArgs,
     ):
+        """
+
+        Parameters
+        ----------
+        probability :
+        args :
+
+        Returns
+        -------
+
+        """
         return newton(
             lambda x: self.sf(x, *args) - probability,
             x0=np.zeros_like(probability),
@@ -432,6 +598,17 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         cumulative_hazard_rate: float | NDArray[np.float64],
         *args: *VariadicArgs,
     ):
+        """
+
+        Parameters
+        ----------
+        cumulative_hazard_rate :
+        args :
+
+        Returns
+        -------
+
+        """
         return newton(
             lambda x: self.chf(x, *args) - cumulative_hazard_rate,
             x0=np.zeros_like(cumulative_hazard_rate),
@@ -440,11 +617,34 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def cdf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        time :
+        args :
+
+        Returns
+        -------
+
+        """
         return 1 - self.sf(time, *args)
 
     def rvs(
         self, *args: *VariadicArgs, size: int = 1, seed: Optional[int] = None
     ) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        args :
+        size :
+        seed :
+
+        Returns
+        -------
+
+        """
         generator = np.random.RandomState(seed=seed)
         probability = generator.uniform(size=size)
         return self.isf(probability, *args)
@@ -452,9 +652,30 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def ppf(
         self, probability: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        probability :
+        args :
+
+        Returns
+        -------
+
+        """
         return self.isf(1 - probability, *args)
 
     def median(self, *args: *VariadicArgs) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        args :
+
+        Returns
+        -------
+
+        """
         return self.ppf(np.array(0.5), *args)
 
     def ls_integrate(
@@ -535,6 +756,12 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
     @property
     def plot(self) -> PlotSurvivalFunc:
+        """
+
+        Returns
+        -------
+
+        """
         return PlotSurvivalFunc(self)
 
 
