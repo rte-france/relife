@@ -135,15 +135,17 @@ class OneCycleRunToFailure(Policy):
         self.model_args = model_args
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        """
+        """The expected total cost.
 
         Parameters
         ----------
-        timeline :
+        timeline : ndarray
+            Timeline of points where the function is evaluated
 
         Returns
         -------
-
+        ndarray
+            The expected total cost for each asset along the timeline
         """
         return reward_partial_expectation(
             timeline,
@@ -156,11 +158,31 @@ class OneCycleRunToFailure(Policy):
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        """
+        The asymptotic expected total cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected total cost for each asset.
+        """
         return self.expected_total_cost(np.array(np.inf))
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64], dt: float = 1.0
     ) -> NDArray[np.float64]:
+        """The expected equivalent annual cost.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            The expected equivalent annual cost until each time point
+        """
         f = (
             lambda x: run_to_failure_cost(x, self.cf)
             * exponential_discount.factor(x, self.discount_rate)
@@ -175,6 +197,14 @@ class OneCycleRunToFailure(Policy):
     def asymptotic_expected_equivalent_annual_cost(
         self, dt: float = 1.0
     ) -> NDArray[np.float64]:
+        """
+        The asymptotic expected equivalent annual cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost.
+        """
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
     def sample(
@@ -295,6 +325,18 @@ class OneCycleAgeReplacementPolicy(Policy):
 
     @ifset("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        """The expected total cost.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            The expected total cost for each asset along the timeline
+        """
         return reward_partial_expectation(
             timeline,
             self.model,
@@ -306,12 +348,32 @@ class OneCycleAgeReplacementPolicy(Policy):
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        """
+        The asymptotic expected total cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected total cost for each asset.
+        """
         return self.expected_total_cost(np.array(np.inf))
 
     @ifset("ar")
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64], dt: float = 1.0
     ) -> NDArray[np.float64]:
+        """The expected equivalent annual cost.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            The expected equivalent annual cost until each time point
+        """
         f = (
             lambda x: age_replacement_cost(x, self.ar, self.cf, self.cp)
             * exponential_discount.factor(x, self.discount_rate)
@@ -328,6 +390,14 @@ class OneCycleAgeReplacementPolicy(Policy):
     def asymptotic_expected_equivalent_annual_cost(
         self, dt: float = 1.0
     ) -> NDArray[np.float64]:
+        """
+        The asymptotic expected equivalent annual cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost.
+        """
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
     @ifset("ar")
@@ -388,6 +458,18 @@ class OneCycleAgeReplacementPolicy(Policy):
         self,
         inplace: Optional[bool] = False,
     ) -> Union[Self, None]:
+        """
+        Computes the optimal age of replacement for each asset.
+
+        Parameters
+        ----------
+        inplace : bool, default is False
+            If True, it sets the optimal age of replacement inplace.
+
+        Returns
+        -------
+        OneCycleAgeReplacementPolicy (inplace is False) object or None (inplace is True)
+        """
 
         cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
         x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
@@ -505,17 +587,56 @@ class RunToFailure(Policy):
         )
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        """The expected total cost.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+            The expected total cost for each asset along the timeline
+        """
         return self.rrp.expected_total_reward(timeline)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        """
+        The asymptotic expected total cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected total cost for each asset.
+        """
         return self.rrp.asymptotic_expected_total_reward()
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
+        """The expected equivalent annual cost.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            The expected equivalent annual cost until each time point
+        """
         return self.rrp.expected_equivalent_annual_cost(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        """
+        The asymptotic expected equivalent annual cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost.
+        """
         return self.rrp.asymptotic_expected_equivalent_annual_cost()
 
     def sample(
@@ -666,20 +787,61 @@ class AgeReplacementPolicy(Policy):
 
     @ifset("rrp")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        """The expected total cost.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            The expected total cost for each asset along the timeline
+        """
         return self.rrp.expected_total_reward(timeline)
 
     @ifset("rrp")
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
+        """The expected equivalent annual cost.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            The expected equivalent annual cost until each time point
+        """
+
         return self.rrp.expected_equivalent_annual_cost(timeline)
 
     @ifset("rrp")
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        """
+        The asymptotic expected total cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected total cost for each asset.
+        """
         return self.rrp.asymptotic_expected_total_reward()
 
     @ifset("rrp")
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        """
+        The asymptotic expected equivalent annual cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost.
+        """
         return self.rrp.asymptotic_expected_equivalent_annual_cost()
 
     def expected_number_of_replacements(
@@ -701,6 +863,18 @@ class AgeReplacementPolicy(Policy):
         self,
         inplace: Optional[bool] = False,
     ) -> Union[Self, None]:
+        """
+        Computes the optimal age of replacement for each asset.
+
+        Parameters
+        ----------
+        inplace : bool, default is False
+            If True, it sets the optimal age of replacement inplace.
+
+        Returns
+        -------
+        AgeReplacementPolicy (inplace is False) object or None (inplace is True)
+        """
 
         cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
         x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
