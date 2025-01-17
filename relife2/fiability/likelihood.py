@@ -28,11 +28,17 @@ class Likelihood(Protocol):
     @abstractmethod
     def negative_log(self, params: NDArray[np.float64]) -> float:
         """
-        Args:
-            params ():
+        Negative log likelihood.
 
-        Returns:
-            Negative log likelihood value given a set a parameters values
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which likelihood is evaluated
+
+        Returns
+        -------
+        float
+            Negative log likelihood value
         """
 
     def jac_negative_log(
@@ -40,17 +46,37 @@ class Likelihood(Protocol):
         params: NDArray[np.float64],
     ) -> NDArray[np.float64]:
         """
-        Args:
-            params ():
+        Jacobian of the negative log likelihood.
 
-        Returns:
-            Negative log likelihood value given a set a parameters values
+        The jacobian (here gradient) is computed with respect to parameters
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which the jacobian is evaluated
+
+        Returns
+        -------
+        ndarray
+            Jacobian of the negative log likelihood value
         """
 
         raise NotImplementedError
 
 
 class LikelihoodFromLifetimes(Likelihood):
+    """
+    Generic likelihood object for parametric lifetime models
+
+    Parameters
+    ----------
+    model : ParametricLifetimeModel
+        Underlying model used to compute probability functions
+    lifetime_data : LifetimeData
+        Observed lifetime data used one which the likelihood is evaluated
+    model_args : tuple of zero or more ndarray, default is ()
+        Variadic arguments required by probability functions
+    """
 
     def __init__(
         self,
