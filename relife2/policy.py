@@ -12,7 +12,7 @@ from relife2.renewal import (
     lifetimes_rewards_generator,
     run_to_failure_cost,
 )
-from relife2.utils.data import CountData, RenewalRewardData
+from relife2.utils.data import RenewalRewardData
 from relife2.utils.types import Model1Args, ModelArgs
 from .nhpp import NHPP
 from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
@@ -21,23 +21,44 @@ from .utils.integration import gauss_legendre
 
 class Policy(Protocol):
     """
-    structural typing of policy object
+    Policy structural type
     """
 
+    # warning: tf > 0, period > 0, dt is deduced from period and is < 0.5
     def expected_total_cost(
         self, timeline: NDArray[np.float64]  # tf: float, period:float=1
     ) -> NDArray[np.float64]:
-        """warning: tf > 0, period > 0, dt is deduced from period and is < 0.5"""
+        """The expected total discounted cost.
+
+        It is computed bu solving the renewal equation.
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            Expected values along the timeline
+        """
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
+    ) -> NDArray[np.float64]:
+        """The expected equivalent annual cost.
 
-    def sample(
-        self,
-        nb_samples: int,
-        seed: Optional[int] = None,
-    ) -> CountData: ...
+
+        Parameters
+        ----------
+        timeline : ndarray
+            Timeline of points where the function is evaluated
+
+        Returns
+        -------
+        ndarray
+            Expected values along the timeline
+        """
 
 
 def ifset(*param_names: str):
@@ -69,16 +90,18 @@ class OneCycleRunToFailure(Policy):
     ----------
     model : LifetimeModel
         The lifetime model of the assets.
-    cf : np.ndarray of shape
-        The cost function array.
-    discount_rate : NDArray[np.float64]
-        The discount rate array.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    discount_rate : float, default is 0.
+        The discount rate.
     model_args : ModelArgs, optional
-        Additional arguments for the model.
+        ModelArgs is a tuple of zero or more ndarray required by the underlying
+        lifetime model of the process.
     nb_assets : int, optional
         Number of assets (default is 1).
-    a0 : Optional[NDArray[np.float64]], optional
-        Initial condition array (default is None).
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
 
 
     References
@@ -112,6 +135,16 @@ class OneCycleRunToFailure(Policy):
         self.model_args = model_args
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+
+        Parameters
+        ----------
+        timeline :
+
+        Returns
+        -------
+
+        """
         return reward_partial_expectation(
             timeline,
             self.model,
@@ -149,6 +182,20 @@ class OneCycleRunToFailure(Policy):
         nb_samples: int,
         seed: Optional[int] = None,
     ) -> RenewalRewardData:
+        """Sample simulation .
+
+        Parameters
+        ----------
+        nb_samples : int
+            Number of samples generated
+        seed : int, optional
+            Sample seed. Usefull to fix random generation and reproduce results
+
+        Returns
+        -------
+        RenewalRewardData
+            Iterable object that encapsulates results with additional functions
+        """
         generator = lifetimes_rewards_generator(
             self.model,
             self.reward,
@@ -189,6 +236,26 @@ class OneCycleAgeReplacementPolicy(Policy):
 
     The asset is disposed at a fixed age `ar` with costs `cp` or upon failure
     with costs `cf` if earlier.
+
+    Parameters
+    ----------
+    model : LifetimeModel
+        The lifetime model of the assets.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    cp : np.ndarray
+        The cost of preventive replacements for each asset.
+    discount_rate : float, default is 0.
+        The discount rate.
+    model_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the underlying
+        lifetime model of the process.
+    nb_assets : int, optional
+        Number of assets (default is 1).
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
+
 
     References
     ----------
@@ -269,6 +336,20 @@ class OneCycleAgeReplacementPolicy(Policy):
         nb_samples: int,
         seed: Optional[int] = None,
     ) -> RenewalRewardData:
+        """Sample simulation .
+
+        Parameters
+        ----------
+        nb_samples : int
+            Number of samples generated
+        seed : int, optional
+            Sample seed. Usefull to fix random generation and reproduce results
+
+        Returns
+        -------
+        RenewalRewardData
+            Iterable object that encapsulates results with additional functions
+        """
         generator = lifetimes_rewards_generator(
             self.model,
             self.reward,
@@ -347,6 +428,31 @@ class RunToFailure(Policy):
     Renewal reward process where assets are replaced on failure with costs
     `cf`.
 
+    Parameters
+    ----------
+    model : LifetimeModel
+        The lifetime model of the assets.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    rate : float, default is 0.
+        The discount rate.
+    model_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the underlying
+        lifetime model of the process.
+    nb_assets : int, optional
+        Number of assets (default is 1).
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
+    model1 : LifetimeModel, optional
+        The lifetime model used for the cycle of replacements. When one adds
+        `model1`, we assume that `model1` is different from `model` meaning
+        the underlying survival probabilities behave differently for the first
+        cycle
+    model1_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the lifetime
+        model of the first cycle of replacements.
+
     References
     ----------
     .. [1] Van der Weide, J. A. M., & Van Noortwijk, J. M. (2008). Renewal
@@ -418,6 +524,22 @@ class RunToFailure(Policy):
         end_time: float,
         seed: Optional[int] = None,
     ) -> RenewalRewardData:
+        """Sample simulation .
+
+        Parameters
+        ----------
+        nb_samples : int
+            Number of samples generated
+        end_time : float
+            End of the observation period. It is the upper bound of the cumulative generated lifetimes.
+        seed : int, optional
+            Sample seed. Usefull to fix random generation and reproduce results
+
+        Returns
+        -------
+        RenewalRewardData
+            Iterable object that encapsulates results with additional functions
+        """
         return self.rrp.sample(nb_samples, end_time, seed=seed)
 
     def expected_number_of_replacements(
@@ -436,8 +558,42 @@ class RunToFailure(Policy):
 class AgeReplacementPolicy(Policy):
     r"""Time based replacement policy.
 
-    Renewal reward process where assets are replaced at a fixed age `ar`
-    with costs `cp` or upon failure with costs `cf` if earlier.
+    Renewal reward process where assets are replaced at a fixed age ``ar``
+    with costs ``cp`` or upon failure with costs ``cf`` if earlier.
+
+    Parameters
+    ----------
+    model : LifetimeModel
+        The lifetime model of the assets.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    cp : np.ndarray
+        The cost of preventive replacements for each asset.
+    ar : np.ndarray, optional
+        Ages of preventive replacements. This parameter can be optimized
+        with ``fit``
+    ar1 : np.ndarray, optional
+        Ages of preventive replacements for the first cycle. This parameter can be optimized
+        with ``fit``
+    discount_rate : float, default is 0.
+        The discount rate.
+    model_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the underlying
+        lifetime model of the process.
+    nb_assets : int, optional
+        Number of assets (default is 1).
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
+    model1 : LifetimeModel, optional
+        The lifetime model used for the cycle of replacements. When one adds
+        `model1`, we assume that ``model1`` is different from ``model`` meaning
+        the underlying survival probabilities behave differently for the first
+        cycle
+    model1_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the lifetime
+        model of the first cycle of replacements.
+
 
     References
     ----------
@@ -632,6 +788,22 @@ class AgeReplacementPolicy(Policy):
         end_time: float,
         seed: Optional[int] = None,
     ) -> RenewalRewardData:
+        """Sample simulation .
+
+        Parameters
+        ----------
+        nb_samples : int
+            Number of samples generated
+        end_time : float
+            End of the observation period. It is the upper bound of the cumulative generated lifetimes.
+        seed : int, optional
+            Sample seed. Usefull to fix random generation and reproduce results
+
+        Returns
+        -------
+        RenewalRewardData
+            Iterable object that encapsulates results with additional functions
+        """
         return self.rrp.sample(nb_samples, end_time, seed=seed)
 
 
