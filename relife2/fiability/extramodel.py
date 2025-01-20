@@ -118,13 +118,13 @@ class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     def sf(
         self, time: NDArray[np.float64], a0: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
-        pass
+        return super().sf(time, a0, *args)
 
     # TODO : correct formula ? if not, does LeftTruncatedModel have to be LifetimeModel ?
     def pdf(
         self, time: NDArray[np.float64], a0: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
-        pass
+        return super().pdf(time, a0, *args)
 
     def isf(
         self,

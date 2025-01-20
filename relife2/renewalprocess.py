@@ -277,7 +277,7 @@ class RenewalRewardProcess(RenewalProcess):
         if self.model1 is not None:
 
             def y1(x):
-                return self.discount.factor(x, rate) * self.reward(
+                return self.discount.factor(x, rate) * self.reward1(
                     x, *self.args["reward1"]
                 )
 
@@ -314,6 +314,7 @@ class RenewalRewardProcess(RenewalProcess):
         discount_rate = np.ma.MaskedArray(self.args["discount"][0], mask)
 
         q = discount_rate * self.asymptotic_expected_total_reward()
+
         q0 = self.model.ls_integrate(
             lambda x: self.reward(x, *self.args["reward"]),
             np.array(0.0),

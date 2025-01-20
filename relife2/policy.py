@@ -120,6 +120,7 @@ class OneCycleRunToFailure(Policy):
         self,
         model: LifetimeModel[*ModelArgs],
         cf: float | NDArray[np.float64],
+        *,
         discount_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
@@ -169,7 +170,7 @@ class OneCycleRunToFailure(Policy):
         return self.expected_total_cost(np.array(np.inf))
 
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64], dt: float = 1.0
+        self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
         """The expected equivalent annual cost.
 
@@ -183,6 +184,7 @@ class OneCycleRunToFailure(Policy):
         ndarray
             The expected equivalent annual cost until each time point
         """
+        dt: float = 1.0
         f = (
             lambda x: run_to_failure_cost(x, self.cf)
             * exponential_discount.factor(x, self.discount_rate)
@@ -195,7 +197,7 @@ class OneCycleRunToFailure(Policy):
         )
 
     def asymptotic_expected_equivalent_annual_cost(
-        self, dt: float = 1.0
+        self,
     ) -> NDArray[np.float64]:
         """
         The asymptotic expected equivalent annual cost.
@@ -205,7 +207,7 @@ class OneCycleRunToFailure(Policy):
         ndarray
             The asymptotic expected equivalent annual cost.
         """
-        return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
+        return self.expected_equivalent_annual_cost(np.array(np.inf))
 
     def sample(
         self,
@@ -304,8 +306,8 @@ class OneCycleAgeReplacementPolicy(Policy):
         model: LifetimeModel[*ModelArgs],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
-        discount_rate: float,
         *,
+        discount_rate: float = 0.0,
         ar: Optional[float | NDArray[np.float64]] = None,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
@@ -360,7 +362,7 @@ class OneCycleAgeReplacementPolicy(Policy):
 
     @ifset("ar")
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64], dt: float = 1.0
+        self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
         """The expected equivalent annual cost.
 
@@ -374,6 +376,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         ndarray
             The expected equivalent annual cost until each time point
         """
+        dt: float = 1.0
         f = (
             lambda x: age_replacement_cost(x, self.ar, self.cf, self.cp)
             * exponential_discount.factor(x, self.discount_rate)
@@ -497,7 +500,7 @@ class OneCycleAgeReplacementPolicy(Policy):
                 self.model.baseline,
                 self.cf,
                 self.cp,
-                self.discount_rate,
+                discount_rate=self.discount_rate,
                 ar=ar,
                 model_args=self.model_args[1:],
                 nb_assets=self.nb_assets,
@@ -516,7 +519,7 @@ class RunToFailure(Policy):
         The lifetime model of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
-    rate : float, default is 0.
+    discount_rate : float, default is 0.
         The discount rate.
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
@@ -549,7 +552,8 @@ class RunToFailure(Policy):
         self,
         model: LifetimeModel[*ModelArgs],
         cf: float | NDArray[np.float64],
-        rate: float | NDArray[np.float64],
+        *,
+        discount_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
@@ -568,22 +572,26 @@ class RunToFailure(Policy):
 
         self.model_args = model_args
         self.cf = cf
-        self.rate = rate
+        self.discount_rate = discount_rate
 
         self.model_args = model_args
         self.model1_args = model1_args
 
         self.nb_assets = nb_assets
 
+        # if Policy is parametrized, set the underlying renewal reward process
+        # note the rewards are the same for the first cycle and the rest of the process
         self.rrp = RenewalRewardProcess(
             self.model,
-            run_to_failure_cost,
+            self.reward,
             nb_assets=self.nb_assets,
             model_args=self.model_args,
             reward_args=(self.cf,),
-            discount_rate=self.rate,
+            discount_rate=self.discount_rate,
             model1=self.model1,
             model1_args=self.model1_args,
+            reward1=self.reward,
+            reward1_args=(self.cf,),
         )
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -731,9 +739,10 @@ class AgeReplacementPolicy(Policy):
         model: LifetimeModel[*ModelArgs],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
+        *,
+        discount_rate: float = 0.0,
         ar: float | NDArray[np.float64] = None,
         ar1: float | NDArray[np.float64] = None,
-        discount_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
@@ -761,6 +770,8 @@ class AgeReplacementPolicy(Policy):
         self.discount_rate = discount_rate
 
         self.model_args = (ar,) + model_args
+
+        # (None, ...) or (ar1, ...)
         self.model1_args = (ar1,) + model1_args if model1_args else None
 
         self.nb_assets = nb_assets
@@ -773,16 +784,20 @@ class AgeReplacementPolicy(Policy):
                 if self.ar1 is None:
                     parametrized = False
 
+        # if Policy is parametrized, set the underlying renewal reward process
+        # note the rewards are the same for the first cycle and the rest of the process
         if parametrized:
             self.rrp = RenewalRewardProcess(
                 self.model,
-                age_replacement_cost,
+                self.reward,
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
                 discount_rate=self.discount_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
+                reward1=self.reward,
+                reward1_args=(self.ar1, self.cf, self.cp),
             )
 
     @ifset("rrp")
@@ -922,7 +937,7 @@ class AgeReplacementPolicy(Policy):
                 self.model1.baseline,
                 self.cf,
                 self.cp,
-                self.discount_rate,
+                discount_rate=self.discount_rate,
                 model_args=self.model1_args[1:],
             ).fit()
             ar1 = onecycle.ar
@@ -934,22 +949,24 @@ class AgeReplacementPolicy(Policy):
             self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
             self.rrp = RenewalRewardProcess(
                 self.model,
-                age_replacement_cost,
+                self.reward,
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
                 discount_rate=self.discount_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
+                reward1=self.reward,
+                reward1_args=(self.ar1, self.cf, self.cp),
             )
         else:
             return AgeReplacementPolicy(
                 self.model.baseline,
                 self.cf,
                 self.cp,
+                discount_rate=self.discount_rate,
                 ar=ar,
                 ar1=ar1,
-                discount_rate=self.discount_rate,
                 model_args=self.model_args[1:],
                 model1=self.model1.baseline if self.model1 else None,
                 model1_args=self.model1_args[1:] if self.model1 else None,
