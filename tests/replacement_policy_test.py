@@ -7,12 +7,13 @@
 import numpy as np
 import pytest
 
-from relife2 import Weibull, Gompertz, Gamma, LogLogistic
-from relife2.policy import (
+from relife2 import (
     OneCycleRunToFailure,
     RunToFailure,
     OneCycleAgeReplacementPolicy,
+    AgeReplacementPolicy,
 )
+from relife2 import Weibull, Gompertz, Gamma, LogLogistic
 
 
 # fixtures
@@ -111,18 +112,26 @@ def test_one_cycle_optimal_replacement_age(baseline, fit_args):
     )
 
 
-# def test_optimal_replacement_age(baseline, fit_args):
-#     cf, cp, rate = fit_args
-#     eps = 1e-2
-#     policy = AgeReplacementPolicy(baseline, cf=cf, cp=cp, rate=rate).fit(fit_ar1=False)
-#     ar = policy.ar
-#     assert np.all(
-#         policy.asymptotic_expected_equivalent_annual_cost(ar + eps)
-#         > policy.asymptotic_expected_equivalent_annual_cost()
-#     ) and np.all(
-#         policy.asymptotic_expected_equivalent_annual_cost(ar - eps)
-#         > policy.asymptotic_expected_equivalent_annual_cost()
-#     )
+def test_optimal_replacement_age(baseline, fit_args):
+    cf, cp, discount_rate = fit_args
+    eps = 1e-2
+    policy = AgeReplacementPolicy(baseline, cf, cp, discount_rate=discount_rate).fit()
+    ar = policy.ar
+
+    policy1 = AgeReplacementPolicy(
+        baseline, cf, cp, discount_rate=discount_rate, ar=ar + eps
+    )
+    policy0 = AgeReplacementPolicy(
+        baseline, cf, cp, discount_rate=discount_rate, ar=ar - eps
+    )
+
+    assert np.all(
+        policy1.asymptotic_expected_equivalent_annual_cost()
+        > policy.asymptotic_expected_equivalent_annual_cost()
+    ) and np.all(
+        policy0.asymptotic_expected_equivalent_annual_cost()
+        > policy.asymptotic_expected_equivalent_annual_cost()
+    )
 
 
 def test_asymptotic_expected_equivalent_annual_cost(policy):
