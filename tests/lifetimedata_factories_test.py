@@ -40,6 +40,7 @@ def test_1d_data(example_1d_data):
     )
 
     lifetime_data = LifetimeData(
+        len(example_1d_data),
         reader.get_complete(),
         reader.get_left_censorships(),
         reader.get_right_censorships(),
@@ -97,6 +98,7 @@ def test_2d_data(example_2d_data):
     )
 
     lifetime_data = LifetimeData(
+        len(example_2d_data),
         reader.get_complete(),
         reader.get_left_censorships(),
         reader.get_right_censorships(),
