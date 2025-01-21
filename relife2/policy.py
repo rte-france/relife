@@ -170,7 +170,7 @@ class OneCycleRunToFailure(Policy):
         return self.expected_total_cost(np.array(np.inf))
 
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64]
+        self, timeline: NDArray[np.float64], dt: float = 1.0
     ) -> NDArray[np.float64]:
         """The expected equivalent annual cost.
 
@@ -178,13 +178,15 @@ class OneCycleRunToFailure(Policy):
         ----------
         timeline : ndarray
             Timeline of points where the function is evaluated
+        dt : float, default 1.0
+            The length of the first period before discounting
 
         Returns
         -------
         ndarray
             The expected equivalent annual cost until each time point
         """
-        dt: float = 1.0
+
         f = (
             lambda x: run_to_failure_cost(x, self.cf)
             * exponential_discount.factor(x, self.discount_rate)
@@ -362,7 +364,7 @@ class OneCycleAgeReplacementPolicy(Policy):
 
     @ifset("ar")
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64]
+        self, timeline: NDArray[np.float64], dt: float = 1.0
     ) -> NDArray[np.float64]:
         """The expected equivalent annual cost.
 
@@ -370,13 +372,15 @@ class OneCycleAgeReplacementPolicy(Policy):
         ----------
         timeline : ndarray
             Timeline of points where the function is evaluated
+        dt : float, default 1.0
+            The length of the first period before discounting
 
         Returns
         -------
         ndarray
             The expected equivalent annual cost until each time point
         """
-        dt: float = 1.0
+
         f = (
             lambda x: age_replacement_cost(x, self.ar, self.cf, self.cp)
             * exponential_discount.factor(x, self.discount_rate)
@@ -396,11 +400,17 @@ class OneCycleAgeReplacementPolicy(Policy):
         """
         The asymptotic expected equivalent annual cost.
 
+        Parameters
+        ----------
+        dt : float, default 1.0
+            The length of the first period before discounting
+
         Returns
         -------
         ndarray
             The asymptotic expected equivalent annual cost.
         """
+
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
     @ifset("ar")

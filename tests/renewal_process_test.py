@@ -7,8 +7,8 @@
 import numpy as np
 import pytest
 
-from relife2 import AgeReplacementModel, EquilibriumDistribution
 from relife2 import Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
+from relife2.fiability import AgeReplacementModel, EquilibriumDistribution
 from relife2.renewal import run_to_failure_cost
 from relife2.renewalprocess import RenewalProcess, RenewalRewardProcess
 
@@ -94,7 +94,7 @@ def test_renewal_reward_process(model_and_args):
 def test_renewal_reward_process_vec(model_and_args):
     t = np.arange(0, 100, 0.5)
     cf0 = 1
-    rate = 0.04
+    discount_rate = 0.04
     model, model_args = model_and_args
 
     nb_assets = max(
@@ -110,14 +110,14 @@ def test_renewal_reward_process_vec(model_and_args):
         run_to_failure_cost,
         model_args=model_args,
         reward_args=(cf0,),
-        discount_rate=rate,
+        discount_rate=discount_rate,
     )
     rrp = RenewalRewardProcess(
         model,
         run_to_failure_cost,
         model_args=model_args,
         reward_args=(np.full((n, 1), cf),),
-        discount_rate=rate,
+        discount_rate=discount_rate,
     )
     z0 = rrp0.expected_total_reward(t)
     z = rrp.expected_total_reward(t)

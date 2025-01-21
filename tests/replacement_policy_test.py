@@ -31,10 +31,10 @@ def baseline(request):
 
 @pytest.fixture(scope="module", params=[0, 0.04])
 def fit_args(request):
-    rate = request.param
+    discount_rate = request.param
     cp = 1
     cf = cp + np.array([5, 10, 20, 100, 1000]).reshape(-1, 1)
-    return cf, cp, rate
+    return cf, cp, discount_rate
 
 
 @pytest.fixture(
@@ -46,12 +46,14 @@ def fit_args(request):
     ],
 )
 def policy(request, baseline, fit_args):
-    cf, cp, rate = fit_args
+    cf, cp, discount_rate = fit_args
 
     if request.param == OneCycleRunToFailure or request.param == RunToFailure:
-        policy_obj = request.param(baseline, cf, rate, nb_assets=5)
+        policy_obj = request.param(
+            baseline, cf, discount_rate=discount_rate, nb_assets=5
+        )
     else:
-        policy_obj = request.param(baseline, cf, cp, rate, nb_assets=5)
+        policy_obj = request.param(baseline, cf, cp, discount_rate, nb_assets=5)
         policy_obj.fit(inplace=True)
 
     return policy_obj
@@ -66,15 +68,15 @@ def policy(request, baseline, fit_args):
     ],
 )
 def policy_vec(request, baseline, fit_args):
-    cf, cp, rate = fit_args
+    cf, cp, discount_rate = fit_args
     batch_size = 3
     cf = np.tile(cf, (batch_size, 1, 1))
-    rate = np.tile(rate, (batch_size, 1, 1))
+    discount_rate = np.tile(discount_rate, (batch_size, 1, 1))
 
     if request.param == OneCycleRunToFailure or request.param == RunToFailure:
-        policy_obj = request.param(baseline, cf, rate, nb_assets=5)
+        policy_obj = request.param(baseline, cf, discount_rate, nb_assets=5)
     else:
-        policy_obj = request.param(baseline, cf, cp, rate, nb_assets=5)
+        policy_obj = request.param(baseline, cf, cp, discount_rate, nb_assets=5)
         policy_obj.fit(inplace=True)
     return policy_obj
 
@@ -82,27 +84,31 @@ def policy_vec(request, baseline, fit_args):
 # test functions
 
 
-# def test_one_cycle_optimal_replacement_age(baseline, fit_args):
-#     cf, cp, rate = fit_args
-#     eps = 1e-2
-#     policy = OneCycleAgeReplacementPolicy(baseline, cf, cp, rate, nb_assets=5)
-#     ar = policy.fit()
-#
-#     policy1 = OneCycleAgeReplacementPolicy(
-#         baseline, cf, cp, rate, ar=ar + eps, nb_assets=5
-#     )
-#     policy0 = OneCycleAgeReplacementPolicy(
-#         baseline, cf, cp, rate, ar=ar - eps, nb_assets=5
-#     )
-#     policy.asymptotic_expected_equivalent_annual_cost()
-#
-#     assert np.all(
-#         policy1.asymptotic_expected_equivalent_annual_cost(dt=0.1)
-#         > policy.asymptotic_expected_equivalent_annual_cost()
-#     ) and np.all(
-#         policy0.asymptotic_expected_equivalent_annual_cost(dt=0.1)
-#         > policy.asymptotic_expected_equivalent_annual_cost()
-#     )
+def test_one_cycle_optimal_replacement_age(baseline, fit_args):
+    cf, cp, discount_rate = fit_args
+    eps = 1e-2
+    policy = OneCycleAgeReplacementPolicy(
+        baseline, cf, cp, discount_rate=discount_rate, nb_assets=5
+    )
+    policy.fit(inplace=True)
+    ar = policy.ar
+
+    policy1 = OneCycleAgeReplacementPolicy(
+        baseline, cf, cp, discount_rate=discount_rate, ar=ar + eps, nb_assets=5
+    )
+    policy0 = OneCycleAgeReplacementPolicy(
+        baseline, cf, cp, discount_rate=discount_rate, ar=ar - eps, nb_assets=5
+    )
+
+    policy.asymptotic_expected_equivalent_annual_cost()
+
+    assert np.all(
+        policy1.asymptotic_expected_equivalent_annual_cost(dt=0.1)
+        > policy.asymptotic_expected_equivalent_annual_cost()
+    ) and np.all(
+        policy0.asymptotic_expected_equivalent_annual_cost(dt=0.1)
+        > policy.asymptotic_expected_equivalent_annual_cost()
+    )
 
 
 # def test_optimal_replacement_age(baseline, fit_args):
