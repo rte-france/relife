@@ -402,16 +402,23 @@ class NelsonAalen(NonParametricLifetimeEstimator):
         )
 
         if len(lifetime_data.left_censored) > 0:
-            raise ValueError("NelsonAalen does not take left censored lifetimes")
-        timeline, timeline_indexes, counts = np.unique(
-            lifetime_data.rlc.values, return_inverse=True, return_counts=True
+            raise ValueError(
+                "NelsonAalen does not accept left censored or interval censored lifetimes"
+            )
+
+        timeline, unique_indices, counts = np.unique(
+            lifetime_data.rc.values, return_inverse=True, return_counts=True
         )
-        death_set = np.zeros_like(timeline, int)  # death at each timeline step
+        death_set = np.zeros_like(
+            timeline, dtype=np.int64
+        )  # death at each timeline step
+
         complete_observation_indic = np.zeros_like(
-            lifetime_data.rlc.values
+            lifetime_data.rc.values
         )  # just creating an array to fill it next line
         complete_observation_indic[lifetime_data.complete.index] = 1
-        np.add.at(death_set, timeline_indexes, complete_observation_indic.flatten())
+
+        np.add.at(death_set, unique_indices, complete_observation_indic.flatten())
         x_in = np.histogram(
             np.concatenate(
                 (
@@ -420,7 +427,7 @@ class NelsonAalen(NonParametricLifetimeEstimator):
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.rlc.values)
+                                len(lifetime_data.rc.values)
                                 - len(lifetime_data.left_truncated.values)
                             )
                         ]

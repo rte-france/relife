@@ -58,7 +58,7 @@ def plot(
     return ax
 
 
-def param_funcprob_plot(
+def param_probfunc_plot(
     fname: str,
     model: LifetimeModel[*ModelArgs],
     timeline: NDArray[np.float64] = None,
@@ -161,7 +161,36 @@ def nonparam_probfunc_plot(
         y,
         se,
         alpha_ci,
-        bounds=(0, 1),
+        bounds=(0.0, 1.0),
+        label=label,
+        drawstyle="steps-post",
+        **kwargs,
+    )
+
+
+def nelsonaalen_plot(
+    fname: str,
+    model: NonParametricLifetimeEstimator,
+    timeline: NDArray[np.float64] = None,
+    alpha_ci: float = 0.05,
+    **kwargs,
+):
+    label = kwargs.pop("label", f"{model.__class__.__name__}" + f".{fname}")
+    if not hasattr(model, fname):
+        raise ValueError(f"No plot for {fname}")
+
+    if timeline is None:
+        timeline = model.estimates.get(fname).timeline
+        y = model.estimates.get(fname).values
+        se = model.estimates.get(fname).se
+    else:
+        y, se = model.estimates.get(fname).nearest_1dinterp(timeline)
+    return plot(
+        timeline,
+        y,
+        se,
+        alpha_ci,
+        bounds=(0.0, np.inf),
         label=label,
         drawstyle="steps-post",
         **kwargs,
@@ -188,11 +217,13 @@ class PlotDescriptor:
         from relife2.nonparametric import ECDF, KaplanMeier, NelsonAalen
 
         if isinstance(obj.model, Distribution):
-            return BoundPlot(obj.model, param_funcprob_plot, self.name)
+            return BoundPlot(obj.model, param_probfunc_plot, self.name)
         if isinstance(obj.model, Regression):
-            return BoundPlot(obj.model, param_funcprob_plot, self.name)
-        if isinstance(obj.model, ECDF | KaplanMeier | NelsonAalen):
+            return BoundPlot(obj.model, param_probfunc_plot, self.name)
+        if isinstance(obj.model, ECDF | KaplanMeier):
             return BoundPlot(obj.model, nonparam_probfunc_plot, self.name)
+        if isinstance(obj.model, NelsonAalen):
+            return BoundPlot(obj.model, nelsonaalen_plot, self.name)
         raise NotImplementedError("No plot")
 
 
