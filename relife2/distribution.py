@@ -433,7 +433,7 @@ class Weibull(Distribution):
 
     .. math::
 
-        f(t) = c \lambda^c t^{c-1} e^{-(\lambda t)^c}
+        f(t) = c \lambda (\lambda t)^{c-1} e^{-(\lambda t)^c}
 
     where:
 
