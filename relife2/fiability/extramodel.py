@@ -14,7 +14,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     r"""
     Age replacement model.
 
-    Lifetime model where the asset is replaced at age :math:`ar`.
+    Lifetime model where the asset is replaced at age :math:`a_r`.
 
     Parameters
     ----------
@@ -127,7 +127,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
 class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     r"""Left truncated model.
 
-    Conditional distribution of the lifetime model for an asset having reach age `a0`.
+    Conditional distribution of the lifetime model for an asset having reach age :math:`a_0`.
 
     Parameters
     ----------

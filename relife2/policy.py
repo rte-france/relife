@@ -268,8 +268,8 @@ class OneCycleRunToFailure(Policy):
 class OneCycleAgeReplacementPolicy(Policy):
     r"""One-cyle age replacement policy.
 
-    The asset is disposed at a fixed age `ar` with costs `cp` or upon failure
-    with costs `cf` if earlier.
+    The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
+    with costs :math:`c_f` if earlier.
 
     Parameters
     ----------
@@ -521,7 +521,7 @@ class RunToFailure(Policy):
     r"""Run-to-failure renewal policy.
 
     Renewal reward process where assets are replaced on failure with costs
-    `cf`.
+    :math:`c_f`.
 
     Parameters
     ----------
@@ -697,8 +697,8 @@ class RunToFailure(Policy):
 class AgeReplacementPolicy(Policy):
     r"""Time based replacement policy.
 
-    Renewal reward process where assets are replaced at a fixed age ``ar``
-    with costs ``cp`` or upon failure with costs ``cf`` if earlier.
+    Renewal reward process where assets are replaced at a fixed age :math:`a_r`
+    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier.
 
     Parameters
     ----------
