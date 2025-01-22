@@ -11,6 +11,21 @@ from relife2.utils.types import ModelArgs
 
 
 class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
+    r"""
+    Age replacement model.
+
+    Lifetime model where the asset is replaced at age `ar`.
+
+    Parameters
+    ----------
+    baseline : LifetimeModel
+        Underlying lifetime model.
+
+    Notes
+    -----
+    This is equivalent to the distribution of :math:`\min(X,a_r)` where
+    :math:`X` is a baseline lifetime model and ar the age of replacement.
+    """
 
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
         super().__init__()
@@ -110,6 +125,16 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
 
 
 class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
+    r"""Left truncated model.
+
+    Conditional distribution of the lifetime model for an asset having reach age `a0`.
+
+    Parameters
+    ----------
+    baseline : LifetimeModel
+        Underlying lifetime model.
+    """
+
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
         super().__init__()
         self.baseline = baseline
@@ -175,6 +200,19 @@ class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
 
 
 class EquilibriumDistribution(LifetimeModel[*ModelArgs]):
+    r"""Equilibrium distribution.
+
+    The equilibirum distribution is the distrbution computed from a lifetime
+    model that makes the associated delayed renewal process stationary [1]_.
+
+    Parameters
+    ----------
+    baseline : LifetimeModel
+        Underlying lifetime model.
+
+    .. [1] Ross, S. M. (1996). Stochastic processes. New York: Wiley.
+    """
+
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
         super().__init__()
         self.baseline = baseline
