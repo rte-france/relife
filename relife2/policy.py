@@ -274,6 +274,9 @@ class OneCycleAgeReplacementPolicy(Policy):
         The cost of preventive replacements for each asset.
     discount_rate : float, default is 0.
         The discount rate.
+    ar : np.ndarray, optional
+        Times until preventive replacements. This parameter can be optimized
+        with ``fit``
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
         lifetime model of the process.
@@ -702,10 +705,10 @@ class AgeReplacementPolicy(Policy):
     cp : np.ndarray
         The cost of preventive replacements for each asset.
     ar : np.ndarray, optional
-        Ages of preventive replacements. This parameter can be optimized
+        Times until preventive replacements. This parameter can be optimized
         with ``fit``
     ar1 : np.ndarray, optional
-        Ages of preventive replacements for the first cycle. This parameter can be optimized
+        Times until preventive replacements for the first cycle. This parameter can be optimized
         with ``fit``
     discount_rate : float, default is 0.
         The discount rate.
