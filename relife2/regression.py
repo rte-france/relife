@@ -567,13 +567,43 @@ class Regression(
 
 
 class ProportionalHazard(Regression):
-    """
+    r"""
     Proportional Hazard regression model.
+
+    The cumulative hazard function :math:`H` is linked to the multiplier
+    function :math:`g` by the relation:
+
+    .. math::
+
+        H(t, x) = g(\beta, x) H_0(t) = e^{\beta \cdot x} H_0(t)
+
+    where :math:`x` is a vector of covariates, :math:`\beta` is the coefficient
+    vector of the effect of covariates, :math:`H_0` is the baseline cumulative
+    hazard function.
+
+    Parameters
+    ----------
+    baseline : ParametricLifetimeModel
+        Any parametric lifetime model to serve as the baseline.
+    coef : tuple of floats (values can be None), optional
+        Coefficients values of the covariate effects.
+
+    References
+    ----------
+    .. [1] Sun, J. (2006). The statistical analysis of interval-censored failure
+        time data (Vol. 3, No. 1). New York: springer.
 
     See Also
     --------
     regression.AFT : AFT regression
     """
+
+    def __init__(
+        self,
+        baseline: ParametricLifetimeModel[*ModelArgs],
+        coef: tuple[float, ...] | tuple[None] = (None,),
+    ):
+        super().__init__(baseline, coef)
 
     def hf(
         self,
@@ -693,9 +723,40 @@ class ProportionalHazard(Regression):
 
 
 class AFT(Regression):
-    """
+    r"""
     Accelerated failure time regression.
+
+    The cumulative hazard function :math:`H` is linked to the multiplier
+    function :math:`g` by the relation:
+
+    .. math::
+
+        H(t, x) = H_0\left(\dfrac{t}{g(\beta, x)}\right) = H_0(t e^{- \beta
+        \cdot x})
+
+    where :math:`x` is a vector of covariates, :math:`\beta` is the coefficient
+    vector of the effect of covariates, :math:`H_0` is the baseline cumulative
+    hazard function.
+
+    Parameters
+    ----------
+    baseline : ParametricLifetimeModel
+        Any parametric lifetime model to serve as the baseline.
+    coef : tuple of floats (values can be None), optional
+        Coefficients values of the covariate effects.
+
+    References
+    ----------
+    .. [1] Kalbfleisch, J. D., & Prentice, R. L. (2011). The statistical
+        analysis of failure time data. John Wiley & Sons.
     """
+
+    def __init__(
+        self,
+        baseline: ParametricLifetimeModel[*ModelArgs],
+        coef: tuple[float, ...] | tuple[None] = (None,),
+    ):
+        super().__init__(baseline, coef)
 
     def hf(
         self,

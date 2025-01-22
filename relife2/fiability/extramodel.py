@@ -14,7 +14,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     r"""
     Age replacement model.
 
-    Lifetime model where the asset is replaced at age `ar`.
+    Lifetime model where the asset is replaced at age :math:`ar`.
 
     Parameters
     ----------
@@ -203,13 +203,15 @@ class EquilibriumDistribution(LifetimeModel[*ModelArgs]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
-    model that makes the associated delayed renewal process stationary [1]_.
+    model that makes the associated delayed renewal process stationary.
 
     Parameters
     ----------
     baseline : LifetimeModel
         Underlying lifetime model.
 
+    References
+    ----------
     .. [1] Ross, S. M. (1996). Stochastic processes. New York: Wiley.
     """
 
