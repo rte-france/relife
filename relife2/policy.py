@@ -103,13 +103,6 @@ class OneCycleRunToFailure(Policy):
         Current ages of the assets (default is None). Setting ``a0`` will add
         left truncations.
 
-
-    References
-    ----------
-    .. [1] Coolen-Schrijner, P., & Coolen, F. P. A. (2006). On optimality
-        criteria for age replacement. Proceedings of the Institution of
-        Mechanical Engineers, Part O: Journal of Risk and Reliability,
-        220(1), 21-29
     """
 
     reward = run_to_failure_cost
