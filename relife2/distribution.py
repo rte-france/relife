@@ -215,8 +215,20 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
 
 class Exponential(Distribution):
-    """
+    r"""
     Exponential lifetime distribution.
+
+    The exponential distribution is a 1-parameter distribution with
+    :math:`(\lambda)`. The probability density function is:
+
+    .. math::
+
+        f(t) = \lambda e^{-\lambda t}
+
+    where:
+
+        - :math:`\lambda > 0`, the rate parameter,
+        - :math:`t\geq 0`, the operating time, age, cycles, etc.
 
     Parameters
     ----------
@@ -413,8 +425,21 @@ class Exponential(Distribution):
 
 
 class Weibull(Distribution):
-    """
+    r"""
     Weibull lifetime distribution.
+
+    The Weibull distribution is a 2-parameter distribution with
+    :math:`(c,\lambda)`. The probability density function is:
+
+    .. math::
+
+        f(t) = c \lambda^c t^{c-1} e^{-(\lambda t)^c}
+
+    where:
+
+        - :math:`c > 0`, the shape parameter,
+        - :math:`\lambda > 0`, the rate parameter,
+        - :math:`t\geq 0`, the operating time, age, cycles, etc.
 
     Parameters
     ----------
@@ -615,8 +640,21 @@ class Weibull(Distribution):
 
 
 class Gompertz(Distribution):
-    """
+    r"""
     Gompertz lifetime distribution.
+
+    The Gompertz distribution is a 2-parameter distribution with
+    :math:`(c,\lambda)`. The probability density function is:
+
+    .. math::
+
+        f(t) = c \lambda e^{\lambda t} e^{ -c \left( e^{\lambda t}-1 \right) }
+
+    where:
+
+        - :math:`c > 0`, the shape parameter,
+        - :math:`\lambda > 0`, the rate parameter,
+        - :math:`t\geq 0`, the operating time, age, cycles, etc.
 
     Parameters
     ----------
@@ -812,8 +850,21 @@ class Gompertz(Distribution):
 
 
 class Gamma(Distribution):
-    """
+    r"""
     Gamma lifetime distribution.
+
+    The Gamma distribution is a 2-parameter distribution with
+    :math:`(c,\lambda)`. The probability density function is:
+
+    .. math::
+
+        f(t) = \frac{\lambda^c t^{c-1} e^{-\lambda t}}{\Gamma(c)}
+
+    where:
+
+        - :math:`c > 0`, the shape parameter,
+        - :math:`\lambda > 0`, the rate parameter,
+        - :math:`t\geq 0`, the operating time, age, cycles, etc.
 
     Parameters
     ----------
@@ -1029,8 +1080,21 @@ class Gamma(Distribution):
 
 
 class LogLogistic(Distribution):
-    """
+    r"""
     Log-logistic probability distribution.
+
+    The Log-logistic distribution is defined as a 2-parameter distribution
+    :math:`(c, \lambda)`. The probability density function is:
+
+    .. math::
+
+        f(t) = \frac{c \lambda^c t^{c-1}}{(1+(\lambda t)^{c})^2}
+
+    where:
+
+        - :math:`c > 0`, the shape parameter,
+        - :math:`\lambda > 0`, the rate parameter,
+        - :math:`t\geq 0`, the operating time, age, cycles, etc.
 
     Parameters
     ----------
