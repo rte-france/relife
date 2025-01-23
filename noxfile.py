@@ -26,6 +26,19 @@ def lint(session):
     session.run("pylint", "--extension-pkg-whitelist=numpy", "relife2/.", *args)
 
 
+@nox.session(tags=["test"])
+def tests(session):
+    requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
+    session.install(*requirements)
+    session.install(".")  # install relife2
+    session.install("pytest")
+    if session.posargs:
+        args = session.posargs
+    else:
+        args = ()
+    session.run("pytest", "tests/", *args)
+
+
 @nox.session(tags=["type"])
 def mypy(session):
     requirements = nox.project.load_toml("pyproject.toml")["project"]["dependencies"]
