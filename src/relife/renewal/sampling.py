@@ -3,11 +3,11 @@ from typing import Iterator, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.fiability.extramodel import AgeReplacementModel
-from relife2.fiability.model import LifetimeModel
-from relife2.renewal.discount import Discount
-from relife2.renewal.reward import Reward
-from relife2.utils.types import (
+from relife.fiability.extramodel import AgeReplacementModel
+from relife.fiability.model import LifetimeModel
+from relife.renewal.discount import Discount
+from relife.renewal.reward import Reward
+from relife.utils.types import (
     DiscountArgs,
     Model1Args,
     ModelArgs,

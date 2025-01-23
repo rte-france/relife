@@ -5,15 +5,15 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-from relife2 import Exponential
-from relife2.fiability import (
+from relife import Exponential
+from relife.fiability import (
     LifetimeModel,
     LikelihoodFromLifetimes,
     ParametricLifetimeModel,
 )
-from relife2.renewal import Reward
-from relife2.utils.data import CountData, LifetimeData, lifetime_data_factory
-from relife2.utils.types import ModelArgs, RewardArgs, VariadicArgs
+from relife.renewal import Reward
+from relife.utils.data import CountData, LifetimeData, lifetime_data_factory
+from relife.utils.types import ModelArgs, RewardArgs, VariadicArgs
 
 
 class StochasticProcess(Protocol):

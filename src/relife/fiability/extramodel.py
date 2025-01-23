@@ -5,9 +5,9 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife2.fiability.model import LifetimeModel
-from relife2.utils.integration import gauss_legendre
-from relife2.utils.types import ModelArgs
+from relife.fiability.model import LifetimeModel
+from relife.utils.integration import gauss_legendre
+from relife.utils.types import ModelArgs
 
 
 class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):

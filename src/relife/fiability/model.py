@@ -8,14 +8,14 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
-from relife2.fiability.likelihood import (
+from relife.fiability.likelihood import (
     LikelihoodFromLifetimes,
     hessian_from_likelihood,
 )
-from relife2.utils.data import LifetimeData, lifetime_data_factory
-from relife2.utils.integration import gauss_legendre, quad_laguerre
-from relife2.utils.plot import PlotSurvivalFunc
-from relife2.utils.types import VariadicArgs
+from relife.utils.data import LifetimeData, lifetime_data_factory
+from relife.utils.integration import gauss_legendre, quad_laguerre
+from relife.utils.plot import PlotSurvivalFunc
+from relife.utils.types import VariadicArgs
 
 
 class Parameters:

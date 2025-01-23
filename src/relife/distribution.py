@@ -7,9 +7,9 @@ from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife2.fiability import ParametricLifetimeModel
-from relife2.utils.data import LifetimeData
-from relife2.utils.integration import shifted_laguerre
+from relife.fiability import ParametricLifetimeModel
+from relife.utils.data import LifetimeData
+from relife.utils.integration import shifted_laguerre
 
 
 # Ts type var is a zero long tuple (see https://github.com/python/mypy/issues/16199)
@@ -170,7 +170,7 @@ class Distribution(ParametricLifetimeModel[()], ABC):
 
     def init_params(self, lifetime_data: LifetimeData) -> None:
         param0 = np.ones(self.nb_params)
-        param0[-1] = 1 / np.median(lifetime_data.rlc.values)
+        param0[-1] = 1 / np.median(lifetime_data.rc.values)
         self.params = param0
 
     @property
@@ -676,8 +676,8 @@ class Gompertz(Distribution):
 
     def init_params(self, lifetime_data: LifetimeData) -> None:
         param0 = np.empty(self.nb_params, dtype=float)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.rlc.values))
-        shape = np.exp(-rate * np.mean(lifetime_data.rlc.values))
+        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.rc.values))
+        shape = np.exp(-rate * np.mean(lifetime_data.rc.values))
         param0[0] = shape
         param0[1] = rate
         self.params = param0

@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, Protocol, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from relife.utils.data import LifetimeData
 from scipy.optimize import approx_fprime
 from typing_extensions import override
 
-from relife2.utils.data import LifetimeData
-
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife2.fiability import ParametricLifetimeModel, ParametricModel
+    from relife.fiability import ParametricLifetimeModel, ParametricModel
 
 
 class Likelihood(Protocol):

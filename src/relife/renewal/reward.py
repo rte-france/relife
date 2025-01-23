@@ -3,7 +3,7 @@ from typing import Protocol
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.utils.types import VariadicArgs
+from relife.utils.types import VariadicArgs
 
 
 class Reward(Protocol[*VariadicArgs]):

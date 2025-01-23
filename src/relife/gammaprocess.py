@@ -16,9 +16,9 @@ from scipy.optimize import Bounds, bisect, minimize
 from scipy.special import digamma, expi, gammainc, lambertw, loggamma
 from scipy.stats import gamma
 
-from relife2.fiability.model import Likelihood, ParametricLifetimeModel, ParametricModel
-from relife2.io import array_factory
-from relife2.utils.data import Deteriorations, deteriorations_factory
+from relife.fiability.model import Likelihood, ParametricLifetimeModel, ParametricModel
+from relife.io import array_factory
+from relife.utils.data import Deteriorations, deteriorations_factory
 
 
 class ShapeFunctions(ParametricModel, ABC):

@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from relife2 import ECDF, KaplanMeier, NelsonAalen, Turnbull
-from relife2 import Weibull
-from relife2.utils.dataset import load_power_transformer, load_input_turnbull
+from relife import ECDF, KaplanMeier, NelsonAalen, Turnbull
+from relife import Weibull
+from relife.datasets import load_power_transformer, load_input_turnbull
 
 
 @pytest.fixture

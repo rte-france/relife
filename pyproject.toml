@@ -3,18 +3,19 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "relife2"
-version = "1.0"
+name = "relife"
+version = "2.0.0"
 requires-python = ">=3.11"
 dependencies = [
-    "numpy ==1.26.4",
+    "numpy ==2.0.0", # 1.26.4
     "scipy ==1.13.0",
     "matplotlib ==3.9.0",
     "typing-extensions == 4.12.2",
 ]
 
-[tool.setuptools.packages]
-find = { }
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["relife*"]  # ["*"] by default
 
 [project.optional-dependencies]
 test = [
@@ -28,12 +29,13 @@ format = [
     "mypy == 1.10.0",
     "no-implicit-optional == 1.4",
 ]
-doc = [
+dev = [
     "sphinx == 7.2.6",
     "sphinx-book-theme == 1.1.2",
     "sphinx-copybutton == 0.5.2",
     "sphinx-design == 0.5.0",
     "myst-parser == 2.0.0",
+    "setuptools[core]",
 ]
 
 [tool.isort]

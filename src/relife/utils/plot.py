@@ -7,12 +7,11 @@ import scipy.stats as stats
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
-
-from relife2.utils.types import ModelArgs
+from relife.utils.types import ModelArgs
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife2.fiability import LifetimeModel
-    from relife2.nonparametric import NonParametricLifetimeEstimator
+    from relife.fiability import LifetimeModel
+    from relife.nonparametric import NonParametricLifetimeEstimator
 
 
 def plot(
@@ -212,9 +211,9 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
-        from relife2.distribution import Distribution  # avoid circular import
-        from relife2.regression import Regression
-        from relife2.nonparametric import ECDF, KaplanMeier, NelsonAalen
+        from relife.distribution import Distribution  # avoid circular import
+        from relife.regression import Regression
+        from relife.nonparametric import ECDF, KaplanMeier, NelsonAalen
 
         if isinstance(obj.model, Distribution):
             return BoundPlot(obj.model, param_probfunc_plot, self.name)

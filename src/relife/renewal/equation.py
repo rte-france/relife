@@ -3,9 +3,9 @@ from typing import Callable, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.fiability.model import LifetimeModel
-from relife2.renewal.discount import Discount
-from relife2.utils.types import DiscountArgs, Model1Args, ModelArgs
+from relife.fiability.model import LifetimeModel
+from relife.renewal.discount import Discount
+from relife.utils.types import DiscountArgs, Model1Args, ModelArgs
 
 
 # make evaluated func  Callable[[array], array] only and do partial elsewhere

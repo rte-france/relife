@@ -7,10 +7,10 @@
 import numpy as np
 import pytest
 
-from relife2 import Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
-from relife2.fiability import AgeReplacementModel, EquilibriumDistribution
-from relife2.renewal import run_to_failure_cost
-from relife2.renewalprocess import RenewalProcess, RenewalRewardProcess
+from relife import Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
+from relife.fiability import AgeReplacementModel, EquilibriumDistribution
+from relife.renewal import run_to_failure_cost
+from relife.renewalprocess import RenewalProcess, RenewalRewardProcess
 
 
 # fixtures

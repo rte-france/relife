@@ -13,8 +13,7 @@ from typing import Iterator, Optional, Protocol, Self, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
-
-from relife2.utils.types import ModelArgs
+from relife.utils.types import ModelArgs
 
 
 @dataclass
@@ -98,7 +97,7 @@ class LifetimeData:
 
     def __post_init__(self):
         self.rc = self.right_censored.union(self.complete)
-        self.rlc = self.complete.union(self.left_censored, self.right_censored)
+        self.rc = self.complete.union(self.left_censored, self.right_censored)
 
         # sanity check that observed lifetimes are inside truncation bounds
         for field_name in [

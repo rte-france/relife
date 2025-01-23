@@ -4,8 +4,8 @@ from typing import Callable, Optional, ParamSpec, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.fiability import LifetimeModel
-from relife2.renewal import (
+from relife.fiability import LifetimeModel
+from relife.renewal import (
     Discount,
     Reward,
     delayed_renewal_equation_solver,
@@ -14,8 +14,8 @@ from relife2.renewal import (
     lifetimes_rewards_generator,
     renewal_equation_solver,
 )
-from relife2.utils.data import RenewalData, RenewalRewardData
-from relife2.utils.types import (
+from relife.utils.data import RenewalData, RenewalRewardData
+from relife.utils.types import (
     DiscountArgs,
     Model1Args,
     ModelArgs,

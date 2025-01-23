@@ -5,9 +5,9 @@ from typing import Optional, Protocol, Union, Self
 import numpy as np
 from numpy.typing import NDArray
 
-from relife2.nhpp import nhpp_data_factory
-from relife2.utils.data import LifetimeData, lifetime_data_factory
-from relife2.utils.plot import PlotSurvivalFunc
+from relife.nhpp import nhpp_data_factory
+from relife.utils.data import LifetimeData, lifetime_data_factory
+from relife.utils.plot import PlotSurvivalFunc
 
 
 @dataclass
@@ -136,11 +136,11 @@ class ECDF(NonParametricLifetimeEstimator):
             departure,
         )
 
-        timeline, counts = np.unique(lifetime_data.rlc.values, return_counts=True)
+        timeline, counts = np.unique(lifetime_data.rc.values, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         sf = 1 - cdf
-        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.rlc.values))
+        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.rc.values))
 
         if inplace:
             self.estimates["sf"] = Estimates(timeline, sf, se)
@@ -260,15 +260,15 @@ class KaplanMeier(NonParametricLifetimeEstimator):
 
         if len(lifetime_data.left_censored) > 0:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
-        timeline, timeline_indexes, counts = np.unique(
-            lifetime_data.rlc.values, return_inverse=True, return_counts=True
+        timeline, unique_indices, counts = np.unique(
+            lifetime_data.rc.values, return_inverse=True, return_counts=True
         )
         death_set = np.zeros_like(timeline, int)  # death at each timeline step
         complete_observation_indic = np.zeros_like(
-            lifetime_data.rlc.values
+            lifetime_data.rc.values
         )  # just creating an array to fill it next line
         complete_observation_indic[lifetime_data.complete.index] = 1
-        np.add.at(death_set, timeline_indexes, complete_observation_indic.flatten())
+        np.add.at(death_set, unique_indices, complete_observation_indic)
         x_in = np.histogram(
             np.concatenate(
                 (
@@ -277,7 +277,7 @@ class KaplanMeier(NonParametricLifetimeEstimator):
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.rlc.values)
+                                len(lifetime_data.rc.values)
                                 - len(lifetime_data.left_truncated.values)
                             )
                         ]
@@ -418,7 +418,7 @@ class NelsonAalen(NonParametricLifetimeEstimator):
         )  # just creating an array to fill it next line
         complete_observation_indic[lifetime_data.complete.index] = 1
 
-        np.add.at(death_set, unique_indices, complete_observation_indic.flatten())
+        np.add.at(death_set, unique_indices, complete_observation_indic)
         x_in = np.histogram(
             np.concatenate(
                 (

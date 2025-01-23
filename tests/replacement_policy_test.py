@@ -7,13 +7,13 @@
 import numpy as np
 import pytest
 
-from relife2 import (
+from relife import (
     OneCycleRunToFailure,
     RunToFailure,
     OneCycleAgeReplacementPolicy,
     AgeReplacementPolicy,
 )
-from relife2 import Weibull, Gompertz, Gamma, LogLogistic
+from relife import Weibull, Gompertz, Gamma, LogLogistic
 
 
 # fixtures

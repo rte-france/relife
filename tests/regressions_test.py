@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 from scipy.stats import boxcox, zscore
 
-from relife2 import (
+from relife import (
     AFT,
     ProportionalHazard,
     LogLogistic,
@@ -19,7 +19,7 @@ from relife2 import (
     Gompertz,
     Gamma,
 )
-from relife2.utils.dataset import load_insulator_string
+from relife.datasets import load_insulator_string
 
 
 # fixtures
