@@ -1,17 +1,17 @@
-from relife2.distribution import Exponential, Gamma, Gompertz, LogLogistic, Weibull
-from relife2.fiability import (
+from relife.distribution import Exponential, Gamma, Gompertz, LogLogistic, Weibull
+from relife.fiability import (
     ParametricModel,
     ParametricLifetimeModel,
     LifetimeModel,
     LikelihoodFromLifetimes,
     Parameters,
 )
-from relife2.nonparametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
-from relife2.policy import (
+from relife.nonparametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
+from relife.policy import (
     OneCycleAgeReplacementPolicy,
     OneCycleRunToFailure,
     RunToFailure,
     AgeReplacementPolicy,
 )
-from relife2.regression import AFT, ProportionalHazard
-from relife2.renewalprocess import RenewalProcess, RenewalRewardProcess
+from relife.regression import AFT, ProportionalHazard
+from relife.renewalprocess import RenewalProcess, RenewalRewardProcess
