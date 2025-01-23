@@ -46,7 +46,7 @@ def test(session):
 @nox.parametrize("scipy", ["1.13.0", "1.13.1", "1.14.0", "1.14.1", "1.15.0"])
 @nox.parametrize("matplotlib", ["3.9", "3.10"])
 def parametrized_test(session, numpy, scipy, matplotlib):
-    session.run("pip install .")  # install relife2
+    session.install(".")  # install relife2
     session.install("pytest")
     # override installed versions by relife2 dependencies by this version
     session.install(f"numpy=={numpy}")
