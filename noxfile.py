@@ -5,13 +5,13 @@ import nox
 def black(session):
     session.install("black")
     session.run("black", "noxfile.py")
-    session.run("black", "relife2/.")
+    session.run("black", "src/relife/.")
 
 
 @nox.session(tags=["reformat"])
 def isort(session):
     session.install("isort")
-    session.run("isort", "relife2/.")
+    session.run("isort", "src/relife/.")
 
 
 @nox.session(tags=["lint"])
@@ -23,7 +23,7 @@ def lint(session):
         args = session.posargs
     else:
         args = ()
-    session.run("pylint", "--extension-pkg-whitelist=numpy", "relife2/.", *args)
+    session.run("pylint", "--extension-pkg-whitelist=numpy", "src/relife/.", *args)
 
 
 @nox.session(tags=["test"], python=["3.9", "3.10", "3.11", "3.12", "3.13"])
@@ -46,7 +46,7 @@ def test(session):
 @nox.parametrize("scipy", ["1.13.0", "1.13.1", "1.14.0", "1.14.1", "1.15.0"])
 @nox.parametrize("matplotlib", ["3.9", "3.10"])
 def parametrized_test(session, numpy, scipy, matplotlib):
-    session.install(".")  # install relife2
+    session.run("pip install .")  # install relife2
     session.install("pytest")
     # override installed versions by relife2 dependencies by this version
     session.install(f"numpy=={numpy}")
@@ -68,4 +68,4 @@ def mypy(session):
         args = session.posargs
     else:
         args = ()
-    session.run("mypy", *args, "relife2/.")
+    session.run("mypy", *args, "src/relife/.")
