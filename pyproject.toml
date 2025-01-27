@@ -1,38 +1,62 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
-dependencies = [
-	"numpy >=1.17.0",
-	"scipy >=1.3.1",
-	"matplotlib >=3.1.1",
-]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "relife"
-authors = [
-	{name = "Thomas Guillon"},
-	{name = "Michael Boulade"},
-	{name = "Laura Cohen"},
-	{name = "Lionel Figueroa"},
-	{name = "Jovana Krstevska "},
-	{name = "Sami Tazi"}
+version = "2.0.0"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy ==2.0.0", # 1.26.4
+    "scipy ==1.13.0",
+    "matplotlib ==3.9.0",
+    "typing-extensions == 4.12.2",
 ]
-readme = "README.rst"
-classifiers = ["License :: OSI Approved :: Apache Software License"]
-requires-python = ">=3.7"
-dynamic = ["version", "description"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["relife*"]  # ["*"] by default
 
 [project.optional-dependencies]
 test = [
-    "pytest >=2.7.3",
-    "pytest-cov",
+    "pytest == 8.0.0",
 ]
-doc = [
-	"sphinx >= 4.4.0",
-	"sphinx-book-theme >= 0.2.0",
+format = [
+    "nox == 2024.4.15",
+    "isort == 5.13.2",
+    "black == 24.4.2",
+    "pylint == 3.2.2",
+    "mypy == 1.10.0",
+    "no-implicit-optional == 1.4",
+]
+dev = [
+    "sphinx == 7.2.6",
+    "sphinx-book-theme == 1.1.2",
+    "sphinx-copybutton == 0.5.2",
+    "sphinx-design == 0.5.0",
+    "myst-parser == 2.0.0",
+    "setuptools[core]",
 ]
 
-[project.urls]
-Home = "https://github.com/rte-france/relife"
-Documentation = "https://rte-france.github.io/relife/"
+[tool.isort]
+profile = 'black'
 
+[tool.pylint.format]
+max-line-length = "88"
+max-args = 10
+disable = """
+    line-too-long,
+"""
+ignored-modules = "scipy.special"
+
+# mypy does not recognize Tuple[Any, ...] notation (bug)
+# see : https://github.com/python/mypy/issues/9459
+[[tool.mypy.overrides]]
+module = ["relife2.types"]
+disable_error_code = ["misc"]
+
+# current scipy is untyped and does not work with mypy
+# see : https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+[[tool.mypy.overrides]]
+module = ["scipy.*"]
+ignore_missing_imports = true
