@@ -7,9 +7,9 @@ from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.fiability import ParametricLifetimeModel
+from relife.model import ParametricLifetimeModel
 from relife.utils.data import LifetimeData
-from relife.utils.integration import shifted_laguerre
+from relife.utils.quadratures import shifted_laguerre
 
 
 # Ts type var is a zero long tuple (see https://github.com/python/mypy/issues/16199)

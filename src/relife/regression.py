@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife.fiability import ParametricLifetimeModel, ParametricModel
+from relife.model import ParametricLifetimeModel, ParametricModel
 from relife.utils.data import LifetimeData
 from relife.utils.types import ModelArgs
 

@@ -13,6 +13,7 @@ from typing import Iterator, Optional, Protocol, Self, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
+
 from relife.utils.types import ModelArgs
 
 
@@ -86,29 +87,29 @@ class LifetimeData:
 
     nb_samples: int
     complete: IndexedData = field(repr=False)  # values shape (m, 1)
-    left_censored: IndexedData = field(repr=False)  # values shape (m, 1)
-    right_censored: IndexedData = field(repr=False)  # values shape (m, 1)
-    interval_censored: IndexedData = field(repr=False)  # values shape (m, 2)
-    left_truncated: IndexedData = field(repr=False)  # values shape (m, 1)
-    right_truncated: IndexedData = field(repr=False)  # values shape (m, 1)
+    left_censoring: IndexedData = field(repr=False)  # values shape (m, 1)
+    right_censoring: IndexedData = field(repr=False)  # values shape (m, 1)
+    interval_censoring: IndexedData = field(repr=False)  # values shape (m, 2)
+    left_truncation: IndexedData = field(repr=False)  # values shape (m, 1)
+    right_truncation: IndexedData = field(repr=False)  # values shape (m, 1)
 
     def __len__(self):
         return self.nb_samples
 
     def __post_init__(self):
-        self.rc = self.right_censored.union(self.complete)
-        self.rc = self.complete.union(self.left_censored, self.right_censored)
+        self.rc = self.right_censoring.union(self.complete)
+        self.rc = self.complete.union(self.left_censoring, self.right_censoring)
 
         # sanity check that observed lifetimes are inside truncation bounds
         for field_name in [
             "complete",
-            "left_censored",
-            "right_censored",
-            "interval_censored",
+            "left_censoring",
+            "left_censoring",
+            "interval_censoring",
         ]:
             data = getattr(self, field_name)
-            if len(self.left_truncated) != 0 and len(data) != 0:
-                intersect_data = data.intersection(self.left_truncated)
+            if len(self.left_truncation) != 0 and len(data) != 0:
+                intersect_data = data.intersection(self.left_truncation)
                 if len(intersect_data) != 0:
                     if np.any(
                         # take right bound when left bound is 0, otherwise take the min value of the bounds
@@ -128,8 +129,8 @@ class LifetimeData:
                         raise ValueError(
                             "Some lifetimes are under left truncation bounds"
                         )
-            if len(self.right_truncated) != 0 and len(data) != 0:
-                intersect_data = data.intersection(self.right_truncated)
+            if len(self.right_truncation) != 0 and len(data) != 0:
+                intersect_data = data.intersection(self.right_truncation)
                 if len(intersect_data) != 0:
                     if np.any(
                         # take left bound when right bound is inf, otherwise take the max value of the bounds
@@ -166,7 +167,7 @@ class Deteriorations:
         self.event = self.increments == 0
 
 
-class LifetimeReader(Protocol):
+class LifetimeParser(Protocol):
     """
     Factory method of ObservedLifetimes and Truncations
     """
@@ -201,42 +202,42 @@ class LifetimeReader(Protocol):
         """
 
     @abstractmethod
-    def get_left_censorships(self) -> IndexedData:
+    def get_left_censoring(self) -> IndexedData:
         """
         Returns:
             IndexedData: object containing left censorhips values and index
         """
 
     @abstractmethod
-    def get_right_censorships(self) -> IndexedData:
+    def get_right_censoring(self) -> IndexedData:
         """
         Returns:
             IndexedData: object containing right censorhips values and index
         """
 
     @abstractmethod
-    def get_interval_censorships(self) -> IndexedData:
+    def get_interval_censoring(self) -> IndexedData:
         """
         Returns:
             IndexedData: object containing interval censorhips valuess and index
         """
 
     @abstractmethod
-    def get_left_truncations(self) -> IndexedData:
+    def get_left_truncation(self) -> IndexedData:
         """
         Returns:
             IndexedData: object containing left truncations values and index
         """
 
     @abstractmethod
-    def get_right_truncations(self) -> IndexedData:
+    def get_right_truncation(self) -> IndexedData:
         """
         Returns:
             IndexedData: object containing right truncations values and index
         """
 
 
-class Lifetime1DReader(LifetimeReader):
+class Lifetime1DParser(LifetimeParser):
     """
     Concrete implementation of LifetimeDataReader for 1D encoding
     """
@@ -246,36 +247,36 @@ class Lifetime1DReader(LifetimeReader):
         values = self.time[index]
         return IndexedData(values, index)
 
-    def get_left_censorships(self) -> IndexedData:
+    def get_left_censoring(self) -> IndexedData:
         return IndexedData(
             np.empty((0, 1), dtype=np.float64),
             np.empty((0,), dtype=np.int64),
         )
 
-    def get_right_censorships(self) -> IndexedData:
+    def get_right_censoring(self) -> IndexedData:
         index = np.where(~self.event)[0]
         values = self.time[index]
         return IndexedData(values, index)
 
-    def get_interval_censorships(self) -> IndexedData:
+    def get_interval_censoring(self) -> IndexedData:
         rc_index = np.where(~self.event)[0]
         rc_values = np.c_[
             self.time[rc_index], np.ones(len(rc_index)) * np.inf
         ]  # add a column of inf
         return IndexedData(rc_values, rc_index)
 
-    def get_left_truncations(self) -> IndexedData:
+    def get_left_truncation(self) -> IndexedData:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
         return IndexedData(values, index)
 
-    def get_right_truncations(self) -> IndexedData:
+    def get_right_truncation(self) -> IndexedData:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
         return IndexedData(values, index)
 
 
-class Lifetime2DReader(LifetimeReader):
+class Lifetime2DParser(LifetimeParser):
     """
     Concrete implementation of LifetimeDataReader for 2D encoding
     """
@@ -285,21 +286,21 @@ class Lifetime2DReader(LifetimeReader):
         values = self.time[index, 0]
         return IndexedData(values, index)
 
-    def get_left_censorships(
+    def get_left_censoring(
         self,
     ) -> IndexedData:
         index = np.where(self.time[:, 0] == 0)[0]
         values = self.time[index, 1]
         return IndexedData(values, index)
 
-    def get_right_censorships(
+    def get_right_censoring(
         self,
     ) -> IndexedData:
         index = np.where(self.time[:, 1] == np.inf)[0]
         values = self.time[index, 0]
         return IndexedData(values, index)
 
-    def get_interval_censorships(self) -> IndexedData:
+    def get_interval_censoring(self) -> IndexedData:
         index = np.where(
             np.not_equal(self.time[:, 0], self.time[:, 1]),
         )[0]
@@ -311,12 +312,12 @@ class Lifetime2DReader(LifetimeReader):
                 )
         return IndexedData(values, index)
 
-    def get_left_truncations(self) -> IndexedData:
+    def get_left_truncation(self) -> IndexedData:
         index = np.where(self.entry > 0)[0]
         values = self.entry[index]
         return IndexedData(values, index)
 
-    def get_right_truncations(self) -> IndexedData:
+    def get_right_truncation(self) -> IndexedData:
         index = np.where(self.departure < np.inf)[0]
         values = self.departure[index]
         return IndexedData(values, index)
@@ -338,24 +339,24 @@ def lifetime_data_factory(
     Returns:
 
     """
-    reader: LifetimeReader
+    reader: LifetimeParser
     if time.ndim == 1:
-        reader = Lifetime1DReader(time, event, entry, departure)
+        reader = Lifetime1DParser(time, event, entry, departure)
     elif time.ndim == 2:
         if time.shape[-1] != 2:
             raise ValueError("If time ndim is 2, time shape must be (n, 2)")
-        reader = Lifetime2DReader(time, event, entry, departure)
+        reader = Lifetime2DParser(time, event, entry, departure)
     else:
         raise ValueError("time ndim must be 1 or 2")
 
     return LifetimeData(
         len(time),
         reader.get_complete(),
-        reader.get_left_censorships(),
-        reader.get_right_censorships(),
-        reader.get_interval_censorships(),
-        reader.get_left_truncations(),
-        reader.get_right_truncations(),
+        reader.get_left_censoring(),
+        reader.get_right_censoring(),
+        reader.get_interval_censoring(),
+        reader.get_left_truncation(),
+        reader.get_right_truncation(),
     )
 
 

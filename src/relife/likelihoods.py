@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Protocol, Union
+from typing import Protocol, Union, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
-from relife.utils.data import LifetimeData
 from scipy.optimize import approx_fprime
 from typing_extensions import override
 
+from relife.utils.data import LifetimeData
+
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.fiability import ParametricLifetimeModel, ParametricModel
+    from relife.model import ParametricLifetimeModel, ParametricModel
 
 
 class Likelihood(Protocol):
@@ -116,9 +117,9 @@ class LikelihoodFromLifetimes(Likelihood):
             np.log(
                 -np.expm1(
                     -self.model.chf(
-                        lifetime_data.left_censored.values,
+                        lifetime_data.left_censoring.values,
                         *(
-                            args[lifetime_data.left_censored.index]
+                            args[lifetime_data.left_censoring.index]
                             for args in self.model_args
                         ),
                     )
@@ -129,8 +130,11 @@ class LikelihoodFromLifetimes(Likelihood):
     def _left_truncations_contribs(self, lifetime_data: LifetimeData) -> float:
         return -np.sum(
             self.model.chf(
-                lifetime_data.left_truncated.values,
-                *(args[lifetime_data.left_truncated.index] for args in self.model_args),
+                lifetime_data.left_truncation.values,
+                *(
+                    args[lifetime_data.left_truncation.index]
+                    for args in self.model_args
+                ),
             ),
             dtype=np.float64,
         )
@@ -166,14 +170,14 @@ class LikelihoodFromLifetimes(Likelihood):
     ) -> NDArray[np.float64]:
         return -np.sum(
             self.model.jac_chf(
-                lifetime_data.left_censored.values,
-                *(args[lifetime_data.left_censored.index] for args in self.model_args),
+                lifetime_data.left_censoring.values,
+                *(args[lifetime_data.left_censoring.index] for args in self.model_args),
             )
             / np.expm1(
                 self.model.chf(
-                    lifetime_data.left_censored.values,
+                    lifetime_data.left_censoring.values,
                     *(
-                        args[lifetime_data.left_censored.index]
+                        args[lifetime_data.left_censoring.index]
                         for args in self.model_args
                     ),
                 )
@@ -186,8 +190,11 @@ class LikelihoodFromLifetimes(Likelihood):
     ) -> NDArray[np.float64]:
         return -np.sum(
             self.model.jac_chf(
-                lifetime_data.left_truncated.values,
-                *(args[lifetime_data.left_truncated.index] for args in self.model_args),
+                lifetime_data.left_truncation.values,
+                *(
+                    args[lifetime_data.left_truncation.index]
+                    for args in self.model_args
+                ),
             ),
             axis=0,
         )

@@ -6,20 +6,27 @@ from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 from relife import Exponential
-from relife.fiability import (
+from relife.likelihoods import LikelihoodFromLifetimes
+from relife.model import (
     LifetimeModel,
-    LikelihoodFromLifetimes,
     ParametricLifetimeModel,
 )
-from relife.renewal import Reward
+from relife.sampling import model_rvs, rvs_size
 from relife.utils.data import CountData, LifetimeData, lifetime_data_factory
-from relife.utils.types import ModelArgs, RewardArgs, VariadicArgs
+from relife.utils.types import ModelArgs, VariadicArgs
 
 
 class StochasticProcess(Protocol):
     model: LifetimeModel[*ModelArgs]
 
     def sample(self, nb_sample: int) -> CountData: ...
+
+
+# DATA FORMAT
+# t0 : ages at the beginning of the observation window
+# tf : ages at the end of the observation window
+# ages : ages at each failure
+# assets : corresponding asset indices
 
 
 def nhpp_data_factory(
@@ -34,6 +41,14 @@ def nhpp_data_factory(
     >>> ages = ages[permutation_ind]
     >>> assets = assets[permutation_ind]
     """
+
+    # insert t0 and tf at the beginning and end
+    #
+    # sort_ind = np.lexsort((ages, assets))
+    # ages = ages[sort_ind]
+    # assets = assets[sort_ind]
+    # ages = np.insert(ages, np.cumsum(np.unique(assets), tf)
+    # ages = np.insert(ages, np.insert(np.cumsum(np.unique(assets)[:-1]), 0, 0), t0)
 
     sort_ind = np.lexsort((ages, assets))
     changing_asset_ind = np.where(assets[sort_ind][:-1] != assets[sort_ind][1:])[0]
@@ -126,37 +141,6 @@ class NHPP:
             self.model.params = likelihood.params
 
         return optimizer.x
-
-    def sample(self, nb_sample: int) -> CountData:
-        pass
-
-
-def model_rvs(
-    model: LifetimeModel[*ModelArgs],
-    size: int,
-    args: ModelArgs = (),
-):
-    return model.rvs(*args, size=size)
-
-
-def rvs_size(
-    nb_samples: int,
-    nb_assets: int,
-    model_args: ModelArgs = (),
-):
-    if bool(model_args) and model_args[0].ndim == 2:
-        size = nb_samples  # rvs size
-    else:
-        size = nb_samples * nb_assets
-    return size
-
-
-def compute_rewards(
-    reward: Reward[*RewardArgs],
-    lifetimes: NDArray[np.float64],
-    args: RewardArgs = (),
-):
-    return reward(lifetimes, *args)
 
 
 def nhpp_generator(

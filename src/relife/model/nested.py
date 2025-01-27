@@ -5,8 +5,8 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.fiability.model import LifetimeModel
-from relife.utils.integration import gauss_legendre
+from relife.model.base import LifetimeModel
+from relife.utils.quadratures import gauss_legendre
 from relife.utils.types import ModelArgs
 
 

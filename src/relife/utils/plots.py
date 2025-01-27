@@ -7,11 +7,12 @@ import scipy.stats as stats
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
+
 from relife.utils.types import ModelArgs
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.fiability import LifetimeModel
-    from relife.nonparametric import NonParametricLifetimeEstimator
+    from relife.model import LifetimeModel
+    from relife.nonparametric import NonParametricEstimator
 
 
 def plot(
@@ -140,7 +141,7 @@ def param_probfunc_plot(
 
 def nonparam_probfunc_plot(
     fname: str,
-    model: NonParametricLifetimeEstimator,
+    model: NonParametricEstimator,
     timeline: NDArray[np.float64] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -169,7 +170,7 @@ def nonparam_probfunc_plot(
 
 def nelsonaalen_plot(
     fname: str,
-    model: NonParametricLifetimeEstimator,
+    model: NonParametricEstimator,
     timeline: NDArray[np.float64] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -211,7 +212,7 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
-        from relife.distribution import Distribution  # avoid circular import
+        from relife.distributions import Distribution  # avoid circular import
         from relife.regression import Regression
         from relife.nonparametric import ECDF, KaplanMeier, NelsonAalen
 
@@ -233,7 +234,5 @@ class PlotSurvivalFunc:
     hf = PlotDescriptor()
     pdf = PlotDescriptor()
 
-    def __init__(
-        self, model: LifetimeModel[*ModelArgs] | NonParametricLifetimeEstimator
-    ):
+    def __init__(self, model: LifetimeModel[*ModelArgs] | NonParametricEstimator):
         self.model = model

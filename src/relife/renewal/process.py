@@ -4,19 +4,17 @@ from typing import Callable, Optional, ParamSpec, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.fiability import LifetimeModel
+from relife.model import LifetimeModel
 from relife.renewal import (
-    Discount,
-    Reward,
     delayed_renewal_equation_solver,
-    exponential_discount,
-    lifetimes_generator,
-    lifetimes_rewards_generator,
     renewal_equation_solver,
 )
+from relife.sampling import lifetimes_generator, lifetimes_rewards_generator
 from relife.utils.data import RenewalData, RenewalRewardData
+from relife.utils.discountings import exponential_discounting, Discounting
+from relife.utils.rewards import Reward
 from relife.utils.types import (
-    DiscountArgs,
+    DiscountingArgs,
     Model1Args,
     ModelArgs,
     RenewalProcessArgs,
@@ -167,14 +165,14 @@ def reward_partial_expectation(
     timeline: NDArray[np.float64],
     model: LifetimeModel[*ModelArgs],
     reward: Reward[*RewardArgs],
-    discount: Discount[*DiscountArgs],
+    discounting: Discounting[*DiscountingArgs],
     *,
     model_args: ModelArgs = (),
     reward_args: RewardArgs = (),
-    discount_args: DiscountArgs = (),
+    discounting_args: DiscountingArgs = (),
 ) -> np.ndarray:
     def func(x):
-        return reward(x, *reward_args) * discount.factor(x, *discount_args)
+        return reward(x, *reward_args) * discounting.factor(x, *discounting_args)
 
     ls = model.ls_integrate(func, np.zeros_like(timeline), timeline, *model_args)
     # reshape 2d -> final_dim
@@ -186,7 +184,7 @@ def reward_partial_expectation(
 
 class RenewalRewardProcess(RenewalProcess):
     args: RenewalRewardProcessArgs
-    discount: Discount[float] = exponential_discount
+    discounting: Discounting[float] = exponential_discounting
 
     def __init__(
         self,
@@ -196,7 +194,7 @@ class RenewalRewardProcess(RenewalProcess):
         nb_assets: int = 1,
         model_args: ModelArgs = (),
         reward_args: RewardArgs = (),
-        discount_rate: float = 0.0,
+        discounting_rate: float = 0.0,
         model1: Optional[LifetimeModel[*Model1Args]] = None,
         model1_args: Model1Args = (),
         reward1: Optional[Reward[*Reward1Args]] = None,
@@ -209,7 +207,7 @@ class RenewalRewardProcess(RenewalProcess):
             "model": model_args,
             "model1": model1_args,
             "reward": reward_args,
-            "discount": (discount_rate,),
+            "discounting": (discounting_rate,),
             "reward1": reward1_args,
         }
 
@@ -223,14 +221,14 @@ class RenewalRewardProcess(RenewalProcess):
                 reward_partial_expectation,
                 model=self.model,
                 reward=self.reward,
-                discount=self.discount,
+                discounting=self.discounting,
                 model_args=self.args["model"],
                 reward_args=self.args["reward"],
-                discount_args=self.args["discount"],
+                discounting_args=self.args["discounting"],
             ),
             model_args=self.args["model"],
-            discount=self.discount,
-            discount_args=self.args["discount"],
+            discounting=self.discounting,
+            discounting_args=self.args["discounting"],
         )
 
         if self.model1 is None:
@@ -244,27 +242,29 @@ class RenewalRewardProcess(RenewalProcess):
                     reward_partial_expectation,
                     model=self.model1,
                     reward=self.reward1,
-                    discount=self.discount,
+                    discounting=self.discounting,
                     model_args=self.args["model1"],
                     reward_args=self.args["reward1"],
-                    discount_args=self.args["discount"],
+                    discounting_args=self.args["discounting"],
                 ),
                 model1_args=self.args["model1"],
-                discount=self.discount,
-                discount_args=self.args["discount"],
+                discounting=self.discounting,
+                discounting_args=self.args["discounting"],
             )
 
     def asymptotic_expected_total_reward(
         self,
     ) -> NDArray[np.float64]:
-        mask = self.args["discount"][0] <= 0
-        rate = np.ma.MaskedArray(self.args["discount"][0], mask)
+        mask = self.args["discounting"][0] <= 0
+        rate = np.ma.MaskedArray(self.args["discounting"][0], mask)
 
         def f(x):
-            return self.discount.factor(x, rate)
+            return self.discounting.factor(x, rate)
 
         def y(x):
-            return self.discount.factor(x, rate) * self.reward(x, *self.args["reward"])
+            return self.discounting.factor(x, rate) * self.reward(
+                x, *self.args["reward"]
+            )
 
         lf = self.model.ls_integrate(
             f, np.array(0.0), np.array(np.inf), *self.args["model"]
@@ -277,7 +277,7 @@ class RenewalRewardProcess(RenewalProcess):
         if self.model1 is not None:
 
             def y1(x):
-                return self.discount.factor(x, rate) * self.reward1(
+                return self.discounting.factor(x, rate) * self.reward1(
                     x, *self.args["reward1"]
                 )
 
@@ -295,7 +295,7 @@ class RenewalRewardProcess(RenewalProcess):
     ) -> NDArray[np.float64]:
 
         z = self.expected_total_reward(timeline)
-        af = self.discount.annuity_factor(timeline, *self.args["discount"])
+        af = self.discounting.annuity_factor(timeline, *self.args["discounting"])
         mask = af == 0.0
         af = np.ma.masked_where(mask, af)
         q = z / af
@@ -310,10 +310,10 @@ class RenewalRewardProcess(RenewalProcess):
         return np.where(mask, q0, q)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        mask = self.args["discount"][0] <= 0
-        discount_rate = np.ma.MaskedArray(self.args["discount"][0], mask)
+        mask = self.args["discounting"][0] <= 0
+        discounting_rate = np.ma.MaskedArray(self.args["discounting"][0], mask)
 
-        q = discount_rate * self.asymptotic_expected_total_reward()
+        q = discounting_rate * self.asymptotic_expected_total_reward()
 
         q0 = self.model.ls_integrate(
             lambda x: self.reward(x, *self.args["reward"]),
@@ -347,13 +347,13 @@ class RenewalRewardProcess(RenewalProcess):
             lifetimes_rewards_generator(
                 self.model,
                 self.reward,
-                self.discount,
+                self.discounting,
                 nb_samples,
                 self.nb_assets,
                 end_time=end_time,
                 model_args=self.args["model"],
                 reward_args=self.args["reward"],
-                discount_args=self.args["discount"],
+                discounting_args=self.args["discounting"],
                 model1=self.model1,
                 model1_args=self.args["model1"],
                 reward1=self.reward1,

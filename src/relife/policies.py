@@ -5,18 +5,15 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.fiability import AgeReplacementModel, LeftTruncatedModel, LifetimeModel
-from relife.renewal import (
-    age_replacement_cost,
-    exponential_discount,
-    lifetimes_rewards_generator,
-    run_to_failure_cost,
-)
+from relife.model import AgeReplacementModel, LeftTruncatedModel, LifetimeModel
 from relife.utils.data import RenewalRewardData
 from relife.utils.types import Model1Args, ModelArgs
 from .nhpp import NHPP
-from .renewalprocess import RenewalRewardProcess, reward_partial_expectation
-from .utils.integration import gauss_legendre
+from .renewal.process import reward_partial_expectation, RenewalRewardProcess
+from .sampling import lifetimes_rewards_generator
+from .utils.discountings import exponential_discounting
+from .utils.quadratures import gauss_legendre
+from .utils.rewards import run_to_failure_cost, age_replacement_cost
 
 
 class Policy(Protocol):
@@ -92,8 +89,8 @@ class OneCycleRunToFailure(Policy):
         The lifetime model of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
-    discount_rate : float, default is 0.
-        The discount rate.
+    discounting_rate : float, default is 0.
+        The discounting rate.
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
         lifetime model of the process.
@@ -106,7 +103,7 @@ class OneCycleRunToFailure(Policy):
     """
 
     reward = run_to_failure_cost
-    discount = exponential_discount
+    discounting = exponential_discounting
     model1 = None
 
     def __init__(
@@ -114,7 +111,7 @@ class OneCycleRunToFailure(Policy):
         model: LifetimeModel[*ModelArgs],
         cf: float | NDArray[np.float64],
         *,
-        discount_rate: float = 0.0,
+        discounting_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
@@ -125,7 +122,7 @@ class OneCycleRunToFailure(Policy):
         self.model = model
         self.nb_assets = nb_assets
         self.cf = cf
-        self.discount_rate = discount_rate
+        self.discounting_rate = discounting_rate
         self.model_args = model_args
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -145,10 +142,10 @@ class OneCycleRunToFailure(Policy):
             timeline,
             self.model,
             run_to_failure_cost,
-            exponential_discount,
+            exponential_discounting,
             model_args=self.model_args,
             reward_args=(self.cf,),
-            discount_args=(self.discount_rate,),
+            discounting_args=(self.discounting_rate,),
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
@@ -182,8 +179,8 @@ class OneCycleRunToFailure(Policy):
 
         f = (
             lambda x: run_to_failure_cost(x, self.cf)
-            * exponential_discount.factor(x, self.discount_rate)
-            / exponential_discount.annuity_factor(x, self.discount_rate)
+            * exponential_discounting.factor(x, self.discounting_rate)
+            / exponential_discounting.annuity_factor(x, self.discounting_rate)
         )
         mask = timeline < dt
         q0 = self.model.cdf(dt, *self.model_args) * f(dt)
@@ -226,13 +223,13 @@ class OneCycleRunToFailure(Policy):
         generator = lifetimes_rewards_generator(
             self.model,
             self.reward,
-            self.discount,
+            self.discounting,
             nb_samples,
             self.nb_assets,
             np.inf,
             model_args=self.model_args,
             reward_args=(self.cf,),
-            discount_args=(self.discount_rate,),
+            discounting_args=(self.discounting_rate,),
             seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
@@ -272,8 +269,8 @@ class OneCycleAgeReplacementPolicy(Policy):
         The cost of failure for each asset.
     cp : np.ndarray
         The cost of preventive replacements for each asset.
-    discount_rate : float, default is 0.
-        The discount rate.
+    discounting_rate : float, default is 0.
+        The discounting rate.
     ar : np.ndarray, optional
         Times until preventive replacements. This parameter can be optimized
         with ``fit``
@@ -296,7 +293,7 @@ class OneCycleAgeReplacementPolicy(Policy):
     """
 
     reward = age_replacement_cost
-    discount = exponential_discount
+    discounting = exponential_discounting
     model1 = None
 
     def __init__(
@@ -305,7 +302,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
-        discount_rate: float = 0.0,
+        discounting_rate: float = 0.0,
         ar: Optional[float | NDArray[np.float64]] = None,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
@@ -320,7 +317,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         self.ar = ar
         self.cf = cf
         self.cp = cp
-        self.discount_rate = discount_rate
+        self.discounting_rate = discounting_rate
         self.model_args = (ar,) + model_args
 
     @ifset("ar")
@@ -341,10 +338,10 @@ class OneCycleAgeReplacementPolicy(Policy):
             timeline,
             self.model,
             self.reward,
-            self.discount,
+            self.discounting,
             model_args=self.model_args,
             reward_args=(self.ar, self.cf, self.cp),
-            discount_args=(self.discount_rate,),
+            discounting_args=(self.discounting_rate,),
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
@@ -379,8 +376,8 @@ class OneCycleAgeReplacementPolicy(Policy):
 
         f = (
             lambda x: age_replacement_cost(x, self.ar, self.cf, self.cp)
-            * exponential_discount.factor(x, self.discount_rate)
-            / exponential_discount.annuity_factor(x, self.discount_rate)
+            * exponential_discounting.factor(x, self.discounting_rate)
+            / exponential_discounting.annuity_factor(x, self.discounting_rate)
         )
         mask = timeline < dt
         q0 = self.model.cdf(dt, *self.model_args) * f(dt)
@@ -432,13 +429,13 @@ class OneCycleAgeReplacementPolicy(Policy):
         generator = lifetimes_rewards_generator(
             self.model,
             self.reward,
-            self.discount,
+            self.discounting,
             nb_samples,
             self.nb_assets,
             np.inf,
             model_args=self.model_args,
             reward_args=(self.ar, self.cf, self.cp),
-            discount_args=(self.discount_rate,),
+            discounting_args=(self.discounting_rate,),
             seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
@@ -487,11 +484,11 @@ class OneCycleAgeReplacementPolicy(Policy):
 
         def eq(a):
             return np.sum(
-                self.discount.factor(a, self.discount_rate)
-                / self.discount.annuity_factor(a, self.discount_rate)
+                self.discounting.factor(a, self.discounting_rate)
+                / self.discounting.annuity_factor(a, self.discounting_rate)
                 * (
                     (cf_3d - cp_3d) * self.model.baseline.hf(a, *self.model_args[1:])
-                    - cp_3d / self.discount.annuity_factor(a, self.discount_rate)
+                    - cp_3d / self.discounting.annuity_factor(a, self.discounting_rate)
                 ),
                 axis=0,
             )
@@ -506,7 +503,7 @@ class OneCycleAgeReplacementPolicy(Policy):
                 self.model.baseline,
                 self.cf,
                 self.cp,
-                discount_rate=self.discount_rate,
+                discounting_rate=self.discounting_rate,
                 ar=ar,
                 model_args=self.model_args[1:],
                 nb_assets=self.nb_assets,
@@ -525,8 +522,8 @@ class RunToFailure(Policy):
         The lifetime model of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
-    discount_rate : float, default is 0.
-        The discount rate.
+    discounting_rate : float, default is 0.
+        The discounting rate.
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
         lifetime model of the process.
@@ -552,14 +549,14 @@ class RunToFailure(Policy):
     """
 
     reward = run_to_failure_cost
-    discount = exponential_discount
+    discounting = exponential_discounting
 
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
         cf: float | NDArray[np.float64],
         *,
-        discount_rate: float = 0.0,
+        discounting_rate: float = 0.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
@@ -578,7 +575,7 @@ class RunToFailure(Policy):
 
         self.model_args = model_args
         self.cf = cf
-        self.discount_rate = discount_rate
+        self.discounting_rate = discounting_rate
 
         self.model_args = model_args
         self.model1_args = model1_args
@@ -593,7 +590,7 @@ class RunToFailure(Policy):
             nb_assets=self.nb_assets,
             model_args=self.model_args,
             reward_args=(self.cf,),
-            discount_rate=self.discount_rate,
+            discounting_rate=self.discounting_rate,
             model1=self.model1,
             model1_args=self.model1_args,
             reward1=self.reward,
@@ -710,8 +707,8 @@ class AgeReplacementPolicy(Policy):
     ar1 : np.ndarray, optional
         Times until preventive replacements for the first cycle. This parameter can be optimized
         with ``fit``
-    discount_rate : float, default is 0.
-        The discount rate.
+    discounting_rate : float, default is 0.
+        The discounting rate.
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
         lifetime model of the process.
@@ -738,7 +735,7 @@ class AgeReplacementPolicy(Policy):
     """
 
     reward = age_replacement_cost
-    discount = exponential_discount
+    discounting = exponential_discounting
 
     def __init__(
         self,
@@ -746,7 +743,7 @@ class AgeReplacementPolicy(Policy):
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
-        discount_rate: float = 0.0,
+        discounting_rate: float = 0.0,
         ar: float | NDArray[np.float64] = None,
         ar1: float | NDArray[np.float64] = None,
         model_args: ModelArgs = (),
@@ -773,7 +770,7 @@ class AgeReplacementPolicy(Policy):
         self.cp = cp
         self.ar = ar
         self.ar1 = ar1
-        self.discount_rate = discount_rate
+        self.discounting_rate = discounting_rate
 
         self.model_args = (ar,) + model_args
 
@@ -799,7 +796,7 @@ class AgeReplacementPolicy(Policy):
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
-                discount_rate=self.discount_rate,
+                discounting_rate=self.discounting_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
                 reward1=self.reward,
@@ -903,27 +900,27 @@ class AgeReplacementPolicy(Policy):
             x0 = np.tile(x0, (self.nb_assets, 1))
 
         ndim = max(
-            map(np.ndim, (cf_3d, cp_3d, self.discount_rate, *self.model_args[1:])),
+            map(np.ndim, (cf_3d, cp_3d, self.discounting_rate, *self.model_args[1:])),
             default=0,
         )
 
         def eq(a):
             f = gauss_legendre(
-                lambda x: self.discount.factor(x, self.discount_rate)
+                lambda x: self.discounting.factor(x, self.discounting_rate)
                 * self.model.baseline.sf(x, *self.model_args[1:]),
                 0,
                 a,
                 ndim=ndim,
             )
             g = gauss_legendre(
-                lambda x: self.discount.factor(x, self.discount_rate)
+                lambda x: self.discounting.factor(x, self.discounting_rate)
                 * self.model.baseline.pdf(x, *self.model_args[1:]),
                 0,
                 a,
                 ndim=ndim,
             )
             return np.sum(
-                self.discount.factor(a, self.discount_rate)
+                self.discounting.factor(a, self.discounting_rate)
                 * (
                     (cf_3d - cp_3d)
                     * (self.model.baseline.hf(a, *self.model_args[1:]) * f - g)
@@ -943,7 +940,7 @@ class AgeReplacementPolicy(Policy):
                 self.model1.baseline,
                 self.cf,
                 self.cp,
-                discount_rate=self.discount_rate,
+                discounting_rate=self.discounting_rate,
                 model_args=self.model1_args[1:],
             ).fit()
             ar1 = onecycle.ar
@@ -959,7 +956,7 @@ class AgeReplacementPolicy(Policy):
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
-                discount_rate=self.discount_rate,
+                discounting_rate=self.discounting_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
                 reward1=self.reward,
@@ -970,7 +967,7 @@ class AgeReplacementPolicy(Policy):
                 self.model.baseline,
                 self.cf,
                 self.cp,
-                discount_rate=self.discount_rate,
+                discounting_rate=self.discounting_rate,
                 ar=ar,
                 ar1=ar1,
                 model_args=self.model_args[1:],
@@ -1005,7 +1002,7 @@ class AgeReplacementPolicy(Policy):
 
 
 class TPolicy(Policy):
-    discount = exponential_discount
+    discounting = exponential_discounting
     nb_assets: int = 1
 
     def __init__(

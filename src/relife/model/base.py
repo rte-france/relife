@@ -8,13 +8,13 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
-from relife.fiability.likelihood import (
+from relife.likelihoods import (
     LikelihoodFromLifetimes,
     hessian_from_likelihood,
 )
 from relife.utils.data import LifetimeData, lifetime_data_factory
-from relife.utils.integration import gauss_legendre, quad_laguerre
-from relife.utils.plot import PlotSurvivalFunc
+from relife.utils.plots import PlotSurvivalFunc
+from relife.utils.quadratures import gauss_legendre, quad_laguerre
 from relife.utils.types import VariadicArgs
 
 
@@ -701,11 +701,27 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         *args: *VariadicArgs,
         deg: int = 100,
     ) -> NDArray[np.float64]:
-        """
+        r"""
         Lebesgue-Stieltjes integration.
 
         The Lebesgue-Stieljes intregration of a function with respect to the lifetime model
         taking into account the probability density function and jumps
+
+        The Lebesgue-Stieltjes integral is:
+
+        .. math::
+
+            \int_a^b g(x) \mathrm{d}F(x) = \int_a^b g(x) f(x)\mathrm{d}x +
+            \sum_i g(a_i) w_i
+
+        where:
+
+        - :math:`F` is the cumulative distribution function,
+        - :math:`f` the probability density function of the lifetime model,
+        - :math:`a_i` and :math:`w_i` are the points and weights of the jumps.
+
+        .. [1] Resnick, S. I. (1992). Adventures in stochastic processes.
+            Springer Science & Business Media. p176.
 
         Parameters
         ----------
@@ -723,8 +739,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         Returns
         -------
         2d ndarray
-             The numerical integration of `func` from `a` to `b`
-
+            Lebesgue-Stieltjes integral of func with respect to `cdf` from `a`
+            to `b`.
 
         Notes
         -----
@@ -732,6 +748,8 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         any other variable referenced in `func`. Because `func` callable is not easy to inspect, either one must specify
         the maximum number of dimensions used (0, 1 or 2), or `ls_integrate` converts all these objects to 2d-array.
         Currently, the second option is prefered. That's why, returns are always 2d-array.
+
+
         """
 
         b = np.minimum(np.inf, b)

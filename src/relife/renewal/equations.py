@@ -3,9 +3,9 @@ from typing import Callable, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.fiability.model import LifetimeModel
-from relife.renewal.discount import Discount
-from relife.utils.types import DiscountArgs, Model1Args, ModelArgs
+from relife.model.base import LifetimeModel
+from relife.utils.discountings import Discounting
+from relife.utils.types import DiscountingArgs, Model1Args, ModelArgs
 
 
 # make evaluated func  Callable[[array], array] only and do partial elsewhere
@@ -15,16 +15,16 @@ def renewal_equation_solver(
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     model_args: ModelArgs = (),
-    discount: Optional[Discount[*DiscountArgs]] = None,
-    discount_args: DiscountArgs = (),
+    discounting: Optional[Discounting[*DiscountingArgs]] = None,
+    discounting_args: DiscountingArgs = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
     f = model.cdf(timeline, *model_args)
     fm = model.cdf(tm, *model_args)
     y = evaluated_func(timeline)
-    if discount is not None:
-        d = discount.factor(timeline, *discount_args)
+    if discounting is not None:
+        d = discounting.factor(timeline, *discounting_args)
     else:
         d = np.ones_like(f)
     z = np.empty(y.shape)
@@ -48,8 +48,8 @@ def delayed_renewal_equation_solver(
     model1: LifetimeModel[*Model1Args],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     model1_args: Model1Args = (),
-    discount: Optional[Discount[*DiscountArgs]] = None,
-    discount_args: DiscountArgs = (),
+    discounting: Optional[Discounting[*DiscountingArgs]] = None,
+    discounting_args: DiscountingArgs = (),
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
@@ -57,8 +57,8 @@ def delayed_renewal_equation_solver(
     f1m = model1.cdf(tm, *model1_args)
     y1 = evaluated_func(timeline)
 
-    if discount is not None:
-        d = discount.factor(timeline, *discount_args)
+    if discounting is not None:
+        d = discounting.factor(timeline, *discounting_args)
     else:
         d = np.ones_like(f1)
     z1 = np.empty(y1.shape)

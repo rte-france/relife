@@ -10,7 +10,7 @@ ModelArgs = tuple[Optional[NDArray[np.float64]], ...]
 Model1Args = tuple[Optional[NDArray[np.float64]], ...]
 RewardArgs = tuple[Optional[NDArray[np.float64]], ...]
 Reward1Args = tuple[Optional[NDArray[np.float64]], ...]
-DiscountArgs = tuple[Optional[float], ...]
+DiscountingArgs = tuple[Optional[float], ...]
 
 
 class RenewalProcessArgs(TypedDict):
@@ -23,4 +23,4 @@ class RenewalRewardProcessArgs(TypedDict):
     model1: Model1Args
     reward: RewardArgs
     reward1: Reward1Args
-    discount: DiscountArgs
+    discounting: DiscountingArgs

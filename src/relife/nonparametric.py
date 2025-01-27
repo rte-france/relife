@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 from relife.nhpp import nhpp_data_factory
 from relife.utils.data import LifetimeData, lifetime_data_factory
-from relife.utils.plot import PlotSurvivalFunc
+from relife.utils.plots import PlotSurvivalFunc
 
 
 @dataclass
@@ -77,7 +77,7 @@ def estimated(method):
     return wrapper
 
 
-class NonParametricLifetimeEstimator(Protocol):
+class NonParametricEstimator(Protocol):
     """
     Non-parametric lifetime estimator.
 
@@ -95,7 +95,7 @@ class NonParametricLifetimeEstimator(Protocol):
         return PlotSurvivalFunc(self)
 
 
-class ECDF(NonParametricLifetimeEstimator):
+class ECDF(NonParametricEstimator):
     """
     Empirical Cumulative Distribution Function.
     """
@@ -184,7 +184,7 @@ class ECDF(NonParametricLifetimeEstimator):
         return self.estimates["cdf"].nearest_1dinterp(time)[0]
 
 
-class KaplanMeier(NonParametricLifetimeEstimator):
+class KaplanMeier(NonParametricEstimator):
     r"""Kaplan-Meier estimator.
 
     Compute the non-parametric Kaplan-Meier estimator (also known as the product
@@ -258,7 +258,7 @@ class KaplanMeier(NonParametricLifetimeEstimator):
             departure,
         )
 
-        if len(lifetime_data.left_censored) > 0:
+        if len(lifetime_data.left_censoring) > 0:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
         timeline, unique_indices, counts = np.unique(
             lifetime_data.rc.values, return_inverse=True, return_counts=True
@@ -272,13 +272,13 @@ class KaplanMeier(NonParametricLifetimeEstimator):
         x_in = np.histogram(
             np.concatenate(
                 (
-                    lifetime_data.left_truncated.values.flatten(),
+                    lifetime_data.left_truncation.values.flatten(),
                     np.array(
                         [
                             0
                             for _ in range(
                                 len(lifetime_data.rc.values)
-                                - len(lifetime_data.left_truncated.values)
+                                - len(lifetime_data.left_truncation.values)
                             )
                         ]
                     ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
@@ -327,7 +327,7 @@ class KaplanMeier(NonParametricLifetimeEstimator):
         return self.estimates["sf"].nearest_1dinterp(time)[0]
 
 
-class NelsonAalen(NonParametricLifetimeEstimator):
+class NelsonAalen(NonParametricEstimator):
     r"""Nelson-Aalen estimator.
 
     Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
@@ -401,7 +401,7 @@ class NelsonAalen(NonParametricLifetimeEstimator):
             departure,
         )
 
-        if len(lifetime_data.left_censored) > 0:
+        if len(lifetime_data.left_censoring) > 0:
             raise ValueError(
                 "NelsonAalen does not accept left censored or interval censored lifetimes"
             )
@@ -422,13 +422,13 @@ class NelsonAalen(NonParametricLifetimeEstimator):
         x_in = np.histogram(
             np.concatenate(
                 (
-                    lifetime_data.left_truncated.values.flatten(),
+                    lifetime_data.left_truncation.values.flatten(),
                     np.array(
                         [
                             0
                             for _ in range(
                                 len(lifetime_data.rc.values)
-                                - len(lifetime_data.left_truncated.values)
+                                - len(lifetime_data.left_truncation.values)
                             )
                         ]
                     ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
@@ -468,7 +468,7 @@ class NelsonAalen(NonParametricLifetimeEstimator):
         return self.estimates["chf"].nearest_1dinterp(time)[0]
 
 
-class Turnbull(NonParametricLifetimeEstimator):
+class Turnbull(NonParametricEstimator):
     """Turnbull estimator"""
 
     def __init__(
@@ -514,20 +514,20 @@ class Turnbull(NonParametricLifetimeEstimator):
         )
 
         timeline_temp = np.unique(
-            np.insert(lifetime_data.interval_censored.values.flatten(), 0, 0)
+            np.insert(lifetime_data.interval_censoring.values.flatten(), 0, 0)
         )
         timeline_len = len(timeline_temp)
         if not self.lowmem:
             event_occurence = (
                 np.greater_equal.outer(
                     timeline_temp[:-1],
-                    lifetime_data.interval_censored.values[
+                    lifetime_data.interval_censoring.values[
                         :, 0
                     ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
                 )
                 * np.less_equal.outer(
                     timeline_temp[1:],
-                    lifetime_data.interval_censored.values[:, 1],
+                    lifetime_data.interval_censoring.values[:, 1],
                 )
             ).T
 
@@ -539,18 +539,18 @@ class Turnbull(NonParametricLifetimeEstimator):
             )
 
         else:
-            len_censored_data = len(lifetime_data.interval_censored.values)
+            len_censored_data = len(lifetime_data.interval_censoring.values)
             event_occurence = []
             for i in range(len_censored_data):
                 event_occurence.append(
                     np.where(
                         (
-                            lifetime_data.interval_censored.values[:, 0][i]
+                            lifetime_data.interval_censoring.values[:, 0][i]
                             <= timeline_temp[:-1]
                         )
                         & (
                             timeline_temp[1:]
-                            <= lifetime_data.interval_censored.values[:, 1][i]
+                            <= lifetime_data.interval_censoring.values[:, 1][i]
                         )
                     )[0][[0, -1]]
                 )
@@ -618,7 +618,7 @@ class Turnbull(NonParametricLifetimeEstimator):
                 )
             d += d_tilde
             y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncated.values.flatten()
+            _unsorted_entry = lifetime_data.left_truncation.values.flatten()
 
             y -= len(_unsorted_entry) - np.searchsorted(
                 np.sort(_unsorted_entry), timeline_temp[1:]
@@ -666,7 +666,7 @@ class Turnbull(NonParametricLifetimeEstimator):
             else:
                 d = d_tilde
             y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncated.values.flatten()
+            _unsorted_entry = lifetime_data.left_truncation.values.flatten()
             y -= len(_unsorted_entry) - np.searchsorted(
                 np.sort(_unsorted_entry), timeline_temp[1:]
             )
