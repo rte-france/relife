@@ -1,6 +1,0 @@
-relife.renewal\_process.renewal\_equation\_solver
-=================================================
-
-.. currentmodule:: relife.renewal_process
-
-.. autofunction:: renewal_equation_solver

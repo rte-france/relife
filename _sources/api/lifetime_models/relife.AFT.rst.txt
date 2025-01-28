@@ -1,0 +1,221 @@
+﻿
+
+
+
+
+
+
+AFT
+===
+
+.. currentmodule:: relife
+
+.. autoclass:: AFT
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+
+    .. rubric:: Methods
+
+    **Survival functions**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+            ~AFT.chf
+        
+        
+        
+        
+            ~AFT.dhf
+        
+        
+        
+            ~AFT.hf
+        
+        
+            ~AFT.ichf
+        
+        
+        
+            ~AFT.isf
+        
+        
+        
+            ~AFT.jac_chf
+        
+        
+            ~AFT.jac_hf
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AFT.mrl
+        
+        
+        
+        
+        
+        
+            ~AFT.sf
+        
+        
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~AFT.cdf
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AFT.pdf
+        
+        
+            ~AFT.ppf
+        
+        
+        
+        
+
+    **Statistics**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AFT.mean
+        
+        
+            ~AFT.median
+        
+        
+            ~AFT.moment
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AFT.var
+        
+
+    **Other methods**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+        
+        
+            ~AFT.copy
+        
+        
+        
+            ~AFT.fit
+        
+        
+        
+        
+        
+        
+            ~AFT.jac_cdf
+        
+        
+        
+        
+            ~AFT.jac_pdf
+        
+        
+            ~AFT.jac_sf
+        
+        
+            ~AFT.ls_integrate
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AFT.rvs
+        
+        
+        
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+            ~AFT.nb_params
+        
+        
+            ~AFT.params
+        
+        
+        
+            ~AFT.params_names
+        
+        
+            ~AFT.plot
+        
+        
+            ~AFT.fitting_results
+        

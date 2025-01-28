@@ -1,6 +1,0 @@
-relife.renewal\_process.delayed\_renewal
-========================================
-
-.. currentmodule:: relife.renewal_process
-
-.. autofunction:: delayed_renewal

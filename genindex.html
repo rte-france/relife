@@ -1,592 +1,414 @@
 
 <!DOCTYPE html>
 
-<html>
+
+<html lang="en" data-content_root="./" >
+
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; ReLife 1.0.0 documentation</title>
-    
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+    <title>Index &#8212; ReLife</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
 
-    
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    
-      
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=733aff7d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
-    
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
-
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
-    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <script src="_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
-    
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
-    <div class="container-xl">
-      <div class="row">
-          
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
+  
+  <dialog id="pst-search-dialog">
     
-        <div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="index.html">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
       
-        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="get_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide/index.html">
+    User’s guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api/index.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="learn/index.html">
+    Learn
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contributor_guide/index.html">
+    Contributor’s guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="future/index.html">
+    Future improvements
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
         
       
-      
-      <img src="_static/logo.png" class="logo" alt="logo">
-      
-      
-      <h1 class="site-logo" id="site-title">ReLife 1.0.0 documentation</h1>
-      
-    </a>
-</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
-    <div class="bd-toc-item active">
-        <p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  API documentation
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="_autosummary/relife.html">
-   relife
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
-  <label for="toctree-checkbox-1">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.data.html">
-     relife.data
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
-    <label for="toctree-checkbox-2">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.data.CountData.html">
-       relife.data.CountData
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.data.LifetimeData.html">
-       relife.data.LifetimeData
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.data.RenewalData.html">
-       relife.data.RenewalData
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.data.RenewalRewardData.html">
-       relife.data.RenewalRewardData
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.data.ReplacementPolicyData.html">
-       relife.data.ReplacementPolicyData
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.datasets.html">
-     relife.datasets
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
-    <label for="toctree-checkbox-3">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.datasets.load_circuit_breaker.html">
-       relife.datasets.load_circuit_breaker
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.datasets.load_insulator_string.html">
-       relife.datasets.load_insulator_string
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.datasets.load_power_transformer.html">
-       relife.datasets.load_power_transformer
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.discounting.html">
-     relife.discounting
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
-    <label for="toctree-checkbox-4">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.discounting.Discount.html">
-       relife.discounting.Discount
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.discounting.ExponentialDiscounting.html">
-       relife.discounting.ExponentialDiscounting
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.discounting.GeneralizedHyperbolicDiscounting.html">
-       relife.discounting.GeneralizedHyperbolicDiscounting
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.discounting.HyperbolicDiscounting.html">
-       relife.discounting.HyperbolicDiscounting
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.distribution.html">
-     relife.distribution
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
-    <label for="toctree-checkbox-5">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.distribution.Exponential.html">
-       relife.distribution.Exponential
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.distribution.Gamma.html">
-       relife.distribution.Gamma
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.distribution.Gompertz.html">
-       relife.distribution.Gompertz
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.distribution.LogLogistic.html">
-       relife.distribution.LogLogistic
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.distribution.MinimumDistribution.html">
-       relife.distribution.MinimumDistribution
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html">
-       relife.distribution.ParametricLifetimeDistribution
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.distribution.Weibull.html">
-       relife.distribution.Weibull
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.model.html">
-     relife.model
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
-    <label for="toctree-checkbox-6">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html">
-       relife.model.AbsolutelyContinuousLifetimeModel
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.model.AgeReplacementModel.html">
-       relife.model.AgeReplacementModel
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.model.EquilibriumDistribution.html">
-       relife.model.EquilibriumDistribution
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.model.HazardFunctions.html">
-       relife.model.HazardFunctions
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.model.LeftTruncated.html">
-       relife.model.LeftTruncated
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.model.LifetimeModel.html">
-       relife.model.LifetimeModel
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.nonparametric.html">
-     relife.nonparametric
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
-    <label for="toctree-checkbox-7">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.nonparametric.ECDF.html">
-       relife.nonparametric.ECDF
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.nonparametric.KaplanMeier.html">
-       relife.nonparametric.KaplanMeier
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.nonparametric.NelsonAalen.html">
-       relife.nonparametric.NelsonAalen
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.parametric.html">
-     relife.parametric
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
-    <label for="toctree-checkbox-8">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.parametric.FittingResult.html">
-       relife.parametric.FittingResult
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.parametric.ParametricHazardFunctions.html">
-       relife.parametric.ParametricHazardFunctions
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.parametric.ParametricLifetimeModel.html">
-       relife.parametric.ParametricLifetimeModel
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.regression.html">
-     relife.regression
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
-    <label for="toctree-checkbox-9">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.regression.concordance_index.html">
-       relife.regression.concordance_index
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.regression.AFT.html">
-       relife.regression.AFT
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.regression.ProportionalHazards.html">
-       relife.regression.ProportionalHazards
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.regression.Regression.html">
-       relife.regression.Regression
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.regression.RegressionFittingResult.html">
-       relife.regression.RegressionFittingResult
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.renewal_process.html">
-     relife.renewal_process
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
-    <label for="toctree-checkbox-10">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.renewal_process.delayed_renewal.html">
-       relife.renewal_process.delayed_renewal
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.renewal_process.renewal_equation_solver.html">
-       relife.renewal_process.renewal_equation_solver
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.renewal_process.RenewalProcess.html">
-       relife.renewal_process.RenewalProcess
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.renewal_process.RenewalRewardProcess.html">
-       relife.renewal_process.RenewalRewardProcess
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.replacement_policy.html">
-     relife.replacement_policy
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
-    <label for="toctree-checkbox-11">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html">
-       relife.replacement_policy.AgeReplacementPolicy
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html">
-       relife.replacement_policy.OneCycleAgeReplacementPolicy
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html">
-       relife.replacement_policy.OneCycleRunToFailure
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.replacement_policy.RunToFailure.html">
-       relife.replacement_policy.RunToFailure
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.reward.html">
-     relife.reward
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
-    <label for="toctree-checkbox-12">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.reward.AgeReplacementCost.html">
-       relife.reward.AgeReplacementCost
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.reward.FailureCost.html">
-       relife.reward.FailureCost
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.reward.Reward.html">
-       relife.reward.Reward
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toctree-l2 has-children">
-    <a class="reference internal" href="_autosummary/relife.utils.html">
-     relife.utils
-    </a>
-    <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
-    <label for="toctree-checkbox-13">
-     <i class="fas fa-chevron-down">
-     </i>
-    </label>
-    <ul>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.args_ndim.html">
-       relife.utils.args_ndim
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.args_size.html">
-       relife.utils.args_size
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.args_take.html">
-       relife.utils.args_take
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.gauss_laguerre.html">
-       relife.utils.gauss_laguerre
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.gauss_legendre.html">
-       relife.utils.gauss_legendre
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.plot.html">
-       relife.utils.plot
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.quad_laguerre.html">
-       relife.utils.quad_laguerre
-      </a>
-     </li>
-     <li class="toctree-l3">
-      <a class="reference internal" href="_autosummary/relife.utils.shifted_laguerre.html">
-       relife.utils.shifted_laguerre
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
-</ul>
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
 
-    </div>
-</nav> <!-- To handle the deprecated key -->
-
-<div class="navbar_extra_footer">
-  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
-</div>
-
-</div>
-
-
-          
-
-
-          
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
-<div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+  
+  <div class="sidebar-header-items sidebar-primary__section">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="get_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide/index.html">
+    User’s guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api/index.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="learn/index.html">
+    Learn
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contributor_guide/index.html">
+    Contributor’s guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="future/index.html">
+    Future improvements
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
                 
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
-
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
-    </div>
-</div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
-            <!-- Table of contents that is only displayed when printing the page -->
-            <div id="jb-print-docs-body" class="onlyprint">
-                <h1></h1>
-                <!-- Table of contents -->
-                <div id="print-main-content">
-                    <div id="jb-print-toc">
-                        
-                    </div>
-                </div>
-            </div>
-            
-              <div>
-                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
 
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#_"><strong>_</strong></a>
- | <a href="#A"><strong>A</strong></a>
- | <a href="#B"><strong>B</strong></a>
+ <a href="#A"><strong>A</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
@@ -601,145 +423,43 @@
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
- | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
-<h2 id="_">_</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.__add__">__add__() (relife.data.LifetimeData.DataByEvent method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.__mul__">__mul__() (relife.data.LifetimeData.DataByEvent method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.a0">a0 (relife.data.ReplacementPolicyData attribute)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT">AFT (class in relife)</a>
 </li>
-      <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel">AbsolutelyContinuousLifetimeModel (class in relife.model)</a>
+      <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel">AgeReplacementModel (class in relife.model)</a>
 </li>
-      <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT">AFT (class in relife.regression)</a>
+      <li><a href="api/renewal_policy/relife.AgeReplacementPolicy.html#relife.AgeReplacementPolicy">AgeReplacementPolicy (class in relife)</a>
 </li>
-      <li><a href="_autosummary/relife.reward.AgeReplacementCost.html#relife.reward.AgeReplacementCost">AgeReplacementCost (class in relife.reward)</a>
-</li>
-      <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel">AgeReplacementModel (class in relife.model)</a>
-</li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy">AgeReplacementPolicy (class in relife.replacement_policy)</a>
-</li>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.AIC">AIC (relife.parametric.FittingResult attribute)</a>
+      <li><a href="api/renewal_policy/relife.AgeReplacementPolicy.html#relife.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">asymptotic_expected_equivalent_annual_cost() (relife.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.AIC">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleAgeReplacementPolicy.html#relife.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">(relife.OneCycleAgeReplacementPolicy method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.AICc">AICc (relife.parametric.FittingResult attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.AICc">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost">(relife.OneCycleRunToFailure method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.discounting.Discount.html#relife.discounting.Discount.annuity_factor">annuity_factor() (relife.discounting.Discount class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.discounting.ExponentialDiscounting.html#relife.discounting.ExponentialDiscounting.annuity_factor">(relife.discounting.ExponentialDiscounting class method)</a>
-</li>
-        <li><a href="_autosummary/relife.discounting.GeneralizedHyperbolicDiscounting.html#relife.discounting.GeneralizedHyperbolicDiscounting.annuity_factor">(relife.discounting.GeneralizedHyperbolicDiscounting class method)</a>
-</li>
-        <li><a href="_autosummary/relife.discounting.HyperbolicDiscounting.html#relife.discounting.HyperbolicDiscounting.annuity_factor">(relife.discounting.HyperbolicDiscounting class method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.args">args (relife.data.LifetimeData attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.args">(relife.data.ReplacementPolicyData attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.utils.args_ndim.html#relife.utils.args_ndim">args_ndim() (in module relife.utils)</a>
-</li>
-      <li><a href="_autosummary/relife.utils.args_size.html#relife.utils.args_size">args_size() (in module relife.utils)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.utils.args_take.html#relife.utils.args_take">args_take() (in module relife.utils)</a>
-</li>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.asdict">asdict() (relife.parametric.FittingResult method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.asdict">(relife.regression.RegressionFittingResult method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.astuple">astuple() (relife.data.CountData method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.astuple">(relife.data.LifetimeData method)</a>
-</li>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.astuple">(relife.data.RenewalData method)</a>
-</li>
-        <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.astuple">(relife.data.RenewalRewardData method)</a>
-</li>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.astuple">(relife.data.ReplacementPolicyData method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">asymptotic_expected_equivalent_annual_cost() (relife.replacement_policy.AgeReplacementPolicy method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">(relife.replacement_policy.OneCycleAgeReplacementPolicy method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost">(relife.replacement_policy.OneCycleRunToFailure method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.asymptotic_expected_equivalent_annual_cost">(relife.replacement_policy.RunToFailure method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth">asymptotic_expected_equivalent_annual_worth() (relife.renewal_process.RenewalRewardProcess method)</a>
-</li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.asymptotic_expected_total_cost">asymptotic_expected_total_cost() (relife.replacement_policy.AgeReplacementPolicy method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost">(relife.replacement_policy.OneCycleAgeReplacementPolicy method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.asymptotic_expected_total_cost">(relife.replacement_policy.OneCycleRunToFailure method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.asymptotic_expected_total_cost">(relife.replacement_policy.RunToFailure method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess.asymptotic_expected_total_reward">asymptotic_expected_total_reward() (relife.renewal_process.RenewalRewardProcess method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="B">B</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.baseline">baseline (relife.distribution.MinimumDistribution attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.baseline">(relife.model.AgeReplacementModel attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.baseline">(relife.model.EquilibriumDistribution attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.baseline">(relife.model.LeftTruncated attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.baseline">(relife.regression.Regression attribute)</a>
+        <li><a href="api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.asymptotic_expected_equivalent_annual_cost">(relife.RunToFailure method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.beta">beta (relife.regression.Regression attribute)</a>
-</li>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.BIC">BIC (relife.parametric.FittingResult attribute)</a>
+      <li><a href="api/renewal_policy/relife.AgeReplacementPolicy.html#relife.AgeReplacementPolicy.asymptotic_expected_total_cost">asymptotic_expected_total_cost() (relife.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.BIC">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleAgeReplacementPolicy.html#relife.OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost">(relife.OneCycleAgeReplacementPolicy method)</a>
+</li>
+        <li><a href="api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.asymptotic_expected_total_cost">(relife.OneCycleRunToFailure method)</a>
+</li>
+        <li><a href="api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.asymptotic_expected_total_cost">(relife.RunToFailure method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -748,128 +468,110 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.c">c (relife.distribution.Gompertz attribute)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.cdf">cdf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.c">(relife.distribution.LogLogistic attribute)</a>
+        <li><a href="api/nonparametric/relife.ECDF.html#relife.ECDF.cdf">(relife.ECDF method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.c">(relife.distribution.Weibull attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.cdf">(relife.Exponential method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.cdf">(relife.Gamma method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.cdf">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.cdf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.cdf">(relife.model.AgeReplacementModel method)</a>
+</li>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.cdf">(relife.model.EquilibriumDistribution method)</a>
+</li>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.cdf">(relife.model.LeftTruncatedModel method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.cdf">(relife.model.LifetimeModel method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.cdf">(relife.model.ParametricLifetimeModel method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.cdf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.cdf">(relife.Weibull method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.cdf">cdf() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.chf">chf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.cdf">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.chf">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.cdf">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.chf">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.cdf">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.chf">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.cdf">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.chf">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.cdf">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.chf">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.cdf">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.chf">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.cdf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.chf">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.cdf">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.chf">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.cdf">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.chf">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.cdf">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/nonparametric/relife.NelsonAalen.html#relife.NelsonAalen.chf">(relife.NelsonAalen method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.cdf">(relife.model.LifetimeModel method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.chf">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.cdf">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.cdf">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.cdf">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.cdf">(relife.regression.Regression method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.chf">chf() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.chf">(relife.distribution.Gamma method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.chf">(relife.distribution.Gompertz method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.chf">(relife.distribution.LogLogistic method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.chf">(relife.distribution.MinimumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.chf">(relife.distribution.ParametricLifetimeDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.chf">(relife.distribution.Weibull method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.chf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.chf">(relife.model.EquilibriumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.HazardFunctions.html#relife.model.HazardFunctions.chf">(relife.model.HazardFunctions method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.chf">(relife.model.LeftTruncated method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricHazardFunctions.html#relife.parametric.ParametricHazardFunctions.chf">(relife.parametric.ParametricHazardFunctions method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.chf">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.chf">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.chf">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.chf">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.chf">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.regression.concordance_index.html#relife.regression.concordance_index">concordance_index() (in module relife.regression)</a>
-</li>
-      <li><a href="_autosummary/relife.reward.AgeReplacementCost.html#relife.reward.AgeReplacementCost.conditional_expectation">conditional_expectation() (relife.reward.AgeReplacementCost method)</a>
+      <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.compose_with">compose_with() (relife.model.ParametricLifetimeModel method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.reward.FailureCost.html#relife.reward.FailureCost.conditional_expectation">(relife.reward.FailureCost method)</a>
-</li>
-        <li><a href="_autosummary/relife.reward.Reward.html#relife.reward.Reward.conditional_expectation">(relife.reward.Reward method)</a>
+        <li><a href="api/base_class/relife.model.ParametricModel.html#relife.model.ParametricModel.compose_with">(relife.model.ParametricModel method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.count">count() (relife.data.LifetimeData.DataByEvent method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.copy">copy() (relife.AFT method)</a>
+
+      <ul>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.copy">(relife.Exponential method)</a>
 </li>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData">CountData (class in relife.data)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.copy">(relife.Gamma method)</a>
 </li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.copy">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.copy">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.copy">(relife.model.ParametricLifetimeModel method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.ParametricModel.html#relife.model.ParametricModel.copy">(relife.model.ParametricModel method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.copy">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.copy">(relife.Weibull method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.D">D (relife.data.LifetimeData.DataByEvent attribute)</a>
-</li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.D_RC">D_RC (relife.data.LifetimeData.DataByEvent attribute)</a>
-</li>
-      <li><a href="_autosummary/relife.renewal_process.delayed_renewal.html#relife.renewal_process.delayed_renewal">delayed_renewal() (in module relife.renewal_process)</a>
-</li>
-      <li><a href="_autosummary/relife.discounting.Discount.html#relife.discounting.Discount">Discount (class in relife.discounting)</a>
-</li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.discount">discount (relife.replacement_policy.AgeReplacementPolicy attribute)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.dhf">dhf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.discount">(relife.replacement_policy.OneCycleAgeReplacementPolicy attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.dhf">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.discount">(relife.replacement_policy.OneCycleRunToFailure attribute)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.dhf">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.discount">(relife.replacement_policy.RunToFailure attribute)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.dhf">(relife.Gompertz method)</a>
 </li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.durations">durations (relife.data.RenewalData attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.durations">(relife.data.RenewalRewardData attribute)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.dhf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.dhf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.dhf">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -878,45 +580,33 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.nonparametric.ECDF.html#relife.nonparametric.ECDF">ECDF (class in relife.nonparametric)</a>
+      <li><a href="api/nonparametric/relife.ECDF.html#relife.ECDF">ECDF (class in relife)</a>
 </li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.entry">entry (relife.data.LifetimeData attribute)</a>
+      <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution">EquilibriumDistribution (class in relife.model)</a>
 </li>
-      <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution">EquilibriumDistribution (class in relife.model)</a>
-</li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.event">event (relife.data.LifetimeData attribute)</a>
-</li>
-      <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.events">events (relife.data.ReplacementPolicyData attribute)</a>
-</li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.expected_equivalent_annual_cost">expected_equivalent_annual_cost() (relife.replacement_policy.AgeReplacementPolicy method)</a>
+      <li><a href="api/renewal_policy/relife.AgeReplacementPolicy.html#relife.AgeReplacementPolicy.expected_equivalent_annual_cost">expected_equivalent_annual_cost() (relife.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost">(relife.replacement_policy.OneCycleAgeReplacementPolicy method)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleAgeReplacementPolicy.html#relife.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost">(relife.OneCycleAgeReplacementPolicy method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.expected_equivalent_annual_cost">(relife.replacement_policy.OneCycleRunToFailure method)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.expected_equivalent_annual_cost">(relife.OneCycleRunToFailure method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.expected_equivalent_annual_cost">(relife.replacement_policy.RunToFailure method)</a>
+        <li><a href="api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.expected_equivalent_annual_cost">(relife.RunToFailure method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess.expected_equivalent_annual_worth">expected_equivalent_annual_worth() (relife.renewal_process.RenewalRewardProcess method)</a>
-</li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.expected_total_cost">expected_total_cost() (relife.replacement_policy.AgeReplacementPolicy method)</a>
+      <li><a href="api/renewal_policy/relife.AgeReplacementPolicy.html#relife.AgeReplacementPolicy.expected_total_cost">expected_total_cost() (relife.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.expected_total_cost">(relife.replacement_policy.OneCycleAgeReplacementPolicy method)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleAgeReplacementPolicy.html#relife.OneCycleAgeReplacementPolicy.expected_total_cost">(relife.OneCycleAgeReplacementPolicy method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.expected_total_cost">(relife.replacement_policy.OneCycleRunToFailure method)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.expected_total_cost">(relife.OneCycleRunToFailure method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.expected_total_cost">(relife.replacement_policy.RunToFailure method)</a>
+        <li><a href="api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.expected_total_cost">(relife.RunToFailure method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess.expected_total_reward">expected_total_reward() (relife.renewal_process.RenewalRewardProcess method)</a>
-</li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential">Exponential (class in relife.distribution)</a>
-</li>
-      <li><a href="_autosummary/relife.discounting.ExponentialDiscounting.html#relife.discounting.ExponentialDiscounting">ExponentialDiscounting (class in relife.discounting)</a>
+      <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential">Exponential (class in relife)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -924,71 +614,47 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.discounting.Discount.html#relife.discounting.Discount.factor">factor() (relife.discounting.Discount class method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.fit">fit() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.discounting.ExponentialDiscounting.html#relife.discounting.ExponentialDiscounting.factor">(relife.discounting.ExponentialDiscounting class method)</a>
+        <li><a href="api/renewal_policy/relife.AgeReplacementPolicy.html#relife.AgeReplacementPolicy.fit">(relife.AgeReplacementPolicy method)</a>
 </li>
-        <li><a href="_autosummary/relife.discounting.GeneralizedHyperbolicDiscounting.html#relife.discounting.GeneralizedHyperbolicDiscounting.factor">(relife.discounting.GeneralizedHyperbolicDiscounting class method)</a>
+        <li><a href="api/nonparametric/relife.ECDF.html#relife.ECDF.fit">(relife.ECDF method)</a>
 </li>
-        <li><a href="_autosummary/relife.discounting.HyperbolicDiscounting.html#relife.discounting.HyperbolicDiscounting.factor">(relife.discounting.HyperbolicDiscounting class method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.fit">(relife.Exponential method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.reward.FailureCost.html#relife.reward.FailureCost">FailureCost (class in relife.reward)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.fit">(relife.Gamma method)</a>
 </li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.fit">fit() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.fit">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.fit">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.fit">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/nonparametric/relife.KaplanMeier.html#relife.KaplanMeier.fit">(relife.KaplanMeier method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.fit">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.fit">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.fit">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.fit">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.fit">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/nonparametric/relife.NelsonAalen.html#relife.NelsonAalen.fit">(relife.NelsonAalen method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.fit">(relife.distribution.Weibull method)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleAgeReplacementPolicy.html#relife.OneCycleAgeReplacementPolicy.fit">(relife.OneCycleAgeReplacementPolicy method)</a>
 </li>
-        <li><a href="_autosummary/relife.nonparametric.ECDF.html#relife.nonparametric.ECDF.fit">(relife.nonparametric.ECDF method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.fit">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.nonparametric.KaplanMeier.html#relife.nonparametric.KaplanMeier.fit">(relife.nonparametric.KaplanMeier method)</a>
+        <li><a href="api/nonparametric/relife.Turnbull.html#relife.Turnbull.fit">(relife.Turnbull method)</a>
 </li>
-        <li><a href="_autosummary/relife.nonparametric.NelsonAalen.html#relife.nonparametric.NelsonAalen.fit">(relife.nonparametric.NelsonAalen method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.fit">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.fit">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.fit">(relife.regression.Regression method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.fit">(relife.replacement_policy.AgeReplacementPolicy method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.fit">(relife.replacement_policy.OneCycleAgeReplacementPolicy method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.fit">(relife.Weibull method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult">FittingResult (class in relife.parametric)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma">Gamma (class in relife.distribution)</a>
-</li>
-      <li><a href="_autosummary/relife.utils.gauss_laguerre.html#relife.utils.gauss_laguerre">gauss_laguerre() (in module relife.utils)</a>
+      <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma">Gamma (class in relife)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.utils.gauss_legendre.html#relife.utils.gauss_legendre">gauss_legendre() (in module relife.utils)</a>
-</li>
-      <li><a href="_autosummary/relife.discounting.GeneralizedHyperbolicDiscounting.html#relife.discounting.GeneralizedHyperbolicDiscounting">GeneralizedHyperbolicDiscounting (class in relife.discounting)</a>
-</li>
-      <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz">Gompertz (class in relife.distribution)</a>
+      <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz">Gompertz (class in relife)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -996,140 +662,184 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.model.HazardFunctions.html#relife.model.HazardFunctions">HazardFunctions (class in relife.model)</a>
-</li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.hf">hf() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.hf">hf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.hf">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.hf">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.hf">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.hf">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.hf">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.hf">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.hf">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.hf">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.hf">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.hf">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.hf">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.hf">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.hf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.hf">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.hf">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.hf">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.HazardFunctions.html#relife.model.HazardFunctions.hf">(relife.model.HazardFunctions method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.hf">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.hf">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.hf">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.ParametricHazardFunctions.html#relife.parametric.ParametricHazardFunctions.hf">(relife.parametric.ParametricHazardFunctions method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.hf">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.hf">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.hf">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.hf">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.hf">(relife.Weibull method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.discounting.HyperbolicDiscounting.html#relife.discounting.HyperbolicDiscounting">HyperbolicDiscounting (class in relife.discounting)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.ichf">ichf() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.ichf">ichf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.ichf">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.ichf">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.ichf">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.ichf">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.ichf">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.ichf">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.ichf">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.ichf">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.ichf">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.ichf">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.ichf">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.ichf">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.ichf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.ichf">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.ichf">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.ichf">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.HazardFunctions.html#relife.model.HazardFunctions.ichf">(relife.model.HazardFunctions method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.ichf">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.ichf">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.ichf">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.ParametricHazardFunctions.html#relife.parametric.ParametricHazardFunctions.ichf">(relife.parametric.ParametricHazardFunctions method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.ichf">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.ichf">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.ichf">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.ichf">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.ichf">(relife.Weibull method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.index">index() (relife.data.LifetimeData.DataByEvent method)</a>
+      <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.init_params">init_params() (relife.model.ParametricLifetimeModel method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.indices">indices (relife.data.CountData attribute)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.isf">isf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.indices">(relife.data.RenewalData attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.isf">(relife.Exponential method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.isf">(relife.Gamma method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.isf">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.isf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.isf">(relife.model.AgeReplacementModel method)</a>
+</li>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.isf">(relife.model.EquilibriumDistribution method)</a>
+</li>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.isf">(relife.model.LeftTruncatedModel method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.isf">(relife.model.LifetimeModel method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.isf">(relife.model.ParametricLifetimeModel method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.isf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.isf">(relife.Weibull method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.isf">isf() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.isf">(relife.distribution.Gamma method)</a>
+      <li><a href="api/base_class/relife.model.Parameters.html#relife.model.Parameters.items_walk">items_walk() (relife.model.Parameters method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.isf">(relife.distribution.Gompertz method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.isf">(relife.distribution.LogLogistic method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.isf">(relife.distribution.MinimumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.isf">(relife.distribution.ParametricLifetimeDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.isf">(relife.distribution.Weibull method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.isf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.isf">(relife.model.AgeReplacementModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.isf">(relife.model.EquilibriumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.isf">(relife.model.LeftTruncated method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.isf">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.isf">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.isf">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.isf">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.isf">(relife.regression.Regression method)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.jac">jac (relife.parametric.FittingResult attribute)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.jac_cdf">jac_cdf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.jac">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.jac_cdf">(relife.Exponential method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.jac_cdf">(relife.Gamma method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.jac_cdf">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.jac_cdf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.jac_cdf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.jac_cdf">(relife.Weibull method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.jac_chf">jac_chf() (relife.AFT method)</a>
+
+      <ul>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.jac_chf">(relife.Exponential method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.jac_chf">(relife.Gamma method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.jac_chf">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.jac_chf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.jac_chf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.jac_chf">(relife.Weibull method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.jac_hf">jac_hf() (relife.AFT method)</a>
+
+      <ul>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.jac_hf">(relife.Exponential method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.jac_hf">(relife.Gamma method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.jac_hf">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.jac_hf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.jac_hf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.jac_hf">(relife.Weibull method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/likelihood/relife.likelihoods.LikelihoodFromLifetimes.html#relife.likelihoods.LikelihoodFromLifetimes.jac_negative_log">jac_negative_log() (relife.likelihoods.LikelihoodFromLifetimes method)</a>
+</li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.jac_pdf">jac_pdf() (relife.AFT method)</a>
+
+      <ul>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.jac_pdf">(relife.Exponential method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.jac_pdf">(relife.Gamma method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.jac_pdf">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.jac_pdf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.jac_pdf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.jac_pdf">(relife.Weibull method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.jac_sf">jac_sf() (relife.AFT method)</a>
+
+      <ul>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.jac_sf">(relife.Exponential method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.jac_sf">(relife.Gamma method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.jac_sf">(relife.Gompertz method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.jac_sf">(relife.LogLogistic method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.jac_sf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.jac_sf">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1138,7 +848,7 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.nonparametric.KaplanMeier.html#relife.nonparametric.KaplanMeier">KaplanMeier (class in relife.nonparametric)</a>
+      <li><a href="api/nonparametric/relife.KaplanMeier.html#relife.KaplanMeier">KaplanMeier (class in relife)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1146,253 +856,150 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.LC">LC (relife.data.LifetimeData.DataByEvent attribute)</a>
+      <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel">LeftTruncatedModel (class in relife.model)</a>
 </li>
-      <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated">LeftTruncated (class in relife.model)</a>
+      <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel">LifetimeModel (class in relife.model)</a>
 </li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData">LifetimeData (class in relife.data)</a>
+      <li><a href="api/likelihood/relife.likelihoods.LikelihoodFromLifetimes.html#relife.likelihoods.LikelihoodFromLifetimes">LikelihoodFromLifetimes (class in relife.likelihoods)</a>
 </li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent">LifetimeData.DataByEvent (class in relife.data)</a>
+      <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic">LogLogistic (class in relife)</a>
 </li>
-      <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel">LifetimeModel (class in relife.model)</a>
-</li>
-      <li><a href="_autosummary/relife.datasets.load_circuit_breaker.html#relife.datasets.load_circuit_breaker">load_circuit_breaker() (in module relife.datasets)</a>
-</li>
-      <li><a href="_autosummary/relife.datasets.load_insulator_string.html#relife.datasets.load_insulator_string">load_insulator_string() (in module relife.datasets)</a>
-</li>
-      <li><a href="_autosummary/relife.datasets.load_power_transformer.html#relife.datasets.load_power_transformer">load_power_transformer() (in module relife.datasets)</a>
-</li>
-      <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic">LogLogistic (class in relife.distribution)</a>
-</li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.ls_integrate">ls_integrate() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.ls_integrate">ls_integrate() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.ls_integrate">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.ls_integrate">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.ls_integrate">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.ls_integrate">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.ls_integrate">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.ls_integrate">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.ls_integrate">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.ls_integrate">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.ls_integrate">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.ls_integrate">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.ls_integrate">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.ls_integrate">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.ls_integrate">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.ls_integrate">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.ls_integrate">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.ls_integrate">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.ls_integrate">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.ls_integrate">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.ls_integrate">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.ls_integrate">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.ls_integrate">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.ls_integrate">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.ls_integrate">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.ls_integrate">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.ls_integrate">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.ls_integrate">(relife.Weibull method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.DataByEvent.LT">LT (relife.data.LifetimeData.DataByEvent attribute)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.mean">mean() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.mean">mean() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.mean">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.mean">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.mean">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.mean">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.mean">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.mean">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.mean">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.mean">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.mean">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.mean">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.mean">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.mean">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.mean">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.mean">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.mean">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.mean">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.mean">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.mean">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.mean">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.mean">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.mean">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.mean">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.mean">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.mean">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.mean">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.mean">(relife.Weibull method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.mean_number_of_events">mean_number_of_events() (relife.data.CountData method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.median">median() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.mean_number_of_events">(relife.data.RenewalData method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.median">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.mean_number_of_events">(relife.data.RenewalRewardData method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.median">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.mean_number_of_events">(relife.data.ReplacementPolicyData method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.median">(relife.Gompertz method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.mean_total_reward">mean_total_reward() (relife.data.RenewalRewardData method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.mean_total_reward">(relife.data.ReplacementPolicyData method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.median">(relife.LogLogistic method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.median">median() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.median">(relife.distribution.Gamma method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.median">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.median">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.median">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.median">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.median">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.median">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.median">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.median">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.median">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.median">(relife.distribution.Weibull method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.median">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.median">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.median">(relife.model.AgeReplacementModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.median">(relife.model.EquilibriumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.median">(relife.model.LeftTruncated method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.median">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.median">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.median">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.median">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.median">(relife.regression.Regression method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution">MinimumDistribution (class in relife.distribution)</a>
-</li>
-      <li>
-    module
-
-      <ul>
-        <li><a href="_autosummary/relife.html#module-relife">relife</a>
-</li>
-        <li><a href="_autosummary/relife.data.html#module-relife.data">relife.data</a>
-</li>
-        <li><a href="_autosummary/relife.datasets.html#module-relife.datasets">relife.datasets</a>
-</li>
-        <li><a href="_autosummary/relife.discounting.html#module-relife.discounting">relife.discounting</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.html#module-relife.distribution">relife.distribution</a>
-</li>
-        <li><a href="_autosummary/relife.model.html#module-relife.model">relife.model</a>
-</li>
-        <li><a href="_autosummary/relife.nonparametric.html#module-relife.nonparametric">relife.nonparametric</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.html#module-relife.parametric">relife.parametric</a>
-</li>
-        <li><a href="_autosummary/relife.regression.html#module-relife.regression">relife.regression</a>
-</li>
-        <li><a href="_autosummary/relife.renewal_process.html#module-relife.renewal_process">relife.renewal_process</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.html#module-relife.replacement_policy">relife.replacement_policy</a>
-</li>
-        <li><a href="_autosummary/relife.reward.html#module-relife.reward">relife.reward</a>
-</li>
-        <li><a href="_autosummary/relife.utils.html#module-relife.utils">relife.utils</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.median">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.moment">moment() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.moment">moment() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.moment">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.moment">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.moment">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.moment">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.moment">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.moment">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.moment">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.moment">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.moment">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.moment">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.moment">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.moment">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.moment">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.moment">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.moment">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.moment">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.moment">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.moment">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.moment">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.moment">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.moment">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.moment">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.moment">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.moment">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.moment">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.moment">(relife.Weibull method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.mrl">mrl() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.mrl">mrl() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.mrl">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.mrl">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.mrl">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.mrl">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.mrl">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.mrl">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.mrl">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.mrl">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.mrl">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.mrl">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.mrl">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.mrl">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.mrl">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.mrl">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.mrl">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.mrl">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.mrl">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.mrl">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.mrl">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.mrl">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.mrl">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.mrl">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.mrl">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.mrl">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.mrl">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.mrl">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1401,231 +1008,189 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.n_indices">n_indices (relife.data.CountData attribute)</a>
+      <li><a href="api/base_class/relife.model.Parameters.html#relife.model.Parameters.names">names (relife.model.Parameters property)</a>
+</li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.nb_params">nb_params (relife.AFT property)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.n_indices">(relife.data.RenewalData attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.nb_params">(relife.Exponential property)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.n_params">n_params (relife.distribution.Exponential property)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.n_params">(relife.distribution.Gamma property)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.nb_params">(relife.Gamma property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.n_params">(relife.distribution.Gompertz property)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.nb_params">(relife.Gompertz property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.n_params">(relife.distribution.LogLogistic property)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.nb_params">(relife.LogLogistic property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.n_params">(relife.distribution.MinimumDistribution property)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.nb_params">(relife.model.ParametricLifetimeModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.n_params">(relife.distribution.ParametricLifetimeDistribution property)</a>
+        <li><a href="api/base_class/relife.model.ParametricModel.html#relife.model.ParametricModel.nb_params">(relife.model.ParametricModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.n_params">(relife.distribution.Weibull property)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.nb_params">(relife.ProportionalHazard property)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.n_params">(relife.parametric.FittingResult attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricHazardFunctions.html#relife.parametric.ParametricHazardFunctions.n_params">(relife.parametric.ParametricHazardFunctions property)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.n_params">(relife.parametric.ParametricLifetimeModel property)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.n_params">(relife.regression.AFT property)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.n_params">(relife.regression.ProportionalHazards property)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.n_params">(relife.regression.Regression property)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.n_params">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.nb_params">(relife.Weibull property)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.n_samples">n_samples (relife.data.CountData attribute)</a>
+      <li><a href="api/likelihood/relife.likelihoods.LikelihoodFromLifetimes.html#relife.likelihoods.LikelihoodFromLifetimes.negative_log">negative_log() (relife.likelihoods.LikelihoodFromLifetimes method)</a>
+</li>
+      <li><a href="api/nonparametric/relife.NelsonAalen.html#relife.NelsonAalen">NelsonAalen (class in relife)</a>
+</li>
+      <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.new_params">new_params() (relife.model.ParametricLifetimeModel method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.n_samples">(relife.data.RenewalData attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.n_samples">(relife.parametric.FittingResult attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.n_samples">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/base_class/relife.model.ParametricModel.html#relife.model.ParametricModel.new_params">(relife.model.ParametricModel method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.nonparametric.NelsonAalen.html#relife.nonparametric.NelsonAalen">NelsonAalen (class in relife.nonparametric)</a>
+      <li><a href="api/base_class/relife.model.Parameters.html#relife.model.Parameters.node_data">node_data (relife.model.Parameters property)</a>
 </li>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.number_of_events">number_of_events() (relife.data.CountData method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.number_of_events">(relife.data.RenewalData method)</a>
-</li>
-        <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.number_of_events">(relife.data.RenewalRewardData method)</a>
-</li>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.number_of_events">(relife.data.ReplacementPolicyData method)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy">OneCycleAgeReplacementPolicy (class in relife.replacement_policy)</a>
+      <li><a href="api/renewal_policy/relife.OneCycleAgeReplacementPolicy.html#relife.OneCycleAgeReplacementPolicy">OneCycleAgeReplacementPolicy (class in relife)</a>
 </li>
-      <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure">OneCycleRunToFailure (class in relife.replacement_policy)</a>
-</li>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.opt">opt (relife.parametric.FittingResult attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.opt">(relife.regression.RegressionFittingResult attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.optimal_replacement_age">optimal_replacement_age() (relife.replacement_policy.AgeReplacementPolicy class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.optimal_replacement_age">(relife.replacement_policy.OneCycleAgeReplacementPolicy class method)</a>
+      <li><a href="api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure">OneCycleRunToFailure (class in relife)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.parametric.ParametricHazardFunctions.html#relife.parametric.ParametricHazardFunctions">ParametricHazardFunctions (class in relife.parametric)</a>
+      <li><a href="api/base_class/relife.model.Parameters.html#relife.model.Parameters">Parameters (class in relife.model)</a>
 </li>
-      <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution">ParametricLifetimeDistribution (class in relife.distribution)</a>
+      <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel">ParametricLifetimeModel (class in relife.model)</a>
 </li>
-      <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel">ParametricLifetimeModel (class in relife.parametric)</a>
+      <li><a href="api/base_class/relife.model.ParametricModel.html#relife.model.ParametricModel">ParametricModel (class in relife.model)</a>
 </li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.params">params (relife.distribution.Exponential property)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.params">params (relife.AFT property)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.params">(relife.distribution.Gamma property)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.params">(relife.Exponential property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.params">(relife.distribution.Gompertz property)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.params">(relife.Gamma property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.params">(relife.distribution.LogLogistic property)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.params">(relife.Gompertz property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.params">(relife.distribution.MinimumDistribution property)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.params">(relife.LogLogistic property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.params">(relife.distribution.ParametricLifetimeDistribution property)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.params">(relife.model.ParametricLifetimeModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.params">(relife.distribution.Weibull property)</a>
+        <li><a href="api/base_class/relife.model.ParametricModel.html#relife.model.ParametricModel.params">(relife.model.ParametricModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.ParametricHazardFunctions.html#relife.parametric.ParametricHazardFunctions.params">(relife.parametric.ParametricHazardFunctions property)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.params">(relife.ProportionalHazard property)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.params">(relife.parametric.ParametricLifetimeModel property)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.params">(relife.regression.AFT property)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.params">(relife.regression.ProportionalHazards property)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.params">(relife.regression.Regression property)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.params">(relife.Weibull property)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.pdf">pdf() (relife.distribution.Exponential method)</a>
+      <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.params_bounds">params_bounds (relife.model.ParametricLifetimeModel property)</a>
+</li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.params_names">params_names (relife.AFT property)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.pdf">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.params_names">(relife.Exponential property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.pdf">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.params_names">(relife.Gamma property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.pdf">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.params_names">(relife.Gompertz property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.pdf">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.params_names">(relife.LogLogistic property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.pdf">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.params_names">(relife.model.ParametricLifetimeModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.pdf">(relife.distribution.Weibull method)</a>
+        <li><a href="api/base_class/relife.model.ParametricModel.html#relife.model.ParametricModel.params_names">(relife.model.ParametricModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.pdf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.params_names">(relife.ProportionalHazard property)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.pdf">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.params_names">(relife.Weibull property)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.pdf">(relife.model.EquilibriumDistribution method)</a>
+      </ul></li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.pdf">pdf() (relife.AFT method)</a>
+
+      <ul>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.pdf">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.pdf">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.pdf">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.pdf">(relife.model.LifetimeModel method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.pdf">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.pdf">(relife.parametric.ParametricLifetimeModel method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.pdf">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.pdf">(relife.regression.AFT method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.pdf">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.pdf">(relife.regression.ProportionalHazards method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.pdf">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.pdf">(relife.regression.Regression method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.pdf">(relife.model.LeftTruncatedModel method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.pdf">(relife.model.LifetimeModel method)</a>
+</li>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.pdf">(relife.model.ParametricLifetimeModel method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.pdf">(relife.ProportionalHazard method)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.pdf">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.utils.plot.html#relife.utils.plot">plot() (in module relife.utils)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.plot">plot (relife.AFT property)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.plot">(relife.distribution.Exponential method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.plot">(relife.Exponential property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.plot">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.plot">(relife.Gamma property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.plot">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.plot">(relife.Gompertz property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.plot">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.plot">(relife.LogLogistic property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.plot">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.plot">(relife.model.AgeReplacementModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.plot">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.plot">(relife.model.EquilibriumDistribution property)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.plot">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.plot">(relife.model.LeftTruncatedModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.nonparametric.ECDF.html#relife.nonparametric.ECDF.plot">(relife.nonparametric.ECDF method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.plot">(relife.model.LifetimeModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.nonparametric.KaplanMeier.html#relife.nonparametric.KaplanMeier.plot">(relife.nonparametric.KaplanMeier method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.plot">(relife.model.ParametricLifetimeModel property)</a>
 </li>
-        <li><a href="_autosummary/relife.nonparametric.NelsonAalen.html#relife.nonparametric.NelsonAalen.plot">(relife.nonparametric.NelsonAalen method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.plot">(relife.ProportionalHazard property)</a>
+</li>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.plot">(relife.Weibull property)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.ppf">ppf() (relife.distribution.Exponential method)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.ppf">ppf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.ppf">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.ppf">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.ppf">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.ppf">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.ppf">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.ppf">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.ppf">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.ppf">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.ppf">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.ppf">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.ppf">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.ppf">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.ppf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.ppf">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.ppf">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.ppf">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.ppf">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.ppf">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.ppf">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.ppf">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.ppf">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.ppf">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.ppf">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.ppf">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.ppf">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.ppf">(relife.Weibull method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards">ProportionalHazards (class in relife.regression)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="Q">Q</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.utils.quad_laguerre.html#relife.utils.quad_laguerre">quad_laguerre() (in module relife.utils)</a>
+      <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard">ProportionalHazard (class in relife)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1633,211 +1198,32 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.rate">rate (relife.distribution.Exponential attribute)</a>
+      <li><a href="api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure">RunToFailure (class in relife)</a>
+</li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.rvs">rvs() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.rate">(relife.distribution.Gamma attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.rvs">(relife.Exponential method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.rate">(relife.distribution.Gompertz attribute)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.rvs">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.rate">(relife.distribution.LogLogistic attribute)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.rvs">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.rate">(relife.distribution.Weibull attribute)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.rvs">(relife.LogLogistic method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.discounting.Discount.html#relife.discounting.Discount.rate">rate() (relife.discounting.Discount class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.discounting.ExponentialDiscounting.html#relife.discounting.ExponentialDiscounting.rate">(relife.discounting.ExponentialDiscounting class method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.rvs">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.discounting.GeneralizedHyperbolicDiscounting.html#relife.discounting.GeneralizedHyperbolicDiscounting.rate">(relife.discounting.GeneralizedHyperbolicDiscounting class method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.rvs">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.discounting.HyperbolicDiscounting.html#relife.discounting.HyperbolicDiscounting.rate">(relife.discounting.HyperbolicDiscounting class method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.rvs">(relife.model.LeftTruncatedModel method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression">Regression (class in relife.regression)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.rvs">(relife.model.LifetimeModel method)</a>
 </li>
-      <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult">RegressionFittingResult (class in relife.regression)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.rvs">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-      <li>
-    relife
-
-      <ul>
-        <li><a href="_autosummary/relife.html#module-relife">module</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.rvs">(relife.ProportionalHazard method)</a>
 </li>
-      </ul></li>
-      <li>
-    relife.data
-
-      <ul>
-        <li><a href="_autosummary/relife.data.html#module-relife.data">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.datasets
-
-      <ul>
-        <li><a href="_autosummary/relife.datasets.html#module-relife.datasets">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.discounting
-
-      <ul>
-        <li><a href="_autosummary/relife.discounting.html#module-relife.discounting">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.distribution
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.html#module-relife.distribution">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.model
-
-      <ul>
-        <li><a href="_autosummary/relife.model.html#module-relife.model">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.nonparametric
-
-      <ul>
-        <li><a href="_autosummary/relife.nonparametric.html#module-relife.nonparametric">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.parametric
-
-      <ul>
-        <li><a href="_autosummary/relife.parametric.html#module-relife.parametric">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.regression
-
-      <ul>
-        <li><a href="_autosummary/relife.regression.html#module-relife.regression">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.renewal_process
-
-      <ul>
-        <li><a href="_autosummary/relife.renewal_process.html#module-relife.renewal_process">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.replacement_policy
-
-      <ul>
-        <li><a href="_autosummary/relife.replacement_policy.html#module-relife.replacement_policy">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.reward
-
-      <ul>
-        <li><a href="_autosummary/relife.reward.html#module-relife.reward">module</a>
-</li>
-      </ul></li>
-      <li>
-    relife.utils
-
-      <ul>
-        <li><a href="_autosummary/relife.utils.html#module-relife.utils">module</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.renewal_process.RenewalProcess.html#relife.renewal_process.RenewalProcess.renewal_density">renewal_density() (relife.renewal_process.RenewalProcess method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess.renewal_density">(relife.renewal_process.RenewalRewardProcess method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.renewal_process.renewal_equation_solver.html#relife.renewal_process.renewal_equation_solver">renewal_equation_solver() (in module relife.renewal_process)</a>
-</li>
-      <li><a href="_autosummary/relife.renewal_process.RenewalProcess.html#relife.renewal_process.RenewalProcess.renewal_function">renewal_function() (relife.renewal_process.RenewalProcess method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess.renewal_function">(relife.renewal_process.RenewalRewardProcess method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData">RenewalData (class in relife.data)</a>
-</li>
-      <li><a href="_autosummary/relife.renewal_process.RenewalProcess.html#relife.renewal_process.RenewalProcess">RenewalProcess (class in relife.renewal_process)</a>
-</li>
-      <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData">RenewalRewardData (class in relife.data)</a>
-</li>
-      <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess">RenewalRewardProcess (class in relife.renewal_process)</a>
-</li>
-      <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData">ReplacementPolicyData (class in relife.data)</a>
-</li>
-      <li><a href="_autosummary/relife.reward.Reward.html#relife.reward.Reward">Reward (class in relife.reward)</a>
-</li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.reward">reward (relife.replacement_policy.AgeReplacementPolicy attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.reward">(relife.replacement_policy.OneCycleAgeReplacementPolicy attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.reward">(relife.replacement_policy.OneCycleRunToFailure attribute)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.reward">(relife.replacement_policy.RunToFailure attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.rewards">rewards (relife.data.RenewalRewardData attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.rewards">(relife.data.ReplacementPolicyData attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.rrp_args">rrp_args() (relife.replacement_policy.AgeReplacementPolicy method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.rrp_args">(relife.replacement_policy.OneCycleAgeReplacementPolicy method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.rrp_args">(relife.replacement_policy.OneCycleRunToFailure method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.rrp_args">(relife.replacement_policy.RunToFailure method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure">RunToFailure (class in relife.replacement_policy)</a>
-</li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.rvs">rvs() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.rvs">(relife.distribution.Gamma method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.rvs">(relife.distribution.Gompertz method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.rvs">(relife.distribution.LogLogistic method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.rvs">(relife.distribution.MinimumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.rvs">(relife.distribution.ParametricLifetimeDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.rvs">(relife.distribution.Weibull method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.rvs">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.rvs">(relife.model.AgeReplacementModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.rvs">(relife.model.EquilibriumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.rvs">(relife.model.LeftTruncated method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.rvs">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.rvs">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.rvs">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.rvs">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.rvs">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.rvs">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1846,124 +1232,46 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.renewal_process.RenewalProcess.html#relife.renewal_process.RenewalProcess.sample">sample() (relife.renewal_process.RenewalProcess method)</a>
+      <li><a href="api/renewal_policy/relife.AgeReplacementPolicy.html#relife.AgeReplacementPolicy.sample">sample() (relife.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.renewal_process.RenewalRewardProcess.html#relife.renewal_process.RenewalRewardProcess.sample">(relife.renewal_process.RenewalRewardProcess method)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleAgeReplacementPolicy.html#relife.OneCycleAgeReplacementPolicy.sample">(relife.OneCycleAgeReplacementPolicy method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.AgeReplacementPolicy.html#relife.replacement_policy.AgeReplacementPolicy.sample">(relife.replacement_policy.AgeReplacementPolicy method)</a>
+        <li><a href="api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.sample">(relife.OneCycleRunToFailure method)</a>
 </li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleAgeReplacementPolicy.html#relife.replacement_policy.OneCycleAgeReplacementPolicy.sample">(relife.replacement_policy.OneCycleAgeReplacementPolicy method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.OneCycleRunToFailure.html#relife.replacement_policy.OneCycleRunToFailure.sample">(relife.replacement_policy.OneCycleRunToFailure method)</a>
-</li>
-        <li><a href="_autosummary/relife.replacement_policy.RunToFailure.html#relife.replacement_policy.RunToFailure.sample">(relife.replacement_policy.RunToFailure method)</a>
-</li>
-        <li><a href="_autosummary/relife.reward.AgeReplacementCost.html#relife.reward.AgeReplacementCost.sample">(relife.reward.AgeReplacementCost method)</a>
-</li>
-        <li><a href="_autosummary/relife.reward.FailureCost.html#relife.reward.FailureCost.sample">(relife.reward.FailureCost method)</a>
-</li>
-        <li><a href="_autosummary/relife.reward.Reward.html#relife.reward.Reward.sample">(relife.reward.Reward method)</a>
+        <li><a href="api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.sample">(relife.RunToFailure method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.samples">samples (relife.data.CountData attribute)</a>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.sf">sf() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.samples">(relife.data.RenewalData attribute)</a>
+        <li><a href="api/nonparametric/relife.ECDF.html#relife.ECDF.sf">(relife.ECDF method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.se">se (relife.parametric.FittingResult attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.se">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.sf">(relife.Exponential method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.sf">sf() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.sf">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.sf">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.sf">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.sf">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.sf">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/nonparametric/relife.KaplanMeier.html#relife.KaplanMeier.sf">(relife.KaplanMeier method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.sf">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.sf">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.sf">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.sf">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.sf">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.sf">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.sf">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.sf">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.sf">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.sf">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.sf">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.sf">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.sf">(relife.model.LeftTruncated method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.sf">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.sf">(relife.model.LifetimeModel method)</a>
+        <li><a href="api/nonparametric/relife.Turnbull.html#relife.Turnbull.sf">(relife.Turnbull method)</a>
 </li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.sf">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.sf">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.sf">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.sf">(relife.regression.Regression method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.utils.shifted_laguerre.html#relife.utils.shifted_laguerre">shifted_laguerre() (in module relife.utils)</a>
-</li>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.size">size (relife.data.CountData property)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.size">(relife.data.RenewalData property)</a>
-</li>
-        <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.size">(relife.data.RenewalRewardData property)</a>
-</li>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.size">(relife.data.ReplacementPolicyData property)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.standard_error">standard_error() (relife.parametric.FittingResult method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.standard_error">(relife.regression.RegressionFittingResult method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.support_upper_bound">support_upper_bound() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.support_upper_bound">(relife.distribution.Gamma method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.support_upper_bound">(relife.distribution.Gompertz method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.support_upper_bound">(relife.distribution.LogLogistic method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.support_upper_bound">(relife.distribution.MinimumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.support_upper_bound">(relife.distribution.ParametricLifetimeDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.support_upper_bound">(relife.distribution.Weibull method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.support_upper_bound">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.support_upper_bound">(relife.model.AgeReplacementModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.support_upper_bound">(relife.model.EquilibriumDistribution method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.support_upper_bound">(relife.model.LeftTruncated method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.support_upper_bound">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.support_upper_bound">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.support_upper_bound">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.support_upper_bound">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.support_upper_bound">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.sf">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1972,74 +1280,52 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.T">T (relife.data.CountData attribute)</a>
+      <li><a href="api/nonparametric/relife.Turnbull.html#relife.Turnbull">Turnbull (class in relife)</a>
+</li>
+  </ul></td>
+</tr></table>
 
-      <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.T">(relife.data.RenewalData attribute)</a>
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/base_class/relife.model.Parameters.html#relife.model.Parameters.update">update() (relife.model.Parameters method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.data.LifetimeData.html#relife.data.LifetimeData.time">time (relife.data.LifetimeData attribute)</a>
-</li>
-      <li><a href="_autosummary/relife.data.CountData.html#relife.data.CountData.times">times (relife.data.CountData attribute)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.RenewalData.html#relife.data.RenewalData.times">(relife.data.RenewalData attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.to_lifetime_data">to_lifetime_data() (relife.data.ReplacementPolicyData method)</a>
+      <li><a href="api/base_class/relife.model.Parameters.html#relife.model.Parameters.update_items">update_items() (relife.model.Parameters method)</a>
 </li>
-      <li><a href="_autosummary/relife.data.RenewalRewardData.html#relife.data.RenewalRewardData.total_reward">total_reward() (relife.data.RenewalRewardData method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.data.ReplacementPolicyData.html#relife.data.ReplacementPolicyData.total_reward">(relife.data.ReplacementPolicyData method)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.parametric.FittingResult.html#relife.parametric.FittingResult.var">var (relife.parametric.FittingResult attribute)</a>
+      <li><a href="api/base_class/relife.model.Parameters.html#relife.model.Parameters.values">values (relife.model.Parameters property)</a>
+</li>
+      <li><a href="api/lifetime_models/relife.AFT.html#relife.AFT.var">var() (relife.AFT method)</a>
 
       <ul>
-        <li><a href="_autosummary/relife.regression.RegressionFittingResult.html#relife.regression.RegressionFittingResult.var">(relife.regression.RegressionFittingResult attribute)</a>
+        <li><a href="api/lifetime_models/relife.Exponential.html#relife.Exponential.var">(relife.Exponential method)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/relife.distribution.Exponential.html#relife.distribution.Exponential.var">var() (relife.distribution.Exponential method)</a>
-
-      <ul>
-        <li><a href="_autosummary/relife.distribution.Gamma.html#relife.distribution.Gamma.var">(relife.distribution.Gamma method)</a>
+        <li><a href="api/lifetime_models/relife.Gamma.html#relife.Gamma.var">(relife.Gamma method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Gompertz.html#relife.distribution.Gompertz.var">(relife.distribution.Gompertz method)</a>
+        <li><a href="api/lifetime_models/relife.Gompertz.html#relife.Gompertz.var">(relife.Gompertz method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.LogLogistic.html#relife.distribution.LogLogistic.var">(relife.distribution.LogLogistic method)</a>
+        <li><a href="api/lifetime_models/relife.LogLogistic.html#relife.LogLogistic.var">(relife.LogLogistic method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.MinimumDistribution.html#relife.distribution.MinimumDistribution.var">(relife.distribution.MinimumDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.var">(relife.model.AgeReplacementModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.ParametricLifetimeDistribution.html#relife.distribution.ParametricLifetimeDistribution.var">(relife.distribution.ParametricLifetimeDistribution method)</a>
+        <li><a href="api/decorator_models/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.var">(relife.model.EquilibriumDistribution method)</a>
 </li>
-        <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull.var">(relife.distribution.Weibull method)</a>
+        <li><a href="api/decorator_models/relife.model.LeftTruncatedModel.html#relife.model.LeftTruncatedModel.var">(relife.model.LeftTruncatedModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AbsolutelyContinuousLifetimeModel.html#relife.model.AbsolutelyContinuousLifetimeModel.var">(relife.model.AbsolutelyContinuousLifetimeModel method)</a>
+        <li><a href="api/base_class/relife.model.LifetimeModel.html#relife.model.LifetimeModel.var">(relife.model.LifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.AgeReplacementModel.html#relife.model.AgeReplacementModel.var">(relife.model.AgeReplacementModel method)</a>
+        <li><a href="api/base_class/relife.model.ParametricLifetimeModel.html#relife.model.ParametricLifetimeModel.var">(relife.model.ParametricLifetimeModel method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.EquilibriumDistribution.html#relife.model.EquilibriumDistribution.var">(relife.model.EquilibriumDistribution method)</a>
+        <li><a href="api/lifetime_models/relife.ProportionalHazard.html#relife.ProportionalHazard.var">(relife.ProportionalHazard method)</a>
 </li>
-        <li><a href="_autosummary/relife.model.LeftTruncated.html#relife.model.LeftTruncated.var">(relife.model.LeftTruncated method)</a>
-</li>
-        <li><a href="_autosummary/relife.model.LifetimeModel.html#relife.model.LifetimeModel.var">(relife.model.LifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.parametric.ParametricLifetimeModel.html#relife.parametric.ParametricLifetimeModel.var">(relife.parametric.ParametricLifetimeModel method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.AFT.html#relife.regression.AFT.var">(relife.regression.AFT method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.ProportionalHazards.html#relife.regression.ProportionalHazards.var">(relife.regression.ProportionalHazards method)</a>
-</li>
-        <li><a href="_autosummary/relife.regression.Regression.html#relife.regression.Regression.var">(relife.regression.Regression method)</a>
+        <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull.var">(relife.Weibull method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -2048,37 +1334,76 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/relife.distribution.Weibull.html#relife.distribution.Weibull">Weibull (class in relife.distribution)</a>
+      <li><a href="api/lifetime_models/relife.Weibull.html#relife.Weibull">Weibull (class in relife)</a>
 </li>
   </ul></td>
 </tr></table>
 
 
 
-              </div>
+                </article>
+              
+              
+              
+              
+              
+            </div>
+            
+            
               
             
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-</div>
+          </div>
+          <footer class="bd-footer-content">
             
-        </div>
+          </footer>
+        
+      </main>
     </div>
-    <footer class="footer">
-  <p>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
     
-      By Thomas Guillon, Michaël Boulade, Laura Cohen, Lionel Figueroa, Jovana Krstevska, Sami Tazi.<br/>
+      © Copyright 2025, RTE.
+      <br/>
     
-        &copy; Copyright 2022, RTE (https://www.rte-france.com) except where otherwise noted and licensed under a CC-BY-4.0 license (https://creativecommons.org/licenses/by/4.0/).<br/>
   </p>
-</footer>
-</main>
+</div>
+      
+        <div class="footer-item">
 
-
-      </div>
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
     </div>
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
 
+  </footer>
   </body>
 </html>

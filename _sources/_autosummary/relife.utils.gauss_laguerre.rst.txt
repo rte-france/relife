@@ -1,6 +1,0 @@
-relife.utils.gauss\_laguerre
-============================
-
-.. currentmodule:: relife.utils
-
-.. autofunction:: gauss_laguerre

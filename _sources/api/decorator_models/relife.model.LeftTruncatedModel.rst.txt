@@ -1,0 +1,148 @@
+﻿
+
+
+
+
+
+
+LeftTruncatedModel
+==================
+
+.. currentmodule:: relife.model
+
+.. autoclass:: LeftTruncatedModel
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+
+    .. rubric:: Methods
+
+    **Survival functions**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+            ~LeftTruncatedModel.chf
+        
+        
+            ~LeftTruncatedModel.hf
+        
+        
+            ~LeftTruncatedModel.ichf
+        
+        
+            ~LeftTruncatedModel.isf
+        
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.mrl
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.sf
+        
+        
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~LeftTruncatedModel.cdf
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.pdf
+        
+        
+            ~LeftTruncatedModel.ppf
+        
+        
+        
+        
+
+    **Statistics**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.mean
+        
+        
+            ~LeftTruncatedModel.median
+        
+        
+            ~LeftTruncatedModel.moment
+        
+        
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.var
+        
+
+    **Other methods**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.ls_integrate
+        
+        
+        
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.rvs
+        
+        
+        
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+            ~LeftTruncatedModel.plot
+        

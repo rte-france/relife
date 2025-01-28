@@ -1,0 +1,148 @@
+﻿
+
+
+
+
+
+
+AgeReplacementModel
+===================
+
+.. currentmodule:: relife.model
+
+.. autoclass:: AgeReplacementModel
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+
+    .. rubric:: Methods
+
+    **Survival functions**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+            ~AgeReplacementModel.chf
+        
+        
+            ~AgeReplacementModel.hf
+        
+        
+            ~AgeReplacementModel.ichf
+        
+        
+            ~AgeReplacementModel.isf
+        
+        
+        
+        
+        
+        
+            ~AgeReplacementModel.mrl
+        
+        
+        
+        
+        
+            ~AgeReplacementModel.sf
+        
+        
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~AgeReplacementModel.cdf
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AgeReplacementModel.pdf
+        
+        
+            ~AgeReplacementModel.ppf
+        
+        
+        
+        
+
+    **Statistics**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AgeReplacementModel.mean
+        
+        
+            ~AgeReplacementModel.median
+        
+        
+            ~AgeReplacementModel.moment
+        
+        
+        
+        
+        
+        
+        
+            ~AgeReplacementModel.var
+        
+
+    **Other methods**
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+        
+        
+        
+        
+        
+            ~AgeReplacementModel.ls_integrate
+        
+        
+        
+        
+        
+        
+        
+        
+            ~AgeReplacementModel.rvs
+        
+        
+        
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+            ~AgeReplacementModel.plot
+        
