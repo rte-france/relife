@@ -1,0 +1,40 @@
+﻿
+
+
+KaplanMeier
+===========
+
+.. currentmodule:: relife
+
+.. autoclass:: KaplanMeier
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~KaplanMeier.fit
+        
+        
+            ~KaplanMeier.sf
+        
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+            ~KaplanMeier.plot
+        
+        
+            ~KaplanMeier.estimates
+        

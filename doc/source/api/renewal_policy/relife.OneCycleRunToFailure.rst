@@ -1,0 +1,52 @@
+﻿
+
+
+OneCycleRunToFailure
+====================
+
+.. currentmodule:: relife
+
+.. autoclass:: OneCycleRunToFailure
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost
+        
+        
+            ~OneCycleRunToFailure.asymptotic_expected_total_cost
+        
+        
+            ~OneCycleRunToFailure.expected_equivalent_annual_cost
+        
+        
+            ~OneCycleRunToFailure.expected_total_cost
+        
+        
+            ~OneCycleRunToFailure.sample
+        
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+            ~OneCycleRunToFailure.discounting
+        
+        
+            ~OneCycleRunToFailure.model1
+        
+        
+            ~OneCycleRunToFailure.reward
+        

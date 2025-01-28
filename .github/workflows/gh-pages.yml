@@ -1,0 +1,45 @@
+name: Build and deploy Github pages
+on: [push]
+permissions:
+  contents: write
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.1.11'
+
+      - name: Clone ReLife2
+        uses: GuillaumeFalourd/clone-github-repo-action@v2.3
+        with:
+          depth: 1
+          branch: 'refactoring'
+          owner: 'rte-france'
+          repository: 'relife'
+
+      - name : Install Python dependencies
+        run: |
+          pip3 install -r requirements.txt # install sphinx (and extensions)
+          cd relife
+          pip3 install . # install relife
+
+      - name: Build Sphinx Doc
+        working-directory: ./docs
+        run: |
+          sphinx-build -M html ./source ./build -Ea
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages # branch on which files are commited
+          folder: ./docs/build/html # The folder the action should deploy.

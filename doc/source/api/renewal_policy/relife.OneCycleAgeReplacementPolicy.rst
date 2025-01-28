@@ -1,0 +1,55 @@
+﻿
+
+
+OneCycleAgeReplacementPolicy
+============================
+
+.. currentmodule:: relife
+
+.. autoclass:: OneCycleAgeReplacementPolicy
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
+        
+        
+            ~OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost
+        
+        
+            ~OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost
+        
+        
+            ~OneCycleAgeReplacementPolicy.expected_total_cost
+        
+        
+            ~OneCycleAgeReplacementPolicy.fit
+        
+        
+            ~OneCycleAgeReplacementPolicy.sample
+        
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+            ~OneCycleAgeReplacementPolicy.discounting
+        
+        
+            ~OneCycleAgeReplacementPolicy.model1
+        
+        
+            ~OneCycleAgeReplacementPolicy.reward
+        
