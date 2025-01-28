@@ -19,27 +19,16 @@ jobs:
         with:
           pandoc-version: '3.1.11'
 
-      - name: Clone ReLife2
-        uses: GuillaumeFalourd/clone-github-repo-action@v2.3
-        with:
-          depth: 1
-          branch: 'refactoring'
-          owner: 'rte-france'
-          repository: 'relife'
-
       - name : Install Python dependencies
-        run: |
-          pip3 install -r requirements.txt # install sphinx (and extensions)
-          cd relife
-          pip3 install . # install relife
+        run: | # dev version with sphinx 
+          pip install ".[dev]" 
 
       - name: Build Sphinx Doc
-        working-directory: ./docs
         run: |
-          sphinx-build -M html ./source ./build -Ea
+          sphinx-build -M html ./doc/source ./doc/build -Ea
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages # branch on which files are commited
-          folder: ./docs/build/html # The folder the action should deploy.
+          folder: ./doc/build/html # The folder the action should deploy.
