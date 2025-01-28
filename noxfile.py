@@ -36,7 +36,7 @@ def test(session):
         args = session.posargs
     else:
         args = ()
-    session.run("pytest", "tests/", *args)
+    session.run("pytest", "test/", *args)
 
 
 @nox.session(tags=["parametrized_test"])
@@ -56,7 +56,7 @@ def parametrized_test(session, numpy, scipy, matplotlib):
         args = session.posargs
     else:
         args = ()
-    session.run("pytest", "tests/", *args)
+    session.run("pytest", "test/", *args)
 
 
 @nox.session(tags=["type"])
