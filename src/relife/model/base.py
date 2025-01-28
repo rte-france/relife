@@ -720,9 +720,6 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         - :math:`f` the probability density function of the lifetime model,
         - :math:`a_i` and :math:`w_i` are the points and weights of the jumps.
 
-        .. [1] Resnick, S. I. (1992). Adventures in stochastic processes.
-            Springer Science & Business Media. p176.
-
         Parameters
         ----------
         func : callable (in : 1 ndarray, out : 1 ndarray)
