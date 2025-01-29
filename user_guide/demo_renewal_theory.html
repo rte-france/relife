@@ -463,7 +463,8 @@
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span><span class="p">,</span> <span class="n">RenewalProcess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcess</span>
 </pre></div>
 </div>
 </div>
@@ -545,7 +546,7 @@
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Calcul de la distribution des âges à l&#39;équilibre. A temps suffisament long, la varariance des durées de vie &quot;étale&quot; les défaillance dans le temps</span>
 <span class="c1"># ce qui aboutit à une stabilisation du rythme d&#39;apparition des défaillances au cours du temps. Lorsque ce régime stationnaire est atteint,</span>
 <span class="c1"># la population d&#39;actifs a une distribution d&#39;âge qui ne varie plus au cours du temps : c&#39;est la distribution d&#39;âges à l&#39;équilibre.</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.fiability</span><span class="w"> </span><span class="kn">import</span> <span class="n">EquilibriumDistribution</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">EquilibriumDistribution</span>
 
 <span class="n">eq_distrib</span> <span class="o">=</span> <span class="n">EquilibriumDistribution</span><span class="p">(</span><span class="n">distrib</span><span class="p">)</span>
 

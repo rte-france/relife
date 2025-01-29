@@ -7,7 +7,7 @@ ReLife
 
     .. grid-item-card::  Asset management
 
-        ReLife was created at RTE for asset management based on fiability and renewal theory.
+        ReLife was created at RTE for asset management based on reliability and renewal theory.
 
     .. grid-item-card::  Open science
 
@@ -40,7 +40,7 @@ ReLife
    * - `API`_
      - The content of the exposed ReLife API
    * - `Learn`_
-     - Learn more about fiability and renewal theory
+     - Learn more about reliability and renewal theory
    * - `Contributor's guide`_
      - Information about the conception of ReLife and how to contribute.
    * - `Future improvements`_
