@@ -20,6 +20,7 @@ include = ["relife*"]  # ["*"] by default
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pandas",
 
     "nox",
     "isort",
