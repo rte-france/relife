@@ -84,13 +84,16 @@ def lifetimes_generator(
     still_valid = event_times < end_time
 
     def sample_routine(target_model, args):
-        nonlocal event_times, still_valid  # modify these variables
+        nonlocal event_times, still_valid, seed  # modify these variables
         lifetimes = model_rvs(target_model, size, args=args, seed=seed).reshape(
             (nb_assets, nb_samples)
         )
         event_times += lifetimes
         events = compute_events(lifetimes, target_model, args)
         still_valid = event_times < end_time
+        # update seed to avoid having the same rvs result
+        if seed is not None:
+            seed += 1
         return lifetimes, event_times, events, still_valid
 
     if model1:
