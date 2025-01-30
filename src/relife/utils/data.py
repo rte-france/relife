@@ -112,19 +112,19 @@ class LifetimeData:
                 intersect_data = data.intersection(self.left_truncation)
                 if len(intersect_data) != 0:
                     if np.any(
-                            # take right bound when left bound is 0, otherwise take the min value of the bounds
-                            # for none interval lifetimes, min equals the value
-                            np.where(
-                                intersect_data.values[:, [0]] == 0,
-                                intersect_data.values[:, [-2]],
-                                np.min(
-                                    intersect_data.values[:, :-1], axis=1, keepdims=True
-                                ),
-                                # min of all cols but last
-                            )
-                            < intersect_data.values[
-                              :, [-1]
-                              ]  # then check if any is under left truncation bound
+                        # take right bound when left bound is 0, otherwise take the min value of the bounds
+                        # for none interval lifetimes, min equals the value
+                        np.where(
+                            intersect_data.values[:, [0]] == 0,
+                            intersect_data.values[:, [-2]],
+                            np.min(
+                                intersect_data.values[:, :-1], axis=1, keepdims=True
+                            ),
+                            # min of all cols but last
+                        )
+                        < intersect_data.values[
+                            :, [-1]
+                        ]  # then check if any is under left truncation bound
                     ):
                         raise ValueError(
                             "Some lifetimes are under left truncation bounds"
@@ -133,19 +133,19 @@ class LifetimeData:
                 intersect_data = data.intersection(self.right_truncation)
                 if len(intersect_data) != 0:
                     if np.any(
-                            # take left bound when right bound is inf, otherwise take the max value of the bounds
-                            # for none interval lifetimes, max equals the value
-                            np.where(
-                                intersect_data.values[:, [-2]] == np.inf,
-                                intersect_data.values[:, [0]],
-                                np.max(
-                                    intersect_data.values[:, :-1], axis=1, keepdims=True
-                                ),
-                                # max of all cols but last
-                            )
-                            > intersect_data.values[
-                              :, [-1]
-                              ]  # then check if any is above right truncation bound
+                        # take left bound when right bound is inf, otherwise take the max value of the bounds
+                        # for none interval lifetimes, max equals the value
+                        np.where(
+                            intersect_data.values[:, [-2]] == np.inf,
+                            intersect_data.values[:, [0]],
+                            np.max(
+                                intersect_data.values[:, :-1], axis=1, keepdims=True
+                            ),
+                            # max of all cols but last
+                        )
+                        > intersect_data.values[
+                            :, [-1]
+                        ]  # then check if any is above right truncation bound
                     ):
                         raise ValueError(
                             "Some lifetimes are above right truncation bounds"
@@ -173,11 +173,11 @@ class LifetimeParser(Protocol):
     """
 
     def __init__(
-            self,
-            time: NDArray[np.float64],
-            event: Optional[NDArray[np.bool_]] = None,
-            entry: Optional[NDArray[np.float64]] = None,
-            departure: Optional[NDArray[np.float64]] = None,
+        self,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
     ):
 
         if entry is None:
@@ -287,14 +287,14 @@ class Lifetime2DParser(LifetimeParser):
         return IndexedData(values, index)
 
     def get_left_censoring(
-            self,
+        self,
     ) -> IndexedData:
         index = np.where(self.time[:, 0] == 0)[0]
         values = self.time[index, 1]
         return IndexedData(values, index)
 
     def get_right_censoring(
-            self,
+        self,
     ) -> IndexedData:
         index = np.where(self.time[:, 1] == np.inf)[0]
         values = self.time[index, 0]
@@ -324,10 +324,10 @@ class Lifetime2DParser(LifetimeParser):
 
 
 def lifetime_data_factory(
-        time: NDArray[np.float64],
-        event: Optional[NDArray[np.bool_]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
+    time: NDArray[np.float64],
+    event: Optional[NDArray[np.bool_]] = None,
+    entry: Optional[NDArray[np.float64]] = None,
+    departure: Optional[NDArray[np.float64]] = None,
 ) -> LifetimeData:
     """
     Args:
@@ -361,9 +361,9 @@ def lifetime_data_factory(
 
 
 def deteriorations_factory(
-        deterioration_measurements: np.ndarray,
-        inspection_times: np.ndarray,
-        unit_ids: np.ndarray,
+    deterioration_measurements: np.ndarray,
+    inspection_times: np.ndarray,
+    unit_ids: np.ndarray,
 ):
     """
     Args:
@@ -428,16 +428,16 @@ class CountData(ABC):
             getattr(self, _field.name) for _field in fields(self) if _field.init
         ]
         if not all(
-                arr.ndim == 1 for arr in fields_values if isinstance(arr, np.ndarray)
+            arr.ndim == 1 for arr in fields_values if isinstance(arr, np.ndarray)
         ):
             raise ValueError("All array values must be 1d")
         if (
-                not len(
-                    set(
-                        arr.shape[0] for arr in fields_values if isinstance(arr, np.ndarray)
-                    )
+            not len(
+                set(
+                    arr.shape[0] for arr in fields_values if isinstance(arr, np.ndarray)
                 )
-                    == 1
+            )
+            == 1
         ):
             raise ValueError("All array values must have the same shape")
 
@@ -452,7 +452,7 @@ class CountData(ABC):
         return self.nb_samples * self.nb_assets
 
     def number_of_events(
-            self, sample: int
+        self, sample: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         ind = self.samples_index == sample
         times = np.insert(np.sort(self.event_times[ind]), 0, 0)
@@ -465,8 +465,7 @@ class CountData(ABC):
         return times, counts
 
     @abstractmethod
-    def iter(self, sample: Optional[int] = None) -> "CountDataIterable":
-        ...
+    def iter(self, sample: Optional[int] = None) -> "CountDataIterable": ...
 
 
 class CountDataIterable:
@@ -511,6 +510,15 @@ class RenewalData(CountData):
     with_model1: bool = field(repr=False)
 
     # necessary to store reference to model_args used to sample (to_lifetime_data)
+    def __post_init__(self):
+        super().__post_init__()
+        # tile args in 2d (homogeneous shape if multiple assets)
+        args_2d = [np.atleast_2d(arg) for arg in self.model_args]
+        if self.nb_assets > 1 and bool(self.model_args):
+            for i, arg in enumerate(args_2d):
+                if arg.shape[0] == 1:
+                    args_2d[i] = np.tile(arg, (self.nb_assets, 1))
+        self.model_args = tuple(args_2d)
 
     def iter(self, sample: Optional[int] = None):
         if sample is None:
@@ -523,11 +531,36 @@ class RenewalData(CountData):
                 CountDataIterable(self, ("event_times", "lifetimes", "events")),
             )
 
+    # def _preprocess_args(self) -> tuple[NDArray[np.float64], ...]:
+    #     # tile args in 2d (homogeneous shape if multiple assets)
+    #     args_2d = [np.atleast_2d(arg) for arg in self.model_args]
+    #     if self.nb_assets > 1 and bool(self.model_args):
+    #         for i, arg in enumerate(args_2d):
+    #             if arg.shape[0] == 1:
+    #                 args_2d[i] = np.tile(arg, (self.nb_assets, 1))
+    #     return tuple(args_2d)
+
+    def _get_args(
+        self, index, previous_args: Optional[tuple[NDArray[np.float64], ...]] = None
+    ) -> tuple[NDArray[np.float64], ...]:
+        args = ()
+        if self.nb_assets > 1 and bool(self.model_args):
+            if previous_args:
+                args = tuple(
+                    (
+                        np.concatenate((p, np.take(a, index, axis=0)))
+                        for p, a in zip(previous_args, self.model_args)
+                    )
+                )
+            else:
+                args = tuple((np.take(a, index, axis=0) for a in self.model_args))
+        return args
+
     def to_fit(
-            self,
-            t0: float = 0,
-            tf: Optional[float] = None,
-            sample: Optional[int] = None,
+        self,
+        t0: float = 0,
+        tf: Optional[float] = None,
+        sample: Optional[int] = None,
     ) -> tuple[
         NDArray[np.float64],
         NDArray[np.bool_],
@@ -563,25 +596,43 @@ class RenewalData(CountData):
 
         s = self.samples_index == sample if sample is not None else Ellipsis
 
-        complete_left_truncated = (self.event_times[s] > t0) & (self.event_times[s] <= tf)
+        complete_left_truncated = (self.event_times[s] > t0) & (
+            self.event_times[s] <= tf
+        )
 
-        _timeline = self.event_times[complete_left_truncated]
-        _lifetimes = self.lifetimes[complete_left_truncated]
-        _events = self.events[complete_left_truncated]
+        _timeline = self.event_times[s][complete_left_truncated]
+        _lifetimes = self.lifetimes[s][complete_left_truncated]
+        _events = self.events[s][complete_left_truncated]
+        _assets_index = self.assets_index[s][complete_left_truncated]
 
         shift_left = _timeline - _lifetimes
         left_truncated = (t0 - shift_left) >= 0
         left_truncations = (t0 - shift_left)[left_truncated]
 
-        time = np.concatenate((time, _lifetimes[left_truncated], _lifetimes[~left_truncated]))
-        event = np.concatenate((event, np.ones_like(left_truncations, dtype=np.bool_), _events[~left_truncated]))
-        entry = np.concatenate((entry, left_truncations, np.zeros_like(_lifetimes[~left_truncated])))
+        time = np.concatenate(
+            (time, _lifetimes[left_truncated], _lifetimes[~left_truncated])
+        )
+        event = np.concatenate(
+            (
+                event,
+                np.ones_like(left_truncations, dtype=np.bool_),
+                _events[~left_truncated],
+            )
+        )
+        entry = np.concatenate(
+            (entry, left_truncations, np.zeros_like(_lifetimes[~left_truncated]))
+        )
 
-        right_censored = (self.event_times[s] > tf)
+        args = self._get_args(_assets_index[left_truncated])
+        args = self._get_args(_assets_index[~left_truncated], previous_args=args)
+        print(args)
 
-        _timeline = self.event_times[right_censored]
-        _lifetimes = self.lifetimes[right_censored]
-        _events = self.events[right_censored]
+        right_censored = self.event_times[s] > tf
+
+        _timeline = self.event_times[s][right_censored]
+        _lifetimes = self.lifetimes[s][right_censored]
+        _events = self.events[s][right_censored]
+        _assets_index = self.assets_index[s][right_censored]
 
         shift_left = _timeline - _lifetimes
         right_censored = (tf - shift_left) >= 0
@@ -591,7 +642,9 @@ class RenewalData(CountData):
         event = np.concatenate((event, np.zeros_like(right_censoring, dtype=np.bool_)))
         entry = np.concatenate((entry, np.zeros_like(right_censoring)))
 
-        return time, event, entry, None, ()
+        args = self._get_args(_assets_index[right_censored], previous_args=args)
+
+        return time, event, entry, None, args
 
 
 @dataclass
@@ -599,7 +652,7 @@ class RenewalRewardData(RenewalData):
     total_rewards: NDArray[np.float64] = field(repr=False)
 
     def cum_total_rewards(
-            self, sample: int
+        self, sample: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         ind = self.samples_index == sample
         s = np.argsort(self.event_times[ind])
