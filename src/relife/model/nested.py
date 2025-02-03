@@ -6,8 +6,8 @@ from scipy.optimize import newton
 from typing_extensions import override
 
 from relife.model.base import LifetimeModel
-from relife.utils.quadratures import gauss_legendre
-from relife.utils.types import ModelArgs
+from relife.quadratures import gauss_legendre
+from relife.typing import ModelArgs
 
 
 class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):

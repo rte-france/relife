@@ -4,8 +4,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.model.base import LifetimeModel
-from relife.utils.discountings import Discounting
-from relife.utils.types import DiscountingArgs, Model1Args, ModelArgs
+from relife.discountings import Discounting
+from relife.typing import DiscountingArgs, Model1Args, ModelArgs
 
 
 # make evaluated func  Callable[[array], array] only and do partial elsewhere

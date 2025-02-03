@@ -9,11 +9,11 @@ from relife.renewal import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
-from relife.sampling import lifetimes_generator, lifetimes_rewards_generator
-from relife.utils.data import RenewalData, RenewalRewardData
-from relife.utils.discountings import exponential_discounting, Discounting
-from relife.utils.rewards import Reward
-from relife.utils.types import (
+from relife.generator import lifetimes_generator, lifetimes_rewards_generator
+from relife.data.renewal import RenewalData, RenewalRewardData
+from relife.discountings import exponential_discounting, Discounting
+from relife.rewards import Reward
+from relife.typing import (
     DiscountingArgs,
     Model1Args,
     ModelArgs,

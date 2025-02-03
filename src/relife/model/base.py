@@ -12,10 +12,10 @@ from relife.likelihoods import (
     LikelihoodFromLifetimes,
     hessian_from_likelihood,
 )
-from relife.utils.data import LifetimeData, lifetime_data_factory
-from relife.utils.plots import PlotSurvivalFunc
-from relife.utils.quadratures import gauss_legendre, quad_laguerre
-from relife.utils.types import VariadicArgs
+from relife.data.lifetime import LifetimeData, lifetime_data_factory
+from relife.plots import PlotSurvivalFunc
+from relife.quadratures import gauss_legendre, quad_laguerre
+from relife.typing import VariadicArgs
 
 
 class Parameters:

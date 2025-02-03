@@ -5,9 +5,9 @@ from numpy.typing import NDArray
 
 from relife.model.base import LifetimeModel
 from relife.model.nested import AgeReplacementModel
-from relife.utils.discountings import Discounting
-from relife.utils.rewards import Reward
-from relife.utils.types import (
+from relife.discountings import Discounting
+from relife.rewards import Reward
+from relife.typing import (
     DiscountingArgs,
     Model1Args,
     ModelArgs,

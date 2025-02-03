@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 from typing_extensions import override
 
-from relife.utils.data import LifetimeData
+from relife.data.lifetime import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.model import ParametricLifetimeModel, ParametricModel

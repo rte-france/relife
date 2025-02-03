@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife.utils.data import RenewalData
+from relife.data.renewal import RenewalData
 
 
 def samples2_assets1():
