@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, fields
-from typing import Optional, Sequence, Iterator
+from typing import Iterator, Optional, Sequence
 
 import numpy as np
 from numpy.typing import NDArray

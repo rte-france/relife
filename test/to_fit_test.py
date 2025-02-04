@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife.data.renewal import RenewalData
+from relife.data import RenewalData
 
 
 def samples2_assets1():
@@ -130,7 +130,6 @@ def test_2_samples_1_asset(samples2_assets1):
 
 
 def test_2_samples_2_assets(samples2_assets2):
-
     t0 = 90.0
     tf = 120.0
 

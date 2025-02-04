@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Protocol, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 from typing_extensions import override
 
-from relife.data.lifetime import LifetimeData
+from relife.data import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.model import ParametricLifetimeModel, ParametricModel

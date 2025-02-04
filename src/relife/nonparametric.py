@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import wraps
-from typing import Optional, Protocol, Union, Self
+from typing import Optional, Protocol, Self, Union
 
 import numpy as np
 from numpy.typing import NDArray

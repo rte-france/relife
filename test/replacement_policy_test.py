@@ -8,12 +8,15 @@ import numpy as np
 import pytest
 
 from relife import (
+    AgeReplacementPolicy,
+    Gamma,
+    Gompertz,
+    LogLogistic,
+    OneCycleAgeReplacementPolicy,
     OneCycleRunToFailure,
     RunToFailure,
-    OneCycleAgeReplacementPolicy,
-    AgeReplacementPolicy,
+    Weibull,
 )
-from relife import Weibull, Gompertz, Gamma, LogLogistic
 
 
 # fixtures

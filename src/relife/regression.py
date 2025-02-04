@@ -14,8 +14,8 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import override
 
+from relife.data import LifetimeData
 from relife.model import ParametricLifetimeModel, ParametricModel
-from relife.data.lifetime import LifetimeData
 from relife.typing import ModelArgs
 
 Ts = TypeVarTuple("Ts")

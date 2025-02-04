@@ -7,11 +7,10 @@
 import numpy as np
 import pytest
 
-from relife import Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
+from relife import AFT, Gamma, Gompertz, LogLogistic, ProportionalHazard, Weibull
 from relife.model import AgeReplacementModel, EquilibriumDistribution
 from relife.renewal import RenewalProcess, RenewalRewardProcess
 from relife.rewards import run_to_failure_cost
-
 
 # fixtures
 

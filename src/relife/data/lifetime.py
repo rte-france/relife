@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Self, Protocol, Optional
+from typing import Optional, Protocol, Self
 
 import numpy as np
 from numpy.typing import NDArray

@@ -4,14 +4,11 @@ from typing import Callable, Optional, ParamSpec, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.model import LifetimeModel
-from relife.renewal import (
-    delayed_renewal_equation_solver,
-    renewal_equation_solver,
-)
+from relife.data import RenewalData, RenewalRewardData
+from relife.discountings import Discounting, exponential_discounting
 from relife.generator import lifetimes_generator, lifetimes_rewards_generator
-from relife.data.renewal import RenewalData, RenewalRewardData
-from relife.discountings import exponential_discounting, Discounting
+from relife.model import LifetimeModel
+from relife.renewal import delayed_renewal_equation_solver, renewal_equation_solver
 from relife.rewards import Reward
 from relife.typing import (
     DiscountingArgs,

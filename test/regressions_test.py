@@ -12,15 +12,14 @@ from scipy.stats import boxcox, zscore
 
 from relife import (
     AFT,
-    ProportionalHazard,
-    LogLogistic,
     Exponential,
-    Weibull,
-    Gompertz,
     Gamma,
+    Gompertz,
+    LogLogistic,
+    ProportionalHazard,
+    Weibull,
 )
 from relife.datasets import load_insulator_string
-
 
 # fixtures
 

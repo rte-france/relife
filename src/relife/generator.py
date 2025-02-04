@@ -3,9 +3,8 @@ from typing import Iterator, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.model.base import LifetimeModel
-from relife.model.nested import AgeReplacementModel
 from relife.discountings import Discounting
+from relife.model import AgeReplacementModel, LifetimeModel
 from relife.rewards import Reward
 from relife.typing import (
     DiscountingArgs,

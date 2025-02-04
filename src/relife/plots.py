@@ -213,8 +213,8 @@ class PlotDescriptor:
 
     def __get__(self, obj, objtype=None):
         from relife.distributions import Distribution  # avoid circular import
-        from relife.regression import Regression
         from relife.nonparametric import ECDF, KaplanMeier, NelsonAalen
+        from relife.regression import Regression
 
         if isinstance(obj.model, Distribution):
             return BoundPlot(obj.model, param_probfunc_plot, self.name)

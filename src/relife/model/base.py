@@ -1,6 +1,6 @@
 import copy
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field, InitVar
+from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain
 from typing import Any, Callable, Generic, Iterator, Optional, Self, Union
 
@@ -8,11 +8,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
-from relife.likelihoods import (
-    LikelihoodFromLifetimes,
-    hessian_from_likelihood,
-)
-from relife.data.lifetime import LifetimeData, lifetime_data_factory
+from relife.data import LifetimeData, lifetime_data_factory
+from relife.likelihoods import LikelihoodFromLifetimes, hessian_from_likelihood
 from relife.plots import PlotSurvivalFunc
 from relife.quadratures import gauss_legendre, quad_laguerre
 from relife.typing import VariadicArgs

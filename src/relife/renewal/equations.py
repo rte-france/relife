@@ -3,8 +3,8 @@ from typing import Callable, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.model.base import LifetimeModel
 from relife.discountings import Discounting
+from relife.model import LifetimeModel
 from relife.typing import DiscountingArgs, Model1Args, ModelArgs
 
 

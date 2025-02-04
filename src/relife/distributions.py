@@ -7,8 +7,8 @@ from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
+from relife.data import LifetimeData
 from relife.model import ParametricLifetimeModel
-from relife.data.lifetime import LifetimeData
 from relife.quadratures import shifted_laguerre
 
 

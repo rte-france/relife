@@ -3,15 +3,13 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.model import LifetimeModel, LeftTruncatedModel
-from relife.renewal import RenewalRewardProcess
-from relife.renewal.process import reward_partial_expectation
-from relife.generator import lifetimes_rewards_generator
-from relife.typing import Policy
-from relife.data.renewal import RenewalRewardData
+from relife.data import RenewalRewardData
 from relife.discountings import exponential_discounting
+from relife.generator import lifetimes_rewards_generator
+from relife.model import LeftTruncatedModel, LifetimeModel
+from relife.renewal import RenewalRewardProcess, reward_partial_expectation
 from relife.rewards import run_to_failure_cost
-from relife.typing import ModelArgs, Model1Args
+from relife.typing import Model1Args, ModelArgs, Policy
 
 
 class OneCycleRunToFailure(Policy):

@@ -1,2 +1,2 @@
-from .base import LifetimeModel, ParametricLifetimeModel, ParametricModel, Parameters
-from .nested import AgeReplacementModel, LeftTruncatedModel, EquilibriumDistribution
+from .base import LifetimeModel, Parameters, ParametricLifetimeModel, ParametricModel
+from .nested import AgeReplacementModel, EquilibriumDistribution, LeftTruncatedModel

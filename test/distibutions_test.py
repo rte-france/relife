@@ -1,13 +1,7 @@
 import numpy as np
 import pytest
 
-from relife import (
-    Exponential,
-    Weibull,
-    Gompertz,
-    Gamma,
-    LogLogistic,
-)
+from relife import Exponential, Gamma, Gompertz, LogLogistic, Weibull
 from relife.datasets import load_power_transformer
 
 
