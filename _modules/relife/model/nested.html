@@ -439,9 +439,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">newton</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils.quadratures</span><span class="w"> </span><span class="kn">import</span> <span class="n">gauss_legendre</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelArgs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.quadratures</span><span class="w"> </span><span class="kn">import</span> <span class="n">gauss_legendre</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelArgs</span>
 
 
 <div class="viewcode-block" id="AgeReplacementModel">
@@ -575,7 +575,7 @@
             <span class="n">args_2d</span> <span class="o">=</span> <span class="p">(</span><span class="n">args_2d</span><span class="p">,)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">integrand</span><span class="p">(</span>
-            <span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">_</span><span class="p">:</span> <span class="o">*</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+            <span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">_</span><span class="p">:</span> <span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span><span class="p">))</span>
 

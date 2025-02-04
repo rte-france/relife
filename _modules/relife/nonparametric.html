@@ -434,14 +434,13 @@
   <h1>Source code for relife.nonparametric</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Self</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.nhpp</span><span class="w"> </span><span class="kn">import</span> <span class="n">nhpp_data_factory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeData</span><span class="p">,</span> <span class="n">lifetime_data_factory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils.plots</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotSurvivalFunc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.data.lifetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeData</span><span class="p">,</span> <span class="n">lifetime_data_factory</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.plots</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotSurvivalFunc</span>
 
 
 <span class="nd">@dataclass</span>
@@ -1165,34 +1164,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="p">[</span><span class="s2">&quot;sf&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nearest_1dinterp</span><span class="p">(</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 </div>
 
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">NonParametricNHPP</span><span class="p">:</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nelson_aalen</span> <span class="o">=</span> <span class="n">NelsonAalen</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">ages</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">assets</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nelson_aalen</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">nhpp_data_factory</span><span class="p">(</span><span class="n">ages</span><span class="p">,</span> <span class="n">assets</span><span class="p">))</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cumulative hazard function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray of shape (n, )</span>
-<span class="sd">            The times at which to estimate the cumulative hazard function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray of shape (n, )</span>
-<span class="sd">            The estimated cumulative hazard values at each time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelson_aalen</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
 </pre></div>
 
                 </article>
