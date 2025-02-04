@@ -4,6 +4,7 @@ import pytest
 from relife.data import RenewalData
 
 
+@pytest.fixture
 def samples2_assets1():
     """
     event_times
@@ -34,11 +35,24 @@ def samples2_assets1():
     return sample_data
 
 
+# def args_in_2d(model_args)
+#     args_2d = [np.atleast_2d(arg) for arg in model_args]
+#     nb_assets =
+#     if nb_assets > 1 and bool(model_args):
+#         for i, arg in enumerate(args_2d):
+#             if arg.shape[0] == 1:
+#                 args_2d[i] = np.tile(arg, (self.nb_assets, 1))
+#
+#
+#
+#
+
+
 @pytest.fixture(
     params=[
-        np.array(1),
-        np.array([1, 2, 3]),
-        np.array([[1, 2, 3], [4, 5, 6]]),
+        (np.array(1),),
+        (np.array([1, 2, 3]),),
+        (np.array([[1, 2, 3], [4, 5, 6]]),),
         (np.array(1), np.array([1, 2, 3]), np.array([[1, 2, 3], [4, 5, 6]])),
     ]
 )
@@ -105,6 +119,8 @@ def samples2_assets2(request):
     )
     order = np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=np.int64)
 
+    model_args = request.param
+
     sample_data = RenewalData(
         samples_index,
         assets_index,
@@ -112,7 +128,7 @@ def samples2_assets2(request):
         event_times,
         lifetimes,
         np.ones_like(lifetimes, dtype=np.bool_),  # events
-        request.param,  # model args
+        model_args,
         False,  # with model1
     )
     return sample_data
