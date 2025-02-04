@@ -5,13 +5,13 @@ import nox
 def black(session):
     session.install("black")
     session.run("black", "noxfile.py")
-    session.run("black", "src/relife/.")
+    session.run("black", "relife/.")
 
 
 @nox.session(tags=["reformat"])
 def isort(session):
     session.install("isort")
-    session.run("isort", "src/relife/.")
+    session.run("isort", "relife/.")
 
 
 @nox.session(tags=["lint"])
@@ -68,4 +68,4 @@ def mypy(session):
         args = session.posargs
     else:
         args = ()
-    session.run("mypy", *args, "src/relife/.")
+    session.run("mypy", *args, "relife/.")
