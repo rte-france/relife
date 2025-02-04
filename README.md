@@ -10,12 +10,24 @@ The future version will include cleaner documentation and better tutorials. The 
 
 If you plan to use ReLife extensively, we would greatly appreciate your feedback. Do not hesitate to open an issue.
 
-## Installation
+## Installation (stable)
 
-The project package uploaded to PyPi has not changed.
+The project package uploaded to PyPi has not changed, meaning the latest version (v1.0.0) published is the same.
 
 ```bash
 pip install relife
+```
+
+## Installation (v2.0.0)
+
+The new version of ReLife can be built from source. You'll need to clone this repository and install ReLife with pip in
+your python environment (**we highly encourage to install ReLife in a python virtual environment**)
+
+```
+source <path_to_your_venv>/bin/activate
+mkdir -p <your_desired_path>/relife
+git clone https://github.com/rte-france/relife.git
+pip install . # or alternatively pip install ".[dev]" adds required dependencies to contribute to ReLife
 ```
 
 ## Documentation
