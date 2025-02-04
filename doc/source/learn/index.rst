@@ -6,7 +6,7 @@ of statistics.
 
 
 Reliability theory
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 Renewal theory
 ~~~~~~~~~~~~~~
