@@ -20,17 +20,6 @@ class RenewalData(CountData):
     model_args: ModelArgs = field(repr=False)
     with_model1: bool = field(repr=False)
 
-    # necessary to store reference to model_args used to sample (to_lifetime_data)
-    # def __post_init__(self):
-    #     super().__post_init__()
-    #     # tile args in 2d (homogeneous shape if multiple assets)
-    #     args_2d = [np.atleast_2d(arg) for arg in self.model_args]
-    #     if self.nb_assets > 1 and bool(self.model_args):
-    #         for i, arg in enumerate(args_2d):
-    #             if arg.shape[0] == 1:
-    #                 args_2d[i] = np.tile(arg, (self.nb_assets, 1))
-    #     self.model_args = tuple(args_2d)
-
     def iter(self, sample: Optional[int] = None):
         if sample is None:
             return CountDataIterable(self, ("event_times", "lifetimes", "events"))
@@ -42,30 +31,20 @@ class RenewalData(CountData):
                 CountDataIterable(self, ("event_times", "lifetimes", "events")),
             )
 
-    def _preprocess_args(self) -> tuple[NDArray[np.float64], ...]:
-        # tile args in 2d (homogeneous shape if multiple assets)
-        args_2d = [np.atleast_2d(arg) for arg in self.model_args]
-        if self.nb_assets > 1 and bool(self.model_args):
-            for i, arg in enumerate(args_2d):
-                if arg.shape[0] == 1:
-                    args_2d[i] = np.tile(arg, (self.nb_assets, 1))
-        return tuple(args_2d)
-
     def _get_args(
         self, index, previous_args: Optional[tuple[NDArray[np.float64], ...]] = None
     ) -> tuple[NDArray[np.float64], ...]:
         args = ()
-        model_args = self._preprocess_args()
-        if self.nb_assets > 1 and bool(model_args):
+        if self.nb_assets > 1 and bool(self.model_args):
             if previous_args:
                 args = tuple(
                     (
                         np.concatenate((p, np.take(a, index, axis=0)))
-                        for p, a in zip(previous_args, model_args)
+                        for p, a in zip(previous_args, self.model_args)
                     )
                 )
             else:
-                args = tuple((np.take(a, index, axis=0) for a in model_args))
+                args = tuple((np.take(a, index, axis=0) for a in self.model_args))
         return args
 
     def to_fit(

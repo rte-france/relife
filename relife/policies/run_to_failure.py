@@ -4,12 +4,18 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.data import RenewalRewardData
-from relife.discountings import exponential_discounting
+from relife.descriptors import ShapedArgs
+from relife.discounting import exponential_discounting
 from relife.generator import lifetimes_rewards_generator
 from relife.model import LeftTruncatedModel, LifetimeModel
 from relife.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.rewards import run_to_failure_cost
 from relife.typing import Model1Args, ModelArgs, Policy
+
+
+def run_to_failure_cost(
+    lifetimes: NDArray[np.float64], cf: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    return np.ones_like(lifetimes) * cf
 
 
 class OneCycleRunToFailure(Policy):
@@ -33,12 +39,13 @@ class OneCycleRunToFailure(Policy):
     a0 : ndarray, optional
         Current ages of the assets (default is None). Setting ``a0`` will add
         left truncations.
-
     """
 
-    reward = run_to_failure_cost
-    discounting = exponential_discounting
     model1 = None
+
+    cf = ShapedArgs()
+    model_args = ShapedArgs()
+    a0 = ShapedArgs()
 
     def __init__(
         self,
@@ -50,11 +57,11 @@ class OneCycleRunToFailure(Policy):
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
+        self.nb_assets = nb_assets
         if a0 is not None:
             model = LeftTruncatedModel(model)
             model_args = (a0, *model_args)
         self.model = model
-        self.nb_assets = nb_assets
         self.cf = cf
         self.discounting_rate = discounting_rate
         self.model_args = model_args
@@ -76,10 +83,9 @@ class OneCycleRunToFailure(Policy):
             timeline,
             self.model,
             run_to_failure_cost,
-            exponential_discounting,
             model_args=self.model_args,
             reward_args=(self.cf,),
-            discounting_args=(self.discounting_rate,),
+            discounting_rate=self.discounting_rate,
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
@@ -156,14 +162,13 @@ class OneCycleRunToFailure(Policy):
         """
         generator = lifetimes_rewards_generator(
             self.model,
-            self.reward,
-            self.discounting,
+            run_to_failure_cost,
             nb_samples,
             self.nb_assets,
             np.inf,
             model_args=self.model_args,
             reward_args=(self.cf,),
-            discounting_args=(self.discounting_rate,),
+            discounting_rate=self.discounting_rate,
             seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
@@ -227,8 +232,10 @@ class RunToFailure(Policy):
         the Engineering and Informational Sciences, 22(1), 53-74.
     """
 
-    reward = run_to_failure_cost
-    discounting = exponential_discounting
+    cf = ShapedArgs()
+    model_args = ShapedArgs()
+    a0 = ShapedArgs()
+    model1_args = ShapedArgs()
 
     def __init__(
         self,
@@ -242,6 +249,8 @@ class RunToFailure(Policy):
         model1: Optional[LifetimeModel[*Model1Args]] = None,
         model1_args: Model1Args = (),
     ) -> None:
+
+        self.nb_assets = nb_assets
 
         if a0 is not None:
             if model1 is not None:
@@ -259,20 +268,18 @@ class RunToFailure(Policy):
         self.model_args = model_args
         self.model1_args = model1_args
 
-        self.nb_assets = nb_assets
-
         # if Policy is parametrized, set the underlying renewal reward process
         # note the rewards are the same for the first cycle and the rest of the process
         self.rrp = RenewalRewardProcess(
             self.model,
-            self.reward,
+            run_to_failure_cost,
             nb_assets=self.nb_assets,
             model_args=self.model_args,
             reward_args=(self.cf,),
             discounting_rate=self.discounting_rate,
             model1=self.model1,
             model1_args=self.model1_args,
-            reward1=self.reward,
+            reward1=run_to_failure_cost,
             reward1_args=(self.cf,),
         )
 

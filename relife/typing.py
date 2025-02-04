@@ -1,7 +1,17 @@
-from typing import Protocol
-
+from typing import Optional, TypeVarTuple, Protocol, Callable, Concatenate
 import numpy as np
 from numpy.typing import NDArray
+
+VariadicArgs = TypeVarTuple("VariadicArgs")
+
+# tuple consisting of zero or more NDArray[np.float64]
+ModelArgs = tuple[Optional[NDArray[np.float64]], ...]
+Model1Args = tuple[Optional[NDArray[np.float64]], ...]
+RewardArgs = tuple[Optional[NDArray[np.float64]], ...]
+Reward1Args = tuple[Optional[NDArray[np.float64]], ...]
+
+# noinspection PyTypeHints
+Reward = Callable[Concatenate[NDArray[np.float64], ...], NDArray[np.float64]]
 
 
 class Policy(Protocol):

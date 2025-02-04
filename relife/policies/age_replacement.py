@@ -5,15 +5,24 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 
 from relife.data import RenewalRewardData
-from relife.discountings import exponential_discounting
+from relife.discounting import exponential_discounting
 from relife.generator import lifetimes_rewards_generator
 from relife.model import AgeReplacementModel, LeftTruncatedModel, LifetimeModel
 from relife.quadratures import gauss_legendre
 from relife.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.rewards import age_replacement_cost
 from relife.typing import Model1Args, ModelArgs, Policy
 
 from .decorators import ifset
+from relife.descriptors import ShapedArgs
+
+
+def age_replacement_cost(
+    lifetimes: NDArray[np.float64],
+    ar: NDArray[np.float64],
+    cf: NDArray[np.float64],
+    cp: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    return np.where(lifetimes < ar, cf, cp)
 
 
 class OneCycleAgeReplacementPolicy(Policy):
@@ -53,8 +62,6 @@ class OneCycleAgeReplacementPolicy(Policy):
         220(1), 21-29
     """
 
-    reward = age_replacement_cost
-    discounting = exponential_discounting
     model1 = None
 
     def __init__(
@@ -98,11 +105,10 @@ class OneCycleAgeReplacementPolicy(Policy):
         return reward_partial_expectation(
             timeline,
             self.model,
-            self.reward,
-            self.discounting,
+            age_replacement_cost,
             model_args=self.model_args,
             reward_args=(self.ar, self.cf, self.cp),
-            discounting_args=(self.discounting_rate,),
+            discounting_rate=self.discounting_rate,
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
@@ -189,14 +195,13 @@ class OneCycleAgeReplacementPolicy(Policy):
         """
         generator = lifetimes_rewards_generator(
             self.model,
-            self.reward,
-            self.discounting,
+            age_replacement_cost,
             nb_samples,
             self.nb_assets,
             np.inf,
             model_args=self.model_args,
             reward_args=(self.ar, self.cf, self.cp),
-            discounting_args=(self.discounting_rate,),
+            discounting_rate=self.discounting_rate,
             seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
@@ -245,11 +250,12 @@ class OneCycleAgeReplacementPolicy(Policy):
 
         def eq(a):
             return np.sum(
-                self.discounting.factor(a, self.discounting_rate)
-                / self.discounting.annuity_factor(a, self.discounting_rate)
+                exponential_discounting.factor(a, self.discounting_rate)
+                / exponential_discounting.annuity_factor(a, self.discounting_rate)
                 * (
                     (cf_3d - cp_3d) * self.model.baseline.hf(a, *self.model_args[1:])
-                    - cp_3d / self.discounting.annuity_factor(a, self.discounting_rate)
+                    - cp_3d
+                    / exponential_discounting.annuity_factor(a, self.discounting_rate)
                 ),
                 axis=0,
             )
@@ -318,8 +324,13 @@ class AgeReplacementPolicy(Policy):
         Reliability, 1000-1008.
     """
 
-    reward = age_replacement_cost
-    discounting = exponential_discounting
+    model_args = ShapedArgs()
+    model1_args = ShapedArgs()
+    cf = ShapedArgs()
+    cp = ShapedArgs()
+    ar = ShapedArgs()
+    ar1 = ShapedArgs()
+    a0 = ShapedArgs()
 
     def __init__(
         self,
@@ -336,6 +347,8 @@ class AgeReplacementPolicy(Policy):
         model1: Optional[LifetimeModel[*Model1Args]] = None,
         model1_args: Model1Args = (),
     ) -> None:
+
+        self.nb_assets = nb_assets
 
         if a0 is not None:
             if model1 is not None:
@@ -361,8 +374,6 @@ class AgeReplacementPolicy(Policy):
         # (None, ...) or (ar1, ...)
         self.model1_args = (ar1,) + model1_args if model1_args else None
 
-        self.nb_assets = nb_assets
-
         self.rrp = None
         parametrized = False
         if self.ar is not None:
@@ -376,14 +387,14 @@ class AgeReplacementPolicy(Policy):
         if parametrized:
             self.rrp = RenewalRewardProcess(
                 self.model,
-                self.reward,
+                age_replacement_cost,
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
                 discounting_rate=self.discounting_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
-                reward1=self.reward,
+                reward1=age_replacement_cost,
                 reward1_args=(self.ar1, self.cf, self.cp),
             )
 
@@ -490,21 +501,21 @@ class AgeReplacementPolicy(Policy):
 
         def eq(a):
             f = gauss_legendre(
-                lambda x: self.discounting.factor(x, self.discounting_rate)
+                lambda x: exponential_discounting.factor(x, self.discounting_rate)
                 * self.model.baseline.sf(x, *self.model_args[1:]),
                 0,
                 a,
                 ndim=ndim,
             )
             g = gauss_legendre(
-                lambda x: self.discounting.factor(x, self.discounting_rate)
+                lambda x: exponential_discounting.factor(x, self.discounting_rate)
                 * self.model.baseline.pdf(x, *self.model_args[1:]),
                 0,
                 a,
                 ndim=ndim,
             )
             return np.sum(
-                self.discounting.factor(a, self.discounting_rate)
+                exponential_discounting.factor(a, self.discounting_rate)
                 * (
                     (cf_3d - cp_3d)
                     * (self.model.baseline.hf(a, *self.model_args[1:]) * f - g)
@@ -536,14 +547,14 @@ class AgeReplacementPolicy(Policy):
             self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
             self.rrp = RenewalRewardProcess(
                 self.model,
-                self.reward,
+                age_replacement_cost,
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 reward_args=(self.ar, self.cf, self.cp),
                 discounting_rate=self.discounting_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
-                reward1=self.reward,
+                reward1=age_replacement_cost,
                 reward1_args=(self.ar1, self.cf, self.cp),
             )
         else:

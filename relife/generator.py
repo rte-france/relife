@@ -3,11 +3,10 @@ from typing import Iterator, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.discountings import Discounting
+from relife.discounting import exponential_discounting
 from relife.model import AgeReplacementModel, LifetimeModel
 from relife.rewards import Reward
 from relife.typing import (
-    DiscountingArgs,
     Model1Args,
     ModelArgs,
     Reward1Args,
@@ -116,14 +115,13 @@ def lifetimes_generator(
 def lifetimes_rewards_generator(
     model: LifetimeModel[*ModelArgs],
     reward: Reward[*RewardArgs],
-    discounting: Discounting[*DiscountingArgs],
     nb_samples: int,
     nb_assets: int,
     end_time: float,
     *,
     model_args: ModelArgs = (),
     reward_args: RewardArgs = (),
-    discounting_args: DiscountingArgs = (),
+    discounting_rate : float = 0.,
     model1: Optional[LifetimeModel[*Model1Args]] = None,
     model1_args: Model1Args = (),
     reward1: Optional[Reward[*Reward1Args]] = None,
@@ -155,7 +153,7 @@ def lifetimes_rewards_generator(
         nonlocal total_rewards  # modify these variables
         lifetimes, event_times, events, still_valid = next(lifetimes_gen)
         rewards = target_reward(lifetimes, *args)
-        discountings = discounting.factor(event_times, *discounting_args)
+        discountings = exponential_discounting.factor(event_times, discounting_rate)
         total_rewards += rewards * discountings
         return lifetimes, event_times, total_rewards, events, still_valid
 
