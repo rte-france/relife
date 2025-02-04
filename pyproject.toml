@@ -1,4 +1,4 @@
-[build-system]
+[build-system] # see setuptools quickstart
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
@@ -13,8 +13,8 @@ dependencies = [
     "typing-extensions",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools.packages.find] # project structure is "flat layout"
+where = ["."] # current directory for flat layout
 include = ["relife*"]  # ["*"] by default
 
 [project.optional-dependencies]
@@ -53,7 +53,7 @@ ignored-modules = "scipy.special"
 # mypy does not recognize Tuple[Any, ...] notation (bug)
 # see : https://github.com/python/mypy/issues/9459
 [[tool.mypy.overrides]]
-module = ["relife2.types"]
+module = ["relife.typing.args"]
 disable_error_code = ["misc"]
 
 # current scipy is untyped and does not work with mypy

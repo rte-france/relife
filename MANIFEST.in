@@ -1,1 +1,1 @@
-include src/relife/datasets/*.csv
+include relife/datasets/*.csv
