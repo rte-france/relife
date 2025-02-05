@@ -14,7 +14,6 @@ LifetimeModel
 
     .. rubric:: Methods
 
-
     .. autosummary::
         :nosignatures:
 
@@ -64,14 +63,4 @@ LifetimeModel
         
         
             ~LifetimeModel.var
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~LifetimeModel.plot
         

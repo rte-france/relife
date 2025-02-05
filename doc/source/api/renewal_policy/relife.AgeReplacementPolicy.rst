@@ -46,16 +46,3 @@ AgeReplacementPolicy
         
             ~AgeReplacementPolicy.sample
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~AgeReplacementPolicy.discounting
-        
-        
-            ~AgeReplacementPolicy.reward
-        

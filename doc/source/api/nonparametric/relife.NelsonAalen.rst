@@ -25,16 +25,3 @@ NelsonAalen
         
             ~NelsonAalen.fit
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~NelsonAalen.plot
-        
-        
-            ~NelsonAalen.estimates
-        

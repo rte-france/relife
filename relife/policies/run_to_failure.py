@@ -44,8 +44,8 @@ class OneCycleRunToFailure(Policy):
     model1 = None
 
     cf = ShapedArgs()
-    model_args = ShapedArgs()
     a0 = ShapedArgs()
+    model_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
@@ -233,9 +233,9 @@ class RunToFailure(Policy):
     """
 
     cf = ShapedArgs()
-    model_args = ShapedArgs()
     a0 = ShapedArgs()
-    model1_args = ShapedArgs()
+    model_args = ShapedArgs(astuple=True)
+    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,

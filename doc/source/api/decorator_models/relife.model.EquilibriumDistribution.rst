@@ -4,7 +4,6 @@
 
 
 
-
 EquilibriumDistribution
 =======================
 
@@ -13,7 +12,7 @@ EquilibriumDistribution
 .. autoclass:: EquilibriumDistribution
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -135,14 +134,4 @@ EquilibriumDistribution
             ~EquilibriumDistribution.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~EquilibriumDistribution.plot
         

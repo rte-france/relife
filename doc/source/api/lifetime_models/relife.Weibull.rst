@@ -4,7 +4,6 @@
 
 
 
-
 Weibull
 =======
 
@@ -13,7 +12,7 @@ Weibull
 .. autoclass:: Weibull
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -195,27 +194,4 @@ Weibull
             ~Weibull.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~Weibull.nb_params
-        
-        
-            ~Weibull.params
-        
-        
-        
-            ~Weibull.params_names
-        
-        
-            ~Weibull.plot
-        
-        
-            ~Weibull.fitting_results
         

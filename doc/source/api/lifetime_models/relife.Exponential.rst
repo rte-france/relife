@@ -4,7 +4,6 @@
 
 
 
-
 Exponential
 ===========
 
@@ -13,7 +12,7 @@ Exponential
 .. autoclass:: Exponential
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -195,27 +194,4 @@ Exponential
             ~Exponential.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~Exponential.nb_params
-        
-        
-            ~Exponential.params
-        
-        
-        
-            ~Exponential.params_names
-        
-        
-            ~Exponential.plot
-        
-        
-            ~Exponential.fitting_results
         

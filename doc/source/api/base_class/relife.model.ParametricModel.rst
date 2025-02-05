@@ -14,7 +14,6 @@ ParametricModel
 
     .. rubric:: Methods
 
-
     .. autosummary::
         :nosignatures:
 
@@ -28,20 +27,4 @@ ParametricModel
         
         
             ~ParametricModel.new_params
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~ParametricModel.nb_params
-        
-        
-            ~ParametricModel.params
-        
-        
-            ~ParametricModel.params_names
         

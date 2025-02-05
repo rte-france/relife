@@ -80,8 +80,8 @@ def delayed_renewal_equation_solver(
 
 
 class RenewalProcess:
-    model_args = ShapedArgs()
-    model1_args = ShapedArgs()
+    model_args = ShapedArgs(astuple=True)
+    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
@@ -204,11 +204,10 @@ def reward_partial_expectation(
 
 
 class RenewalRewardProcess(RenewalProcess):
-    model_args = ShapedArgs()
-    model1_args = ShapedArgs()
-    reward_args = ShapedArgs()
-    reward1_args = ShapedArgs()
-    discounting_rate = ShapedArgs()
+    model_args = ShapedArgs(astuple=True)
+    model1_args = ShapedArgs(astuple=True)
+    reward_args = ShapedArgs(astuple=True)
+    reward1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,

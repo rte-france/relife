@@ -34,19 +34,3 @@ OneCycleRunToFailure
         
             ~OneCycleRunToFailure.sample
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~OneCycleRunToFailure.discounting
-        
-        
-            ~OneCycleRunToFailure.model1
-        
-        
-            ~OneCycleRunToFailure.reward
-        

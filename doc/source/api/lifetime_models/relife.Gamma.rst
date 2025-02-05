@@ -4,7 +4,6 @@
 
 
 
-
 Gamma
 =====
 
@@ -13,7 +12,7 @@ Gamma
 .. autoclass:: Gamma
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -195,27 +194,4 @@ Gamma
             ~Gamma.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~Gamma.nb_params
-        
-        
-            ~Gamma.params
-        
-        
-        
-            ~Gamma.params_names
-        
-        
-            ~Gamma.plot
-        
-        
-            ~Gamma.fitting_results
         

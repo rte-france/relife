@@ -10,9 +10,7 @@ import pytest
 from relife import AFT, Gamma, Gompertz, LogLogistic, ProportionalHazard, Weibull
 from relife.model import AgeReplacementModel, EquilibriumDistribution
 from relife.renewal import RenewalProcess, RenewalRewardProcess
-from relife.rewards import run_to_failure_cost
-
-# fixtures
+from relife.policies.run_to_failure import run_to_failure_cost
 
 
 @pytest.fixture(
@@ -72,7 +70,7 @@ def test_renewal_process(model_and_args):
     rp = RenewalProcess(
         model, model1=model1, model_args=model_args, model1_args=model_args
     )
-    y0 = 1 / model.mean(*model_args)
+    y0 = 1 / model.mean(*rp.model_args)
     y = rp.renewal_density(t)
     assert y[..., -1:] == pytest.approx(y0, rel=1e-4)
 

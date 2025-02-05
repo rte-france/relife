@@ -14,7 +14,6 @@ Parameters
 
     .. rubric:: Methods
 
-
     .. autosummary::
         :nosignatures:
 
@@ -49,20 +48,4 @@ Parameters
         
         
             ~Parameters.update_parents
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~Parameters.names
-        
-        
-            ~Parameters.node_data
-        
-        
-            ~Parameters.values
         

@@ -339,13 +339,13 @@ class AgeReplacementPolicy(Policy):
 
     model: AgeReplacementModel
     model1: AgeReplacementModel
-    model_args = ShapedArgs()
-    model1_args = ShapedArgs()
     cf = ShapedArgs()
     cp = ShapedArgs()
     ar = ShapedArgs()
     ar1 = ShapedArgs()
     a0 = ShapedArgs()
+    model_args = ShapedArgs(astuple=True)
+    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,

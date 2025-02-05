@@ -43,16 +43,3 @@ RunToFailure
         
             ~RunToFailure.sample
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~RunToFailure.discounting
-        
-        
-            ~RunToFailure.reward
-        
