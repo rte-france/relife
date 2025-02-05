@@ -9,7 +9,7 @@ from relife.discounting import exponential_discounting
 from relife.generator import lifetimes_rewards_generator
 from relife.model import LeftTruncatedModel, LifetimeModel
 from relife.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.typing import Model1Args, ModelArgs, Policy
+from relife.types import Model1Args, ModelArgs, Policy
 
 
 def run_to_failure_cost(

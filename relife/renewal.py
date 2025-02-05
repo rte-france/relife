@@ -9,7 +9,7 @@ from relife.descriptors import ShapedArgs
 from relife.discounting import exponential_discounting
 from relife.generator import lifetimes_generator, lifetimes_rewards_generator
 from relife.model import LifetimeModel
-from relife.typing import Model1Args, ModelArgs, Reward1Args, RewardArgs, Reward
+from relife.types import Model1Args, ModelArgs, Reward1Args, RewardArgs, Reward
 
 
 def renewal_equation_solver(

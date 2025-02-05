@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.typing import ModelArgs
+from relife.types import ModelArgs
 
 from .counting import CountData, CountDataIterable
 

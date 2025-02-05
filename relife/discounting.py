@@ -4,7 +4,7 @@ from typing import Generic
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.typing import VariadicArgs
+from relife.types import VariadicArgs
 
 
 class Discounting(Generic[*VariadicArgs], ABC):

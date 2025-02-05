@@ -5,12 +5,12 @@ from numpy.typing import NDArray
 
 from relife.discounting import exponential_discounting
 from relife.model import AgeReplacementModel, LifetimeModel
-from relife.rewards import Reward
-from relife.typing import (
+from relife.types import (
     Model1Args,
     ModelArgs,
     Reward1Args,
     RewardArgs,
+    Reward,
 )
 
 
@@ -36,7 +36,7 @@ def rvs_size(
 
 
 def compute_rewards(
-    reward: Reward[*RewardArgs],
+    reward: Reward,
     lifetimes: NDArray[np.float64],
     args: RewardArgs = (),
 ):
@@ -114,17 +114,17 @@ def lifetimes_generator(
 
 def lifetimes_rewards_generator(
     model: LifetimeModel[*ModelArgs],
-    reward: Reward[*RewardArgs],
+    reward: Reward,
     nb_samples: int,
     nb_assets: int,
     end_time: float,
     *,
     model_args: ModelArgs = (),
     reward_args: RewardArgs = (),
-    discounting_rate : float = 0.,
+    discounting_rate: float = 0.0,
     model1: Optional[LifetimeModel[*Model1Args]] = None,
     model1_args: Model1Args = (),
-    reward1: Optional[Reward[*Reward1Args]] = None,
+    reward1: Optional[Reward] = None,
     reward1_args: Reward1Args = (),
     seed: Optional[int] = None,
 ) -> Iterator[

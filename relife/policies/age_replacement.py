@@ -10,7 +10,7 @@ from relife.generator import lifetimes_rewards_generator
 from relife.model import AgeReplacementModel, LeftTruncatedModel, LifetimeModel
 from relife.quadratures import gauss_legendre
 from relife.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.typing import Model1Args, ModelArgs, Policy
+from relife.types import Model1Args, ModelArgs, Policy
 
 from .decorators import ifset
 from relife.descriptors import ShapedArgs
@@ -62,6 +62,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         220(1), 21-29
     """
 
+    model: AgeReplacementModel
     model1 = None
 
     def __init__(
@@ -324,6 +325,8 @@ class AgeReplacementPolicy(Policy):
         Reliability, 1000-1008.
     """
 
+    model: AgeReplacementModel
+    model1: AgeReplacementModel
     model_args = ShapedArgs()
     model1_args = ShapedArgs()
     cf = ShapedArgs()

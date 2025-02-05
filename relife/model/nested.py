@@ -7,7 +7,7 @@ from typing_extensions import override
 
 from relife.model import LifetimeModel
 from relife.quadratures import gauss_legendre
-from relife.typing import ModelArgs
+from relife.types import ModelArgs
 
 
 class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):

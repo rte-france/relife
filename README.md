@@ -27,7 +27,15 @@ your python environment (**we highly encourage to install ReLife in a python vir
 source <path_to_your_venv>/bin/activate
 mkdir -p <your_desired_path>/relife
 git clone https://github.com/rte-france/relife.git
-pip install . # or alternatively pip install ".[dev]" adds required dependencies to contribute to ReLife
+pip install .
+```
+
+**Developper installation**
+
+Just change the pip installation command by (notice the usage of the editable mode) :
+
+```
+pip install -e ".[dev]"
 ```
 
 ## Documentation

@@ -1,2 +1,2 @@
 from .age_replacement import AgeReplacementPolicy, OneCycleAgeReplacementPolicy
-from .run_to_failure import OneCycleRunToFailure, RunToFailure
+from .run_to_failure import RunToFailure, OneCycleRunToFailure

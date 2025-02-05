@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
-from relife.typing import ModelArgs
+from relife.types import ModelArgs
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.model import LifetimeModel

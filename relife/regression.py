@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, TypeVarTuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -16,9 +16,7 @@ from typing_extensions import override
 
 from relife.data import LifetimeData
 from relife.model import ParametricLifetimeModel, ParametricModel
-from relife.typing import ModelArgs
-
-Ts = TypeVarTuple("Ts")
+from relife.types import ModelArgs
 
 
 class CovarEffect(ParametricModel):
