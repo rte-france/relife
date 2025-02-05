@@ -21,14 +21,3 @@
             ~{{ name }}.{{ item }}
         {% endif %}
     {%- endfor %}
-
-    .. rubric:: {{ _('Attributes') }}
-
-    .. autosummary::
-        :nosignatures:
-
-    {% for item in attributes %}
-        {% if not item.startswith('_') %}
-            ~{{ name }}.{{ item }}
-        {% endif %}
-    {%- endfor %}

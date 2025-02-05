@@ -9,13 +9,14 @@
 
 import os
 
-# # for local use only
-# PATH_TO_LIBRARY = ""
-# sys.path.insert(0, os.path.abspath(PATH_TO_LIBRARY))
+# import sys
+# from pathlib import Path
+#
+# sys.path.insert(0, str(Path("..", "..").resolve()))
 
-project = 'relife_doc'
-copyright = '2025, RTE'
-author = 'RTE-SAGA'
+project = "relife_doc"
+copyright = "2025, RTE"
+author = "RTE-SAGA"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -63,18 +64,18 @@ else:
     mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 #########################################################################################
 
-templates_path = ['_templates', '_templates/autosummary']
+templates_path = ["_templates", "_templates/autosummary"]
 # exclude_patterns = ['_build', '_templates'] # note to be parsed by compiler
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
-html_static_path = ['_static']
+html_static_path = ["_static"]
 html_title = "ReLife"  # sidebar title
 html_logo = "_static/logo.png"
 html_js_files = ["custom-icon.js"]
-html_css_files = ['css/custom.css']  # custom css to change some colors
+html_css_files = ["css/custom.css"]  # custom css to change some colors
 
 html_theme_options = {
     # "announcement": "<em>beta version</em> New ReLife documentation in progress",  # annoucement bar
@@ -100,6 +101,6 @@ html_theme_options = {
             "url": "https://pypi.org/project/relife/",  # required
             # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
             "icon": "fa-custom fa-pypi",
-        }
+        },
     ],
 }

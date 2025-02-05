@@ -282,7 +282,13 @@ class AgeReplacementPolicy(Policy):
     r"""Time based replacement policy.
 
     Renewal reward process where assets are replaced at a fixed age :math:`a_r`
-    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier.
+    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.
+
+    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
+        Maintenance optimization. Encyclopedia of Statistics in Quality and
+        Reliability, 1000-1008.
+
+    |
 
     Parameters
     ----------
@@ -317,12 +323,18 @@ class AgeReplacementPolicy(Policy):
         ModelArgs is a tuple of zero or more ndarray required by the lifetime
         model of the first cycle of replacements.
 
-
-    References
+    Attributes
     ----------
-    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
-        Maintenance optimization. Encyclopedia of Statistics in Quality and
-        Reliability, 1000-1008.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    cp : np.ndarray
+        The cost of preventive replacements for each asset.
+    ar : np.ndarray
+        Times until preventive replacements. This parameter can be optimized
+        with ``fit``
+    ar1 : np.ndarray
+        Times until preventive replacements for the first cycle. This parameter can be optimized
+        with ``fit``
     """
 
     model: AgeReplacementModel
@@ -352,6 +364,7 @@ class AgeReplacementPolicy(Policy):
     ) -> None:
 
         self.nb_assets = nb_assets
+        """nb of assets"""
 
         if a0 is not None:
             if model1 is not None:
@@ -367,9 +380,21 @@ class AgeReplacementPolicy(Policy):
         self.model1 = model1
 
         self.cf = cf
+        """The cost of failure for each asset."""
         self.cp = cp
+        """np.ndarray
+            The cost of preventive replacements for each asset.
+        """
         self.ar = ar
+        """ar : np.ndarray
+            Times until preventive replacements. This parameter can be optimized
+            with ``fit``
+        """
         self.ar1 = ar1
+        """ar1 : np.ndarray
+            Times until preventive replacements for the first cycle. This parameter can be optimized
+            with ``fit``
+        """
         self.discounting_rate = discounting_rate
 
         self.model_args = (ar,) + model_args

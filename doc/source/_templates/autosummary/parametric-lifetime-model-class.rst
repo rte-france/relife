@@ -2,8 +2,7 @@
 {% set statistics = ["mean", "var", "moment", "median"] %}
 {% set probability_functions = ["pdf", "ppf", "cdf"] %}
 {% set exclude_methods = ["__init__", "__new__", "compose_with", "new_params", "init_params"] %}
-{% set exclude_attributes = ["params_bounds"] %}
-{% set exclude_members = ", ".join(exclude_methods + exclude_attributes)  %}
+{% set exclude_members = ", ".join(exclude_methods)  %}
 
 {{ name | escape | underline }}
 
@@ -54,17 +53,6 @@
 
     {% for item in methods %}
         {% if (item not in survival_functions + statistics + probability_functions + exclude_methods) and not item.startswith("_") %}
-            ~{{ name }}.{{ item }}
-        {% endif %}
-    {%- endfor %}
-
-    .. rubric:: {{ _('Attributes') }}
-
-    .. autosummary::
-        :nosignatures:
-
-    {% for item in attributes %}
-        {% if item not in exclude_attributes and not item.startswith('_') %}
             ~{{ name }}.{{ item }}
         {% endif %}
     {%- endfor %}
