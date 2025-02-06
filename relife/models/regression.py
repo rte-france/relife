@@ -15,7 +15,7 @@ from scipy.optimize import Bounds
 from typing_extensions import override
 
 from relife.data import LifetimeData
-from relife.model import ParametricLifetimeModel, ParametricModel
+from relife.core.model import ParametricLifetimeModel, ParametricModel
 from relife.types import ModelArgs
 
 
@@ -89,7 +89,7 @@ class Regression(
     Parameters
     ----------
     baseline : ParametricLifetimeModel
-        Any parametric lifetime model to serve as the baseline.
+        Any parametric lifetime core to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
 
@@ -116,16 +116,16 @@ class Regression(
         *args: *ModelArgs,
     ) -> None:
         """
-        Initialize parameters for the regression model.
+        Initialize parameters for the regression core.
 
         Parameters
         ----------
         lifetime_data : LifetimeData
-            The lifetime data used to initialize the baseline model.
+            The lifetime data used to initialize the baseline core.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values. Should have shape (k, ) or (m, k) where m is the number of assets and k is the number of covariates.
         *args : variable number of arguments
-            Any additional arguments needed by the baseline model.
+            Any additional arguments needed by the baseline core.
         """
         self.covar_effect.new_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
@@ -177,7 +177,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -203,7 +203,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -230,7 +230,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -255,7 +255,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -281,7 +281,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -307,7 +307,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -332,7 +332,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
         size : int, optional
             Number of random variates to generate.
         seed : int, optional
@@ -357,7 +357,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -376,7 +376,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -397,7 +397,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -423,7 +423,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -448,7 +448,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -473,7 +473,7 @@ class Regression(
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -489,7 +489,7 @@ class Regression(
     ) -> NDArray[np.float64]:
         """Jacobian of the survival function
 
-        Jacobian with respect to model parameters.
+        Jacobian with respect to core parameters.
 
         Parameters
         ----------
@@ -498,7 +498,7 @@ class Regression(
         covar : np.darray of shape (k, ) or (m, k)
             Covariates values.
         *args : variable number of np.darray
-            Any other variables needed by the model
+            Any other variables needed by the core
 
         Returns
         -------
@@ -516,7 +516,7 @@ class Regression(
     ) -> NDArray[np.float64]:
         """Jacobian of the cumulative distribution function.
 
-        Jacobian with respect to model parameters.
+        Jacobian with respect to core parameters.
 
         Parameters
         ----------
@@ -525,7 +525,7 @@ class Regression(
         covar : np.darray of shape (k, ) or (m, k)
             Covariates values.
         *args : variable number of np.darray
-            Any other variables needed by the model
+            Any other variables needed by the core
 
         Returns
         -------
@@ -542,7 +542,7 @@ class Regression(
     ) -> NDArray[np.float64]:
         """Jacobian of the probability density function.
 
-        Jacobian with respect to model parameters.
+        Jacobian with respect to core parameters.
 
         Parameters
         ----------
@@ -551,7 +551,7 @@ class Regression(
         covar : np.darray of shape (k, ) or (m, k)
             Covariates values.
         *args : variable number of np.darray
-            Any other variables needed by the model
+            Any other variables needed by the core
 
         Returns
         -------
@@ -566,7 +566,7 @@ class Regression(
 
 class ProportionalHazard(Regression):
     r"""
-    Proportional Hazard regression model.
+    Proportional Hazard regression core.
 
     The cumulative hazard function :math:`H` is linked to the multiplier
     function :math:`g` by the relation:
@@ -582,7 +582,7 @@ class ProportionalHazard(Regression):
     Parameters
     ----------
     baseline : ParametricLifetimeModel
-        Any parametric lifetime model to serve as the baseline.
+        Any parametric lifetime core to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
 
@@ -620,7 +620,7 @@ class ProportionalHazard(Regression):
         covar : np.darray
             Covariates values.
         *args : variable number of np.darray
-            Any other variables needed by the model
+            Any other variables needed by the core
 
 
         Returns
@@ -649,7 +649,7 @@ class ProportionalHazard(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -674,7 +674,7 @@ class ProportionalHazard(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -739,7 +739,7 @@ class AFT(Regression):
     Parameters
     ----------
     baseline : ParametricLifetimeModel
-        Any parametric lifetime model to serve as the baseline.
+        Any parametric lifetime core to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
 
@@ -773,7 +773,7 @@ class AFT(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -802,7 +802,7 @@ class AFT(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -828,7 +828,7 @@ class AFT(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -854,7 +854,7 @@ class AFT(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -886,7 +886,7 @@ class AFT(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------
@@ -919,7 +919,7 @@ class AFT(Regression):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values.
         *args : variable number of np.ndarray
-            Any other variables needed by the model.
+            Any other variables needed by the core.
 
         Returns
         -------

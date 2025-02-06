@@ -7,9 +7,9 @@
 import numpy as np
 import pytest
 
-from relife import AFT, Gamma, Gompertz, LogLogistic, ProportionalHazard, Weibull
-from relife.model import AgeReplacementModel, EquilibriumDistribution
-from relife.renewal import RenewalProcess, RenewalRewardProcess
+from relife.models import AFT, Gamma, Gompertz, LogLogistic, ProportionalHazard, Weibull
+from relife.process import RenewalProcess, RenewalRewardProcess
+from relife.core.nested_model import AgeReplacementModel, EquilibriumDistribution
 from relife.policies.run_to_failure import run_to_failure_cost
 
 

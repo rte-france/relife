@@ -3,8 +3,9 @@ from typing import Iterator, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.discounting import exponential_discounting
-from relife.model import AgeReplacementModel, LifetimeModel
+from relife.core.discounting import exponential_discounting
+from relife.core.nested_model import AgeReplacementModel
+from relife.core.model import LifetimeModel
 from relife.types import (
     Model1Args,
     ModelArgs,
@@ -49,7 +50,7 @@ def compute_events(
     model_args: ModelArgs = (),
 ) -> NDArray[np.bool_]:
     """
-    tag lifetimes as being right censored or not depending on model used
+    tag lifetimes as being right censored or not depending on core used
     """
     events = np.ones_like(lifetimes, dtype=np.bool_)
     ar = 0.0

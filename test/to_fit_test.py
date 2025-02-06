@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from relife.core.descriptors import ShapedArgs
 from relife.data import RenewalData
 
 
@@ -29,7 +30,7 @@ def samples2_assets1():
         event_times,
         lifetimes,
         np.ones_like(lifetimes, dtype=np.bool_),  # events
-        (),  # model args
+        (),  # core args
         False,  # with model1
     )
     return sample_data
@@ -50,10 +51,14 @@ def samples2_assets1():
 
 @pytest.fixture(
     params=[
-        (np.array(1),),
-        (np.array([1, 2, 3]),),
+        (np.array([[1], [1]]),),
+        (np.array([[1, 2, 3], [1, 2, 3]]),),
         (np.array([[1, 2, 3], [4, 5, 6]]),),
-        (np.array(1), np.array([1, 2, 3]), np.array([[1, 2, 3], [4, 5, 6]])),
+        (
+            np.array([[1], [1]]),
+            np.array([[1, 2, 3], [1, 2, 3]]),
+            np.array([[1, 2, 3], [4, 5, 6]]),
+        ),
     ]
 )
 def samples2_assets2(request):

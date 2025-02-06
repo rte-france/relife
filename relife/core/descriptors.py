@@ -27,6 +27,10 @@ class ShapedArgs:
     def __set__(
         self, obj, value: Optional[Union[NDArray[np.float64], ModelArgs]]
     ) -> ModelArgs:
+        """
+        if nb_assets is 1, values are all 1d array (event floats)
+        if nb_assets is more than 1, values are all 2d array
+        """
         if value is None:
             setattr(obj, self.private_name, value)
         else:

@@ -1,100 +1,13 @@
-from dataclasses import dataclass
-from functools import wraps
-from typing import Optional, Protocol, Self, Union
+from typing import Optional, Self, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
+from relife.core.model import Estimates, NonParametricModel, estimated
 from relife.data.lifetime import LifetimeData, lifetime_data_factory
-from relife.plots import PlotSurvivalFunc
 
 
-@dataclass
-class Estimates:
-    """
-    Stores the estimates for a non-parametric lifetime model.
-
-    Parameters
-    ----------
-    timeline : np.ndarray of shape (n, )
-        The timeline of the estimates.
-    values : np.ndarray of shape (n, )
-        The estimated values.
-    se : np.ndarray of shape (n, ), optional
-        The standard errors of the estimates. If not provided, defaults to an array of zeros.
-
-    Raises
-    ------
-    ValueError
-        If the shapes of `timeline`, `values`, and `se` are not compatible.
-    """
-
-    timeline: NDArray[np.float64]
-    values: NDArray[np.float64]
-    se: Optional[NDArray[np.float64]] = None
-
-    def __post_init__(self):
-        if self.se is None:
-            self.se = np.zeros_like(
-                self.values
-            )  # garder None/Nan efaire le changement de valeur au niveau du plot
-
-        if self.timeline.shape != self.values.shape != self.se:
-            raise ValueError("Incompatible timeline, values and se in Estimates")
-
-    def nearest_1dinterp(
-        self, x: float | NDArray[np.float64]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        """Returns x nearest interpolation based on timeline and values data points
-        timeline has to be monotonically increasing
-
-        Args:
-            x (NDArray[np.float64]): 1d x coordinates to interpolate
-
-        Returns:
-            NDArray[np.float64]: interpolation values of x
-        """
-        spacing = np.diff(self.timeline) / 2
-        xp = np.hstack([spacing, spacing[-1]]) + self.timeline
-        values_p = np.concatenate([self.values, self.values[-1, None]])
-        se_p = np.concatenate([self.se, self.se[-1, None]])
-        return (
-            values_p[np.searchsorted(xp, np.asarray(x))],
-            se_p[np.searchsorted(xp, np.asarray(x))],
-        )
-
-
-def estimated(method):
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        if None in self.estimates.values():
-            return ValueError(
-                f"{self.__class__.__name__} instance has not been fitted yet, call fit first"
-            )
-        return method(self, *args, **kwargs)
-
-    return wrapper
-
-
-class NonParametricEstimator(Protocol):
-    """
-    Non-parametric lifetime estimator.
-
-    Attributes
-    ----------
-    estimates : Estimations
-        The estimations produced when fitting the estimator.
-    """
-
-    estimates: dict[str, Optional[Estimates]]
-
-    @property
-    @estimated
-    def plot(self):
-        return PlotSurvivalFunc(self)
-
-
-class ECDF(NonParametricEstimator):
+class ECDF(NonParametricModel):
     """
     Empirical Cumulative Distribution Function.
     """
@@ -183,7 +96,7 @@ class ECDF(NonParametricEstimator):
         return self.estimates["cdf"].nearest_1dinterp(time)[0]
 
 
-class KaplanMeier(NonParametricEstimator):
+class KaplanMeier(NonParametricModel):
     r"""Kaplan-Meier estimator.
 
     Compute the non-parametric Kaplan-Meier estimator (also known as the product
@@ -326,7 +239,7 @@ class KaplanMeier(NonParametricEstimator):
         return self.estimates["sf"].nearest_1dinterp(time)[0]
 
 
-class NelsonAalen(NonParametricEstimator):
+class NelsonAalen(NonParametricModel):
     r"""Nelson-Aalen estimator.
 
     Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
@@ -467,7 +380,7 @@ class NelsonAalen(NonParametricEstimator):
         return self.estimates["chf"].nearest_1dinterp(time)[0]
 
 
-class Turnbull(NonParametricEstimator):
+class Turnbull(NonParametricModel):
     """Turnbull estimator"""
 
     def __init__(

@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 
-from relife.data import LifetimeData
-from relife.data.lifetime import Lifetime1DParser, Lifetime2DParser
+from relife.data.lifetime import LifetimeData, Lifetime1DParser, Lifetime2DParser
 
 
 @pytest.fixture

@@ -5,26 +5,26 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.model import LifetimeModel
-from relife.quadratures import gauss_legendre
+from .model import LifetimeModel
+from .quadratures import gauss_legendre
 from relife.types import ModelArgs
 
 
 class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     r"""
-    Age replacement model.
+    Age replacement core.
 
-    Lifetime model where the asset is replaced at age :math:`a_r`.
+    Lifetime core where the asset is replaced at age :math:`a_r`.
 
     Parameters
     ----------
     baseline : LifetimeModel
-        Underlying lifetime model.
+        Underlying lifetime core.
 
     Notes
     -----
     This is equivalent to the distribution of :math:`\min(X,a_r)` where
-    :math:`X` is a baseline lifetime model and ar the age of replacement.
+    :math:`X` is a baseline lifetime core and ar the age of replacement.
     """
 
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
@@ -125,14 +125,14 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
 
 
 class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
-    r"""Left truncated model.
+    r"""Left truncated core.
 
-    Conditional distribution of the lifetime model for an asset having reach age :math:`a_0`.
+    Conditional distribution of the lifetime core for an asset having reach age :math:`a_0`.
 
     Parameters
     ----------
     baseline : LifetimeModel
-        Underlying lifetime model.
+        Underlying lifetime core.
     """
 
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
@@ -203,12 +203,12 @@ class EquilibriumDistribution(LifetimeModel[*ModelArgs]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
-    model that makes the associated delayed renewal process stationary.
+    core that makes the associated delayed renewal process stationary.
 
     Parameters
     ----------
     baseline : LifetimeModel
-        Underlying lifetime model.
+        Underlying lifetime core.
 
     References
     ----------

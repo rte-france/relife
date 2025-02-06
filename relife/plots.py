@@ -11,8 +11,7 @@ from numpy.typing import ArrayLike, NDArray
 from relife.types import ModelArgs
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.model import LifetimeModel
-    from relife.nonparametric import NonParametricEstimator
+    from relife.core.model import LifetimeModel, NonParametricModel
 
 
 def plot(
@@ -67,7 +66,7 @@ def param_probfunc_plot(
     alpha_ci: float = 0.05,
     **kwargs,
 ) -> Axes:
-    r"""Plot functions of the distribution model.
+    r"""Plot functions of the distribution core.
 
     Parameters
     ----------
@@ -76,12 +75,12 @@ def param_probfunc_plot(
     timeline : 1D array, optional
         Timeline of the plot (x-axis), by default guessed by the millile.
     model_args : Tuple[ndarray], optional
-        Extra arguments required by the parametric lifetime model, by
+        Extra arguments required by the parametric lifetime core, by
         default ().
     alpha_ci : float, optional
         :math:`\alpha`-value to define the :math:`100(1-\alpha)\%`
         confidence interval, by default 0.05 corresponding to the 95\%
-        confidence interval. If set to None or if the model has not been
+        confidence interval. If set to None or if the core has not been
         fitted, no confidence interval is plotted.
     fname : str, optional
         Name of the function to be plotted, by default 'sf'. Should be one
@@ -141,7 +140,7 @@ def param_probfunc_plot(
 
 def nonparam_probfunc_plot(
     fname: str,
-    model: NonParametricEstimator,
+    model: NonParametricModel,
     timeline: NDArray[np.float64] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -170,7 +169,7 @@ def nonparam_probfunc_plot(
 
 def nelsonaalen_plot(
     fname: str,
-    model: NonParametricEstimator,
+    model: NonParametricModel,
     timeline: NDArray[np.float64] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -212,9 +211,13 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
-        from relife.distributions import Distribution  # avoid circular import
-        from relife.nonparametric import ECDF, KaplanMeier, NelsonAalen
-        from relife.regression import Regression
+        from relife.models import (
+            ECDF,
+            KaplanMeier,
+            NelsonAalen,
+        )  # avoid circular import
+        from relife.models.regression import Regression
+        from relife.models.distributions import Distribution
 
         if isinstance(obj.model, Distribution):
             return BoundPlot(obj.model, param_probfunc_plot, self.name)
@@ -234,5 +237,5 @@ class PlotSurvivalFunc:
     hf = PlotDescriptor()
     pdf = PlotDescriptor()
 
-    def __init__(self, model: LifetimeModel[*ModelArgs] | NonParametricEstimator):
+    def __init__(self, model: LifetimeModel[*ModelArgs] | NonParametricModel):
         self.model = model

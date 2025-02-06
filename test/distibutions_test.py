@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife import Exponential, Gamma, Gompertz, LogLogistic, Weibull
+from relife.models import Exponential, Gamma, Gompertz, LogLogistic, Weibull
 from relife.datasets import load_power_transformer
 
 
@@ -52,8 +52,8 @@ def test_fit(model, data):
     assert model.params == pytest.approx(expected_params, rel=1e-3)
 
 
-# def test_minimum_distribution(model, data):
-#     params = model.params.copy()
+# def test_minimum_distribution(core, data):
+#     params = core.params.copy()
 #     n = np.ones((data.size, 1))
-#     model = MinimumDistribution(model).fit(*data.astuple(), args=(n,))
-#     assert model.params == pytest.approx(params, rel=1e-3)
+#     core = MinimumDistribution(core).fit(*data.astuple(), args=(n,))
+#     assert core.params == pytest.approx(params, rel=1e-3)

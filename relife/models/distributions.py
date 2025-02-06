@@ -8,8 +8,8 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.data import LifetimeData
-from relife.model import ParametricLifetimeModel
-from relife.quadratures import shifted_laguerre
+from relife.core.model import ParametricLifetimeModel
+from relife.core.quadratures import shifted_laguerre
 
 
 # Ts type var is a zero long tuple (see https://github.com/python/mypy/issues/16199)
@@ -17,7 +17,7 @@ from relife.quadratures import shifted_laguerre
 # no args are required
 class Distribution(ParametricLifetimeModel[()], ABC):
     """
-    Base class of distribution model.
+    Base class of distribution core.
     """
 
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -243,17 +243,17 @@ class Exponential(Distribution):
 
     Examples
     --------
-    Constructing exponential model with rate of 0.75.
+    Constructing exponential core with rate of 0.75.
 
-    >>> model = Exponential(0.75)
+    >>> core = Exponential(0.75)
     >>> time = np.linspace(3, 10, num=5)
-    >>> model.sf(time)
+    >>> core.sf(time)
     array([0.10539922, 0.02836782, 0.00763509, 0.00205496, 0.00055308]))
 
     Notice that only one asset is considered here. To pass another asset, use a 2d time array
 
     >>> time = np.linspace([3, 5], [10, 10], num=5, axis=1)
-    >>> model.sf(time)
+    >>> core.sf(time)
     array([[0.10539922, 0.02836782, 0.00763509, 0.00205496, 0.00055308],
            [0.02351775, 0.00920968, 0.00360656, 0.00141235, 0.00055308]])
     """

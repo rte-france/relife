@@ -18,13 +18,13 @@ data like parameters, other nested models, etc.
     :caption: Lifetime models
     :nosignatures:
 
-    Exponential
-    Weibull
-    Gompertz
-    Gamma
-    LogLogistic
-    ProportionalHazard
-    AFT
+    models.Exponential
+    models.Weibull
+    models.Gompertz
+    models.Gamma
+    models.LogLogistic
+    models.ProportionalHazard
+    models.AFT
 
 
 .. rubric:: Non-parametric lifetime estimators
@@ -39,10 +39,10 @@ parameters but estimations of functions values.
     :caption: Non-parametric lifetime estimators
     :nosignatures:
 
-    ECDF
-    KaplanMeier
-    NelsonAalen
-    Turnbull
+    models.ECDF
+    models.KaplanMeier
+    models.NelsonAalen
+    models.Turnbull
 
 
 .. rubric:: Renewal policies
@@ -57,10 +57,10 @@ data.
     :caption: Renewal policies
     :nosignatures:
 
-    OneCycleAgeReplacementPolicy
-    OneCycleRunToFailure
-    RunToFailure
-    AgeReplacementPolicy
+    policies.OneCycleAgeReplacementPolicy
+    policies.OneCycleRunToFailure
+    policies.RunToFailure
+    policies.AgeReplacementPolicy
 
 .. rubric:: Likelihoods
 
@@ -70,28 +70,28 @@ data.
     :caption: Likelihoods
     :nosignatures:
 
-    likelihoods.LikelihoodFromLifetimes
+    core.likelihoods.LikelihoodFromLifetimes
 
-.. rubric:: Decorator models
+.. rubric:: Nested models
 
-A decorator model is basically a `LifetimeModel` object that wraps another `LifetimeModel` object set as a baseline.
+A nested model is basically a `LifetimeModel` object that wraps another `LifetimeModel` object set as a baseline.
 Those models mainly deserves to some functionnalities in `Policy` object but advanced users can clearly use them for a
 specific purpose. For instance `LeftTruncatedModel` wraps a baseline model by overriding some of its probibability function
 in order to take into account the time condition imposed by a left trunctation `a0`.
 
 .. autosummary::
-    :toctree: decorator_models
+    :toctree: nested_models
     :template: parametric-lifetime-model-class.rst
-    :caption: Decorator models
+    :caption: Nested models
     :nosignatures:
 
-    model.AgeReplacementModel
-    model.LeftTruncatedModel
-    model.EquilibriumDistribution
+    core.nested_model.AgeReplacementModel
+    core.nested_model.LeftTruncatedModel
+    core.nested_model.EquilibriumDistribution
 
-.. rubric:: Base class
+.. rubric:: Base model
 
-What we call `base class` are objects (in Python class are objects) used at the core of ReLife subsystems.
+What we call `base model` are objects (in Python class are objects) used at the core of ReLife subsystems.
 For beginners, it is not necessary to know them. If you start to inspect ReLife code, you will encounter them regularly
 in inheritance hierarchy. In fact, most objects created for fiability theory inherits from one of those objects. One can
 think of them as `engines` that empower objects with special functionalities to make ReLife model creation easier.
@@ -103,7 +103,7 @@ think of them as `engines` that empower objects with special functionalities to 
     :caption: Base class
     :nosignatures:
 
-    model.Parameters
-    model.ParametricModel
-    model.LifetimeModel
-    model.ParametricLifetimeModel
+    core.model.Parameters
+    core.model.ParametricModel
+    core.model.LifetimeModel
+    core.model.ParametricLifetimeModel

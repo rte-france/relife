@@ -11,7 +11,7 @@ from typing_extensions import override
 from relife.data import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.model import ParametricLifetimeModel, ParametricModel
+    from .model import ParametricLifetimeModel, ParametricModel
 
 
 class Likelihood(Protocol):
@@ -71,7 +71,7 @@ class LikelihoodFromLifetimes(Likelihood):
     Parameters
     ----------
     model : ParametricLifetimeModel
-        Underlying model used to compute probability functions
+        Underlying core used to compute probability functions
     lifetime_data : LifetimeData
         Observed lifetime data used one which the likelihood is evaluated
     model_args : tuple of zero or more ndarray, default is ()
@@ -84,7 +84,7 @@ class LikelihoodFromLifetimes(Likelihood):
         lifetime_data: LifetimeData,
         model_args: tuple[NDArray[np.float64], ...] = (),
     ):
-        self.model = model.copy()  # a copy is made as likelihood modifies model.params
+        self.model = model.copy()  # a copy is made as likelihood modifies core.params
         self.lifetime_data = lifetime_data
         self.model_args = model_args
 

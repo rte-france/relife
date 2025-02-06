@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 from scipy.stats import boxcox, zscore
 
-from relife import (
+from relife.models import (
     AFT,
     Exponential,
     Gamma,

@@ -35,16 +35,27 @@ class RenewalData(CountData):
         self, index, previous_args: Optional[tuple[NDArray[np.float64], ...]] = None
     ) -> tuple[NDArray[np.float64], ...]:
         args = ()
-        if self.nb_assets > 1 and bool(self.model_args):
-            if previous_args:
-                args = tuple(
-                    (
-                        np.concatenate((p, np.take(a, index, axis=0)))
-                        for p, a in zip(previous_args, self.model_args)
+        if bool(self.model_args):
+            if self.nb_assets > 1:
+                if previous_args:
+                    args = tuple(
+                        (
+                            np.concatenate((p, np.take(a, index, axis=0)))
+                            for p, a in zip(previous_args, self.model_args)
+                        )
                     )
-                )
-            else:
-                args = tuple((np.take(a, index, axis=0) for a in self.model_args))
+                else:
+                    args = tuple((np.take(a, index, axis=0) for a in self.model_args))
+            if self.nb_assets == 1:
+                if previous_args:
+                    args = tuple(
+                        (
+                            np.concatenate((p, np.tile(a, (len(index), 1))))
+                            for p, a in zip(previous_args, self.model_args)
+                        )
+                    )
+                else:
+                    args = tuple((np.tile(a, (len(index), 1)) for a in self.model_args))
         return args
 
     def to_fit(

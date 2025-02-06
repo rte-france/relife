@@ -4,11 +4,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.data import RenewalRewardData
-from relife.descriptors import ShapedArgs
-from relife.discounting import exponential_discounting
+from relife.core.descriptors import ShapedArgs
+from relife.core.discounting import exponential_discounting
 from relife.generator import lifetimes_rewards_generator
-from relife.model import LeftTruncatedModel, LifetimeModel
-from relife.renewal import RenewalRewardProcess, reward_partial_expectation
+from relife.core.nested_model import LeftTruncatedModel
+from relife.core.model import LifetimeModel
+from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
 from relife.types import Model1Args, ModelArgs, Policy
 
 
@@ -26,14 +27,14 @@ class OneCycleRunToFailure(Policy):
     Parameters
     ----------
     model : LifetimeModel
-        The lifetime model of the assets.
+        The lifetime core of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
     discounting_rate : float, default is 0.
         The discounting rate.
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
-        lifetime model of the process.
+        lifetime core of the process.
     nb_assets : int, optional
         Number of assets (default is 1).
     a0 : ndarray, optional
@@ -203,27 +204,27 @@ class RunToFailure(Policy):
     Parameters
     ----------
     model : LifetimeModel
-        The lifetime model of the assets.
+        The lifetime core of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
     discounting_rate : float, default is 0.
         The discounting rate.
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
-        lifetime model of the process.
+        lifetime core of the process.
     nb_assets : int, optional
         Number of assets (default is 1).
     a0 : ndarray, optional
         Current ages of the assets (default is None). Setting ``a0`` will add
         left truncations.
     model1 : LifetimeModel, optional
-        The lifetime model used for the cycle of replacements. When one adds
-        `model1`, we assume that `model1` is different from `model` meaning
+        The lifetime core used for the cycle of replacements. When one adds
+        `model1`, we assume that `model1` is different from `core` meaning
         the underlying survival probabilities behave differently for the first
         cycle
     model1_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the lifetime
-        model of the first cycle of replacements.
+        core of the first cycle of replacements.
 
     References
     ----------

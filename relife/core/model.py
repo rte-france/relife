@@ -1,17 +1,18 @@
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, asdict, dataclass, field
+from functools import wraps
 from itertools import chain
-from typing import Any, Callable, Generic, Iterator, Optional, Self, Union
+from typing import Any, Callable, Generic, Iterator, Optional, Self, Union, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
 from relife.data import LifetimeData, lifetime_data_factory
-from relife.likelihoods import LikelihoodFromLifetimes, hessian_from_likelihood
+from .likelihoods import LikelihoodFromLifetimes, hessian_from_likelihood
 from relife.plots import PlotSurvivalFunc
-from relife.quadratures import gauss_legendre, quad_laguerre
+from .quadratures import gauss_legendre, quad_laguerre
 from relife.types import VariadicArgs
 
 
@@ -146,9 +147,9 @@ class Parameters:
 
 class ParametricModel:
     """
-    Base class to create a parametric model.
+    Base class to create a parametric core.
 
-    Any parametric model must inherit from `ParametricModel`.
+    Any parametric core must inherit from `ParametricModel`.
     """
 
     def __init__(self):
@@ -163,14 +164,14 @@ class ParametricModel:
         Returns
         -------
         ndarray
-            Parameters values of the model
+            Parameters values of the core
 
         Notes
         -----
         If parameter values are not set, they are encoded as `np.nan` value.
 
-        Parameters can be by manually setting`params` through its setter, fitting the model if `fit` exists or
-        by specifying all parameters values when the model object is initialized.
+        Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
+        by specifying all parameters values when the core object is initialized.
         """
         return np.array(self._params.values)
 
@@ -249,7 +250,7 @@ class ParametricModel:
         """Change local parameters structure.
 
         This method only affects **local** parameters. `ParametricModel` components are not
-        affected. This is usefull when one wants to change model parameters for any reason. For
+        affected. This is usefull when one wants to change core parameters for any reason. For
         instance `Regression` models use `new_params` to change number of regression coefficients
         depending on the number of covariates that are passed to the `fit` method.
 
@@ -305,9 +306,9 @@ class ParametricModel:
 
 class LifetimeModel(Generic[*VariadicArgs], ABC):
     """
-    Base class to create a lifetime model.
+    Base class to create a lifetime core.
 
-    A lifetime model is an object that can answer to traditional lifetime probability
+    A lifetime core is an object that can answer to traditional lifetime probability
     functions (``sf``, ``hf`` etc.) and other common probabilitu functions (``pdf``,
     ``cdf``, etc.).
     """
@@ -701,7 +702,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         r"""
         Lebesgue-Stieltjes integration.
 
-        The Lebesgue-Stieljes intregration of a function with respect to the lifetime model
+        The Lebesgue-Stieljes intregration of a function with respect to the lifetime core
         taking into account the probability density function and jumps
 
         The Lebesgue-Stieltjes integral is:
@@ -714,7 +715,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         where:
 
         - :math:`F` is the cumulative distribution function,
-        - :math:`f` the probability density function of the lifetime model,
+        - :math:`f` the probability density function of the lifetime core,
         - :math:`a_i` and :math:`w_i` are the points and weights of the jumps.
 
         Parameters
@@ -726,7 +727,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         b : ndarray (max dim of 2)
             Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.
         args : ndarray (max dim of 2)
-            Other arguments needed by the lifetime model (eg. covariates)
+            Other arguments needed by the lifetime core (eg. covariates)
         deg : int, default 100
             Degree of the polynomials interpolation
 
@@ -789,7 +790,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
 
 @dataclass
 class FittingResults:
-    """Fitting results of the parametric model."""
+    """Fitting results of the parametric core."""
 
     nb_samples: InitVar[int]  #: Number of observations (samples).
 
@@ -856,9 +857,9 @@ class FittingResults:
 
 class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC):
     """
-    Base class to create a parametric lifetime model
+    Base class to create a parametric lifetime core
 
-    A parametric lifetime model is an ``LifetimeModel`` having parameters that can
+    A parametric lifetime core is an ``LifetimeModel`` having parameters that can
     be estimated, i.e. it has a `fit` method.
     """
 
@@ -922,7 +923,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         **kwargs: Any,
     ) -> Union[Self, None]:
         """
-        Estimation of lifetime model parameters with respect to lifetime data.
+        Estimation of lifetime core parameters with respect to lifetime data.
 
 
         Parameters
@@ -936,9 +937,9 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
         model_args : tuple of ndarray, default is None
-            Other arguments needed by the lifetime model.
+            Other arguments needed by the lifetime core.
         inplace : boolean, default is True
-            If true, parameters of the lifetime model will be replaced by estimated parameters.
+            If true, parameters of the lifetime core will be replaced by estimated parameters.
         **kwargs
             Extra arguments used by `scipy.minimize`. Default values are:
                 - `method` : `"L-BFGS-B"`
@@ -1020,6 +1021,91 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         ):
             if not self._all_params_set:
                 raise ValueError(
-                    f"Can't call {item} if one model params is not set. Instanciate fully parametrized model or fit it"
+                    f"Can't call {item} if one core params is not set. Instanciate fully parametrized core or fit it"
                 )
         return super().__getattribute__(item)
+
+
+@dataclass
+class Estimates:
+    """
+    Stores the estimates for a non-parametric lifetime core.
+
+    Parameters
+    ----------
+    timeline : np.ndarray of shape (n, )
+        The timeline of the estimates.
+    values : np.ndarray of shape (n, )
+        The estimated values.
+    se : np.ndarray of shape (n, ), optional
+        The standard errors of the estimates. If not provided, defaults to an array of zeros.
+
+    Raises
+    ------
+    ValueError
+        If the shapes of `timeline`, `values`, and `se` are not compatible.
+    """
+
+    timeline: NDArray[np.float64]
+    values: NDArray[np.float64]
+    se: Optional[NDArray[np.float64]] = None
+
+    def __post_init__(self):
+        if self.se is None:
+            self.se = np.zeros_like(
+                self.values
+            )  # garder None/Nan efaire le changement de valeur au niveau du plot
+
+        if self.timeline.shape != self.values.shape != self.se:
+            raise ValueError("Incompatible timeline, values and se in Estimates")
+
+    def nearest_1dinterp(
+        self, x: float | NDArray[np.float64]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        """Returns x nearest interpolation based on timeline and values data points
+        timeline has to be monotonically increasing
+
+        Args:
+            x (NDArray[np.float64]): 1d x coordinates to interpolate
+
+        Returns:
+            NDArray[np.float64]: interpolation values of x
+        """
+        spacing = np.diff(self.timeline) / 2
+        xp = np.hstack([spacing, spacing[-1]]) + self.timeline
+        values_p = np.concatenate([self.values, self.values[-1, None]])
+        se_p = np.concatenate([self.se, self.se[-1, None]])
+        return (
+            values_p[np.searchsorted(xp, np.asarray(x))],
+            se_p[np.searchsorted(xp, np.asarray(x))],
+        )
+
+
+def estimated(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if None in self.estimates.values():
+            return ValueError(
+                f"{self.__class__.__name__} instance has not been fitted yet, call fit first"
+            )
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
+class NonParametricModel(Protocol):
+    """
+    Non-parametric lifetime estimator.
+
+    Attributes
+    ----------
+    estimates : Estimations
+        The estimations produced when fitting the estimator.
+    """
+
+    estimates: dict[str, Optional[Estimates]]
+
+    @property
+    @estimated
+    def plot(self):
+        return PlotSurvivalFunc(self)
