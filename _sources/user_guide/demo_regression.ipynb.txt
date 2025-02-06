@@ -18,7 +18,8 @@
     "import numpy as np\n",
     "import matplotlib.pyplot as plt\n",
     "\n",
-    "from relife import ProportionalHazard, AgeReplacementPolicy, Weibull, Gompertz\n",
+    "from relife.models import ProportionalHazard, Weibull, Gompertz\n",
+    "from relife.policies import AgeReplacementPolicy\n",
     "from relife.datasets import load_insulator_string"
    ]
   },
@@ -67,16 +68,16 @@
     {
      "data": {
       "text/plain": [
-       "array([[1.85748294e-05],\n",
-       "       [2.87804129e-05],\n",
-       "       [5.72340392e-06],\n",
-       "       [1.69700162e-04],\n",
-       "       [2.07513341e-05],\n",
-       "       [1.00906648e-04],\n",
-       "       [3.65663721e-05],\n",
-       "       [1.32461531e-05],\n",
-       "       [7.39777310e-06],\n",
-       "       [2.08323997e-05]])"
+       "array([[1.46783849e-05],\n",
+       "       [5.42951408e-05],\n",
+       "       [1.05144624e-05],\n",
+       "       [3.61177139e-05],\n",
+       "       [3.48798498e-05],\n",
+       "       [3.24496916e-05],\n",
+       "       [1.46152505e-04],\n",
+       "       [6.21107733e-05],\n",
+       "       [5.63674190e-05],\n",
+       "       [1.78487920e-05]])"
       ]
      },
      "execution_count": 4,

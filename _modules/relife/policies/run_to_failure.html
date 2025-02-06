@@ -438,11 +438,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardData</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShapedArgs</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShapedArgs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">lifetimes_rewards_generator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span><span class="p">,</span> <span class="n">LifetimeModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">reward_partial_expectation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.nested_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.process.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">reward_partial_expectation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model1Args</span><span class="p">,</span> <span class="n">ModelArgs</span><span class="p">,</span> <span class="n">Policy</span>
 
 
@@ -453,7 +454,7 @@
 
 
 <div class="viewcode-block" id="OneCycleRunToFailure">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OneCycleRunToFailure</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One cyle run-to-failure policy</span>
 
@@ -462,14 +463,14 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    model : LifetimeModel</span>
-<span class="sd">        The lifetime model of the assets.</span>
+<span class="sd">        The lifetime core of the assets.</span>
 <span class="sd">    cf : np.ndarray</span>
 <span class="sd">        The cost of failure for each asset.</span>
 <span class="sd">    discounting_rate : float, default is 0.</span>
 <span class="sd">        The discounting rate.</span>
 <span class="sd">    model_args : ModelArgs, optional</span>
 <span class="sd">        ModelArgs is a tuple of zero or more ndarray required by the underlying</span>
-<span class="sd">        lifetime model of the process.</span>
+<span class="sd">        lifetime core of the process.</span>
 <span class="sd">    nb_assets : int, optional</span>
 <span class="sd">        Number of assets (default is 1).</span>
 <span class="sd">    a0 : ndarray, optional</span>
@@ -503,7 +504,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span> <span class="o">=</span> <span class="n">model_args</span>
 
 <div class="viewcode-block" id="OneCycleRunToFailure.expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.expected_total_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The expected total cost.</span>
 
@@ -528,7 +529,7 @@
 
 
 <div class="viewcode-block" id="OneCycleRunToFailure.asymptotic_expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.asymptotic_expected_total_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.asymptotic_expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The asymptotic expected total cost.</span>
@@ -542,7 +543,7 @@
 
 
 <div class="viewcode-block" id="OneCycleRunToFailure.expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.expected_equivalent_annual_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -574,7 +575,7 @@
 
 
 <div class="viewcode-block" id="OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -590,7 +591,7 @@
 
 
 <div class="viewcode-block" id="OneCycleRunToFailure.sample">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.OneCycleRunToFailure.html#relife.OneCycleRunToFailure.sample">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.sample">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -647,7 +648,7 @@
 
 
 <div class="viewcode-block" id="RunToFailure">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.RunToFailure.html#relife.policies.RunToFailure">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RunToFailure</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run-to-failure renewal policy.</span>
 
@@ -657,27 +658,27 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    model : LifetimeModel</span>
-<span class="sd">        The lifetime model of the assets.</span>
+<span class="sd">        The lifetime core of the assets.</span>
 <span class="sd">    cf : np.ndarray</span>
 <span class="sd">        The cost of failure for each asset.</span>
 <span class="sd">    discounting_rate : float, default is 0.</span>
 <span class="sd">        The discounting rate.</span>
 <span class="sd">    model_args : ModelArgs, optional</span>
 <span class="sd">        ModelArgs is a tuple of zero or more ndarray required by the underlying</span>
-<span class="sd">        lifetime model of the process.</span>
+<span class="sd">        lifetime core of the process.</span>
 <span class="sd">    nb_assets : int, optional</span>
 <span class="sd">        Number of assets (default is 1).</span>
 <span class="sd">    a0 : ndarray, optional</span>
 <span class="sd">        Current ages of the assets (default is None). Setting ``a0`` will add</span>
 <span class="sd">        left truncations.</span>
 <span class="sd">    model1 : LifetimeModel, optional</span>
-<span class="sd">        The lifetime model used for the cycle of replacements. When one adds</span>
-<span class="sd">        `model1`, we assume that `model1` is different from `model` meaning</span>
+<span class="sd">        The lifetime core used for the cycle of replacements. When one adds</span>
+<span class="sd">        `model1`, we assume that `model1` is different from `core` meaning</span>
 <span class="sd">        the underlying survival probabilities behave differently for the first</span>
 <span class="sd">        cycle</span>
 <span class="sd">    model1_args : ModelArgs, optional</span>
 <span class="sd">        ModelArgs is a tuple of zero or more ndarray required by the lifetime</span>
-<span class="sd">        model of the first cycle of replacements.</span>
+<span class="sd">        core of the first cycle of replacements.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -738,7 +739,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="RunToFailure.expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.expected_total_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.RunToFailure.html#relife.policies.RunToFailure.expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The expected total cost.</span>
 
@@ -755,7 +756,7 @@
 
 
 <div class="viewcode-block" id="RunToFailure.asymptotic_expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.asymptotic_expected_total_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.RunToFailure.html#relife.policies.RunToFailure.asymptotic_expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The asymptotic expected total cost.</span>
@@ -769,7 +770,7 @@
 
 
 <div class="viewcode-block" id="RunToFailure.expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.expected_equivalent_annual_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.RunToFailure.html#relife.policies.RunToFailure.expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -789,7 +790,7 @@
 
 
 <div class="viewcode-block" id="RunToFailure.asymptotic_expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.asymptotic_expected_equivalent_annual_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.RunToFailure.html#relife.policies.RunToFailure.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The asymptotic expected equivalent annual cost.</span>
@@ -803,7 +804,7 @@
 
 
 <div class="viewcode-block" id="RunToFailure.sample">
-<a class="viewcode-back" href="../../../api/renewal_policy/relife.RunToFailure.html#relife.RunToFailure.sample">[docs]</a>
+<a class="viewcode-back" href="../../../api/renewal_policy/relife.policies.RunToFailure.html#relife.policies.RunToFailure.sample">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
