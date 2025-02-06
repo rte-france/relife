@@ -596,6 +596,7 @@ class AgeReplacementPolicy(Policy):
                 model_args=self.model_args[1:],
                 model1=self.model1.baseline if self.model1 else None,
                 model1_args=self.model1_args[1:] if self.model1 else None,
+                nb_assets=self.nb_assets,
             )
 
     @ifset("rrp")

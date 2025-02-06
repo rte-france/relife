@@ -123,15 +123,15 @@ def test_optimal_replacement_age(baseline, fit_args):
     cf, cp, discounting_rate = fit_args
     eps = 1e-2
     policy = AgeReplacementPolicy(
-        baseline, cf, cp, discounting_rate=discounting_rate
+        baseline, cf, cp, discounting_rate=discounting_rate, nb_assets=5
     ).fit()
     ar = policy.ar
 
     policy1 = AgeReplacementPolicy(
-        baseline, cf, cp, discounting_rate=discounting_rate, ar=ar + eps
+        baseline, cf, cp, discounting_rate=discounting_rate, ar=ar + eps, nb_assets=5
     )
     policy0 = AgeReplacementPolicy(
-        baseline, cf, cp, discounting_rate=discounting_rate, ar=ar - eps
+        baseline, cf, cp, discounting_rate=discounting_rate, ar=ar - eps, nb_assets=5
     )
 
     assert np.all(

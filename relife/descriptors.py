@@ -5,6 +5,13 @@ from numpy.typing import NDArray
 from relife.types import ModelArgs
 
 
+def np_at_least(nb_assets: int):
+    if nb_assets == 1:
+        return np.atleast_1d
+    else:
+        return np.atleast_2d
+
+
 class ShapedArgs:
 
     def __init__(self, astuple: bool = False):
@@ -23,31 +30,32 @@ class ShapedArgs:
         if value is None:
             setattr(obj, self.private_name, value)
         else:
-            if isinstance(value, (list, tuple)):
-                args_2d = [np.atleast_2d(arg) for arg in value]
-            elif isinstance(value, np.ndarray):
-                args_2d = [np.atleast_2d(value)]
-            elif isinstance(value, float):
-                args_2d = [np.array([[value]])]
-            else:
-                raise ValueError(
-                    f"Args {self.public_name} can be either sequence of ndarray, ndarray or float"
-                )
+            try:
+                if isinstance(value, (list, tuple)):
+                    value = [
+                        np_at_least(obj.nb_assets)(np.asarray(v, dtype=np.float64))
+                        for v in value
+                    ]
+                else:
+                    value = [
+                        np_at_least(obj.nb_assets)(np.asarray(value, dtype=np.float64))
+                    ]
+            except ValueError:
+                raise ValueError("Incompatible args type. Must be ArrayLike")
 
-            if bool(args_2d):  # if not empty
-                current_nb_assets = max(map(lambda x: x.shape[0], args_2d))
+            if bool(value):  # if not empty
+                current_nb_assets = max(
+                    map(lambda x: x.shape[0] if x.ndim > 1 else 1, value), default=1
+                )
                 nb_assets = getattr(obj, "nb_assets")
                 if current_nb_assets > nb_assets:
                     raise ValueError(
-                        f"""
-                        Nb assets is {nb_assets} but {self.public_name} seems to have {current_nb_assets}.
-                        Set correct nb_assets (default 1) or modify {self.public_name}
-                        """
+                        f"Uncorrect arg shape (nb of assets up to {current_nb_assets}) but nb_assets is set {nb_assets}"
                     )
 
-                for i, arg in enumerate(args_2d):
-                    if arg.shape[0] == 1:
-                        args_2d[i] = np.tile(arg, (nb_assets, 1))
+                for i, arg in enumerate(value):
+                    if arg.shape[0] == 1 and nb_assets != 1:
+                        value[i] = np.tile(arg, (nb_assets, 1))
                     if arg.shape[0] != 1 and arg.shape[0] != nb_assets:
                         raise ValueError(
                             f"Args {self.public_name} shapes are inconsistent"
@@ -58,10 +66,10 @@ class ShapedArgs:
                         )
 
             if self.astuple:
-                setattr(obj, self.private_name, tuple(args_2d))
+                setattr(obj, self.private_name, tuple(value))
             else:
-                if len(args_2d) > 1:
+                if len(value) > 1:
                     raise ValueError(
                         "If astuple is False, args can't be a sequence, set astuple to True"
                     )
-                setattr(obj, self.private_name, args_2d[0])
+                setattr(obj, self.private_name, value[0])

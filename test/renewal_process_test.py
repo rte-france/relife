@@ -43,7 +43,7 @@ def age_replacement_model(request):
 
 
 @pytest.fixture(scope="module")
-def model_and_args(baseline, regression, age_replacement_model):
+def model_args_nb_assets(baseline, regression, age_replacement_model):
     model = baseline
     args = ()
     if regression is not None:
@@ -57,42 +57,53 @@ def model_and_args(baseline, regression, age_replacement_model):
         if not isinstance(tmax, np.ndarray):
             tmax = np.array(tmax)
         args = (tmax,) + args
-    return model, args
+    nb_assets = max(
+        tuple(map(lambda x: x.shape[0] if x.ndim > 1 else 1, args)), default=1
+    )
+    return model, args, nb_assets
 
 
 # test functions
 
 
-def test_renewal_process(model_and_args):
+def test_renewal_process(model_args_nb_assets):
     t = np.arange(0, 100, 0.5)
-    model, model_args = model_and_args
+    model, model_args, nb_assets = model_args_nb_assets
     model1 = EquilibriumDistribution(model)
     rp = RenewalProcess(
-        model, model1=model1, model_args=model_args, model1_args=model_args
+        model,
+        model1=model1,
+        model_args=model_args,
+        model1_args=model_args,
+        nb_assets=nb_assets,
     )
     y0 = 1 / model.mean(*rp.model_args)
     y = rp.renewal_density(t)
     assert y[..., -1:] == pytest.approx(y0, rel=1e-4)
 
 
-def test_renewal_reward_process(model_and_args):
+def test_renewal_reward_process(model_args_nb_assets):
     t = np.arange(0, 100, 0.5)
-    model, model_args = model_and_args
+    model, model_args, nb_assets = model_args_nb_assets
     reward = run_to_failure_cost
     reward_args = (1,)
     rrp = RenewalRewardProcess(
-        model, reward, model_args=model_args, reward_args=reward_args
+        model,
+        reward,
+        model_args=model_args,
+        reward_args=reward_args,
+        nb_assets=nb_assets,
     )
     m = rrp.renewal_function(t)
     z = rrp.expected_total_reward(t)
     assert m == pytest.approx(z, rel=1e-4)
 
 
-def test_renewal_reward_process_vec(model_and_args):
+def test_renewal_reward_process_vec(model_args_nb_assets):
     t = np.arange(0, 100, 0.5)
     cf0 = 1
     discounting_rate = 0.04
-    model, model_args = model_and_args
+    model, model_args, nb_assets = model_args_nb_assets
 
     nb_assets = max(
         tuple(map(lambda x: x.shape[0] if x.ndim >= 1 else 1, model_args)), default=1
@@ -108,6 +119,7 @@ def test_renewal_reward_process_vec(model_and_args):
         model_args=model_args,
         reward_args=(cf0,),
         discounting_rate=discounting_rate,
+        nb_assets=nb_assets,
     )
     rrp = RenewalRewardProcess(
         model,
@@ -115,10 +127,10 @@ def test_renewal_reward_process_vec(model_and_args):
         model_args=model_args,
         reward_args=(np.full((n, 1), cf),),
         discounting_rate=discounting_rate,
+        nb_assets=n,
     )
     z0 = rrp0.expected_total_reward(t)
     z = rrp.expected_total_reward(t)
-
     # if one asset, then z has 2 dim with n lines of expected_total_reward
     if nb_assets == 1:
         assert z0 == pytest.approx(z.sum(axis=0), rel=1e-4)
