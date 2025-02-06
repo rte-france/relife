@@ -4,7 +4,6 @@
 
 
 
-
 ProportionalHazard
 ==================
 
@@ -13,7 +12,7 @@ ProportionalHazard
 .. autoclass:: ProportionalHazard
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -195,27 +194,4 @@ ProportionalHazard
             ~ProportionalHazard.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~ProportionalHazard.nb_params
-        
-        
-            ~ProportionalHazard.params
-        
-        
-        
-            ~ProportionalHazard.params_names
-        
-        
-            ~ProportionalHazard.plot
-        
-        
-            ~ProportionalHazard.fitting_results
         

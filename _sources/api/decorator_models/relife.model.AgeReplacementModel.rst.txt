@@ -4,7 +4,6 @@
 
 
 
-
 AgeReplacementModel
 ===================
 
@@ -13,7 +12,7 @@ AgeReplacementModel
 .. autoclass:: AgeReplacementModel
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -135,14 +134,4 @@ AgeReplacementModel
             ~AgeReplacementModel.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~AgeReplacementModel.plot
         

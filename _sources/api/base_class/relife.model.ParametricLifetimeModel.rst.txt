@@ -14,7 +14,6 @@ ParametricLifetimeModel
 
     .. rubric:: Methods
 
-
     .. autosummary::
         :nosignatures:
 
@@ -79,29 +78,4 @@ ParametricLifetimeModel
         
         
             ~ParametricLifetimeModel.var
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~ParametricLifetimeModel.nb_params
-        
-        
-            ~ParametricLifetimeModel.params
-        
-        
-            ~ParametricLifetimeModel.params_bounds
-        
-        
-            ~ParametricLifetimeModel.params_names
-        
-        
-            ~ParametricLifetimeModel.plot
-        
-        
-            ~ParametricLifetimeModel.fitting_results
         

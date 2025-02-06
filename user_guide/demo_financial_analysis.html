@@ -480,7 +480,7 @@
 
 <span class="c1"># Remplacement par âge sur une infinité de cycles</span>
 <span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
-    <span class="n">distribution</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
+    <span class="n">distribution</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span>
 <span class="p">)</span>
 <span class="n">ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>
@@ -507,7 +507,7 @@
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Remplacement par âge sur un cycle</span>
 <span class="n">onecycle_ar_policy</span> <span class="o">=</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">(</span>
-    <span class="n">distribution</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
+    <span class="n">distribution</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span>
 <span class="p">)</span>
 <span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">ar</span>
@@ -566,7 +566,7 @@ array([[ 7.82608906],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">optimal_ar</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">optimal_ar</span><span class="p">)</span>
@@ -592,20 +592,19 @@ array([[ 7.82608906],
 <span class="n">discounting_rate</span> <span class="o">=</span> <span class="mf">0.05</span>
 
 <span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># range of ar</span>
-<span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
-    <span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
-<span class="p">)</span>
-<span class="n">za</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span>
-<span class="n">ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">za</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
+    <span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">ar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span>
+<span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 <span class="n">ar_opt</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>  <span class="c1"># optimal ar</span>
 <span class="n">za_opt</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">za</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">za_opt</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; cf=</span><span class="si">{</span><span class="n">cf</span><span class="si">}</span><span class="s2"> k€, ar=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2"> years&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">za_opt</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; cf=</span><span class="si">{</span><span class="n">cf</span><span class="si">}</span><span class="s2"> k€, ar=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> years&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Age of preventive replacement [years]&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Asymptotic expected equivalent annual cost [k€]&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;asymptotic expected equivalent annual cost with optimal ar :&quot;</span><span class="p">,</span> <span class="n">za_opt</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;asymptotic expected equivalent annual cost with optimal ar :&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">za_opt</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -621,7 +620,7 @@ array([[ 7.82608906],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-asymptotic expected equivalent annual cost with optimal ar : [[0.21905383]]
+asymptotic expected equivalent annual cost with optimal ar : [0.22]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">

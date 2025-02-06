@@ -619,27 +619,6 @@ time data (Vol. 3, No. 1). New York: springer.</p>
 </tbody>
 </table>
 </div>
-<p class="rubric">Attributes</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.ProportionalHazard.nb_params" title="relife.ProportionalHazard.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></p></td>
-<td><p>Number of parameters.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.ProportionalHazard.params" title="relife.ProportionalHazard.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></p></td>
-<td><p>Parameters values.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.ProportionalHazard.params_names" title="relife.ProportionalHazard.params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params_names</span></code></a></p></td>
-<td><p>Parameters names.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.ProportionalHazard.plot" title="relife.ProportionalHazard.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></p></td>
-<td><p>Plot</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fitting_results</span></code></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.ProportionalHazard.cdf">
 <span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.ProportionalHazard.cdf" title="Link to this definition">#</a></dt>
@@ -1137,6 +1116,20 @@ by specifying all parameters values when the model object is initialized.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="relife.ProportionalHazard.params_bounds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_bounds</span></span><a class="headerlink" href="#relife.ProportionalHazard.params_bounds" title="Link to this definition">#</a></dt>
+<dd><p>Bounds of the parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Bounds</dt><dd><p>The lower and upper bounds for the parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="relife.ProportionalHazard.params_names">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_names</span></span><a class="headerlink" href="#relife.ProportionalHazard.params_names" title="Link to this definition">#</a></dt>
 <dd><p>Parameters names.</p>
@@ -1326,6 +1319,7 @@ by specifying all parameters values when the model object is initialized.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.ProportionalHazard.mrl"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.mrl()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.ProportionalHazard.nb_params"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.nb_params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.ProportionalHazard.params"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.params</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.ProportionalHazard.params_bounds"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.params_bounds</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.ProportionalHazard.params_names"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.params_names</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.ProportionalHazard.pdf"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.pdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.ProportionalHazard.plot"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.plot</span></code></a></li>

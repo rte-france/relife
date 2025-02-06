@@ -25,16 +25,3 @@ KaplanMeier
         
             ~KaplanMeier.sf
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~KaplanMeier.plot
-        
-        
-            ~KaplanMeier.estimates
-        

@@ -4,7 +4,6 @@
 
 
 
-
 LogLogistic
 ===========
 
@@ -13,7 +12,7 @@ LogLogistic
 .. autoclass:: LogLogistic
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -195,27 +194,4 @@ LogLogistic
             ~LogLogistic.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~LogLogistic.nb_params
-        
-        
-            ~LogLogistic.params
-        
-        
-        
-            ~LogLogistic.params_names
-        
-        
-            ~LogLogistic.plot
-        
-        
-            ~LogLogistic.fitting_results
         

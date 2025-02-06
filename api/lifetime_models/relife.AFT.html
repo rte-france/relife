@@ -613,27 +613,6 @@ analysis of failure time data. John Wiley &amp; Sons.</p>
 </tbody>
 </table>
 </div>
-<p class="rubric">Attributes</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.AFT.nb_params" title="relife.AFT.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></p></td>
-<td><p>Number of parameters.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.AFT.params" title="relife.AFT.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></p></td>
-<td><p>Parameters values.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.AFT.params_names" title="relife.AFT.params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params_names</span></code></a></p></td>
-<td><p>Parameters names.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.AFT.plot" title="relife.AFT.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></p></td>
-<td><p>Plot</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fitting_results</span></code></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.AFT.cdf">
 <span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.AFT.cdf" title="Link to this definition">#</a></dt>
@@ -1131,6 +1110,20 @@ by specifying all parameters values when the model object is initialized.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="relife.AFT.params_bounds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_bounds</span></span><a class="headerlink" href="#relife.AFT.params_bounds" title="Link to this definition">#</a></dt>
+<dd><p>Bounds of the parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Bounds</dt><dd><p>The lower and upper bounds for the parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="relife.AFT.params_names">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_names</span></span><a class="headerlink" href="#relife.AFT.params_names" title="Link to this definition">#</a></dt>
 <dd><p>Parameters names.</p>
@@ -1320,6 +1313,7 @@ by specifying all parameters values when the model object is initialized.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.AFT.mrl"><code class="docutils literal notranslate"><span class="pre">AFT.mrl()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.AFT.nb_params"><code class="docutils literal notranslate"><span class="pre">AFT.nb_params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.AFT.params"><code class="docutils literal notranslate"><span class="pre">AFT.params</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.AFT.params_bounds"><code class="docutils literal notranslate"><span class="pre">AFT.params_bounds</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.AFT.params_names"><code class="docutils literal notranslate"><span class="pre">AFT.params_names</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.AFT.pdf"><code class="docutils literal notranslate"><span class="pre">AFT.pdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.AFT.plot"><code class="docutils literal notranslate"><span class="pre">AFT.plot</span></code></a></li>

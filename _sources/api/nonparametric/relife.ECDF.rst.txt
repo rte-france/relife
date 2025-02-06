@@ -28,16 +28,3 @@ ECDF
         
             ~ECDF.sf
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~ECDF.plot
-        
-        
-            ~ECDF.estimates
-        

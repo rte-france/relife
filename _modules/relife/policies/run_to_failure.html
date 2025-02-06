@@ -438,12 +438,18 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardData</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.discountings</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShapedArgs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">lifetimes_rewards_generator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span><span class="p">,</span> <span class="n">LifetimeModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">reward_partial_expectation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.rewards</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_to_failure_cost</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model1Args</span><span class="p">,</span> <span class="n">ModelArgs</span><span class="p">,</span> <span class="n">Policy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model1Args</span><span class="p">,</span> <span class="n">ModelArgs</span><span class="p">,</span> <span class="n">Policy</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_to_failure_cost</span><span class="p">(</span>
+    <span class="n">lifetimes</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">cf</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">lifetimes</span><span class="p">)</span> <span class="o">*</span> <span class="n">cf</span>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailure">
@@ -469,12 +475,13 @@
 <span class="sd">    a0 : ndarray, optional</span>
 <span class="sd">        Current ages of the assets (default is None). Setting ``a0`` will add</span>
 <span class="sd">        left truncations.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">reward</span> <span class="o">=</span> <span class="n">run_to_failure_cost</span>
-    <span class="n">discounting</span> <span class="o">=</span> <span class="n">exponential_discounting</span>
     <span class="n">model1</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">cf</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">a0</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">model_args</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">(</span><span class="n">astuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -486,11 +493,11 @@
         <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">a0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span> <span class="o">=</span> <span class="n">nb_assets</span>
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
             <span class="n">model_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">model_args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span> <span class="o">=</span> <span class="n">nb_assets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="n">cf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">=</span> <span class="n">discounting_rate</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span> <span class="o">=</span> <span class="n">model_args</span>
@@ -514,10 +521,9 @@
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
             <span class="n">run_to_failure_cost</span><span class="p">,</span>
-            <span class="n">exponential_discounting</span><span class="p">,</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
             <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
-            <span class="n">discounting_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,),</span>
+            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -606,14 +612,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="n">lifetimes_rewards_generator</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="p">,</span>
+            <span class="n">run_to_failure_cost</span><span class="p">,</span>
             <span class="n">nb_samples</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
             <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
-            <span class="n">discounting_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,),</span>
+            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">_lifetimes</span><span class="p">,</span> <span class="n">_event_times</span><span class="p">,</span> <span class="n">_total_rewards</span><span class="p">,</span> <span class="n">_events</span><span class="p">,</span> <span class="n">still_valid</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
@@ -681,8 +686,10 @@
 <span class="sd">        the Engineering and Informational Sciences, 22(1), 53-74.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">reward</span> <span class="o">=</span> <span class="n">run_to_failure_cost</span>
-    <span class="n">discounting</span> <span class="o">=</span> <span class="n">exponential_discounting</span>
+    <span class="n">cf</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">a0</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">model_args</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">(</span><span class="n">astuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model1_args</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">(</span><span class="n">astuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -696,6 +703,8 @@
         <span class="n">model1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">Model1Args</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model1_args</span><span class="p">:</span> <span class="n">Model1Args</span> <span class="o">=</span> <span class="p">(),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span> <span class="o">=</span> <span class="n">nb_assets</span>
 
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">model1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -713,20 +722,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span> <span class="o">=</span> <span class="n">model_args</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span> <span class="o">=</span> <span class="n">model1_args</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span> <span class="o">=</span> <span class="n">nb_assets</span>
-
         <span class="c1"># if Policy is parametrized, set the underlying renewal reward process</span>
         <span class="c1"># note the rewards are the same for the first cycle and the rest of the process</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rrp</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
+            <span class="n">run_to_failure_cost</span><span class="p">,</span>
             <span class="n">nb_assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
             <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
             <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
             <span class="n">model1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span>
             <span class="n">model1_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">,</span>
-            <span class="n">reward1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
+            <span class="n">reward1</span><span class="o">=</span><span class="n">run_to_failure_cost</span><span class="p">,</span>
             <span class="n">reward1_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
         <span class="p">)</span>
 

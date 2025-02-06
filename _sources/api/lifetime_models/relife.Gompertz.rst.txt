@@ -4,7 +4,6 @@
 
 
 
-
 Gompertz
 ========
 
@@ -13,7 +12,7 @@ Gompertz
 .. autoclass:: Gompertz
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -195,27 +194,4 @@ Gompertz
             ~Gompertz.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~Gompertz.nb_params
-        
-        
-            ~Gompertz.params
-        
-        
-        
-            ~Gompertz.params_names
-        
-        
-            ~Gompertz.plot
-        
-        
-            ~Gompertz.fitting_results
         

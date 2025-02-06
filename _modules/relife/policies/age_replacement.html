@@ -439,15 +439,24 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">newton</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardData</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.discountings</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">lifetimes_rewards_generator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgeReplacementModel</span><span class="p">,</span> <span class="n">LeftTruncatedModel</span><span class="p">,</span> <span class="n">LifetimeModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.quadratures</span><span class="w"> </span><span class="kn">import</span> <span class="n">gauss_legendre</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">reward_partial_expectation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.rewards</span><span class="w"> </span><span class="kn">import</span> <span class="n">age_replacement_cost</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model1Args</span><span class="p">,</span> <span class="n">ModelArgs</span><span class="p">,</span> <span class="n">Policy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model1Args</span><span class="p">,</span> <span class="n">ModelArgs</span><span class="p">,</span> <span class="n">Policy</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">ifset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShapedArgs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">age_replacement_cost</span><span class="p">(</span>
+    <span class="n">lifetimes</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+    <span class="n">ar</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+    <span class="n">cf</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+    <span class="n">cp</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">lifetimes</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="OneCycleAgeReplacementPolicy">
@@ -489,8 +498,7 @@
 <span class="sd">        220(1), 21-29</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">reward</span> <span class="o">=</span> <span class="n">age_replacement_cost</span>
-    <span class="n">discounting</span> <span class="o">=</span> <span class="n">exponential_discounting</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">AgeReplacementModel</span>
     <span class="n">model1</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -536,11 +544,10 @@
         <span class="k">return</span> <span class="n">reward_partial_expectation</span><span class="p">(</span>
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="p">,</span>
+            <span class="n">age_replacement_cost</span><span class="p">,</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
             <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
-            <span class="n">discounting_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,),</span>
+            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -639,14 +646,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="n">lifetimes_rewards_generator</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="p">,</span>
+            <span class="n">age_replacement_cost</span><span class="p">,</span>
             <span class="n">nb_samples</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
             <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
-            <span class="n">discounting_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,),</span>
+            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">_lifetimes</span><span class="p">,</span> <span class="n">_event_times</span><span class="p">,</span> <span class="n">_total_rewards</span><span class="p">,</span> <span class="n">_events</span><span class="p">,</span> <span class="n">still_valid</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
@@ -698,11 +704,12 @@
 
         <span class="k">def</span><span class="w"> </span><span class="nf">eq</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
-                <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">annuity_factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
+                <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
+                <span class="o">/</span> <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">annuity_factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
                 <span class="o">*</span> <span class="p">(</span>
                     <span class="p">(</span><span class="n">cf_3d</span> <span class="o">-</span> <span class="n">cp_3d</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-                    <span class="o">-</span> <span class="n">cp_3d</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">annuity_factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
+                    <span class="o">-</span> <span class="n">cp_3d</span>
+                    <span class="o">/</span> <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">annuity_factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
                 <span class="p">),</span>
                 <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
             <span class="p">)</span>
@@ -732,7 +739,13 @@
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Time based replacement policy.</span>
 
 <span class="sd">    Renewal reward process where assets are replaced at a fixed age :math:`a_r`</span>
-<span class="sd">    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier.</span>
+<span class="sd">    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.</span>
+
+<span class="sd">    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., &amp; Kallen, M. J. (2007).</span>
+<span class="sd">        Maintenance optimization. Encyclopedia of Statistics in Quality and</span>
+<span class="sd">        Reliability, 1000-1008.</span>
+
+<span class="sd">    |</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -767,16 +780,29 @@
 <span class="sd">        ModelArgs is a tuple of zero or more ndarray required by the lifetime</span>
 <span class="sd">        model of the first cycle of replacements.</span>
 
-
-<span class="sd">    References</span>
+<span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., &amp; Kallen, M. J. (2007).</span>
-<span class="sd">        Maintenance optimization. Encyclopedia of Statistics in Quality and</span>
-<span class="sd">        Reliability, 1000-1008.</span>
+<span class="sd">    cf : np.ndarray</span>
+<span class="sd">        The cost of failure for each asset.</span>
+<span class="sd">    cp : np.ndarray</span>
+<span class="sd">        The cost of preventive replacements for each asset.</span>
+<span class="sd">    ar : np.ndarray</span>
+<span class="sd">        Times until preventive replacements. This parameter can be optimized</span>
+<span class="sd">        with ``fit``</span>
+<span class="sd">    ar1 : np.ndarray</span>
+<span class="sd">        Times until preventive replacements for the first cycle. This parameter can be optimized</span>
+<span class="sd">        with ``fit``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">reward</span> <span class="o">=</span> <span class="n">age_replacement_cost</span>
-    <span class="n">discounting</span> <span class="o">=</span> <span class="n">exponential_discounting</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">AgeReplacementModel</span>
+    <span class="n">model1</span><span class="p">:</span> <span class="n">AgeReplacementModel</span>
+    <span class="n">cf</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">cp</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">ar</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">ar1</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">a0</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">()</span>
+    <span class="n">model_args</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">(</span><span class="n">astuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model1_args</span> <span class="o">=</span> <span class="n">ShapedArgs</span><span class="p">(</span><span class="n">astuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -794,6 +820,9 @@
         <span class="n">model1_args</span><span class="p">:</span> <span class="n">Model1Args</span> <span class="o">=</span> <span class="p">(),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span> <span class="o">=</span> <span class="n">nb_assets</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nb of assets&quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">model1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;model1 and a0 can&#39;t be set together&quot;</span><span class="p">)</span>
@@ -808,17 +837,27 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model1</span> <span class="o">=</span> <span class="n">model1</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="n">cf</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The cost of failure for each asset.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cp</span> <span class="o">=</span> <span class="n">cp</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;np.ndarray</span>
+<span class="sd">            The cost of preventive replacements for each asset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ar</span> <span class="o">=</span> <span class="n">ar</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;ar : np.ndarray</span>
+<span class="sd">            Times until preventive replacements. This parameter can be optimized</span>
+<span class="sd">            with ``fit``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ar1</span> <span class="o">=</span> <span class="n">ar1</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;ar1 : np.ndarray</span>
+<span class="sd">            Times until preventive replacements for the first cycle. This parameter can be optimized</span>
+<span class="sd">            with ``fit``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">=</span> <span class="n">discounting_rate</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">ar</span><span class="p">,)</span> <span class="o">+</span> <span class="n">model_args</span>
 
         <span class="c1"># (None, ...) or (ar1, ...)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">ar1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">model1_args</span> <span class="k">if</span> <span class="n">model1_args</span> <span class="k">else</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span> <span class="o">=</span> <span class="n">nb_assets</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">rrp</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">parametrized</span> <span class="o">=</span> <span class="kc">False</span>
@@ -833,14 +872,14 @@
         <span class="k">if</span> <span class="n">parametrized</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rrp</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
+                <span class="n">age_replacement_cost</span><span class="p">,</span>
                 <span class="n">nb_assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
                 <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
                 <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
                 <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
                 <span class="n">model1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span>
                 <span class="n">model1_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">,</span>
-                <span class="n">reward1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
+                <span class="n">reward1</span><span class="o">=</span><span class="n">age_replacement_cost</span><span class="p">,</span>
                 <span class="n">reward1_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
             <span class="p">)</span>
 
@@ -961,21 +1000,21 @@
 
         <span class="k">def</span><span class="w"> </span><span class="nf">eq</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
             <span class="n">f</span> <span class="o">=</span> <span class="n">gauss_legendre</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
                 <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
                 <span class="mi">0</span><span class="p">,</span>
                 <span class="n">a</span><span class="p">,</span>
                 <span class="n">ndim</span><span class="o">=</span><span class="n">ndim</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">g</span> <span class="o">=</span> <span class="n">gauss_legendre</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
                 <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
                 <span class="mi">0</span><span class="p">,</span>
                 <span class="n">a</span><span class="p">,</span>
                 <span class="n">ndim</span><span class="o">=</span><span class="n">ndim</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
+                <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
                 <span class="o">*</span> <span class="p">(</span>
                     <span class="p">(</span><span class="n">cf_3d</span> <span class="o">-</span> <span class="n">cp_3d</span><span class="p">)</span>
                     <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">*</span> <span class="n">f</span> <span class="o">-</span> <span class="n">g</span><span class="p">)</span>
@@ -1007,14 +1046,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">ar1</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model1</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rrp</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
+                <span class="n">age_replacement_cost</span><span class="p">,</span>
                 <span class="n">nb_assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
                 <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
                 <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
                 <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
                 <span class="n">model1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span>
                 <span class="n">model1_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">,</span>
-                <span class="n">reward1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
+                <span class="n">reward1</span><span class="o">=</span><span class="n">age_replacement_cost</span><span class="p">,</span>
                 <span class="n">reward1_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1028,6 +1067,7 @@
                 <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
                 <span class="n">model1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="o">.</span><span class="n">baseline</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">model1_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">nb_assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 

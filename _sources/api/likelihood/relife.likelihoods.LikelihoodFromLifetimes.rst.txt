@@ -14,7 +14,6 @@ LikelihoodFromLifetimes
 
     .. rubric:: Methods
 
-
     .. autosummary::
         :nosignatures:
 
@@ -25,20 +24,4 @@ LikelihoodFromLifetimes
         
         
             ~LikelihoodFromLifetimes.negative_log
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~LikelihoodFromLifetimes.hasjac
-        
-        
-            ~LikelihoodFromLifetimes.params
-        
-        
-            ~LikelihoodFromLifetimes.model
         

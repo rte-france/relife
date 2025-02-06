@@ -66,7 +66,7 @@ data.
 
 .. autosummary::
     :toctree: likelihood
-    :template: base-class.rst
+    :template: default.rst
     :caption: Likelihoods
     :nosignatures:
 
@@ -99,7 +99,7 @@ think of them as `engines` that empower objects with special functionalities to 
 
 .. autosummary::
     :toctree: base_class
-    :template: base-class.rst
+    :template: default.rst
     :caption: Base class
     :nosignatures:
 

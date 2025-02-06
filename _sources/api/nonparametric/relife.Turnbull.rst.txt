@@ -25,16 +25,3 @@ Turnbull
         
             ~Turnbull.sf
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~Turnbull.plot
-        
-        
-            ~Turnbull.estimates
-        

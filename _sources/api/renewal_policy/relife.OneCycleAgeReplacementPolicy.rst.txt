@@ -37,19 +37,3 @@ OneCycleAgeReplacementPolicy
         
             ~OneCycleAgeReplacementPolicy.sample
         
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~OneCycleAgeReplacementPolicy.discounting
-        
-        
-            ~OneCycleAgeReplacementPolicy.model1
-        
-        
-            ~OneCycleAgeReplacementPolicy.reward
-        

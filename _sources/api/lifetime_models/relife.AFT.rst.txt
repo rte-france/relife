@@ -4,7 +4,6 @@
 
 
 
-
 AFT
 ===
 
@@ -13,7 +12,7 @@ AFT
 .. autoclass:: AFT
     :members:
     :inherited-members:
-    :exclude-members: __init__, __new__, compose_with, new_params, init_params, params_bounds
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
 
     .. rubric:: Methods
 
@@ -195,27 +194,4 @@ AFT
             ~AFT.rvs
         
         
-        
-
-    .. rubric:: Attributes
-
-    .. autosummary::
-        :nosignatures:
-
-    
-        
-            ~AFT.nb_params
-        
-        
-            ~AFT.params
-        
-        
-        
-            ~AFT.params_names
-        
-        
-            ~AFT.plot
-        
-        
-            ~AFT.fitting_results
         
