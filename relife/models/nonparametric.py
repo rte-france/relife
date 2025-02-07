@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.core.model import Estimates, NonParametricModel, estimated
+from relife.data import nhpp_lifetime_data_factory
 from relife.data.lifetime import LifetimeData, lifetime_data_factory
 
 
@@ -604,3 +605,35 @@ class Turnbull(NonParametricModel):
             The estimated survival probabilities at each time.
         """
         return self.estimates["sf"].nearest_1dinterp(time)[0]
+
+
+class NHPPNonParametric(NonParametricModel):
+
+    def __init__(self):
+        super().__init__()
+        self.estimates = {"chf": None}
+        self.nelson_aalen = NelsonAalen()
+
+    def fit(
+        self,
+        t0: NDArray[np.float64],
+        tf: NDArray[np.float64],
+        ages: NDArray[np.float64],
+        assets: NDArray[np.int64],
+    ) -> None:
+        self.nelson_aalen.fit(nhpp_lifetime_data_factory(t0, tf, ages, assets))
+
+    def chf(self, time):
+        """Cumulative hazard function.
+
+        Parameters
+        ----------
+        time : np.ndarray of shape (n, )
+            The times at which to estimate the cumulative hazard function.
+
+        Returns
+        -------
+        np.ndarray of shape (n, )
+            The estimated cumulative hazard values at each time.
+        """
+        return self.nelson_aalen.chf(time)

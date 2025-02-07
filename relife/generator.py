@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 from relife.core.discounting import exponential_discounting
 from relife.core.nested_model import AgeReplacementModel
 from relife.core.model import LifetimeModel
+from relife.models import Exponential
 from relife.types import (
     Model1Args,
     ModelArgs,
@@ -172,5 +173,48 @@ def lifetimes_rewards_generator(
         try:
             yield sample_routine(reward, reward_args)
         except StopIteration:
+            break
+    return
+
+
+def nhpp_generator(
+    model: LifetimeModel[*ModelArgs],
+    nb_samples: int,
+    nb_assets: int,
+    end_time: float,
+    *,
+    model_args: ModelArgs = (),
+    seed: Optional[int] = None,
+) -> Iterator[
+    tuple[
+        NDArray[np.float64],
+        NDArray[np.float64],
+    ]
+]:
+    hpp_event_times = np.zeros((nb_assets, nb_samples))
+    previous_event_times = np.zeros((nb_assets, nb_samples))
+    still_valid = np.ones_like(hpp_event_times, dtype=np.bool_)
+    exponential_dist = Exponential(1.0)
+
+    def sample_routine(target_model, args):
+        nonlocal hpp_event_times, previous_event_times, still_valid, seed  # modify these variables
+        lifetimes = model_rvs(exponential_dist, size, args=args, seed=seed).reshape(
+            (nb_assets, nb_samples)
+        )
+        hpp_event_times += lifetimes
+        ages = target_model.ichf(hpp_event_times, *args)
+        durations = ages - previous_event_times
+        previous_event_times = ages
+        still_valid = ages < end_time
+        if seed is not None:
+            seed += 1
+        return durations, ages, still_valid
+
+    size = rvs_size(nb_samples, nb_assets, model_args)
+    while True:
+        gen_data = sample_routine(model, model_args)
+        if np.any(gen_data[-1]) > 0:
+            yield gen_data
+        else:
             break
     return

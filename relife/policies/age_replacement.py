@@ -15,6 +15,7 @@ from relife.types import Model1Args, ModelArgs, Policy
 
 from .decorators import ifset
 from relife.core.descriptors import ShapedArgs
+from ..process import NHPP
 
 
 def age_replacement_cost(
@@ -624,3 +625,102 @@ class AgeReplacementPolicy(Policy):
             Iterable object that encapsulates results with additional functions
         """
         return self.rrp.sample(nb_samples, end_time, seed=seed)
+
+
+class NHPPAgeReplacementPolicy(Policy):
+
+    def __init__(
+        self,
+        model: LifetimeModel[*ModelArgs],
+        c0: NDArray[np.float64],
+        cr: NDArray[np.float64],
+        *,
+        discounting_rate: float = 0.0,
+        ar: Optional[NDArray[np.float64]] = None,
+        model_args: ModelArgs = (),
+        nb_assets: int = 1,
+    ) -> None:
+
+        self.nb_assets = nb_assets
+        self.model = model
+        self.process = NHPP(model, model_args)
+        self.model_args = model_args
+        self.discounting_rate = discounting_rate
+        self.ar = ar
+        self.c0 = c0
+        self.cr = cr
+
+    @ifset("ar")
+    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        pass
+
+    @ifset("ar")
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def number_of_replacements(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def expected_number_of_repairs(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        pass
+
+    def fit(
+        self,
+        inplace: bool = True,
+    ) -> np.ndarray:
+        x0 = self.model.mean()
+
+        cr_2d, c0_2d, *model_args_2d = np.atleast_2d(self.cr, self.c0, *self.model_args)
+        if isinstance(model_args_2d, np.ndarray):
+            model_args_2d = (model_args_2d,)
+
+        if self.discounting_rate != 0:
+
+            def dcost(a):
+                a = np.atleast_2d(a)
+                return (
+                    (1 - np.exp(-self.discounting_rate * a))
+                    / self.discounting_rate
+                    * self.process.intensity(a, *model_args_2d)
+                    - gauss_legendre(
+                        lambda t: np.exp(-self.discounting_rate * t)
+                        * self.process.intensity(t, *model_args_2d),
+                        np.array(0.0),
+                        a,
+                        ndim=2,
+                    )
+                    - c0_2d / cr_2d
+                )
+
+        else:
+
+            def dcost(a):
+                a = np.atleast_2d(a)
+                return (
+                    a * self.process.intensity(a, *model_args_2d)
+                    - self.process.cumulative_intensity(a, *model_args_2d)
+                    - c0_2d / cr_2d
+                )
+
+        ar = newton(dcost, x0)
+
+        ndim = max(map(np.ndim, (self.c0, self.cr, *self.model_args)), default=0)
+        if ndim < 2:
+            ar = np.squeeze(ar)
+
+        if inplace:
+            self.ar = ar
+
+        return ar
