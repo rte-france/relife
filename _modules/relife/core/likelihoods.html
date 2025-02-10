@@ -662,6 +662,7 @@
                 <span class="sa">f</span><span class="s2">&quot;No support of jac negative likelihood for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jac_complete_contribs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_data</span><span class="p">)</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac_right_censored_contribs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_data</span><span class="p">)</span>
