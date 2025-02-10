@@ -31,6 +31,8 @@ class NHPP(ParametricModel):
     def sample(
         self, nb_samples, nb_assets, end_time: int, seed: Optional[int] = None
     ) -> NHPPData:
+        if self.cumulative_intensity(end_time) * nb_samples * nb_assets > 1e6:
+            raise ValueError("Exceeded number of sample allowed")
         durations = np.array([], dtype=np.float64)
         ages = np.array([], dtype=np.float64)
         samples = np.array([], dtype=np.int64)
@@ -81,7 +83,7 @@ class NHPP(ParametricModel):
         )
 
         minimize_kwargs = {
-            "method": kwargs.get("method", "L-BFGS-B"),
+            "method": kwargs.get("method", "Nelder-Mead"),  # Nelder-Mead better here
             "constraints": kwargs.get("constraints", ()),
             "tol": kwargs.get("tol", None),
             "callback": kwargs.get("callback", None),
@@ -93,7 +95,7 @@ class NHPP(ParametricModel):
         optimizer = minimize(
             likelihood.negative_log,
             minimize_kwargs.pop("x0"),
-            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
+            # jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
             **minimize_kwargs,
         )
 

@@ -1,8 +1,11 @@
+import warnings
 from dataclasses import dataclass, field
 from itertools import filterfalse
 from typing import Optional
 
 import numpy as np
+from matplotlib import pyplot as plt
+from numpy.distutils.system_info import atlas_3_10_info
 from numpy.typing import NDArray
 
 from .counting import CountData, CountDataIterable
@@ -48,40 +51,24 @@ def nhpp_lifetime_data_factory(
     ages = ages[sort]
     assets = assets[sort]
 
-    # uncorrect
-    # unique_assets_index, inverse_index = np.unique(assets, return_inverse=True)
-    # if len(unique_assets_index) != nb_assets:
-    #     raise ValueError(
-    #         "Assets must have the same number of unique elements than t0 and tf"
-    #     )
-    # if unique_assets_index != np.arange(0, len(nb_assets)):
-    #     assets = np.sort(inverse_index)
-    # --------------------------
-
-    # [2, 0, 3] # change np.arange(0, nb_assets) -> np.unique(nb_assets) (not 0 from nb_assets)
-    nb_ages_per_asset = np.sum(
+    nb_ages = np.sum(
         np.tile(assets, (nb_assets, 1)) == np.arange(0, nb_assets)[:, None], axis=1
     )
 
-    # control that tf is coherent with ages (remove observations with no ages)
-    index_last_age_per_asset = np.append(
-        np.where(assets[:-1] != assets[1:])[0], len(assets) - 1
-    )
-    last_age_per_asset = ages[index_last_age_per_asset]
-    if np.any(last_age_per_asset >= af[nb_ages_per_asset != 0]):
+    #  control that t0 is coherent with ages (remove observations with no ages)
+    index_first = np.where(np.roll(assets, 1) != assets)[0]
+    index_last = np.append(index_first[1:] - 1, len(assets) - 1)
+
+    if np.any(ages[index_first] <= a0[nb_ages != 0]):
+        raise ValueError("Every t0 per asset must be lower than every ages per asset")
+    if np.any(ages[index_last] >= af[nb_ages != 0]):
         raise ValueError("Every af per asset must be greater than every ages per asset")
 
-    #  control that t0 is coherent with ages (remove observations with no ages)
-    index_first_age_per_asset = np.insert(index_last_age_per_asset + 1, 0, 0)[:-1]
-    first_age_per_asset = ages[index_first_age_per_asset]
-    if np.any(first_age_per_asset <= a0[nb_ages_per_asset != 0]):
-        raise ValueError("Every t0 per asset must be lower than every ages per asset")
-
-    insert_index = np.cumsum(nb_ages_per_asset)
+    insert_index = np.cumsum(nb_ages)
     event = np.ones_like(ages, dtype=np.bool_)
     time = np.insert(ages, insert_index, af)
     event = np.insert(event, insert_index, False)
-    entry = np.roll(np.insert(ages, insert_index, np.roll(a0, -1)), 1)
+    entry = np.insert(ages, np.insert(insert_index[:-1], 0, 0), a0)
 
     return time, event, entry
 
@@ -110,57 +97,83 @@ class NHPPData(CountData):
     def mean_number_of_repairs(self):
         pass
 
-    def to_fit(self, t0: float, tf: float, sample: Optional[int] = None):
-        max_event_time = np.max(self.event_times)
-        if tf > max_event_time:
-            tf = max_event_time
+    # def to_fit(self, t0: float, tf: float, sample: Optional[int] = None):
+    #     if np.any(tf >= self.event_times):
+    #         warnings.warn("Some sample ages are ")
+    #
+    #     if t0 >= tf:
+    #         raise ValueError("`t0` must be strictly lower than `tf`")
+    #
+    #     ages = np.array([], dtype=np.float64)
+    #     assets = np.array([], dtype=np.float64)
+    #
+    #     s = self.samples_index == sample if sample is not None else Ellipsis
+    #
+    #     inside = (self.event_times[s] > t0) & (self.event_times[s] <= tf)
+    #
+    #     _assets_index = self.assets_index[s][inside]
+    #     _samples_index = self.samples_index[s][inside]
+    #     _assets = _assets_index + _samples_index
+    #
+    #     sort = np.argsort(_assets)
+    #     _assets = _assets[sort]
+    #     _ages = self.event_times[s][inside][sort]
+    #     _durations = self.durations[s][inside][sort]
+    #
+    #     shift_left = _ages - _durations
+    #     first_ages = (t0 - shift_left) >= 0
+    #     # left_truncations = (t0 - shift_left)[left_truncated]
+    #
+    #     a0 = _ages[first_ages]
+    #     ages = np.concatenate((ages, _ages[~first_ages]))
+    #     assets = np.concatenate((assets, _assets[~first_ages]))
+    #
+    #     outside = self.event_times[s] > tf
+    #
+    #     _assets_index = self.assets_index[s][outside]
+    #     _samples_index = self.samples_index[s][outside]
+    #     _assets = _assets_index + _samples_index
+    #
+    #     sort = np.argsort(_assets)
+    #     _assets = _assets[sort]
+    #     _ages = self.event_times[s][outside][sort]
+    #     _durations = self.durations[s][outside][sort]
+    #
+    #     shift_left = _ages - _durations
+    #     last_ages = (tf - shift_left) >= 0
+    #     # right_censoring = (tf - shift_left)[target_right_censored]
+    #
+    #     af = np.ones(np.sum(last_ages)) * tf
+    #
+    #     assert len(a0) == len(af)
+    #
+    #     return a0, af, ages, assets
 
-        if t0 >= tf:
-            raise ValueError("`t0` must be strictly lower than `tf`")
-
-        ages = np.array([], dtype=np.float64)
-        assets = np.array([], dtype=np.float64)
+    def to_fit(self, sample: Optional[int] = None):
 
         s = self.samples_index == sample if sample is not None else Ellipsis
 
-        complete_left_truncated = (self.event_times[s] > t0) & (
-            self.event_times[s] <= tf
-        )
-
-        _assets_index = self.assets_index[s][complete_left_truncated]
-        _samples_index = self.samples_index[s][complete_left_truncated]
+        _assets_index = self.assets_index[s]
+        _samples_index = self.samples_index[s]
+        _ages = self.event_times[s]
         _assets = _assets_index + _samples_index
 
-        sort = np.argsort(_assets)
+        sort = np.lexsort((_ages, _assets))
         _assets = _assets[sort]
-        _ages = self.event_times[s][complete_left_truncated][sort]
-        _durations = self.durations[s][complete_left_truncated][sort]
+        _ages = _ages[sort]
+        if self.nb_assets == self.nb_samples == 1:
+            a0_index = np.array([0])
+            af_index = np.array([len(_assets) - 1])
+        else:
+            a0_index = np.where(np.roll(_assets, 1) != _assets)[0]
+            af_index = np.append(a0_index[1:] - 1, len(_assets) - 1)
 
-        shift_left = _ages - _durations
-        left_truncated = (t0 - shift_left) >= 0
-        # left_truncations = (t0 - shift_left)[left_truncated]
+        assert len(a0_index) == len(af_index)
 
-        a0 = _ages[left_truncated]
-        ages = np.concatenate((ages, _ages[~left_truncated]))
-        assets = np.concatenate((assets, _assets[~left_truncated]))
+        a0 = _ages[a0_index]  # in order asset 0, 1, ... , n
+        af = _ages[af_index]
+        to_delete = np.concatenate((a0_index, af_index))
+        _ages = np.delete(_ages, to_delete)
+        _assets = np.delete(_assets, to_delete)
 
-        right_censored = self.event_times[s] > tf
-
-        _assets_index = self.assets_index[s][right_censored]
-        _samples_index = self.samples_index[s][right_censored]
-        _assets = _assets_index + _samples_index
-
-        sort = np.argsort(_assets)
-        _assets = _assets[sort]
-        _ages = self.event_times[s][right_censored][sort]
-        _durations = self.durations[s][right_censored][sort]
-
-        shift_left = _ages - _durations
-        target_right_censored = (tf - shift_left) >= 0
-        # right_censoring = (tf - shift_left)[target_right_censored]
-
-        af = np.ones(np.sum(target_right_censored)) * tf
-
-        assert len(a0) == len(af)
-
-        return a0, af, ages, assets
+        return a0, af, _ages, _assets
