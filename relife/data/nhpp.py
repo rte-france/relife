@@ -77,15 +77,15 @@ def nhpp_lifetime_data_factory(
 class NHPPData(CountData):
     durations: NDArray[np.float64] = field(repr=False)
 
-    def iter(self, sample: Optional[int] = None):
+    def iter(self, sample_id: Optional[int] = None):
         # note that event_times == ages
-        if sample is None:
+        if sample_id is None:
             return CountDataIterable(self, ("event_times", "durations"))
         else:
-            if sample not in self.samples_unique_index:
-                raise ValueError(f"{sample} is not part of samples index")
+            if sample_id not in self.samples_unique_ids:
+                raise ValueError(f"{sample_id} is not part of samples index")
             return filterfalse(
-                lambda x: x[0] != sample,
+                lambda x: x[0] != sample_id,
                 CountDataIterable(self, ("event_times", "durations")),
             )
 
@@ -151,11 +151,11 @@ class NHPPData(CountData):
 
     def to_fit(self, sample: Optional[int] = None):
 
-        s = self.samples_index == sample if sample is not None else Ellipsis
+        s = self.samples_ids == sample if sample is not None else Ellipsis
 
-        _assets_index = self.assets_index[s]
-        _samples_index = self.samples_index[s]
-        _ages = self.event_times[s]
+        _assets_index = self.assets_ids[s]
+        _samples_index = self.samples_ids[s]
+        _ages = self.timeline[s]
         _assets = _assets_index + _samples_index
 
         sort = np.lexsort((_ages, _assets))

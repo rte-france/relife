@@ -354,46 +354,41 @@ class RenewalRewardProcess(RenewalProcess):
         event_times = np.array([], dtype=np.float64)
         total_rewards = np.array([], dtype=np.float64)
         events = np.array([], dtype=np.bool_)
-        samples_index = np.array([], dtype=np.int64)
-        assets_index = np.array([], dtype=np.int64)
-        order = np.array([], dtype=np.int64)
+        samples_ids = np.array([], dtype=np.int64)
+        assets_ids = np.array([], dtype=np.int64)
 
-        for i, (
+        for (
             _lifetimes,
             _event_times,
             _total_rewards,
             _events,
             still_valid,
-        ) in enumerate(
-            lifetimes_rewards_generator(
-                self.model,
-                self.reward,
-                nb_samples,
-                self.nb_assets,
-                end_time=end_time,
-                model_args=self.model_args,
-                reward_args=self.reward_args,
-                discounting_rate=self.discounting_rate,
-                model1=self.model1,
-                model1_args=self.model1_args,
-                reward1=self.reward1,
-                reward1_args=self.reward1_args,
-                seed=seed,
-            )
+        ) in lifetimes_rewards_generator(
+            self.model,
+            self.reward,
+            nb_samples,
+            self.nb_assets,
+            end_time=end_time,
+            model_args=self.model_args,
+            reward_args=self.reward_args,
+            discounting_rate=self.discounting_rate,
+            model1=self.model1,
+            model1_args=self.model1_args,
+            reward1=self.reward1,
+            reward1_args=self.reward1_args,
+            seed=seed,
         ):
             lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid]))
             event_times = np.concatenate((event_times, _event_times[still_valid]))
             total_rewards = np.concatenate((total_rewards, _total_rewards[still_valid]))
             events = np.concatenate((events, _events[still_valid]))
-            order = np.concatenate((order, np.ones_like(_lifetimes[still_valid]) * i))
-            _assets_index, _samples_index = np.where(still_valid)
-            samples_index = np.concatenate((samples_index, _samples_index))
-            assets_index = np.concatenate((assets_index, _assets_index))
+            _assets_ids, _samples_ids = np.where(still_valid)
+            samples_ids = np.concatenate((samples_ids, _samples_ids))
+            assets_ids = np.concatenate((assets_ids, _assets_ids))
 
         return RenewalRewardData(
-            samples_index,
-            assets_index,
-            order,
+            samples_ids,
+            assets_ids,
             event_times,
             lifetimes,
             events,

@@ -20,7 +20,7 @@ data like parameters, other nested models, etc.
 
 .. autosummary::
     :toctree: lifetime_models
-    :template: parametric-lifetime-model-class.rst
+    :template: default.rst
     :caption: Lifetime models
     :nosignatures:
 

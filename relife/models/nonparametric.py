@@ -3,7 +3,8 @@ from typing import Optional, Self, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.core.model import Estimates, NonParametricModel, estimated
+from relife.core.decorators import require_attributes
+from relife.core.model import Estimates, NonParametricModel
 from relife.data import nhpp_lifetime_data_factory
 from relife.data.lifetime import LifetimeData, lifetime_data_factory
 
@@ -13,9 +14,13 @@ class ECDF(NonParametricModel):
     Empirical Cumulative Distribution Function.
     """
 
+    _sf: Union[Estimates, None]
+    _cdf: Union[Estimates, None]
+
     def __init__(self):
         super().__init__()
-        self.estimates = {"sf": None, "cdf": None}
+        self._sf = None
+        self._cdf = None
 
     def fit(
         self,
@@ -52,11 +57,11 @@ class ECDF(NonParametricModel):
         sf = 1 - cdf
         se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.rc.values))
 
-        self.estimates["sf"] = Estimates(timeline, sf, se)
-        self.estimates["cdf"] = Estimates(timeline, cdf, se)
+        self._sf = Estimates(timeline, sf, se)
+        self._cdf = Estimates(timeline, cdf, se)
         return self
 
-    @estimated
+    @require_attributes("_sf")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Survival function.
 
@@ -70,9 +75,9 @@ class ECDF(NonParametricModel):
         np.ndarray of shape (n, )
             The estimated survival probabilities at each time.
         """
-        return self.estimates["sf"].nearest_1dinterp(time)[0]
+        return self._sf.nearest_1dinterp(time)[0]
 
-    @estimated
+    @require_attributes("_cdf")
     def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
@@ -86,7 +91,7 @@ class ECDF(NonParametricModel):
         np.ndarray of shape (n, )
             The estimated cumulative hazard values at each time.
         """
-        return self.estimates["cdf"].nearest_1dinterp(time)[0]
+        return self._cdf.nearest_1dinterp(time)[0]
 
 
 class KaplanMeier(NonParametricModel):
@@ -127,9 +132,11 @@ class KaplanMeier(NonParametricModel):
 
     """
 
+    _sf: Union[Estimates, None]
+
     def __init__(self):
         super().__init__()
-        self.estimates = {"sf": None}
+        self._sf = None
 
     def fit(
         self,
@@ -205,10 +212,10 @@ class KaplanMeier(NonParametricModel):
 
         timeline = np.insert(timeline, 0, 0)
 
-        self.estimates["sf"] = Estimates(timeline, sf, se)
+        self._sf = Estimates(timeline, sf, se)
         return self
 
-    @estimated
+    @require_attributes("_sf")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Survival function.
 
@@ -222,7 +229,7 @@ class KaplanMeier(NonParametricModel):
         np.ndarray of shape (n, )
             The estimated survival probabilities at each time.
         """
-        return self.estimates["sf"].nearest_1dinterp(time)[0]
+        return self._sf.nearest_1dinterp(time)[0]
 
 
 class NelsonAalen(NonParametricModel):
@@ -263,9 +270,11 @@ class NelsonAalen(NonParametricModel):
         data. John Wiley & Sons.
     """
 
+    _chf: Union[Estimates, None]
+
     def __init__(self):
         super().__init__()
-        self.estimates = {"chf": None}
+        self._chf = None
 
     def fit(
         self,
@@ -339,10 +348,10 @@ class NelsonAalen(NonParametricModel):
         se = np.sqrt(np.insert(var, 0, 0))
         timeline = np.insert(timeline, 0, 0)
 
-        self.estimates["chf"] = Estimates(timeline, chf, se)
+        self._chf = Estimates(timeline, chf, se)
         return self
 
-    @estimated
+    @require_attributes("_chf")
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Cumulative hazard function.
 
@@ -356,11 +365,13 @@ class NelsonAalen(NonParametricModel):
         np.ndarray of shape (n, )
             The estimated cumulative hazard values at each time.
         """
-        return self.estimates["chf"].nearest_1dinterp(time)[0]
+        return self._chf.nearest_1dinterp(time)[0]
 
 
 class Turnbull(NonParametricModel):
     """Turnbull estimator"""
+
+    _sf: Union[Estimates, None]
 
     def __init__(
         self,
@@ -368,7 +379,7 @@ class Turnbull(NonParametricModel):
         lowmem: Optional[bool] = False,
     ):
         super().__init__()
-        self.estimates = {"sf": None}
+        self._sf = None
         self.tol = tol
         self.lowmem = lowmem
 
@@ -455,7 +466,7 @@ class Turnbull(NonParametricModel):
         sf = np.delete(s, ind_del)
         timeline = np.delete(timeline_temp, ind_del)
 
-        self.estimates["sf"] = Estimates(timeline, sf)
+        self._sf = Estimates(timeline, sf)
         return self
 
     def _estimate_with_low_memory(
@@ -561,7 +572,7 @@ class Turnbull(NonParametricModel):
             count += 1
         return s
 
-    @estimated
+    @require_attributes("_sf")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """Survival function.
 
@@ -575,14 +586,16 @@ class Turnbull(NonParametricModel):
         np.ndarray of shape (n, )
             The estimated survival probabilities at each time.
         """
-        return self.estimates["sf"].nearest_1dinterp(time)[0]
+        return self._sf.nearest_1dinterp(time)[0]
 
 
 class NHPPNonParametric(NonParametricModel):
 
+    _chf: Union[Estimates, None]
+
     def __init__(self):
         super().__init__()
-        self.estimates = {"chf": None}
+        self._chf = None
 
     def fit(
         self,
@@ -599,7 +612,7 @@ class NHPPNonParametric(NonParametricModel):
         )
         return self
 
-    @estimated
+    @require_attributes("_chf")
     def chf(self, time):
         """Cumulative hazard function.
 
@@ -613,4 +626,4 @@ class NHPPNonParametric(NonParametricModel):
         np.ndarray of shape (n, )
             The estimated cumulative hazard values at each time.
         """
-        return self.estimates["chf"].nearest_1dinterp(time)[0]
+        return self._chf.nearest_1dinterp(time)[0]

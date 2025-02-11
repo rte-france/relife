@@ -79,6 +79,7 @@ def lifetimes_generator(
         NDArray[np.float64],
     ]
 ]:
+    """Generates asset lifetimes data by sampling from given lifetime models."""
 
     event_times = np.zeros((nb_assets, nb_samples))
     still_valid = event_times < end_time

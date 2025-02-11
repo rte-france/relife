@@ -83,20 +83,15 @@ class Regression(
     ParametricLifetimeModel[NDArray[np.float64], *ModelArgs],
     ABC,
 ):
-    """
-    Base class for regression models.
-
-    Parameters
-    ----------
-    baseline : ParametricLifetimeModel
-        Any parametric lifetime core to serve as the baseline.
-    coef : tuple of floats (values can be None), optional
-        Coefficients values of the covariate effects.
+    r"""Base class for regression models.
 
     See Also
     --------
     regression.AFT : AFT regression
     """
+
+    baseline: ParametricLifetimeModel[*ModelArgs]
+    covar_effect: CovarEffect
 
     def __init__(
         self,
@@ -577,7 +572,9 @@ class ProportionalHazard(Regression):
 
     where :math:`x` is a vector of covariates, :math:`\beta` is the coefficient
     vector of the effect of covariates, :math:`H_0` is the baseline cumulative
-    hazard function.
+    hazard function [1]_.
+
+    |
 
     Parameters
     ----------
@@ -585,6 +582,19 @@ class ProportionalHazard(Regression):
         Any parametric lifetime core to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
+
+
+    Attributes
+    ----------
+    params : np.ndarray
+        The model parameters (both baseline parameters and covariate effects parameters).
+    params_names : np.ndarray
+        The model parameters (both baseline parameters and covariate effects parameters).
+    baseline : ParametricLifetimeModel
+        The regression baseline model.
+    covar_effect : CovarEffect
+        The regression covariate effect.
+
 
     References
     ----------

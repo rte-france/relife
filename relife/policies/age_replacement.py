@@ -1,4 +1,4 @@
-from typing import Optional, Self, Union
+from typing import Optional, Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -13,8 +13,8 @@ from relife.core.quadratures import gauss_legendre
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
 from relife.types import Model1Args, ModelArgs, Policy
 
-from .decorators import ifset
 from relife.core.descriptors import ShapedArgs
+from relife.core.decorators import require_attributes
 from ..process import NHPP
 
 
@@ -91,7 +91,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         self.discounting_rate = discounting_rate
         self.model_args = (ar,) + model_args
 
-    @ifset("ar")
+    @require_attributes("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         """The expected total cost.
 
@@ -125,7 +125,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         """
         return self.expected_total_cost(np.array(np.inf))
 
-    @ifset("ar")
+    @require_attributes("ar")
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64], dt: float = 1.0
     ) -> NDArray[np.float64]:
@@ -176,7 +176,7 @@ class OneCycleAgeReplacementPolicy(Policy):
 
         return self.expected_equivalent_annual_cost(np.array(np.inf), dt)
 
-    @ifset("ar")
+    @require_attributes("ar")
     def sample(
         self,
         nb_samples: int,
@@ -208,19 +208,17 @@ class OneCycleAgeReplacementPolicy(Policy):
             seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
-        assets_index, samples_index = np.where(still_valid)
-        assets_index.astype(np.int64)
-        samples_index.astype(np.int64)
+        assets_ids, samples_ids = np.where(still_valid)
+        assets_ids.astype(np.int64)
+        samples_ids.astype(np.int64)
         lifetimes = _lifetimes[still_valid]
         event_times = _event_times[still_valid]
         total_rewards = _total_rewards[still_valid]
         events = _events[still_valid]
-        order = np.zeros_like(lifetimes)
 
         return RenewalRewardData(
-            samples_index,
-            assets_index,
-            order,
+            samples_ids,
+            assets_ids,
             event_times,
             lifetimes,
             events,
@@ -315,10 +313,10 @@ class AgeReplacementPolicy(Policy):
         The cost of failure for each asset.
     cp : np.ndarray
         The cost of preventive replacements for each asset.
-    ar : np.ndarray
+    ar : np.ndarray or None
         Times until preventive replacements. This parameter can be optimized
         with ``fit``
-    ar1 : np.ndarray
+    ar1 : np.ndarray or None
         Times until preventive replacements for the first cycle. This parameter can be optimized
         with ``fit``
     """
@@ -350,8 +348,6 @@ class AgeReplacementPolicy(Policy):
     ) -> None:
 
         self.nb_assets = nb_assets
-        """nb of assets"""
-
         if a0 is not None:
             if model1 is not None:
                 raise ValueError("model1 and a0 can't be set together")
@@ -366,21 +362,9 @@ class AgeReplacementPolicy(Policy):
         self.model1 = model1
 
         self.cf = cf
-        """The cost of failure for each asset."""
         self.cp = cp
-        """np.ndarray
-            The cost of preventive replacements for each asset.
-        """
         self.ar = ar
-        """ar : np.ndarray
-            Times until preventive replacements. This parameter can be optimized
-            with ``fit``
-        """
         self.ar1 = ar1
-        """ar1 : np.ndarray
-            Times until preventive replacements for the first cycle. This parameter can be optimized
-            with ``fit``
-        """
         self.discounting_rate = discounting_rate
 
         self.model_args = (ar,) + model_args
@@ -388,7 +372,7 @@ class AgeReplacementPolicy(Policy):
         # (None, ...) or (ar1, ...)
         self.model1_args = (ar1,) + model1_args if model1_args else None
 
-        self.rrp = None
+        self.process = None
         parametrized = False
         if self.ar is not None:
             parametrized = True
@@ -399,7 +383,7 @@ class AgeReplacementPolicy(Policy):
         # if Policy is parametrized, set the underlying renewal reward process
         # note the rewards are the same for the first cycle and the rest of the process
         if parametrized:
-            self.rrp = RenewalRewardProcess(
+            self.process = RenewalRewardProcess(
                 self.model,
                 age_replacement_cost,
                 nb_assets=self.nb_assets,
@@ -412,7 +396,7 @@ class AgeReplacementPolicy(Policy):
                 reward1_args=(self.ar1, self.cf, self.cp),
             )
 
-    @ifset("rrp")
+    @require_attributes("rrp")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         """The expected total cost.
 
@@ -426,9 +410,9 @@ class AgeReplacementPolicy(Policy):
         ndarray
             The expected total cost for each asset along the timeline
         """
-        return self.rrp.expected_total_reward(timeline)
+        return self.process.expected_total_reward(timeline)
 
-    @ifset("rrp")
+    @require_attributes("rrp")
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
@@ -445,9 +429,9 @@ class AgeReplacementPolicy(Policy):
             The expected equivalent annual cost until each time point
         """
 
-        return self.rrp.expected_equivalent_annual_cost(timeline)
+        return self.process.expected_equivalent_annual_cost(timeline)
 
-    @ifset("rrp")
+    @require_attributes("rrp")
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         """
         The asymptotic expected total cost.
@@ -457,9 +441,9 @@ class AgeReplacementPolicy(Policy):
         ndarray
             The asymptotic expected total cost for each asset.
         """
-        return self.rrp.asymptotic_expected_total_reward()
+        return self.process.asymptotic_expected_total_reward()
 
-    @ifset("rrp")
+    @require_attributes("rrp")
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         """
         The asymptotic expected equivalent annual cost.
@@ -469,7 +453,7 @@ class AgeReplacementPolicy(Policy):
         ndarray
             The asymptotic expected equivalent annual cost.
         """
-        return self.rrp.asymptotic_expected_equivalent_annual_cost()
+        return self.process.asymptotic_expected_equivalent_annual_cost()
 
     def expected_number_of_replacements(
         self, timeline: NDArray[np.float64]
@@ -552,7 +536,7 @@ class AgeReplacementPolicy(Policy):
         self.ar1 = ar1
         self.model_args = (ar,) + self.model_args[1:]
         self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
-        self.rrp = RenewalRewardProcess(
+        self.process = RenewalRewardProcess(
             self.model,
             age_replacement_cost,
             nb_assets=self.nb_assets,
@@ -566,33 +550,59 @@ class AgeReplacementPolicy(Policy):
         )
         return self
 
-    @ifset("rrp")
+    @require_attributes("rrp")
     def sample(
         self,
         nb_samples: int,
         end_time: float,
         seed: Optional[int] = None,
     ) -> RenewalRewardData:
-        """Sample simulation .
-
-        Parameters
-        ----------
-        nb_samples : int
-            Number of samples generated
-        end_time : float
-            End of the observation period. It is the upper bound of the cumulative generated lifetimes.
-        seed : int, optional
-            Sample seed. Usefull to fix random generation and reproduce results
-
-        Returns
-        -------
-        RenewalRewardData
-            Iterable object that encapsulates results with additional functions
         """
-        return self.rrp.sample(nb_samples, end_time, seed=seed)
+        Generate samples of the renewal reward process.
+
+        This method creates samples using the internal `RenewalRewardProcess` (RRP) object.
+        The samples are generated up to a specified time with a given number of samples. An
+        optional seed can be provided to ensure reproducibility of the simulation.
+
+        Parameters:
+            nb_samples: int
+                The number of samples to generate.
+            end_time: float
+                The time limit up to which the process is simulated.
+            seed: int (optional)
+                The random seed used for reproducibility. If not provided, the random
+                generator will produce non-reproducible results.
+
+        Returns:
+            RenewalRewardData:
+                The data generated by the renewal reward process sampling.
+        """
+        return self.process.sample(nb_samples, end_time, seed=seed)
 
 
 class NHPPAgeReplacementPolicy(Policy):
+    """
+    Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..
+
+    Attributes
+    ----------
+    nb_assets : int
+        Number of assets involved in the age-replacement policy.
+    model : LifetimeModel
+        The lifetime model defining the underlying process.
+    process : NHPP
+        NHPP instance modeling the intensity and cumulative intensity.
+    model_args : ModelArgs
+        Additional arguments required by the lifetime model.
+    discounting_rate : float
+        Discount rate applied for present value calculations.
+    ar : np.ndarray or None
+        Optimized replacement age (optimized policy parameter).
+    c0 : np.ndarray
+        Cost associated with preventive replacement.
+    cr : np.ndarray
+        Cost associated with corrective replacement.
+    """
 
     def __init__(
         self,
@@ -615,14 +625,14 @@ class NHPPAgeReplacementPolicy(Policy):
         self.c0 = c0
         self.cr = cr
 
-    @ifset("ar")
+    @require_attributes("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         pass
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         pass
 
-    @ifset("ar")
+    @require_attributes("ar")
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
@@ -644,6 +654,19 @@ class NHPPAgeReplacementPolicy(Policy):
     def fit(
         self,
     ) -> Self:
+        """
+        Finds the optimal solution of a cost function and updates the instance's parameters.
+
+        The method computes the optimal value based on a cost function that integrates
+        the discounting rate and process-specific intensities. This value is updated
+        into the instance attribute `ar`. The method uses numerical techniques such as
+        Newton's method and Gauss-Legendre quadrature for efficient computation.
+
+        Returns
+        -------
+        Self
+            The updated instance after the optimization.
+        """
         x0 = self.model.mean()
 
         cr_2d, c0_2d, *model_args_2d = np.atleast_2d(self.cr, self.c0, *self.model_args)

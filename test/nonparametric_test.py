@@ -35,9 +35,7 @@ def test_fit_ecdf_kaplan_meier(data):
     km2 = KaplanMeier().fit(time, event, entry)
     na = NelsonAalen().fit(time=time, entry=entry)
 
-    assert ecdf.estimates["sf"].values == pytest.approx(
-        km.estimates["sf"].values, rel=1e-4
-    )
+    assert ecdf._sf.values == pytest.approx(km._sf.values, rel=1e-4)
     assert np.isclose(ecdf.sf(91), 0.00060606)
     assert np.isclose(km.sf(0.1), 0.99818182)
 
@@ -56,6 +54,6 @@ def test_turnbull(data_turnbull, weibull_model):
     """
     time = np.array(data_turnbull[:-1]).T
     tb = Turnbull(lowmem=True).fit(time, entry=data_turnbull[-1])
-    t = tb.estimates["sf"].timeline / 6
-    assert np.isclose(tb.estimates["sf"].values, weibull_model.sf(t), atol=0.02).all()
+    t = tb._sf.timeline / 6
+    assert np.isclose(tb._sf.values, weibull_model.sf(t), atol=0.02).all()
     assert np.isclose(tb.sf(100), 0.97565265)

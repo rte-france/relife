@@ -20,14 +20,14 @@ class RenewalData(CountData):
     model_args: ModelArgs = field(repr=False)
     with_model1: bool = field(repr=False)
 
-    def iter(self, sample: Optional[int] = None):
-        if sample is None:
+    def iter(self, sample_id: Optional[int] = None):
+        if sample_id is None:
             return CountDataIterable(self, ("event_times", "lifetimes", "events"))
         else:
-            if sample not in self.samples_unique_index:
-                raise ValueError(f"{sample} is not part of samples index")
+            if sample_id not in self.samples_unique_ids:
+                raise ValueError(f"{sample_id} is not part of samples index")
             return filterfalse(
-                lambda x: x[0] != sample,
+                lambda x: x[0] != sample_id,
                 CountDataIterable(self, ("event_times", "lifetimes", "events")),
             )
 
@@ -71,21 +71,34 @@ class RenewalData(CountData):
         tuple[NDArray[np.float64], ...],
     ]:
         """
-        consider only model_args (not model1_args)
-        if t0 is lower than first event_times => raise  Error
+        Prepares and filters the dataset attributes for model fitting on specified
+        time constraints and optional sample ID.
 
         Parameters
         ----------
-        t0 : start (time) of the observation period
-        tf : end (time) of the observation period
-        sample :
+        t0 : float, optional
+            The lower bound of the time interval (inclusive). Default is 0.
+        tf : float, optional
+            The upper bound of the time interval (inclusive). If not provided, the
+            maximum event time in the dataset is used.
+        sample : int, optional
+            An identifier for filtering a subset of the dataset. If provided, only
+            data associated with this sample ID is processed. Default is None.
 
         Returns
         -------
-
+        tuple of np.ndarray
+            A tuple containing:
+                - time: An array of observed lifetimes.
+                - event: A boolean array indicating events (True for observed events,
+                          False for censored).
+                - entry: An array of entry times representing the left truncation values.
+                - None: A placeholder returning no additional value for this component.
+                - args: Additional arguments as a tuple of arrays prepared for
+                        subsequent operations.
         """
 
-        max_event_time = np.max(self.event_times)
+        max_event_time = np.max(self.timeline)
         if tf > max_event_time:
             tf = max_event_time
 
@@ -96,16 +109,14 @@ class RenewalData(CountData):
         event = np.array([], dtype=np.bool_)
         entry = np.array([], dtype=np.float64)
 
-        s = self.samples_index == sample if sample is not None else Ellipsis
+        s = self.samples_ids == sample if sample is not None else Ellipsis
 
-        complete_left_truncated = (self.event_times[s] > t0) & (
-            self.event_times[s] <= tf
-        )
+        complete_left_truncated = (self.timeline[s] > t0) & (self.timeline[s] <= tf)
 
-        _timeline = self.event_times[s][complete_left_truncated]
+        _timeline = self.timeline[s][complete_left_truncated]
         _lifetimes = self.lifetimes[s][complete_left_truncated]
         _events = self.events[s][complete_left_truncated]
-        _assets_index = self.assets_index[s][complete_left_truncated]
+        _assets_index = self.assets_ids[s][complete_left_truncated]
 
         shift_left = _timeline - _lifetimes
         left_truncated = (t0 - shift_left) >= 0
@@ -128,12 +139,12 @@ class RenewalData(CountData):
         args = self._get_args(_assets_index[left_truncated])
         args = self._get_args(_assets_index[~left_truncated], previous_args=args)
 
-        right_censored = self.event_times[s] > tf
+        right_censored = self.timeline[s] > tf
 
-        _timeline = self.event_times[s][right_censored]
+        _timeline = self.timeline[s][right_censored]
         _lifetimes = self.lifetimes[s][right_censored]
         _events = self.events[s][right_censored]
-        _assets_index = self.assets_index[s][right_censored]
+        _assets_index = self.assets_ids[s][right_censored]
 
         shift_left = _timeline - _lifetimes
         right_censored = (tf - shift_left) >= 0
@@ -155,14 +166,14 @@ class RenewalRewardData(RenewalData):
     def cum_total_rewards(
         self, sample: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        ind = self.samples_index == sample
-        s = np.argsort(self.event_times[ind])
-        times = np.insert(self.event_times[ind][s], 0, 0)
+        ind = self.samples_ids == sample
+        s = np.argsort(self.timeline[ind])
+        times = np.insert(self.timeline[ind][s], 0, 0)
         z = np.insert(self.total_rewards[ind][s].cumsum(), 0, 0)
         return times, z
 
     def mean_total_reward(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        s = np.argsort(self.event_times)
-        times = np.insert(self.event_times[s], 0, 0)
+        s = np.argsort(self.timeline)
+        times = np.insert(self.timeline[s], 0, 0)
         z = np.insert(self.total_rewards[s].cumsum(), 0, 0) / self.nb_samples
         return times, z

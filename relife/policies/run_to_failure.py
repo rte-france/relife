@@ -173,19 +173,17 @@ class OneCycleRunToFailure(Policy):
             seed=seed,
         )
         _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
-        assets_index, samples_index = np.where(still_valid)
-        assets_index.astype(np.int64)
-        samples_index.astype(np.int64)
+        assets_ids, samples_ids = np.where(still_valid)
+        assets_ids.astype(np.int64)
+        samples_ids.astype(np.int64)
         lifetimes = _lifetimes[still_valid]
         event_times = _event_times[still_valid]
         total_rewards = _total_rewards[still_valid]
         events = _events[still_valid]
-        order = np.zeros_like(lifetimes)
 
         return RenewalRewardData(
-            samples_index,
-            assets_index,
-            order,
+            samples_ids,
+            assets_ids,
             event_times,
             lifetimes,
             events,
@@ -271,7 +269,7 @@ class RunToFailure(Policy):
 
         # if Policy is parametrized, set the underlying renewal reward process
         # note the rewards are the same for the first cycle and the rest of the process
-        self.rrp = RenewalRewardProcess(
+        self.process = RenewalRewardProcess(
             self.model,
             run_to_failure_cost,
             nb_assets=self.nb_assets,
@@ -296,7 +294,7 @@ class RunToFailure(Policy):
         -------
             The expected total cost for each asset along the timeline
         """
-        return self.rrp.expected_total_reward(timeline)
+        return self.process.expected_total_reward(timeline)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         """
@@ -307,7 +305,7 @@ class RunToFailure(Policy):
         ndarray
             The asymptotic expected total cost for each asset.
         """
-        return self.rrp.asymptotic_expected_total_reward()
+        return self.process.asymptotic_expected_total_reward()
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
@@ -324,7 +322,7 @@ class RunToFailure(Policy):
         ndarray
             The expected equivalent annual cost until each time point
         """
-        return self.rrp.expected_equivalent_annual_cost(timeline)
+        return self.process.expected_equivalent_annual_cost(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         """
@@ -335,7 +333,7 @@ class RunToFailure(Policy):
         ndarray
             The asymptotic expected equivalent annual cost.
         """
-        return self.rrp.asymptotic_expected_equivalent_annual_cost()
+        return self.process.asymptotic_expected_equivalent_annual_cost()
 
     def sample(
         self,
@@ -359,7 +357,7 @@ class RunToFailure(Policy):
         RenewalRewardData
             Iterable object that encapsulates results with additional functions
         """
-        return self.rrp.sample(nb_samples, end_time, seed=seed)
+        return self.process.sample(nb_samples, end_time, seed=seed)
 
     def expected_number_of_replacements(
         self, timeline: NDArray[np.float64]

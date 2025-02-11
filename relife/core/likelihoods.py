@@ -9,6 +9,8 @@ from scipy.optimize import approx_fprime
 from typing_extensions import override
 
 from relife.data import LifetimeData
+from ..models import Gamma
+from ..models.regression import Regression
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from .model import ParametricLifetimeModel, ParametricModel
@@ -293,3 +295,11 @@ def hessian_from_likelihood(method: str):
             return hessian_cs
         case _:
             return hessian_2point
+
+
+def hessian_scheme(obj: ParametricLifetimeModel):
+    if hasattr(obj, "baseline"):
+        return hessian_scheme(obj.baseline)
+    if isinstance(obj, Gamma):
+        return hessian_2point
+    return hessian_cs

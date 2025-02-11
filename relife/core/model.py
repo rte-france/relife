@@ -1076,18 +1076,6 @@ class Estimates:
         )
 
 
-def estimated(method):
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        if None in self.estimates.values():
-            return ValueError(
-                f"{self.__class__.__name__} instance has not been fitted yet, call fit first"
-            )
-        return method(self, *args, **kwargs)
-
-    return wrapper
-
-
 class NonParametricModel(Protocol):
     """
     Non-parametric lifetime estimator.
@@ -1101,6 +1089,5 @@ class NonParametricModel(Protocol):
     estimates: dict[str, Optional[Estimates]]
 
     @property
-    @estimated
     def plot(self):
         return PlotSurvivalFunc(self)

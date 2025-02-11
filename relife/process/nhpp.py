@@ -35,29 +35,25 @@ class NHPP(ParametricModel):
             raise ValueError("Exceeded number of sample allowed")
         durations = np.array([], dtype=np.float64)
         ages = np.array([], dtype=np.float64)
-        samples = np.array([], dtype=np.int64)
-        assets = np.array([], dtype=np.int64)
-        order = np.array([], dtype=np.int64)
+        samples_ids = np.array([], dtype=np.int64)
+        assets_ids = np.array([], dtype=np.int64)
 
-        for i, (_durations, _ages, still_valid) in enumerate(
-            nhpp_generator(
-                self.model,
-                nb_samples,
-                nb_assets,
-                end_time,
-                model_args=self.model_args,
-                seed=seed,
-            )
+        for _durations, _ages, still_valid in nhpp_generator(
+            self.model,
+            nb_samples,
+            nb_assets,
+            end_time,
+            model_args=self.model_args,
+            seed=seed,
         ):
             durations = np.concatenate((durations, _durations[still_valid]))
             ages = np.concatenate((ages, _ages[still_valid]))
-            order = np.concatenate((order, np.ones_like(_ages[still_valid]) * i))
             _assets, _samples = np.where(still_valid)
-            samples = np.concatenate((samples, _samples))
-            assets = np.concatenate((assets, _assets))
+            samples_ids = np.concatenate((samples_ids, _samples))
+            assets_ids = np.concatenate((assets_ids, _assets))
 
         # note that ages == event_times
-        return NHPPData(samples, assets, order, ages, durations)
+        return NHPPData(samples_ids, assets_ids, ages, durations)
 
     def fit(
         self,

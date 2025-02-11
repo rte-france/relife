@@ -1,74 +1,79 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, fields
-from functools import cached_property
-from random import sample
 from typing import Iterator, Optional, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 
 
+def _validate_field_shapes(field_values: list[NDArray]) -> None:
+    if not all(arr.ndim == 1 for arr in field_values if isinstance(arr, np.ndarray)):
+        raise ValueError("All array values must be 1-dimensional")
+    if len({arr.shape[0] for arr in field_values if isinstance(arr, np.ndarray)}) != 1:
+        raise ValueError("All array values must have the same length")
+
+
 @dataclass
 class CountData(ABC):
-    samples_index: NDArray[np.int64] = field(repr=False)  # samples index
-    assets_index: NDArray[np.int64] = field(repr=False)  # assets index
-    order: NDArray[np.int64] = field(
-        repr=False
-    )  # order index (order in generation process)
-    event_times: NDArray[np.float64] = field(repr=False)
-
+    samples_ids: NDArray[np.int64] = field(repr=False)  # samples ids
+    assets_ids: NDArray[np.int64] = field(repr=False)  # assets ids
+    timeline: NDArray[np.float64] = field(repr=False)  # timeline (time of each events)
     nb_samples: int = field(init=False)
     nb_assets: int = field(init=False)
-    samples_unique_index: NDArray[np.int64] = field(
+    samples_unique_ids: NDArray[np.int64] = field(
         init=False, repr=False
     )  # unique samples index
-    assets_unique_index: NDArray[np.int64] = field(
+    assets_unique_ids: NDArray[np.int64] = field(
         init=False, repr=False
     )  # unique assets index
 
     def __post_init__(self):
-        fields_values = [
-            getattr(self, _field.name) for _field in fields(self) if _field.init
+        initialized_fields = [
+            getattr(self, field_def.name)
+            for field_def in fields(self)
+            if field_def.init
         ]
-        if not all(
-            arr.ndim == 1 for arr in fields_values if isinstance(arr, np.ndarray)
-        ):
-            raise ValueError("All array values must be 1d")
-        if (
-            not len(
-                set(
-                    arr.shape[0] for arr in fields_values if isinstance(arr, np.ndarray)
-                )
-            )
-            == 1
-        ):
-            raise ValueError("All array values must have the same shape")
+        _validate_field_shapes(initialized_fields)
+        self._set_unique_ids()
 
-        self.samples_unique_index = np.unique(
-            self.samples_index
-        )  # samples unique index
-        self.assets_unique_index = np.unique(self.assets_index)  # assets unique index
-        self.nb_samples = len(self.samples_unique_index)
-        self.nb_assets = len(self.assets_unique_index)
+    def _set_unique_ids(self) -> None:
+        """Compute and set unique indices and counts for samples and assets."""
+        self.samples_unique_ids = np.unique(self.samples_ids)
+        self.assets_unique_ids = np.unique(self.assets_ids)
+        self.nb_samples = len(self.samples_unique_ids)
+        self.nb_assets = len(self.assets_unique_ids)
 
     def __len__(self) -> int:
         return self.nb_samples * self.nb_assets
 
     def number_of_events(
-        self, sample: int
+        self, sample_id: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        ind = self.samples_index == sample
-        times = np.insert(np.sort(self.event_times[ind]), 0, 0)
+        ind = self.samples_ids == sample_id
+        times = np.insert(np.sort(self.timeline[ind]), 0, 0)
         counts = np.arange(times.size)
         return times, counts
 
     def mean_number_of_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        times = np.insert(np.sort(self.event_times), 0, 0)
+        times = np.insert(np.sort(self.timeline), 0, 0)
         counts = np.arange(times.size) / self.nb_samples
         return times, counts
 
     @abstractmethod
-    def iter(self, sample: Optional[int] = None) -> "CountDataIterable": ...
+    def iter(self, sample_id: Optional[int] = None) -> "CountDataIterable":
+        """
+        Iterate over count data.
+
+        Provide an iterable access pattern for count-based data, optionally restricted by a provided sample size.
+
+        Parameters:
+            sample_id: int (optional)
+                Unique sample identifier.
+        Returns:
+            CountDataIterable:
+                An iterable object that facilitates iteration over the count data.
+        """
+        ...
 
 
 class CountDataIterable:
@@ -80,23 +85,55 @@ class CountDataIterable:
         field_names : fields iterate on
         """
         self.data = data
-        sorted_index = np.lexsort((data.order, data.assets_index, data.samples_index))
-        self.sorted_fields = tuple(
-            (getattr(data, name)[sorted_index].copy() for name in field_names)
+        self.sorted_indices = np.lexsort(
+            (data.timeline, data.assets_ids, data.samples_ids)
         )
-        self.samples_index = data.samples_index[sorted_index].copy()
-        self.assets_index = data.assets_index[sorted_index].copy()
+        self.sorted_fields = tuple(
+            getattr(data, name)[self.sorted_indices].copy() for name in field_names
+        )
+        self.samples_index = data.samples_ids[self.sorted_indices].copy()
+        self.assets_index = data.assets_ids[self.sorted_indices].copy()()
 
     def __len__(self) -> int:
         return self.data.nb_samples * self.data.nb_assets
 
     def __iter__(self) -> Iterator[tuple[int, int, *tuple[NDArray[np.float64], ...]]]:
+        """
+        Iterator over the CountData, yielding tuples with
+        (sample_id, asset_id, and corresponding field values).
 
-        for sample in self.data.samples_unique_index:
-            sample_mask = self.samples_index == sample
-            for asset in self.data.assets_unique_index:
-                asset_mask = self.assets_index[sample_mask] == asset
-                itervalues = tuple(
-                    (v[sample_mask][asset_mask]) for v in self.sorted_fields
+        Yields
+        ------
+        tuple[int, int, *tuple[NDArray[np.float64], ...]]
+        """
+        for sample_id in self.data.samples_unique_ids:
+            sample_specific_mask = self.samples_index == sample_id
+            for asset_id in self.data.assets_unique_ids:
+                yield self._get_sample_asset_values(
+                    sample_id, asset_id, sample_specific_mask
                 )
-                yield int(sample), int(asset), *itervalues
+
+    def _get_sample_asset_values(
+        self, sample_id: int, asset_id: int, sample_mask: NDArray[np.bool_]
+    ) -> tuple[int, int, *tuple[NDArray[np.float64], ...]]:
+        """
+        Extract values for a specific sample and asset combination.
+
+        Parameters
+        ----------
+        sample_id : int
+            Unique sample identifier.
+        asset_id : int
+            Unique asset identifier.
+        sample_mask : NDArray[np.bool_]
+            Mask indicating which entries belong to the sample.
+
+        Returns
+        -------
+        tuple[int, int, *tuple[NDArray[np.float64], ...]]
+        """
+        asset_specific_mask = self.assets_index[sample_mask] == asset_id
+        field_values_in_scope = tuple(
+            _field[sample_mask][asset_specific_mask] for _field in self.sorted_fields
+        )
+        return int(sample_id), int(asset_id), *field_values_in_scope
