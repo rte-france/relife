@@ -44,7 +44,7 @@ def test_mrl(model):
 
 def test_fit(model, data):
     expected_params = model.params.copy()
-    model.fit(
+    model = model.fit(
         data[0, :],
         event=data[1, :] == 1,
         entry=data[2, :],

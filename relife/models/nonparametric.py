@@ -23,8 +23,7 @@ class ECDF(NonParametricModel):
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-        inplace: bool = False,
-    ) -> Union[Self, None]:
+    ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
@@ -38,8 +37,6 @@ class ECDF(NonParametricModel):
             Left truncations applied to lifetime values.
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
-        inplace : boolean, default is True
-            If true, estimations are stored in the object
         """
 
         lifetime_data = lifetime_data_factory(
@@ -55,14 +52,9 @@ class ECDF(NonParametricModel):
         sf = 1 - cdf
         se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.rc.values))
 
-        if inplace:
-            self.estimates["sf"] = Estimates(timeline, sf, se)
-            self.estimates["cdf"] = Estimates(timeline, cdf, se)
-        else:
-            return_obj = ECDF()
-            return_obj.estimates["sf"] = Estimates(timeline, sf, se)
-            return_obj.estimates["cdf"] = Estimates(timeline, cdf, se)
-            return return_obj
+        self.estimates["sf"] = Estimates(timeline, sf, se)
+        self.estimates["cdf"] = Estimates(timeline, cdf, se)
+        return self
 
     @estimated
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -145,7 +137,6 @@ class KaplanMeier(NonParametricModel):
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-        inplace: bool = False,
     ) -> Union[Self, None]:
         """
         Compute the non-parametric estimations with respect to lifetime data.
@@ -160,8 +151,6 @@ class KaplanMeier(NonParametricModel):
             Left truncations applied to lifetime values.
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
-        inplace : boolean, default is True
-            If true, estimations are stored in the object
         """
 
         lifetime_data = lifetime_data_factory(
@@ -216,12 +205,8 @@ class KaplanMeier(NonParametricModel):
 
         timeline = np.insert(timeline, 0, 0)
 
-        if inplace:
-            self.estimates["sf"] = Estimates(timeline, sf, se)
-        else:
-            return_obj = KaplanMeier()
-            return_obj.estimates["sf"] = Estimates(timeline, sf, se)
-            return return_obj
+        self.estimates["sf"] = Estimates(timeline, sf, se)
+        return self
 
     @estimated
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -288,8 +273,7 @@ class NelsonAalen(NonParametricModel):
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-        inplace: bool = False,
-    ) -> Union[Self, None]:
+    ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
@@ -303,8 +287,6 @@ class NelsonAalen(NonParametricModel):
             Left truncations applied to lifetime values.
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
-        inplace : boolean, default is True
-            If true, estimations are stored in the object
         """
 
         lifetime_data = lifetime_data_factory(
@@ -357,12 +339,8 @@ class NelsonAalen(NonParametricModel):
         se = np.sqrt(np.insert(var, 0, 0))
         timeline = np.insert(timeline, 0, 0)
 
-        if inplace:
-            self.estimates["chf"] = Estimates(timeline, chf, se)
-        else:
-            return_obj = NelsonAalen()
-            return_obj.estimates["chf"] = Estimates(timeline, chf, se)
-            return return_obj
+        self.estimates["chf"] = Estimates(timeline, chf, se)
+        return self
 
     @estimated
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -400,8 +378,7 @@ class Turnbull(NonParametricModel):
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-        inplace: bool = False,
-    ) -> Union[Self, None]:
+    ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
@@ -415,8 +392,6 @@ class Turnbull(NonParametricModel):
             Left truncations applied to lifetime values.
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
-        inplace : boolean, default is True
-            If true, estimations are stored in the object
         """
 
         lifetime_data = lifetime_data_factory(
@@ -480,12 +455,8 @@ class Turnbull(NonParametricModel):
         sf = np.delete(s, ind_del)
         timeline = np.delete(timeline_temp, ind_del)
 
-        if inplace:
-            self.estimates["sf"] = Estimates(timeline, sf)
-        else:
-            return_obj = Turnbull(self.tol, self.lowmem)
-            return_obj.estimates["sf"] = Estimates(timeline, sf)
-            return return_obj
+        self.estimates["sf"] = Estimates(timeline, sf)
+        return self
 
     def _estimate_with_low_memory(
         self,
@@ -612,7 +583,6 @@ class NHPPNonParametric(NonParametricModel):
     def __init__(self):
         super().__init__()
         self.estimates = {"chf": None}
-        self.nelson_aalen = NelsonAalen()
 
     def fit(
         self,
@@ -620,9 +590,16 @@ class NHPPNonParametric(NonParametricModel):
         tf: NDArray[np.float64],
         ages: NDArray[np.float64],
         assets: NDArray[np.int64],
-    ) -> None:
-        self.nelson_aalen.fit(nhpp_lifetime_data_factory(t0, tf, ages, assets))
+    ) -> Self:
 
+        self.estimates["chf"] = (
+            NelsonAalen()
+            .fit(nhpp_lifetime_data_factory(t0, tf, ages, assets))
+            .estimates["chf"]
+        )
+        return self
+
+    @estimated
     def chf(self, time):
         """Cumulative hazard function.
 
@@ -636,4 +613,4 @@ class NHPPNonParametric(NonParametricModel):
         np.ndarray of shape (n, )
             The estimated cumulative hazard values at each time.
         """
-        return self.nelson_aalen.chf(time)
+        return self.estimates["chf"].nearest_1dinterp(time)[0]

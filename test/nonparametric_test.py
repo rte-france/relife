@@ -28,16 +28,12 @@ def weibull_model(request):
 
 def test_fit_ecdf_kaplan_meier(data):
     time, event, entry = data
-    ecdf = ECDF()
-    ecdf.fit(time, inplace=True)
+    ecdf = ECDF().fit(time)
     # ATTENTION faut tester sans entry ni rc_indic pr être cohérent avec ECDF
-    km = KaplanMeier()
-    km.fit(time, inplace=True)
+    km = KaplanMeier().fit(time)
     # mais tester l'estimate avec rc_indic qd mm pour verifier que tt fonctionne shape wise
-    km2 = KaplanMeier()
-    km2.fit(time, event, entry, inplace=True)
-    na = NelsonAalen()
-    na.fit(time=time, entry=entry, inplace=True)
+    km2 = KaplanMeier().fit(time, event, entry)
+    na = NelsonAalen().fit(time=time, entry=entry)
 
     assert ecdf.estimates["sf"].values == pytest.approx(
         km.estimates["sf"].values, rel=1e-4
@@ -59,8 +55,7 @@ def test_turnbull(data_turnbull, weibull_model):
 
     """
     time = np.array(data_turnbull[:-1]).T
-    tb = Turnbull(lowmem=True)
-    tb.fit(time, entry=data_turnbull[-1], inplace=True)
+    tb = Turnbull(lowmem=True).fit(time, entry=data_turnbull[-1])
     t = tb.estimates["sf"].timeline / 6
     assert np.isclose(tb.estimates["sf"].values, weibull_model.sf(t), atol=0.02).all()
     assert np.isclose(tb.sf(100), 0.97565265)

@@ -221,7 +221,6 @@ class LikelihoodFromLifetimes(Likelihood):
                 f"No support of jac negative likelihood for {self.model.__class__.__name__}"
             )
         self.model.params = params
-        print(params)
         return (
             self._jac_complete_contribs(self.lifetime_data)
             + self._jac_right_censored_contribs(self.lifetime_data)

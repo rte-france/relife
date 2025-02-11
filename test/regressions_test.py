@@ -80,7 +80,7 @@ def test_mean(model, covar):
 
 
 def fit_model(model, data):
-    model.fit(
+    return model.fit(
         data[0, :],
         event=data[1, :] == 1,
         entry=data[2, :],
@@ -91,9 +91,7 @@ def fit_model(model, data):
                 )
             ),
         ),
-        inplace=True,
     )
-    return model
 
 
 def test_fit_model(model, data):

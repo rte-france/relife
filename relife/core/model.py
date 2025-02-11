@@ -919,9 +919,8 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         model_args: tuple[*VariadicArgs] = (),
-        inplace: bool = False,
         **kwargs: Any,
-    ) -> Union[Self, None]:
+    ) -> Self:
         """
         Estimation of lifetime core parameters with respect to lifetime data.
 
@@ -938,8 +937,6 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             Right truncations applied to lifetime values.
         model_args : tuple of ndarray, default is None
             Other arguments needed by the lifetime core.
-        inplace : boolean, default is True
-            If true, parameters of the lifetime core will be replaced by estimated parameters.
         **kwargs
             Extra arguments used by `scipy.minimize`. Default values are:
                 - `method` : `"L-BFGS-B"`
@@ -1003,13 +1000,11 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             len(lifetime_data), optimizer, var
         )
 
-        if inplace:
-            self.init_params(lifetime_data, *model_args)
-            # or just self.init_params(observed_lifetimes, *model_args)
-            self.params = optimized_model.params
-            self.fitting_results = FittingResults(len(lifetime_data), optimizer, var)
-        else:
-            return optimized_model
+        self.init_params(lifetime_data, *model_args)
+        # or just self.init_params(observed_lifetimes, *model_args)
+        self.params = optimized_model.params
+        self.fitting_results = FittingResults(len(lifetime_data), optimizer, var)
+        return self
 
     def __getattribute__(self, item):
         """control if params are set"""

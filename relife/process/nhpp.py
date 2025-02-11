@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -66,9 +66,8 @@ class NHPP(ParametricModel):
         ages: NDArray[np.float64],
         assets: NDArray[np.int64],
         model_args: tuple[*VariadicArgs] = (),
-        inplace: bool = True,
         **kwargs: Any,
-    ) -> NDArray[np.float64]:
+    ) -> Self:
 
         lifetime_data = lifetime_data_factory(
             *nhpp_lifetime_data_factory(a0, af, ages, assets)
@@ -98,10 +97,9 @@ class NHPP(ParametricModel):
             # jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
             **minimize_kwargs,
         )
+        optimized_model.params = optimizer.x
 
-        if inplace:
-            self.model.init_params(lifetime_data, *model_args)
-            # or just self.init_params(observed_lifetimes, *model_args)
-            self.model.params = likelihood.params
+        self.model.init_params(lifetime_data, *model_args)
+        self.model.params = optimized_model.params
 
-        return optimizer.x
+        return self

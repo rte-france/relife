@@ -231,15 +231,9 @@ class OneCycleAgeReplacementPolicy(Policy):
 
     def fit(
         self,
-        inplace: Optional[bool] = False,
-    ) -> Union[Self, None]:
+    ) -> Self:
         """
         Computes the optimal age of replacement for each asset.
-
-        Parameters
-        ----------
-        inplace : bool, default is False
-            If True, it sets the optimal age of replacement inplace.
 
         Returns
         -------
@@ -265,19 +259,9 @@ class OneCycleAgeReplacementPolicy(Policy):
 
         ar = np.asarray(newton(eq, x0), dtype=np.float64)
 
-        if inplace:
-            self.model_args = (ar,) + self.model_args[1:]
-            self.ar = ar
-        else:
-            return OneCycleAgeReplacementPolicy(
-                self.model.baseline,
-                self.cf,
-                self.cp,
-                discounting_rate=self.discounting_rate,
-                ar=ar,
-                model_args=self.model_args[1:],
-                nb_assets=self.nb_assets,
-            )
+        self.model_args = (ar,) + self.model_args[1:]
+        self.ar = ar
+        return self
 
 
 class AgeReplacementPolicy(Policy):
@@ -504,15 +488,9 @@ class AgeReplacementPolicy(Policy):
 
     def fit(
         self,
-        inplace: Optional[bool] = False,
-    ) -> Union[Self, None]:
+    ) -> Self:
         """
         Computes the optimal age of replacement for each asset.
-
-        Parameters
-        ----------
-        inplace : bool, default is False
-            If True, it sets the optimal age of replacement inplace.
 
         Returns
         -------
@@ -570,36 +548,23 @@ class AgeReplacementPolicy(Policy):
             ).fit()
             ar1 = onecycle.ar
 
-        if inplace:
-            self.ar = ar
-            self.ar1 = ar1
-            self.model_args = (ar,) + self.model_args[1:]
-            self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
-            self.rrp = RenewalRewardProcess(
-                self.model,
-                age_replacement_cost,
-                nb_assets=self.nb_assets,
-                model_args=self.model_args,
-                reward_args=(self.ar, self.cf, self.cp),
-                discounting_rate=self.discounting_rate,
-                model1=self.model1,
-                model1_args=self.model1_args,
-                reward1=age_replacement_cost,
-                reward1_args=(self.ar1, self.cf, self.cp),
-            )
-        else:
-            return AgeReplacementPolicy(
-                self.model.baseline,
-                self.cf,
-                self.cp,
-                discounting_rate=self.discounting_rate,
-                ar=ar,
-                ar1=ar1,
-                model_args=self.model_args[1:],
-                model1=self.model1.baseline if self.model1 else None,
-                model1_args=self.model1_args[1:] if self.model1 else None,
-                nb_assets=self.nb_assets,
-            )
+        self.ar = ar
+        self.ar1 = ar1
+        self.model_args = (ar,) + self.model_args[1:]
+        self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
+        self.rrp = RenewalRewardProcess(
+            self.model,
+            age_replacement_cost,
+            nb_assets=self.nb_assets,
+            model_args=self.model_args,
+            reward_args=(self.ar, self.cf, self.cp),
+            discounting_rate=self.discounting_rate,
+            model1=self.model1,
+            model1_args=self.model1_args,
+            reward1=age_replacement_cost,
+            reward1_args=(self.ar1, self.cf, self.cp),
+        )
+        return self
 
     @ifset("rrp")
     def sample(
@@ -678,8 +643,7 @@ class NHPPAgeReplacementPolicy(Policy):
 
     def fit(
         self,
-        inplace: bool = True,
-    ) -> np.ndarray:
+    ) -> Self:
         x0 = self.model.mean()
 
         cr_2d, c0_2d, *model_args_2d = np.atleast_2d(self.cr, self.c0, *self.model_args)
@@ -719,8 +683,5 @@ class NHPPAgeReplacementPolicy(Policy):
         ndim = max(map(np.ndim, (self.c0, self.cr, *self.model_args)), default=0)
         if ndim < 2:
             ar = np.squeeze(ar)
-
-        if inplace:
-            self.ar = ar
-
-        return ar
+        self.ar = ar
+        return self
