@@ -208,10 +208,6 @@ class ParametricModel:
         """
         return len(self._params)
 
-    @property
-    def _all_params_set(self):
-        return np.isnan(self.params).any() and not np.isnan(self.params).all()
-
     def compose_with(self, **kwcomponents: Self):
         """Compose with new ``ParametricModel`` instance(s).
 
@@ -856,26 +852,6 @@ class FittingResults:
 
 
 class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC):
-    """
-    Base class to create a parametric lifetime core
-
-    A parametric lifetime core is an ``LifetimeModel`` having parameters that can
-    be estimated, i.e. it has a `fit` method.
-    """
-
-    # def __init_subclass__(cls, **kwargs):
-    #     """
-    #     TODO : something to parse *args names and to fill args_names and nb_args
-    #     see Descriptors
-    #     """
-    #
-    # @property
-    # def args_names(self):
-    #     return self._args.names
-    #
-    # @property
-    # def nb_args(self):
-    #     return len(self._args)
 
     fitting_results: FittingResults | None
 
@@ -907,10 +883,6 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         args : tuple of numpy arrays
             lala.
         """
-
-    @property
-    def _default_hess_scheme(self) -> str:
-        return "cs"
 
     def fit(
         self,
@@ -992,9 +964,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             **minimize_kwargs,
         )
         optimized_model.params = optimizer.x
-        var = np.linalg.inv(
-            hessian_from_likelihood(self._default_hess_scheme)(likelihood)
-        )
+        var = np.linalg.inv(likelihood.hessian())
 
         optimized_model.fitting_results = FittingResults(
             len(lifetime_data), optimizer, var
@@ -1011,12 +981,12 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
 
         if (
             not item.startswith("_")
-            and not not item.startswith("__")
+            and not item.startswith("__")
             and hasattr(LifetimeModel, item)
         ):
-            if not self._all_params_set:
+            if None in self.params:
                 raise ValueError(
-                    f"Can't call {item} if one core params is not set. Instanciate fully parametrized core or fit it"
+                    f"Can't call {item} if one param is None. Got {self.params} as params"
                 )
         return super().__getattribute__(item)
 

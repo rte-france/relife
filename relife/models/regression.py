@@ -151,10 +151,6 @@ class Regression(
         )
         return Bounds(lb, ub)
 
-    @property
-    def _default_hess_scheme(self) -> str:
-        return self.baseline._default_hess_scheme
-
     @override
     def sf(
         self,
