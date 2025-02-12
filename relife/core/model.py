@@ -862,27 +862,20 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
     @property
     @abstractmethod
     def params_bounds(self) -> Bounds:
-        """Bounds of the parameters
+        """Parameter bounds.
+
+        Parameters bounds are given for the optimization algorithm used to estimate the parameters.
 
         Returns
         -------
-        Bounds
-            The lower and upper bounds for the parameters.
+        scipy.optimize.Bounds
+            Scipy Bounds object.
         """
 
     @abstractmethod
-    def init_params(self, lifetime_data: LifetimeData, *args: *VariadicArgs) -> None:
-        """Initialization of the parameters
-
-        Initialize parameters values with respect to lifetime data.
-
-        Parameters
-        ----------
-        lifetime_data : LifetimeData object
-            lalal.
-        args : tuple of numpy arrays
-            lala.
-        """
+    def init_params(
+        self, lifetime_data: LifetimeData, *args: *VariadicArgs
+    ) -> None: ...
 
     def fit(
         self,

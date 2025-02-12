@@ -21,14 +21,12 @@ from relife.types import ModelArgs
 
 class CovarEffect(ParametricModel):
     """
-    Covariate effect.
+    Covariates effect.
 
     Parameters
     ----------
     coef : tuple of float or tuple of None, optional
-        Coefficients used to parametrized the covariate effect.
-        If None is provided, the coefficients values will be set to np.nan.
-
+        Coefficients of the covariates effect. Values can be None.
     """
 
     def __init__(self, coef: tuple[float, ...] | tuple[None] = (None,)):
@@ -83,11 +81,8 @@ class Regression(
     ParametricLifetimeModel[NDArray[np.float64], *ModelArgs],
     ABC,
 ):
-    r"""Base class for regression models.
-
-    See Also
-    --------
-    regression.AFT : AFT regression
+    """
+    Base class for regression models.
     """
 
     baseline: ParametricLifetimeModel[*ModelArgs]
@@ -129,14 +124,6 @@ class Regression(
 
     @property
     def params_bounds(self) -> Bounds:
-        """
-        Bounds of the parameters.
-
-        Returns
-        -------
-        Bounds
-            The lower and upper bounds for the parameters.
-        """
         lb = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, -np.inf),
@@ -158,23 +145,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """
-        Survival function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Survival probabilities at each given time.
-        """
         return super().sf(time, covar, *args)
 
     @override
@@ -184,17 +154,18 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """
-        Inverse survival function.
+        """Inverse survival function.
 
         Parameters
         ----------
-        probability : float or ndarray, shape (n, ) or (m, n)
-            Survival probabilities.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : np.ndarray
+            Covariate values. The ndarray must be broadcastable with ``time``.
         *args : variable number of np.ndarray
-            Any other variables needed by the core.
+            Any variables needed to compute the function. Those variables must be
+            broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
 
         Returns
         -------
@@ -211,23 +182,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """
-        Cumulative distribution function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Cumulative probabilities at each given time.
-        """
         return super().cdf(time, covar, *args)
 
     def pdf(
@@ -236,23 +190,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """
-        Probability density function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Probability densities at each given time.
-        """
         return super().pdf(time, covar, *args)
 
     @override
@@ -262,23 +199,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """
-        Percent point function (inverse of cdf).
-
-        Parameters
-        ----------
-        probability : float or ndarray, shape (n, ) or (m, n)
-            Cumulative probabilities.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Time values corresponding to the given cumulative probabilities.
-        """
         return super().ppf(probability, covar, *args)
 
     @override
@@ -288,23 +208,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """
-        Mean residual life.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Mean residual life values at each given time.
-        """
         return super().mrl(time, covar, *args)
 
     @override
@@ -316,23 +219,24 @@ class Regression(
         seed: Optional[int] = None,
     ):
         """
-        Random variates.
+        Random variable sampling.
 
         Parameters
         ----------
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
+        covar : np.ndarray
+            Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
         *args : variable number of np.ndarray
-            Any other variables needed by the core.
-        size : int, optional
-            Number of random variates to generate.
-        seed : int, optional
-            Seed for random number generator.
+            Any variables needed to compute the function. Those variables must be
+            broadcastable with ``covar``. They may exist and result from method chaining due to nested class instantiation.
+        size : int, default 1
+            Size of the sample.
+        seed : int, default None
+            Random seed.
 
         Returns
         -------
         np.ndarray
-            Random variates.
+            Sample of random lifetimes.
         """
         return super().rvs(covar, *args, size=size, seed=seed)
 
@@ -340,61 +244,16 @@ class Regression(
     def mean(
         self, covar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
-        """
-        Mean of the distribution.
-
-        Parameters
-        ----------
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        np.ndarray
-            Mean values.
-        """
         return super().mean(covar, *args)
 
     @override
     def var(self, covar: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
-        """
-        Variance of the distribution.
-
-        Parameters
-        ----------
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        np.ndarray
-            Variance values.
-        """
         return super().var(covar, *args)
 
     @override
     def median(
         self, covar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
-        """
-        Median of the distribution.
-
-        Parameters
-        ----------
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        np.ndarray
-            Median values.
-        """
         return super().median(covar, *args)
 
     @abstractmethod
@@ -403,24 +262,7 @@ class Regression(
         time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
-    ) -> NDArray[np.float64]:
-        """
-        Jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
-            The values of the Jacobian at each n points (eventually for m assets).
-        """
+    ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_chf(
@@ -428,24 +270,7 @@ class Regression(
         time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
-    ) -> NDArray[np.float64]:
-        """
-        Jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : np.ndarray of shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
-            The values of the Jacobian at each n points (eventually for m assets).
-        """
+    ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def dhf(
@@ -453,24 +278,7 @@ class Regression(
         time: float | NDArray[np.float64],
         covar: NDArray[np.float64],
         *args: *ModelArgs,
-    ) -> NDArray[np.float64]:
-        """
-        Derivative of the hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Derivative values with respect to time.
-        """
+    ) -> NDArray[np.float64]: ...
 
     def jac_sf(
         self,
@@ -478,25 +286,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the survival function
-
-        Jacobian with respect to core parameters.
-
-        Parameters
-        ----------
-        time : np.darray of shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.darray of shape (k, ) or (m, k)
-            Covariates values.
-        *args : variable number of np.darray
-            Any other variables needed by the core
-
-        Returns
-        -------
-        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
-            The values of the jacobian at each n points (eventually for m assets).
-
-        """
         return -self.jac_chf(time, covar, *args) * self.sf(time, covar, *args)
 
     def jac_cdf(
@@ -505,24 +294,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the cumulative distribution function.
-
-        Jacobian with respect to core parameters.
-
-        Parameters
-        ----------
-        time : np.darray of shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.darray of shape (k, ) or (m, k)
-            Covariates values.
-        *args : variable number of np.darray
-            Any other variables needed by the core
-
-        Returns
-        -------
-        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
-            The values of the jacobian at each n points (eventually for m assets).
-        """
         return -self.jac_sf(time, covar, *args)
 
     def jac_pdf(
@@ -531,25 +302,6 @@ class Regression(
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the probability density function.
-
-        Jacobian with respect to core parameters.
-
-        Parameters
-        ----------
-        time : np.darray of shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.darray of shape (k, ) or (m, k)
-            Covariates values.
-        *args : variable number of np.darray
-            Any other variables needed by the core
-
-        Returns
-        -------
-        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
-            The values of the jacobian at each n points (eventually for m assets).
-        """
-
         return self.jac_hf(time, covar, *args) * self.sf(
             time, covar, *args
         ) + self.jac_sf(time, covar, *args) * self.hf(time, covar, *args)
@@ -574,8 +326,8 @@ class ProportionalHazard(Regression):
 
     Parameters
     ----------
-    baseline : ParametricLifetimeModel
-        Any parametric lifetime core to serve as the baseline.
+    baseline : :py:class:`~relife.core.model.ParametricLifetimeModel`
+        Any parametric lifetime model to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
 
@@ -586,9 +338,9 @@ class ProportionalHazard(Regression):
         The model parameters (both baseline parameters and covariate effects parameters).
     params_names : np.ndarray
         The model parameters (both baseline parameters and covariate effects parameters).
-    baseline : ParametricLifetimeModel
+    baseline : :py:class:`~relife.core.model.ParametricLifetimeModel`
         The regression baseline model.
-    covar_effect : CovarEffect
+    covar_effect : :py:class:`~relife.models.regression.CovarEffect`
         The regression covariate effect.
 
 
@@ -599,7 +351,8 @@ class ProportionalHazard(Regression):
 
     See Also
     --------
-    regression.AFT : AFT regression
+    regression.AFT : Accelerated Failure Time regression.
+
     """
 
     def __init__(
@@ -615,29 +368,6 @@ class ProportionalHazard(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Hazard function.
-
-        The hazard function of the regression
-
-        Parameters
-        ----------
-        time : np.darray
-            Elapsed time.
-        covar : np.darray
-            Covariates values.
-        *args : variable number of np.darray
-            Any other variables needed by the core
-
-
-        Returns
-        -------
-        numpy array of floats
-            Hazard values at each given time.
-
-        Notes
-        -----
-        `time`, `covar` and any `*args` arrays must be broadcastable
-        """
         return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
     def chf(
@@ -646,22 +376,6 @@ class ProportionalHazard(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Cumulative hazard values at each given time.
-        """
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
     @override
@@ -671,22 +385,6 @@ class ProportionalHazard(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or ndarray, shape (n, ) or (m, n)
-            Cumulative hazard rate values.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Inverse cumulative hazard values, i.e., time.
-        """
         return self.baseline.ichf(
             cumulative_hazard_rate / self.covar_effect.g(covar), *args
         )
@@ -740,19 +438,36 @@ class AFT(Regression):
 
     where :math:`x` is a vector of covariates, :math:`\beta` is the coefficient
     vector of the effect of covariates, :math:`H_0` is the baseline cumulative
-    hazard function.
+    hazard function [1]_.
+
+    |
 
     Parameters
     ----------
-    baseline : ParametricLifetimeModel
-        Any parametric lifetime core to serve as the baseline.
+    baseline : :py:class:`~relife.core.model.ParametricLifetimeModel`
+        Any parametric lifetime model to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
+
+    Attributes
+    ----------
+    params : np.ndarray
+        The model parameters (both baseline parameters and covariate effects parameters).
+    params_names : np.ndarray
+        The model parameters (both baseline parameters and covariate effects parameters).
+    baseline : :py:class:`~relife.core.model.ParametricLifetimeModel`
+        The regression baseline model.
+    covar_effect : :py:class:`~relife.models.regression.CovarEffect`
+        The regression covariate effect.
 
     References
     ----------
     .. [1] Kalbfleisch, J. D., & Prentice, R. L. (2011). The statistical
         analysis of failure time data. John Wiley & Sons.
+
+    See Also
+    --------
+    regression.ProportionalHazard : proportional hazard regression
     """
 
     def __init__(
@@ -768,28 +483,6 @@ class AFT(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Hazard function.
-
-        The hazard function of the regression.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Hazard values at each given time.
-
-        Notes
-        -----
-        `time`, `covar`, and any `*args` arrays must be broadcastable.
-        """
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
 
@@ -799,22 +492,6 @@ class AFT(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Cumulative hazard values at each given time.
-        """
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
 
@@ -825,22 +502,6 @@ class AFT(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or ndarray, shape (n, ) or (m, n)
-            Cumulative hazard rate values.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Inverse cumulative hazard values, i.e., time.
-        """
         return self.covar_effect.g(covar) * self.baseline.ichf(
             cumulative_hazard_rate, *args
         )
@@ -851,22 +512,6 @@ class AFT(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
-            The values of the Jacobian at each n points (eventually for m assets).
-        """
         t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
             (
@@ -883,22 +528,6 @@ class AFT(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        np.ndarray of shape (n, nb_params) or (m, n, nb_params)
-            The values of the Jacobian at each n points (eventually for m assets).
-        """
         t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
             (
@@ -916,21 +545,104 @@ class AFT(Regression):
         covar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        """Derivative of the hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values.
-        *args : variable number of np.ndarray
-            Any other variables needed by the core.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Derivative values with respect to time.
-        """
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
+
+
+TIME_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+time : float or np.ndarray
+    Elapsed time value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+covar : np.ndarray
+    Covariate values. The ndarray must be broadcastable with ``time``.
+*args : variable number of np.ndarray
+    Any variables needed to compute the function. Those variables must be
+    broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
+
+Returns
+-------
+np.ndarray
+    Function values at each given time(s).
+"""
+
+
+ICHF_DOCSTRING = """
+Inverse cumulative hazard function.
+
+Parameters
+----------
+cumulative_hazard_rate : float or np.ndarray
+    Cumulative hazard rate value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+covar : np.ndarray
+    Covariate values. The ndarray must be broadcastable with ``time``.
+*args : variable number of np.ndarray
+    Any variables needed to compute the function.
+
+Returns
+-------
+np.ndarray
+    Function values at each given time(s).
+"""
+
+MOMENT_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+covar : np.ndarray
+    Covariate values. The ndarray must be broadcastable with ``time``.
+*args : variable number of np.ndarray
+    Any variables needed to compute the function. Those variables must be
+    broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
+
+Returns
+-------
+np.ndarray
+    {name} values.
+"""
+
+
+for class_obj in (AFT, ProportionalHazard):
+    class_obj.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The survival function")
+    class_obj.hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The hazard function")
+    class_obj.chf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The cumulative hazard function"
+    )
+    class_obj.pdf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The probability density function"
+    )
+    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The mean residual life function"
+    )
+    class_obj.cdf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The cumulative distribution function"
+    )
+    class_obj.dhf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The derivative of the hazard function"
+    )
+    class_obj.jac_hf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The jacobian of the hazard function"
+    )
+    class_obj.jac_chf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The jacobian of the cumulative hazard function"
+    )
+    class_obj.jac_sf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The jacobian of the survival function"
+    )
+    class_obj.jac_pdf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The jacobian of the probability density function"
+    )
+    class_obj.jac_cdf.__doc__ = TIME_BASE_DOCSTRING.format(
+        name="The jacobian of the cumulative distribution function"
+    )
+
+    class_obj.mean.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The mean")
+    class_obj.var.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The variance")
+    class_obj.median.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The median")
+
+    class_obj.ichf.__doc__ = ICHF_DOCSTRING
