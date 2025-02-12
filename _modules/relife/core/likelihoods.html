@@ -448,6 +448,72 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricLifetimeModel</span><span class="p">,</span> <span class="n">ParametricModel</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">hessian_cs</span><span class="p">(</span>
+    <span class="n">likelihood</span><span class="p">:</span> <span class="n">Likelihood</span><span class="p">,</span>
+    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        likelihood ():</span>
+<span class="sd">        eps ():</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">hasjac</span><span class="p">:</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">eps</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+                <span class="n">hess</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">likelihood</span><span class="o">.</span><span class="n">jac_negative_log</span><span class="p">(</span><span class="n">params</span> <span class="o">+</span> <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="n">eps</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
+                    <span class="n">hess</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">hess</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">hess</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hessian_2point</span><span class="p">(</span>
+    <span class="n">likelihood</span><span class="p">:</span> <span class="n">Likelihood</span><span class="p">,</span>
+    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        likelihood ():</span>
+<span class="sd">        eps ():</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">hasjac</span><span class="p">:</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+            <span class="n">hess</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">approx_fprime</span><span class="p">(</span>
+                <span class="n">params</span><span class="p">,</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">jac_negative_log</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">eps</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">hess</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hessian_scheme</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">relife.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gamma</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">&quot;baseline&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_hessian_scheme</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">hessian_2point</span>
+    <span class="k">return</span> <span class="n">hessian_cs</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">Likelihood</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">ParametricModel</span>
 
@@ -458,6 +524,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hasjac</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">_hessian_scheme</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">negative_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -499,7 +568,7 @@
 
 
 <div class="viewcode-block" id="LikelihoodFromLifetimes">
-<a class="viewcode-back" href="../../../api/likelihood/relife.core.likelihoods.LikelihoodFromLifetimes.html#relife.core.likelihoods.LikelihoodFromLifetimes">[docs]</a>
+<a class="viewcode-back" href="../../../api/likelihoods/relife.core.likelihoods.LikelihoodFromLifetimes.html#relife.core.likelihoods.LikelihoodFromLifetimes">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LikelihoodFromLifetimes</span><span class="p">(</span><span class="n">Likelihood</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generic likelihood object for parametric lifetime models</span>
@@ -636,7 +705,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="LikelihoodFromLifetimes.negative_log">
-<a class="viewcode-back" href="../../../api/likelihood/relife.core.likelihoods.LikelihoodFromLifetimes.html#relife.core.likelihoods.LikelihoodFromLifetimes.negative_log">[docs]</a>
+<a class="viewcode-back" href="../../../api/likelihoods/relife.core.likelihoods.LikelihoodFromLifetimes.html#relife.core.likelihoods.LikelihoodFromLifetimes.negative_log">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">negative_log</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">params</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -651,7 +720,7 @@
 
 
 <div class="viewcode-block" id="LikelihoodFromLifetimes.jac_negative_log">
-<a class="viewcode-back" href="../../../api/likelihood/relife.core.likelihoods.LikelihoodFromLifetimes.html#relife.core.likelihoods.LikelihoodFromLifetimes.jac_negative_log">[docs]</a>
+<a class="viewcode-back" href="../../../api/likelihoods/relife.core.likelihoods.LikelihoodFromLifetimes.html#relife.core.likelihoods.LikelihoodFromLifetimes.jac_negative_log">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_negative_log</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -662,7 +731,6 @@
                 <span class="sa">f</span><span class="s2">&quot;No support of jac negative likelihood for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jac_complete_contribs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_data</span><span class="p">)</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac_right_censored_contribs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_data</span><span class="p">)</span>
@@ -671,62 +739,6 @@
         <span class="p">)</span></div>
 </div>
 
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">hessian_cs</span><span class="p">(</span>
-    <span class="n">likelihood</span><span class="p">:</span> <span class="n">Likelihood</span><span class="p">,</span>
-    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        likelihood ():</span>
-<span class="sd">        eps ():</span>
-
-<span class="sd">    Returns:</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">hasjac</span><span class="p">:</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span>
-        <span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
-        <span class="n">u</span> <span class="o">=</span> <span class="n">eps</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
-                <span class="n">hess</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">likelihood</span><span class="o">.</span><span class="n">jac_negative_log</span><span class="p">(</span><span class="n">params</span> <span class="o">+</span> <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="n">eps</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
-                    <span class="n">hess</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">hess</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">hess</span>
-    <span class="k">return</span> <span class="kc">None</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">hessian_2point</span><span class="p">(</span>
-    <span class="n">likelihood</span><span class="p">:</span> <span class="n">Likelihood</span><span class="p">,</span>
-    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        likelihood ():</span>
-<span class="sd">        eps ():</span>
-
-<span class="sd">    Returns:</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">hasjac</span><span class="p">:</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
-            <span class="n">hess</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">approx_fprime</span><span class="p">(</span>
-                <span class="n">params</span><span class="p">,</span>
-                <span class="k">lambda</span> <span class="n">params</span><span class="p">:</span> <span class="n">likelihood</span><span class="o">.</span><span class="n">jac_negative_log</span><span class="p">(</span><span class="n">params</span><span class="p">)[</span><span class="n">i</span><span class="p">],</span>
-                <span class="n">eps</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">hess</span>
-    <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">hessian_from_likelihood</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>

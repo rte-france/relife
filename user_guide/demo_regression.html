@@ -516,16 +516,16 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[1.46783849e-05],
-       [5.42951408e-05],
-       [1.05144624e-05],
-       [3.61177139e-05],
-       [3.48798498e-05],
-       [3.24496916e-05],
-       [1.46152505e-04],
-       [6.21107733e-05],
-       [5.63674190e-05],
-       [1.78487920e-05]])
+array([[1.82139884e-05],
+       [4.18836140e-05],
+       [1.72287476e-04],
+       [1.22768879e-04],
+       [4.10564839e-05],
+       [1.03734197e-04],
+       [1.12817643e-04],
+       [1.99725367e-05],
+       [1.02540205e-04],
+       [5.83896504e-06]])
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -592,8 +592,7 @@ array([[1.46783849e-05],
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Calculons la politique et l&#39;âge de remplacement pour les individus i, j, k définis ci-dessus:</span>
 <span class="n">policy_ph</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
     <span class="n">ph</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">model_args</span><span class="o">=</span><span class="p">(</span><span class="n">covar</span><span class="p">[[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]],),</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span>
-<span class="p">)</span>
-<span class="n">policy_ph</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">policy_ph</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>
 </pre></div>
 </div>

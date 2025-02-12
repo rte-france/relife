@@ -482,8 +482,7 @@
 <span class="c1"># Remplacement par âge sur une infinité de cycles</span>
 <span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
     <span class="n">distribution</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span>
-<span class="p">)</span>
-<span class="n">ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>
 </pre></div>
 </div>
@@ -509,8 +508,7 @@
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Remplacement par âge sur un cycle</span>
 <span class="n">onecycle_ar_policy</span> <span class="o">=</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">(</span>
     <span class="n">distribution</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span>
-<span class="p">)</span>
-<span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 <span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">ar</span>
 </pre></div>
 </div>
@@ -567,8 +565,7 @@ array([[ 7.82608906],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 <span class="n">optimal_ar</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">optimal_ar</span><span class="p">)</span>
 </pre></div>

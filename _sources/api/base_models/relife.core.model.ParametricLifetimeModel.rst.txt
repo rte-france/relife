@@ -1,0 +1,75 @@
+﻿
+
+
+ParametricLifetimeModel
+=======================
+
+.. currentmodule:: relife.core.model
+
+.. autoclass:: ParametricLifetimeModel
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
+
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~ParametricLifetimeModel.cdf
+        
+        
+            ~ParametricLifetimeModel.chf
+        
+        
+        
+            ~ParametricLifetimeModel.copy
+        
+        
+            ~ParametricLifetimeModel.fit
+        
+        
+            ~ParametricLifetimeModel.hf
+        
+        
+            ~ParametricLifetimeModel.ichf
+        
+        
+        
+            ~ParametricLifetimeModel.isf
+        
+        
+            ~ParametricLifetimeModel.ls_integrate
+        
+        
+            ~ParametricLifetimeModel.mean
+        
+        
+            ~ParametricLifetimeModel.median
+        
+        
+            ~ParametricLifetimeModel.moment
+        
+        
+            ~ParametricLifetimeModel.mrl
+        
+        
+        
+            ~ParametricLifetimeModel.pdf
+        
+        
+            ~ParametricLifetimeModel.ppf
+        
+        
+            ~ParametricLifetimeModel.rvs
+        
+        
+            ~ParametricLifetimeModel.sf
+        
+        
+            ~ParametricLifetimeModel.var
+        

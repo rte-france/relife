@@ -54,8 +54,7 @@
     "# Remplacement par âge sur une infinité de cycles\n",
     "ar_policy = AgeReplacementPolicy(\n",
     "    distribution, cf=cf, a0=a0, cp=cp, discounting_rate=discounting_rate, nb_assets=3\n",
-    ")\n",
-    "ar_policy.fit(inplace=True)\n",
+    ").fit()\n",
     "ar_policy.ar1, ar_policy.ar"
    ]
   },
@@ -82,8 +81,7 @@
     "# Remplacement par âge sur un cycle\n",
     "onecycle_ar_policy = OneCycleAgeReplacementPolicy(\n",
     "    distribution, a0=a0, cf=cf, cp=cp, discounting_rate=discounting_rate, nb_assets=3\n",
-    ")\n",
-    "onecycle_ar_policy.fit(inplace=True)\n",
+    ").fit()\n",
     "onecycle_ar_policy.ar"
    ]
   },
@@ -151,8 +149,7 @@
     }
    ],
    "source": [
-    "ar_policy = AgeReplacementPolicy(distrib, cf=cf, cp=cp, discounting_rate=discounting_rate, nb_assets=3)\n",
-    "ar_policy.fit(inplace=True)\n",
+    "ar_policy = AgeReplacementPolicy(distrib, cf=cf, cp=cp, discounting_rate=discounting_rate, nb_assets=3).fit()\n",
     "optimal_ar = ar_policy.ar\n",
     "print(optimal_ar)"
    ]
