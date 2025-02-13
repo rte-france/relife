@@ -4,7 +4,7 @@
 ParametricModel
 ===============
 
-.. currentmodule:: relife.core.model
+.. currentmodule:: relife.core
 
 .. autoclass:: ParametricModel
     :members:

@@ -4,7 +4,7 @@
 LifetimeModel
 =============
 
-.. currentmodule:: relife.core.model
+.. currentmodule:: relife.core
 
 .. autoclass:: LifetimeModel
     :members:

@@ -119,8 +119,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/logo_relife_final.svg" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../../_static/logo_relife_final.svg" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -143,15 +143,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
-    User’s guide
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../api/index.html">
-    API
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
@@ -293,15 +293,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
-    User’s guide
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../api/index.html">
-    API
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
@@ -432,7 +432,8 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.models.nonparametric</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyexpat</span><span class="w"> </span><span class="kn">import</span> <span class="n">native_encoding</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
@@ -468,18 +469,25 @@
         <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
+<span class="sd">        Computes the EDCF estimators (``sf`` and ``cdf``) from given lifetime data.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        time : ndarray (1d or 2d)</span>
-<span class="sd">            Observed lifetime values.</span>
-<span class="sd">        event : ndarray of boolean values (1d), default is None</span>
-<span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
-<span class="sd">        entry : ndarray of float (1d), default is None</span>
-<span class="sd">            Left truncations applied to lifetime values.</span>
-<span class="sd">        departure : ndarray of float (1d), default is None</span>
-<span class="sd">            Right truncations applied to lifetime values.</span>
+<span class="sd">        time : np.ndarray</span>
+<span class="sd">            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.</span>
+<span class="sd">            Shape must be ``(n_samples,)``.</span>
+<span class="sd">        event : np.ndarray, default is None</span>
+<span class="sd">            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.</span>
+<span class="sd">            By default, all lifetimes are assumed to be complete.</span>
+<span class="sd">        entry : np.ndarray, default is None</span>
+<span class="sd">            Left truncations values. Shape is always ``(n_samples,)``.</span>
+<span class="sd">        departure : np.ndarray, default is None</span>
+<span class="sd">            Right truncations values. Shape is always ``(n_samples,)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Self</span>
+<span class="sd">            The instance with computed estimators.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">lifetime_data_factory</span><span class="p">(</span>
@@ -504,18 +512,6 @@
 <a class="viewcode-back" href="../../../api/nonparametric_models/relife.models.ECDF.html#relife.models.ECDF.sf">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;_sf&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Survival function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray of shape (n, )</span>
-<span class="sd">            The times at which to estimate the survival function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray of shape (n, )</span>
-<span class="sd">            The estimated survival probabilities at each time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="o">.</span><span class="n">nearest_1dinterp</span><span class="p">(</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
@@ -523,18 +519,6 @@
 <a class="viewcode-back" href="../../../api/nonparametric_models/relife.models.ECDF.html#relife.models.ECDF.cdf">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;_cdf&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cumulative hazard function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray of shape (n, )</span>
-<span class="sd">            The times at which to estimate the cumulative hazard function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray of shape (n, )</span>
-<span class="sd">            The estimated cumulative hazard values at each time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="o">.</span><span class="n">nearest_1dinterp</span><span class="p">(</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 </div>
 
@@ -596,18 +580,30 @@
         <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Self</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
+<span class="sd">        Computes the Kaplan-Meier estimator (``sf``) from given lifetime data.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        time : ndarray (1d or 2d)</span>
-<span class="sd">            Observed lifetime values.</span>
-<span class="sd">        event : ndarray of boolean values (1d), default is None</span>
-<span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
-<span class="sd">        entry : ndarray of float (1d), default is None</span>
-<span class="sd">            Left truncations applied to lifetime values.</span>
-<span class="sd">        departure : ndarray of float (1d), default is None</span>
-<span class="sd">            Right truncations applied to lifetime values.</span>
+<span class="sd">        time : np.ndarray</span>
+<span class="sd">            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.</span>
+<span class="sd">            Shape must be ``(n_samples,)``.</span>
+<span class="sd">        event : np.ndarray, default is None</span>
+<span class="sd">            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.</span>
+<span class="sd">            By default, all lifetimes are assumed to be complete.</span>
+<span class="sd">        entry : np.ndarray, default is None</span>
+<span class="sd">            Left truncations values. Shape is always ``(n_samples,)``.</span>
+<span class="sd">        departure : np.ndarray, default is None</span>
+<span class="sd">            Right truncations values. Shape is always ``(n_samples,)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Self</span>
+<span class="sd">            The instance with computed estimators.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the input lifetime data contains left-censored.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">lifetime_data_factory</span><span class="p">(</span>
@@ -670,18 +666,6 @@
 <a class="viewcode-back" href="../../../api/nonparametric_models/relife.models.KaplanMeier.html#relife.models.KaplanMeier.sf">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;_sf&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Survival function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray of shape (n, )</span>
-<span class="sd">            The times at which to estimate the survival function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray of shape (n, )</span>
-<span class="sd">            The estimated survival probabilities at each time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="o">.</span><span class="n">nearest_1dinterp</span><span class="p">(</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 </div>
 
@@ -743,18 +727,31 @@
         <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
+<span class="sd">        Computes the Nelson-Aalen estimator (``chf``) from given lifetime data.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        time : ndarray (1d or 2d)</span>
-<span class="sd">            Observed lifetime values.</span>
-<span class="sd">        event : ndarray of boolean values (1d), default is None</span>
-<span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
-<span class="sd">        entry : ndarray of float (1d), default is None</span>
-<span class="sd">            Left truncations applied to lifetime values.</span>
-<span class="sd">        departure : ndarray of float (1d), default is None</span>
-<span class="sd">            Right truncations applied to lifetime values.</span>
+<span class="sd">        time : np.ndarray</span>
+<span class="sd">            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.</span>
+<span class="sd">            Shape must be ``(n_samples,)``.</span>
+<span class="sd">        event : np.ndarray, default is None</span>
+<span class="sd">            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.</span>
+<span class="sd">            By default, all lifetimes are assumed to be complete.</span>
+<span class="sd">        entry : np.ndarray, default is None</span>
+<span class="sd">            Left truncations values. Shape is always ``(n_samples,)``.</span>
+<span class="sd">        departure : np.ndarray, default is None</span>
+<span class="sd">            Right truncations values. Shape is always ``(n_samples,)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Self</span>
+<span class="sd">            The instance with computed estimators.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the input lifetime data contains left-censored or interval-censored</span>
+<span class="sd">            observations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">lifetime_data_factory</span><span class="p">(</span>
@@ -815,18 +812,6 @@
 <a class="viewcode-back" href="../../../api/nonparametric_models/relife.models.NelsonAalen.html#relife.models.NelsonAalen.chf">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;_chf&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cumulative hazard function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray of shape (n, )</span>
-<span class="sd">            The times at which to estimate the cumulative hazard function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray of shape (n, )</span>
-<span class="sd">            The estimated cumulative hazard values at each time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="o">.</span><span class="n">nearest_1dinterp</span><span class="p">(</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 </div>
 
@@ -859,18 +844,25 @@
         <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
+<span class="sd">        Computes the Turnbull estimator (``sf``) from given lifetime data.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        time : ndarray (1d or 2d)</span>
-<span class="sd">            Observed lifetime values.</span>
-<span class="sd">        event : ndarray of boolean values (1d), default is None</span>
-<span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
-<span class="sd">        entry : ndarray of float (1d), default is None</span>
-<span class="sd">            Left truncations applied to lifetime values.</span>
-<span class="sd">        departure : ndarray of float (1d), default is None</span>
-<span class="sd">            Right truncations applied to lifetime values.</span>
+<span class="sd">        time : np.ndarray</span>
+<span class="sd">            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.</span>
+<span class="sd">            Shape must be ``(n_samples,)``.</span>
+<span class="sd">        event : np.ndarray, default is None</span>
+<span class="sd">            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.</span>
+<span class="sd">            By default, all lifetimes are assumed to be complete.</span>
+<span class="sd">        entry : np.ndarray, default is None</span>
+<span class="sd">            Left truncations values. Shape is always ``(n_samples,)``.</span>
+<span class="sd">        departure : np.ndarray, default is None</span>
+<span class="sd">            Right truncations values. Shape is always ``(n_samples,)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Self</span>
+<span class="sd">            The instance with computed estimators.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">lifetime_data_factory</span><span class="p">(</span>
@@ -1045,18 +1037,6 @@
 <a class="viewcode-back" href="../../../api/nonparametric_models/relife.models.Turnbull.html#relife.models.Turnbull.sf">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;_sf&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Survival function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray of shape (n, )</span>
-<span class="sd">            The times at which to estimate the survival function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray of shape (n, )</span>
-<span class="sd">            The estimated survival probabilities at each time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="o">.</span><span class="n">nearest_1dinterp</span><span class="p">(</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 </div>
 
@@ -1087,19 +1067,37 @@
 
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;_chf&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cumulative hazard function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray of shape (n, )</span>
-<span class="sd">            The times at which to estimate the cumulative hazard function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray of shape (n, )</span>
-<span class="sd">            The estimated cumulative hazard values at each time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="o">.</span><span class="n">nearest_1dinterp</span><span class="p">(</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="n">TIME_BASE_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">The estimation of </span><span class="si">{name}</span><span class="s2">.</span>
+
+<span class="s2">Parameters</span>
+<span class="s2">----------</span>
+<span class="s2">time : float or np.ndarray</span>
+<span class="s2">    Elapsed time value(s) at which to report the estimation value(s).</span>
+<span class="s2">    If ndarray, allowed shapes are ``()``, ``(n_values,)``.</span>
+
+<span class="s2">Returns</span>
+<span class="s2">-------</span>
+<span class="s2">np.float64 or np.ndarray</span>
+<span class="s2">    Estimation values at each given time(s).</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="n">ECDF</span><span class="o">.</span><span class="n">sf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;the survival function&quot;</span><span class="p">)</span>
+<span class="n">ECDF</span><span class="o">.</span><span class="n">cdf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;the cumulative distribution function&quot;</span>
+<span class="p">)</span>
+<span class="n">KaplanMeier</span><span class="o">.</span><span class="n">sf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;the survival function&quot;</span><span class="p">)</span>
+<span class="n">NelsonAalen</span><span class="o">.</span><span class="n">chf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;the cumulative hazard function&quot;</span>
+<span class="p">)</span>
+<span class="n">Turnbull</span><span class="o">.</span><span class="n">sf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;the survival function&quot;</span><span class="p">)</span>
+<span class="n">NHPPNonParametric</span><span class="o">.</span><span class="n">chf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;the cumulative hazard function&quot;</span>
+<span class="p">)</span>
 </pre></div>
 
                 </article>

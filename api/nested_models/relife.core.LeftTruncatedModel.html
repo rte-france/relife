@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>ECDF &#8212; ReLife</title>
+    <title>LeftTruncatedModel &#8212; ReLife</title>
   
   
   
@@ -48,12 +48,14 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/nonparametric_models/relife.models.ECDF';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/nested_models/relife.core.LeftTruncatedModel';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="KaplanMeier" href="relife.models.KaplanMeier.html" />
-    <link rel="prev" title="AFT" href="../parametric_lifetime_models/relife.models.AFT.html" />
+    <link rel="next" title="EquilibriumDistribution" href="relife.core.EquilibriumDistribution.html" />
+    <link rel="prev" title="AgeReplacementModel" href="relife.core.AgeReplacementModel.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -387,7 +389,7 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../user_api.html">User API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user_api.html">User API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Exponential.html">Exponential</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Weibull.html">Weibull</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Gompertz.html">Gompertz</a></li>
@@ -395,10 +397,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.LogLogistic.html">LogLogistic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.ProportionalHazard.html">ProportionalHazard</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.AFT.html">AFT</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">ECDF</a></li>
-<li class="toctree-l2"><a class="reference internal" href="relife.models.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l2"><a class="reference internal" href="relife.models.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l2"><a class="reference internal" href="relife.models.Turnbull.html">Turnbull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.ECDF.html">ECDF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.Turnbull.html">Turnbull</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../parametric_models/relife.models.regression.CovarEffect.html">CovarEffect</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleRunToFailure.html">OneCycleRunToFailure</a></li>
@@ -409,11 +411,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../data_module.html">Data management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets_module.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../generator_module.html">Generators</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../core_module.html">Core features (subsystems)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../core_module.html">Core features (subsystems)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../likelihoods/relife.core.LikelihoodFromLifetimes.html">LikelihoodFromLifetimes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nested_models/relife.core.AgeReplacementModel.html">AgeReplacementModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nested_models/relife.core.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nested_models/relife.core.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.core.AgeReplacementModel.html">AgeReplacementModel</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">LeftTruncatedModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relife.core.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.ParametricModel.html">ParametricModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.LifetimeModel.html">LifetimeModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
@@ -463,9 +465,9 @@
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../user_api.html" class="nav-link">User API</a></li>
+    <li class="breadcrumb-item"><a href="../core_module.html" class="nav-link">Core features (subsystems)</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">ECDF</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">LeftTruncatedModel</span></li>
   </ul>
 </nav>
 </div>
@@ -482,42 +484,104 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="ecdf">
-<h1>ECDF<a class="headerlink" href="#ecdf" title="Link to this heading">#</a></h1>
+  <section id="lefttruncatedmodel">
+<h1>LeftTruncatedModel<a class="headerlink" href="#lefttruncatedmodel" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="relife.models.ECDF">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.models.</span></span><span class="sig-name descname"><span class="pre">ECDF</span></span><a class="reference internal" href="../../_modules/relife/models/nonparametric.html#ECDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.models.ECDF" title="Link to this definition">#</a></dt>
-<dd><p>Empirical Cumulative Distribution Function.</p>
+<dt class="sig sig-object py" id="relife.core.LeftTruncatedModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.core.</span></span><span class="sig-name descname"><span class="pre">LeftTruncatedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#LeftTruncatedModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.LeftTruncatedModel" title="Link to this definition">#</a></dt>
+<dd><p>Left truncated core.</p>
+<p>Conditional distribution of the lifetime core for an asset having reach age <span class="math notranslate nohighlight">\(a_0\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>baseline</strong><span class="classifier">LifetimeModel</span></dt><dd><p>Underlying lifetime core.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p class="rubric">Methods</p>
+<p><strong>Survival functions</strong></p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.models.ECDF.cdf" title="relife.models.ECDF.cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></a></p></td>
-<td><p>The estimation of the cumulative distribution function.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.models.ECDF.fit" title="relife.models.ECDF.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p>Computes the EDCF estimators (<code class="docutils literal notranslate"><span class="pre">sf</span></code> and <code class="docutils literal notranslate"><span class="pre">cdf</span></code>) from given lifetime data.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.models.ECDF.sf" title="relife.models.ECDF.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
-<td><p>The estimation of the survival function.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.core.LeftTruncatedModel.isf" title="relife.core.LeftTruncatedModel.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<td><p>Inverse survival function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Statistics</strong></p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.core.LeftTruncatedModel.moment" title="relife.core.LeftTruncatedModel.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<td><p>n-th order moment</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Other methods</strong></p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.core.LeftTruncatedModel.ls_integrate" title="relife.core.LeftTruncatedModel.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<td><p>Lebesgue-Stieltjes integration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.core.LeftTruncatedModel.rvs" title="relife.core.LeftTruncatedModel.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<td><p>Random variable sampling.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.models.ECDF.cdf">
-<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/models/nonparametric.html#ECDF.cdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.models.ECDF.cdf" title="Link to this definition">#</a></dt>
-<dd><p>The estimation of the cumulative distribution function.</p>
+<dt class="sig sig-object py" id="relife.core.LeftTruncatedModel.isf">
+<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#LeftTruncatedModel.isf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.LeftTruncatedModel.isf" title="Link to this definition">#</a></dt>
+<dd><p>Inverse survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to report the estimation value(s).
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code>.</p>
-</dd>
+<dt><strong>probability</strong><span class="classifier">float or ndarray, shape (n, ) or (m, n)</span></dt><dd></dd>
+<dt><strong>*args</strong><span class="classifier">variadic arguments required by the function</span></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Estimation values at each given time(s).</p>
+<dt>ndarray of shape (), (n, ) or (m, n)</dt><dd><p>Complement quantile corresponding to probability.</p>
 </dd>
 </dl>
 </dd>
@@ -525,48 +589,94 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.models.ECDF.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/models/nonparametric.html#ECDF.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.models.ECDF.fit" title="Link to this definition">#</a></dt>
-<dd><p>Computes the EDCF estimators (<code class="docutils literal notranslate"><span class="pre">sf</span></code> and <code class="docutils literal notranslate"><span class="pre">cdf</span></code>) from given lifetime data.</p>
+<dt class="sig sig-object py" id="relife.core.LeftTruncatedModel.ls_integrate">
+<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.core.LeftTruncatedModel.ls_integrate" title="Link to this definition">#</a></dt>
+<dd><p>Lebesgue-Stieltjes integration.</p>
+<p>The Lebesgue-Stieljes intregration of a function with respect to the lifetime core
+taking into account the probability density function and jumps</p>
+<p>The Lebesgue-Stieltjes integral is:</p>
+<div class="math notranslate nohighlight">
+\[\int_a^b g(x) \mathrm{d}F(x) = \int_a^b g(x) f(x)\mathrm{d}x +
+\sum_i g(a_i) w_i\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function,</p></li>
+<li><p><span class="math notranslate nohighlight">\(f\)</span> the probability density function of the lifetime core,</p></li>
+<li><p><span class="math notranslate nohighlight">\(a_i\)</span> and <span class="math notranslate nohighlight">\(w_i\)</span> are the points and weights of the jumps.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">np.ndarray</span></dt><dd><p>Observed lifetime values. Dimension is <code class="docutils literal notranslate"><span class="pre">1d</span></code> as left censoring is not allowed here.
-Shape must be <code class="docutils literal notranslate"><span class="pre">(n_samples,)</span></code>.</p>
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray, out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and returns one ndarray object</p>
 </dd>
-<dt><strong>event</strong><span class="classifier">np.ndarray, default is None</span></dt><dd><p>Booleans that indicated if lifetime values are right censored. Shape must be <code class="docutils literal notranslate"><span class="pre">(n_samples,)</span></code>.
-By default, all lifetimes are assumed to be complete.</p>
+<dt><strong>a</strong><span class="classifier">ndarray (max dim of 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
 </dd>
-<dt><strong>entry</strong><span class="classifier">np.ndarray, default is None</span></dt><dd><p>Left truncations values. Shape is always <code class="docutils literal notranslate"><span class="pre">(n_samples,)</span></code>.</p>
+<dt><strong>b</strong><span class="classifier">ndarray (max dim of 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.</p>
 </dd>
-<dt><strong>departure</strong><span class="classifier">np.ndarray, default is None</span></dt><dd><p>Right truncations values. Shape is always <code class="docutils literal notranslate"><span class="pre">(n_samples,)</span></code>.</p>
+<dt><strong>args</strong><span class="classifier">ndarray (max dim of 2)</span></dt><dd><p>Other arguments needed by the lifetime core (eg. covariates)</p>
+</dd>
+<dt><strong>deg</strong><span class="classifier">int, default 100</span></dt><dd><p>Degree of the polynomials interpolation</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Self</dt><dd><p>The instance with computed estimators.</p>
+<dt>2d ndarray</dt><dd><p>Lebesgue-Stieltjes integral of func with respect to <cite>cdf</cite> from <cite>a</cite>
+to <cite>b</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p><cite>ls_integrate</cite> operations rely on arguments number of dimensions passed in <cite>a</cite>, <cite>b</cite>, <cite>*args</cite> or
+any other variable referenced in <cite>func</cite>. Because <cite>func</cite> callable is not easy to inspect, either one must specify
+the maximum number of dimensions used (0, 1 or 2), or <cite>ls_integrate</cite> converts all these objects to 2d-array.
+Currently, the second option is prefered. That’s why, returns are always 2d-array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.core.LeftTruncatedModel.moment">
+<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.core.LeftTruncatedModel.moment" title="Link to this definition">#</a></dt>
+<dd><p>n-th order moment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">order of the moment, at least 1.</span></dt><dd></dd>
+<dt><strong>*args</strong><span class="classifier">variadic arguments required by the function</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray of shape (0, )</dt><dd><p>n-th order moment.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.core.LeftTruncatedModel.plot">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><a class="headerlink" href="#relife.core.LeftTruncatedModel.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot</p>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.models.ECDF.sf">
-<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/models/nonparametric.html#ECDF.sf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.models.ECDF.sf" title="Link to this definition">#</a></dt>
-<dd><p>The estimation of the survival function.</p>
+<dt class="sig sig-object py" id="relife.core.LeftTruncatedModel.rvs">
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#LeftTruncatedModel.rvs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.LeftTruncatedModel.rvs" title="Link to this definition">#</a></dt>
+<dd><p>Random variable sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to report the estimation value(s).
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code>.</p>
+<dt><strong>*args</strong><span class="classifier">variadic arguments required by the function</span></dt><dd></dd>
+<dt><strong>size</strong><span class="classifier">int, default 1</span></dt><dd><p>Sized of the generated sample.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int, default None</span></dt><dd><p>Random seed.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Estimation values at each given time(s).</p>
+<dt>ndarray of shape (size, )</dt><dd><p>Sample of random lifetimes.</p>
 </dd>
 </dl>
 </dd>
@@ -600,10 +710,12 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.models.ECDF"><code class="docutils literal notranslate"><span class="pre">ECDF</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.models.ECDF.cdf"><code class="docutils literal notranslate"><span class="pre">ECDF.cdf()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.models.ECDF.fit"><code class="docutils literal notranslate"><span class="pre">ECDF.fit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.models.ECDF.sf"><code class="docutils literal notranslate"><span class="pre">ECDF.sf()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LeftTruncatedModel"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LeftTruncatedModel.isf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.isf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LeftTruncatedModel.ls_integrate"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.ls_integrate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LeftTruncatedModel.moment"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.moment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LeftTruncatedModel.plot"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LeftTruncatedModel.rvs"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.rvs()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -613,7 +725,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/nonparametric_models/relife.models.ECDF.rst.txt"
+      <li><a href="../../_sources/api/nested_models/relife.core.LeftTruncatedModel.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

@@ -4,12 +4,12 @@
 
 
 
-AgeReplacementModel
-===================
+LeftTruncatedModel
+==================
 
-.. currentmodule:: relife.core.nested_model
+.. currentmodule:: relife.core
 
-.. autoclass:: AgeReplacementModel
+.. autoclass:: LeftTruncatedModel
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__, compose_with, new_params, init_params
@@ -25,29 +25,29 @@ AgeReplacementModel
         
         
         
-            ~AgeReplacementModel.chf
+            ~LeftTruncatedModel.chf
         
         
-            ~AgeReplacementModel.hf
+            ~LeftTruncatedModel.hf
         
         
-            ~AgeReplacementModel.ichf
+            ~LeftTruncatedModel.ichf
         
         
-            ~AgeReplacementModel.isf
-        
-        
-        
-        
-        
-        
-            ~AgeReplacementModel.mrl
+            ~LeftTruncatedModel.isf
         
         
         
         
         
-            ~AgeReplacementModel.sf
+        
+            ~LeftTruncatedModel.mrl
+        
+        
+        
+        
+        
+            ~LeftTruncatedModel.sf
         
         
 
@@ -57,7 +57,7 @@ AgeReplacementModel
     
         
         
-            ~AgeReplacementModel.cdf
+            ~LeftTruncatedModel.cdf
         
         
         
@@ -69,10 +69,10 @@ AgeReplacementModel
         
         
         
-            ~AgeReplacementModel.pdf
+            ~LeftTruncatedModel.pdf
         
         
-            ~AgeReplacementModel.ppf
+            ~LeftTruncatedModel.ppf
         
         
         
@@ -92,21 +92,21 @@ AgeReplacementModel
         
         
         
-            ~AgeReplacementModel.mean
+            ~LeftTruncatedModel.mean
         
         
-            ~AgeReplacementModel.median
+            ~LeftTruncatedModel.median
         
         
-            ~AgeReplacementModel.moment
-        
-        
-        
+            ~LeftTruncatedModel.moment
         
         
         
         
-            ~AgeReplacementModel.var
+        
+        
+        
+            ~LeftTruncatedModel.var
         
 
     **Other methods**
@@ -122,7 +122,7 @@ AgeReplacementModel
         
         
         
-            ~AgeReplacementModel.ls_integrate
+            ~LeftTruncatedModel.ls_integrate
         
         
         
@@ -131,7 +131,7 @@ AgeReplacementModel
         
         
         
-            ~AgeReplacementModel.rvs
+            ~LeftTruncatedModel.rvs
         
         
         

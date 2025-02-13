@@ -48,12 +48,12 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/likelihoods/relife.core.likelihoods.LikelihoodFromLifetimes';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/likelihoods/relife.core.LikelihoodFromLifetimes';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="AgeReplacementModel" href="../nested_models/relife.core.nested_model.AgeReplacementModel.html" />
-    <link rel="prev" title="AgeReplacementPolicy" href="../renewal_policies/relife.policies.AgeReplacementPolicy.html" />
+    <link rel="next" title="AgeReplacementModel" href="../nested_models/relife.core.AgeReplacementModel.html" />
+    <link rel="prev" title="Core features (subsystems)" href="../core_module.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -122,8 +122,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../_static/logo_relife_final.svg" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../_static/logo_relife_final.svg" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -145,16 +145,16 @@
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../user_guide/index.html">
-    User’s guide
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="../index.html">
-    API
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
@@ -297,16 +297,16 @@
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../user_guide/index.html">
-    User’s guide
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="../index.html">
-    API
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
@@ -386,49 +386,39 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Exponential.html">Exponential</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Weibull.html">Weibull</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Gompertz.html">Gompertz</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Gamma.html">Gamma</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.models.LogLogistic.html">LogLogistic</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.models.ProportionalHazard.html">ProportionalHazard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.models.AFT.html">AFT</a></li>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user_api.html">User API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Exponential.html">Exponential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Weibull.html">Weibull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Gompertz.html">Gompertz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Gamma.html">Gamma</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.LogLogistic.html">LogLogistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.ProportionalHazard.html">ProportionalHazard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.AFT.html">AFT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.ECDF.html">ECDF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.Turnbull.html">Turnbull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parametric_models/relife.models.regression.CovarEffect.html">CovarEffect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleRunToFailure.html">OneCycleRunToFailure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.RunToFailure.html">RunToFailure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Non-parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../nonparametric_models/relife.models.ECDF.html">ECDF</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../nonparametric_models/relife.models.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../nonparametric_models/relife.models.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../nonparametric_models/relife.models.Turnbull.html">Turnbull</a></li>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../data_module.html">Data management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets_module.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generator_module.html">Generators</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../core_module.html">Core features (subsystems)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">LikelihoodFromLifetimes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nested_models/relife.core.AgeReplacementModel.html">AgeReplacementModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nested_models/relife.core.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nested_models/relife.core.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.LifetimeModel.html">LifetimeModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other parametric models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_models/relife.models.regression.CovarEffect.html">CovarEffect</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Renewal policies</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleRunToFailure.html">OneCycleRunToFailure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../renewal_policies/relife.policies.RunToFailure.html">RunToFailure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../renewal_policies/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">LikelihoodFromLifetimes</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Nested models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../nested_models/relife.core.nested_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../nested_models/relife.core.nested_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../nested_models/relife.core.nested_model.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Base models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_models/relife.core.model.ParametricModel.html">ParametricModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_models/relife.core.model.LifetimeModel.html">LifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_models/relife.core.model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -472,6 +462,9 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
     
+    
+    <li class="breadcrumb-item"><a href="../core_module.html" class="nav-link">Core features (subsystems)</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">LikelihoodFromLifetimes</span></li>
   </ul>
 </nav>
@@ -492,8 +485,8 @@
   <section id="likelihoodfromlifetimes">
 <h1>LikelihoodFromLifetimes<a class="headerlink" href="#likelihoodfromlifetimes" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="relife.core.likelihoods.LikelihoodFromLifetimes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.core.likelihoods.</span></span><span class="sig-name descname"><span class="pre">LikelihoodFromLifetimes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lifetime_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/likelihoods.html#LikelihoodFromLifetimes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.likelihoods.LikelihoodFromLifetimes" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.core.LikelihoodFromLifetimes">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.core.</span></span><span class="sig-name descname"><span class="pre">LikelihoodFromLifetimes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lifetime_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/likelihoods.html#LikelihoodFromLifetimes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.LikelihoodFromLifetimes" title="Link to this definition">#</a></dt>
 <dd><p>Generic likelihood object for parametric lifetime models</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -513,18 +506,18 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hessian</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.core.likelihoods.LikelihoodFromLifetimes.jac_negative_log" title="relife.core.likelihoods.LikelihoodFromLifetimes.jac_negative_log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_negative_log</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.core.LikelihoodFromLifetimes.jac_negative_log" title="relife.core.LikelihoodFromLifetimes.jac_negative_log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_negative_log</span></code></a></p></td>
 <td><p>Jacobian of the negative log likelihood.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.core.likelihoods.LikelihoodFromLifetimes.negative_log" title="relife.core.likelihoods.LikelihoodFromLifetimes.negative_log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">negative_log</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.core.LikelihoodFromLifetimes.negative_log" title="relife.core.LikelihoodFromLifetimes.negative_log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">negative_log</span></code></a></p></td>
 <td><p>Negative log likelihood.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.core.likelihoods.LikelihoodFromLifetimes.jac_negative_log">
-<span class="sig-name descname"><span class="pre">jac_negative_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/likelihoods.html#LikelihoodFromLifetimes.jac_negative_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.likelihoods.LikelihoodFromLifetimes.jac_negative_log" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.core.LikelihoodFromLifetimes.jac_negative_log">
+<span class="sig-name descname"><span class="pre">jac_negative_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/likelihoods.html#LikelihoodFromLifetimes.jac_negative_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.LikelihoodFromLifetimes.jac_negative_log" title="Link to this definition">#</a></dt>
 <dd><p>Jacobian of the negative log likelihood.</p>
 <p>The jacobian (here gradient) is computed with respect to parameters</p>
 <dl class="field-list simple">
@@ -544,8 +537,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.core.likelihoods.LikelihoodFromLifetimes.negative_log">
-<span class="sig-name descname"><span class="pre">negative_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/likelihoods.html#LikelihoodFromLifetimes.negative_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.likelihoods.LikelihoodFromLifetimes.negative_log" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.core.LikelihoodFromLifetimes.negative_log">
+<span class="sig-name descname"><span class="pre">negative_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/likelihoods.html#LikelihoodFromLifetimes.negative_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.LikelihoodFromLifetimes.negative_log" title="Link to this definition">#</a></dt>
 <dd><p>Negative log likelihood.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -590,9 +583,9 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.likelihoods.LikelihoodFromLifetimes"><code class="docutils literal notranslate"><span class="pre">LikelihoodFromLifetimes</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.likelihoods.LikelihoodFromLifetimes.jac_negative_log"><code class="docutils literal notranslate"><span class="pre">LikelihoodFromLifetimes.jac_negative_log()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.likelihoods.LikelihoodFromLifetimes.negative_log"><code class="docutils literal notranslate"><span class="pre">LikelihoodFromLifetimes.negative_log()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LikelihoodFromLifetimes"><code class="docutils literal notranslate"><span class="pre">LikelihoodFromLifetimes</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LikelihoodFromLifetimes.jac_negative_log"><code class="docutils literal notranslate"><span class="pre">LikelihoodFromLifetimes.jac_negative_log()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.LikelihoodFromLifetimes.negative_log"><code class="docutils literal notranslate"><span class="pre">LikelihoodFromLifetimes.negative_log()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -602,7 +595,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/likelihoods/relife.core.likelihoods.LikelihoodFromLifetimes.rst.txt"
+      <li><a href="../../_sources/api/likelihoods/relife.core.LikelihoodFromLifetimes.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

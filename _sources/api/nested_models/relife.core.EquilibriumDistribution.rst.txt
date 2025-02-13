@@ -7,7 +7,7 @@
 EquilibriumDistribution
 =======================
 
-.. currentmodule:: relife.core.nested_model
+.. currentmodule:: relife.core
 
 .. autoclass:: EquilibriumDistribution
     :members:
