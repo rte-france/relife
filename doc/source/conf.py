@@ -73,7 +73,7 @@ templates_path = ["_templates", "_templates/autosummary"]
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_title = "ReLife"  # sidebar title
-html_logo = "_static/logo.png"
+html_logo = "_static/logo_relife_final.svg"
 html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 
@@ -83,6 +83,7 @@ html_theme_options = {
     "navbar_align": "left",  # align to the left header bar sections
     "header_links_before_dropdown": 4,  # control the number of section displayed in the header bar
     "show_prev_next": False,  # hide previous and next button
+    "show_nav_level": 2,  # unfold nav section by 2 levels
     "icon_links": [
         {
             # Label for this link

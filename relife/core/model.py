@@ -1,16 +1,15 @@
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, asdict, dataclass, field
-from functools import wraps
 from itertools import chain
-from typing import Any, Callable, Generic, Iterator, Optional, Self, Union, Protocol
+from typing import Any, Callable, Generic, Iterator, Optional, Self, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
 from relife.data import LifetimeData, lifetime_data_factory
-from .likelihoods import LikelihoodFromLifetimes, hessian_from_likelihood
+from .likelihoods import LikelihoodFromLifetimes
 from relife.plots import PlotSurvivalFunc
 from .quadratures import gauss_legendre, quad_laguerre
 from relife.types import VariadicArgs
@@ -301,48 +300,29 @@ class ParametricModel:
 
 
 class LifetimeModel(Generic[*VariadicArgs], ABC):
-    """
-    Base class to create a lifetime core.
+    r"""A generic base class for lifetime models.
 
-    A lifetime core is an object that can answer to traditional lifetime probability
-    functions (``sf``, ``hf`` etc.) and other common probabilitu functions (``pdf``,
-    ``cdf``, etc.).
-    """
+    This class defines the structure for creating lifetime models. It is s a blueprint
+    for implementing lifetime models parametrized by a variadic set of arguments.
+    It provides the framework for implementing hazard functions (``hf``), cumulative hazard functions (``chf``),
+    probability density function (``pdf``) and survival function (``sf``).
+    Other functions are implemented by default but can be overridden by derived classes.
 
-    # def __init_subclass__(cls, **kwargs):
-    #     """
-    #     TODO : something to parse *args names and to fill args_names and nb_args
-    #     see Descriptors
-    #     """
-    #
-    # @property
-    # def args_names(self):
-    #     return self._args.names
-    #
-    # @property
-    # def nb_args(self):
-    #     return len(self._args)
+    Methods:
+        hf: Abstract method to compute the hazard function.
+        chf: Abstract method to compute the cumulative hazard function.
+        sf: Abstract method to compute the survival function.
+        pdf: Abstract method to compute the probability density function.
+
+    Raises:
+        NotImplementedError: Raised when an abstract method or feature in this
+        class has not been implemented in a derived class.
+    """
 
     @abstractmethod
     def hf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """
-        Hazard function.
-
-        The hazard function of the distribution
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Hazard values at each given time.
-        """
         if hasattr(self, "pdf") and hasattr(self, "sf"):
             return self.pdf(time, *args) / self.sf(time, *args)
         if hasattr(self, "sf"):
@@ -364,20 +344,6 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def chf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Cumulative hazard values at each given time.
-        """
-
         if hasattr(self, "sf"):
             return -np.log(self.sf(time, *args))
         if hasattr(self, "pdf") and hasattr(self, "hf"):
@@ -399,19 +365,6 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def sf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Survival function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Survival function values at each given time.
-        """
         if hasattr(self, "chf"):
             return np.exp(
                 -self.chf(
@@ -433,19 +386,6 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def pdf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Probability density function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            The probability density function evaluated at each given time.
-        """
         try:
             return self.sf(time, *args) * self.hf(time, *args)
         except NotImplementedError as err:
@@ -459,51 +399,11 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def mrl(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Mean residual life.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-            Elapsed time.
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Mean residual life values.
-        """
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
         if sf.ndim < 2:  # 2d to 1d or 0d
             ls = np.squeeze(ls)
         return ls / sf
-
-        # masked_time: ma.MaskedArray = ma.MaskedArray(
-        #     time, time >= self.support_upper_bound
-        # )
-        # upper_bound = np.broadcast_to(
-        #     np.asarray(self.isf(np.array(1e-4), *args)),
-        #     time.shape,
-        # )
-        # masked_upper_bound: ma.MaskedArray = ma.MaskedArray(
-        #     upper_bound, time >= self.support_upper_bound
-        # )
-        #
-        # def integrand(x):
-        #     return (x - masked_time) * self.pdf(x, *args)
-        #
-        # integration = gauss_legendre(
-        #     integrand,
-        #     masked_time,
-        #     masked_upper_bound,
-        #     ndim=2,
-        # ) + quad_laguerre(
-        #     integrand,
-        #     masked_upper_bound,
-        #     ndim=2,
-        # )
-        # mrl_values = integration / self.sf(masked_time, *args)
-        # return np.squeeze(ma.filled(mrl_values, 0.0))
 
     def moment(self, n: int, *args: *VariadicArgs) -> NDArray[np.float64]:
         """n-th order moment
@@ -546,31 +446,9 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         # )
 
     def mean(self, *args: *VariadicArgs) -> NDArray[np.float64]:
-        """Mean.
-
-        Parameters
-        ----------
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (0,)
-            Mean value.
-        """
         return self.moment(1, *args)
 
     def var(self, *args: *VariadicArgs) -> NDArray[np.float64]:
-        """Variance.
-
-        Parameters
-        ----------
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (0,)
-            Variance value.
-        """
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
     def isf(
@@ -600,18 +478,6 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         cumulative_hazard_rate: float | NDArray[np.float64],
         *args: *VariadicArgs,
     ):
-        """Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Inverse cumulative hazard values, i.e. time.
-        """
         return newton(
             lambda x: self.chf(x, *args) - cumulative_hazard_rate,
             x0=np.zeros_like(cumulative_hazard_rate),
@@ -620,18 +486,6 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def cdf(
         self, time: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Cumulative distribution function.
-
-        Parameters
-        ----------
-        time : float or ndarray, shape (n, ) or (m, n)
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Cumulative distribution function values at each given time.
-        """
         return 1 - self.sf(time, *args)
 
     def rvs(
@@ -659,32 +513,9 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
     def ppf(
         self, probability: float | NDArray[np.float64], *args: *VariadicArgs
     ) -> NDArray[np.float64]:
-        """Percent point function.
-
-        Parameters
-        ----------
-        probability : float or ndarray, shape (n, ) or (m, n)
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Quantile corresponding to probability.
-        """
         return self.isf(1 - probability, *args)
 
     def median(self, *args: *VariadicArgs) -> NDArray[np.float64]:
-        """Median
-
-        Parameters
-        ----------
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (0,)
-            Median value.
-        """
         return self.ppf(np.array(0.5), *args)
 
     def ls_integrate(
@@ -854,6 +685,13 @@ class FittingResults:
 class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC):
 
     fitting_results: FittingResults | None
+    DEFAULT_MINIMIZE_KWARGS = {
+        "method": "L-BFGS-B",
+        "constraints": (),
+        "tol": None,
+        "callback": None,
+        "options": None,
+    }
 
     def __init__(self):
         super().__init__()
@@ -886,45 +724,48 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         model_args: tuple[*VariadicArgs] = (),
         **kwargs: Any,
     ) -> Self:
-        """
-        Estimation of lifetime core parameters with respect to lifetime data.
-
+        r"""
+        Estimates model parameters with respect to lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
-        model_args : tuple of ndarray, default is None
-            Other arguments needed by the lifetime core.
+        time : np.ndarray
+            Observed lifetime values. Dimensions can be either ``1d`` or ``2d`` :
+
+            - ``1d`` : ``(n_samples,)`` shape that provides complete lifetime observations and right censoring.
+            - ``2d`` : ``(n_samples, 2)`` shape that provides complete lifetime observations, right censoring, left censoring and interval censoring.
+
+        event : np.ndarray, default is None
+            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)`` and
+            is only valid if ``time`` is ``1d``.  By default, all lifetimes are assumed to be complete.
+        entry : np.ndarray, default is None
+            Left truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``.
+        departure : np.ndarray, default is None
+            Right truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``
+        model_args : tuple of np.ndarray, default is None
+            Any other variable values needed to compute model's functions. Those variables must be
+            broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
         **kwargs
-            Extra arguments used by `scipy.minimize`. Default values are:
-                - `method` : `"L-BFGS-B"`
-                - `contraints` : `()`
-                - `tol` : `None`
-                - `callback` : `None`
-                - `options` : `None`
-                - `bounds` : `self.params_bounds`
-                - `x0` : `self.init_params`
+            Other arguments used by the optimizer.
+            See `scipy.optimize.mininize <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_.
+            Default values are:
+
+            - ``method`` : ``"L-BFGS-B"``
+            - ``contraints`` : ``()``
+            - ``tol`` : ``None``
+            - ``callback`` : ``None``
+            - ``options`` : ``None``
+            - ``bounds`` : ``self.params_bounds``
+            - ``x0`` : ``self.init_params``
 
         Returns
         -------
-        ndarray of float
-            Estimated parameters.
-
-        Notes
-        -----
-        Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
-        format that allows to pass other information as left-censored or interval-censored values. In this case,
-        `event` is not needed as 2d-array encodes right-censored values by itself.
+        Self
+            ParametricLifetimeModel instance with optimized parameters.
 
         """
 
+        # Step 1: Prepare lifetime data
         lifetime_data = lifetime_data_factory(
             time,
             event,
@@ -932,14 +773,14 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             departure,
         )
 
+        # Step 2: Initialize the model and likelihood
+        self.init_params(lifetime_data, *model_args)
         optimized_model = self.copy()
-        optimized_model.init_params(lifetime_data, *model_args)
-        # or just optimized_model.init_params(observed_lifetimes, *model_args)
-
         likelihood = LikelihoodFromLifetimes(
             optimized_model, lifetime_data, model_args=model_args
         )
 
+        # Step 3: Configure and run the optimizer
         minimize_kwargs = {
             "method": kwargs.get("method", "L-BFGS-B"),
             "constraints": kwargs.get("constraints", ()),
@@ -949,7 +790,6 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             "bounds": kwargs.get("bounds", optimized_model.params_bounds),
             "x0": kwargs.get("x0", optimized_model.params),
         }
-
         optimizer = minimize(
             likelihood.negative_log,
             minimize_kwargs.pop("x0"),
@@ -957,20 +797,23 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
             **minimize_kwargs,
         )
         optimized_model.params = optimizer.x
-        var = np.linalg.inv(likelihood.hessian())
 
-        optimized_model.fitting_results = FittingResults(
-            len(lifetime_data), optimizer, var
+        # Step 4: Compute parameters variance (Hessian inverse)
+        hessian_inverse = np.linalg.inv(likelihood.hessian())
+
+        # Step 5: Update model state and return
+        self.params = optimized_model.params = optimizer.x
+        self.fitting_results = optimized_model.fitting_results = FittingResults(
+            len(lifetime_data), optimizer, hessian_inverse
         )
-
-        self.init_params(lifetime_data, *model_args)
-        # or just self.init_params(observed_lifetimes, *model_args)
-        self.params = optimized_model.params
-        self.fitting_results = FittingResults(len(lifetime_data), optimizer, var)
         return self
 
     def __getattribute__(self, item):
-        """control if params are set"""
+        """
+        Raises:
+            ValueError: If any of the attributes in `params` is set to None when trying to
+            access the attribute.
+        """
 
         if (
             not item.startswith("_")

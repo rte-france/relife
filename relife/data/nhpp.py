@@ -97,58 +97,6 @@ class NHPPData(CountData):
     def mean_number_of_repairs(self):
         pass
 
-    # def to_fit(self, t0: float, tf: float, sample: Optional[int] = None):
-    #     if np.any(tf >= self.event_times):
-    #         warnings.warn("Some sample ages are ")
-    #
-    #     if t0 >= tf:
-    #         raise ValueError("`t0` must be strictly lower than `tf`")
-    #
-    #     ages = np.array([], dtype=np.float64)
-    #     assets = np.array([], dtype=np.float64)
-    #
-    #     s = self.samples_index == sample if sample is not None else Ellipsis
-    #
-    #     inside = (self.event_times[s] > t0) & (self.event_times[s] <= tf)
-    #
-    #     _assets_index = self.assets_index[s][inside]
-    #     _samples_index = self.samples_index[s][inside]
-    #     _assets = _assets_index + _samples_index
-    #
-    #     sort = np.argsort(_assets)
-    #     _assets = _assets[sort]
-    #     _ages = self.event_times[s][inside][sort]
-    #     _durations = self.durations[s][inside][sort]
-    #
-    #     shift_left = _ages - _durations
-    #     first_ages = (t0 - shift_left) >= 0
-    #     # left_truncations = (t0 - shift_left)[left_truncated]
-    #
-    #     a0 = _ages[first_ages]
-    #     ages = np.concatenate((ages, _ages[~first_ages]))
-    #     assets = np.concatenate((assets, _assets[~first_ages]))
-    #
-    #     outside = self.event_times[s] > tf
-    #
-    #     _assets_index = self.assets_index[s][outside]
-    #     _samples_index = self.samples_index[s][outside]
-    #     _assets = _assets_index + _samples_index
-    #
-    #     sort = np.argsort(_assets)
-    #     _assets = _assets[sort]
-    #     _ages = self.event_times[s][outside][sort]
-    #     _durations = self.durations[s][outside][sort]
-    #
-    #     shift_left = _ages - _durations
-    #     last_ages = (tf - shift_left) >= 0
-    #     # right_censoring = (tf - shift_left)[target_right_censored]
-    #
-    #     af = np.ones(np.sum(last_ages)) * tf
-    #
-    #     assert len(a0) == len(af)
-    #
-    #     return a0, af, ages, assets
-
     def to_fit(self, sample: Optional[int] = None):
 
         s = self.samples_ids == sample if sample is not None else Ellipsis

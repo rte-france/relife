@@ -21,12 +21,10 @@ def samples2_assets1():
     lifetimes = np.array([40.0, 36.0, 26.0, 41.0, 21.0, 35.0, 36.0, 20.0])
     assets_index = np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int64)
     samples_index = np.array([0, 1, 0, 1, 0, 1, 0, 1], dtype=np.int64)
-    order = np.array([0, 0, 1, 1, 2, 2, 3, 3], dtype=np.int64)
 
     sample_data = RenewalData(
         samples_index,
         assets_index,
-        order,
         event_times,
         lifetimes,
         np.ones_like(lifetimes, dtype=np.bool_),  # events
@@ -122,14 +120,12 @@ def samples2_assets2(request):
     samples_index = np.array(
         [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], dtype=np.int64
     )
-    order = np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3], dtype=np.int64)
 
     model_args = request.param
 
     sample_data = RenewalData(
         samples_index,
         assets_index,
-        order,
         event_times,
         lifetimes,
         np.ones_like(lifetimes, dtype=np.bool_),  # events

@@ -396,7 +396,7 @@ class AgeReplacementPolicy(Policy):
                 reward1_args=(self.ar1, self.cf, self.cp),
             )
 
-    @require_attributes("rrp")
+    @require_attributes("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         """The expected total cost.
 
@@ -412,7 +412,7 @@ class AgeReplacementPolicy(Policy):
         """
         return self.process.expected_total_reward(timeline)
 
-    @require_attributes("rrp")
+    @require_attributes("ar")
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
@@ -431,7 +431,7 @@ class AgeReplacementPolicy(Policy):
 
         return self.process.expected_equivalent_annual_cost(timeline)
 
-    @require_attributes("rrp")
+    @require_attributes("ar")
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         """
         The asymptotic expected total cost.
@@ -443,7 +443,7 @@ class AgeReplacementPolicy(Policy):
         """
         return self.process.asymptotic_expected_total_reward()
 
-    @require_attributes("rrp")
+    @require_attributes("ar")
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         """
         The asymptotic expected equivalent annual cost.
@@ -550,7 +550,7 @@ class AgeReplacementPolicy(Policy):
         )
         return self
 
-    @require_attributes("rrp")
+    @require_attributes("ar")
     def sample(
         self,
         nb_samples: int,
@@ -603,6 +603,11 @@ class NHPPAgeReplacementPolicy(Policy):
     cr : np.ndarray
         Cost associated with corrective replacement.
     """
+
+    c0 = ShapedArgs()
+    cp = ShapedArgs()
+    ar = ShapedArgs()
+    model_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,

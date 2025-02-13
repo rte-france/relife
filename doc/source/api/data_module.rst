@@ -1,0 +1,4 @@
+.. currentmodule:: relife
+
+Data management
+===============

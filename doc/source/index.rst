@@ -65,14 +65,13 @@ ReLife
     :maxdepth: 2
     :hidden:
 
-    user_guide/index
-
+    api/index
 
 .. toctree::
     :maxdepth: 2
     :hidden:
 
-    api/index
+    user_guide/index
 
 .. toctree::
     :maxdepth: 2
@@ -80,20 +79,17 @@ ReLife
 
     learn/index
 
-
 .. toctree::
     :maxdepth: 2
     :hidden:
 
     contributor_guide/index
 
-
 .. toctree::
     :hidden:
     :maxdepth: 2
 
     future/index
-
 
 .. rubric:: Supported by
 

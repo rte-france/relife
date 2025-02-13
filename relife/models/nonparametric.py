@@ -1,3 +1,4 @@
+from pyexpat import native_encoding
 from typing import Optional, Self, Union
 
 import numpy as np
@@ -30,18 +31,25 @@ class ECDF(NonParametricModel):
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self:
         """
-        Compute the non-parametric estimations with respect to lifetime data.
+        Computes the EDCF estimators (``sf`` and ``cdf``) from given lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
+        time : np.ndarray
+            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.
+            Shape must be ``(n_samples,)``.
+        event : np.ndarray, default is None
+            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.
+            By default, all lifetimes are assumed to be complete.
+        entry : np.ndarray, default is None
+            Left truncations values. Shape is always ``(n_samples,)``.
+        departure : np.ndarray, default is None
+            Right truncations values. Shape is always ``(n_samples,)``.
+
+        Returns
+        -------
+        Self
+            The instance with computed estimators.
         """
 
         lifetime_data = lifetime_data_factory(
@@ -63,34 +71,10 @@ class ECDF(NonParametricModel):
 
     @require_attributes("_sf")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        """Survival function.
-
-        Parameters
-        ----------
-        time : np.ndarray of shape (n, )
-            The times at which to estimate the survival function.
-
-        Returns
-        -------
-        np.ndarray of shape (n, )
-            The estimated survival probabilities at each time.
-        """
         return self._sf.nearest_1dinterp(time)[0]
 
     @require_attributes("_cdf")
     def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        """Cumulative hazard function.
-
-        Parameters
-        ----------
-        time : np.ndarray of shape (n, )
-            The times at which to estimate the cumulative hazard function.
-
-        Returns
-        -------
-        np.ndarray of shape (n, )
-            The estimated cumulative hazard values at each time.
-        """
         return self._cdf.nearest_1dinterp(time)[0]
 
 
@@ -146,18 +130,30 @@ class KaplanMeier(NonParametricModel):
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Union[Self, None]:
         """
-        Compute the non-parametric estimations with respect to lifetime data.
+        Computes the Kaplan-Meier estimator (``sf``) from given lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
+        time : np.ndarray
+            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.
+            Shape must be ``(n_samples,)``.
+        event : np.ndarray, default is None
+            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.
+            By default, all lifetimes are assumed to be complete.
+        entry : np.ndarray, default is None
+            Left truncations values. Shape is always ``(n_samples,)``.
+        departure : np.ndarray, default is None
+            Right truncations values. Shape is always ``(n_samples,)``.
+
+        Returns
+        -------
+        Self
+            The instance with computed estimators.
+
+        Raises
+        ------
+        ValueError
+            If the input lifetime data contains left-censored.
         """
 
         lifetime_data = lifetime_data_factory(
@@ -217,18 +213,6 @@ class KaplanMeier(NonParametricModel):
 
     @require_attributes("_sf")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        """Survival function.
-
-        Parameters
-        ----------
-        time : np.ndarray of shape (n, )
-            The times at which to estimate the survival function.
-
-        Returns
-        -------
-        np.ndarray of shape (n, )
-            The estimated survival probabilities at each time.
-        """
         return self._sf.nearest_1dinterp(time)[0]
 
 
@@ -284,18 +268,31 @@ class NelsonAalen(NonParametricModel):
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self:
         """
-        Compute the non-parametric estimations with respect to lifetime data.
+        Computes the Nelson-Aalen estimator (``chf``) from given lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
+        time : np.ndarray
+            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.
+            Shape must be ``(n_samples,)``.
+        event : np.ndarray, default is None
+            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.
+            By default, all lifetimes are assumed to be complete.
+        entry : np.ndarray, default is None
+            Left truncations values. Shape is always ``(n_samples,)``.
+        departure : np.ndarray, default is None
+            Right truncations values. Shape is always ``(n_samples,)``.
+
+        Returns
+        -------
+        Self
+            The instance with computed estimators.
+
+        Raises
+        ------
+        ValueError
+            If the input lifetime data contains left-censored or interval-censored
+            observations.
         """
 
         lifetime_data = lifetime_data_factory(
@@ -353,18 +350,6 @@ class NelsonAalen(NonParametricModel):
 
     @require_attributes("_chf")
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        """Cumulative hazard function.
-
-        Parameters
-        ----------
-        time : np.ndarray of shape (n, )
-            The times at which to estimate the cumulative hazard function.
-
-        Returns
-        -------
-        np.ndarray of shape (n, )
-            The estimated cumulative hazard values at each time.
-        """
         return self._chf.nearest_1dinterp(time)[0]
 
 
@@ -391,18 +376,25 @@ class Turnbull(NonParametricModel):
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self:
         """
-        Compute the non-parametric estimations with respect to lifetime data.
+        Computes the Turnbull estimator (``sf``) from given lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
+        time : np.ndarray
+            Observed lifetime values. Dimension is ``1d`` as left censoring is not allowed here.
+            Shape must be ``(n_samples,)``.
+        event : np.ndarray, default is None
+            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)``.
+            By default, all lifetimes are assumed to be complete.
+        entry : np.ndarray, default is None
+            Left truncations values. Shape is always ``(n_samples,)``.
+        departure : np.ndarray, default is None
+            Right truncations values. Shape is always ``(n_samples,)``.
+
+        Returns
+        -------
+        Self
+            The instance with computed estimators.
         """
 
         lifetime_data = lifetime_data_factory(
@@ -574,18 +566,6 @@ class Turnbull(NonParametricModel):
 
     @require_attributes("_sf")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        """Survival function.
-
-        Parameters
-        ----------
-        time : np.ndarray of shape (n, )
-            The times at which to estimate the survival function.
-
-        Returns
-        -------
-        np.ndarray of shape (n, )
-            The estimated survival probabilities at each time.
-        """
         return self._sf.nearest_1dinterp(time)[0]
 
 
@@ -614,16 +594,34 @@ class NHPPNonParametric(NonParametricModel):
 
     @require_attributes("_chf")
     def chf(self, time):
-        """Cumulative hazard function.
-
-        Parameters
-        ----------
-        time : np.ndarray of shape (n, )
-            The times at which to estimate the cumulative hazard function.
-
-        Returns
-        -------
-        np.ndarray of shape (n, )
-            The estimated cumulative hazard values at each time.
-        """
         return self._chf.nearest_1dinterp(time)[0]
+
+
+TIME_BASE_DOCSTRING = """
+The estimation of {name}.
+
+Parameters
+----------
+time : float or np.ndarray
+    Elapsed time value(s) at which to report the estimation value(s).
+    If ndarray, allowed shapes are ``()``, ``(n_values,)``.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Estimation values at each given time(s).
+"""
+
+
+ECDF.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="the survival function")
+ECDF.cdf.__doc__ = TIME_BASE_DOCSTRING.format(
+    name="the cumulative distribution function"
+)
+KaplanMeier.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="the survival function")
+NelsonAalen.chf.__doc__ = TIME_BASE_DOCSTRING.format(
+    name="the cumulative hazard function"
+)
+Turnbull.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="the survival function")
+NHPPNonParametric.chf.__doc__ = TIME_BASE_DOCSTRING.format(
+    name="the cumulative hazard function"
+)
