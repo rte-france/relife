@@ -172,7 +172,6 @@ class RenewalProcess:
         return RenewalData(
             samples_index,
             assets_index,
-            order,
             event_times,
             lifetimes,
             events,

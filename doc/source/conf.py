@@ -73,7 +73,7 @@ templates_path = ["_templates", "_templates/autosummary"]
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_title = "ReLife"  # sidebar title
-html_logo = "_static/logo_relife_final.svg"
+html_logo = "_static/logo.png"
 html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 

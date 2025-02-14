@@ -79,15 +79,10 @@ class ECDF(NonParametricModel):
 
 
 class KaplanMeier(NonParametricModel):
-    r"""Kaplan-Meier estimator.
+    r"""Kaplan-Meier estimator (also known as the product limit estimator).
 
-    Compute the non-parametric Kaplan-Meier estimator (also known as the product
-    limit estimator) of the survival function from lifetime data.
-
-    Notes
-    -----
     For a given time instant :math:`t` and :math:`n` total observations, this
-    estimator is defined as:
+    estimator is defined as [1]_ [2]_:
 
     .. math::
 
@@ -219,13 +214,8 @@ class KaplanMeier(NonParametricModel):
 class NelsonAalen(NonParametricModel):
     r"""Nelson-Aalen estimator.
 
-    Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
-    function from lifetime data.
-
-    Notes
-    -----
     For a given time instant :math:`t` and :math:`n` total observations, this
-    estimator is defined as:
+    estimator is defined as [1]_:
 
     .. math::
 

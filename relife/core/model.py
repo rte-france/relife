@@ -761,7 +761,7 @@ class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC
         Returns
         -------
         Self
-            ParametricLifetimeModel instance with optimized parameters.
+            Same instance with optimized parameters.
 
         """
 

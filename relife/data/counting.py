@@ -92,7 +92,7 @@ class CountDataIterable:
             getattr(data, name)[self.sorted_indices].copy() for name in field_names
         )
         self.samples_index = data.samples_ids[self.sorted_indices].copy()
-        self.assets_index = data.assets_ids[self.sorted_indices].copy()()
+        self.assets_index = data.assets_ids[self.sorted_indices].copy()
 
     def __len__(self) -> int:
         return self.data.nb_samples * self.data.nb_assets

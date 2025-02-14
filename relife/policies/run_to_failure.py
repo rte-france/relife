@@ -9,6 +9,12 @@ from relife.core.discounting import exponential_discounting
 from relife.generator import lifetimes_rewards_generator
 from relife.core.nested_model import LeftTruncatedModel
 from relife.core.model import LifetimeModel
+from .docstrings import (
+    ETC_DOCSTRING,
+    EEAC_DOCSTRING,
+    ASYMPTOTIC_ETC_DOCSTRING,
+    ASYMPTOTIC_EEAC_DOCSTRING,
+)
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
 from relife.types import Model1Args, ModelArgs, Policy
 
@@ -32,6 +38,8 @@ class OneCycleRunToFailure(Policy):
         The cost of failure for each asset.
     discounting_rate : float, default is 0.
         The discounting rate.
+    period_before_discounting: float, default is 1.
+        The length of the first period before discounting.
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
         lifetime core of the process.
@@ -54,6 +62,7 @@ class OneCycleRunToFailure(Policy):
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
+        period_before_discounting: float = 1.0,
         model_args: ModelArgs = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
@@ -65,21 +74,12 @@ class OneCycleRunToFailure(Policy):
         self.model = model
         self.cf = cf
         self.discounting_rate = discounting_rate
+        if period_before_discounting == 0:
+            raise ValueError("The period_before_discounting must be greater than 0")
+        self.period_before_discounting = period_before_discounting
         self.model_args = model_args
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        """The expected total cost.
-
-        Parameters
-        ----------
-        timeline : ndarray
-            Timeline of points where the function is evaluated
-
-        Returns
-        -------
-        ndarray
-            The expected total cost for each asset along the timeline
-        """
         return reward_partial_expectation(
             timeline,
             self.model,
@@ -90,56 +90,32 @@ class OneCycleRunToFailure(Policy):
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
-        """
-        The asymptotic expected total cost.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected total cost for each asset.
-        """
         return self.expected_total_cost(np.array(np.inf))
 
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64], dt: float = 1.0
+        self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
-        """The expected equivalent annual cost.
-
-        Parameters
-        ----------
-        timeline : ndarray
-            Timeline of points where the function is evaluated
-        dt : float, default 1.0
-            The length of the first period before discounting
-
-        Returns
-        -------
-        ndarray
-            The expected equivalent annual cost until each time point
-        """
 
         f = (
             lambda x: run_to_failure_cost(x, self.cf)
             * exponential_discounting.factor(x, self.discounting_rate)
             / exponential_discounting.annuity_factor(x, self.discounting_rate)
         )
-        mask = timeline < dt
-        q0 = self.model.cdf(dt, *self.model_args) * f(dt)
+        mask = timeline < self.period_before_discounting
+        q0 = self.model.cdf(self.period_before_discounting, *self.model_args) * f(
+            self.period_before_discounting
+        )
         return q0 + np.where(
-            mask, 0, self.model.ls_integrate(f, dt, timeline, *self.model_args)
+            mask,
+            0,
+            self.model.ls_integrate(
+                f, self.period_before_discounting, timeline, *self.model_args
+            ),
         )
 
     def asymptotic_expected_equivalent_annual_cost(
         self,
     ) -> NDArray[np.float64]:
-        """
-        The asymptotic expected equivalent annual cost.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected equivalent annual cost.
-        """
         return self.expected_equivalent_annual_cost(np.array(np.inf))
 
     def sample(
@@ -147,19 +123,24 @@ class OneCycleRunToFailure(Policy):
         nb_samples: int,
         seed: Optional[int] = None,
     ) -> RenewalRewardData:
-        """Sample simulation .
+        r"""
+        Samples lifetimes and rewards.
 
         Parameters
         ----------
-        nb_samples : int
-            Number of samples generated
-        seed : int, optional
-            Sample seed. Usefull to fix random generation and reproduce results
+            nb_samples : int
+                The number of samples to be generated.
+            seed : int or None, optional
+                An optional seed for random number generation to ensure reproducibility. Defaults to None.
 
         Returns
         -------
         RenewalRewardData
-            Iterable object that encapsulates results with additional functions
+            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.
+
+        .. note::
+
+            The sampling process stops after the first iteration as only one cycle of replacement is considered.
         """
         generator = lifetimes_rewards_generator(
             self.model,
@@ -283,56 +264,17 @@ class RunToFailure(Policy):
         )
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        """The expected total cost.
-
-        Parameters
-        ----------
-        timeline : ndarray
-            Timeline of points where the function is evaluated
-
-        Returns
-        -------
-            The expected total cost for each asset along the timeline
-        """
         return self.process.expected_total_reward(timeline)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
-        """
-        The asymptotic expected total cost.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected total cost for each asset.
-        """
         return self.process.asymptotic_expected_total_reward()
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
-        """The expected equivalent annual cost.
-
-        Parameters
-        ----------
-        timeline : ndarray
-            Timeline of points where the function is evaluated
-
-        Returns
-        -------
-        ndarray
-            The expected equivalent annual cost until each time point
-        """
         return self.process.expected_equivalent_annual_cost(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        """
-        The asymptotic expected equivalent annual cost.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected equivalent annual cost.
-        """
         return self.process.asymptotic_expected_equivalent_annual_cost()
 
     def sample(
@@ -341,32 +283,36 @@ class RunToFailure(Policy):
         end_time: float,
         seed: Optional[int] = None,
     ) -> RenewalRewardData:
-        """Sample simulation .
+        """
+        Samples lifetimes and rewards.
 
         Parameters
         ----------
-        nb_samples : int
-            Number of samples generated
-        end_time : float
-            End of the observation period. It is the upper bound of the cumulative generated lifetimes.
-        seed : int, optional
-            Sample seed. Usefull to fix random generation and reproduce results
+            nb_samples : int
+                The number of samples to be generated.
+            end_time : float
+                The temporal limit for the sampling operation.
+            seed : int or None, optional
+                An optional seed for random number generation to ensure reproducibility. Defaults to None.
 
         Returns
         -------
         RenewalRewardData
-            Iterable object that encapsulates results with additional functions
+            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.
         """
         return self.process.sample(nb_samples, end_time, seed=seed)
 
-    def expected_number_of_replacements(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
 
-    def expected_number_of_failures(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
+OneCycleRunToFailure.expected_total_cost.__doc__ = ETC_DOCSTRING
+OneCycleRunToFailure.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
+OneCycleRunToFailure.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
+OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+    ASYMPTOTIC_EEAC_DOCSTRING
+)
 
-    def expected_number_of_preventive_replacements(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
+RunToFailure.expected_total_cost.__doc__ = ETC_DOCSTRING
+RunToFailure.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
+RunToFailure.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
+RunToFailure.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+    ASYMPTOTIC_EEAC_DOCSTRING
+)

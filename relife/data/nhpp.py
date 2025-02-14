@@ -80,13 +80,13 @@ class NHPPData(CountData):
     def iter(self, sample_id: Optional[int] = None):
         # note that event_times == ages
         if sample_id is None:
-            return CountDataIterable(self, ("event_times", "durations"))
+            return CountDataIterable(self, ("timeline", "durations"))
         else:
             if sample_id not in self.samples_unique_ids:
                 raise ValueError(f"{sample_id} is not part of samples index")
             return filterfalse(
                 lambda x: x[0] != sample_id,
-                CountDataIterable(self, ("event_times", "durations")),
+                CountDataIterable(self, ("timeline", "durations")),
             )
 
     # durations in post_init ?
