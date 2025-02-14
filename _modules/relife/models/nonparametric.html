@@ -119,8 +119,8 @@
       
     
     
-    <img src="../../../_static/logo_relife_final.svg" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/logo_relife_final.svg" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -527,15 +527,10 @@
 <div class="viewcode-block" id="KaplanMeier">
 <a class="viewcode-back" href="../../../api/nonparametric_models/relife.models.KaplanMeier.html#relife.models.KaplanMeier">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">KaplanMeier</span><span class="p">(</span><span class="n">NonParametricModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Kaplan-Meier estimator.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Kaplan-Meier estimator (also known as the product limit estimator).</span>
 
-<span class="sd">    Compute the non-parametric Kaplan-Meier estimator (also known as the product</span>
-<span class="sd">    limit estimator) of the survival function from lifetime data.</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
 <span class="sd">    For a given time instant :math:`t` and :math:`n` total observations, this</span>
-<span class="sd">    estimator is defined as:</span>
+<span class="sd">    estimator is defined as [1]_ [2]_:</span>
 
 <span class="sd">    .. math::</span>
 
@@ -676,13 +671,8 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">NelsonAalen</span><span class="p">(</span><span class="n">NonParametricModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Nelson-Aalen estimator.</span>
 
-<span class="sd">    Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard</span>
-<span class="sd">    function from lifetime data.</span>
-
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
 <span class="sd">    For a given time instant :math:`t` and :math:`n` total observations, this</span>
-<span class="sd">    estimator is defined as:</span>
+<span class="sd">    estimator is defined as [1]_:</span>
 
 <span class="sd">    .. math::</span>
 

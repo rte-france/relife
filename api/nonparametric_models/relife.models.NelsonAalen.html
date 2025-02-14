@@ -124,8 +124,8 @@
       
     
     
-    <img src="../../_static/logo_relife_final.svg" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../_static/logo_relife_final.svg" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -490,11 +490,8 @@
 <dt class="sig sig-object py" id="relife.models.NelsonAalen">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.models.</span></span><span class="sig-name descname"><span class="pre">NelsonAalen</span></span><a class="reference internal" href="../../_modules/relife/models/nonparametric.html#NelsonAalen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.models.NelsonAalen" title="Link to this definition">#</a></dt>
 <dd><p>Nelson-Aalen estimator.</p>
-<p>Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
-function from lifetime data.</p>
-<p class="rubric">Notes</p>
 <p>For a given time instant <span class="math notranslate nohighlight">\(t\)</span> and <span class="math notranslate nohighlight">\(n\)</span> total observations, this
-estimator is defined as:</p>
+estimator is defined as <a class="reference internal" href="#rbfc33fa70291-1" id="id1">[1]</a>:</p>
 <div class="math notranslate nohighlight">
 \[\hat{H}(t) = \sum_{i: t_i \leq t} \frac{d_i}{n_i}\]</div>
 <p>where <span class="math notranslate nohighlight">\(d_i\)</span> is the number of failures until <span class="math notranslate nohighlight">\(t_i\)</span> and
@@ -509,7 +506,7 @@ estimator is defined as:</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rbfc33fa70291-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
 <p>Lawless, J. F. (2011). Statistical models and methods for lifetime
 data. John Wiley &amp; Sons.</p>
 </div>

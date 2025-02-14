@@ -119,8 +119,8 @@
       
     
     
-    <img src="../../../_static/logo_relife_final.svg" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/logo_relife_final.svg" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -443,6 +443,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">lifetimes_rewards_generator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.nested_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.docstrings</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ETC_DOCSTRING</span><span class="p">,</span>
+    <span class="n">EEAC_DOCSTRING</span><span class="p">,</span>
+    <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span><span class="p">,</span>
+    <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.process.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">reward_partial_expectation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model1Args</span><span class="p">,</span> <span class="n">ModelArgs</span><span class="p">,</span> <span class="n">Policy</span>
 
@@ -468,6 +474,8 @@
 <span class="sd">        The cost of failure for each asset.</span>
 <span class="sd">    discounting_rate : float, default is 0.</span>
 <span class="sd">        The discounting rate.</span>
+<span class="sd">    period_before_discounting: float, default is 1.</span>
+<span class="sd">        The length of the first period before discounting.</span>
 <span class="sd">    model_args : ModelArgs, optional</span>
 <span class="sd">        ModelArgs is a tuple of zero or more ndarray required by the underlying</span>
 <span class="sd">        lifetime core of the process.</span>
@@ -490,6 +498,7 @@
         <span class="n">cf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">period_before_discounting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">model_args</span><span class="p">:</span> <span class="n">ModelArgs</span> <span class="o">=</span> <span class="p">(),</span>
         <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">a0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -501,23 +510,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="n">cf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">=</span> <span class="n">discounting_rate</span>
+        <span class="k">if</span> <span class="n">period_before_discounting</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The period_before_discounting must be greater than 0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span> <span class="o">=</span> <span class="n">period_before_discounting</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span> <span class="o">=</span> <span class="n">model_args</span>
 
 <div class="viewcode-block" id="OneCycleRunToFailure.expected_total_cost">
 <a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The expected total cost.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        timeline : ndarray</span>
-<span class="sd">            Timeline of points where the function is evaluated</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The expected total cost for each asset along the timeline</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">reward_partial_expectation</span><span class="p">(</span>
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
@@ -531,46 +531,30 @@
 <div class="viewcode-block" id="OneCycleRunToFailure.asymptotic_expected_total_cost">
 <a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.asymptotic_expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The asymptotic expected total cost.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The asymptotic expected total cost for each asset.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailure.expected_equivalent_annual_cost">
 <a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The expected equivalent annual cost.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        timeline : ndarray</span>
-<span class="sd">            Timeline of points where the function is evaluated</span>
-<span class="sd">        dt : float, default 1.0</span>
-<span class="sd">            The length of the first period before discounting</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The expected equivalent annual cost until each time point</span>
-<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">f</span> <span class="o">=</span> <span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">run_to_failure_cost</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">)</span>
             <span class="o">*</span> <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
             <span class="o">/</span> <span class="n">exponential_discounting</span><span class="o">.</span><span class="n">annuity_factor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">timeline</span> <span class="o">&lt;</span> <span class="n">dt</span>
-        <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">)</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">timeline</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span>
+        <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">)</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">q0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-            <span class="n">mask</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">)</span>
+            <span class="n">mask</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
+                <span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span>
+            <span class="p">),</span>
         <span class="p">)</span></div>
 
 
@@ -579,14 +563,6 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The asymptotic expected equivalent annual cost.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The asymptotic expected equivalent annual cost.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span></div>
 
 
@@ -597,19 +573,24 @@
         <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardData</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample simulation .</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Samples lifetimes and rewards.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
-<span class="sd">            Number of samples generated</span>
-<span class="sd">        seed : int, optional</span>
-<span class="sd">            Sample seed. Usefull to fix random generation and reproduce results</span>
+<span class="sd">            nb_samples : int</span>
+<span class="sd">                The number of samples to be generated.</span>
+<span class="sd">            seed : int or None, optional</span>
+<span class="sd">                An optional seed for random number generation to ensure reproducibility. Defaults to None.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        RenewalRewardData</span>
-<span class="sd">            Iterable object that encapsulates results with additional functions</span>
+<span class="sd">            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            The sampling process stops after the first iteration as only one cycle of replacement is considered.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">generator</span> <span class="o">=</span> <span class="n">lifetimes_rewards_generator</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
@@ -739,31 +720,12 @@
 <div class="viewcode-block" id="RunToFailure.expected_total_cost">
 <a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The expected total cost.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        timeline : ndarray</span>
-<span class="sd">            Timeline of points where the function is evaluated</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">            The expected total cost for each asset along the timeline</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">expected_total_reward</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RunToFailure.asymptotic_expected_total_cost">
 <a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.asymptotic_expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The asymptotic expected total cost.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The asymptotic expected total cost for each asset.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">()</span></div>
 
 
@@ -772,32 +734,12 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The expected equivalent annual cost.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        timeline : ndarray</span>
-<span class="sd">            Timeline of points where the function is evaluated</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The expected equivalent annual cost until each time point</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RunToFailure.asymptotic_expected_equivalent_annual_cost">
 <a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The asymptotic expected equivalent annual cost.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The asymptotic expected equivalent annual cost.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span></div>
 
 
@@ -809,37 +751,41 @@
         <span class="n">end_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardData</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample simulation .</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Samples lifetimes and rewards.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
-<span class="sd">            Number of samples generated</span>
-<span class="sd">        end_time : float</span>
-<span class="sd">            End of the observation period. It is the upper bound of the cumulative generated lifetimes.</span>
-<span class="sd">        seed : int, optional</span>
-<span class="sd">            Sample seed. Usefull to fix random generation and reproduce results</span>
+<span class="sd">            nb_samples : int</span>
+<span class="sd">                The number of samples to be generated.</span>
+<span class="sd">            end_time : float</span>
+<span class="sd">                The temporal limit for the sampling operation.</span>
+<span class="sd">            seed : int or None, optional</span>
+<span class="sd">                An optional seed for random number generation to ensure reproducibility. Defaults to None.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        RenewalRewardData</span>
-<span class="sd">            Iterable object that encapsulates results with additional functions</span>
+<span class="sd">            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">nb_samples</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span></div>
+</div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_number_of_replacements</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_number_of_failures</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
+<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
+<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
+<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
+<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span>
+<span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_number_of_preventive_replacements</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span></div>
-
+<span class="n">RunToFailure</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
+<span class="n">RunToFailure</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
+<span class="n">RunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
+<span class="n">RunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span>
+<span class="p">)</span>
 </pre></div>
 
                 </article>

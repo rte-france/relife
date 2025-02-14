@@ -124,8 +124,8 @@
       
     
     
-    <img src="../../_static/logo_relife_final.svg" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../_static/logo_relife_final.svg" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -489,12 +489,9 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.models.KaplanMeier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.models.</span></span><span class="sig-name descname"><span class="pre">KaplanMeier</span></span><a class="reference internal" href="../../_modules/relife/models/nonparametric.html#KaplanMeier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.models.KaplanMeier" title="Link to this definition">#</a></dt>
-<dd><p>Kaplan-Meier estimator.</p>
-<p>Compute the non-parametric Kaplan-Meier estimator (also known as the product
-limit estimator) of the survival function from lifetime data.</p>
-<p class="rubric">Notes</p>
+<dd><p>Kaplan-Meier estimator (also known as the product limit estimator).</p>
 <p>For a given time instant <span class="math notranslate nohighlight">\(t\)</span> and <span class="math notranslate nohighlight">\(n\)</span> total observations, this
-estimator is defined as:</p>
+estimator is defined as <a class="reference internal" href="#rcf7b3d2d59b5-1" id="id1">[1]</a> <a class="reference internal" href="#rcf7b3d2d59b5-2" id="id2">[2]</a>:</p>
 <div class="math notranslate nohighlight">
 \[\hat{S}(t) = \prod_{i: t_i \leq t} \left( 1 - \frac{d_i}{n_i}\right)\]</div>
 <p>where <span class="math notranslate nohighlight">\(d_i\)</span> is the number of failures until <span class="math notranslate nohighlight">\(t_i\)</span> and
@@ -507,12 +504,12 @@ estimator is defined as:</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rcf7b3d2d59b5-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
 <p>Lawless, J. F. (2011). Statistical models and methods for lifetime
 data. John Wiley &amp; Sons.</p>
 </div>
 <div class="citation" id="rcf7b3d2d59b5-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
 <p>Kaplan, E. L., &amp; Meier, P. (1958). Nonparametric estimation from
 incomplete observations. Journal of the American statistical
 association, 53(282), 457-481.</p>
