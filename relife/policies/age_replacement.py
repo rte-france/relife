@@ -143,9 +143,7 @@ class OneCycleAgeReplacementPolicy(Policy):
     def asymptotic_expected_equivalent_annual_cost(
         self,
     ) -> NDArray[np.float64]:
-        return self.expected_equivalent_annual_cost(
-            np.array(np.inf), self.period_before_discounting
-        )
+        return self.expected_equivalent_annual_cost(np.array(np.inf))
 
     @require_attributes("ar")
     def sample(
@@ -390,21 +388,6 @@ class AgeReplacementPolicy(Policy):
     @require_attributes("ar")
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.process.asymptotic_expected_equivalent_annual_cost()
-
-    def expected_number_of_replacements(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
-        pass
-
-    def expected_number_of_failures(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
-        pass
-
-    def expected_number_of_preventive_replacements(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
-        pass
 
     def fit(
         self,

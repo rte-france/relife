@@ -100,6 +100,7 @@ def test_one_cycle_optimal_replacement_age(baseline, fit_args):
         cf,
         cp,
         discounting_rate=discounting_rate,
+        period_before_discounting=0.1,
         ar=policy.ar + eps,
         nb_assets=5,
     )
@@ -108,14 +109,15 @@ def test_one_cycle_optimal_replacement_age(baseline, fit_args):
         cf,
         cp,
         discounting_rate=discounting_rate,
+        period_before_discounting=0.1,
         ar=policy.ar - eps,
         nb_assets=5,
     )
     assert np.all(
-        policy1.asymptotic_expected_equivalent_annual_cost(dt=0.1)
+        policy1.asymptotic_expected_equivalent_annual_cost()
         > policy.asymptotic_expected_equivalent_annual_cost()
     ) and np.all(
-        policy0.asymptotic_expected_equivalent_annual_cost(dt=0.1)
+        policy0.asymptotic_expected_equivalent_annual_cost()
         > policy.asymptotic_expected_equivalent_annual_cost()
     )
 
