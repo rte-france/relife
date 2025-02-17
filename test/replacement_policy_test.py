@@ -150,7 +150,7 @@ def test_asymptotic_expected_equivalent_annual_cost(policy):
     timeline = np.arange(0, 400, 0.2)
     qa = policy.asymptotic_expected_equivalent_annual_cost()
     q = policy.expected_equivalent_annual_cost(timeline)
-    assert q[..., -1:] == pytest.approx(qa, rel=1e-1)
+    assert q[:, -1] == pytest.approx(qa, rel=1e-1)
 
 
 # FIXME : does not work because now max ndim in ls_integrate is 2d, here it's 3d -> broadcasting error

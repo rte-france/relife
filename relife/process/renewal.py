@@ -308,7 +308,7 @@ class RenewalRewardProcess(RenewalProcess):
                 y1, np.array(0.0), np.array(np.inf), *self.model1_args
             )
             z = ly1 + z * lf1
-        return np.where(mask, np.inf, z)
+        return np.squeeze(np.where(mask, np.inf, z))
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
@@ -335,13 +335,16 @@ class RenewalRewardProcess(RenewalProcess):
 
         q = discounting_rate * self.asymptotic_expected_total_reward()
 
-        q0 = self.model.ls_integrate(
-            lambda x: self.reward(x, *self.reward_args),
-            np.array(0.0),
-            np.array(np.inf),
-            *self.model_args,
-        ) / self.model.mean(*self.model_args)
-        return np.where(mask, q0, q)
+        q0 = np.squeeze(
+            self.model.ls_integrate(
+                lambda x: self.reward(x, *self.reward_args),
+                np.array(0.0),
+                np.array(np.inf),
+                *self.model_args,
+            )
+            / self.model.mean(*self.model_args)
+        )
+        return np.squeeze(np.where(mask, q0, q))
 
     def sample(
         self,

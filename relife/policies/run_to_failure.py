@@ -105,12 +105,15 @@ class OneCycleRunToFailure(Policy):
         q0 = self.model.cdf(self.period_before_discounting, *self.model_args) * f(
             self.period_before_discounting
         )
-        return q0 + np.where(
-            mask,
-            0,
-            self.model.ls_integrate(
-                f, self.period_before_discounting, timeline, *self.model_args
-            ),
+        return np.squeeze(
+            q0
+            + np.where(
+                mask,
+                0,
+                self.model.ls_integrate(
+                    f, self.period_before_discounting, timeline, *self.model_args
+                ),
+            )
         )
 
     def asymptotic_expected_equivalent_annual_cost(
