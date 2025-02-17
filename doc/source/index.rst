@@ -1,7 +1,6 @@
 :html_theme.sidebar_secondary.remove: true
 
-ReLife
-======
+.. image:: ./_static/pixel_full_logo_clip.png
 
 .. grid:: 3
 

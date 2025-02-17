@@ -24,7 +24,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
     Notes
     -----
     This is equivalent to the distribution of :math:`\min(X,a_r)` where
-    :math:`X` is a baseline lifetime core and ar the age of replacement.
+    :math:`X` is a baseline lifetime and ar the age of replacement.
     """
 
     def __init__(self, baseline: LifetimeModel[*ModelArgs]):
@@ -37,19 +37,20 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         ar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        return np.where(time < ar, self.baseline.sf(time, *args), 0)
+        return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
-    # TODO : correct formula ? if not, does AgeReplacementModel have to be LifetimeModel ?
+    # TODO : check if correct formula
     def hf(
         self, time: NDArray[np.float64], ar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
-        return self.baseline.hf(time, *args)
 
-    # TODO : correct formula ? if not, does AgeReplacementModel have to be LifetimeModel ?
+        return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
+
+    # TODO : check if correct formula
     def chf(
         self, time: NDArray[np.float64], ar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
-        return self.baseline.chf(time, *args)
+        return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     @override
     def isf(
@@ -59,6 +60,15 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
         return np.minimum(self.baseline.isf(probability, *args), ar)
+
+    @override
+    def ichf(
+        self,
+        probability: NDArray[np.float64],
+        ar: NDArray[np.float64],
+        *args: *ModelArgs,
+    ) -> NDArray[np.float64]:
+        return np.minimum(self.baseline.ichf(probability, *args), ar)
 
     def pdf(
         self,
@@ -81,10 +91,47 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         )
 
     @override
+    def mean(self, ar: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        return self.moment(1, ar, *args)
+
+    @override
+    def var(self, ar: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
+
+    def rvs(
+        self,
+        ar: NDArray[np.float64],
+        *args: *ModelArgs,
+        size: Optional[int] = 1,
+        seed: Optional[int] = None,
+    ) -> NDArray[np.float64]:
+        return np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
+
+    def ppf(
+        self,
+        probability: float | NDArray[np.float64],
+        ar: NDArray[np.float64],
+        *args: *ModelArgs,
+    ) -> NDArray[np.float64]:
+        return self.isf(1 - probability, ar, *args)
+
+    def median(self, ar: NDArray[np.float64], *args: *ModelArgs) -> NDArray[np.float64]:
+        return self.ppf(np.array(0.5), ar, *args)
+
+    def cdf(
+        self,
+        time: float | NDArray[np.float64],
+        ar: NDArray[np.float64],
+        *args: *ModelArgs,
+    ) -> NDArray[np.float64]:
+        return np.where(
+            time < ar, self.baseline.cdf(time, *args), self.baseline.cdf(ar, *args)
+        )
+
+    @override
     def mrl(
         self, time: NDArray[np.float64], ar: NDArray[np.float64], *args: *ModelArgs
     ) -> NDArray[np.float64]:
-
         ub = np.array(np.inf)
         mask = time >= ar
         if np.any(mask):
@@ -196,7 +243,7 @@ class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         size: Optional[int] = 1,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
-        return self.baseline.rvs(*(a0, *args), size=size, seed=seed) + a0
+        return self.baseline.rvs(*args, size=size, seed=seed) + a0
 
 
 class EquilibriumDistribution(LifetimeModel[*ModelArgs]):

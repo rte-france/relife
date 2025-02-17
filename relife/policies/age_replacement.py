@@ -1,14 +1,13 @@
 from typing import Optional, Self
 
 import numpy as np
-import numpy.ma as ma
 
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
 from relife.data import RenewalRewardData, NHPPData
 from relife.core.discounting import exponential_discounting
-from relife.generator import lifetimes_rewards_generator, nhpp_generator
+from relife.generator import lifetimes_rewards_generator
 from relife.core.nested_model import AgeReplacementModel, LeftTruncatedModel
 from relife.core.model import LifetimeModel
 from relife.core.quadratures import gauss_legendre
@@ -319,6 +318,32 @@ class AgeReplacementPolicy(Policy):
     model_args = ShapedArgs(astuple=True)
     model1_args = ShapedArgs(astuple=True)
 
+    def __new__(
+        cls,
+        model: LifetimeModel[*ModelArgs],
+        cf: float | NDArray[np.float64],
+        cp: float | NDArray[np.float64],
+        *,
+        one_cycle: bool = False,
+        **kwargs,
+    ):
+        """
+        Factory allowing instanciation of AgeReplacementPolicy or OneCycleAgeReplacementPolicy
+        based on the one_cycle argument.
+
+        Parameters
+        ----------
+        one_cycle : bool, optional
+            If `True`, instantiates OneCycleAgeReplacementPolicy instead of AgeReplacementPolicy.
+
+        Returns
+        -------
+        AgeReplacementPolicy or OneCycleAgeReplacementPolicy instance.
+        """
+        if one_cycle:
+            return OneCycleAgeReplacementPolicy(model, cf, cp, **kwargs)
+        return super().__new__(cls)
+
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
@@ -335,6 +360,7 @@ class AgeReplacementPolicy(Policy):
         model1_args: Model1Args = (),
     ) -> None:
 
+        print(type(self))
         self.nb_assets = nb_assets
         if a0 is not None:
             if model1 is not None:

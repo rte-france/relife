@@ -29,15 +29,6 @@ AgeReplacementPolicy
             ~AgeReplacementPolicy.expected_equivalent_annual_cost
         
         
-            ~AgeReplacementPolicy.expected_number_of_failures
-        
-        
-            ~AgeReplacementPolicy.expected_number_of_preventive_replacements
-        
-        
-            ~AgeReplacementPolicy.expected_number_of_replacements
-        
-        
             ~AgeReplacementPolicy.expected_total_cost
         
         

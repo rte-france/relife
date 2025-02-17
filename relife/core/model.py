@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
 from relife.data import LifetimeData, lifetime_data_factory
+from .nested_model import LeftTruncatedModel, AgeReplacementModel
 from .likelihoods import LikelihoodFromLifetimes
 from relife.plots import PlotSurvivalFunc
 from .quadratures import gauss_legendre, quad_laguerre
@@ -318,6 +319,26 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         NotImplementedError: Raised when an abstract method or feature in this
         class has not been implemented in a derived class.
     """
+
+    def __new__(
+        cls,
+        /,
+        *args,
+        left_truncated: bool = False,
+        age_replacement: bool = False,
+        **kwargs,
+    ):
+        """
+        Factory allowing instanciation of AgeReplacementPolicy and/or LeftTruncatedModel.
+        """
+        if left_truncated and age_replacement:
+            return AgeReplacementModel(LeftTruncatedModel(cls(**kwargs)))
+        if left_truncated and not age_replacement:
+            return LeftTruncatedModel(cls(**kwargs))
+        if not left_truncated and age_replacement:
+            return AgeReplacementModel(cls(**kwargs))
+        else:
+            return super().__new__(cls(**kwargs))
 
     @abstractmethod
     def hf(
