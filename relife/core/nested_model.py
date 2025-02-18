@@ -124,9 +124,7 @@ class AgeReplacementModel(LifetimeModel[NDArray[np.float64], *ModelArgs]):
         ar: NDArray[np.float64],
         *args: *ModelArgs,
     ) -> NDArray[np.float64]:
-        return np.where(
-            time < ar, self.baseline.cdf(time, *args), self.baseline.cdf(ar, *args)
-        )
+        return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
 
     @override
     def mrl(

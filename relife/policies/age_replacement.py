@@ -7,7 +7,7 @@ from scipy.optimize import newton
 
 from relife.data import RenewalRewardData, NHPPData
 from relife.core.discounting import exponential_discounting
-from relife.generator import lifetimes_rewards_generator
+from relife.generator import lifetimes_rewards_generator, nhpp_policy_generator
 from relife.core.nested_model import AgeReplacementModel, LeftTruncatedModel
 from relife.core.model import LifetimeModel
 from relife.core.quadratures import gauss_legendre
@@ -318,32 +318,6 @@ class AgeReplacementPolicy(Policy):
     model_args = ShapedArgs(astuple=True)
     model1_args = ShapedArgs(astuple=True)
 
-    def __new__(
-        cls,
-        model: LifetimeModel[*ModelArgs],
-        cf: float | NDArray[np.float64],
-        cp: float | NDArray[np.float64],
-        *,
-        one_cycle: bool = False,
-        **kwargs,
-    ):
-        """
-        Factory allowing instanciation of AgeReplacementPolicy or OneCycleAgeReplacementPolicy
-        based on the one_cycle argument.
-
-        Parameters
-        ----------
-        one_cycle : bool, optional
-            If `True`, instantiates OneCycleAgeReplacementPolicy instead of AgeReplacementPolicy.
-
-        Returns
-        -------
-        AgeReplacementPolicy or OneCycleAgeReplacementPolicy instance.
-        """
-        if one_cycle:
-            return OneCycleAgeReplacementPolicy(model, cf, cp, **kwargs)
-        return super().__new__(cls)
-
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
@@ -360,7 +334,6 @@ class AgeReplacementPolicy(Policy):
         model1_args: Model1Args = (),
     ) -> None:
 
-        print(type(self))
         self.nb_assets = nb_assets
         if a0 is not None:
             if model1 is not None:
@@ -554,21 +527,21 @@ class NHPPAgeReplacementPolicy(Policy):
         Discount rate applied for present value calculations.
     ar : np.ndarray or None
         Optimized replacement age (optimized policy parameter).
-    c0 : np.ndarray
-        Cost associated with preventive replacement.
+    cf : np.ndarray
+        The cost of failure for each asset.
     cr : np.ndarray
-        Cost associated with corrective replacement.
+        The cost of repair for each asset.
     """
 
-    c0 = ShapedArgs()
-    cp = ShapedArgs()
+    cf = ShapedArgs()
+    cr = ShapedArgs()
     ar = ShapedArgs()
     model_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
-        c0: NDArray[np.float64],
+        cf: NDArray[np.float64],
         cr: NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
@@ -578,12 +551,13 @@ class NHPPAgeReplacementPolicy(Policy):
     ) -> None:
 
         self.nb_assets = nb_assets
-        self.process = NHPP(model, model_args)
-        self.model = AgeReplacementModel(model)
-        self.model_args = (ar,) + model_args
+
+        self.process = NHPP(model, model_args, nb_assets=nb_assets)
+        self.model = model
+        self.model_args = model_args
         self.discounting_rate = discounting_rate
         self.ar = ar
-        self.c0 = c0
+        self.cf = cf
         self.cr = cr
 
     @require_attributes("ar")
@@ -613,23 +587,39 @@ class NHPPAgeReplacementPolicy(Policy):
         pass
 
     @require_attributes("ar")
-    def sample(
-        self, nb_samples, nb_assets, end_time: int, seed: Optional[int] = None
-    ) -> NHPPData:
+    def sample(self, nb_samples, end_time: int, seed: Optional[int] = None) -> NHPPData:
+        timeline = np.array([], dtype=np.float64)
+        durations = np.array([], dtype=np.float64)
+        repairs = np.array([], dtype=np.int64)
+        samples_ids = np.array([], dtype=np.int64)
+        assets_ids = np.array([], dtype=np.int64)
 
-        # TODO : does not work because AgeReplacementModel does not have ichf
-        # either write another generator, or add ichf to AgeReplacementModel
-        return self.process.sample(nb_samples, nb_assets, end_time, seed=seed)
+        for _timeline, _durations, _repairs, still_valid in nhpp_policy_generator(
+            self.model,
+            self.ar,
+            nb_samples,
+            self.nb_assets,
+            end_time,
+            model_args=self.model_args,
+            seed=seed,
+        ):
+            timeline = np.concatenate((timeline, _timeline[still_valid]))
+            durations = np.concatenate((durations, _durations[still_valid]))
+            repairs = np.concatenate((repairs, _repairs[still_valid]))
+            _assets, _samples = np.where(still_valid)
+            samples_ids = np.concatenate((samples_ids, _samples))
+            assets_ids = np.concatenate((assets_ids, _assets))
+
+        # note that ages == event_times
+        return NHPPData(samples_ids, assets_ids, timeline, durations, repairs)
 
     def fit(
         self,
     ) -> Self:
 
-        x0 = self.model.baseline.mean(*self.model_args[1:])
+        x0 = self.model.mean(*self.model_args)
 
-        cr_2d, c0_2d, *model_args_2d = np.atleast_2d(
-            self.cr, self.c0, *self.model_args[1:]
-        )
+        cr_2d, cf_2d, *model_args_2d = np.atleast_2d(self.cr, self.cf, *self.model_args)
         if isinstance(model_args_2d, np.ndarray):
             model_args_2d = (model_args_2d,)
 
@@ -648,7 +638,7 @@ class NHPPAgeReplacementPolicy(Policy):
                         a,
                         ndim=2,
                     )
-                    - c0_2d / cr_2d
+                    - cf_2d / cr_2d
                 )
 
         else:
@@ -658,16 +648,15 @@ class NHPPAgeReplacementPolicy(Policy):
                 return (
                     a * self.process.intensity(a, *model_args_2d)
                     - self.process.cumulative_intensity(a, *model_args_2d)
-                    - c0_2d / cr_2d
+                    - cf_2d / cr_2d
                 )
 
         ar = newton(dcost, x0)
 
-        ndim = max(map(np.ndim, (self.c0, self.cr, *self.model_args)), default=0)
+        ndim = max(map(np.ndim, (self.cf, self.cr, *self.model_args)), default=0)
         if ndim < 2:
             ar = np.squeeze(ar)
         self.ar = ar
-        self.model_args = (ar,) + self.model_args
         return self
 
 

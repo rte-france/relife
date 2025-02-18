@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import scipy.stats as stats
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 

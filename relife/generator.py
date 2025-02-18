@@ -1,6 +1,7 @@
 from typing import Iterator, Optional
 
 import numpy as np
+from nbclient.exceptions import timeout_err_msg
 from numpy.typing import NDArray
 
 from relife.core.discounting import exponential_discounting
@@ -16,15 +17,6 @@ from relife.types import (
 )
 
 
-def model_rvs(
-    model: LifetimeModel[*ModelArgs],
-    size: int,
-    args: ModelArgs = (),
-    seed: Optional[int] = None,
-):
-    return model.rvs(*args, size=size, seed=seed)
-
-
 def rvs_size(
     nb_samples: int,
     nb_assets: int,
@@ -37,21 +29,13 @@ def rvs_size(
     return size
 
 
-def compute_rewards(
-    reward: Reward,
-    lifetimes: NDArray[np.float64],
-    args: RewardArgs = (),
-):
-    return reward(lifetimes, *args)
-
-
 def compute_events(
     lifetimes: NDArray[np.float64],
     model: LifetimeModel[*ModelArgs],
     model_args: ModelArgs = (),
 ) -> NDArray[np.bool_]:
     """
-    tag lifetimes as being right censored or not depending on core used
+    tag lifetimes as being right censored or not depending on model used
     """
     events = np.ones_like(lifetimes, dtype=np.bool_)
     ar = 0.0
@@ -84,13 +68,15 @@ def lifetimes_generator(
     event_times = np.zeros((nb_assets, nb_samples))
     still_valid = event_times < end_time
 
-    def sample_routine(target_model, args):
+    def sample_routine(lifetime_model, args):
         nonlocal event_times, still_valid, seed  # modify these variables
-        lifetimes = model_rvs(target_model, size, args=args, seed=seed).reshape(
-            (nb_assets, nb_samples)
-        )
+        lifetimes = lifetime_model.rvs(
+            *args,
+            size=size,
+            seed=seed,
+        ).reshape((nb_assets, nb_samples))
         event_times += lifetimes
-        events = compute_events(lifetimes, target_model, args)
+        events = compute_events(lifetimes, lifetime_model, args)
         still_valid = event_times < end_time
         # update seed to avoid having the same rvs result
         if seed is not None:
@@ -152,10 +138,10 @@ def lifetimes_rewards_generator(
         seed=seed,
     )
 
-    def sample_routine(target_reward, args):
+    def sample_routine(reward_func, args):
         nonlocal total_rewards  # modify these variables
         lifetimes, event_times, events, still_valid = next(lifetimes_gen)
-        rewards = target_reward(lifetimes, *args)
+        rewards = reward_func(lifetimes, *args)
         discountings = exponential_discounting.factor(event_times, discounting_rate)
         total_rewards += rewards * discountings
         return lifetimes, event_times, total_rewards, events, still_valid
@@ -192,24 +178,95 @@ def nhpp_generator(
         NDArray[np.float64],
     ]
 ]:
-    hpp_event_times = np.zeros((nb_assets, nb_samples))
-    previous_event_times = np.zeros((nb_assets, nb_samples))
-    still_valid = np.ones_like(hpp_event_times, dtype=np.bool_)
+    hpp_timeline = np.zeros((nb_assets, nb_samples))
+    previous_timeline = np.zeros((nb_assets, nb_samples))
+    still_valid = np.ones_like(hpp_timeline, dtype=np.bool_)
     exponential_dist = Exponential(1.0)
 
     def sample_routine(target_model, args):
-        nonlocal hpp_event_times, previous_event_times, still_valid, seed  # modify these variables
-        lifetimes = model_rvs(exponential_dist, size, args=args, seed=seed).reshape(
-            (nb_assets, nb_samples)
-        )
-        hpp_event_times += lifetimes
-        ages = target_model.ichf(hpp_event_times, *args)
-        durations = ages - previous_event_times
-        previous_event_times = ages
+        nonlocal hpp_timeline, previous_timeline, still_valid, seed  # modify these variables
+        lifetimes = model_rvs(
+            exponential_dist, size, model_args=args, seed=seed
+        ).reshape((nb_assets, nb_samples))
+        hpp_timeline += lifetimes
+        ages = target_model.ichf(hpp_timeline, *args)
+        durations = ages - previous_timeline
+        previous_timeline = ages
         still_valid = ages < end_time
         if seed is not None:
             seed += 1
         return durations, ages, still_valid
+
+    size = rvs_size(nb_samples, nb_assets, model_args)
+    while True:
+        gen_data = sample_routine(model, model_args)
+        if np.any(gen_data[-1]) > 0:
+            yield gen_data
+        else:
+            break
+    return
+
+
+def nhpp_policy_generator(
+    model: LifetimeModel[*ModelArgs],
+    ar: NDArray[np.float64],  # ages of replacement
+    nb_samples: int,
+    nb_assets: int,
+    end_time: float,
+    *,
+    model_args: ModelArgs = (),
+    seed: Optional[int] = None,
+) -> Iterator[
+    tuple[
+        NDArray[np.float64],
+        NDArray[np.float64],
+    ]
+]:
+    hpp_timeline = np.zeros((nb_assets, nb_samples))
+    previous_ages = np.zeros((nb_assets, nb_samples))
+    timeline = np.zeros((nb_assets, nb_samples))
+    nb_repairs = np.zeros((nb_assets, nb_samples), dtype=np.int64)
+    still_valid = np.ones_like(hpp_timeline, dtype=np.bool_)
+    exponential_dist = Exponential(1.0)
+    ar = np.broadcast_to(ar.reshape(-1, 1), (nb_assets, nb_samples))
+    # milestones = ar.copy()  # ar milestones
+
+    def sample_routine(lifetime_model, args):
+        nonlocal hpp_timeline, previous_ages, timeline, nb_repairs, still_valid, seed  # modify these variables
+
+        hpp_timeline += exponential_dist.rvs(size=size, seed=seed).reshape(
+            (nb_assets, nb_samples)
+        )
+
+        ages = lifetime_model.ichf(hpp_timeline, *args)  # ar values or less
+        print(ages)
+        durations = ages - previous_ages
+        print(durations)
+
+        # update
+        timeline += ages
+        # TODO : the condition is not on timeline but on ages only (ages are dates)
+        still_repaired = ages < ar
+        nb_repairs[still_repaired] += 1  # update those not having reach ar
+
+        durations[~still_repaired] = (
+            ar[~still_repaired] - previous_ages[~still_repaired]
+        )
+        timeline[~still_repaired] += (
+            ar[~still_repaired] - previous_ages[~still_repaired]
+        )
+        # milestones[~still_repaired] += ar[~still_repaired]
+        hpp_timeline[~still_repaired] = 0.0
+        nb_repairs[~still_repaired] = 0
+
+        previous_ages[still_repaired] = ages[still_repaired]
+        previous_ages[~still_repaired] = 0.0
+
+        still_valid = timeline < end_time
+
+        if seed is not None:
+            seed += 1
+        return timeline, durations, nb_repairs, still_valid
 
     size = rvs_size(nb_samples, nb_assets, model_args)
     while True:

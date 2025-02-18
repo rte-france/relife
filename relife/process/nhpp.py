@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
+from relife.core.descriptors import ShapedArgs
 from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
 from relife.data import lifetime_data_factory, NHPPData, nhpp_lifetime_data_factory
@@ -13,12 +14,17 @@ from relife.types import ModelArgs, VariadicArgs
 
 class NHPP(ParametricModel):
 
+    model_args = ShapedArgs(astuple=True)
+
     def __init__(
         self,
         model: LifetimeModel[*ModelArgs],
         model_args: ModelArgs = (),
+        *,
+        nb_assets: int = 1,
     ):
         super().__init__()
+        self.nb_assets = nb_assets
         self.compose_with(model=model)
         self.model_args = model_args
 
@@ -28,10 +34,8 @@ class NHPP(ParametricModel):
     def cumulative_intensity(self, time: np.ndarray, *args: *ModelArgs) -> np.ndarray:
         return self.model.chf(time, *args)
 
-    def sample(
-        self, nb_samples, nb_assets, end_time: int, seed: Optional[int] = None
-    ) -> NHPPData:
-        if self.cumulative_intensity(end_time) * nb_samples * nb_assets > 1e6:
+    def sample(self, nb_samples, end_time: int, seed: Optional[int] = None) -> NHPPData:
+        if self.cumulative_intensity(end_time) * nb_samples * self.nb_assets > 1e6:
             raise ValueError("Exceeded number of sample allowed")
         durations = np.array([], dtype=np.float64)
         ages = np.array([], dtype=np.float64)
@@ -41,7 +45,7 @@ class NHPP(ParametricModel):
         for _durations, _ages, still_valid in nhpp_generator(
             self.model,
             nb_samples,
-            nb_assets,
+            self.nb_assets,
             end_time,
             model_args=self.model_args,
             seed=seed,
