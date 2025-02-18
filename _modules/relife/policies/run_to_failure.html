@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=733aff7d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=da1e0c12" />
   
   <!-- So that users can add custom icons -->
   <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -119,8 +119,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/pixel_full_logo_clip.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../../_static/pixel_full_logo_clip.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -549,12 +549,15 @@
         <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">)</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">q0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-            <span class="n">mask</span><span class="p">,</span>
-            <span class="mi">0</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-                <span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span>
-            <span class="p">),</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span>
+            <span class="n">q0</span>
+            <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">mask</span><span class="p">,</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
+                    <span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
         <span class="p">)</span></div>
 
 
