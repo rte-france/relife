@@ -223,7 +223,7 @@ def nhpp_policy_generator(
     ]
 ]:
     hpp_timeline = np.zeros((nb_assets, nb_samples))
-    previous_ages = np.zeros((nb_assets, nb_samples))
+    previous_event_times = np.zeros((nb_assets, nb_samples))
     timeline = np.zeros((nb_assets, nb_samples))
     nb_repairs = np.zeros((nb_assets, nb_samples), dtype=np.int64)
     still_valid = np.ones_like(hpp_timeline, dtype=np.bool_)
@@ -232,35 +232,32 @@ def nhpp_policy_generator(
     # milestones = ar.copy()  # ar milestones
 
     def sample_routine(lifetime_model, args):
-        nonlocal hpp_timeline, previous_ages, timeline, nb_repairs, still_valid, seed  # modify these variables
+        nonlocal hpp_timeline, previous_event_times, timeline, nb_repairs, still_valid, seed  # modify these variables
 
         hpp_timeline += exponential_dist.rvs(size=size, seed=seed).reshape(
             (nb_assets, nb_samples)
         )
-
-        ages = lifetime_model.ichf(hpp_timeline, *args)  # ar values or less
-        print(ages)
-        durations = ages - previous_ages
-        print(durations)
+        event_times = lifetime_model.ichf(hpp_timeline, *args)  # ar values or less
+        durations = event_times - previous_event_times
 
         # update
-        timeline += ages
-        # TODO : the condition is not on timeline but on ages only (ages are dates)
-        still_repaired = ages < ar
-        nb_repairs[still_repaired] += 1  # update those not having reach ar
-
+        still_repaired = event_times < ar
+        nb_repairs[still_repaired] += 1
         durations[~still_repaired] = (
-            ar[~still_repaired] - previous_ages[~still_repaired]
+            ar[~still_repaired] - previous_event_times[~still_repaired]
         )
+
         timeline[~still_repaired] += (
-            ar[~still_repaired] - previous_ages[~still_repaired]
+            ar[~still_repaired] - previous_event_times[~still_repaired]
         )
+        timeline[still_repaired] += durations[still_repaired]
+
         # milestones[~still_repaired] += ar[~still_repaired]
         hpp_timeline[~still_repaired] = 0.0
         nb_repairs[~still_repaired] = 0
 
-        previous_ages[still_repaired] = ages[still_repaired]
-        previous_ages[~still_repaired] = 0.0
+        previous_event_times[still_repaired] = event_times[still_repaired]
+        previous_event_times[~still_repaired] = 0.0
 
         still_valid = timeline < end_time
 
