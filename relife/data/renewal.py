@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.types import ModelArgs
+from relife.types import TupleArrays
 
 from .counting import CountData, CountDataIterable
 
@@ -17,7 +17,7 @@ class RenewalData(CountData):
         repr=False
     )  # event indicators (right censored or not)
 
-    model_args: ModelArgs = field(repr=False)
+    model_args: TupleArrays = field(repr=False)
     with_model1: bool = field(repr=False)
 
     def iter(self, sample_id: Optional[int] = None):

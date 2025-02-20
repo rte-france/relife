@@ -9,17 +9,17 @@ from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
 from relife.data import lifetime_data_factory, NHPPData, nhpp_lifetime_data_factory
 from relife.generator import nhpp_generator
-from relife.types import ModelArgs, VariadicArgs
+from relife.types import TupleArrays, VariadicArgs
 
 
-class NHPP(ParametricModel):
+class NonHomogeneousPoissonProcess(ParametricModel):
 
     model_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
-        model_args: ModelArgs = (),
+        model: LifetimeModel[*TupleArrays],
+        model_args: TupleArrays = (),
         *,
         nb_assets: int = 1,
     ):
@@ -28,36 +28,50 @@ class NHPP(ParametricModel):
         self.compose_with(model=model)
         self.model_args = model_args
 
-    def intensity(self, time: np.ndarray, *args: *ModelArgs) -> np.ndarray:
+    def intensity(self, time: np.ndarray, *args: *TupleArrays) -> np.ndarray:
         return self.model.hf(time, *args)
 
-    def cumulative_intensity(self, time: np.ndarray, *args: *ModelArgs) -> np.ndarray:
+    def cumulative_intensity(self, time: np.ndarray, *args: *TupleArrays) -> np.ndarray:
         return self.model.chf(time, *args)
 
-    def sample(self, nb_samples, end_time: int, seed: Optional[int] = None) -> NHPPData:
-        if self.cumulative_intensity(end_time) * nb_samples * self.nb_assets > 1e6:
-            raise ValueError("Exceeded number of sample allowed")
+    def sample(
+        self,
+        nb_samples,
+        end_time: int,
+        seed: Optional[int] = None,
+        maxsample: int = 1e5,
+    ) -> NHPPData:
         durations = np.array([], dtype=np.float64)
-        ages = np.array([], dtype=np.float64)
+        nb_repairs = np.array([], dtype=np.float64)
+        ages = np.array([], dtype=np.int64)
         samples_ids = np.array([], dtype=np.int64)
         assets_ids = np.array([], dtype=np.int64)
 
-        for _durations, _ages, still_valid in nhpp_generator(
-            self.model,
-            nb_samples,
-            self.nb_assets,
-            end_time,
-            model_args=self.model_args,
-            seed=seed,
+        for i, (_samples_ids, _assets_ids, _durations, _ages) in enumerate(
+            nhpp_generator(
+                self.model,
+                nb_samples,
+                self.nb_assets,
+                end_time,
+                model_args=self.model_args,
+                seed=seed,
+            )
         ):
-            durations = np.concatenate((durations, _durations[still_valid]))
-            ages = np.concatenate((ages, _ages[still_valid]))
-            _assets, _samples = np.where(still_valid)
-            samples_ids = np.concatenate((samples_ids, _samples))
-            assets_ids = np.concatenate((assets_ids, _assets))
+            durations = np.concatenate((durations, _durations))
+            ages = np.concatenate((ages, _ages))
+            nb_repairs = np.concatenate(
+                (nb_repairs, np.ones_like(_durations, dtype=np.int64) * (i + 1))
+            )
+            samples_ids = np.concatenate((samples_ids, _samples_ids))
+            assets_ids = np.concatenate((assets_ids, _samples_ids))
+
+            if len(samples_ids) > maxsample:
+                raise ValueError(
+                    "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+                )
 
         # note that ages == event_times
-        return NHPPData(samples_ids, assets_ids, ages, durations)
+        return NHPPData(samples_ids, assets_ids, ages, durations, nb_repairs)
 
     def fit(
         self,

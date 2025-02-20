@@ -123,3 +123,38 @@ class NHPPData(CountData):
         _assets = np.delete(_assets, to_delete)
 
         return a0, af, _ages, _assets
+
+
+@dataclass
+class NHPPPolicyData(CountData):
+    durations: NDArray[np.float64] = field(repr=False)  # durations between repairs
+    repairs: NDArray[np.int64] = field(repr=False)  # nb of repairs
+
+    def to_fit(self, sample: Optional[int] = None):
+
+        s = self.samples_ids == sample if sample is not None else Ellipsis
+
+        _assets_index = self.assets_ids[s]
+        _samples_index = self.samples_ids[s]
+        _ages = self.timeline[s]
+        _assets = _assets_index + _samples_index
+
+        sort = np.lexsort((_ages, _assets))
+        _assets = _assets[sort]
+        _ages = _ages[sort]
+        if self.nb_assets == self.nb_samples == 1:
+            a0_index = np.array([0])
+            af_index = np.array([len(_assets) - 1])
+        else:
+            a0_index = np.where(np.roll(_assets, 1) != _assets)[0]
+            af_index = np.append(a0_index[1:] - 1, len(_assets) - 1)
+
+        assert len(a0_index) == len(af_index)
+
+        a0 = _ages[a0_index]  # in order asset 0, 1, ... , n
+        af = _ages[af_index]
+        to_delete = np.concatenate((a0_index, af_index))
+        _ages = np.delete(_ages, to_delete)
+        _assets = np.delete(_assets, to_delete)
+
+        return a0, af, _ages, _assets

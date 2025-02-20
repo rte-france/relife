@@ -471,6 +471,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         return newton(
             lambda x: self.sf(x, *args) - probability,
             x0=np.zeros_like(probability),
+            args=args,
         )
 
     def ichf(

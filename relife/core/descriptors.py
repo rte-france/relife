@@ -2,7 +2,7 @@ from typing import Union, Optional
 
 import numpy as np
 from numpy.typing import NDArray
-from relife.types import ModelArgs
+from relife.types import TupleArrays
 
 
 def np_at_least(nb_assets: int):
@@ -25,8 +25,8 @@ class ShapedArgs:
         return getattr(obj, self.private_name)
 
     def __set__(
-        self, obj, value: Optional[Union[NDArray[np.float64], ModelArgs]]
-    ) -> ModelArgs:
+        self, obj, value: Optional[Union[NDArray[np.float64], TupleArrays]]
+    ) -> TupleArrays:
         """
         if nb_assets is 1, values are all 1d array (event floats)
         if nb_assets is more than 1, values are all 2d array

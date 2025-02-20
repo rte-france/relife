@@ -9,15 +9,15 @@ from relife.core.descriptors import ShapedArgs
 from relife.core.discounting import exponential_discounting
 from relife.generator import lifetimes_generator, lifetimes_rewards_generator
 from relife.core.model import LifetimeModel
-from relife.types import Model1Args, ModelArgs, Reward1Args, RewardArgs, Reward
+from relife.types import TupleArrays, Reward
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*ModelArgs],
+    model: LifetimeModel[*TupleArrays],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
-    model_args: ModelArgs = (),
+    model_args: TupleArrays = (),
     discounting_rate: float = 0.0,
 ) -> NDArray[np.float64]:
 
@@ -47,9 +47,9 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    model1: LifetimeModel[*Model1Args],
+    model1: LifetimeModel[*TupleArrays],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    model1_args: Model1Args = (),
+    model1_args: TupleArrays = (),
     discounting_rate: float = 0.0,
 ) -> NDArray[np.float64]:
 
@@ -85,12 +85,12 @@ class RenewalProcess:
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
+        model: LifetimeModel[*TupleArrays],
         *,
         nb_assets: int = 1,
-        model_args: ModelArgs = (),
-        model1: Optional[LifetimeModel[*Model1Args]] = None,
-        model1_args: Model1Args = (),
+        model_args: TupleArrays = (),
+        model1: Optional[LifetimeModel[*TupleArrays]] = None,
+        model1_args: TupleArrays = (),
     ):
         self.nb_assets = nb_assets
         self.model = model
@@ -140,38 +140,45 @@ class RenewalProcess:
         nb_samples: int,
         end_time: float,
         seed: Optional[int] = None,
+        maxsample: int = 1e5,
     ) -> RenewalData:
 
         lifetimes = np.array([], dtype=np.float64)
         event_times = np.array([], dtype=np.float64)
         events = np.array([], dtype=np.bool_)
-        samples_index = np.array([], dtype=np.int64)
-        assets_index = np.array([], dtype=np.int64)
-        order = np.array([], dtype=np.int64)
+        samples_ids = np.array([], dtype=np.int64)
+        assets_ids = np.array([], dtype=np.int64)
 
-        for i, (_lifetimes, _event_times, _events, still_valid) in enumerate(
-            lifetimes_generator(
-                self.model,
-                nb_samples,
-                self.nb_assets,
-                end_time,
-                model_args=self.model_args,
-                model1=self.model1,
-                model1_args=self.model1_args,
-                seed=seed,
-            )
+        for (
+            _samples_ids,
+            _assets_ids,
+            _lifetimes,
+            _event_times,
+            _events,
+        ) in lifetimes_generator(
+            self.model,
+            nb_samples,
+            self.nb_assets,
+            end_time,
+            model_args=self.model_args,
+            model1=self.model1,
+            model1_args=self.model1_args,
+            seed=seed,
         ):
-            lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid]))
-            event_times = np.concatenate((event_times, _event_times[still_valid]))
-            events = np.concatenate((events, _events[still_valid]))
-            order = np.concatenate((order, np.ones_like(_lifetimes[still_valid]) * i))
-            _assets_index, _samples_index = np.where(still_valid)
-            samples_index = np.concatenate((samples_index, _samples_index))
-            assets_index = np.concatenate((assets_index, _assets_index))
+            lifetimes = np.concatenate((lifetimes, _lifetimes))
+            event_times = np.concatenate((event_times, _event_times))
+            events = np.concatenate((events, _events))
+            samples_ids = np.concatenate((samples_ids, _samples_ids))
+            assets_ids = np.concatenate((assets_ids, _assets_ids))
+
+            if len(samples_ids) > maxsample:
+                raise ValueError(
+                    "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+                )
 
         return RenewalData(
-            samples_index,
-            assets_index,
+            samples_ids,
+            assets_ids,
             event_times,
             lifetimes,
             events,
@@ -182,11 +189,11 @@ class RenewalProcess:
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*ModelArgs],
+    model: LifetimeModel[*TupleArrays],
     reward: Reward,
     *,
-    model_args: ModelArgs = (),
-    reward_args: RewardArgs = (),
+    model_args: TupleArrays = (),
+    reward_args: TupleArrays = (),
     discounting_rate: float = 0.0,
 ) -> np.ndarray:
     def func(x):
@@ -210,17 +217,17 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
+        model: LifetimeModel[*TupleArrays],
         reward: Reward,
         *,
         nb_assets: int = 1,
-        model_args: ModelArgs = (),
-        reward_args: RewardArgs = (),
+        model_args: TupleArrays = (),
+        reward_args: TupleArrays = (),
         discounting_rate: float = 0.0,
-        model1: Optional[LifetimeModel[*Model1Args]] = None,
-        model1_args: Model1Args = (),
+        model1: Optional[LifetimeModel[*TupleArrays]] = None,
+        model1_args: TupleArrays = (),
         reward1: Optional[Reward] = None,
-        reward1_args: Reward1Args = (),
+        reward1_args: TupleArrays = (),
     ):
         super().__init__(
             model,
@@ -351,7 +358,9 @@ class RenewalRewardProcess(RenewalProcess):
         nb_samples: int,
         end_time: float,
         seed: Optional[int] = None,
+        maxsample: int = 1e5,
     ) -> RenewalRewardData:
+
         lifetimes = np.array([], dtype=np.float64)
         event_times = np.array([], dtype=np.float64)
         total_rewards = np.array([], dtype=np.float64)
@@ -360,11 +369,12 @@ class RenewalRewardProcess(RenewalProcess):
         assets_ids = np.array([], dtype=np.int64)
 
         for (
+            _samples_ids,
+            _assets_ids,
             _lifetimes,
             _event_times,
             _total_rewards,
             _events,
-            still_valid,
         ) in lifetimes_rewards_generator(
             self.model,
             self.reward,
@@ -380,13 +390,17 @@ class RenewalRewardProcess(RenewalProcess):
             reward1_args=self.reward1_args,
             seed=seed,
         ):
-            lifetimes = np.concatenate((lifetimes, _lifetimes[still_valid]))
-            event_times = np.concatenate((event_times, _event_times[still_valid]))
-            total_rewards = np.concatenate((total_rewards, _total_rewards[still_valid]))
-            events = np.concatenate((events, _events[still_valid]))
-            _assets_ids, _samples_ids = np.where(still_valid)
+            lifetimes = np.concatenate((lifetimes, _lifetimes))
+            event_times = np.concatenate((event_times, _event_times))
+            total_rewards = np.concatenate((total_rewards, _total_rewards))
+            events = np.concatenate((events, _events))
             samples_ids = np.concatenate((samples_ids, _samples_ids))
             assets_ids = np.concatenate((assets_ids, _assets_ids))
+
+            if len(samples_ids) > maxsample:
+                raise ValueError(
+                    "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+                )
 
         return RenewalRewardData(
             samples_ids,

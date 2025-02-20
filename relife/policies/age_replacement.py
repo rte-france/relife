@@ -1,4 +1,4 @@
-from typing import Optional, Self
+from typing import Optional, Self, Union
 
 import numpy as np
 
@@ -12,7 +12,7 @@ from relife.core.nested_model import AgeReplacementModel, LeftTruncatedModel
 from relife.core.model import LifetimeModel
 from relife.core.quadratures import gauss_legendre
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.types import Model1Args, ModelArgs, Policy
+from relife.types import TupleArrays, Policy
 
 from relife.core.descriptors import ShapedArgs
 from relife.core.decorators import require_attributes
@@ -22,7 +22,7 @@ from .docstrings import (
     ASYMPTOTIC_ETC_DOCSTRING,
     ASYMPTOTIC_EEAC_DOCSTRING,
 )
-from ..process import NHPP
+from ..process import NonHomogeneousPoissonProcess
 
 
 def age_replacement_cost(
@@ -85,14 +85,14 @@ class OneCycleAgeReplacementPolicy(Policy):
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
+        model: LifetimeModel[*TupleArrays],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
         ar: Optional[float | NDArray[np.float64]] = None,
-        model_args: ModelArgs = (),
+        model_args: TupleArrays = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
@@ -162,6 +162,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         self,
         nb_samples: int,
         seed: Optional[int] = None,
+        maxsample: int = 1e5,
     ) -> RenewalRewardData:
         r"""
         Samples lifetimes and rewards, given the age(s) of replacement.
@@ -193,14 +194,14 @@ class OneCycleAgeReplacementPolicy(Policy):
             discounting_rate=self.discounting_rate,
             seed=seed,
         )
-        _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
-        assets_ids, samples_ids = np.where(still_valid)
-        assets_ids.astype(np.int64)
-        samples_ids.astype(np.int64)
-        lifetimes = _lifetimes[still_valid]
-        event_times = _event_times[still_valid]
-        total_rewards = _total_rewards[still_valid]
-        events = _events[still_valid]
+        samples_ids, assets_ids, lifetimes, event_times, total_rewards, events = next(
+            generator
+        )
+
+        if len(samples_ids) > maxsample:
+            raise ValueError(
+                "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+            )
 
         return RenewalRewardData(
             samples_ids,
@@ -320,18 +321,18 @@ class AgeReplacementPolicy(Policy):
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
+        model: LifetimeModel[*TupleArrays],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         ar: float | NDArray[np.float64] = None,
         ar1: float | NDArray[np.float64] = None,
-        model_args: ModelArgs = (),
+        model_args: TupleArrays = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[*Model1Args]] = None,
-        model1_args: Model1Args = (),
+        model1: Optional[LifetimeModel[*TupleArrays]] = None,
+        model1_args: TupleArrays = (),
     ) -> None:
 
         self.nb_assets = nb_assets
@@ -519,7 +520,7 @@ class NHPPAgeReplacementPolicy(Policy):
         Number of assets involved in the age-replacement policy.
     model : LifetimeModel
         The lifetime model defining the underlying process.
-    process : NHPP
+    process : NonHomogeneousPoissonProcess
         NHPP instance modeling the intensity and cumulative intensity.
     model_args : ModelArgs
         Additional arguments required by the lifetime model.
@@ -540,19 +541,21 @@ class NHPPAgeReplacementPolicy(Policy):
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
+        model: LifetimeModel[*TupleArrays],
         cf: NDArray[np.float64],
         cr: NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         ar: Optional[NDArray[np.float64]] = None,
-        model_args: ModelArgs = (),
+        model_args: TupleArrays = (),
         nb_assets: int = 1,
     ) -> None:
 
         self.nb_assets = nb_assets
 
-        self.process = NHPP(model, model_args, nb_assets=nb_assets)
+        self.process = NonHomogeneousPoissonProcess(
+            model, model_args, nb_assets=nb_assets
+        )
         self.model = model
         self.model_args = model_args
         self.discounting_rate = discounting_rate
@@ -587,7 +590,13 @@ class NHPPAgeReplacementPolicy(Policy):
         pass
 
     @require_attributes("ar")
-    def sample(self, nb_samples, end_time: int, seed: Optional[int] = None) -> NHPPData:
+    def sample(
+        self,
+        nb_samples,
+        end_time: int,
+        seed: Optional[int] = None,
+        maxsample: int = 1e5,
+    ) -> NHPPData:
         timeline = np.array([], dtype=np.float64)
         durations = np.array([], dtype=np.float64)
         repairs = np.array([], dtype=np.int64)
@@ -609,6 +618,11 @@ class NHPPAgeReplacementPolicy(Policy):
             _assets, _samples = np.where(still_valid)
             samples_ids = np.concatenate((samples_ids, _samples))
             assets_ids = np.concatenate((assets_ids, _assets))
+
+            if len(samples_ids) > maxsample:
+                raise ValueError(
+                    "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+                )
 
         # note that ages == event_times
         return NHPPData(samples_ids, assets_ids, timeline, durations, repairs)
@@ -658,6 +672,70 @@ class NHPPAgeReplacementPolicy(Policy):
             ar = np.squeeze(ar)
         self.ar = ar
         return self
+
+
+class _AgeReplacementPolicy:
+    def __init__(self, model: LifetimeModel[*TupleArrays]):
+        self.model = model
+        self.policy = None
+        self.fitted = False
+
+    def load(self, /, *args, nature: str = "default", **kwargs):
+        if self.policy is not None:
+            raise ValueError("AgeReplacementPolicy is already load")
+        elif type == "default":
+            self.policy = AgeReplacementPolicy(self.model, *args, **kwargs)
+        elif type == "one_cycle":
+            self.policy = OneCycleAgeReplacementPolicy(self.model, *args, **kwargs)
+        elif type == "poisson":
+            self.policy = NHPPAgeReplacementPolicy(self.model, *args, **kwargs)
+        else:
+            raise ValueError(f"Uncorrect nature {nature}")
+
+    def load_fit(self, /, *args, nature: str = "default", **kwargs):
+        if self.policy is not None:
+            raise ValueError("AgeReplacementPolicy is already load")
+        elif type == "default":
+            self.policy = AgeReplacementPolicy(self.model, *args, **kwargs).fit()
+            self.fitted = True
+        elif type == "one_cycle":
+            self.policy = OneCycleAgeReplacementPolicy(
+                self.model, *args, **kwargs
+            ).fit()
+            self.fitted = True
+        elif type == "poisson":
+            self.policy = NHPPAgeReplacementPolicy(self.model, *args, **kwargs).fit()
+            self.fitted = True
+        else:
+            raise ValueError(f"Uncorrect nature {nature}")
+
+    def fit(self):
+        if self.fitted:
+            raise ValueError("AgeReplacementPolicy is already fitted")
+        self.policy = self.policy.fit()
+
+    def __getattr__(self, item):
+        class_name = type(self).__name__
+        if self.policy is None:
+            raise ValueError("No policy as been loaded")
+        if item in super().__getattribute__("policy"):
+            return super().__getattribute__("policy")[item]
+        raise AttributeError(f"{class_name} has no attribute/method {item}")
+
+
+def replacement_policy(
+    model: LifetimeModel[*TupleArrays],
+    process: str = "RenewalProcess",
+    args: TupleArrays = (),
+    costs: TupleArrays = (),
+    ar: NDArray[np.float64] = None,
+) -> Union[
+    AgeReplacementPolicy, OneCycleAgeReplacementPolicy, NHPPAgeReplacementPolicy
+]:
+    """
+    PROBLEM
+    """
+    pass
 
 
 WARNING = r"""

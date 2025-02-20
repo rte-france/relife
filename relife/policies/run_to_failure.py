@@ -16,7 +16,7 @@ from .docstrings import (
     ASYMPTOTIC_EEAC_DOCSTRING,
 )
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.types import Model1Args, ModelArgs, Policy
+from relife.types import TupleArrays, Policy
 
 
 def run_to_failure_cost(
@@ -58,12 +58,12 @@ class OneCycleRunToFailure(Policy):
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
+        model: LifetimeModel[*TupleArrays],
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
-        model_args: ModelArgs = (),
+        model_args: TupleArrays = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
@@ -125,6 +125,7 @@ class OneCycleRunToFailure(Policy):
         self,
         nb_samples: int,
         seed: Optional[int] = None,
+        maxsample: int = 1e5,
     ) -> RenewalRewardData:
         r"""
         Samples lifetimes and rewards.
@@ -156,14 +157,13 @@ class OneCycleRunToFailure(Policy):
             discounting_rate=self.discounting_rate,
             seed=seed,
         )
-        _lifetimes, _event_times, _total_rewards, _events, still_valid = next(generator)
-        assets_ids, samples_ids = np.where(still_valid)
-        assets_ids.astype(np.int64)
-        samples_ids.astype(np.int64)
-        lifetimes = _lifetimes[still_valid]
-        event_times = _event_times[still_valid]
-        total_rewards = _total_rewards[still_valid]
-        events = _events[still_valid]
+        samples_ids, assets_ids, lifetimes, event_times, total_rewards, events = next(
+            generator
+        )
+        if len(samples_ids) > maxsample:
+            raise ValueError(
+                "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+            )
 
         return RenewalRewardData(
             samples_ids,
@@ -222,15 +222,15 @@ class RunToFailure(Policy):
 
     def __init__(
         self,
-        model: LifetimeModel[*ModelArgs],
+        model: LifetimeModel[*TupleArrays],
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
-        model_args: ModelArgs = (),
+        model_args: TupleArrays = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[*Model1Args]] = None,
-        model1_args: Model1Args = (),
+        model1: Optional[LifetimeModel[*TupleArrays]] = None,
+        model1_args: TupleArrays = (),
     ) -> None:
 
         self.nb_assets = nb_assets
@@ -304,6 +304,31 @@ class RunToFailure(Policy):
             The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.
         """
         return self.process.sample(nb_samples, end_time, seed=seed)
+
+
+class _RunToFailurePolicy:
+    def __init__(self, model: LifetimeModel[*TupleArrays]):
+        self.model = model
+        self.policy = None
+        self.fitted = False
+
+    def load(self, /, *args, nature: str = "default", **kwargs):
+        if self.policy is not None:
+            raise ValueError("AgeReplacementPolicy is already load")
+        elif type == "default":
+            self.policy = RunToFailure(self.model, *args, **kwargs)
+        elif type == "one_cycle":
+            self.policy = OneCycleRunToFailure(self.model, *args, **kwargs)
+        else:
+            raise ValueError(f"Uncorrect nature {nature}")
+
+    def __getattr__(self, item):
+        class_name = type(self).__name__
+        if self.policy is None:
+            raise ValueError("No policy as been loaded")
+        if item in super().__getattribute__("policy"):
+            return super().__getattribute__("policy")[item]
+        raise AttributeError(f"{class_name} has no attribute/method {item}")
 
 
 OneCycleRunToFailure.expected_total_cost.__doc__ = ETC_DOCSTRING
