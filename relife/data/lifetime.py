@@ -87,7 +87,7 @@ class LifetimeData:
 
     def __post_init__(self):
         self.rc = self.right_censoring.union(self.complete)
-        self.rc = self.complete.union(self.left_censoring, self.right_censoring)
+        self.rlc = self.complete.union(self.left_censoring, self.right_censoring)
 
         # sanity check that observed lifetimes are inside truncation bounds
         for field_name in [

@@ -1,12 +1,11 @@
+from functools import partial
 from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.data import RenewalRewardData
 from relife.core.descriptors import ShapedArgs
 from relife.core.discounting import exponential_discounting
-from relife.generator import lifetimes_rewards_generator
 from relife.core.nested_model import LeftTruncatedModel
 from relife.core.model import LifetimeModel
 from .docstrings import (
@@ -16,7 +15,7 @@ from .docstrings import (
     ASYMPTOTIC_EEAC_DOCSTRING,
 )
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.types import TupleArrays, Policy
+from relife.types import TupleArrays
 
 
 def run_to_failure_cost(
@@ -25,7 +24,7 @@ def run_to_failure_cost(
     return np.ones_like(lifetimes) * cf
 
 
-class OneCycleRunToFailure(Policy):
+class OneCycleRunToFailurePolicy:
     r"""One cyle run-to-failure policy
 
     A policy for running assets to failure within one cycle.
@@ -83,9 +82,8 @@ class OneCycleRunToFailure(Policy):
         return reward_partial_expectation(
             timeline,
             self.model,
-            run_to_failure_cost,
+            partial(run_to_failure_cost, cf=self.cf),
             model_args=self.model_args,
-            reward_args=(self.cf,),
             discounting_rate=self.discounting_rate,
         )
 
@@ -121,63 +119,8 @@ class OneCycleRunToFailure(Policy):
     ) -> NDArray[np.float64]:
         return self.expected_equivalent_annual_cost(np.array(np.inf))
 
-    def sample(
-        self,
-        nb_samples: int,
-        seed: Optional[int] = None,
-        maxsample: int = 1e5,
-    ) -> RenewalRewardData:
-        r"""
-        Samples lifetimes and rewards.
 
-        Parameters
-        ----------
-            nb_samples : int
-                The number of samples to be generated.
-            seed : int or None, optional
-                An optional seed for random number generation to ensure reproducibility. Defaults to None.
-
-        Returns
-        -------
-        RenewalRewardData
-            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.
-
-        .. note::
-
-            The sampling process stops after the first iteration as only one cycle of replacement is considered.
-        """
-        generator = lifetimes_rewards_generator(
-            self.model,
-            run_to_failure_cost,
-            nb_samples,
-            self.nb_assets,
-            np.inf,
-            model_args=self.model_args,
-            reward_args=(self.cf,),
-            discounting_rate=self.discounting_rate,
-            seed=seed,
-        )
-        samples_ids, assets_ids, lifetimes, event_times, total_rewards, events = next(
-            generator
-        )
-        if len(samples_ids) > maxsample:
-            raise ValueError(
-                "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
-            )
-
-        return RenewalRewardData(
-            samples_ids,
-            assets_ids,
-            event_times,
-            lifetimes,
-            events,
-            self.model_args,
-            False,
-            total_rewards,
-        )
-
-
-class RunToFailure(Policy):
+class DefaultRunToFailurePolicy:
     r"""Run-to-failure renewal policy.
 
     Renewal reward process where assets are replaced on failure with costs
@@ -255,15 +198,13 @@ class RunToFailure(Policy):
         # note the rewards are the same for the first cycle and the rest of the process
         self.process = RenewalRewardProcess(
             self.model,
-            run_to_failure_cost,
+            partial(run_to_failure_cost, cf=self.cf),
             nb_assets=self.nb_assets,
             model_args=self.model_args,
-            reward_args=(self.cf,),
             discounting_rate=self.discounting_rate,
             model1=self.model1,
             model1_args=self.model1_args,
-            reward1=run_to_failure_cost,
-            reward1_args=(self.cf,),
+            reward1=partial(run_to_failure_cost, cf=self.cf),
         )
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -280,67 +221,21 @@ class RunToFailure(Policy):
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.process.asymptotic_expected_equivalent_annual_cost()
 
-    def sample(
-        self,
-        nb_samples: int,
-        end_time: float,
-        seed: Optional[int] = None,
-    ) -> RenewalRewardData:
-        """
-        Samples lifetimes and rewards.
 
-        Parameters
-        ----------
-            nb_samples : int
-                The number of samples to be generated.
-            end_time : float
-                The temporal limit for the sampling operation.
-            seed : int or None, optional
-                An optional seed for random number generation to ensure reproducibility. Defaults to None.
-
-        Returns
-        -------
-        RenewalRewardData
-            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.
-        """
-        return self.process.sample(nb_samples, end_time, seed=seed)
-
-
-class _RunToFailurePolicy:
-    def __init__(self, model: LifetimeModel[*TupleArrays]):
-        self.model = model
-        self.policy = None
-        self.fitted = False
-
-    def load(self, /, *args, nature: str = "default", **kwargs):
-        if self.policy is not None:
-            raise ValueError("AgeReplacementPolicy is already load")
-        elif type == "default":
-            self.policy = RunToFailure(self.model, *args, **kwargs)
-        elif type == "one_cycle":
-            self.policy = OneCycleRunToFailure(self.model, *args, **kwargs)
-        else:
-            raise ValueError(f"Uncorrect nature {nature}")
-
-    def __getattr__(self, item):
-        class_name = type(self).__name__
-        if self.policy is None:
-            raise ValueError("No policy as been loaded")
-        if item in super().__getattribute__("policy"):
-            return super().__getattribute__("policy")[item]
-        raise AttributeError(f"{class_name} has no attribute/method {item}")
-
-
-OneCycleRunToFailure.expected_total_cost.__doc__ = ETC_DOCSTRING
-OneCycleRunToFailure.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
-OneCycleRunToFailure.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
-OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+OneCycleRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
+OneCycleRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
+OneCycleRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = (
+    ASYMPTOTIC_ETC_DOCSTRING
+)
+OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
     ASYMPTOTIC_EEAC_DOCSTRING
 )
 
-RunToFailure.expected_total_cost.__doc__ = ETC_DOCSTRING
-RunToFailure.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
-RunToFailure.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
-RunToFailure.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+DefaultRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
+DefaultRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
+DefaultRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = (
+    ASYMPTOTIC_ETC_DOCSTRING
+)
+DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
     ASYMPTOTIC_EEAC_DOCSTRING
 )

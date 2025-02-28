@@ -2,11 +2,10 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.core import LifetimeModel
-from . import OneCycleRunToFailurePolicy
-from .run_to_failure import DefaultRunToFailurePolicy
+from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
 from .age_replacement import (
     DefaultAgeReplacementPolicy,
-    NHPPAgeReplacementPolicy,
+    NonHomogeneousPoissonAgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,
 )
 from relife.types import TupleArrays
@@ -136,7 +135,7 @@ class AgeReplacementPolicy:
             ar = kwargs.get("ar", None)
             model_args = kwargs.get("model_args", ())
             nb_assets = kwargs.get("nb_assets", 1)
-            self.policy = NHPPAgeReplacementPolicy(
+            self.policy = NonHomogeneousPoissonAgeReplacementPolicy(
                 model,
                 cf,
                 cr,

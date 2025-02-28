@@ -1,18 +1,15 @@
-from typing import Optional, Self, Union
-
+from functools import partial
+from typing import Optional, Self
 import numpy as np
-
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.data import RenewalRewardData, NHPPData
 from relife.core.discounting import exponential_discounting
-from relife.generator import lifetimes_rewards_generator, nhpp_policy_generator
 from relife.core.nested_model import AgeReplacementModel, LeftTruncatedModel
 from relife.core.model import LifetimeModel
 from relife.core.quadratures import gauss_legendre
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.types import TupleArrays, Policy
+from relife.types import TupleArrays
 
 from relife.core.descriptors import ShapedArgs
 from relife.core.decorators import require_attributes
@@ -22,7 +19,7 @@ from .docstrings import (
     ASYMPTOTIC_ETC_DOCSTRING,
     ASYMPTOTIC_EEAC_DOCSTRING,
 )
-from ..process import NonHomogeneousPoissonProcess
+from relife.process.nhpp import NonHomogeneousPoissonProcess
 
 
 def age_replacement_cost(
@@ -34,7 +31,7 @@ def age_replacement_cost(
     return np.where(lifetimes < ar, cf, cp)
 
 
-class OneCycleAgeReplacementPolicy(Policy):
+class OneCycleAgeReplacementPolicy:
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
@@ -54,7 +51,7 @@ class OneCycleAgeReplacementPolicy(Policy):
          The length of the first period before discounting.
     ar : np.ndarray, optional
         Times until preventive replacements. This parameter can be optimized
-        with ``fit``
+        with ``optimize``
     model_args : ModelArgs, optional
         ModelArgs is a tuple of zero or more ndarray required by the underlying
         lifetime core of the process.
@@ -116,9 +113,8 @@ class OneCycleAgeReplacementPolicy(Policy):
         return reward_partial_expectation(
             timeline,
             self.model,
-            age_replacement_cost,
+            partial(age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp),
             model_args=self.model_args,
-            reward_args=(self.ar, self.cf, self.cp),
             discounting_rate=self.discounting_rate,
         )
 
@@ -157,64 +153,7 @@ class OneCycleAgeReplacementPolicy(Policy):
     ) -> NDArray[np.float64]:
         return self.expected_equivalent_annual_cost(np.array(np.inf))
 
-    @require_attributes("ar")
-    def sample(
-        self,
-        nb_samples: int,
-        seed: Optional[int] = None,
-        maxsample: int = 1e5,
-    ) -> RenewalRewardData:
-        r"""
-        Samples lifetimes and rewards, given the age(s) of replacement.
-
-        Parameters
-        ----------
-            nb_samples : int
-                The number of samples to be generated.
-            seed : int or None, optional
-                An optional seed for random number generation to ensure reproducibility. Defaults to None.
-
-        Returns
-        -------
-        RenewalRewardData
-            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.
-
-        .. note::
-
-            The sampling process stops after the first iteration as only one cycle of replacement is considered.
-        """
-        generator = lifetimes_rewards_generator(
-            self.model,
-            age_replacement_cost,
-            nb_samples,
-            self.nb_assets,
-            np.inf,
-            model_args=self.model_args,
-            reward_args=(self.ar, self.cf, self.cp),
-            discounting_rate=self.discounting_rate,
-            seed=seed,
-        )
-        samples_ids, assets_ids, lifetimes, event_times, total_rewards, events = next(
-            generator
-        )
-
-        if len(samples_ids) > maxsample:
-            raise ValueError(
-                "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
-            )
-
-        return RenewalRewardData(
-            samples_ids,
-            assets_ids,
-            event_times,
-            lifetimes,
-            events,
-            self.model_args,
-            False,
-            total_rewards,
-        )
-
-    def fit(
+    def optimize(
         self,
     ) -> Self:
         """
@@ -250,7 +189,7 @@ class OneCycleAgeReplacementPolicy(Policy):
         return self
 
 
-class AgeReplacementPolicy(Policy):
+class DefaultAgeReplacementPolicy:
     r"""Time based replacement policy.
 
     Renewal reward process where assets are replaced at a fixed age :math:`a_r`
@@ -272,10 +211,10 @@ class AgeReplacementPolicy(Policy):
         The cost of preventive replacements for each asset.
     ar : np.ndarray, optional
         Times until preventive replacements. This parameter can be optimized
-        with ``fit``
+        with ``optimize``
     ar1 : np.ndarray, optional
         Times until preventive replacements for the first cycle. This parameter can be optimized
-        with ``fit``
+        with ``optimize``
     discounting_rate : float, default is 0.
         The discounting rate.
     model_args : ModelArgs, optional
@@ -303,10 +242,10 @@ class AgeReplacementPolicy(Policy):
         The cost of preventive replacements for each asset.
     ar : np.ndarray or None
         Times until preventive replacements. This parameter can be optimized
-        with ``fit``
+        with ``optimize``
     ar1 : np.ndarray or None
         Times until preventive replacements for the first cycle. This parameter can be optimized
-        with ``fit``
+        with ``optimize``
     """
 
     model: AgeReplacementModel
@@ -373,15 +312,15 @@ class AgeReplacementPolicy(Policy):
         if parametrized:
             self.process = RenewalRewardProcess(
                 self.model,
-                age_replacement_cost,
+                partial(age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp),
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
-                reward_args=(self.ar, self.cf, self.cp),
                 discounting_rate=self.discounting_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
-                reward1=age_replacement_cost,
-                reward1_args=(self.ar1, self.cf, self.cp),
+                reward1=partial(
+                    age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp
+                ),
             )
 
     @require_attributes("ar")
@@ -402,7 +341,7 @@ class AgeReplacementPolicy(Policy):
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.process.asymptotic_expected_equivalent_annual_cost()
 
-    def fit(
+    def optimize(
         self,
     ) -> Self:
         """
@@ -462,7 +401,7 @@ class AgeReplacementPolicy(Policy):
                 self.cp,
                 discounting_rate=self.discounting_rate,
                 model_args=self.model1_args[1:],
-            ).fit()
+            ).optimize()
             ar1 = onecycle.ar
 
         self.ar = ar
@@ -471,46 +410,18 @@ class AgeReplacementPolicy(Policy):
         self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
         self.process = RenewalRewardProcess(
             self.model,
-            age_replacement_cost,
+            partial(age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp),
             nb_assets=self.nb_assets,
             model_args=self.model_args,
-            reward_args=(self.ar, self.cf, self.cp),
             discounting_rate=self.discounting_rate,
             model1=self.model1,
             model1_args=self.model1_args,
-            reward1=age_replacement_cost,
-            reward1_args=(self.ar1, self.cf, self.cp),
+            reward1=partial(age_replacement_cost, ar=self.ar1, cf=self.cf, cp=self.cp),
         )
         return self
 
-    @require_attributes("ar")
-    def sample(
-        self,
-        nb_samples: int,
-        end_time: float,
-        seed: Optional[int] = None,
-    ) -> RenewalRewardData:
-        """
-        Samples lifetimes and rewards, given the age(s) of replacement.
 
-        Parameters
-        ----------
-            nb_samples : int
-                The number of samples to be generated.
-            end_time : float
-                The temporal limit for the sampling operation.
-            seed : int or None, optional
-                An optional seed for random number generation to ensure reproducibility. Defaults to None.
-
-        Returns
-        -------
-        RenewalRewardData
-            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.
-        """
-        return self.process.sample(nb_samples, end_time, seed=seed)
-
-
-class NHPPAgeReplacementPolicy(Policy):
+class NonHomogeneousPoissonAgeReplacementPolicy:
     """
     Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..
 
@@ -589,45 +500,7 @@ class NHPPAgeReplacementPolicy(Policy):
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         pass
 
-    @require_attributes("ar")
-    def sample(
-        self,
-        nb_samples,
-        end_time: int,
-        seed: Optional[int] = None,
-        maxsample: int = 1e5,
-    ) -> NHPPData:
-        timeline = np.array([], dtype=np.float64)
-        durations = np.array([], dtype=np.float64)
-        repairs = np.array([], dtype=np.int64)
-        samples_ids = np.array([], dtype=np.int64)
-        assets_ids = np.array([], dtype=np.int64)
-
-        for _timeline, _durations, _repairs, still_valid in nhpp_policy_generator(
-            self.model,
-            self.ar,
-            nb_samples,
-            self.nb_assets,
-            end_time,
-            model_args=self.model_args,
-            seed=seed,
-        ):
-            timeline = np.concatenate((timeline, _timeline[still_valid]))
-            durations = np.concatenate((durations, _durations[still_valid]))
-            repairs = np.concatenate((repairs, _repairs[still_valid]))
-            _assets, _samples = np.where(still_valid)
-            samples_ids = np.concatenate((samples_ids, _samples))
-            assets_ids = np.concatenate((assets_ids, _assets))
-
-            if len(samples_ids) > maxsample:
-                raise ValueError(
-                    "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
-                )
-
-        # note that ages == event_times
-        return NHPPData(samples_ids, assets_ids, timeline, durations, repairs)
-
-    def fit(
+    def optimize(
         self,
     ) -> Self:
 
@@ -674,76 +547,12 @@ class NHPPAgeReplacementPolicy(Policy):
         return self
 
 
-class _AgeReplacementPolicy:
-    def __init__(self, model: LifetimeModel[*TupleArrays]):
-        self.model = model
-        self.policy = None
-        self.fitted = False
-
-    def load(self, /, *args, nature: str = "default", **kwargs):
-        if self.policy is not None:
-            raise ValueError("AgeReplacementPolicy is already load")
-        elif type == "default":
-            self.policy = AgeReplacementPolicy(self.model, *args, **kwargs)
-        elif type == "one_cycle":
-            self.policy = OneCycleAgeReplacementPolicy(self.model, *args, **kwargs)
-        elif type == "poisson":
-            self.policy = NHPPAgeReplacementPolicy(self.model, *args, **kwargs)
-        else:
-            raise ValueError(f"Uncorrect nature {nature}")
-
-    def load_fit(self, /, *args, nature: str = "default", **kwargs):
-        if self.policy is not None:
-            raise ValueError("AgeReplacementPolicy is already load")
-        elif type == "default":
-            self.policy = AgeReplacementPolicy(self.model, *args, **kwargs).fit()
-            self.fitted = True
-        elif type == "one_cycle":
-            self.policy = OneCycleAgeReplacementPolicy(
-                self.model, *args, **kwargs
-            ).fit()
-            self.fitted = True
-        elif type == "poisson":
-            self.policy = NHPPAgeReplacementPolicy(self.model, *args, **kwargs).fit()
-            self.fitted = True
-        else:
-            raise ValueError(f"Uncorrect nature {nature}")
-
-    def fit(self):
-        if self.fitted:
-            raise ValueError("AgeReplacementPolicy is already fitted")
-        self.policy = self.policy.fit()
-
-    def __getattr__(self, item):
-        class_name = type(self).__name__
-        if self.policy is None:
-            raise ValueError("No policy as been loaded")
-        if item in super().__getattribute__("policy"):
-            return super().__getattribute__("policy")[item]
-        raise AttributeError(f"{class_name} has no attribute/method {item}")
-
-
-def replacement_policy(
-    model: LifetimeModel[*TupleArrays],
-    process: str = "RenewalProcess",
-    args: TupleArrays = (),
-    costs: TupleArrays = (),
-    ar: NDArray[np.float64] = None,
-) -> Union[
-    AgeReplacementPolicy, OneCycleAgeReplacementPolicy, NHPPAgeReplacementPolicy
-]:
-    """
-    PROBLEM
-    """
-    pass
-
-
 WARNING = r"""
 
 .. warning::
 
     This method requires the ``ar`` attribute to be set either at initialization
-    or with the ``fit`` method.
+    or with the ``optimize`` method.
 """
 
 OneCycleAgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
@@ -757,12 +566,14 @@ OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ 
     ASYMPTOTIC_EEAC_DOCSTRING + WARNING
 )
 
-AgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
-AgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING + WARNING
-AgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = (
+DefaultAgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
+DefaultAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = (
+    EEAC_DOCSTRING + WARNING
+)
+DefaultAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = (
     ASYMPTOTIC_ETC_DOCSTRING + WARNING
 )
 
-AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
     ASYMPTOTIC_EEAC_DOCSTRING + WARNING
 )

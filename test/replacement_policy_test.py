@@ -11,8 +11,8 @@ from relife.models import Gamma, Gompertz, LogLogistic, Weibull
 from relife.policies import (
     AgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,
-    OneCycleRunToFailure,
-    RunToFailure,
+    OneCycleRunToFailurePolicy,
+    DefaultRunToFailurePolicy,
 )
 
 
@@ -41,16 +41,19 @@ def fit_args(request):
 @pytest.fixture(
     scope="module",
     params=[
-        OneCycleRunToFailure,
+        OneCycleRunToFailurePolicy,
         OneCycleAgeReplacementPolicy,
-        RunToFailure,
+        DefaultRunToFailurePolicy,
         AgeReplacementPolicy,
     ],
 )
 def policy(request, baseline, fit_args):
     cf, cp, discounting_rate = fit_args
 
-    if request.param == OneCycleRunToFailure or request.param == RunToFailure:
+    if (
+        request.param == OneCycleRunToFailurePolicy
+        or request.param == DefaultRunToFailurePolicy
+    ):
         policy_obj = request.param(
             baseline, cf, discounting_rate=discounting_rate, nb_assets=5
         )
@@ -65,9 +68,9 @@ def policy(request, baseline, fit_args):
 @pytest.fixture(
     scope="module",
     params=[
-        OneCycleRunToFailure,
+        OneCycleRunToFailurePolicy,
         OneCycleAgeReplacementPolicy,
-        RunToFailure,
+        DefaultRunToFailurePolicy,
         AgeReplacementPolicy,
     ],
 )
@@ -77,7 +80,10 @@ def policy_vec(request, baseline, fit_args):
     cf = np.tile(cf, (batch_size, 1, 1))
     discounting_rate = np.tile(discounting_rate, (batch_size, 1, 1))
 
-    if request.param == OneCycleRunToFailure or request.param == RunToFailure:
+    if (
+        request.param == OneCycleRunToFailurePolicy
+        or request.param == DefaultRunToFailurePolicy
+    ):
         policy_obj = request.param(baseline, cf, discounting_rate, nb_assets=5)
     else:
         policy_obj = request.param(

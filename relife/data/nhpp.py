@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass, field
 from itertools import filterfalse
 from typing import Optional
@@ -95,27 +96,56 @@ class NHPPData(CountData):
     def mean_number_of_repairs(self):
         pass
 
-    def to_fit(self, sample: Optional[int] = None):
+    def to_fit(
+        self, t0: float = 0.0, tf: Optional[float] = None, sample: Optional[int] = None
+    ):
 
+        # step 1 : select and control
         s = self.samples_ids == sample if sample is not None else Ellipsis
+
+        max_event_time = np.max(self.timeline)
+        if tf is not None:
+            if max_event_time <= tf:
+                tf = None
+                warnings.warn(
+                    f"Selected window might be too large with tf {tf}. If you explicitly want to convert all date, leave tf as None (default Value)"
+                )
+        if t0 != 0:
+            if max_event_time <= t0:
+                raise ValueError(
+                    f"Invalid t0 {t0} where the maximum event time value is {max_event_time}"
+                )
 
         _assets_index = self.assets_ids[s]
         _samples_index = self.samples_ids[s]
         _ages = self.timeline[s]
-        _assets = _assets_index + _samples_index
+        _durations = self.durations[s]
+        _assets = (
+            _assets_index + _samples_index
+        )  # all i.i.d evaluated as multiple assets
 
+        # step 2 : sort
         sort = np.lexsort((_ages, _assets))
         _assets = _assets[sort]
         _ages = _ages[sort]
-        if self.nb_assets == self.nb_samples == 1:
-            a0_index = np.array([0])
-            af_index = np.array([len(_assets) - 1])
+        _durations = _durations[sort]
+
+        # step 3 : collect index
+        if t0 == 0.0 and tf is None:
+            if self.nb_assets == self.nb_samples == 1:
+                a0_index = np.array([0])
+                af_index = np.array([len(_assets) - 1])
+            else:
+                a0_index = np.where(np.roll(_assets, 1) != _assets)[0]
+                af_index = np.append(a0_index[1:] - 1, len(_assets) - 1)
         else:
-            a0_index = np.where(np.roll(_assets, 1) != _assets)[0]
-            af_index = np.append(a0_index[1:] - 1, len(_assets) - 1)
+            if tf is None:
+                tf = max_event_time
+            a0_index = np.where((_ages >= t0) == False)[0] + 1
 
         assert len(a0_index) == len(af_index)
 
+        # step 4 : convert and return
         a0 = _ages[a0_index]  # in order asset 0, 1, ... , n
         af = _ages[af_index]
         to_delete = np.concatenate((a0_index, af_index))
