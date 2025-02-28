@@ -432,21 +432,18 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.policies.age_replacement</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Union</span>
-
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Self</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">newton</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardData</span><span class="p">,</span> <span class="n">NHPPData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">lifetimes_rewards_generator</span><span class="p">,</span> <span class="n">nhpp_policy_generator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.nested_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgeReplacementModel</span><span class="p">,</span> <span class="n">LeftTruncatedModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.quadratures</span><span class="w"> </span><span class="kn">import</span> <span class="n">gauss_legendre</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.process.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">reward_partial_expectation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">TupleArrays</span><span class="p">,</span> <span class="n">Policy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">TupleArrays</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShapedArgs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_attributes</span>
@@ -456,7 +453,7 @@
     <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span><span class="p">,</span>
     <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..process</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonHomogeneousPoissonProcess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.process.nhpp</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonHomogeneousPoissonProcess</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">age_replacement_cost</span><span class="p">(</span>
@@ -470,7 +467,7 @@
 
 <div class="viewcode-block" id="OneCycleAgeReplacementPolicy">
 <a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OneCycleAgeReplacementPolicy</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OneCycleAgeReplacementPolicy</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One-cyle age replacement policy.</span>
 
 <span class="sd">    The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure</span>
@@ -490,7 +487,7 @@
 <span class="sd">         The length of the first period before discounting.</span>
 <span class="sd">    ar : np.ndarray, optional</span>
 <span class="sd">        Times until preventive replacements. This parameter can be optimized</span>
-<span class="sd">        with ``fit``</span>
+<span class="sd">        with ``optimize``</span>
 <span class="sd">    model_args : ModelArgs, optional</span>
 <span class="sd">        ModelArgs is a tuple of zero or more ndarray required by the underlying</span>
 <span class="sd">        lifetime core of the process.</span>
@@ -554,9 +551,8 @@
         <span class="k">return</span> <span class="n">reward_partial_expectation</span><span class="p">(</span>
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">age_replacement_cost</span><span class="p">,</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">age_replacement_cost</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
             <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -605,69 +601,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="OneCycleAgeReplacementPolicy.sample">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.sample">[docs]</a>
-    <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">maxsample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">1e5</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardData</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Samples lifetimes and rewards, given the age(s) of replacement.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">            nb_samples : int</span>
-<span class="sd">                The number of samples to be generated.</span>
-<span class="sd">            seed : int or None, optional</span>
-<span class="sd">                An optional seed for random number generation to ensure reproducibility. Defaults to None.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        RenewalRewardData</span>
-<span class="sd">            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.</span>
-
-<span class="sd">        .. note::</span>
-
-<span class="sd">            The sampling process stops after the first iteration as only one cycle of replacement is considered.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">generator</span> <span class="o">=</span> <span class="n">lifetimes_rewards_generator</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">age_replacement_cost</span><span class="p">,</span>
-            <span class="n">nb_samples</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-            <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
-            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
-            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">samples_ids</span><span class="p">,</span> <span class="n">assets_ids</span><span class="p">,</span> <span class="n">lifetimes</span><span class="p">,</span> <span class="n">event_times</span><span class="p">,</span> <span class="n">total_rewards</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-            <span class="n">generator</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">maxsample</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Max number of sample has been reach : 1e5. Modify maxsample or set different arguments&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">RenewalRewardData</span><span class="p">(</span>
-            <span class="n">samples_ids</span><span class="p">,</span>
-            <span class="n">assets_ids</span><span class="p">,</span>
-            <span class="n">event_times</span><span class="p">,</span>
-            <span class="n">lifetimes</span><span class="p">,</span>
-            <span class="n">events</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="kc">False</span><span class="p">,</span>
-            <span class="n">total_rewards</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="OneCycleAgeReplacementPolicy.fit">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.fit">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+<div class="viewcode-block" id="OneCycleAgeReplacementPolicy.optimize">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.optimize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -705,9 +641,9 @@
 
 
 
-<div class="viewcode-block" id="AgeReplacementPolicy">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">AgeReplacementPolicy</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+<div class="viewcode-block" id="DefaultAgeReplacementPolicy">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html#relife.policies.DefaultAgeReplacementPolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DefaultAgeReplacementPolicy</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Time based replacement policy.</span>
 
 <span class="sd">    Renewal reward process where assets are replaced at a fixed age :math:`a_r`</span>
@@ -729,10 +665,10 @@
 <span class="sd">        The cost of preventive replacements for each asset.</span>
 <span class="sd">    ar : np.ndarray, optional</span>
 <span class="sd">        Times until preventive replacements. This parameter can be optimized</span>
-<span class="sd">        with ``fit``</span>
+<span class="sd">        with ``optimize``</span>
 <span class="sd">    ar1 : np.ndarray, optional</span>
 <span class="sd">        Times until preventive replacements for the first cycle. This parameter can be optimized</span>
-<span class="sd">        with ``fit``</span>
+<span class="sd">        with ``optimize``</span>
 <span class="sd">    discounting_rate : float, default is 0.</span>
 <span class="sd">        The discounting rate.</span>
 <span class="sd">    model_args : ModelArgs, optional</span>
@@ -760,10 +696,10 @@
 <span class="sd">        The cost of preventive replacements for each asset.</span>
 <span class="sd">    ar : np.ndarray or None</span>
 <span class="sd">        Times until preventive replacements. This parameter can be optimized</span>
-<span class="sd">        with ``fit``</span>
+<span class="sd">        with ``optimize``</span>
 <span class="sd">    ar1 : np.ndarray or None</span>
 <span class="sd">        Times until preventive replacements for the first cycle. This parameter can be optimized</span>
-<span class="sd">        with ``fit``</span>
+<span class="sd">        with ``optimize``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="n">AgeReplacementModel</span>
@@ -830,26 +766,26 @@
         <span class="k">if</span> <span class="n">parametrized</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                <span class="n">age_replacement_cost</span><span class="p">,</span>
+                <span class="n">partial</span><span class="p">(</span><span class="n">age_replacement_cost</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
                 <span class="n">nb_assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
                 <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-                <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
                 <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
                 <span class="n">model1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span>
                 <span class="n">model1_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">,</span>
-                <span class="n">reward1</span><span class="o">=</span><span class="n">age_replacement_cost</span><span class="p">,</span>
-                <span class="n">reward1_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
+                <span class="n">reward1</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span>
+                    <span class="n">age_replacement_cost</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cp</span>
+                <span class="p">),</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="AgeReplacementPolicy.expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.expected_total_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultAgeReplacementPolicy.expected_total_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html#relife.policies.DefaultAgeReplacementPolicy.expected_total_cost">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">expected_total_reward</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AgeReplacementPolicy.expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.expected_equivalent_annual_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultAgeReplacementPolicy.expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html#relife.policies.DefaultAgeReplacementPolicy.expected_equivalent_annual_cost">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
@@ -857,23 +793,23 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AgeReplacementPolicy.asymptotic_expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.asymptotic_expected_total_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultAgeReplacementPolicy.asymptotic_expected_total_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html#relife.policies.DefaultAgeReplacementPolicy.asymptotic_expected_total_cost">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html#relife.policies.DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="AgeReplacementPolicy.fit">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.fit">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+<div class="viewcode-block" id="DefaultAgeReplacementPolicy.optimize">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html#relife.policies.DefaultAgeReplacementPolicy.optimize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -933,7 +869,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">,</span>
                 <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
                 <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
             <span class="n">ar1</span> <span class="o">=</span> <span class="n">onecycle</span><span class="o">.</span><span class="n">ar</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ar</span> <span class="o">=</span> <span class="n">ar</span>
@@ -942,51 +878,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">ar1</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model1</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">age_replacement_cost</span><span class="p">,</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">age_replacement_cost</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
             <span class="n">nb_assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
             <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
             <span class="n">model1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span>
             <span class="n">model1_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">,</span>
-            <span class="n">reward1</span><span class="o">=</span><span class="n">age_replacement_cost</span><span class="p">,</span>
-            <span class="n">reward1_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
+            <span class="n">reward1</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">age_replacement_cost</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
-
-
-<div class="viewcode-block" id="AgeReplacementPolicy.sample">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.sample">[docs]</a>
-    <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">end_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardData</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Samples lifetimes and rewards, given the age(s) of replacement.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">            nb_samples : int</span>
-<span class="sd">                The number of samples to be generated.</span>
-<span class="sd">            end_time : float</span>
-<span class="sd">                The temporal limit for the sampling operation.</span>
-<span class="sd">            seed : int or None, optional</span>
-<span class="sd">                An optional seed for random number generation to ensure reproducibility. Defaults to None.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        RenewalRewardData</span>
-<span class="sd">            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">nb_samples</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span></div>
 </div>
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">NHPPAgeReplacementPolicy</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NonHomogeneousPoissonAgeReplacementPolicy</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..</span>
 
@@ -1065,45 +970,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">pass</span>
 
-    <span class="nd">@require_attributes</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">,</span>
-        <span class="n">end_time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">maxsample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">1e5</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NHPPData</span><span class="p">:</span>
-        <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-        <span class="n">durations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-        <span class="n">repairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
-        <span class="n">samples_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
-        <span class="n">assets_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">_timeline</span><span class="p">,</span> <span class="n">_durations</span><span class="p">,</span> <span class="n">_repairs</span><span class="p">,</span> <span class="n">still_valid</span> <span class="ow">in</span> <span class="n">nhpp_policy_generator</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">,</span>
-            <span class="n">nb_samples</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
-            <span class="n">end_time</span><span class="p">,</span>
-            <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
-        <span class="p">):</span>
-            <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">timeline</span><span class="p">,</span> <span class="n">_timeline</span><span class="p">[</span><span class="n">still_valid</span><span class="p">]))</span>
-            <span class="n">durations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">durations</span><span class="p">,</span> <span class="n">_durations</span><span class="p">[</span><span class="n">still_valid</span><span class="p">]))</span>
-            <span class="n">repairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">repairs</span><span class="p">,</span> <span class="n">_repairs</span><span class="p">[</span><span class="n">still_valid</span><span class="p">]))</span>
-            <span class="n">_assets</span><span class="p">,</span> <span class="n">_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">still_valid</span><span class="p">)</span>
-            <span class="n">samples_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">samples_ids</span><span class="p">,</span> <span class="n">_samples</span><span class="p">))</span>
-            <span class="n">assets_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">assets_ids</span><span class="p">,</span> <span class="n">_assets</span><span class="p">))</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">maxsample</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Max number of sample has been reach : 1e5. Modify maxsample or set different arguments&quot;</span>
-                <span class="p">)</span>
-
-        <span class="c1"># note that ages == event_times</span>
-        <span class="k">return</span> <span class="n">NHPPData</span><span class="p">(</span><span class="n">samples_ids</span><span class="p">,</span> <span class="n">assets_ids</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">durations</span><span class="p">,</span> <span class="n">repairs</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 
@@ -1150,76 +1017,12 @@
         <span class="k">return</span> <span class="bp">self</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_AgeReplacementPolicy</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">TupleArrays</span><span class="p">]):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nature</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;AgeReplacementPolicy is already load&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;one_cycle&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;poisson&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">NHPPAgeReplacementPolicy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Uncorrect nature </span><span class="si">{</span><span class="n">nature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nature</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;AgeReplacementPolicy is already load&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;one_cycle&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;poisson&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">NHPPAgeReplacementPolicy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Uncorrect nature </span><span class="si">{</span><span class="n">nature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;AgeReplacementPolicy is already fitted&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-        <span class="n">class_name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No policy as been loaded&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s2">&quot;policy&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s2">&quot;policy&quot;</span><span class="p">)[</span><span class="n">item</span><span class="p">]</span>
-        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> has no attribute/method </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">replacement_policy</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">LifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">TupleArrays</span><span class="p">],</span>
-    <span class="n">process</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;RenewalProcess&quot;</span><span class="p">,</span>
-    <span class="n">args</span><span class="p">:</span> <span class="n">TupleArrays</span> <span class="o">=</span> <span class="p">(),</span>
-    <span class="n">costs</span><span class="p">:</span> <span class="n">TupleArrays</span> <span class="o">=</span> <span class="p">(),</span>
-    <span class="n">ar</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-    <span class="n">AgeReplacementPolicy</span><span class="p">,</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">,</span> <span class="n">NHPPAgeReplacementPolicy</span>
-<span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    PROBLEM</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">pass</span>
-
-
 <span class="n">WARNING</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
 
 <span class="s2">.. warning::</span>
 
 <span class="s2">    This method requires the ``ar`` attribute to be set either at initialization</span>
-<span class="s2">    or with the ``fit`` method.</span>
+<span class="s2">    or with the ``optimize`` method.</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
 <span class="n">OneCycleAgeReplacementPolicy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
@@ -1233,13 +1036,15 @@
     <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
 <span class="p">)</span>
 
-<span class="n">AgeReplacementPolicy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
-<span class="n">AgeReplacementPolicy</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
-<span class="n">AgeReplacementPolicy</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+<span class="n">DefaultAgeReplacementPolicy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
+<span class="n">DefaultAgeReplacementPolicy</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">EEAC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
+<span class="p">)</span>
+<span class="n">DefaultAgeReplacementPolicy</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
 <span class="p">)</span>
 
-<span class="n">AgeReplacementPolicy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+<span class="n">DefaultAgeReplacementPolicy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span> <span class="o">+</span> <span class="n">WARNING</span>
 <span class="p">)</span>
 </pre></div>
@@ -1286,7 +1091,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
     <br/>
   </p>
 </div>

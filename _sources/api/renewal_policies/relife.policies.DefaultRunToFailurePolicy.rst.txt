@@ -1,0 +1,33 @@
+﻿
+
+
+DefaultRunToFailurePolicy
+=========================
+
+.. currentmodule:: relife.policies
+
+.. autoclass:: DefaultRunToFailurePolicy
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
+
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost
+        
+        
+            ~DefaultRunToFailurePolicy.asymptotic_expected_total_cost
+        
+        
+            ~DefaultRunToFailurePolicy.expected_equivalent_annual_cost
+        
+        
+            ~DefaultRunToFailurePolicy.expected_total_cost
+        

@@ -1,0 +1,36 @@
+﻿
+
+
+DefaultAgeReplacementPolicy
+===========================
+
+.. currentmodule:: relife.policies
+
+.. autoclass:: DefaultAgeReplacementPolicy
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__, compose_with, new_params, init_params
+
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
+        
+        
+            ~DefaultAgeReplacementPolicy.asymptotic_expected_total_cost
+        
+        
+            ~DefaultAgeReplacementPolicy.expected_equivalent_annual_cost
+        
+        
+            ~DefaultAgeReplacementPolicy.expected_total_cost
+        
+        
+            ~DefaultAgeReplacementPolicy.optimize
+        

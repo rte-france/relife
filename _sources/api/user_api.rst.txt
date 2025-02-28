@@ -65,6 +65,6 @@ data.
     :nosignatures:
 
     policies.OneCycleAgeReplacementPolicy
-    policies.OneCycleRunToFailure
-    policies.RunToFailure
-    policies.AgeReplacementPolicy
+    policies.OneCycleRunToFailurePolicy
+    policies.DefaultRunToFailurePolicy
+    policies.DefaultAgeReplacementPolicy

@@ -432,15 +432,14 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.policies.run_to_failure</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShapedArgs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.discounting</span><span class="w"> </span><span class="kn">import</span> <span class="n">exponential_discounting</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">lifetimes_rewards_generator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.nested_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.core.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.docstrings</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -450,7 +449,7 @@
     <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.process.renewal</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">reward_partial_expectation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">TupleArrays</span><span class="p">,</span> <span class="n">Policy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">TupleArrays</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">run_to_failure_cost</span><span class="p">(</span>
@@ -459,9 +458,9 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">lifetimes</span><span class="p">)</span> <span class="o">*</span> <span class="n">cf</span>
 
 
-<div class="viewcode-block" id="OneCycleRunToFailure">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OneCycleRunToFailure</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+<div class="viewcode-block" id="OneCycleRunToFailurePolicy">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OneCycleRunToFailurePolicy</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One cyle run-to-failure policy</span>
 
 <span class="sd">    A policy for running assets to failure within one cycle.</span>
@@ -515,27 +514,26 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span> <span class="o">=</span> <span class="n">period_before_discounting</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span> <span class="o">=</span> <span class="n">model_args</span>
 
-<div class="viewcode-block" id="OneCycleRunToFailure.expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.expected_total_cost">[docs]</a>
+<div class="viewcode-block" id="OneCycleRunToFailurePolicy.expected_total_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">reward_partial_expectation</span><span class="p">(</span>
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">run_to_failure_cost</span><span class="p">,</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">run_to_failure_cost</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">),</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
             <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="OneCycleRunToFailure.asymptotic_expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.asymptotic_expected_total_cost">[docs]</a>
+<div class="viewcode-block" id="OneCycleRunToFailurePolicy.asymptotic_expected_total_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="OneCycleRunToFailure.expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.expected_equivalent_annual_cost">[docs]</a>
+<div class="viewcode-block" id="OneCycleRunToFailurePolicy.expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -561,77 +559,19 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.asymptotic_expected_equivalent_annual_cost">[docs]</a>
+<div class="viewcode-block" id="OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span></div>
-
-
-<div class="viewcode-block" id="OneCycleRunToFailure.sample">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">maxsample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">1e5</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardData</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Samples lifetimes and rewards.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">            nb_samples : int</span>
-<span class="sd">                The number of samples to be generated.</span>
-<span class="sd">            seed : int or None, optional</span>
-<span class="sd">                An optional seed for random number generation to ensure reproducibility. Defaults to None.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        RenewalRewardData</span>
-<span class="sd">            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.</span>
-
-<span class="sd">        .. note::</span>
-
-<span class="sd">            The sampling process stops after the first iteration as only one cycle of replacement is considered.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">generator</span> <span class="o">=</span> <span class="n">lifetimes_rewards_generator</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">run_to_failure_cost</span><span class="p">,</span>
-            <span class="n">nb_samples</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-            <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
-            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
-            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">samples_ids</span><span class="p">,</span> <span class="n">assets_ids</span><span class="p">,</span> <span class="n">lifetimes</span><span class="p">,</span> <span class="n">event_times</span><span class="p">,</span> <span class="n">total_rewards</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-            <span class="n">generator</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">maxsample</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Max number of sample has been reach : 1e5. Modify maxsample or set different arguments&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">RenewalRewardData</span><span class="p">(</span>
-            <span class="n">samples_ids</span><span class="p">,</span>
-            <span class="n">assets_ids</span><span class="p">,</span>
-            <span class="n">event_times</span><span class="p">,</span>
-            <span class="n">lifetimes</span><span class="p">,</span>
-            <span class="n">events</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="kc">False</span><span class="p">,</span>
-            <span class="n">total_rewards</span><span class="p">,</span>
-        <span class="p">)</span></div>
 </div>
 
 
 
-<div class="viewcode-block" id="RunToFailure">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RunToFailure</span><span class="p">(</span><span class="n">Policy</span><span class="p">):</span>
+<div class="viewcode-block" id="DefaultRunToFailurePolicy">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultRunToFailurePolicy.html#relife.policies.DefaultRunToFailurePolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DefaultRunToFailurePolicy</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run-to-failure renewal policy.</span>
 
 <span class="sd">    Renewal reward process where assets are replaced on failure with costs</span>
@@ -709,109 +649,58 @@
         <span class="c1"># note the rewards are the same for the first cycle and the rest of the process</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">run_to_failure_cost</span><span class="p">,</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">run_to_failure_cost</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">),</span>
             <span class="n">nb_assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="n">model_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">reward_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
             <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
             <span class="n">model1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span>
             <span class="n">model1_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model1_args</span><span class="p">,</span>
-            <span class="n">reward1</span><span class="o">=</span><span class="n">run_to_failure_cost</span><span class="p">,</span>
-            <span class="n">reward1_args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,),</span>
+            <span class="n">reward1</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">run_to_failure_cost</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">),</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="RunToFailure.expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.expected_total_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultRunToFailurePolicy.expected_total_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultRunToFailurePolicy.html#relife.policies.DefaultRunToFailurePolicy.expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">expected_total_reward</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RunToFailure.asymptotic_expected_total_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.asymptotic_expected_total_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultRunToFailurePolicy.asymptotic_expected_total_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultRunToFailurePolicy.html#relife.policies.DefaultRunToFailurePolicy.asymptotic_expected_total_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="RunToFailure.expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.expected_equivalent_annual_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultRunToFailurePolicy.expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultRunToFailurePolicy.html#relife.policies.DefaultRunToFailurePolicy.expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RunToFailure.asymptotic_expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.asymptotic_expected_equivalent_annual_cost">[docs]</a>
+<div class="viewcode-block" id="DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.DefaultRunToFailurePolicy.html#relife.policies.DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span></div>
-
-
-<div class="viewcode-block" id="RunToFailure.sample">
-<a class="viewcode-back" href="../../../api/renewal_policies/relife.policies.RunToFailure.html#relife.policies.RunToFailure.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">end_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardData</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Samples lifetimes and rewards.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">            nb_samples : int</span>
-<span class="sd">                The number of samples to be generated.</span>
-<span class="sd">            end_time : float</span>
-<span class="sd">                The temporal limit for the sampling operation.</span>
-<span class="sd">            seed : int or None, optional</span>
-<span class="sd">                An optional seed for random number generation to ensure reproducibility. Defaults to None.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        RenewalRewardData</span>
-<span class="sd">            The resulting :py:class:`~relife.data.counting.CountData` object which encapsulates the sampled data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">nb_samples</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span></div>
 </div>
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_RunToFailurePolicy</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">TupleArrays</span><span class="p">]):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nature</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;AgeReplacementPolicy is already load&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">RunToFailure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;one_cycle&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">OneCycleRunToFailure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Uncorrect nature </span><span class="si">{</span><span class="n">nature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-        <span class="n">class_name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No policy as been loaded&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s2">&quot;policy&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s2">&quot;policy&quot;</span><span class="p">)[</span><span class="n">item</span><span class="p">]</span>
-        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> has no attribute/method </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-
-<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
-<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
-<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
-<span class="n">OneCycleRunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
+<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
+<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
+<span class="p">)</span>
+<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span>
 <span class="p">)</span>
 
-<span class="n">RunToFailure</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
-<span class="n">RunToFailure</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
-<span class="n">RunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
-<span class="n">RunToFailure</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+<span class="n">DefaultRunToFailurePolicy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
+<span class="n">DefaultRunToFailurePolicy</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
+<span class="n">DefaultRunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
+<span class="p">)</span>
+<span class="n">DefaultRunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span>
 <span class="p">)</span>
 </pre></div>
@@ -858,7 +747,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
     <br/>
   </p>
 </div>

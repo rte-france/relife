@@ -32,8 +32,5 @@ OneCycleAgeReplacementPolicy
             ~OneCycleAgeReplacementPolicy.expected_total_cost
         
         
-            ~OneCycleAgeReplacementPolicy.fit
-        
-        
-            ~OneCycleAgeReplacementPolicy.sample
+            ~OneCycleAgeReplacementPolicy.optimize
         
