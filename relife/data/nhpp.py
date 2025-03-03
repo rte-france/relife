@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from .counting import CountData, CountDataIterable
+from .counting import CountData
 
 
 def nhpp_lifetime_data_factory(
@@ -75,18 +75,6 @@ def nhpp_lifetime_data_factory(
 class NHPPData(CountData):
     durations: NDArray[np.float64] = field(repr=False)  # durations between repairs
     repairs: NDArray[np.int64] = field(repr=False)  # nb of repairs
-
-    def iter(self, sample_id: Optional[int] = None):
-        # note that event_times == ages
-        if sample_id is None:
-            return CountDataIterable(self, ("timeline", "durations", "repairs"))
-        else:
-            if sample_id not in self.samples_unique_ids:
-                raise ValueError(f"{sample_id} is not part of samples index")
-            return filterfalse(
-                lambda x: x[0] != sample_id,
-                CountDataIterable(self, ("timeline", "durations", "repairs")),
-            )
 
     # durations in post_init ?
 

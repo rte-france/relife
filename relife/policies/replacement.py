@@ -1,25 +1,62 @@
+from typing import Optional
+
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.core import LifetimeModel
-from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
-from .age_replacement import (
-    DefaultAgeReplacementPolicy,
-    NonHomogeneousPoissonAgeReplacementPolicy,
-    OneCycleAgeReplacementPolicy,
-)
-from relife.types import TupleArrays
+from relife.core.descriptors import NbAssets, ShapedArgs
+from relife.data import CountData
+from relife.types import Arg
 
 
-class RunToFailurePolicy:
-    def __init__(
+class ReplacementPolicy:
+    model: LifetimeModel[*tuple[Arg, ...]]
+    model1 = Optional[LifetimeModel[*tuple[Arg, ...]]]
+    model_args = ShapedArgs(astuple=True)
+    model1_args = ShapedArgs(astuple=True)
+    nb_assets = NbAssets()
+
+    def sample(
         self,
-        model: LifetimeModel[*TupleArrays],
-        costs: dict[NDArray[np.float64]],
-        nature: str = "default",
-        **kwargs,
-    ):
-        if nature == "default":
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from relife.sampling import sample_count_data
+
+        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+
+    def sample_lifetime_data(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        seed: Optional[int] = None,
+        use: str = "model",
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sampling import sample_lifetime_data
+
+        return sample_lifetime_data(self, size, tf, t0, seed, use)
+
+
+def replacement_policy(
+    model: LifetimeModel[*tuple[Arg, ...]],
+    costs: dict[NDArray[np.float64]],
+    one_cycle: bool = False,
+    run_to_failure: bool = False,
+    **kwargs,
+) -> ReplacementPolicy:
+
+    from .age_replacement import (
+        OneCycleAgeReplacementPolicy,
+        DefaultAgeReplacementPolicy,
+    )
+    from .run_to_failure import OneCycleRunToFailurePolicy, DefaultRunToFailurePolicy
+
+    if run_to_failure:
+        if not one_cycle:
             try:
                 cf = costs["cf"]
             except KeyError:
@@ -30,7 +67,7 @@ class RunToFailurePolicy:
             a0 = kwargs.get("a0", None)
             model1 = kwargs.get("model1", None)
             model1_args = kwargs.get("model1_args", None)
-            self.policy = DefaultRunToFailurePolicy(
+            return DefaultRunToFailurePolicy(
                 model,
                 cf,
                 discounting_rate=discounting_rate,
@@ -40,7 +77,7 @@ class RunToFailurePolicy:
                 model1=model1,
                 model1_args=model1_args,
             )
-        elif nature == "one_cycle":
+        else:
             try:
                 cf = costs["cf"]
             except KeyError:
@@ -49,7 +86,7 @@ class RunToFailurePolicy:
             model_args = kwargs.get("model_args", ())
             nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
-            self.policy = OneCycleRunToFailurePolicy(
+            return OneCycleRunToFailurePolicy(
                 model,
                 cf,
                 discounting_rate=discounting_rate,
@@ -57,21 +94,8 @@ class RunToFailurePolicy:
                 nb_assets=nb_assets,
                 a0=a0,
             )
-        else:
-            raise ValueError(
-                f"Uncorrect nature {nature}, valid are : default, one_cycle or poisson"
-            )
-
-
-class AgeReplacementPolicy:
-    def __init__(
-        self,
-        model: LifetimeModel[*TupleArrays],
-        costs: dict[NDArray[np.float64]],
-        nature: str = "default",
-        **kwargs,
-    ):
-        if nature == "default":
+    else:
+        if not one_cycle:
             try:
                 cf, cp = (
                     costs["cf"],
@@ -87,7 +111,7 @@ class AgeReplacementPolicy:
             a0 = kwargs.get("a0", None)
             model1 = kwargs.get("model1", None)
             model1_args = kwargs.get("model1_args", None)
-            self.policy = DefaultAgeReplacementPolicy(
+            return DefaultAgeReplacementPolicy(
                 model,
                 cf,
                 cp,
@@ -100,7 +124,7 @@ class AgeReplacementPolicy:
                 model1=model1,
                 model1_args=model1_args,
             )
-        elif nature == "one_cycle":
+        else:
             try:
                 cf, cp = (
                     costs["cf"],
@@ -113,7 +137,7 @@ class AgeReplacementPolicy:
             model_args = kwargs.get("model_args", ())
             nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
-            self.policy = OneCycleAgeReplacementPolicy(
+            return OneCycleAgeReplacementPolicy(
                 model,
                 cf,
                 cp,
@@ -123,57 +147,33 @@ class AgeReplacementPolicy:
                 nb_assets=nb_assets,
                 a0=a0,
             )
-        elif nature == "poisson":
-            try:
-                cf, cr = (
-                    costs["cf"],
-                    costs["cr"],
-                )
-            except KeyError:
-                raise ValueError("Costs must contain cf and cr")
-            discounting_rate = kwargs.get("discounting_rate", 0.0)
-            ar = kwargs.get("ar", None)
-            model_args = kwargs.get("model_args", ())
-            nb_assets = kwargs.get("nb_assets", 1)
-            self.policy = NonHomogeneousPoissonAgeReplacementPolicy(
-                model,
-                cf,
-                cr,
-                discounting_rate=discounting_rate,
-                ar=ar,
-                model_args=model_args,
-                nb_assets=nb_assets,
-            )
-        else:
-            raise ValueError(
-                f"Uncorrect nature {nature}, valid are : default, one_cycle or poisson"
-            )
-
-    def __getattr__(self, item):
-        class_name = type(self).__name__
-        if self.policy is None:
-            raise ValueError("No policy as been loaded")
-        if item in super().__getattribute__("policy"):
-            return super().__getattribute__("policy")[item]
-        raise AttributeError(f"{class_name} has no attribute/method {item}")
 
 
-def policy(
-    model: LifetimeModel[*TupleArrays],
+def unperfect_repair_policy(
+    model: LifetimeModel[*tuple[Arg, ...]],
     costs: dict[NDArray[np.float64]],
-    age_replacement: bool = True,
-    nature: str = "default",
     **kwargs,
 ):
-    if age_replacement:
-        if nature not in ("default", "one_cycle", "poisson"):
-            raise ValueError(
-                "Invalid age replacement policy nature. Valid values are : default, one_cycle or poisson"
-            )
-        return AgeReplacementPolicy(model, costs, nature=nature, **kwargs)
-    else:
-        if nature not in ("default", "one_cycle"):
-            raise ValueError(
-                "Invalid run to failure policy nature. Valid values are : default, one_cycle or poisson"
-            )
-        return RunToFailurePolicy(model, costs, nature=nature, **kwargs)
+
+    from .age_replacement import NonHomogeneousPoissonAgeReplacementPolicy
+
+    try:
+        cf, cr = (
+            costs["cf"],
+            costs["cr"],
+        )
+    except KeyError:
+        raise ValueError("Costs must contain cf and cr")
+    discounting_rate = kwargs.get("discounting_rate", 0.0)
+    ar = kwargs.get("ar", None)
+    model_args = kwargs.get("model_args", ())
+    nb_assets = kwargs.get("nb_assets", 1)
+    return NonHomogeneousPoissonAgeReplacementPolicy(
+        model,
+        cf,
+        cr,
+        discounting_rate=discounting_rate,
+        ar=ar,
+        model_args=model_args,
+        nb_assets=nb_assets,
+    )

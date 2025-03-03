@@ -23,12 +23,16 @@ from typing import Optional
 import numpy as np
 from collections.abc import Iterator
 
+
 from relife.models import Exponential
+from relife.types import Arg
 
 
-def get_nb_assets(*args) -> int:
+def get_nb_assets(args_tuple: tuple[Arg, ...]) -> int:
     def as_2d():
-        for x in args:
+        for x in args_tuple:
+            if not isinstance(x, np.ndarray):
+                x = np.asarray(x)
             if len(x.shape) > 2:
                 raise ValueError
             yield np.atleast_2d(x)
@@ -38,7 +42,7 @@ def get_nb_assets(*args) -> int:
 
 class LifetimeIterator(Iterator):
     """
-    returns time, event, entry in 2D  - shape : (nb_assets, nb_samples)
+    returns time, event_indicators, entries in 2D  - shape : (nb_assets, nb_samples)
     censoring and truncations only based on t0 and tf values
 
     selection is done in iterable
@@ -60,18 +64,22 @@ class LifetimeIterator(Iterator):
         self.t0 = t0
         self.seed = seed
 
+        # hidden attributes, control set/get interface
         self._model = None
         self._model_args = None
+        self._model_type = None
         self._nb_assets = None
         self._timeline = None
-        self._model_type = None
+        self._start = None
         self._stop = None
 
     def set_model(self, model, model_args):
         if self._model is None:
             self._nb_assets = get_nb_assets(model_args)
             self._timeline = np.zeros((self._nb_assets, self.size))
-            self._stop = np.all(self._timeline >= self.tf)
+            # counting arrays to catch values crossing t0 and tf bounds
+            self._stop = np.zeros((self._nb_assets, self.size), dtype=np.int64)
+            self._start = np.zeros((self._nb_assets, self.size), dtype=np.int64)
         else:
             nb_assets = get_nb_assets(model_args)
             if nb_assets != self._nb_assets:
@@ -88,52 +96,58 @@ class LifetimeIterator(Iterator):
 
     @property
     def stop(self):
-        return self._stop
+        """stop condition is based on a counter to keep track of last elements before tf (censoring)"""
+        return np.all(self._stop > 0)
 
     @property
     def nb_samples(self):
         return self.size
 
     def _sample_routine(self):
-        lifetimes = self._model.rvs(
+        durations = self._model.rvs(
             *self._model_args,
             size=self.nb_samples,
             seed=self.seed,
         ).reshape((self._nb_assets, self.nb_samples))
 
-        right_censored = self.timeline - self.tf >= 0
-        left_truncated = self.timeline - lifetimes <= self.t0
+        # update timeline
+        self._timeline += durations
 
-        self._timeline += lifetimes
+        # count values that have just crossed t0 or tf
+        self._start[self._timeline > self.t0] += 1
+        self._stop[self.timeline > self.tf] += 1
 
-        # censor lifetime values
-        events = np.ones_like(self.timeline, dtype=np.bool_)
-        lifetimes = np.where(right_censored, self._timeline - self.tf, lifetimes)
+        left_truncated = self._start == 1
+        right_censored = self._stop == 1
+
+        # censor values
+        event_indicators = np.ones_like(self.timeline, dtype=np.bool_)
+        durations = np.where(
+            right_censored, durations - (self._timeline - self.tf), durations
+        )
         self._timeline = np.where(right_censored, self.tf, self.timeline)
+        event_indicators[right_censored] = False
 
-        # generate left truncations
+        # get left truncations
         entries = np.zeros_like(self.timeline)
         entries = np.where(
-            left_truncated, self.t0 - (self.timeline - lifetimes), entries
+            left_truncated, self.t0 - (self.timeline - durations), entries
         )
 
         # update seed to avoid having the same rvs result
         if self.seed is not None:
             self.seed += 1
 
-        # update stop condition
-        self._stop = np.all(self._timeline >= self.tf)
-
         return (
-            lifetimes,
-            events,
+            durations,
+            event_indicators,
             entries,
         )
 
     def __next__(self):
         if self._model is None:
             raise ValueError("Set model first")
-        while not self.stop:
+        while not self.stop:  # recompute stop condition automatically
             return self._sample_routine()
         raise StopIteration
 

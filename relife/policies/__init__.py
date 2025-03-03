@@ -1,4 +1,4 @@
 from .age_replacement import DefaultAgeReplacementPolicy, OneCycleAgeReplacementPolicy
 from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
 from .age_replacement import NonHomogeneousPoissonAgeReplacementPolicy
-from .interface import policy, RunToFailurePolicy, AgeReplacementPolicy
+from .replacement import replacement_policy, unperfect_repair_policy

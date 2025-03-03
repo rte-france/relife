@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Optional
 
 import numpy as np
@@ -15,16 +14,12 @@ from .docstrings import (
     ASYMPTOTIC_EEAC_DOCSTRING,
 )
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.types import TupleArrays
+from relife.types import Arg
+from relife.costs import run_to_failure_cost
+from .replacement import ReplacementPolicy
 
 
-def run_to_failure_cost(
-    lifetimes: NDArray[np.float64], cf: NDArray[np.float64]
-) -> NDArray[np.float64]:
-    return np.ones_like(lifetimes) * cf
-
-
-class OneCycleRunToFailurePolicy:
+class OneCycleRunToFailurePolicy(ReplacementPolicy):
     r"""One cyle run-to-failure policy
 
     A policy for running assets to failure within one cycle.
@@ -50,19 +45,17 @@ class OneCycleRunToFailurePolicy:
     """
 
     model1 = None
-
     cf = ShapedArgs()
     a0 = ShapedArgs()
-    model_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: LifetimeModel[*TupleArrays],
+        model: LifetimeModel[*tuple[Arg, ...]],
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
-        model_args: TupleArrays = (),
+        model_args: tuple[Arg, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
@@ -82,7 +75,7 @@ class OneCycleRunToFailurePolicy:
         return reward_partial_expectation(
             timeline,
             self.model,
-            partial(run_to_failure_cost, cf=self.cf),
+            run_to_failure_cost(self.cf),
             model_args=self.model_args,
             discounting_rate=self.discounting_rate,
         )
@@ -95,7 +88,7 @@ class OneCycleRunToFailurePolicy:
     ) -> NDArray[np.float64]:
 
         f = (
-            lambda x: run_to_failure_cost(x, self.cf)
+            lambda x: run_to_failure_cost(self.cf)(x)
             * exponential_discounting.factor(x, self.discounting_rate)
             / exponential_discounting.annuity_factor(x, self.discounting_rate)
         )
@@ -120,7 +113,7 @@ class OneCycleRunToFailurePolicy:
         return self.expected_equivalent_annual_cost(np.array(np.inf))
 
 
-class DefaultRunToFailurePolicy:
+class DefaultRunToFailurePolicy(ReplacementPolicy):
     r"""Run-to-failure renewal policy.
 
     Renewal reward process where assets are replaced on failure with costs
@@ -160,20 +153,18 @@ class DefaultRunToFailurePolicy:
 
     cf = ShapedArgs()
     a0 = ShapedArgs()
-    model_args = ShapedArgs(astuple=True)
-    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: LifetimeModel[*TupleArrays],
+        model: LifetimeModel[*tuple[Arg, ...]],
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
-        model_args: TupleArrays = (),
+        model_args: tuple[Arg, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[*TupleArrays]] = None,
-        model1_args: TupleArrays = (),
+        model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
+        model1_args: tuple[Arg, ...] = (),
     ) -> None:
 
         self.nb_assets = nb_assets
@@ -198,13 +189,13 @@ class DefaultRunToFailurePolicy:
         # note the rewards are the same for the first cycle and the rest of the process
         self.process = RenewalRewardProcess(
             self.model,
-            partial(run_to_failure_cost, cf=self.cf),
+            run_to_failure_cost(self.cf),
             nb_assets=self.nb_assets,
             model_args=self.model_args,
             discounting_rate=self.discounting_rate,
             model1=self.model1,
             model1_args=self.model1_args,
-            reward1=partial(run_to_failure_cost, cf=self.cf),
+            reward1=run_to_failure_cost(self.cf),
         )
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
-from relife.types import TupleArrays
+from relife.types import Arg
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.core.model import LifetimeModel, NonParametricModel
@@ -59,9 +59,9 @@ def plot(
 
 def param_probfunc_plot(
     fname: str,
-    model: LifetimeModel[*TupleArrays],
+    model: LifetimeModel[*tuple[Arg, ...]],
     timeline: NDArray[np.float64] = None,
-    model_args: TupleArrays = (),
+    model_args: tuple[Arg, ...] = (),
     asset: Optional[ArrayLike] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -237,5 +237,5 @@ class PlotSurvivalFunc:
     hf = PlotDescriptor()
     pdf = PlotDescriptor()
 
-    def __init__(self, model: LifetimeModel[*TupleArrays] | NonParametricModel):
+    def __init__(self, model: LifetimeModel[*tuple[Arg, ...]] | NonParametricModel):
         self.model = model

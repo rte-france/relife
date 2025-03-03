@@ -15,25 +15,25 @@ from relife.policies import (
     OneCycleAgeReplacementPolicy,
     DefaultAgeReplacementPolicy,
 )
-from relife.policies.age_replacement import age_replacement_cost
-from relife.policies.run_to_failure import run_to_failure_cost
+from relife.costs import age_replacement_cost, run_to_failure_cost
 
 
 @singledispatch
-def sample(obj, _size, _tf, _seed):
+def sample_count_data(obj, size, tf, t0, maxsample, seed):
     # '_param' just for IDE warning of unused param
     raise ValueError(f"No sample for {type(obj)}")
 
 
-@sample.register
+@sample_count_data.register
 def _(
     obj: RenewalProcess,
-    size,
-    tf,
-    seed,
+    size: int,
+    tf: float,
+    t0: float = 0.0,
     maxsample: int = 1e5,
+    seed: Optional[int] = None,
 ):
-    lifetimes = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
     timeline = np.array([], dtype=np.float64)
     samples_ids = np.array([], dtype=np.int64)
     assets_ids = np.array([], dtype=np.int64)
@@ -42,17 +42,19 @@ def _(
         size,
         tf,
         obj.model,
+        t0=t0,
         model_args=obj.model_args,
         model1=obj.model1,
         model1_args=obj.model1_args,
         seed=seed,
+        keep_last=False,
     )
 
     for data in iterable:
         samples_ids = np.concatenate((timeline, data["samples_ids"]))
         assets_ids = np.concatenate((timeline, data["assets_ids "]))
         timeline = np.concatenate((timeline, data["timeline"]))
-        lifetimes = np.concatenate((timeline, data["time"]))
+        durations = np.concatenate((timeline, data["durations"]))
 
         if len(samples_ids) > maxsample:
             raise ValueError(
@@ -60,23 +62,26 @@ def _(
             )
 
     return RenewalData(
+        t0,
+        tf,
         samples_ids,
         assets_ids,
         timeline,
-        lifetimes,
+        durations,
     )
 
 
-@sample.register
+@sample_count_data.register
 def _(
     obj: RenewalRewardProcess,
-    size,
-    tf,
-    seed,
+    size: int,
+    tf: float,
+    t0: float = 0.0,
     maxsample: int = 1e5,
+    seed: Optional[int] = None,
 ):
-    lifetimes = np.array([], dtype=np.float64)
-    event_times = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    timeline = np.array([], dtype=np.float64)
     rewards = np.array([], dtype=np.float64)
     events = np.array([], dtype=np.bool_)
     samples_ids = np.array([], dtype=np.int64)
@@ -88,17 +93,19 @@ def _(
         obj.model,
         obj.reward,
         partial(exponential_discounting.factor, rate=obj.discounting_rate),
+        t0=t0,
         model_args=obj.model_args,
         model1=obj.model1,
         model1_args=obj.model1_args,
         seed=seed,
+        keep_last=False,
     )
 
     for data in iterable:
-        lifetimes = np.concatenate((lifetimes, data["time"]))
-        event_times = np.concatenate((event_times, data["timeline"]))
+        durations = np.concatenate((durations, data["durations"]))
+        timeline = np.concatenate((timeline, data["timeline"]))
         rewards = np.concatenate((rewards, data["rewards"]))
-        events = np.concatenate((events, data["event"]))
+        events = np.concatenate((events, data["event_indicators"]))
         samples_ids = np.concatenate((samples_ids, data["sample_ids"]))
         assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
 
@@ -108,24 +115,27 @@ def _(
             )
 
     return RenewalRewardData(
+        t0,
+        tf,
         samples_ids,
         assets_ids,
-        event_times,
-        lifetimes,
+        timeline,
+        durations,
         rewards,
     )
 
 
-@sample.register
+@sample_count_data.register
 def _(
     obj: OneCycleRunToFailurePolicy,
-    size,
-    tf,
-    seed,
+    size: int,
+    tf: float,
+    t0: float = 0.0,
     maxsample: int = 1e5,
+    seed: Optional[int] = None,
 ):
-    lifetimes = np.array([], dtype=np.float64)
-    event_times = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    timeline = np.array([], dtype=np.float64)
     rewards = np.array([], dtype=np.float64)
     samples_ids = np.array([], dtype=np.int64)
     assets_ids = np.array([], dtype=np.int64)
@@ -134,17 +144,19 @@ def _(
         size,
         tf,
         obj.model,
-        partial(run_to_failure_cost, cf=obj.cf),
+        run_to_failure_cost(cf=obj.cf),
         partial(exponential_discounting.factor, rate=obj.discounting_rate),
+        t0=t0,
         model_args=obj.model_args,
         seed=seed,
+        keep_last=False,
     )
 
     for data in iterable:
-        lifetimes = np.concatenate((lifetimes, data["time"]))
-        event_times = np.concatenate((event_times, data["timeline"]))
+        durations = np.concatenate((durations, data["durations"]))
+        timeline = np.concatenate((timeline, data["timeline"]))
         rewards = np.concatenate((rewards, data["rewards"]))
-        samples_ids = np.concatenate((samples_ids, data["sample_ids"]))
+        samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
         assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
 
         if len(samples_ids) > maxsample:
@@ -156,24 +168,27 @@ def _(
         break
 
     return RenewalRewardData(
+        t0,
+        tf,
         samples_ids,
         assets_ids,
-        event_times,
-        lifetimes,
+        timeline,
+        durations,
         rewards,
     )
 
 
-@sample.register
+@sample_count_data.register
 def _(
     obj: DefaultRunToFailurePolicy,
-    size,
-    tf,
-    seed,
+    size: int,
+    tf: float,
+    t0: float = 0.0,
     maxsample: int = 1e5,
+    seed: Optional[int] = None,
 ):
-    lifetimes = np.array([], dtype=np.float64)
-    event_times = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    timeline = np.array([], dtype=np.float64)
     rewards = np.array([], dtype=np.float64)
     samples_ids = np.array([], dtype=np.int64)
     assets_ids = np.array([], dtype=np.int64)
@@ -182,19 +197,21 @@ def _(
         size,
         tf,
         obj.model,
-        partial(run_to_failure_cost, cf=obj.cf),
+        run_to_failure_cost(cf=obj.cf),
         partial(exponential_discounting.factor, rate=obj.discounting_rate),
+        t0=t0,
         model_args=obj.model_args,
         model1=obj.model1,
         model1_args=obj.model1_args,
         seed=seed,
+        keep_last=False,
     )
 
     for data in iterable:
-        lifetimes = np.concatenate((lifetimes, data["time"]))
-        event_times = np.concatenate((event_times, data["timeline"]))
+        durations = np.concatenate((durations, data["durations"]))
+        timeline = np.concatenate((timeline, data["timeline"]))
         rewards = np.concatenate((rewards, data["rewards"]))
-        samples_ids = np.concatenate((samples_ids, data["sample_ids"]))
+        samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
         assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
 
         if len(samples_ids) > maxsample:
@@ -203,21 +220,24 @@ def _(
             )
 
     return RenewalRewardData(
+        t0,
+        tf,
         samples_ids,
         assets_ids,
-        event_times,
-        lifetimes,
+        timeline,
+        durations,
         rewards,
     )
 
 
-@sample.register
+@sample_count_data.register
 def _(
     obj: NonHomogeneousPoissonProcess,
-    size,
-    tf,
-    seed,
+    size: int,
+    tf: float,
+    t0: float = 0.0,
     maxsample: int = 1e5,
+    seed: Optional[int] = None,
 ):
     ages = np.array([], dtype=np.float64)
     durations = np.array([], dtype=np.float64)
@@ -239,7 +259,7 @@ def _(
         ages = np.concatenate((ages, data["ages"]))
         durations = np.concatenate((durations, data["durations"]))
         rewards = np.concatenate((rewards, data["rewards"]))
-        samples_ids = np.concatenate((samples_ids, data["sample_ids"]))
+        samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
         assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
 
         if len(samples_ids) > maxsample:
@@ -260,17 +280,16 @@ def get_model_model1(model, model1, model_args, model1_args, use: str):
             raise ValueError(
                 "Can't collect lifetime data from model and model1 because they have not the same type. Set use to 'model' or 'model1'"
             )
-    elif use == "model":
-        model1 = model
-        model1_args = model_args
     elif use == "model1":
         model = model1
-        model1_args = model1_args
+        model_args = model1_args
+    elif use == "model":
+        pass
     else:
         raise ValueError(
             f"Invalid 'use' value. Got {use}. Expected : 'both', 'model', or 'model1'"
         )
-    return model, model1, model_args, model1_args
+    return model, model_args
 
 
 @singledispatch
@@ -295,11 +314,11 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    time = np.array([], dtype=np.float64)
-    event = np.array([], dtype=np.float64)
-    entry = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    event_indicators = np.array([], dtype=np.float64)
+    entries = np.array([], dtype=np.float64)
 
-    model, model1, model_args, model1_args = get_model_model1(
+    model, model_args = get_model_model1(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
     )
 
@@ -309,17 +328,23 @@ def _(
         model,
         t0=t0,
         model_args=model_args,
-        model1=model1,
-        model1_args=model1_args,
+        model1=model,
+        model1_args=model_args,
         seed=seed,
     )
 
+    stack_model_args = tuple(([] for _ in range(len(model_args))))
     for data in iterable:
-        time = np.concatenate((time, data["time"]))
-        event = np.concatenate((event, data["event"]))
-        entry = np.concatenate((entry, data["entry"]))
+        durations = np.concatenate((durations, data["durations"]))
+        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
+        entries = np.concatenate((entries, data["entries"]))
 
-    return time, event, entry
+        for i, v in enumerate(stack_model_args):
+            v.append(np.take(model_args[i], data["assets_ids"], axis=0))
+
+    model_args = tuple((np.concatenate(x) for x in stack_model_args))
+
+    return durations, event_indicators, entries, model_args
 
 
 @sample_lifetime_data.register
@@ -331,11 +356,11 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    time = np.array([], dtype=np.float64)
-    event = np.array([], dtype=np.float64)
-    entry = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    event_indicators = np.array([], dtype=np.float64)
+    entries = np.array([], dtype=np.float64)
 
-    model, model1, model_args, model1_args = get_model_model1(
+    model, model_args = get_model_model1(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
     )
 
@@ -345,17 +370,23 @@ def _(
         model,
         t0=t0,
         model_args=model_args,
-        model1=model1,
-        model1_args=model1_args,
+        model1=model,
+        model1_args=model_args,
         seed=seed,
     )
 
+    stack_model_args = tuple(([] for _ in range(len(model_args))))
     for data in iterable:
-        time = np.concatenate((time, data["time"]))
-        event = np.concatenate((event, data["event"]))
-        entry = np.concatenate((entry, data["entry"]))
+        durations = np.concatenate((durations, data["durations"]))
+        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
+        entries = np.concatenate((entries, data["entries"]))
 
-    return time, event, entry
+        for i, v in enumerate(stack_model_args):
+            v.append(np.take(model_args[i], data["assets_ids"], axis=0))
+
+    model_args = tuple((np.concatenate(x) for x in stack_model_args))
+
+    return durations, event_indicators, entries, model_args
 
 
 @sample_lifetime_data.register
@@ -367,9 +398,9 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    time = np.array([], dtype=np.float64)
-    event = np.array([], dtype=np.float64)
-    entry = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    event_indicators = np.array([], dtype=np.float64)
+    entries = np.array([], dtype=np.float64)
 
     if use in ("both", "model1"):
         raise ValueError(
@@ -380,22 +411,27 @@ def _(
         size,
         tf,
         obj.model,
-        partial(run_to_failure_cost, cf=obj.cf),
+        run_to_failure_cost(cf=obj.cf),
         partial(exponential_discounting.factor, rate=obj.discounting_rate),
         t0=t0,
         model_args=obj.model_args,
         seed=seed,
     )
 
+    model_args = ()
     for data in iterable:
-        time = np.concatenate((time, data["time"]))
-        event = np.concatenate((event, data["event"]))
-        entry = np.concatenate((entry, data["entry"]))
+        durations = np.concatenate((durations, data["durations"]))
+        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
+        entries = np.concatenate((entries, data["entries"]))
+
+        model_args = tuple(
+            (np.take(v, data["assets_ids"], axis=0) for v in obj.model_args)
+        )
 
         # break loop after first iteration (one cycle only)
         break
 
-    return time, event, entry
+    return durations, event_indicators, entries, model_args
 
 
 @sample_lifetime_data.register
@@ -407,11 +443,11 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    time = np.array([], dtype=np.float64)
-    event = np.array([], dtype=np.float64)
-    entry = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    event_indicators = np.array([], dtype=np.float64)
+    entries = np.array([], dtype=np.float64)
 
-    model, model1, model_args, model1_args = get_model_model1(
+    model, model_args = get_model_model1(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
     )
 
@@ -419,21 +455,27 @@ def _(
         size,
         tf,
         model,
-        partial(run_to_failure_cost, cf=obj.cf),
+        run_to_failure_cost(cf=obj.cf),
         partial(exponential_discounting.factor, rate=obj.discounting_rate),
         t0=t0,
         model_args=model_args,
-        model1=model1,
-        model1_args=model1_args,
+        model1=model,
+        model1_args=model_args,
         seed=seed,
     )
 
+    stack_model_args = tuple(([] for _ in range(len(model_args))))
     for data in iterable:
-        time = np.concatenate((time, data["time"]))
-        event = np.concatenate((event, data["event"]))
-        entry = np.concatenate((entry, data["entry"]))
+        durations = np.concatenate((durations, data["durations"]))
+        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
+        entries = np.concatenate((entries, data["entries"]))
 
-    return time, event, entry
+        for i, v in enumerate(stack_model_args):
+            v.append(np.take(model_args[i], data["assets_ids"], axis=0))
+
+    model_args = tuple((np.concatenate(x) for x in stack_model_args))
+
+    return durations, event_indicators, entries, model_args
 
 
 @sample_lifetime_data.register
@@ -445,9 +487,9 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    time = np.array([], dtype=np.float64)
-    event = np.array([], dtype=np.float64)
-    entry = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    event_indicators = np.array([], dtype=np.float64)
+    entries = np.array([], dtype=np.float64)
 
     if use in ("both", "model1"):
         raise ValueError(
@@ -458,22 +500,27 @@ def _(
         size,
         tf,
         obj.model,
-        partial(age_replacement_cost, cp=obj.cp, cf=obj.cf),
+        age_replacement_cost(ar=obj.ar, cp=obj.cp, cf=obj.cf),
         partial(exponential_discounting.factor, rate=obj.discounting_rate),
         t0=t0,
         model_args=obj.model_args,
         seed=seed,
     )
 
+    model_args = ()
     for data in iterable:
-        time = np.concatenate((time, data["time"]))
-        event = np.concatenate((event, data["event"]))
-        entry = np.concatenate((entry, data["entry"]))
+        durations = np.concatenate((durations, data["durations"]))
+        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
+        entries = np.concatenate((entries, data["entries"]))
+
+        model_args = tuple(
+            (np.take(v, data["assets_ids"], axis=0) for v in obj.model_args)
+        )
 
         # break loop after first iteration (one cycle only)
         break
 
-    return time, event, entry
+    return durations, event_indicators, entries, model_args
 
 
 @sample_lifetime_data.register
@@ -485,11 +532,11 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    time = np.array([], dtype=np.float64)
-    event = np.array([], dtype=np.float64)
-    entry = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+    event_indicators = np.array([], dtype=np.float64)
+    entries = np.array([], dtype=np.float64)
 
-    model, model1, model_args, model1_args = get_model_model1(
+    model, model_args = get_model_model1(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
     )
 
@@ -497,21 +544,27 @@ def _(
         size,
         tf,
         model,
-        partial(age_replacement_cost, cp=obj.cp, cf=obj.cf),
+        age_replacement_cost(ar=obj.ar, cp=obj.cp, cf=obj.cf),
         partial(exponential_discounting.factor, rate=obj.discounting_rate),
         t0=t0,
         model_args=model_args,
-        model1=model1,
-        model1_args=model1_args,
+        model1=model,
+        model1_args=model_args,
         seed=seed,
     )
 
+    stack_model_args = tuple(([] for _ in range(len(model_args))))
     for data in iterable:
-        time = np.concatenate((time, data["time"]))
-        event = np.concatenate((event, data["event"]))
-        entry = np.concatenate((entry, data["entry"]))
+        durations = np.concatenate((durations, data["durations"]))
+        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
+        entries = np.concatenate((entries, data["entries"]))
 
-    return time, event, entry
+        for i, v in enumerate(stack_model_args):
+            v.append(np.take(model_args[i], data["assets_ids"], axis=0))
+
+    model_args = tuple((np.concatenate(x) for x in stack_model_args))
+
+    return durations, event_indicators, entries, model_args
 
 
 def sample_non_homogeneous_data(

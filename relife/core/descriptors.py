@@ -2,7 +2,7 @@ from typing import Union, Optional
 
 import numpy as np
 from numpy.typing import NDArray
-from relife.types import TupleArrays
+from relife.types import Arg
 
 
 def np_at_least(nb_assets: int):
@@ -10,6 +10,32 @@ def np_at_least(nb_assets: int):
         return np.atleast_1d
     else:
         return np.atleast_2d
+
+
+class NbAssets:
+
+    def __init__(self):
+        self.default_value = 1  # default value
+
+    def __set_name__(self, owner, name):
+        self.private_name = "_" + name
+        self.public_name = name
+
+    def __get__(self, obj, objtype=None):
+        return getattr(obj, self.private_name, self.default_value)
+
+    def __set__(self, obj, value: int):
+        if not isinstance(value, int):
+            raise ValueError(
+                f"Incorrect type for {self.public_name}, must be integer (default 1)"
+            )
+        if value == 0:
+            raise ValueError(
+                f"Incorrect value for {self.public_name}, must be greater or equal to 1"
+            )
+        current_value = getattr(obj, self.private_name, self.default_value)
+        if value > current_value:
+            setattr(obj, self.private_name, value)
 
 
 class ShapedArgs:
@@ -25,8 +51,8 @@ class ShapedArgs:
         return getattr(obj, self.private_name)
 
     def __set__(
-        self, obj, value: Optional[Union[NDArray[np.float64], TupleArrays]]
-    ) -> TupleArrays:
+        self, obj, value: Optional[Union[Arg, tuple[Arg, ...]]]
+    ) -> tuple[Arg, ...]:
         """
         if nb_assets is 1, values are all 1d array (event floats)
         if nb_assets is more than 1, values are all 2d array

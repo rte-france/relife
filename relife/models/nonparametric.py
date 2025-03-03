@@ -1,4 +1,3 @@
-from pyexpat import native_encoding
 from typing import Optional, Self, Union
 
 import numpy as np

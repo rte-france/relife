@@ -10,7 +10,7 @@ import pytest
 from relife.models import AFT, Gamma, Gompertz, LogLogistic, ProportionalHazard, Weibull
 from relife.process import RenewalProcess, RenewalRewardProcess
 from relife.core.nested_model import AgeReplacementModel, EquilibriumDistribution
-from relife.policies.run_to_failure import run_to_failure_cost
+from relife.costs import run_to_failure_cost
 
 
 @pytest.fixture(

@@ -7,8 +7,8 @@ from scipy.optimize import minimize
 from relife.core.descriptors import ShapedArgs
 from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
-from relife.data import lifetime_data_factory, NHPPData, nhpp_lifetime_data_factory
-from relife.types import TupleArrays, VariadicArgs
+from relife.data import lifetime_data_factory, nhpp_lifetime_data_factory
+from relife.types import Arg, VariadicArgs
 
 
 class NonHomogeneousPoissonProcess(ParametricModel):
@@ -17,8 +17,8 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
     def __init__(
         self,
-        model: LifetimeModel[*TupleArrays],
-        model_args: TupleArrays = (),
+        model: LifetimeModel[*tuple[Arg, ...]],
+        model_args: tuple[Arg, ...] = (),
         *,
         nb_assets: int = 1,
     ):
@@ -27,10 +27,12 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         self.compose_with(model=model)
         self.model_args = model_args
 
-    def intensity(self, time: np.ndarray, *args: *TupleArrays) -> np.ndarray:
+    def intensity(self, time: np.ndarray, *args: *tuple[Arg, ...]) -> np.ndarray:
         return self.model.hf(time, *args)
 
-    def cumulative_intensity(self, time: np.ndarray, *args: *TupleArrays) -> np.ndarray:
+    def cumulative_intensity(
+        self, time: np.ndarray, *args: *tuple[Arg, ...]
+    ) -> np.ndarray:
         return self.model.chf(time, *args)
 
     def fit(

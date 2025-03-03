@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Optional, Self
 import numpy as np
 from numpy.typing import NDArray
@@ -9,7 +8,7 @@ from relife.core.nested_model import AgeReplacementModel, LeftTruncatedModel
 from relife.core.model import LifetimeModel
 from relife.core.quadratures import gauss_legendre
 from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
-from relife.types import TupleArrays
+from relife.types import Arg
 
 from relife.core.descriptors import ShapedArgs
 from relife.core.decorators import require_attributes
@@ -20,18 +19,11 @@ from .docstrings import (
     ASYMPTOTIC_EEAC_DOCSTRING,
 )
 from relife.process.nhpp import NonHomogeneousPoissonProcess
+from relife.costs import age_replacement_cost
+from .replacement import ReplacementPolicy
 
 
-def age_replacement_cost(
-    lifetimes: NDArray[np.float64],
-    ar: NDArray[np.float64],
-    cf: NDArray[np.float64],
-    cp: NDArray[np.float64],
-) -> NDArray[np.float64]:
-    return np.where(lifetimes < ar, cf, cp)
-
-
-class OneCycleAgeReplacementPolicy:
+class OneCycleAgeReplacementPolicy(ReplacementPolicy):
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
@@ -77,19 +69,17 @@ class OneCycleAgeReplacementPolicy:
     ar = ShapedArgs()
     ar1 = None
     a0 = ShapedArgs()
-    model_args = ShapedArgs(astuple=True)
-    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: LifetimeModel[*TupleArrays],
+        model: LifetimeModel[*tuple[Arg, ...]],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
         ar: Optional[float | NDArray[np.float64]] = None,
-        model_args: TupleArrays = (),
+        model_args: tuple[Arg, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
@@ -113,7 +103,7 @@ class OneCycleAgeReplacementPolicy:
         return reward_partial_expectation(
             timeline,
             self.model,
-            partial(age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp),
+            age_replacement_cost(ar=self.ar, cf=self.cf, cp=self.cp),
             model_args=self.model_args,
             discounting_rate=self.discounting_rate,
         )
@@ -126,7 +116,7 @@ class OneCycleAgeReplacementPolicy:
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
         f = (
-            lambda x: age_replacement_cost(x, self.ar, self.cf, self.cp)
+            lambda x: age_replacement_cost(self.ar, self.cf, self.cp)(x)
             * exponential_discounting.factor(x, self.discounting_rate)
             / exponential_discounting.annuity_factor(x, self.discounting_rate)
         )
@@ -189,7 +179,7 @@ class OneCycleAgeReplacementPolicy:
         return self
 
 
-class DefaultAgeReplacementPolicy:
+class DefaultAgeReplacementPolicy(ReplacementPolicy):
     r"""Time based replacement policy.
 
     Renewal reward process where assets are replaced at a fixed age :math:`a_r`
@@ -255,23 +245,21 @@ class DefaultAgeReplacementPolicy:
     ar = ShapedArgs()
     ar1 = ShapedArgs()
     a0 = ShapedArgs()
-    model_args = ShapedArgs(astuple=True)
-    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: LifetimeModel[*TupleArrays],
+        model: LifetimeModel[*tuple[Arg, ...]],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         ar: float | NDArray[np.float64] = None,
         ar1: float | NDArray[np.float64] = None,
-        model_args: TupleArrays = (),
+        model_args: tuple[Arg, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[*TupleArrays]] = None,
-        model1_args: TupleArrays = (),
+        model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
+        model1_args: tuple[Arg, ...] = (),
     ) -> None:
 
         self.nb_assets = nb_assets
@@ -312,15 +300,13 @@ class DefaultAgeReplacementPolicy:
         if parametrized:
             self.process = RenewalRewardProcess(
                 self.model,
-                partial(age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp),
+                age_replacement_cost(ar=self.ar, cf=self.cf, cp=self.cp),
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
                 discounting_rate=self.discounting_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
-                reward1=partial(
-                    age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp
-                ),
+                reward1=age_replacement_cost(ar=self.ar, cf=self.cf, cp=self.cp),
             )
 
     @require_attributes("ar")
@@ -410,13 +396,13 @@ class DefaultAgeReplacementPolicy:
         self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
         self.process = RenewalRewardProcess(
             self.model,
-            partial(age_replacement_cost, ar=self.ar, cf=self.cf, cp=self.cp),
+            age_replacement_cost(ar=self.ar, cf=self.cf, cp=self.cp),
             nb_assets=self.nb_assets,
             model_args=self.model_args,
             discounting_rate=self.discounting_rate,
             model1=self.model1,
             model1_args=self.model1_args,
-            reward1=partial(age_replacement_cost, ar=self.ar1, cf=self.cf, cp=self.cp),
+            reward1=age_replacement_cost(ar=self.ar1, cf=self.cf, cp=self.cp),
         )
         return self
 
@@ -452,13 +438,13 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
 
     def __init__(
         self,
-        model: LifetimeModel[*TupleArrays],
+        model: LifetimeModel[*tuple[Arg, ...]],
         cf: NDArray[np.float64],
         cr: NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
         ar: Optional[NDArray[np.float64]] = None,
-        model_args: TupleArrays = (),
+        model_args: tuple[Arg, ...] = (),
         nb_assets: int = 1,
     ) -> None:
 
