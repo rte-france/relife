@@ -1,59 +1,26 @@
-from typing import Optional
-
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.core import LifetimeModel
-from relife.core.descriptors import NbAssets, ShapedArgs
-from relife.data import CountData
+from relife.policies import (
+    DefaultRunToFailurePolicy,
+    OneCycleRunToFailurePolicy,
+    DefaultAgeReplacementPolicy,
+    OneCycleAgeReplacementPolicy,
+    NonHomogeneousPoissonAgeReplacementPolicy,
+)
+from relife.policies.renewal import RenewalPolicy
 from relife.types import Arg
 
 
-class ReplacementPolicy:
-    model: LifetimeModel[*tuple[Arg, ...]]
-    model1 = Optional[LifetimeModel[*tuple[Arg, ...]]]
-    model_args = ShapedArgs(astuple=True)
-    model1_args = ShapedArgs(astuple=True)
-    nb_assets = NbAssets()
-
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> CountData:
-        from relife.sampling import sample_count_data
-
-        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
-
-    def sample_lifetime_data(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        seed: Optional[int] = None,
-        use: str = "model",
-    ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sampling import sample_lifetime_data
-
-        return sample_lifetime_data(self, size, tf, t0, seed, use)
-
-
-def replacement_policy(
-    model: LifetimeModel[*tuple[Arg, ...]],
+# renewal_policy ?
+def renewal_policy(
+    model: LifetimeModel[*tuple[Arg, ...]],  # ajouter NHPP
     costs: dict[NDArray[np.float64]],
     one_cycle: bool = False,
     run_to_failure: bool = False,
     **kwargs,
-) -> ReplacementPolicy:
-
-    from .age_replacement import (
-        OneCycleAgeReplacementPolicy,
-        DefaultAgeReplacementPolicy,
-    )
-    from .run_to_failure import OneCycleRunToFailurePolicy, DefaultRunToFailurePolicy
+) -> RenewalPolicy:
 
     if run_to_failure:
         if not one_cycle:
@@ -149,13 +116,11 @@ def replacement_policy(
             )
 
 
-def unperfect_repair_policy(
+def imperfect_repair_policy(
     model: LifetimeModel[*tuple[Arg, ...]],
     costs: dict[NDArray[np.float64]],
     **kwargs,
 ):
-
-    from .age_replacement import NonHomogeneousPoissonAgeReplacementPolicy
 
     try:
         cf, cr = (

@@ -1,29 +1,250 @@
 from typing import Optional, Self
+
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
+from relife.core import LifetimeModel, AgeReplacementModel, LeftTruncatedModel
+from relife.core.decorators import require_attributes
+from relife.core.descriptors import NbAssets, ShapedArgs
 from relife.core.discounting import exponential_discounting
-from relife.core.nested_model import AgeReplacementModel, LeftTruncatedModel
-from relife.core.model import LifetimeModel
 from relife.core.quadratures import gauss_legendre
-from relife.process.renewal import RenewalRewardProcess, reward_partial_expectation
+from relife.costs import age_replacement_cost, run_to_failure_cost
+from relife.data import CountData
+from relife.process import RenewalRewardProcess, NonHomogeneousPoissonProcess
+from relife.process.renewal import reward_partial_expectation
 from relife.types import Arg
 
-from relife.core.descriptors import ShapedArgs
-from relife.core.decorators import require_attributes
-from .docstrings import (
-    ETC_DOCSTRING,
-    EEAC_DOCSTRING,
-    ASYMPTOTIC_ETC_DOCSTRING,
-    ASYMPTOTIC_EEAC_DOCSTRING,
-)
-from relife.process.nhpp import NonHomogeneousPoissonProcess
-from relife.costs import age_replacement_cost
-from .replacement import ReplacementPolicy
+
+# RenewalPolicy
+class RenewalPolicy:
+    model: LifetimeModel[*tuple[Arg, ...]]
+    model1 = Optional[LifetimeModel[*tuple[Arg, ...]]]
+    model_args = ShapedArgs(astuple=True)
+    model1_args = ShapedArgs(astuple=True)
+    nb_assets = NbAssets()
+
+    def sample(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from relife.sampling import sample_count_data
+
+        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+
+    # sample_failure_data
+    def sample_failure_data(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        seed: Optional[int] = None,
+        use: str = "model",
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sampling import sample_failure_data
+
+        return sample_failure_data(self, size, tf, t0, seed, use)
 
 
-class OneCycleAgeReplacementPolicy(ReplacementPolicy):
+class OneCycleRunToFailurePolicy(RenewalPolicy):
+    r"""One cyle run-to-failure policy
+
+    A policy for running assets to failure within one cycle.
+
+    Parameters
+    ----------
+    model : LifetimeModel
+        The lifetime core of the assets.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    discounting_rate : float, default is 0.
+        The discounting rate.
+    period_before_discounting: float, default is 1.
+        The length of the first period before discounting.
+    model_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the underlying
+        lifetime core of the process.
+    nb_assets : int, optional
+        Number of assets (default is 1).
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
+    """
+
+    model1 = None
+    cf = ShapedArgs()
+    a0 = ShapedArgs()
+
+    def __init__(
+        self,
+        model: LifetimeModel[*tuple[Arg, ...]],
+        cf: float | NDArray[np.float64],
+        *,
+        discounting_rate: float = 0.0,
+        period_before_discounting: float = 1.0,
+        model_args: tuple[Arg, ...] = (),
+        nb_assets: int = 1,
+        a0: Optional[float | NDArray[np.float64]] = None,
+    ) -> None:
+        self.nb_assets = nb_assets
+        if a0 is not None:
+            model = LeftTruncatedModel(model)
+            model_args = (a0, *model_args)
+        self.model = model
+        self.cf = cf
+        self.discounting_rate = discounting_rate
+        if period_before_discounting == 0:
+            raise ValueError("The period_before_discounting must be greater than 0")
+        self.period_before_discounting = period_before_discounting
+        self.model_args = model_args
+
+    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        return reward_partial_expectation(
+            timeline,
+            self.model,
+            run_to_failure_cost(self.cf),
+            model_args=self.model_args,
+            discounting_rate=self.discounting_rate,
+        )
+
+    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        return self.expected_total_cost(np.array(np.inf))
+
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+
+        f = (
+            lambda x: run_to_failure_cost(self.cf)(x)
+            * exponential_discounting.factor(x, self.discounting_rate)
+            / exponential_discounting.annuity_factor(x, self.discounting_rate)
+        )
+        mask = timeline < self.period_before_discounting
+        q0 = self.model.cdf(self.period_before_discounting, *self.model_args) * f(
+            self.period_before_discounting
+        )
+        return np.squeeze(
+            q0
+            + np.where(
+                mask,
+                0,
+                self.model.ls_integrate(
+                    f, self.period_before_discounting, timeline, *self.model_args
+                ),
+            )
+        )
+
+    def asymptotic_expected_equivalent_annual_cost(
+        self,
+    ) -> NDArray[np.float64]:
+        return self.expected_equivalent_annual_cost(np.array(np.inf))
+
+
+class DefaultRunToFailurePolicy(RenewalPolicy):
+    r"""Run-to-failure renewal policy.
+
+    Renewal reward process where assets are replaced on failure with costs
+    :math:`c_f`.
+
+    Parameters
+    ----------
+    model : LifetimeModel
+        The lifetime core of the assets.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    discounting_rate : float, default is 0.
+        The discounting rate.
+    model_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the underlying
+        lifetime core of the process.
+    nb_assets : int, optional
+        Number of assets (default is 1).
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
+    model1 : LifetimeModel, optional
+        The lifetime core used for the cycle of replacements. When one adds
+        `model1`, we assume that `model1` is different from `core` meaning
+        the underlying survival probabilities behave differently for the first
+        cycle
+    model1_args : ModelArgs, optional
+        ModelArgs is a tuple of zero or more ndarray required by the lifetime
+        core of the first cycle of replacements.
+
+    References
+    ----------
+    .. [1] Van der Weide, J. A. M., & Van Noortwijk, J. M. (2008). Renewal
+        theory with exponential and hyperbolic discounting. Probability in
+        the Engineering and Informational Sciences, 22(1), 53-74.
+    """
+
+    cf = ShapedArgs()
+    a0 = ShapedArgs()
+
+    def __init__(
+        self,
+        model: LifetimeModel[*tuple[Arg, ...]],
+        cf: float | NDArray[np.float64],
+        *,
+        discounting_rate: float = 0.0,
+        model_args: tuple[Arg, ...] = (),
+        nb_assets: int = 1,
+        a0: Optional[float | NDArray[np.float64]] = None,
+        model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
+        model1_args: tuple[Arg, ...] = (),
+    ) -> None:
+
+        self.nb_assets = nb_assets
+
+        if a0 is not None:
+            if model1 is not None:
+                raise ValueError("model1 and a0 can't be set together")
+            model1 = LeftTruncatedModel(model)
+            model1_args = (a0, *model_args)
+
+        self.model = model
+        self.model1 = model1
+
+        self.model_args = model_args
+        self.cf = cf
+        self.discounting_rate = discounting_rate
+
+        self.model_args = model_args
+        self.model1_args = model1_args
+
+        # if Policy is parametrized, set the underlying renewal reward process
+        # note the rewards are the same for the first cycle and the rest of the process
+        self.process = RenewalRewardProcess(
+            self.model,
+            run_to_failure_cost(self.cf),
+            nb_assets=self.nb_assets,
+            model_args=self.model_args,
+            discounting_rate=self.discounting_rate,
+            model1=self.model1,
+            model1_args=self.model1_args,
+            reward1=run_to_failure_cost(self.cf),
+        )
+
+    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.process.expected_total_reward(timeline)
+
+    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        return self.process.asymptotic_expected_total_reward()
+
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        return self.process.expected_equivalent_annual_cost(timeline)
+
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        return self.process.asymptotic_expected_equivalent_annual_cost()
+
+
+class OneCycleAgeReplacementPolicy(RenewalPolicy):
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
@@ -179,7 +400,7 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
         return self
 
 
-class DefaultAgeReplacementPolicy(ReplacementPolicy):
+class DefaultAgeReplacementPolicy(RenewalPolicy):
     r"""Time based replacement policy.
 
     Renewal reward process where assets are replaced at a fixed age :math:`a_r`
@@ -407,7 +628,7 @@ class DefaultAgeReplacementPolicy(ReplacementPolicy):
         return self
 
 
-class NonHomogeneousPoissonAgeReplacementPolicy:
+class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
     """
     Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..
 
@@ -533,6 +754,13 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
         return self
 
 
+from .docstrings import (
+    ETC_DOCSTRING,
+    EEAC_DOCSTRING,
+    ASYMPTOTIC_ETC_DOCSTRING,
+    ASYMPTOTIC_EEAC_DOCSTRING,
+)
+
 WARNING = r"""
 
 .. warning::
@@ -562,4 +790,23 @@ DefaultAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = (
 
 DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
     ASYMPTOTIC_EEAC_DOCSTRING + WARNING
+)
+
+
+OneCycleRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
+OneCycleRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
+OneCycleRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = (
+    ASYMPTOTIC_ETC_DOCSTRING
+)
+OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+    ASYMPTOTIC_EEAC_DOCSTRING
+)
+
+DefaultRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
+DefaultRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
+DefaultRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = (
+    ASYMPTOTIC_ETC_DOCSTRING
+)
+DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+    ASYMPTOTIC_EEAC_DOCSTRING
 )

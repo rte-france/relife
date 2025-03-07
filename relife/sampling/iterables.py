@@ -2,10 +2,13 @@ from typing import Iterable, Optional, Callable
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import override
 
 from relife.core import LifetimeModel, AgeReplacementModel, LeftTruncatedModel
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 from relife.types import Arg
+from ..policies import NonHomogeneousPoissonAgeReplacementPolicy
+from ..process import NonHomogeneousPoissonProcess
 
 
 class RenewalIterable(Iterable):
@@ -27,7 +30,7 @@ class RenewalIterable(Iterable):
         self,
         size: int,
         tf: float,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        model: LifetimeModel[*tuple[NDArray[np.float64], ...]],
         reward_func: Optional[
             Callable[[NDArray[np.float64]], NDArray[np.float64]]
         ] = None,
@@ -144,7 +147,7 @@ class RenewalIterable(Iterable):
         iterator = LifetimeIterator(self.size, self.tf, self.t0, seed=self.seed)
 
         # first cycle : set model1 in iterator
-        iterator.set_model(self.model1, self.model1_args)
+        iterator.load(self.model1, self.model1_args)
 
         # yield first dict of results (return empty arrays if iterator stops at first iteration)
         try:
@@ -161,7 +164,7 @@ class RenewalIterable(Iterable):
             yield self.returned_dict
 
         # next cycles : set model in iterator
-        iterator.set_model(self.model, self.model_args)
+        iterator.load(self.model, self.model_args)
 
         # yield dict of results until iterator stops
         for durations, event_indicators, entries in iterator:
@@ -179,81 +182,88 @@ class NonHomogeneousPoissonIterable(Iterable):
     Iterable returning dict of 1D arrays selected from each iterations
     """
 
+    reward_func = None
+    discount_factor = None
+
     def __init__(
         self,
         size: int,
         tf: float,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        process: NonHomogeneousPoissonProcess,
         reward_func: Optional[
             Callable[[NDArray[np.float64]], NDArray[np.float64]]
         ] = None,
         discount_factor: Optional[
             Callable[[NDArray[np.float64]], NDArray[np.float64]]
         ] = None,
-        model_args: tuple[Arg, ...] = (),
         t0: float = 0.0,
+        ar: Optional[NDArray[np.float64]] = None,
         seed: Optional[int] = None,
+        keep_last: bool = True,
     ):
         self.size = size
         self.tf = tf
         self.t0 = t0
 
-        self.model = model
-        self.model_args = model_args
-
+        self.model = process.model
+        self.model_args = process.model_args
         self.reward_func = reward_func
         self.discount_func = discount_factor
         self.seed = seed
+        self.keep_last = keep_last
+        self.ar = ar
 
         self.returned_dict = {
             "samples_ids": np.array([], dtype=np.int64),
             "assets_ids": np.array([], dtype=np.int64),
-            "ages": np.array([], dtype=np.float64),
+            "timeline": np.array([], dtype=np.float64),
             "durations": np.array([], dtype=np.float64),
-            "rewards": np.array([], dtype=np.float64),
-            "is_a0": np.array([], dtype=np.bool_),  # booleans indicating if ages are a0
-            "is_af": np.array([], dtype=np.bool_),  # booleans indicating if ages are af
+            "a0": np.array([], dtype=np.float64),
+            "af": np.array([], dtype=np.float64),
         }
+
+    def compute_rewards(self, durations):
+        return self.reward_func(durations)
+
+    def update_returned_dict(
+        self,
+        timeline,
+        durations,
+        a0,
+        af,
+    ):
+        # select values in t0 tf observation window
+        if self.keep_last:
+            timeline_selection = np.logical_and(
+                self.t0 <= timeline, timeline <= self.tf
+            )
+        else:
+            timeline_selection = np.logical_and(self.t0 <= timeline, timeline < self.tf)
+
+        # get ids
+        assets_ids, samples_ids = np.where(timeline_selection)
+
+        self.returned_dict.update(
+            samples_ids=samples_ids,
+            assets_ids=assets_ids,
+            timeline=timeline[timeline_selection],
+            durations=durations[timeline_selection],
+            a0=a0[timeline_selection],
+            af=af[timeline_selection],
+        )
 
     def __iter__(self):
         # construct iterator
         iterator = NonHomogeneousPoissonIterator(
-            self.size, self.tf, self.t0, seed=self.seed
+            self.size, self.tf, self.t0, ar=self.ar, seed=self.seed
         )
-
         # set model in iterator
-        iterator.set_model(self.model, self.model_args)
-
-        previous_ages = np.zeros_like(iterator.timeline)
-        cpt_a0 = np.zeros_like(
-            iterator.timeline, dtype=np.int64
-        )  # count iterator to catch a0 (first iteration only)
+        iterator.load(self.model, self.model_args)
+        ages = np.zeros_like(iterator.timeline)
 
         # yield dict of results until iterator stops
-        for ages in iterator:
-            selection = self.t0 < iterator.timeline < self.tf
-            assets_ids, samples_ids = np.where(selection)
-            self.returned_dict["assets_ids"] = assets_ids
-            self.returned_dict["samples_ids"] = samples_ids
-            self.returned_dict["ages"] = ages[selection]
-
-            # update cpt_a0 and catch a0 ages
-            cpt_a0[selection] += 1
-            self.returned_dict["is_a0"] = np.where(cpt_a0 == 1, True, False)[selection]
-
-            # check if iterator will stop at the next iteration:
-            self.returned_dict["is_af"] = np.where(ages >= self.tf, True, False)[
-                selection
-            ]
-
-            self.returned_dict["durations"] = (ages - previous_ages)[selection]
-            previous_ages = ages.copy()
-
-            rewards = np.zeros_like(ages)
-            if self.reward_func and self.discount_func:
-                rewards = self.reward_func(ages) * self.discount_func(ages)
-            if self.reward_func and not self.discount_func:
-                rewards = self.reward_func(ages)
-            self.returned_dict["rewards"] = rewards[selection]
-
+        for durations, a0, af in iterator:
+            # select values in t0 tf observation window
+            timeline = iterator.timeline
+            self.update_returned_dict(timeline, durations, a0, af)
             yield self.returned_dict

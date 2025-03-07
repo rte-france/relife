@@ -1,1 +1,1 @@
-from .sample import sample_count_data, sample_lifetime_data, sample_non_homogeneous_data
+from .sample import sample_count_data, sample_failure_data, sample_non_homogeneous_data

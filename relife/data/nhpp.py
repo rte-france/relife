@@ -5,8 +5,10 @@ from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import override
 
 from .counting import CountData
+from relife.plots import PlotNHPPData
 
 
 def nhpp_lifetime_data_factory(
@@ -73,74 +75,88 @@ def nhpp_lifetime_data_factory(
 
 @dataclass
 class NHPPData(CountData):
-    durations: NDArray[np.float64] = field(repr=False)  # durations between repairs
-    repairs: NDArray[np.int64] = field(repr=False)  # nb of repairs
-
-    # durations in post_init ?
+    ages: NDArray[np.float64] = field(repr=False)
 
     def number_of_repairs(self):
-        pass
+        # alias name
+        return self.number_of_events()
 
     def mean_number_of_repairs(self):
-        pass
+        return self.mean_number_of_events()
 
-    def to_fit(
-        self, t0: float = 0.0, tf: Optional[float] = None, sample: Optional[int] = None
-    ):
+    # def number_of_repairs(self):
+    #     sort_all = np.argsort(self.timeline)
+    #     timeline = np.insert(self.timeline[sort_all], 0, 0)
+    #     nb_repairs = np.cumsum(np.insert(self.nb_repairs[sort_all], 0, 0))
+    #     return timeline, nb_repairs
+    #
+    # def mean_number_of_repairs(self):
+    #     sort_all = np.argsort(self.timeline)
+    #     timeline = np.insert(self.timeline[sort_all], 0, 0)
+    #     nb_repairs = np.cumsum(np.insert(self.nb_repairs[sort_all], 0, 0) / len(self))
+    #     return timeline, nb_repairs
 
-        # step 1 : select and control
-        s = self.samples_ids == sample if sample is not None else Ellipsis
+    @property
+    def plot(self):
+        return PlotNHPPData(self)
 
-        max_event_time = np.max(self.timeline)
-        if tf is not None:
-            if max_event_time <= tf:
-                tf = None
-                warnings.warn(
-                    f"Selected window might be too large with tf {tf}. If you explicitly want to convert all date, leave tf as None (default Value)"
-                )
-        if t0 != 0:
-            if max_event_time <= t0:
-                raise ValueError(
-                    f"Invalid t0 {t0} where the maximum event time value is {max_event_time}"
-                )
-
-        _assets_index = self.assets_ids[s]
-        _samples_index = self.samples_ids[s]
-        _ages = self.timeline[s]
-        _durations = self.durations[s]
-        _assets = (
-            _assets_index + _samples_index
-        )  # all i.i.d evaluated as multiple assets
-
-        # step 2 : sort
-        sort = np.lexsort((_ages, _assets))
-        _assets = _assets[sort]
-        _ages = _ages[sort]
-        _durations = _durations[sort]
-
-        # step 3 : collect index
-        if t0 == 0.0 and tf is None:
-            if self.nb_assets == self.nb_samples == 1:
-                a0_index = np.array([0])
-                af_index = np.array([len(_assets) - 1])
-            else:
-                a0_index = np.where(np.roll(_assets, 1) != _assets)[0]
-                af_index = np.append(a0_index[1:] - 1, len(_assets) - 1)
-        else:
-            if tf is None:
-                tf = max_event_time
-            a0_index = np.where((_ages >= t0) == False)[0] + 1
-
-        assert len(a0_index) == len(af_index)
-
-        # step 4 : convert and return
-        a0 = _ages[a0_index]  # in order asset 0, 1, ... , n
-        af = _ages[af_index]
-        to_delete = np.concatenate((a0_index, af_index))
-        _ages = np.delete(_ages, to_delete)
-        _assets = np.delete(_assets, to_delete)
-
-        return a0, af, _ages, _assets
+    # def to_fit(
+    #     self, t0: float = 0.0, tf: Optional[float] = None, sample: Optional[int] = None
+    # ):
+    #
+    #     # step 1 : select and control
+    #     s = self.samples_ids == sample if sample is not None else Ellipsis
+    #
+    #     max_event_time = np.max(self.timeline)
+    #     if tf is not None:
+    #         if max_event_time <= tf:
+    #             tf = None
+    #             warnings.warn(
+    #                 f"Selected window might be too large with tf {tf}. If you explicitly want to convert all date, leave tf as None (default Value)"
+    #             )
+    #     if t0 != 0:
+    #         if max_event_time <= t0:
+    #             raise ValueError(
+    #                 f"Invalid t0 {t0} where the maximum event time value is {max_event_time}"
+    #             )
+    #
+    #     _assets_index = self.assets_ids[s]
+    #     _samples_index = self.samples_ids[s]
+    #     _ages = self.timeline[s]
+    #     _durations = self.durations[s]
+    #     _assets = (
+    #         _assets_index + _samples_index
+    #     )  # all i.i.d evaluated as multiple assets
+    #
+    #     # step 2 : sort
+    #     sort = np.lexsort((_ages, _assets))
+    #     _assets = _assets[sort]
+    #     _ages = _ages[sort]
+    #     _durations = _durations[sort]
+    #
+    #     # step 3 : collect index
+    #     if t0 == 0.0 and tf is None:
+    #         if self.nb_assets == self.nb_samples == 1:
+    #             a0_index = np.array([0])
+    #             af_index = np.array([len(_assets) - 1])
+    #         else:
+    #             a0_index = np.where(np.roll(_assets, 1) != _assets)[0]
+    #             af_index = np.append(a0_index[1:] - 1, len(_assets) - 1)
+    #     else:
+    #         if tf is None:
+    #             tf = max_event_time
+    #         a0_index = np.where((_ages >= t0) == False)[0] + 1
+    #
+    #     assert len(a0_index) == len(af_index)
+    #
+    #     # step 4 : convert and return
+    #     a0 = _ages[a0_index]  # in order asset 0, 1, ... , n
+    #     af = _ages[af_index]
+    #     to_delete = np.concatenate((a0_index, af_index))
+    #     _ages = np.delete(_ages, to_delete)
+    #     _assets = np.delete(_assets, to_delete)
+    #
+    #     return a0, af, _ages, _assets
 
 
 @dataclass

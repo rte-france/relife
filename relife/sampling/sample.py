@@ -3,17 +3,21 @@ from typing import Union, Optional
 
 import numpy as np
 
-from relife.data import RenewalData, RenewalRewardData
+from relife.data import RenewalData, RenewalRewardData, NHPPData
 
 from relife.process import RenewalRewardProcess, NonHomogeneousPoissonProcess
 from relife.process.renewal import RenewalProcess
-from .iterables import RenewalIterable, NonHomogeneousPoissonIterable
+from .iterables import (
+    RenewalIterable,
+    NonHomogeneousPoissonIterable,
+)
 from relife.core.discounting import exponential_discounting
 from relife.policies import (
     OneCycleRunToFailurePolicy,
     DefaultRunToFailurePolicy,
     OneCycleAgeReplacementPolicy,
     DefaultAgeReplacementPolicy,
+    NonHomogeneousPoissonAgeReplacementPolicy,
 )
 from relife.costs import age_replacement_cost, run_to_failure_cost
 
@@ -239,33 +243,75 @@ def _(
     maxsample: int = 1e5,
     seed: Optional[int] = None,
 ):
-    ages = np.array([], dtype=np.float64)
-    durations = np.array([], dtype=np.float64)
-    rewards = np.array([], dtype=np.float64)
+
     samples_ids = np.array([], dtype=np.int64)
     assets_ids = np.array([], dtype=np.int64)
+    timeline = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
 
-    iterable = NonHomogeneousPoissonIterable(
-        size,
-        tf,
-        obj.model,
-        reward_func=None,
-        discount_factor=None,
-        model_args=obj.model_args,
-        seed=seed,
-    )
+    iterable = NonHomogeneousPoissonIterable(size, tf, process=obj, t0=t0, seed=seed)
 
     for data in iterable:
-        ages = np.concatenate((ages, data["ages"]))
-        durations = np.concatenate((durations, data["durations"]))
-        rewards = np.concatenate((rewards, data["rewards"]))
-        samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
-        assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
+        _samples_ids = data["samples_ids"]
+        _assets_ids = data["assets_ids"]
+        _timeline = data["timeline"]
+        _durations = data["durations"]
+
+        selection = ~np.isnan(_durations)
+        durations = np.concatenate((durations, _durations[selection]))
+        timeline = np.concatenate((timeline, _timeline[selection]))
+        samples_ids = np.concatenate((samples_ids, _samples_ids[selection]))
+        assets_ids = np.concatenate((assets_ids, _assets_ids[selection]))
+
+        # select a0, af only for sample_failure_data
 
         if len(samples_ids) > maxsample:
             raise ValueError(
                 "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
             )
+
+    return NHPPData(t0, tf, samples_ids, assets_ids, timeline, durations)
+
+
+@sample_count_data.register
+def _(
+    obj: NonHomogeneousPoissonAgeReplacementPolicy,
+    size: int,
+    tf: float,
+    t0: float = 0.0,
+    maxsample: int = 1e5,
+    seed: Optional[int] = None,
+):
+
+    samples_ids = np.array([], dtype=np.int64)
+    assets_ids = np.array([], dtype=np.int64)
+    timeline = np.array([], dtype=np.float64)
+    durations = np.array([], dtype=np.float64)
+
+    iterable = NonHomogeneousPoissonIterable(
+        size, tf, process=obj.process, t0=t0, ar=obj.ar, seed=seed
+    )
+
+    for data in iterable:
+        _samples_ids = data["samples_ids"]
+        _assets_ids = data["assets_ids"]
+        _timeline = data["timeline"]
+        _durations = data["durations"]
+
+        selection = ~np.isnan(_durations)
+        durations = np.concatenate((durations, _durations[selection]))
+        timeline = np.concatenate((timeline, _timeline[selection]))
+        samples_ids = np.concatenate((samples_ids, _samples_ids[selection]))
+        assets_ids = np.concatenate((assets_ids, _assets_ids[selection]))
+
+        # select a0, af only for sample_failure_data
+
+        if len(samples_ids) > maxsample:
+            raise ValueError(
+                "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+            )
+
+    return NHPPData(t0, tf, samples_ids, assets_ids, timeline, durations)
 
 
 def get_baseline_type(model):
@@ -293,7 +339,7 @@ def get_model_model1(model, model1, model_args, model1_args, use: str):
 
 
 @singledispatch
-def sample_lifetime_data(
+def sample_failure_data(
     obj,
     _size,
     _tf,
@@ -305,7 +351,7 @@ def sample_lifetime_data(
     ValueError(f"No sample for {type(obj)}")
 
 
-@sample_lifetime_data.register
+@sample_failure_data.register
 def _(
     obj: Union[RenewalProcess, RenewalRewardProcess],
     size: int,
@@ -347,7 +393,7 @@ def _(
     return durations, event_indicators, entries, model_args
 
 
-@sample_lifetime_data.register
+@sample_failure_data.register
 def _(
     obj: RenewalRewardProcess,
     size: int,
@@ -389,7 +435,7 @@ def _(
     return durations, event_indicators, entries, model_args
 
 
-@sample_lifetime_data.register
+@sample_failure_data.register
 def _(
     obj: OneCycleRunToFailurePolicy,
     size: int,
@@ -434,7 +480,7 @@ def _(
     return durations, event_indicators, entries, model_args
 
 
-@sample_lifetime_data.register
+@sample_failure_data.register
 def _(
     obj: DefaultRunToFailurePolicy,
     size: int,
@@ -478,7 +524,7 @@ def _(
     return durations, event_indicators, entries, model_args
 
 
-@sample_lifetime_data.register
+@sample_failure_data.register
 def _(
     obj: OneCycleAgeReplacementPolicy,
     size: int,
@@ -523,7 +569,7 @@ def _(
     return durations, event_indicators, entries, model_args
 
 
-@sample_lifetime_data.register
+@sample_failure_data.register
 def _(
     obj: DefaultAgeReplacementPolicy,
     size: int,
@@ -585,18 +631,27 @@ def sample_non_homogeneous_data(
         obj.model,
         reward_func=None,
         discount_factor=None,
-        model_args=obj.model_args,
         seed=seed,
     )
 
     for data in iterable:
+        index = data["samples_ids"] + data["assets_ids"]
 
-        is_a0 = data["is_a0"]
-        is_af = data["is_af"]
-        not_af_a0 = np.logical_and(~is_a0, ~is_af)
-        a0 = np.concatenate((a0, np.full((is_a0.sum(),), t0)))
-        af = np.concatenate((af, np.full((is_af.sum(),), tf)))
-        ages = np.concatenate((ages, data["ages"][not_af_a0]))
-        assets = np.concatenate(
-            (assets, (data["samples_ids"] + data["assets_ids"])[not_af_a0])
+        entries = data["entries"]
+        event_indicators = data["event_indicators"]
+
+        # collect a0
+        a0 = np.concatenate((a0, entries[entries != 0]))
+        assets = np.concatenate((assets, index[entries != 0]))
+
+        # collect af
+        af = np.concatenate((af, index[event_indicators != 0]))
+        assets = np.concatenate((assets, index[event_indicators != 0]))
+
+        # collect ages
+        timeline = data["timeline"]
+        ages = np.concatenate(
+            (ages, timeline[np.logical_and(event_indicators, entries == 0)])
         )
+
+    return a0, af, assets, ages

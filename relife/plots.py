@@ -8,10 +8,12 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
+
 from relife.types import Arg
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.core.model import LifetimeModel, NonParametricModel
+    from relife.data import CountData, NHPPData
 
 
 def plot(
@@ -59,7 +61,7 @@ def plot(
 
 def param_probfunc_plot(
     fname: str,
-    model: LifetimeModel[*tuple[Arg, ...]],
+    obj: LifetimeModel[*tuple[Arg, ...]],
     timeline: NDArray[np.float64] = None,
     model_args: tuple[Arg, ...] = (),
     asset: Optional[ArrayLike] = None,
@@ -71,7 +73,7 @@ def param_probfunc_plot(
     Parameters
     ----------
     asset :
-    model :
+    obj :
     timeline : 1D array, optional
         Timeline of the plot (x-axis), by default guessed by the millile.
     model_args : Tuple[ndarray], optional
@@ -101,11 +103,11 @@ def param_probfunc_plot(
     ValueError
         If `fname` value is not among 'sf', 'cdf', 'chf', 'hf' or 'pdf'.
     """
-    label = kwargs.pop("label", f"{model.__class__.__name__}" + f".{fname}")
+    label = kwargs.pop("label", f"{obj.__class__.__name__}" + f".{fname}")
     if timeline is None:
-        timeline = np.linspace(0, model.isf(1e-3), 200)
-    f = getattr(model, fname)
-    jac_f = getattr(model, "jac_" + fname)
+        timeline = np.linspace(0, obj.isf(1e-3), 200)
+    f = getattr(obj, fname)
+    jac_f = getattr(obj, "jac_" + fname)
 
     if asset is not None:
         model_args = tuple(
@@ -119,15 +121,15 @@ def param_probfunc_plot(
 
     y = f(timeline, *model_args)
     se = None
-    if alpha_ci is not None and hasattr(model, "fitting_results"):
-        if model.fitting_results is not None:
-            if model.fitting_results.se is not None:
+    if alpha_ci is not None and hasattr(obj, "fitting_results"):
+        if obj.fitting_results is not None:
+            if obj.fitting_results.se is not None:
                 i0 = 0
                 se = np.empty_like(timeline)
                 if timeline[0] == 0:
                     i0 = 1
                     se[0] = 0
-                se[i0:] = model.fitting_results.standard_error(
+                se[i0:] = obj.fitting_results.standard_error(
                     jac_f(timeline[i0:].reshape(-1, 1), *model_args)
                 )
 
@@ -140,21 +142,21 @@ def param_probfunc_plot(
 
 def nonparam_probfunc_plot(
     fname: str,
-    model: NonParametricModel,
+    obj: NonParametricModel,
     timeline: NDArray[np.float64] = None,
     alpha_ci: float = 0.05,
     **kwargs,
 ):
-    label = kwargs.pop("label", f"{model.__class__.__name__}" + f".{fname}")
-    if not hasattr(model, fname):
+    label = kwargs.pop("label", f"{obj.__class__.__name__}" + f".{fname}")
+    if not hasattr(obj, fname):
         raise ValueError(f"No plot for {fname}")
 
     if timeline is None:
-        timeline = model.estimates.get(fname).timeline
-        y = model.estimates.get(fname).values
-        se = model.estimates.get(fname).se
+        timeline = obj.estimates.get(fname).timeline
+        y = obj.estimates.get(fname).values
+        se = obj.estimates.get(fname).se
     else:
-        y, se = model.estimates.get(fname).nearest_1dinterp(timeline)
+        y, se = obj.estimates.get(fname).nearest_1dinterp(timeline)
     return plot(
         timeline,
         y,
@@ -169,21 +171,21 @@ def nonparam_probfunc_plot(
 
 def nelsonaalen_plot(
     fname: str,
-    model: NonParametricModel,
+    obj: NonParametricModel,
     timeline: NDArray[np.float64] = None,
     alpha_ci: float = 0.05,
     **kwargs,
 ):
-    label = kwargs.pop("label", f"{model.__class__.__name__}" + f".{fname}")
-    if not hasattr(model, fname):
+    label = kwargs.pop("label", f"{obj.__class__.__name__}" + f".{fname}")
+    if not hasattr(obj, fname):
         raise ValueError(f"No plot for {fname}")
 
     if timeline is None:
-        timeline = model.estimates.get(fname).timeline
-        y = model.estimates.get(fname).values
-        se = model.estimates.get(fname).se
+        timeline = obj.estimates.get(fname).timeline
+        y = obj.estimates.get(fname).values
+        se = obj.estimates.get(fname).se
     else:
-        y, se = model.estimates.get(fname).nearest_1dinterp(timeline)
+        y, se = obj.estimates.get(fname).nearest_1dinterp(timeline)
     return plot(
         timeline,
         y,
@@ -194,6 +196,19 @@ def nelsonaalen_plot(
         drawstyle="steps-post",
         **kwargs,
     )
+
+
+def count_data_plot(
+    fname: str,
+    obj: CountData,
+    **kwargs,
+):
+    label = kwargs.pop("label", fname)
+    if not hasattr(obj, fname):
+        raise ValueError(f"No plot for {fname}")
+    timeline, values = getattr(obj, fname)()
+
+    return plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
 
 
 class BoundPlot:
@@ -218,15 +233,20 @@ class PlotDescriptor:
         )  # avoid circular import
         from relife.models.regression import Regression
         from relife.models.distributions import Distribution
+        from relife.data import CountData, NHPPData
 
-        if isinstance(obj.model, Distribution):
-            return BoundPlot(obj.model, param_probfunc_plot, self.name)
-        if isinstance(obj.model, Regression):
-            return BoundPlot(obj.model, param_probfunc_plot, self.name)
-        if isinstance(obj.model, ECDF | KaplanMeier):
-            return BoundPlot(obj.model, nonparam_probfunc_plot, self.name)
-        if isinstance(obj.model, NelsonAalen):
-            return BoundPlot(obj.model, nelsonaalen_plot, self.name)
+        if isinstance(obj.obj, Distribution):
+            return BoundPlot(obj.obj, param_probfunc_plot, self.name)
+        if isinstance(obj.obj, Regression):
+            return BoundPlot(obj.obj, param_probfunc_plot, self.name)
+        if isinstance(obj.obj, ECDF | KaplanMeier):
+            return BoundPlot(obj.obj, nonparam_probfunc_plot, self.name)
+        if isinstance(obj.obj, NelsonAalen):
+            return BoundPlot(obj.obj, nelsonaalen_plot, self.name)
+        if isinstance(obj.obj, CountData):
+            return BoundPlot(obj.obj, count_data_plot, self.name)
+        if isinstance(obj.obj, NHPPData):
+            return BoundPlot(obj.obj, count_data_plot, self.name)
         raise NotImplementedError("No plot")
 
 
@@ -237,5 +257,23 @@ class PlotSurvivalFunc:
     hf = PlotDescriptor()
     pdf = PlotDescriptor()
 
-    def __init__(self, model: LifetimeModel[*tuple[Arg, ...]] | NonParametricModel):
-        self.model = model
+    def __init__(self, obj: LifetimeModel[*tuple[Arg, ...]] | NonParametricModel):
+        self.obj = obj
+
+
+class PlotCountingData:
+    number_of_events = PlotDescriptor()
+    mean_number_of_events = PlotDescriptor()
+
+    def __init__(self, obj: CountData):
+        self.obj = obj
+
+
+class PlotNHPPData:
+    number_of_events = PlotDescriptor()
+    mean_number_of_events = PlotDescriptor()
+    number_of_repairs = PlotDescriptor()
+    mean_number_of_repairs = PlotDescriptor()
+
+    def __init__(self, obj: NHPPData):
+        self.obj = obj

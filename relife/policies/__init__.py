@@ -1,4 +1,8 @@
-from .age_replacement import DefaultAgeReplacementPolicy, OneCycleAgeReplacementPolicy
-from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
-from .age_replacement import NonHomogeneousPoissonAgeReplacementPolicy
-from .replacement import replacement_policy, unperfect_repair_policy
+from .renewal import (
+    OneCycleAgeReplacementPolicy,
+    DefaultAgeReplacementPolicy,
+    NonHomogeneousPoissonAgeReplacementPolicy,
+    OneCycleRunToFailurePolicy,
+    DefaultRunToFailurePolicy,
+)
+from .factories import renewal_policy, imperfect_repair_policy

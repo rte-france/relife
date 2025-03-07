@@ -6,12 +6,13 @@ from typing import Optional, Union, NewType
 import numpy as np
 from numpy.typing import NDArray
 
+from relife.plots import PlotCountingData
 
 Ids = NewType("Ids", Union[list[int, ...], tuple[int, ...], int])
 
 
 @dataclass
-class CountData(ABC):
+class CountData:
     t0: float
     tf: float
     samples_ids: NDArray[np.int64] = field(repr=False)  # samples ids
@@ -37,10 +38,18 @@ class CountData(ABC):
         self.nb_samples = len(self.samples_unique_ids)
         self.nb_assets = len(self.assets_unique_ids)
 
+        for field_name, arr in self.fields():
+            setattr(self, field_name, arr[sorted_indices])
+
+    def fields(self):
         for field_def in fields(self):
-            if field_def.init and field_def.name not in ("t0", "tf"):
-                arr = getattr(self, field_def.name)
-                setattr(self, field_def.name, arr[sorted_indices])
+            if field_def.init and field_def.name not in (
+                "t0",
+                "tf",
+                "nb_samples",
+                "nb_assets",
+            ):
+                yield field_def.name, getattr(self, field_def.name)
 
     def __len__(self) -> int:
         return self.nb_samples * self.nb_assets
@@ -48,8 +57,7 @@ class CountData(ABC):
     def select(self, sample: Optional[Ids] = None, asset: Optional[Ids] = None):
         # fluent interface to select sample
 
-        sample_selection = slice(None, None)
-        asset_selection = slice(None, None)
+        selection = np.ones_like(self.timeline, dtype=np.bool_)
 
         if sample is not None:
             try:
@@ -60,10 +68,7 @@ class CountData(ABC):
             if not set(sample).issubset(self.samples_unique_ids):
                 raise ValueError("Sample indices are not valid")
 
-            print(np.isin(self.samples_ids, sample))
-            print(np.nonzero(np.isin(self.samples_ids, sample))[0])
-
-            sample_selection = np.nonzero(np.isin(self.samples_ids, sample))[0]
+            selection = np.isin(self.samples_ids, sample)  # bool index
 
         if asset is not None:
             try:
@@ -72,35 +77,28 @@ class CountData(ABC):
                 asset = (asset,)
             if not set(asset).issubset(self.assets_unique_ids):
                 raise ValueError("Sample indices are not valid")
-            asset_selection = np.nonzero(
-                np.isin(self.assets_ids[sample_selection], asset)
-            )[0]
 
-        print(sample_selection)
-        print(asset_selection)
+            selection = np.logical_and(np.isin(self.assets_ids, asset), selection)
 
         new_fields = {
-            field_def.name: getattr(self, field_def.name)[sample_selection][
-                asset_selection
-            ]
-            for field_def in fields(self)
-            if field_def.name not in ("t0", "tf")
+            field_name: np.compress(selection, arr) for field_name, arr in self.fields()
         }
 
         return replace(copy.deepcopy(self), t0=self.t0, tf=self.tf, **new_fields)
 
-    def number_of_events(
-        self, sample_id: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        ind = self.samples_ids == sample_id
-        times = np.insert(np.sort(self.timeline[ind]), 0, 0)
-        counts = np.arange(times.size)
-        return times, counts
+    def number_of_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline = np.insert(np.sort(self.timeline), 0, 0)
+        counts = np.insert(np.arange(1, self.timeline.size + 1), 0, 0)
+        return timeline, counts
 
     def mean_number_of_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        times = np.insert(np.sort(self.timeline), 0, 0)
-        counts = np.arange(times.size) / self.nb_samples
-        return times, counts
+        timeline = np.insert(np.sort(self.timeline), 0, 0)
+        counts = np.insert(np.arange(self.timeline.size), 0, 0.0) / len(self)
+        return timeline, counts
+
+    @property
+    def plot(self):
+        return PlotCountingData(self)
 
     # @abstractmethod
     # def iter(self, sample_id: Optional[int] = None) -> "CountDataIterable":
