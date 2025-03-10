@@ -10,7 +10,7 @@ import pytest
 from relife.models import AFT, Gamma, Gompertz, LogLogistic, ProportionalHazard, Weibull
 from relife.process import RenewalProcess, RenewalRewardProcess
 from relife.core.nested_model import AgeReplacementModel, EquilibriumDistribution
-from relife.costs import run_to_failure_cost
+from relife.rewards import run_to_failure_rewards
 
 
 @pytest.fixture(
@@ -85,7 +85,7 @@ def test_renewal_process(model_args_nb_assets):
 def test_renewal_reward_process(model_args_nb_assets):
     t = np.arange(0, 100, 0.5)
     model, model_args, nb_assets = model_args_nb_assets
-    reward = run_to_failure_cost
+    reward = run_to_failure_rewards
     reward_args = (1,)
     rrp = RenewalRewardProcess(
         model,
@@ -115,7 +115,7 @@ def test_renewal_reward_process_vec(model_args_nb_assets):
 
     rrp0 = RenewalRewardProcess(
         model,
-        run_to_failure_cost,
+        run_to_failure_rewards,
         model_args=model_args,
         reward_args=(cf0,),
         discounting_rate=discounting_rate,
@@ -123,7 +123,7 @@ def test_renewal_reward_process_vec(model_args_nb_assets):
     )
     rrp = RenewalRewardProcess(
         model,
-        run_to_failure_cost,
+        run_to_failure_rewards,
         model_args=model_args,
         reward_args=(np.full((n, 1), cf),),
         discounting_rate=discounting_rate,

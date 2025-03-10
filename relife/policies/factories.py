@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.core import LifetimeModel
+from relife.core import ParametricModel
 from relife.policies import (
     DefaultRunToFailurePolicy,
     OneCycleRunToFailurePolicy,
@@ -10,17 +10,36 @@ from relife.policies import (
     NonHomogeneousPoissonAgeReplacementPolicy,
 )
 from relife.policies.renewal import RenewalPolicy
-from relife.types import Arg
+from relife.process import NonHomogeneousPoissonProcess
 
 
-# renewal_policy ?
 def renewal_policy(
-    model: LifetimeModel[*tuple[Arg, ...]],  # ajouter NHPP
+    obj: ParametricModel,  # ajouter NHPP
     costs: dict[NDArray[np.float64]],
     one_cycle: bool = False,
     run_to_failure: bool = False,
     **kwargs,
 ) -> RenewalPolicy:
+
+    if isinstance(obj, NonHomogeneousPoissonProcess):
+        try:
+            cf, cr = (
+                costs["cf"],
+                costs["cr"],
+            )
+        except KeyError:
+            raise ValueError("Costs must contain cf and cr")
+        discounting_rate = kwargs.get("discounting_rate", 0.0)
+        ar = kwargs.get("ar", None)
+        nb_assets = kwargs.get("nb_assets", 1)
+        return NonHomogeneousPoissonAgeReplacementPolicy(
+            obj,
+            cf,
+            cr,
+            discounting_rate=discounting_rate,
+            ar=ar,
+            nb_assets=nb_assets,
+        )
 
     if run_to_failure:
         if not one_cycle:
@@ -35,7 +54,7 @@ def renewal_policy(
             model1 = kwargs.get("model1", None)
             model1_args = kwargs.get("model1_args", None)
             return DefaultRunToFailurePolicy(
-                model,
+                obj,
                 cf,
                 discounting_rate=discounting_rate,
                 model_args=model_args,
@@ -54,7 +73,7 @@ def renewal_policy(
             nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
             return OneCycleRunToFailurePolicy(
-                model,
+                obj,
                 cf,
                 discounting_rate=discounting_rate,
                 model_args=model_args,
@@ -79,7 +98,7 @@ def renewal_policy(
             model1 = kwargs.get("model1", None)
             model1_args = kwargs.get("model1_args", None)
             return DefaultAgeReplacementPolicy(
-                model,
+                obj,
                 cf,
                 cp,
                 discounting_rate=discounting_rate,
@@ -105,7 +124,7 @@ def renewal_policy(
             nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
             return OneCycleAgeReplacementPolicy(
-                model,
+                obj,
                 cf,
                 cp,
                 discounting_rate=discounting_rate,
@@ -114,31 +133,3 @@ def renewal_policy(
                 nb_assets=nb_assets,
                 a0=a0,
             )
-
-
-def imperfect_repair_policy(
-    model: LifetimeModel[*tuple[Arg, ...]],
-    costs: dict[NDArray[np.float64]],
-    **kwargs,
-):
-
-    try:
-        cf, cr = (
-            costs["cf"],
-            costs["cr"],
-        )
-    except KeyError:
-        raise ValueError("Costs must contain cf and cr")
-    discounting_rate = kwargs.get("discounting_rate", 0.0)
-    ar = kwargs.get("ar", None)
-    model_args = kwargs.get("model_args", ())
-    nb_assets = kwargs.get("nb_assets", 1)
-    return NonHomogeneousPoissonAgeReplacementPolicy(
-        model,
-        cf,
-        cr,
-        discounting_rate=discounting_rate,
-        ar=ar,
-        model_args=model_args,
-        nb_assets=nb_assets,
-    )

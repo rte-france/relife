@@ -5,4 +5,4 @@ from .renewal import (
     OneCycleRunToFailurePolicy,
     DefaultRunToFailurePolicy,
 )
-from .factories import renewal_policy, imperfect_repair_policy
+from .factories import renewal_policy

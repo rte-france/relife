@@ -4,7 +4,7 @@ from typing import Optional, Callable
 import numpy as np
 from numpy.typing import NDArray
 from relife.core.descriptors import ShapedArgs
-from relife.core.discounting import exponential_discounting
+from relife.rewards import exponential_discounting, Discounting
 from relife.core.model import LifetimeModel
 from relife.types import Arg
 
@@ -15,17 +15,19 @@ def renewal_equation_solver(
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     model_args: tuple[Arg, ...] = (),
-    discounting_rate: float = 0.0,
+    discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
     f = model.cdf(timeline, *model_args)
     fm = model.cdf(tm, *model_args)
     y = evaluated_func(timeline)
-    if discounting_rate != 0.0:
-        d = exponential_discounting.factor(timeline, discounting_rate)
+
+    if discounting is not None:
+        d = discounting.factor(timeline)
     else:
         d = np.ones_like(f)
+
     z = np.empty(y.shape)
     u = d * np.insert(f[..., 1:] - fm, 0, 1, axis=-1)
     v = d[..., :-1] * np.insert(np.diff(fm), 0, 1, axis=-1)
@@ -47,7 +49,7 @@ def delayed_renewal_equation_solver(
     model1: LifetimeModel[*tuple[Arg, ...]],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     model1_args: tuple[Arg, ...] = (),
-    discounting_rate: float = 0.0,
+    discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
@@ -55,10 +57,11 @@ def delayed_renewal_equation_solver(
     f1m = model1.cdf(tm, *model1_args)
     y1 = evaluated_func(timeline)
 
-    if discounting_rate != 0.0:
-        d = exponential_discounting.factor(timeline, discounting_rate)
+    if discounting is not None:
+        d = discounting.factor(timeline)
     else:
         d = np.ones_like(f1)
+
     z1 = np.empty(y1.shape)
     u1 = d * np.insert(f1[..., 1:] - f1m, 0, 1, axis=-1)
     v1 = d[..., :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)
@@ -159,10 +162,10 @@ def reward_partial_expectation(
     reward: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     model_args: tuple[Arg, ...] = (),
-    discounting_rate: float = 0.0,
+    discounting: Optional[Discounting] = None,
 ) -> np.ndarray:
     def func(x):
-        return reward(x) * exponential_discounting.factor(x, discounting_rate)
+        return reward(x) * discounting.factor(x)
 
     ls = model.ls_integrate(func, np.zeros_like(timeline), timeline, *model_args)
     # reshape 2d -> final_dim
@@ -181,14 +184,14 @@ class RenewalRewardProcess(RenewalProcess):
     def __init__(
         self,
         model: LifetimeModel[*tuple[Arg, ...]],
-        reward: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        rewards: Callable[[NDArray[np.float64]], NDArray[np.float64]],
         *,
         nb_assets: int = 1,
         model_args: tuple[Arg, ...] = (),
-        discounting_rate: float = 0.0,
+        discounting: Optional[Discounting] = None,
         model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
         model1_args: tuple[Arg, ...] = (),
-        reward1: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
+        rewards1: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
     ):
         super().__init__(
             model,
@@ -197,9 +200,9 @@ class RenewalRewardProcess(RenewalProcess):
             model_args=model_args,
             model1_args=model1_args,
         )
-        self.reward = reward
-        self.reward1 = reward1
-        self.discounting_rate = discounting_rate
+        self.rewards = rewards
+        self.rewards1 = rewards1
+        self.discounting = discounting
 
     def expected_total_reward(
         self, timeline: NDArray[np.float64]
@@ -210,13 +213,13 @@ class RenewalRewardProcess(RenewalProcess):
             partial(
                 reward_partial_expectation,
                 model=self.model,
-                reward=self.reward,
+                reward=self.rewards,
                 model_args=self.model_args,
                 reward_args=self.reward_args,
-                discounting_rate=self.discounting_rate,
+                discounting=self.discounting,
             ),
             model_args=self.model_args,
-            discounting_rate=self.discounting_rate,
+            discounting=self.discounting,
         )
 
         if self.model1 is None:
@@ -229,25 +232,22 @@ class RenewalRewardProcess(RenewalProcess):
                 partial(
                     reward_partial_expectation,
                     model=self.model1,
-                    reward=self.reward1,
+                    reward=self.rewards1,
                     model_args=self.model1_args,
-                    discounting_rate=self.discounting_rate,
+                    discounting_rate=self.discounting,
                 ),
                 model1_args=self.model1_args,
-                discounting_rate=self.discounting_rate,
+                discounting=self.discounting,
             )
 
     def asymptotic_expected_total_reward(
         self,
     ) -> NDArray[np.float64]:
-        mask = self.discounting_rate <= 0
-        rate = np.ma.MaskedArray(self.discounting_rate, mask)
-
         def f(x):
-            return exponential_discounting.factor(x, rate)
+            return self.discounting.factor(x)
 
         def y(x):
-            return exponential_discounting.factor(x, rate) * self.reward(x)
+            return self.discounting.factor(x) * self.rewards(x)
 
         lf = self.model.ls_integrate(
             f, np.array(0.0), np.array(np.inf), *self.model_args
@@ -260,7 +260,7 @@ class RenewalRewardProcess(RenewalProcess):
         if self.model1 is not None:
 
             def y1(x):
-                return exponential_discounting.factor(x, rate) * self.reward1(x)
+                return self.discounting.factor(x) * self.rewards1(x)
 
             lf1 = self.model1.ls_integrate(
                 f, np.array(0.0), np.array(np.inf), *self.model1_args
@@ -269,40 +269,38 @@ class RenewalRewardProcess(RenewalProcess):
                 y1, np.array(0.0), np.array(np.inf), *self.model1_args
             )
             z = ly1 + z * lf1
-        return np.squeeze(np.where(mask, np.inf, z))
+
+        return np.squeeze(z)
 
     def expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
 
         z = self.expected_total_reward(timeline)
-        af = exponential_discounting.annuity_factor(timeline, self.discounting_rate)
+        af = self.discounting.annuity_factor(timeline)
         mask = af == 0.0
         af = np.ma.masked_where(mask, af)
         q = z / af
         if self.model1 is None:
-            q0 = self.reward(np.array(0.0)) * self.model.pdf(
+            q0 = self.rewards(np.array(0.0)) * self.model.pdf(
                 np.array(0.0), *self.model_args
             )
         else:
-            q0 = self.reward1(np.array(0.0)) * self.model1.pdf(
+            q0 = self.rewards1(np.array(0.0)) * self.model1.pdf(
                 np.array(0.0), *self.model1_args
             )
         return np.where(mask, q0, q)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        mask = self.discounting_rate <= 0
-        discounting_rate = np.ma.MaskedArray(self.discounting_rate, mask)
-
-        q = discounting_rate * self.asymptotic_expected_total_reward()
-
-        q0 = np.squeeze(
-            self.model.ls_integrate(
-                lambda x: self.reward(x),
-                np.array(0.0),
-                np.array(np.inf),
-                *self.model_args,
+        if self.discounting.rate == 0.0:
+            return np.squeeze(
+                self.model.ls_integrate(
+                    lambda x: self.rewards(x),
+                    np.array(0.0),
+                    np.array(np.inf),
+                    *self.model_args,
+                )
+                / self.model.mean(*self.model_args)
             )
-            / self.model.mean(*self.model_args)
-        )
-        return np.squeeze(np.where(mask, q0, q))
+        else:
+            return self.discounting.rate * self.asymptotic_expected_total_reward()
