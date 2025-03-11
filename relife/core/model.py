@@ -10,7 +10,7 @@ from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
 from relife.data import LifetimeData, lifetime_data_factory
 from .likelihoods import LikelihoodFromLifetimes
-from relife.plots import PlotSurvivalFunc
+from relife.plots import PlotSurvivalFunc, PlotConstructor
 from .quadratures import gauss_legendre, quad_laguerre
 from relife.types import VariadicArgs
 
@@ -611,7 +611,7 @@ class LifetimeModel(Generic[*VariadicArgs], ABC):
         #         raise ValueError("broadcast_to shape value is incompatible")
 
     @property
-    def plot(self) -> PlotSurvivalFunc:
+    def plot(self) -> PlotConstructor:
         """Plot"""
         return PlotSurvivalFunc(self)
 

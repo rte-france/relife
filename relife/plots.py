@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 
 import numpy as np
 import scipy.stats as stats
@@ -13,7 +13,8 @@ from relife.types import Arg
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.core.model import LifetimeModel, NonParametricModel
-    from relife.data import CountData, NHPPData
+    from relife.data import CountData, NHPPData, RenewalData
+    from relife.process import NonHomogeneousPoissonProcess
 
 
 def plot(
@@ -22,6 +23,7 @@ def plot(
     se: np.ndarray = None,
     alpha_ci: float = 0.05,
     bounds=(-np.inf, np.inf),
+    label: Optional[str] = None,
     **kwargs,
 ) -> Axes:
     r"""Plot a function with a confidence interval.
@@ -42,20 +44,23 @@ def plot(
     bounds : tuple, optional
         Bounds for clipping the value of the confidence interval, by default
         (-np.inf, np.inf).
+    label : str, optional
+        label name
     **kwargs : dict, optional
         Extra arguments to specify the plot properties (see
         matplotlib.pyplot.plot documentation).
     """
     ax = kwargs.pop("ax", plt.gca())
     drawstyle = kwargs.pop("drawstyle", "default")
-    (lines,) = ax.plot(x, y, drawstyle=drawstyle, **kwargs)
+    (lines,) = ax.plot(x, y, drawstyle=drawstyle, label=label, **kwargs)
     if alpha_ci is not None and se is not None:
         z = stats.norm.ppf(1 - alpha_ci / 2)
         yl = np.clip(y - z * se, bounds[0], bounds[1])
         yu = np.clip(y + z * se, bounds[0], bounds[1])
         step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
         ax.fill_between(x, yl, yu, facecolor=lines.get_color(), step=step, alpha=0.25)
-    ax.legend()
+    if label is not None:
+        ax.legend()
     return ax
 
 
@@ -211,6 +216,42 @@ def count_data_plot(
     return plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
 
 
+def renewal_data_plot(
+    fname: str,
+    obj: CountData,
+    **kwargs,
+):
+    label = kwargs.pop("label", fname)
+    if not hasattr(obj, fname):
+        raise ValueError(f"No plot for {fname}")
+    timeline, values = getattr(obj, fname)()
+    if fname in ("total_rewards", "mean_total_rewards"):
+        ax = kwargs.pop("ax", plt.gca())
+        alpha = kwargs.pop("alpha", 1.0)
+        ax.plot(timeline, values, label=label, **kwargs)
+        ax.fill_between(timeline, values, where=values >= 0, alpha=alpha, **kwargs)
+        if label is not None:
+            ax.legend()
+        return ax
+    else:
+        return count_data_plot(fname, obj, label=label, **kwargs)
+
+
+def nhpp_plot(
+    fname: str,
+    obj: NonHomogeneousPoissonProcess,
+    timeline: NDArray[np.float64] = None,
+    **kwargs,
+):
+
+    label = kwargs.pop("label", f"{obj.__class__.__name__}" + f".{fname}")
+    if not hasattr(obj, fname):
+        raise ValueError(f"No plot for {fname}")
+    f = getattr(obj, fname)
+    y = f(timeline)
+    return plot(timeline, y, label=label, **kwargs)
+
+
 class BoundPlot:
     def __init__(self, obj, plot_func, fname: str):
         self.obj = obj
@@ -233,7 +274,8 @@ class PlotDescriptor:
         )  # avoid circular import
         from relife.models.regression import Regression
         from relife.models.distributions import Distribution
-        from relife.data import CountData, NHPPData
+        from relife.data import CountData, NHPPData, RenewalData
+        from relife.process import NonHomogeneousPoissonProcess
 
         if isinstance(obj.obj, Distribution):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
@@ -244,36 +286,46 @@ class PlotDescriptor:
         if isinstance(obj.obj, NelsonAalen):
             return BoundPlot(obj.obj, nelsonaalen_plot, self.name)
         if isinstance(obj.obj, CountData):
+            if isinstance(obj.obj, RenewalData):
+                return BoundPlot(obj.obj, renewal_data_plot, self.name)
             return BoundPlot(obj.obj, count_data_plot, self.name)
         if isinstance(obj.obj, NHPPData):
             return BoundPlot(obj.obj, count_data_plot, self.name)
+        if isinstance(obj.obj, NonHomogeneousPoissonProcess):
+            return BoundPlot(obj.obj, nhpp_plot, self.name)
         raise NotImplementedError("No plot")
 
 
-class PlotSurvivalFunc:
+class PlotConstructor:
+    def __init__(self, obj: Any):
+        self.obj = obj
+
+
+class PlotSurvivalFunc(PlotConstructor):
     sf = PlotDescriptor()
     cdf = PlotDescriptor()
     chf = PlotDescriptor()
     hf = PlotDescriptor()
     pdf = PlotDescriptor()
 
-    def __init__(self, obj: LifetimeModel[*tuple[Arg, ...]] | NonParametricModel):
-        self.obj = obj
+
+class PlotNHPP(PlotConstructor):
+    intensity = PlotDescriptor()
+    cumulative_intensity = PlotDescriptor()
 
 
-class PlotCountingData:
+class PlotCountingData(PlotConstructor):
     number_of_events = PlotDescriptor()
     mean_number_of_events = PlotDescriptor()
 
-    def __init__(self, obj: CountData):
-        self.obj = obj
+
+class PlotRenewalData(PlotCountingData):
+    total_rewards = PlotDescriptor()
+    mean_total_rewards = PlotDescriptor()
 
 
-class PlotNHPPData:
+class PlotNHPPData(PlotConstructor):
     number_of_events = PlotDescriptor()
     mean_number_of_events = PlotDescriptor()
     number_of_repairs = PlotDescriptor()
     mean_number_of_repairs = PlotDescriptor()
-
-    def __init__(self, obj: NHPPData):
-        self.obj = obj

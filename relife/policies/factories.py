@@ -23,8 +23,8 @@ def renewal_policy(
 
     if isinstance(obj, NonHomogeneousPoissonProcess):
         try:
-            cf, cr = (
-                costs["cf"],
+            cp, cr = (
+                costs["cp"],
                 costs["cr"],
             )
         except KeyError:
@@ -34,7 +34,7 @@ def renewal_policy(
         nb_assets = kwargs.get("nb_assets", 1)
         return NonHomogeneousPoissonAgeReplacementPolicy(
             obj,
-            cf,
+            cp,
             cr,
             discounting_rate=discounting_rate,
             ar=ar,

@@ -27,7 +27,7 @@ class RenewalPolicy:
     model1_args = ShapedArgs(astuple=True)
     nb_assets = NbAssets()
 
-    def sample(
+    def simulate(
         self,
         size: int,
         tf: float,
@@ -402,6 +402,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
         self.model_args = (ar,) + self.model_args[1:]
         self.ar = ar
+        self.rewards = age_replacement_rewards(ar=ar, cf=self.cf, cp=self.cp)
         return self
 
 
@@ -508,6 +509,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         self.ar1 = ar1
         self.discounting = exponential_discounting(discounting_rate)
         self.rewards = age_replacement_rewards(ar=self.ar, cf=self.cf, cp=self.cp)
+        self.rewards1 = age_replacement_rewards(ar=self.ar1, cf=self.cf, cp=self.cp)
 
         self.model_args = (ar,) + model_args
 
@@ -533,7 +535,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
                 discounting=self.discounting,
                 model1=self.model1,
                 model1_args=self.model1_args,
-                rewards1=self.rewards,
+                rewards1=self.rewards1,
             )
 
     @require_attributes("ar")
@@ -623,13 +625,13 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
         self.process = RenewalRewardProcess(
             self.model,
-            self.rewards,
+            age_replacement_rewards(ar=ar, cf=self.cf, cp=self.cp),
             nb_assets=self.nb_assets,
             model_args=self.model_args,
             discounting=self.discounting,
             model1=self.model1,
             model1_args=self.model1_args,
-            rewards1=age_replacement_rewards(ar=self.ar1, cf=self.cf, cp=self.cp),
+            rewards1=age_replacement_rewards(ar=ar1, cf=self.cf, cp=self.cp),
         )
         return self
 
@@ -652,20 +654,20 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         Discount rate applied for present value calculations.
     ar : np.ndarray or None
         Optimized replacement age (optimized policy parameter).
-    cf : np.ndarray
+    cp : np.ndarray
         The cost of failure for each asset.
     cr : np.ndarray
         The cost of repair for each asset.
     """
 
-    cf = ShapedArgs()
+    cp = ShapedArgs()
     cr = ShapedArgs()
     ar = ShapedArgs()
 
     def __init__(
         self,
         process: NonHomogeneousPoissonProcess,
-        cf: NDArray[np.float64],
+        cp: NDArray[np.float64],
         cr: NDArray[np.float64],
         *,
         discounting_rate: float = 0.0,
@@ -678,10 +680,11 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         self.process = process
         self.model = process.model
         self.model_args = process.model_args
-        self.discounting = exponential_discounting(discounting_rate)
         self.ar = ar
-        self.cf = cf
+        self.cp = cp
         self.cr = cr
+        self.discounting = exponential_discounting(discounting_rate)
+        self.rewards = age_replacement_rewards(self.ar, self.cr, self.cp)
 
     @require_attributes("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -715,7 +718,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
 
         x0 = self.model.mean(*self.model_args)
 
-        cr_2d, cf_2d, *model_args_2d = np.atleast_2d(self.cr, self.cf, *self.model_args)
+        cr_2d, cp_2d, *model_args_2d = np.atleast_2d(self.cr, self.cp, *self.model_args)
         if isinstance(model_args_2d, np.ndarray):
             model_args_2d = (model_args_2d,)
 
@@ -734,7 +737,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
                         a,
                         ndim=2,
                     )
-                    - cf_2d / cr_2d
+                    - cp_2d / cr_2d
                 )
 
         else:
@@ -744,15 +747,16 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
                 return (
                     a * self.process.intensity(a, *model_args_2d)
                     - self.process.cumulative_intensity(a, *model_args_2d)
-                    - cf_2d / cr_2d
+                    - cp_2d / cr_2d
                 )
 
         ar = newton(dcost, x0)
 
-        ndim = max(map(np.ndim, (self.cf, self.cr, *self.model_args)), default=0)
+        ndim = max(map(np.ndim, (self.cp, self.cr, *self.model_args)), default=0)
         if ndim < 2:
             ar = np.squeeze(ar)
         self.ar = ar
+        self.rewards = age_replacement_rewards(ar, self.cr, self.cp)
         return self
 
 

@@ -97,7 +97,9 @@ class SampleIterator(Iterator, ABC):
             assets_ids=assets_ids,
             timeline=self.timeline[selection],
         )
-        self._output_dict.update({k: v[selection] for k, v in kwvalues.items()})
+        self._output_dict.update(
+            {k: v[selection] for k, v in kwvalues.items() if v is not None}
+        )
         return self._output_dict
 
     @abstractmethod
@@ -207,38 +209,44 @@ class LifetimeIterator(SampleIterator):
             seed=self.seed,
         ).reshape((self._nb_assets, self.nb_samples))
 
-        if self._ar:
-            durations = np.minimum(durations, self._ar)
-        if self._a0 is not None:
-            durations = durations + self._a0
+        # create events_indicators and entries
+        event_indicators = np.ones_like(self.timeline, dtype=np.bool_)
+        entries = np.zeros_like(self.timeline)
 
         # update timeline
         self.timeline += durations
+
+        # ar right censorings
+        if self._ar is not None:
+            is_replaced = durations >= self._ar
+            self.timeline = np.where(
+                is_replaced, self.timeline - (durations - self._ar), self.timeline
+            )
+            durations[is_replaced] = self._ar
+            event_indicators[is_replaced] = False
+
+        # a0 left truncations
+        if self._a0 is not None:
+            self.timeline = self.timeline - self._a0
+            durations = durations - self._a0
+            entries = np.maximum(entries, self._a0)
 
         # update start and stop counter
         self._start[self.timeline > self.t0] += 1
         self._stop[self.timeline > self.tf] += 1
 
-        # censor values
-        event_indicators = np.ones_like(self.timeline, dtype=np.bool_)
+        # tf right censorings
         durations = np.where(
             self._crossed_tf, durations - (self.timeline - self.tf), durations
         )
         self.timeline[self._crossed_tf] = self.tf
         event_indicators[self._crossed_tf] = False
 
-        # get left truncations
-        entries = np.zeros_like(self.timeline)
+        # t0 left truncations
         entries = np.where(
             self._crossed_t0, self.t0 - (self.timeline - durations), entries
         )
-
-        # update censorings
-        if self._ar is not None:
-            event_indicators = np.where(durations < self._ar, event_indicators, False)
-        # update truncations
-        if self._a0 is not None:
-            entries = np.maximum(entries, self._a0)
+        durations = np.where(self._crossed_t0, durations - entries, durations)
 
         # update seed to avoid having the same rvs result
         if self.seed is not None:
@@ -288,11 +296,30 @@ class NonHomogeneousPoissonIterator(SampleIterator):
     ):
         super().__init__(size, tf, t0, seed=seed)
 
+        self._rewards = None
+        self._discounting = None
+
         self._hpp_timeline = None  # exposed attribute (set/get)
         self._failure_times = None
         self._ages = None
         self._ar = None
         self._exponential_dist = Exponential(1.0)
+
+    def set_rewards(self, rewards: RewardsFunc):
+        self._rewards = rewards
+
+    def set_discounting(self, discounting: Discounting):
+        self._discounting = discounting
+
+    def compute_rewards(
+        self, timeline: NDArray[np.float64], durations: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        rewards = np.zeros_like(durations)
+        if self._rewards and self._discounting:
+            rewards = self._rewards(durations) * self._discounting.factor(timeline)
+        if self._rewards and not self._discounting:
+            rewards = self._rewards(durations)
+        return rewards
 
     def set_sampler(self, model, model_args, ar: Optional[NDArray[np.float64]] = None):
 
@@ -348,10 +375,10 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
         # update a0 values
         a0[self._crossed_t0] = self.t0
-
         # af values
         af[self._crossed_tf] = self.tf
-        durations[self._crossed_tf] = np.nan  # no reparations
+
+        durations = np.where(self._crossed_tf, self.timeline - self.tf, durations)
         self.timeline[self._crossed_tf] = self.tf
 
         # update seed to avoid having the same rvs result
@@ -365,5 +392,12 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             raise ValueError("Set sampler first")
         while not self.stop:  # recompute stop condition automatically
             durations, a0, af = self._sample_routine()
-            return self.output_as_dict_of_1d(durations=durations, a0=a0, af=af)
+            rewards = (
+                self.compute_rewards(self.timeline, durations)
+                if self._rewards
+                else None
+            )
+            return self.output_as_dict_of_1d(
+                durations=durations, a0=a0, af=af, rewards=rewards
+            )
         raise StopIteration

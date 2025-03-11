@@ -1,4 +1,4 @@
-from typing import Any, Self
+from typing import Any, Self, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,7 +7,9 @@ from scipy.optimize import minimize
 from relife.core.descriptors import ShapedArgs
 from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
-from relife.data import lifetime_data_factory, nhpp_lifetime_data_factory
+from relife.data import lifetime_data_factory, nhpp_lifetime_data_factory, CountData
+from relife.plots import PlotNHPP, PlotConstructor
+from relife.rewards import run_to_failure_rewards
 from relife.types import Arg, VariadicArgs
 
 
@@ -21,6 +23,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         model_args: tuple[Arg, ...] = (),
         *,
         nb_assets: int = 1,
+        cr: Optional[NDArray[np.float64]] = None,
     ):
         super().__init__()
         self.nb_assets = nb_assets
@@ -34,6 +37,35 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         self, time: np.ndarray, *args: *tuple[Arg, ...]
     ) -> np.ndarray:
         return self.model.chf(time, *args)
+
+    def simulate(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from relife.sampling import sample_count_data
+
+        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+
+    # sample_failure_data
+    def sample_failure_data(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        seed: Optional[int] = None,
+        use: str = "model",
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sampling import sample_failure_data
+
+        return sample_failure_data(self, size, tf, t0, seed, use)
+
+    @property
+    def plot(self) -> PlotConstructor:
+        return PlotNHPP(self)
 
     def fit(
         self,

@@ -5,7 +5,7 @@ from typing import Optional, Union, NewType
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.plots import PlotCountingData
+from relife.plots import PlotCountingData, PlotRenewalData, PlotConstructor
 
 Ids = NewType("Ids", Union[list[int, ...], tuple[int, ...], int])
 
@@ -87,9 +87,10 @@ class CountData:
 
     def number_of_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         sort = np.argsort(self.timeline)
-        timeline = np.insert(self.timeline[sort], 0, 0)
+        timeline = self.timeline[sort]
         counts = np.ones_like(timeline)
-        counts[0] = 0
+        timeline = np.insert(timeline, 0, self.t0)
+        counts = np.insert(counts, 0, 0)
         counts[timeline == self.tf] = 0
         return timeline, np.cumsum(counts)
 
@@ -98,31 +99,28 @@ class CountData:
         return timeline, counts / len(self)
 
     @property
-    def plot(self):
+    def plot(self) -> PlotConstructor:
         return PlotCountingData(self)
 
 
 @dataclass
 class RenewalData(CountData):
     durations: NDArray[np.float64] = field(repr=False)
-    rewards: NDArray[np.float64] = field(default=None, repr=False)
+    rewards: NDArray[np.float64] = field(repr=False)
 
-    def __post_init__(self):
-        super().__post_init__()
-        if self.rewards is None:
-            self.rewards = np.zeros_like(self.timeline)
+    def total_rewards(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        sort = np.argsort(self.timeline)
+        timeline = self.timeline[sort]
+        rewards = self.rewards[sort]
+        timeline = np.insert(timeline, 0, self.t0)
+        rewards = np.insert(rewards, 0, 0)
+        rewards[timeline == self.tf] = 0
+        return timeline, rewards.cumsum()
 
-    def cum_total_rewards(
-        self, sample: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        ind = self.samples_ids == sample
-        s = np.argsort(self.timeline[ind])
-        times = np.insert(self.timeline[ind][s], 0, 0)
-        z = np.insert(self.rewards[ind][s].cumsum(), 0, 0)
-        return times, z
+    def mean_total_rewards(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline, rewards = self.total_rewards()
+        return timeline, rewards / len(self)
 
-    def mean_total_reward(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        s = np.argsort(self.timeline)
-        times = np.insert(self.timeline[s], 0, 0)
-        z = np.insert(self.rewards[s].cumsum(), 0, 0) / self.nb_samples
-        return times, z
+    @property
+    def plot(self) -> PlotConstructor:
+        return PlotRenewalData(self)

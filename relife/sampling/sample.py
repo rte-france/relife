@@ -78,7 +78,8 @@ def _(
                 rewards,
             )
 
-    # next cycles : set model in iterator
+    # next cycles : set model in iterator and change rewards
+    iterator.set_rewards(obj.rewards)
     iterator.set_sampler(obj.model, obj.model_args)
 
     for data in iterator:
@@ -95,6 +96,9 @@ def _(
             raise ValueError(
                 "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
             )
+
+    if rewards is None:
+        rewards = np.zeros_like(timeline)
 
     return RenewalData(
         t0,
@@ -135,7 +139,7 @@ def _(
             "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
         )
 
-    return RenewalRewardData(
+    return RenewalData(
         t0,
         tf,
         samples_ids,
@@ -174,7 +178,7 @@ def _(
             "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
         )
 
-    return RenewalRewardData(
+    return RenewalData(
         t0,
         tf,
         samples_ids,
@@ -211,11 +215,17 @@ def _(
     assets_ids = np.array([], dtype=np.int64)
     timeline = np.array([], dtype=np.float64)
     durations = np.array([], dtype=np.float64)
+    rewards = None
+    if isinstance(obj, NonHomogeneousPoissonAgeReplacementPolicy):
+        rewards = np.array([], dtype=np.float64)
 
     iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed)
     iterator.set_sampler(
         obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
     )
+    if isinstance(obj, NonHomogeneousPoissonAgeReplacementPolicy):
+        iterator.set_rewards(obj.rewards)
+        iterator.set_discounting(obj.discounting)
 
     for data in iterator:
         if data["timeline"].size == 0:
@@ -230,6 +240,8 @@ def _(
         timeline = np.concatenate((timeline, _timeline[selection]))
         samples_ids = np.concatenate((samples_ids, _samples_ids[selection]))
         assets_ids = np.concatenate((assets_ids, _assets_ids[selection]))
+        if isinstance(obj, NonHomogeneousPoissonAgeReplacementPolicy):
+            rewards = np.concatenate((rewards, data["rewards"]))
 
         # select a0, af only for sample_failure_data
         # selection = ~np.isnan(_a0)
@@ -243,7 +255,10 @@ def _(
                 "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
             )
 
-    return NHPPData(t0, tf, samples_ids, assets_ids, timeline, durations)
+    if rewards is None:
+        rewards = np.zeros_like(timeline)
+
+    return RenewalData(t0, tf, samples_ids, assets_ids, timeline, durations, rewards)
 
 
 def get_baseline_type(model):

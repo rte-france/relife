@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from .counting import CountData
-from relife.plots import PlotNHPPData
+from relife.plots import PlotNHPPData, PlotConstructor
 
 
 def nhpp_lifetime_data_factory(
@@ -75,7 +75,7 @@ def nhpp_lifetime_data_factory(
 
 @dataclass
 class NHPPData(CountData):
-    ages: NDArray[np.float64] = field(repr=False)
+    durations: NDArray[np.float64] = field(repr=False)
 
     def number_of_repairs(self):
         # alias name
@@ -97,7 +97,7 @@ class NHPPData(CountData):
     #     return timeline, nb_repairs
 
     @property
-    def plot(self):
+    def plot(self) -> PlotConstructor:
         return PlotNHPPData(self)
 
     # def to_fit(
