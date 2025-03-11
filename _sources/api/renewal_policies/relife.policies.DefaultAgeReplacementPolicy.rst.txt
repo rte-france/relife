@@ -35,8 +35,8 @@ DefaultAgeReplacementPolicy
             ~DefaultAgeReplacementPolicy.optimize
         
         
-            ~DefaultAgeReplacementPolicy.sample
-        
-        
             ~DefaultAgeReplacementPolicy.sample_failure_data
+        
+        
+            ~DefaultAgeReplacementPolicy.simulate
         
