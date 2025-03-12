@@ -5,8 +5,8 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from .model import LifetimeModel
-from .quadratures import gauss_legendre
+from relife.core.model import LifetimeModel
+from relife.core.quadratures import gauss_legendre
 from relife.types import Args
 
 
@@ -255,6 +255,7 @@ class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *tuple[Args, ...]]):
             - a0
         )
 
+    @override
     def rvs(
         self,
         a0: NDArray[np.float64],
@@ -262,7 +263,7 @@ class LeftTruncatedModel(LifetimeModel[NDArray[np.float64], *tuple[Args, ...]]):
         size: Optional[int] = 1,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
-        return self.baseline.rvs(*args, size=size, seed=seed) + a0
+        return super().rvs(*(a0, *args), size=size, seed=seed)
 
 
 class EquilibriumDistribution(LifetimeModel[*tuple[Args, ...]]):

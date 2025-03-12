@@ -3,7 +3,7 @@ from typing import Union, Optional
 
 import numpy as np
 
-from relife.data import RenewalData, NHPPData
+from relife.data import RenewalData
 
 from relife.process import RenewalRewardProcess, NonHomogeneousPoissonProcess
 from relife.process.renewal import RenewalProcess
@@ -19,7 +19,7 @@ from relife.rewards import (
     run_to_failure_rewards,
 )
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
-from ..process.nhpp import NonHomogeneousPoissonProcessWithRewards
+from relife.process import NonHomogeneousPoissonProcessWithRewards
 
 
 @singledispatch
@@ -49,7 +49,7 @@ def _(
     samples_ids = np.array([], dtype=np.int64)
     assets_ids = np.array([], dtype=np.int64)
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
 
     rewards = None
     if isinstance(obj, RenewalRewardProcess):
@@ -124,7 +124,7 @@ def _(
     seed: Optional[int] = None,
 ):
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_rewards(run_to_failure_rewards(obj.cf))
     iterator.set_discounting(obj.discounting)
     iterator.set_sampler(obj.model, obj.model_args)
@@ -163,7 +163,7 @@ def _(
     seed: Optional[int] = None,
 ):
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_rewards(age_replacement_rewards(obj.ar, obj.cf, obj.cp))
     iterator.set_discounting(obj.discounting)
     iterator.set_sampler(obj.model, obj.model_args)
@@ -232,7 +232,9 @@ def _(
     ):
         rewards = np.array([], dtype=np.float64)
 
-    iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed)
+    iterator = NonHomogeneousPoissonIterator(
+        size, tf, t0=t0, nb_assets=obj.nb_assets, seed=seed
+    )
     iterator.set_sampler(
         obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
     )
@@ -340,7 +342,7 @@ def _(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
     )
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_sampler(obj.model, obj.model_args)
 
     stack_model_args = tuple(([] for _ in range(len(model_args))))
@@ -375,7 +377,7 @@ def _(
             "Invalid 'use' argument for OneCycleRunToFailurePolicy. 'use' can only be 'model'"
         )
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_sampler(obj.model, obj.model_args)
 
     model_args = ()
@@ -411,7 +413,7 @@ def _(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
     )
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_sampler(model, model_args)
 
     stack_model_args = tuple(([] for _ in range(len(model_args))))

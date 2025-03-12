@@ -9,7 +9,7 @@ from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
 from relife.data import lifetime_data_factory, nhpp_lifetime_data_factory, CountData
 from relife.plots import PlotNHPP, PlotConstructor
-from relife.rewards import run_to_failure_rewards, RewardsFunc, exp_discounting
+from relife.rewards import RewardsFunc, exp_discounting
 from relife.types import Args, VariadicArgs
 
 

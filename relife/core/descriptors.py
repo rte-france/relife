@@ -12,30 +12,34 @@ def np_at_least(nb_assets: int):
         return np.atleast_2d
 
 
+def get_nb_assets(args_tuple: tuple[Args, ...]) -> int:
+    def as_2d():
+        for x in args_tuple:
+            if not isinstance(x, np.ndarray):
+                x = np.asarray(x)
+            if len(x.shape) > 2:
+                raise ValueError
+            yield np.atleast_2d(x)
+
+    return max(map(lambda x: x.shape[0], as_2d()), default=1)
+
+
 class NbAssets:
 
-    def __init__(self):
-        self.default_value = 1  # default value
-
-    def __set_name__(self, owner, name):
-        self.private_name = "_" + name
-        self.public_name = name
+    def __init__(self, compute_from: Optional[tuple[str]] = None):
+        self.compute_from = compute_from
+        self.cached_value = None if compute_from is not None else 1
 
     def __get__(self, obj, objtype=None):
-        return getattr(obj, self.private_name, self.default_value)
-
-    def __set__(self, obj, value: int):
-        if not isinstance(value, int):
-            raise ValueError(
-                f"Incorrect type for {self.public_name}, must be integer (default 1)"
-            )
-        if value == 0:
-            raise ValueError(
-                f"Incorrect value for {self.public_name}, must be greater or equal to 1"
-            )
-        current_value = getattr(obj, self.private_name, self.default_value)
-        if value > current_value:
-            setattr(obj, self.private_name, value)
+        if self.cached_value is not None:
+            return self.cached_value
+        else:
+            if self.compute_from is not None:
+                nb_assets = get_nb_assets(
+                    tuple((getattr(obj, attr) for attr in self.compute_from))
+                )
+                self.cached_value = nb_assets
+                return nb_assets
 
 
 class ShapedArgs:

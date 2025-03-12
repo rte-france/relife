@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.core import LifetimeModel, AgeReplacementModel, LeftTruncatedModel
+from relife.core import LifetimeModel
 from relife.core.decorators import require_attributes
 from relife.core.descriptors import NbAssets, ShapedArgs
 from relife.core.quadratures import gauss_legendre
@@ -17,6 +17,7 @@ from relife.data import CountData
 from relife.process import RenewalRewardProcess, NonHomogeneousPoissonProcess
 from relife.process.renewal import reward_partial_expectation
 from relife.types import Args
+from relife.models import LeftTruncatedModel, AgeReplacementModel
 
 
 # RenewalPolicy

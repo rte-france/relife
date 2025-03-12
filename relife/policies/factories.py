@@ -21,6 +21,7 @@ def renewal_policy(
     one_cycle: bool = False,
     run_to_failure: bool = False,
     discounting_rate: Optional[float] = None,
+    nb_assets: int = 1,
     **kwargs,
 ) -> RenewalPolicy:
 
@@ -33,7 +34,6 @@ def renewal_policy(
         except KeyError:
             raise ValueError("Costs must contain cf and cr")
         ar = kwargs.get("ar", None)
-        nb_assets = kwargs.get("nb_assets", 1)
         return NonHomogeneousPoissonAgeReplacementPolicy(
             obj,
             cp,
@@ -50,7 +50,6 @@ def renewal_policy(
             except KeyError:
                 raise ValueError("Costs must only contain cf")
             model_args = kwargs.get("model_args", ())
-            nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
             model1 = kwargs.get("model1", None)
             model1_args = kwargs.get("model1_args", None)
@@ -70,7 +69,6 @@ def renewal_policy(
             except KeyError:
                 raise ValueError("Costs must only contain cf")
             model_args = kwargs.get("model_args", ())
-            nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
             return OneCycleRunToFailurePolicy(
                 obj,
@@ -92,7 +90,6 @@ def renewal_policy(
             ar = kwargs.get("ar", None)
             ar1 = kwargs.get("ar1", None)
             model_args = kwargs.get("model_args", ())
-            nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
             model1 = kwargs.get("model1", None)
             model1_args = kwargs.get("model1_args", None)
@@ -119,7 +116,6 @@ def renewal_policy(
                 raise ValueError("Costs must contain cf and cp")
             ar = kwargs.get("ar", None)
             model_args = kwargs.get("model_args", ())
-            nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
             return OneCycleAgeReplacementPolicy(
                 obj,

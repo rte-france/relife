@@ -9,7 +9,7 @@ import pytest
 
 from relife.models import AFT, Gamma, Gompertz, LogLogistic, ProportionalHazard, Weibull
 from relife.process import RenewalProcess, RenewalRewardProcess
-from relife.core.nested_model import AgeReplacementModel, EquilibriumDistribution
+from relife.models.nested import AgeReplacementModel, EquilibriumDistribution
 from relife.rewards import run_to_failure_rewards
 
 

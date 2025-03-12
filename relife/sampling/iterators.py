@@ -26,7 +26,7 @@ from collections.abc import Iterator
 
 from numpy.typing import NDArray
 
-from relife.core import (
+from relife.models import (
     AgeReplacementModel,
     LeftTruncatedModel,
 )
@@ -42,6 +42,7 @@ class SampleIterator(Iterator, ABC):
         size: int,
         tf: float,  # calendar end time
         t0: float = 0.0,  # calendar beginning time
+        nb_assets: int = 1,
         *,
         seed: Optional[int] = None,
         keep_last: bool = True,
@@ -58,7 +59,7 @@ class SampleIterator(Iterator, ABC):
         self._model = None
         self._model_args = None
         self._model_type = None
-        self._nb_assets = None
+        self._nb_assets = nb_assets
 
         self._start = None
         self._stop = None
@@ -133,11 +134,14 @@ class LifetimeIterator(SampleIterator):
         size: int,
         tf: float,  # calendar end time
         t0: float = 0.0,  # calendar beginning time
+        nb_assets: int = 1,
         *,
         seed: Optional[int] = None,
         keep_last: bool = True,
     ):
-        super().__init__(size, tf, t0, seed=seed, keep_last=keep_last)
+        super().__init__(
+            size, tf, t0, nb_assets=nb_assets, seed=seed, keep_last=keep_last
+        )
         self._rewards = None
         self._discounting = None
         self._a0 = None
@@ -152,35 +156,27 @@ class LifetimeIterator(SampleIterator):
     def set_sampler(self, model, model_args):
 
         if self._model is None:
-            self._nb_assets = get_nb_assets(model_args)
+            # self._nb_assets = get_nb_assets(model_args)
             self.timeline = np.zeros((self._nb_assets, self.size))
             # counting arrays to catch values crossing t0 and tf bounds
             self._stop = np.zeros((self._nb_assets, self.size), dtype=np.int64)
             self._start = np.zeros((self._nb_assets, self.size), dtype=np.int64)
 
-        else:
-            nb_assets = get_nb_assets(model_args)
-            if nb_assets != self._nb_assets:
-                raise ValueError("Can't change nb assets")
+        # else:
+        #     nb_assets = get_nb_assets(model_args)
+        #     if nb_assets != self._nb_assets:
+        #         raise ValueError("Can't change nb assets")
 
         ar = None
         a0 = None
         if isinstance(model, AgeReplacementModel):
             ar = model_args[0].copy()
-            model_args = model_args[1:]
-            model = model.baseline
             if isinstance(model, LeftTruncatedModel):
                 a0 = model_args[1].copy()
-                model_args = model_args[1:]
-                model = model.baseline
         elif isinstance(model, LeftTruncatedModel):
             a0 = model_args[0].copy()
-            model_args = model_args[1:]
-            model = model.baseline
             if isinstance(model, AgeReplacementModel):
                 ar = model_args[1].copy()
-                model_args = model_args[1:]
-                model = model.baseline
 
         # if self._model_type is not None:
         #     if type(model) != self._model_type:
@@ -204,31 +200,29 @@ class LifetimeIterator(SampleIterator):
     def _sample_routine(self) -> tuple[NDArray[np.floating], ...]:
 
         durations = self._model.rvs(
+            *self._model_args,
             size=self.nb_samples,
             seed=self.seed,
-        ).reshape((self._nb_assets, self.nb_samples))
+        ).reshape((-1, self.nb_samples))
+        if durations.shape != (self._nb_assets, self.nb_samples):
+            # sometimes, model1 has n assets but not model
+            durations = np.tile(durations, (self._nb_assets, 1))
 
         # create events_indicators and entries
         event_indicators = np.ones_like(self.timeline, dtype=np.bool_)
         entries = np.zeros_like(self.timeline)
 
-        # update timeline
-        self.timeline += durations
-
         # ar right censorings
         if self._ar is not None:
-            is_replaced = durations >= self._ar
-            self.timeline = np.where(
-                is_replaced, self.timeline - (durations - self._ar), self.timeline
-            )
-            durations[is_replaced] = self._ar
+            is_replaced = durations == self._ar
             event_indicators[is_replaced] = False
 
         # a0 left truncations
         if self._a0 is not None:
-            self.timeline = self.timeline - self._a0
-            durations = durations - self._a0
             entries = np.maximum(entries, self._a0)
+
+        # update timeline
+        self.timeline += durations
 
         # update start and stop counter
         self._start[self.timeline > self.t0] += 1
@@ -290,10 +284,11 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         size: int,
         tf: float,  # calendar end time
         t0: float = 0.0,  # calendar beginning time
+        nb_assets: int = 1,
         *,
         seed: Optional[int] = None,
     ):
-        super().__init__(size, tf, t0, seed=seed)
+        super().__init__(size, tf, t0, nb_assets=nb_assets, seed=seed)
 
         self._rewards = None
         self._discounting = None
@@ -323,7 +318,7 @@ class NonHomogeneousPoissonIterator(SampleIterator):
     def set_sampler(self, model, model_args, ar: Optional[NDArray[np.float64]] = None):
 
         if self._model is None:
-            self._nb_assets = get_nb_assets(model_args)
+            # self._nb_assets = get_nb_assets(model_args)
             self.timeline = np.zeros((self._nb_assets, self.size))
             # counting arrays to catch values crossing t0 and tf bounds
             self._stop = np.zeros((self._nb_assets, self.size), dtype=np.int64)
