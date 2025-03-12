@@ -48,14 +48,10 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/nested_models/relife.core.AgeReplacementModel';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="LeftTruncatedModel" href="relife.core.LeftTruncatedModel.html" />
-    <link rel="prev" title="LikelihoodFromLifetimes" href="../likelihoods/relife.core.LikelihoodFromLifetimes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -147,7 +143,7 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../index.html">
     API
   </a>
@@ -276,8 +272,10 @@
       
       
       
+        
+      
       <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
 
   
@@ -299,7 +297,7 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../index.html">
     API
   </a>
@@ -383,49 +381,6 @@
     
   </div>
   
-    <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item">
-<nav class="bd-docs-nav bd-links"
-     aria-label="Section Navigation">
-  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../user_api.html">User API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Exponential.html">Exponential</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Weibull.html">Weibull</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Gompertz.html">Gompertz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.Gamma.html">Gamma</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.LogLogistic.html">LogLogistic</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.ProportionalHazard.html">ProportionalHazard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_lifetime_models/relife.models.AFT.html">AFT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.ECDF.html">ECDF</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../nonparametric_models/relife.models.Turnbull.html">Turnbull</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parametric_models/relife.models.regression.CovarEffect.html">CovarEffect</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.DefaultRunToFailurePolicy.html">DefaultRunToFailurePolicy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html">DefaultAgeReplacementPolicy</a></li>
-</ul>
-</details></li>
-<li class="toctree-l1"><a class="reference internal" href="../data_module.html">Data management</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../datasets_module.html">Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generator_module.html">Generators</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../core_module.html">Core features (subsystems)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../likelihoods/relife.core.LikelihoodFromLifetimes.html">LikelihoodFromLifetimes</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">AgeReplacementModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="relife.core.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="relife.core.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.ParametricModel.html">ParametricModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.LifetimeModel.html">LifetimeModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../base_models/relife.core.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-</ul>
-</details></li>
-</ul>
-</div>
-</nav></div>
-    </div>
-  
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
       <div class="sidebar-primary-item">
@@ -461,12 +416,6 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    
-    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
-    
-    
-    <li class="breadcrumb-item"><a href="../core_module.html" class="nav-link">Core features (subsystems)</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">AgeReplacementModel</span></li>
   </ul>
 </nav>
@@ -486,208 +435,6 @@
                   
   <section id="agereplacementmodel">
 <h1>AgeReplacementModel<a class="headerlink" href="#agereplacementmodel" title="Link to this heading">#</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="relife.core.AgeReplacementModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.core.</span></span><span class="sig-name descname"><span class="pre">AgeReplacementModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#AgeReplacementModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.AgeReplacementModel" title="Link to this definition">#</a></dt>
-<dd><p>Age replacement core.</p>
-<p>Lifetime core where the asset is replaced at age <span class="math notranslate nohighlight">\(a_r\)</span>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>baseline</strong><span class="classifier">LifetimeModel</span></dt><dd><p>Underlying lifetime core.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>This is equivalent to the distribution of <span class="math notranslate nohighlight">\(\min(X,a_r)\)</span> where
-<span class="math notranslate nohighlight">\(X\)</span> is a baseline lifetime and ar the age of replacement.</p>
-<p class="rubric">Methods</p>
-<p><strong>Survival functions</strong></p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.core.AgeReplacementModel.isf" title="relife.core.AgeReplacementModel.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
-<td><p>Inverse survival function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><strong>Statistics</strong></p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.core.AgeReplacementModel.moment" title="relife.core.AgeReplacementModel.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
-<td><p>n-th order moment</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><strong>Other methods</strong></p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.core.AgeReplacementModel.ls_integrate" title="relife.core.AgeReplacementModel.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
-<td><p>Lebesgue-Stieltjes integration.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.core.AgeReplacementModel.rvs" title="relife.core.AgeReplacementModel.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
-<td><p>Random variable sampling.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.core.AgeReplacementModel.isf">
-<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#AgeReplacementModel.isf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.AgeReplacementModel.isf" title="Link to this definition">#</a></dt>
-<dd><p>Inverse survival function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>probability</strong><span class="classifier">float or ndarray, shape (n, ) or (m, n)</span></dt><dd></dd>
-<dt><strong>*args</strong><span class="classifier">variadic arguments required by the function</span></dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ndarray of shape (), (n, ) or (m, n)</dt><dd><p>Complement quantile corresponding to probability.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.core.AgeReplacementModel.ls_integrate">
-<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#AgeReplacementModel.ls_integrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.AgeReplacementModel.ls_integrate" title="Link to this definition">#</a></dt>
-<dd><p>Lebesgue-Stieltjes integration.</p>
-<p>The Lebesgue-Stieljes intregration of a function with respect to the lifetime core
-taking into account the probability density function and jumps</p>
-<p>The Lebesgue-Stieltjes integral is:</p>
-<div class="math notranslate nohighlight">
-\[\int_a^b g(x) \mathrm{d}F(x) = \int_a^b g(x) f(x)\mathrm{d}x +
-\sum_i g(a_i) w_i\]</div>
-<p>where:</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function,</p></li>
-<li><p><span class="math notranslate nohighlight">\(f\)</span> the probability density function of the lifetime core,</p></li>
-<li><p><span class="math notranslate nohighlight">\(a_i\)</span> and <span class="math notranslate nohighlight">\(w_i\)</span> are the points and weights of the jumps.</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray, out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and returns one ndarray object</p>
-</dd>
-<dt><strong>a</strong><span class="classifier">ndarray (max dim of 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
-</dd>
-<dt><strong>b</strong><span class="classifier">ndarray (max dim of 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.</p>
-</dd>
-<dt><strong>args</strong><span class="classifier">ndarray (max dim of 2)</span></dt><dd><p>Other arguments needed by the lifetime core (eg. covariates)</p>
-</dd>
-<dt><strong>deg</strong><span class="classifier">int, default 100</span></dt><dd><p>Degree of the polynomials interpolation</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>2d ndarray</dt><dd><p>Lebesgue-Stieltjes integral of func with respect to <cite>cdf</cite> from <cite>a</cite>
-to <cite>b</cite>.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p><cite>ls_integrate</cite> operations rely on arguments number of dimensions passed in <cite>a</cite>, <cite>b</cite>, <cite>*args</cite> or
-any other variable referenced in <cite>func</cite>. Because <cite>func</cite> callable is not easy to inspect, either one must specify
-the maximum number of dimensions used (0, 1 or 2), or <cite>ls_integrate</cite> converts all these objects to 2d-array.
-Currently, the second option is prefered. That’s why, returns are always 2d-array.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.core.AgeReplacementModel.moment">
-<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#AgeReplacementModel.moment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.AgeReplacementModel.moment" title="Link to this definition">#</a></dt>
-<dd><p>n-th order moment</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>n</strong><span class="classifier">order of the moment, at least 1.</span></dt><dd></dd>
-<dt><strong>*args</strong><span class="classifier">variadic arguments required by the function</span></dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ndarray of shape (0, )</dt><dd><p>n-th order moment.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="relife.core.AgeReplacementModel.plot">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><a class="headerlink" href="#relife.core.AgeReplacementModel.plot" title="Link to this definition">#</a></dt>
-<dd><p>Plot</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.core.AgeReplacementModel.rvs">
-<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/core/nested_model.html#AgeReplacementModel.rvs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.core.AgeReplacementModel.rvs" title="Link to this definition">#</a></dt>
-<dd><p>Random variable sampling.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>*args</strong><span class="classifier">variadic arguments required by the function</span></dt><dd></dd>
-<dt><strong>size</strong><span class="classifier">int, default 1</span></dt><dd><p>Sized of the generated sample.</p>
-</dd>
-<dt><strong>seed</strong><span class="classifier">int, default None</span></dt><dd><p>Random seed.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ndarray of shape (size, )</dt><dd><p>Sample of random lifetimes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 
 
@@ -704,25 +451,6 @@ Currently, the second option is prefered. That’s why, returns are always 2d-ar
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.AgeReplacementModel"><code class="docutils literal notranslate"><span class="pre">AgeReplacementModel</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.AgeReplacementModel.isf"><code class="docutils literal notranslate"><span class="pre">AgeReplacementModel.isf()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.AgeReplacementModel.ls_integrate"><code class="docutils literal notranslate"><span class="pre">AgeReplacementModel.ls_integrate()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.AgeReplacementModel.moment"><code class="docutils literal notranslate"><span class="pre">AgeReplacementModel.moment()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.AgeReplacementModel.plot"><code class="docutils literal notranslate"><span class="pre">AgeReplacementModel.plot</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.core.AgeReplacementModel.rvs"><code class="docutils literal notranslate"><span class="pre">AgeReplacementModel.rvs()</span></code></a></li>
-</ul>
-</li>
-</ul>
-  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
