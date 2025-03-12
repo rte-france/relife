@@ -13,7 +13,7 @@ VariadicArgs = TypeVarTuple("VariadicArgs")
 # float = np.float64
 # bool = np.bool_
 # see : https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-Arg = NewType(
+Args = NewType(
     "Args", Union[NDArray[np.floating], NDArray[np.integer], NDArray[np.bool], float]
 )
 # tuple consisting of zero or more args

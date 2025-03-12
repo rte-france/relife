@@ -9,7 +9,7 @@ from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
 
-from relife.types import Arg
+from relife.types import Args
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.core.model import LifetimeModel, NonParametricModel
@@ -66,9 +66,9 @@ def plot(
 
 def param_probfunc_plot(
     fname: str,
-    obj: LifetimeModel[*tuple[Arg, ...]],
+    obj: LifetimeModel[*tuple[Args, ...]],
     timeline: NDArray[np.float64] = None,
-    model_args: tuple[Arg, ...] = (),
+    model_args: tuple[Args, ...] = (),
     asset: Optional[ArrayLike] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -227,9 +227,11 @@ def renewal_data_plot(
     timeline, values = getattr(obj, fname)()
     if fname in ("total_rewards", "mean_total_rewards"):
         ax = kwargs.pop("ax", plt.gca())
-        alpha = kwargs.pop("alpha", 1.0)
-        ax.plot(timeline, values, label=label, **kwargs)
-        ax.fill_between(timeline, values, where=values >= 0, alpha=alpha, **kwargs)
+        alpha = kwargs.pop("alpha", 0.2)
+        ax.plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
+        ax.fill_between(
+            timeline, values, where=values >= 0, step="post", alpha=alpha, **kwargs
+        )
         if label is not None:
             ax.legend()
         return ax
@@ -315,8 +317,8 @@ class PlotNHPP(PlotConstructor):
 
 
 class PlotCountingData(PlotConstructor):
-    number_of_events = PlotDescriptor()
-    mean_number_of_events = PlotDescriptor()
+    nb_events = PlotDescriptor()
+    mean_nb_events = PlotDescriptor()
 
 
 class PlotRenewalData(PlotCountingData):
@@ -325,7 +327,7 @@ class PlotRenewalData(PlotCountingData):
 
 
 class PlotNHPPData(PlotConstructor):
-    number_of_events = PlotDescriptor()
-    mean_number_of_events = PlotDescriptor()
+    nb_events = PlotDescriptor()
+    mean_nb_events = PlotDescriptor()
     number_of_repairs = PlotDescriptor()
     mean_number_of_repairs = PlotDescriptor()

@@ -33,7 +33,7 @@ from relife.core import (
 )
 from relife.models import Exponential
 from relife.rewards import RewardsFunc, Discounting
-from relife.types import Arg
+from relife.types import Args
 
 
 class SampleIterator(Iterator, ABC):
@@ -107,7 +107,7 @@ class SampleIterator(Iterator, ABC):
         pass
 
 
-def get_nb_assets(args_tuple: tuple[Arg, ...]) -> int:
+def get_nb_assets(args_tuple: tuple[Args, ...]) -> int:
     def as_2d():
         for x in args_tuple:
             if not isinstance(x, np.ndarray):
@@ -183,9 +183,9 @@ class LifetimeIterator(SampleIterator):
                 model_args = model_args[1:]
                 model = model.baseline
 
-        if self._model_type is not None:
-            if type(model) != self._model_type:
-                raise ValueError("Can't change model type")
+        # if self._model_type is not None:
+        #     if type(model) != self._model_type:
+        #         raise ValueError("Can't change model type")
         self._model = model
         self._model_type = type(model)
         self._model_args = model_args

@@ -19,6 +19,7 @@ from relife.rewards import (
     run_to_failure_rewards,
 )
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
+from ..process.nhpp import NonHomogeneousPoissonProcessWithRewards
 
 
 @singledispatch
@@ -47,13 +48,14 @@ def _(
     timeline = np.array([], dtype=np.float64)
     samples_ids = np.array([], dtype=np.int64)
     assets_ids = np.array([], dtype=np.int64)
+
+    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+
     rewards = None
     if isinstance(obj, RenewalRewardProcess):
         rewards = np.array([], dtype=np.float64)
-
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
-    iterator.set_rewards(obj.rewards1)
-    iterator.set_discounting(obj.discounting)
+        iterator.set_rewards(obj.rewards1)
+        iterator.set_discounting(obj.discounting)
 
     # first cycle : set model1 in iterator
     if obj.model1 is not None:
@@ -79,8 +81,9 @@ def _(
             )
 
     # next cycles : set model in iterator and change rewards
-    iterator.set_rewards(obj.rewards)
     iterator.set_sampler(obj.model, obj.model_args)
+    if isinstance(obj, RenewalRewardProcess):
+        iterator.set_rewards(obj.rewards)
 
     for data in iterator:
         if data["timeline"].size == 0:
@@ -203,7 +206,11 @@ def _(
 
 @sample_count_data.register
 def _(
-    obj: Union[NonHomogeneousPoissonProcess, NonHomogeneousPoissonAgeReplacementPolicy],
+    obj: Union[
+        NonHomogeneousPoissonProcess,
+        NonHomogeneousPoissonAgeReplacementPolicy,
+        NonHomogeneousPoissonProcessWithRewards,
+    ],
     size: int,
     tf: float,
     t0: float = 0.0,
@@ -216,14 +223,26 @@ def _(
     timeline = np.array([], dtype=np.float64)
     durations = np.array([], dtype=np.float64)
     rewards = None
-    if isinstance(obj, NonHomogeneousPoissonAgeReplacementPolicy):
+    if isinstance(
+        obj,
+        (
+            NonHomogeneousPoissonAgeReplacementPolicy,
+            NonHomogeneousPoissonProcessWithRewards,
+        ),
+    ):
         rewards = np.array([], dtype=np.float64)
 
     iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed)
     iterator.set_sampler(
         obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
     )
-    if isinstance(obj, NonHomogeneousPoissonAgeReplacementPolicy):
+    if isinstance(
+        obj,
+        (
+            NonHomogeneousPoissonAgeReplacementPolicy,
+            NonHomogeneousPoissonProcessWithRewards,
+        ),
+    ):
         iterator.set_rewards(obj.rewards)
         iterator.set_discounting(obj.discounting)
 
@@ -240,7 +259,13 @@ def _(
         timeline = np.concatenate((timeline, _timeline[selection]))
         samples_ids = np.concatenate((samples_ids, _samples_ids[selection]))
         assets_ids = np.concatenate((assets_ids, _assets_ids[selection]))
-        if isinstance(obj, NonHomogeneousPoissonAgeReplacementPolicy):
+        if isinstance(
+            obj,
+            (
+                NonHomogeneousPoissonAgeReplacementPolicy,
+                NonHomogeneousPoissonProcessWithRewards,
+            ),
+        ):
             rewards = np.concatenate((rewards, data["rewards"]))
 
         # select a0, af only for sample_failure_data

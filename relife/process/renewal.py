@@ -4,17 +4,18 @@ from typing import Optional, Callable
 import numpy as np
 from numpy.typing import NDArray
 from relife.core.descriptors import ShapedArgs
-from relife.rewards import exponential_discounting, Discounting
+from relife.data import CountData
+from relife.rewards import Discounting, exp_discounting
 from relife.core.model import LifetimeModel
-from relife.types import Arg
+from relife.types import Args
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*tuple[Arg, ...]],
+    model: LifetimeModel[*tuple[Args, ...]],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
-    model_args: tuple[Arg, ...] = (),
+    model_args: tuple[Args, ...] = (),
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
@@ -46,9 +47,9 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    model1: LifetimeModel[*tuple[Arg, ...]],
+    model1: LifetimeModel[*tuple[Args, ...]],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    model1_args: tuple[Arg, ...] = (),
+    model1_args: tuple[Args, ...] = (),
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
@@ -85,12 +86,12 @@ class RenewalProcess:
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        model: LifetimeModel[*tuple[Args, ...]],
         *,
         nb_assets: int = 1,
-        model_args: tuple[Arg, ...] = (),
-        model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
-        model1_args: tuple[Arg, ...] = (),
+        model_args: tuple[Args, ...] = (),
+        model1: Optional[LifetimeModel[*tuple[Args, ...]]] = None,
+        model1_args: tuple[Args, ...] = (),
     ):
         self.nb_assets = nb_assets
         self.model = model
@@ -135,33 +136,38 @@ class RenewalProcess:
             model_args=self.model_args,
         )
 
-    # def sample(
-    #     self,
-    #     size: int,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ):
-    #     return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
-    #
-    # def sample_lifetime_data(
-    #     self,
-    #     size: int,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     seed: Optional[int] = None,
-    #     use: str = "model",
-    # ):
-    #     return sample_lifetime_data(self, size, tf, t0, seed, use)
+    def sample(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from relife.sampling import sample_count_data
+
+        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+
+    # sample_failure_data
+    def sample_failure_data(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        seed: Optional[int] = None,
+        use: str = "model",
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sampling import sample_failure_data
+
+        return sample_failure_data(self, size, tf, t0, seed, use)
 
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*tuple[Arg, ...]],
+    model: LifetimeModel[*tuple[Args, ...]],
     reward: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
-    model_args: tuple[Arg, ...] = (),
+    model_args: tuple[Args, ...] = (),
     discounting: Optional[Discounting] = None,
 ) -> np.ndarray:
     def func(x):
@@ -183,14 +189,14 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        model: LifetimeModel[*tuple[Args, ...]],
         rewards: Callable[[NDArray[np.float64]], NDArray[np.float64]],
         *,
         nb_assets: int = 1,
-        model_args: tuple[Arg, ...] = (),
-        discounting: Optional[Discounting] = None,
-        model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
-        model1_args: tuple[Arg, ...] = (),
+        model_args: tuple[Args, ...] = (),
+        discounting_rate: Optional[float] = None,
+        model1: Optional[LifetimeModel[*tuple[Args, ...]]] = None,
+        model1_args: tuple[Args, ...] = (),
         rewards1: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
     ):
         super().__init__(
@@ -201,8 +207,8 @@ class RenewalRewardProcess(RenewalProcess):
             model1_args=model1_args,
         )
         self.rewards = rewards
-        self.rewards1 = rewards1
-        self.discounting = discounting
+        self.rewards1 = rewards1 if rewards1 is not None else rewards
+        self.discounting = exp_discounting(discounting_rate)
 
     def expected_total_reward(
         self, timeline: NDArray[np.float64]

@@ -9,8 +9,8 @@ from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
 from relife.data import lifetime_data_factory, nhpp_lifetime_data_factory, CountData
 from relife.plots import PlotNHPP, PlotConstructor
-from relife.rewards import run_to_failure_rewards
-from relife.types import Arg, VariadicArgs
+from relife.rewards import run_to_failure_rewards, RewardsFunc, exp_discounting
+from relife.types import Args, VariadicArgs
 
 
 class NonHomogeneousPoissonProcess(ParametricModel):
@@ -19,26 +19,25 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Arg, ...]],
-        model_args: tuple[Arg, ...] = (),
+        model: LifetimeModel[*tuple[Args, ...]],
+        model_args: tuple[Args, ...] = (),
         *,
         nb_assets: int = 1,
-        cr: Optional[NDArray[np.float64]] = None,
     ):
         super().__init__()
         self.nb_assets = nb_assets
         self.compose_with(model=model)
         self.model_args = model_args
 
-    def intensity(self, time: np.ndarray, *args: *tuple[Arg, ...]) -> np.ndarray:
+    def intensity(self, time: np.ndarray, *args: *tuple[Args, ...]) -> np.ndarray:
         return self.model.hf(time, *args)
 
     def cumulative_intensity(
-        self, time: np.ndarray, *args: *tuple[Arg, ...]
+        self, time: np.ndarray, *args: *tuple[Args, ...]
     ) -> np.ndarray:
         return self.model.chf(time, *args)
 
-    def simulate(
+    def sample(
         self,
         size: int,
         tf: float,
@@ -111,3 +110,18 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         self.model.params = optimized_model.params
 
         return self
+
+
+class NonHomogeneousPoissonProcessWithRewards(NonHomogeneousPoissonProcess):
+    def __init__(
+        self,
+        model: LifetimeModel[*tuple[Args, ...]],
+        rewards: RewardsFunc,
+        model_args: tuple[Args, ...] = (),
+        *,
+        discounting_rate: Optional[float] = None,
+        nb_assets: int = 1,
+    ):
+        super().__init__(model, model_args, nb_assets=nb_assets)
+        self.rewards = rewards
+        self.discounting = exp_discounting(discounting_rate)

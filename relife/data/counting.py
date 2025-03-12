@@ -85,7 +85,7 @@ class CountData:
 
         return replace(copy.deepcopy(self), t0=self.t0, tf=self.tf, **new_fields)
 
-    def number_of_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def nb_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         sort = np.argsort(self.timeline)
         timeline = self.timeline[sort]
         counts = np.ones_like(timeline)
@@ -94,8 +94,8 @@ class CountData:
         counts[timeline == self.tf] = 0
         return timeline, np.cumsum(counts)
 
-    def mean_number_of_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline, counts = self.number_of_events()
+    def mean_nb_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline, counts = self.nb_events()
         return timeline, counts / len(self)
 
     @property

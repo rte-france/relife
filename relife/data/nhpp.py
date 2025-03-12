@@ -79,10 +79,10 @@ class NHPPData(CountData):
 
     def number_of_repairs(self):
         # alias name
-        return self.number_of_events()
+        return self.nb_events()
 
     def mean_number_of_repairs(self):
-        return self.mean_number_of_events()
+        return self.mean_nb_events()
 
     # def number_of_repairs(self):
     #     sort_all = np.argsort(self.timeline)

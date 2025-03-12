@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -18,6 +20,7 @@ def renewal_policy(
     costs: dict[NDArray[np.float64]],
     one_cycle: bool = False,
     run_to_failure: bool = False,
+    discounting_rate: Optional[float] = None,
     **kwargs,
 ) -> RenewalPolicy:
 
@@ -29,7 +32,6 @@ def renewal_policy(
             )
         except KeyError:
             raise ValueError("Costs must contain cf and cr")
-        discounting_rate = kwargs.get("discounting_rate", 0.0)
         ar = kwargs.get("ar", None)
         nb_assets = kwargs.get("nb_assets", 1)
         return NonHomogeneousPoissonAgeReplacementPolicy(
@@ -47,7 +49,6 @@ def renewal_policy(
                 cf = costs["cf"]
             except KeyError:
                 raise ValueError("Costs must only contain cf")
-            discounting_rate = kwargs.get("discounting_rate", 0.0)
             model_args = kwargs.get("model_args", ())
             nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
@@ -68,7 +69,6 @@ def renewal_policy(
                 cf = costs["cf"]
             except KeyError:
                 raise ValueError("Costs must only contain cf")
-            discounting_rate = kwargs.get("discounting_rate", 0.0)
             model_args = kwargs.get("model_args", ())
             nb_assets = kwargs.get("nb_assets", 1)
             a0 = kwargs.get("a0", None)
@@ -89,7 +89,6 @@ def renewal_policy(
                 )
             except KeyError:
                 raise ValueError("Costs must contain cf and cp")
-            discounting_rate = kwargs.get("discounting_rate", 0.0)
             ar = kwargs.get("ar", None)
             ar1 = kwargs.get("ar1", None)
             model_args = kwargs.get("model_args", ())
@@ -118,7 +117,6 @@ def renewal_policy(
                 )
             except KeyError:
                 raise ValueError("Costs must contain cf and cp")
-            discounting_rate = kwargs.get("discounting_rate", 0.0)
             ar = kwargs.get("ar", None)
             model_args = kwargs.get("model_args", ())
             nb_assets = kwargs.get("nb_assets", 1)

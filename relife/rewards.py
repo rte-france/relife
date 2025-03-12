@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from functools import partial
-from typing import Callable, NewType
+from typing import Callable, NewType, Optional, ParamSpec
 
 import numpy as np
 from numpy.typing import NDArray
@@ -17,40 +17,32 @@ class Discounting(ABC):
     def annuity_factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]: ...
 
 
-class ExponentialDiscounting:
-    def __init__(self, rate: float = 0.0):
+class ExpDiscounting:
+    def __init__(self, rate: Optional[float] = None):
         self.rate = rate
 
     def factor(
         self,
         timeline: NDArray[np.float64],
     ) -> NDArray[np.float64]:
-        if self.rate != 0:
-            return np.exp(-self.rate * timeline)
+        if self.rate is not None:
+            return 1.0 / np.exp(self.rate * timeline)
         else:
             return np.ones_like(timeline)
-
-    def rate(
-        self,
-        timeline: NDArray[np.float64],
-    ) -> NDArray[np.float64]:
-        return self.rate * np.ones_like(timeline)
 
     def annuity_factor(
         self,
         timeline: NDArray[np.float64],
     ) -> NDArray[np.float64]:
-        mask = self.rate == 0
-        discounting_rate = np.ma.MaskedArray(self.rate, mask)
-        return np.where(
-            mask,
-            timeline,
-            (1 - np.exp(discounting_rate * timeline)) / discounting_rate,
-        )
+
+        if self.rate is not None:
+            return (1 - np.exp(self.rate * timeline)) / self.rate
+        else:
+            return np.ones_like(timeline)
 
 
-def exponential_discounting(rate: float) -> Discounting:
-    return ExponentialDiscounting(rate)
+def exp_discounting(rate: Optional[float] = None) -> Discounting:
+    return ExpDiscounting(rate)
 
 
 RewardsFunc = NewType(

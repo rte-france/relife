@@ -11,23 +11,23 @@ from relife.core.quadratures import gauss_legendre
 from relife.rewards import (
     age_replacement_rewards,
     run_to_failure_rewards,
-    exponential_discounting,
+    exp_discounting,
 )
 from relife.data import CountData
 from relife.process import RenewalRewardProcess, NonHomogeneousPoissonProcess
 from relife.process.renewal import reward_partial_expectation
-from relife.types import Arg
+from relife.types import Args
 
 
 # RenewalPolicy
 class RenewalPolicy:
-    model: LifetimeModel[*tuple[Arg, ...]]
-    model1 = Optional[LifetimeModel[*tuple[Arg, ...]]]
+    model: LifetimeModel[*tuple[Args, ...]]
+    model1 = Optional[LifetimeModel[*tuple[Args, ...]]]
     model_args = ShapedArgs(astuple=True)
     model1_args = ShapedArgs(astuple=True)
     nb_assets = NbAssets()
 
-    def simulate(
+    def sample(
         self,
         size: int,
         tf: float,
@@ -84,12 +84,12 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        model: LifetimeModel[*tuple[Args, ...]],
         cf: float | NDArray[np.float64],
         *,
-        discounting_rate: float = 0.0,
+        discounting_rate: Optional[float] = None,
         period_before_discounting: float = 1.0,
-        model_args: tuple[Arg, ...] = (),
+        model_args: tuple[Args, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
@@ -99,7 +99,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
             model_args = (a0, *model_args)
         self.model = model
         self.cf = cf
-        self.discounting = exponential_discounting(discounting_rate)
+        self.discounting = exp_discounting(discounting_rate)
         self.rewards = run_to_failure_rewards(self.cf)
         if period_before_discounting == 0:
             raise ValueError("The period_before_discounting must be greater than 0")
@@ -191,15 +191,15 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        model: LifetimeModel[*tuple[Args, ...]],
         cf: float | NDArray[np.float64],
         *,
-        discounting_rate: float = 0.0,
-        model_args: tuple[Arg, ...] = (),
+        discounting_rate: Optional[float] = None,
+        model_args: tuple[Args, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
-        model1_args: tuple[Arg, ...] = (),
+        model1: Optional[LifetimeModel[*tuple[Args, ...]]] = None,
+        model1_args: tuple[Args, ...] = (),
     ) -> None:
 
         self.nb_assets = nb_assets
@@ -215,7 +215,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
         self.model_args = model_args
         self.cf = cf
-        self.discounting = exponential_discounting(discounting_rate)
+        self.discounting = exp_discounting(discounting_rate)
         self.rewards = run_to_failure_rewards(self.cf)
 
         self.model_args = model_args
@@ -228,7 +228,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
             self.rewards,
             nb_assets=self.nb_assets,
             model_args=self.model_args,
-            discounting=self.discounting,
+            discounting_rate=discounting_rate,
             model1=self.model1,
             model1_args=self.model1_args,
             rewards1=self.rewards,
@@ -298,14 +298,14 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        model: LifetimeModel[*tuple[Args, ...]],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
-        discounting_rate: float = 0.0,
+        discounting_rate: Optional[float] = None,
         period_before_discounting: float = 1.0,
         ar: Optional[float | NDArray[np.float64]] = None,
-        model_args: tuple[Arg, ...] = (),
+        model_args: tuple[Args, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
@@ -322,7 +322,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
         self.rewards = age_replacement_rewards(ar=self.ar, cf=self.cf, cp=self.cp)
-        self.discounting = exponential_discounting(discounting_rate)
+        self.discounting = exp_discounting(discounting_rate)
         self.model_args = (ar,) + model_args
 
     @require_attributes("ar")
@@ -475,18 +475,18 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Arg, ...]],
+        model: LifetimeModel[*tuple[Args, ...]],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
-        discounting_rate: float = 0.0,
+        discounting_rate: Optional[float] = None,
         ar: float | NDArray[np.float64] = None,
         ar1: float | NDArray[np.float64] = None,
-        model_args: tuple[Arg, ...] = (),
+        model_args: tuple[Args, ...] = (),
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[*tuple[Arg, ...]]] = None,
-        model1_args: tuple[Arg, ...] = (),
+        model1: Optional[LifetimeModel[*tuple[Args, ...]]] = None,
+        model1_args: tuple[Args, ...] = (),
     ) -> None:
 
         self.nb_assets = nb_assets
@@ -507,7 +507,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         self.cp = cp
         self.ar = ar
         self.ar1 = ar1
-        self.discounting = exponential_discounting(discounting_rate)
+        self.discounting = exp_discounting(discounting_rate)
         self.rewards = age_replacement_rewards(ar=self.ar, cf=self.cf, cp=self.cp)
         self.rewards1 = age_replacement_rewards(ar=self.ar1, cf=self.cf, cp=self.cp)
 
@@ -532,7 +532,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
                 self.rewards,
                 nb_assets=self.nb_assets,
                 model_args=self.model_args,
-                discounting=self.discounting,
+                discounting_rate=discounting_rate,
                 model1=self.model1,
                 model1_args=self.model1_args,
                 rewards1=self.rewards1,
@@ -628,7 +628,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
             age_replacement_rewards(ar=ar, cf=self.cf, cp=self.cp),
             nb_assets=self.nb_assets,
             model_args=self.model_args,
-            discounting=self.discounting,
+            discounting_rate=self.discounting.rate,
             model1=self.model1,
             model1_args=self.model1_args,
             rewards1=age_replacement_rewards(ar=ar1, cf=self.cf, cp=self.cp),
@@ -670,7 +670,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         cp: NDArray[np.float64],
         cr: NDArray[np.float64],
         *,
-        discounting_rate: float = 0.0,
+        discounting_rate: Optional[float] = None,
         ar: Optional[NDArray[np.float64]] = None,
         nb_assets: int = 1,
     ) -> None:
@@ -683,7 +683,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         self.ar = ar
         self.cp = cp
         self.cr = cr
-        self.discounting = exponential_discounting(discounting_rate)
+        self.discounting = exp_discounting(discounting_rate)
         self.rewards = age_replacement_rewards(self.ar, self.cr, self.cp)
 
     @require_attributes("ar")
