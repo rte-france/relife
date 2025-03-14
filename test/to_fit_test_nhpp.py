@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 from relife.process import NonHomogeneousPoissonProcess
 from relife.models import Weibull
-from relife.data import nhpp_lifetime_data_factory
+from relife.data import nhpp_data_factory
 
 # a0 = np.array([1.0, 3.0, 6.0])
 # af = np.array([5.0, 8.0, 15.0])

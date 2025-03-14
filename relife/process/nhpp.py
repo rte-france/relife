@@ -7,7 +7,7 @@ from scipy.optimize import minimize
 from relife.core.descriptors import ShapedArgs
 from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
-from relife.data import lifetime_data_factory, nhpp_lifetime_data_factory, CountData
+from relife.data import lifetime_data_factory, nhpp_data_factory, CountData
 from relife.plots import PlotNHPP, PlotConstructor
 from relife.rewards import RewardsFunc, exp_discounting
 from relife.types import Args, VariadicArgs
@@ -49,8 +49,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
         return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
 
-    # sample_failure_data
-    def sample_failure_data(
+    def to_failure_data(
         self,
         size: int,
         tf: float,
@@ -76,9 +75,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         **kwargs: Any,
     ) -> Self:
 
-        lifetime_data = lifetime_data_factory(
-            *nhpp_lifetime_data_factory(a0, af, ages, assets)
-        )
+        lifetime_data = lifetime_data_factory(*nhpp_data_factory(a0, af, ages, assets))
 
         optimized_model = self.model.copy()
         optimized_model.init_params(lifetime_data, *model_args)

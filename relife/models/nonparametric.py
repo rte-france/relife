@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from relife.core.decorators import require_attributes
 from relife.core.model import Estimates, NonParametricModel
-from relife.data import nhpp_lifetime_data_factory
+from relife.data import nhpp_data_factory
 from relife.data.lifetime import LifetimeData, lifetime_data_factory
 
 
@@ -575,9 +575,7 @@ class NHPPNonParametric(NonParametricModel):
     ) -> Self:
 
         self.estimates["chf"] = (
-            NelsonAalen()
-            .fit(nhpp_lifetime_data_factory(t0, tf, ages, assets))
-            .estimates["chf"]
+            NelsonAalen().fit(nhpp_data_factory(t0, tf, ages, assets)).estimates["chf"]
         )
         return self
 

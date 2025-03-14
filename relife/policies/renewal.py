@@ -40,8 +40,7 @@ class RenewalPolicy:
 
         return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
 
-    # sample_failure_data
-    def sample_failure_data(
+    def to_failure_data(
         self,
         size: int,
         tf: float,
