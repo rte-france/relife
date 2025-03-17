@@ -1,7 +1,8 @@
-from typing import Union, Optional
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
+
 from relife.types import Args
 
 

@@ -1,3 +1,3 @@
-from .renewal import RenewalProcess, RenewalRewardProcess
+from .factories import poisson_process, renewal_process
 from .nhpp import NonHomogeneousPoissonProcess, NonHomogeneousPoissonProcessWithRewards
-from .factories import renewal_process, poisson_process
+from .renewal import RenewalProcess, RenewalRewardProcess

@@ -1,12 +1,13 @@
 from functools import partial
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+
 from relife.core.descriptors import ShapedArgs
+from relife.core.model import LifetimeModel
 from relife.data import CountData
 from relife.rewards import Discounting, exp_discounting
-from relife.core.model import LifetimeModel
 from relife.types import Args
 
 

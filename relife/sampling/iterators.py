@@ -5,18 +5,18 @@ ages : assets ages at each event
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
-import numpy as np
 from collections.abc import Iterator
+from typing import Optional
 
+import numpy as np
 from numpy.typing import NDArray
 
 from relife.models import (
     AgeReplacementModel,
+    Exponential,
     LeftTruncatedModel,
 )
-from relife.models import Exponential
-from relife.rewards import RewardsFunc, Discounting
+from relife.rewards import Discounting, RewardsFunc
 from relife.types import Args
 
 

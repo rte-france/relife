@@ -2,17 +2,18 @@ import copy
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain
-from typing import Any, Callable, Generic, Iterator, Optional, Self, Protocol
+from typing import Any, Callable, Generic, Iterator, Optional, Protocol, Self
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
 
 from relife.data import LifetimeData, lifetime_data_factory
-from .likelihoods import LikelihoodFromLifetimes
-from relife.plots import PlotSurvivalFunc, PlotConstructor
-from .quadratures import gauss_legendre, quad_laguerre
+from relife.plots import PlotConstructor, PlotSurvivalFunc
 from relife.types import VariadicArgs
+
+from .likelihoods import LikelihoodFromLifetimes
+from .quadratures import gauss_legendre, quad_laguerre
 
 
 class Parameters:

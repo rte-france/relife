@@ -6,27 +6,26 @@ from scipy.optimize import newton
 
 from relife.core import LifetimeModel
 from relife.core.decorators import require_attributes
-from relife.core.descriptors import NbAssets, ShapedArgs
+from relife.core.descriptors import ShapedArgs
 from relife.core.quadratures import gauss_legendre
+from relife.data import CountData
+from relife.models import AgeReplacementModel, LeftTruncatedModel
+from relife.process import NonHomogeneousPoissonProcess, RenewalRewardProcess
+from relife.process.renewal import reward_partial_expectation
 from relife.rewards import (
     age_replacement_rewards,
-    run_to_failure_rewards,
     exp_discounting,
+    run_to_failure_rewards,
 )
-from relife.data import CountData
-from relife.process import RenewalRewardProcess, NonHomogeneousPoissonProcess
-from relife.process.renewal import reward_partial_expectation
 from relife.types import Args
-from relife.models import LeftTruncatedModel, AgeReplacementModel
 
 
 # RenewalPolicy
 class RenewalPolicy:
     model: LifetimeModel[*tuple[Args, ...]]
-    model1 = Optional[LifetimeModel[*tuple[Args, ...]]]
+    model1: Optional[LifetimeModel[*tuple[Args, ...]]]
     model_args = ShapedArgs(astuple=True)
     model1_args = ShapedArgs(astuple=True)
-    nb_assets = NbAssets()
 
     def sample(
         self,
@@ -252,7 +251,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         return self.process.asymptotic_expected_equivalent_annual_cost()
 
 
-class OneCycleAgeReplacementPolicy(RenewalPolicy):
+class OneCycleAgeReplacementPolicy:
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
@@ -764,10 +763,10 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
 
 
 from .docstrings import (
-    ETC_DOCSTRING,
-    EEAC_DOCSTRING,
-    ASYMPTOTIC_ETC_DOCSTRING,
     ASYMPTOTIC_EEAC_DOCSTRING,
+    ASYMPTOTIC_ETC_DOCSTRING,
+    EEAC_DOCSTRING,
+    ETC_DOCSTRING,
 )
 
 WARNING = r"""

@@ -1,4 +1,5 @@
-from typing import TypeVarTuple, Union, NewType, Tuple
+from typing import NewType, Tuple, TypeVarTuple, Union
+
 import numpy as np
 from numpy.typing import NDArray
 

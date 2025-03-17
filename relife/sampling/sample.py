@@ -1,26 +1,29 @@
 from functools import singledispatch
-from typing import Union, Optional
+from typing import Optional, Union
 
 import numpy as np
 
 from relife.data import RenewalData
-
-from relife.process import RenewalRewardProcess, NonHomogeneousPoissonProcess
-from relife.process.renewal import RenewalProcess
+from relife.data.counting import NHPPCountData
 from relife.policies import (
-    OneCycleRunToFailurePolicy,
-    DefaultRunToFailurePolicy,
-    OneCycleAgeReplacementPolicy,
     DefaultAgeReplacementPolicy,
+    DefaultRunToFailurePolicy,
     NonHomogeneousPoissonAgeReplacementPolicy,
+    OneCycleAgeReplacementPolicy,
+    OneCycleRunToFailurePolicy,
 )
+from relife.process import (
+    NonHomogeneousPoissonProcess,
+    NonHomogeneousPoissonProcessWithRewards,
+    RenewalRewardProcess,
+)
+from relife.process.renewal import RenewalProcess
 from relife.rewards import (
     age_replacement_rewards,
     run_to_failure_rewards,
 )
+
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
-from relife.process import NonHomogeneousPoissonProcessWithRewards
-from relife.data.counting import NHPPCountData
 
 
 # noinspection PyUnusedLocal

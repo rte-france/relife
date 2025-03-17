@@ -1,17 +1,16 @@
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.core import ParametricModel
 from relife.policies import (
-    DefaultRunToFailurePolicy,
-    OneCycleRunToFailurePolicy,
     DefaultAgeReplacementPolicy,
-    OneCycleAgeReplacementPolicy,
+    DefaultRunToFailurePolicy,
     NonHomogeneousPoissonAgeReplacementPolicy,
+    OneCycleAgeReplacementPolicy,
+    OneCycleRunToFailurePolicy,
 )
-from relife.policies.renewal import RenewalPolicy
 from relife.process import NonHomogeneousPoissonProcess
 
 
@@ -23,7 +22,13 @@ def renewal_policy(
     discounting_rate: Optional[float] = None,
     nb_assets: int = 1,
     **kwargs,
-) -> RenewalPolicy:
+) -> Union[
+    NonHomogeneousPoissonAgeReplacementPolicy,
+    DefaultAgeReplacementPolicy,
+    DefaultRunToFailurePolicy,
+    OneCycleRunToFailurePolicy,
+    OneCycleAgeReplacementPolicy,
+]:
 
     if isinstance(obj, NonHomogeneousPoissonProcess):
         try:

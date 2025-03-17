@@ -9,7 +9,7 @@ import pytest
 
 from relife.models import Gamma, Gompertz, LogLogistic, Weibull
 from relife.policies import (
-    AgeReplacementPolicy,
+    DefaultAgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,
     OneCycleRunToFailurePolicy,
     DefaultRunToFailurePolicy,
@@ -42,9 +42,9 @@ def fit_args(request):
     scope="module",
     params=[
         OneCycleRunToFailurePolicy,
-        OneCycleAgeReplacementPolicy,
+        DefaultAgeReplacementPolicy,
         DefaultRunToFailurePolicy,
-        AgeReplacementPolicy,
+        DefaultAgeReplacementPolicy,
     ],
 )
 def policy(request, baseline, fit_args):
@@ -60,7 +60,7 @@ def policy(request, baseline, fit_args):
     else:
         policy_obj = request.param(
             baseline, cf, cp, discounting_rate=discounting_rate, nb_assets=5
-        ).fit()
+        ).optimize()
 
     return policy_obj
 
@@ -69,26 +69,25 @@ def policy(request, baseline, fit_args):
     scope="module",
     params=[
         OneCycleRunToFailurePolicy,
-        OneCycleAgeReplacementPolicy,
+        DefaultAgeReplacementPolicy,
         DefaultRunToFailurePolicy,
-        AgeReplacementPolicy,
+        DefaultAgeReplacementPolicy,
     ],
 )
 def policy_vec(request, baseline, fit_args):
     cf, cp, discounting_rate = fit_args
-    batch_size = 3
-    cf = np.tile(cf, (batch_size, 1, 1))
-    discounting_rate = np.tile(discounting_rate, (batch_size, 1, 1))
 
     if (
         request.param == OneCycleRunToFailurePolicy
         or request.param == DefaultRunToFailurePolicy
     ):
-        policy_obj = request.param(baseline, cf, discounting_rate, nb_assets=5)
+        policy_obj = request.param(
+            baseline, cf, discounting_rate=discounting_rate, nb_assets=5
+        )
     else:
         policy_obj = request.param(
-            baseline, cf, cp, discounting_rate, nb_assets=5
-        ).fit()
+            baseline, cf, cp, discounting_rate=discounting_rate, nb_assets=5
+        ).optimize()
     return policy_obj
 
 
@@ -100,7 +99,7 @@ def test_one_cycle_optimal_replacement_age(baseline, fit_args):
     eps = 1e-2
     policy = OneCycleAgeReplacementPolicy(
         baseline, cf, cp, discounting_rate=discounting_rate, nb_assets=5
-    ).fit()
+    ).optimize()
     policy1 = OneCycleAgeReplacementPolicy(
         baseline,
         cf,
@@ -131,15 +130,15 @@ def test_one_cycle_optimal_replacement_age(baseline, fit_args):
 def test_optimal_replacement_age(baseline, fit_args):
     cf, cp, discounting_rate = fit_args
     eps = 1e-2
-    policy = AgeReplacementPolicy(
+    policy = DefaultAgeReplacementPolicy(
         baseline, cf, cp, discounting_rate=discounting_rate, nb_assets=5
-    ).fit()
+    ).optimize()
     ar = policy.ar
 
-    policy1 = AgeReplacementPolicy(
+    policy1 = DefaultAgeReplacementPolicy(
         baseline, cf, cp, discounting_rate=discounting_rate, ar=ar + eps, nb_assets=5
     )
-    policy0 = AgeReplacementPolicy(
+    policy0 = DefaultAgeReplacementPolicy(
         baseline, cf, cp, discounting_rate=discounting_rate, ar=ar - eps, nb_assets=5
     )
 

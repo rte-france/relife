@@ -1,4 +1,4 @@
-from typing import Any, Self, Optional, Union, Sequence
+from typing import Any, Optional, Self, Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,8 +7,8 @@ from scipy.optimize import minimize
 from relife.core.descriptors import ShapedArgs
 from relife.core.likelihoods import LikelihoodFromLifetimes
 from relife.core.model import LifetimeModel, ParametricModel
-from relife.data import lifetime_data_factory, CountData
-from relife.plots import PlotNHPP, PlotConstructor
+from relife.data import CountData, lifetime_data_factory
+from relife.plots import PlotConstructor, PlotNHPP
 from relife.rewards import RewardsFunc, exp_discounting
 from relife.types import Args, VariadicArgs
 

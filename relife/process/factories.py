@@ -2,9 +2,9 @@ from typing import Optional
 
 from relife.core import ParametricModel
 from relife.process import (
+    NonHomogeneousPoissonProcess,
     RenewalProcess,
     RenewalRewardProcess,
-    NonHomogeneousPoissonProcess,
 )
 from relife.process.nhpp import NonHomogeneousPoissonProcessWithRewards
 from relife.rewards import RewardsFunc

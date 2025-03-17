@@ -1,16 +1,16 @@
 import copy
 from dataclasses import dataclass, field, fields, replace
-from typing import Optional, Union, NewType
+from typing import NewType, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.plots import (
-    PlotCountingData,
-    PlotRenewalData,
     PlotConstructor,
+    PlotCountingData,
     PlotNHPPData,
+    PlotRenewalData,
 )
 
 Ids = NewType("Ids", Union[list[int, ...], tuple[int, ...], int])

@@ -25,7 +25,7 @@ class ExpDiscounting:
         self,
         timeline: NDArray[np.float64],
     ) -> NDArray[np.float64]:
-        if self.rate is not None:
+        if self.rate is not None and self.rate != 0.0:
             return 1.0 / np.exp(self.rate * timeline)
         else:
             return np.ones_like(timeline)
@@ -35,7 +35,7 @@ class ExpDiscounting:
         timeline: NDArray[np.float64],
     ) -> NDArray[np.float64]:
 
-        if self.rate is not None:
+        if self.rate is not None and self.rate != 0.0:
             return (1 - np.exp(self.rate * timeline)) / self.rate
         else:
             return np.ones_like(timeline)

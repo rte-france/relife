@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Any
+from typing import TYPE_CHECKING, Any, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
-import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
@@ -12,7 +12,7 @@ from relife.types import Args
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.core.model import LifetimeModel, NonParametricModel
-    from relife.data import CountData, RenewalData, NHPPCountData
+    from relife.data import CountData, NHPPCountData, RenewalData
     from relife.process import NonHomogeneousPoissonProcess
 
 
@@ -280,14 +280,14 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
-        from relife.models import (
+        from relife.data import CountData, NHPPCountData, RenewalData
+        from relife.models import (  # avoid circular import
             ECDF,
             KaplanMeier,
             NelsonAalen,
-        )  # avoid circular import
-        from relife.models.regression import Regression
+        )
         from relife.models.distributions import Distribution
-        from relife.data import CountData, RenewalData, NHPPCountData
+        from relife.models.regression import Regression
         from relife.process import NonHomogeneousPoissonProcess
 
         if isinstance(obj.obj, Distribution):
