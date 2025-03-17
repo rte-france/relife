@@ -85,13 +85,11 @@ def test_renewal_process(model_args_nb_assets):
 def test_renewal_reward_process(model_args_nb_assets):
     t = np.arange(0, 100, 0.5)
     model, model_args, nb_assets = model_args_nb_assets
-    reward = run_to_failure_rewards
-    reward_args = (1,)
+    reward = run_to_failure_rewards(cf=1)
     rrp = RenewalRewardProcess(
         model,
         reward,
         model_args=model_args,
-        reward_args=reward_args,
         nb_assets=nb_assets,
     )
     m = rrp.renewal_function(t)
@@ -115,17 +113,15 @@ def test_renewal_reward_process_vec(model_args_nb_assets):
 
     rrp0 = RenewalRewardProcess(
         model,
-        run_to_failure_rewards,
+        run_to_failure_rewards(cf=cf0),
         model_args=model_args,
-        reward_args=(cf0,),
         discounting_rate=discounting_rate,
         nb_assets=nb_assets,
     )
     rrp = RenewalRewardProcess(
         model,
-        run_to_failure_rewards,
+        run_to_failure_rewards(cf=np.full((n, 1), cf)),
         model_args=model_args,
-        reward_args=(np.full((n, 1), cf),),
         discounting_rate=discounting_rate,
         nb_assets=n,
     )

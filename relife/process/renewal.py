@@ -183,8 +183,6 @@ def reward_partial_expectation(
 class RenewalRewardProcess(RenewalProcess):
     model_args = ShapedArgs(astuple=True)
     model1_args = ShapedArgs(astuple=True)
-    reward_args = ShapedArgs(astuple=True)
-    reward1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
@@ -220,7 +218,6 @@ class RenewalRewardProcess(RenewalProcess):
                 model=self.model,
                 reward=self.rewards,
                 model_args=self.model_args,
-                reward_args=self.reward_args,
                 discounting=self.discounting,
             ),
             model_args=self.model_args,

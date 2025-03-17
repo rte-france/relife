@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife.data import nhpp_data_factory
+from relife.process.nhpp import nhpp_data_factory
 from relife.data.lifetime import LifetimeData, Lifetime1DParser, Lifetime2DParser
 
 
@@ -32,17 +32,17 @@ def example_2d_data():
 @pytest.fixture
 def nhpp_data_v0():
     return {
-        "event_asset_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_event": (11, 13, 21, 25, 27),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "ages_at_events": (11, 13, 21, 25, 27),
     }
 
 
 @pytest.fixture
 def nhpp_data_v1():
     return {
-        "event_asset_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_event": (11, 13, 21, 25, 27),
-        "asset_ids": ("AB2", "CX13"),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "assets_ids": ("AB2", "CX13"),
         "start_ages": (10, 12),
         "end_ages": (35, 60),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
@@ -52,9 +52,9 @@ def nhpp_data_v1():
 @pytest.fixture
 def nhpp_data_v2():
     return {
-        "event_asset_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_event": (11, 13, 21, 25, 27),
-        "asset_ids": ("AB2", "CX13"),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "assets_ids": ("AB2", "CX13"),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
     }
 
@@ -62,9 +62,9 @@ def nhpp_data_v2():
 @pytest.fixture
 def nhpp_data_v3():
     return {
-        "event_asset_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_event": (11, 13, 21, 25, 27),
-        "asset_ids": ("AB2", "CX13"),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "assets_ids": ("AB2", "CX13"),
         "start_ages": (10, 12),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
     }
@@ -73,9 +73,9 @@ def nhpp_data_v3():
 @pytest.fixture
 def nhpp_data_v4():
     return {
-        "event_asset_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_event": (11, 13, 21, 25, 27),
-        "asset_ids": ("AB2", "CX13"),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "assets_ids": ("AB2", "CX13"),
         "end_ages": (35, 60),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
     }

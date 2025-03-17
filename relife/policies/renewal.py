@@ -45,12 +45,15 @@ class RenewalPolicy:
         size: int,
         tf: float,
         t0: float = 0.0,
+        maxsample: int = 1e5,
         seed: Optional[int] = None,
         use: str = "model",
     ) -> tuple[NDArray[np.float64], ...]:
         from relife.sampling import sample_failure_data
 
-        return sample_failure_data(self, size, tf, t0, seed, use)
+        return sample_failure_data(
+            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use
+        )
 
 
 class OneCycleRunToFailurePolicy(RenewalPolicy):

@@ -1,3 +1,2 @@
-from .counting import CountData, RenewalData
+from .counting import CountData, RenewalData, NHPPCountData
 from .lifetime import IndexedData, LifetimeData, lifetime_data_factory
-from .nhpp import nhpp_data_factory, NHPPData

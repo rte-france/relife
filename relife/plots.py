@@ -8,12 +8,11 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
-
 from relife.types import Args
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.core.model import LifetimeModel, NonParametricModel
-    from relife.data import CountData, NHPPData, RenewalData
+    from relife.data import CountData, RenewalData, NHPPCountData
     from relife.process import NonHomogeneousPoissonProcess
 
 
@@ -216,6 +215,18 @@ def count_data_plot(
     return plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
 
 
+def nhpp_count_data_plot(
+    fname: str,
+    obj: NHPPCountData,
+    **kwargs,
+):
+    label = kwargs.pop("label", fname)
+    if not hasattr(obj, fname):
+        raise ValueError(f"No plot for {fname}")
+    timeline, values = getattr(obj, fname)()
+    return plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
+
+
 def renewal_data_plot(
     fname: str,
     obj: CountData,
@@ -276,7 +287,7 @@ class PlotDescriptor:
         )  # avoid circular import
         from relife.models.regression import Regression
         from relife.models.distributions import Distribution
-        from relife.data import CountData, NHPPData, RenewalData
+        from relife.data import CountData, RenewalData, NHPPCountData
         from relife.process import NonHomogeneousPoissonProcess
 
         if isinstance(obj.obj, Distribution):
@@ -290,9 +301,8 @@ class PlotDescriptor:
         if isinstance(obj.obj, CountData):
             if isinstance(obj.obj, RenewalData):
                 return BoundPlot(obj.obj, renewal_data_plot, self.name)
-            return BoundPlot(obj.obj, count_data_plot, self.name)
-        if isinstance(obj.obj, NHPPData):
-            return BoundPlot(obj.obj, count_data_plot, self.name)
+            if isinstance(obj.obj, NHPPCountData):
+                return BoundPlot(obj.obj, nhpp_count_data_plot, self.name)
         if isinstance(obj.obj, NonHomogeneousPoissonProcess):
             return BoundPlot(obj.obj, nhpp_plot, self.name)
         raise NotImplementedError("No plot")
@@ -329,5 +339,5 @@ class PlotRenewalData(PlotCountingData):
 class PlotNHPPData(PlotConstructor):
     nb_events = PlotDescriptor()
     mean_nb_events = PlotDescriptor()
-    number_of_repairs = PlotDescriptor()
-    mean_number_of_repairs = PlotDescriptor()
+    nb_repairs = PlotDescriptor()
+    mean_nb_repairs = PlotDescriptor()

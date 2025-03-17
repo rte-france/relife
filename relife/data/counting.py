@@ -4,8 +4,14 @@ from typing import Optional, Union, NewType
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import override
 
-from relife.plots import PlotCountingData, PlotRenewalData, PlotConstructor
+from relife.plots import (
+    PlotCountingData,
+    PlotRenewalData,
+    PlotConstructor,
+    PlotNHPPData,
+)
 
 Ids = NewType("Ids", Union[list[int, ...], tuple[int, ...], int])
 
@@ -124,3 +130,42 @@ class RenewalData(CountData):
     @property
     def plot(self) -> PlotConstructor:
         return PlotRenewalData(self)
+
+
+@dataclass
+class NHPPCountData(CountData):
+    ages: NDArray[np.float64] = field(repr=False)
+    events: NDArray[np.bool_] = field(repr=False)
+    rewards: NDArray[np.float64] = field(repr=False)
+
+    @override
+    def nb_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        sort = np.argsort(self.timeline)
+        timeline = self.timeline[sort]
+        timeline = np.insert(timeline, 0, self.t0)
+        counts = self.events[sort].copy()
+        counts = np.insert(counts, 0, 0)
+        return timeline, np.cumsum(counts)
+
+    def nb_repairs(self):
+        return self.nb_events()
+
+    def mean_nb_repairs(self):
+        return self.mean_nb_events()
+
+    def total_rewards(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        sort = np.argsort(self.timeline)
+        timeline = self.timeline[sort]
+        rewards = self.rewards[sort]
+        timeline = np.insert(timeline, 0, self.t0)
+        rewards = np.insert(rewards, 0, 0)
+        rewards[timeline == self.tf] = 0
+        return timeline, rewards.cumsum()
+
+    def mean_total_rewards(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline, rewards = self.total_rewards()
+        return timeline, rewards / len(self)
+
+    @property
+    def plot(self) -> PlotConstructor:
+        return PlotNHPPData(self)
