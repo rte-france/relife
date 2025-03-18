@@ -1,12 +1,6 @@
 from typing import Optional
 
 from relife.core import ParametricModel
-from relife.process import (
-    NonHomogeneousPoissonProcess,
-    RenewalProcess,
-    RenewalRewardProcess,
-)
-from relife.process.nhpp import NonHomogeneousPoissonProcessWithRewards
 from relife.rewards import RewardsFunc
 from relife.types import Args
 
@@ -21,6 +15,8 @@ def renewal_process(
     rewards1: Optional[RewardsFunc] = None,
     discounting_rate: Optional[float] = None,
 ):
+    from relife.process import RenewalProcess, RenewalRewardProcess
+
     if rewards is None:
         return RenewalProcess(
             model,
@@ -49,6 +45,11 @@ def poisson_process(
     rewards: Optional[RewardsFunc] = None,
     discounting_rate: Optional[float] = None,
 ):
+
+    from relife.process import (
+        NonHomogeneousPoissonProcess,
+        NonHomogeneousPoissonProcessWithRewards,
+    )
 
     if rewards is None:
         return NonHomogeneousPoissonProcess(

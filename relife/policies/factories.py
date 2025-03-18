@@ -1,17 +1,20 @@
-from typing import Optional, Union
+from __future__ import annotations
+
+from typing import Optional, Union, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.core import ParametricModel
-from relife.policies import (
-    DefaultAgeReplacementPolicy,
-    DefaultRunToFailurePolicy,
-    NonHomogeneousPoissonAgeReplacementPolicy,
-    OneCycleAgeReplacementPolicy,
-    OneCycleRunToFailurePolicy,
-)
-from relife.process import NonHomogeneousPoissonProcess
+
+if TYPE_CHECKING:
+    from relife.policies import (
+        DefaultAgeReplacementPolicy,
+        DefaultRunToFailurePolicy,
+        OneCycleRunToFailurePolicy,
+        OneCycleAgeReplacementPolicy,
+        NonHomogeneousPoissonAgeReplacementPolicy,
+    )
 
 
 def renewal_policy(
@@ -29,6 +32,15 @@ def renewal_policy(
     OneCycleRunToFailurePolicy,
     OneCycleAgeReplacementPolicy,
 ]:
+
+    from relife.process import NonHomogeneousPoissonProcess
+    from relife.policies import (
+        DefaultAgeReplacementPolicy,
+        DefaultRunToFailurePolicy,
+        OneCycleRunToFailurePolicy,
+        OneCycleAgeReplacementPolicy,
+        NonHomogeneousPoissonAgeReplacementPolicy,
+    )
 
     if isinstance(obj, NonHomogeneousPoissonProcess):
         try:

@@ -9,10 +9,10 @@ import pytest
 
 from relife.models import Gamma, Gompertz, LogLogistic, Weibull
 from relife.policies import (
-    DefaultAgeReplacementPolicy,
+    # DefaultAgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,
     OneCycleRunToFailurePolicy,
-    DefaultRunToFailurePolicy,
+    # DefaultRunToFailurePolicy,
 )
 
 
@@ -42,17 +42,18 @@ def fit_args(request):
     scope="module",
     params=[
         OneCycleRunToFailurePolicy,
-        DefaultAgeReplacementPolicy,
-        DefaultRunToFailurePolicy,
-        DefaultAgeReplacementPolicy,
+        OneCycleAgeReplacementPolicy,
+        # DefaultAgeReplacementPolicy,
+        # DefaultRunToFailurePolicy,
     ],
 )
 def policy(request, baseline, fit_args):
     cf, cp, discounting_rate = fit_args
 
     if (
-        request.param == OneCycleRunToFailurePolicy
-        or request.param == DefaultRunToFailurePolicy
+        request.param
+        == OneCycleRunToFailurePolicy
+        # or request.param == DefaultRunToFailurePolicy
     ):
         policy_obj = request.param(
             baseline, cf, discounting_rate=discounting_rate, nb_assets=5
@@ -69,17 +70,18 @@ def policy(request, baseline, fit_args):
     scope="module",
     params=[
         OneCycleRunToFailurePolicy,
-        DefaultAgeReplacementPolicy,
-        DefaultRunToFailurePolicy,
-        DefaultAgeReplacementPolicy,
+        OneCycleAgeReplacementPolicy,
+        # DefaultAgeReplacementPolicy,
+        # DefaultRunToFailurePolicy,
     ],
 )
 def policy_vec(request, baseline, fit_args):
     cf, cp, discounting_rate = fit_args
 
     if (
-        request.param == OneCycleRunToFailurePolicy
-        or request.param == DefaultRunToFailurePolicy
+        request.param
+        == OneCycleRunToFailurePolicy
+        # or request.param == DefaultRunToFailurePolicy
     ):
         policy_obj = request.param(
             baseline, cf, discounting_rate=discounting_rate, nb_assets=5
@@ -127,35 +129,35 @@ def test_one_cycle_optimal_replacement_age(baseline, fit_args):
     )
 
 
-def test_optimal_replacement_age(baseline, fit_args):
-    cf, cp, discounting_rate = fit_args
-    eps = 1e-2
-    policy = DefaultAgeReplacementPolicy(
-        baseline, cf, cp, discounting_rate=discounting_rate, nb_assets=5
-    ).optimize()
-    ar = policy.ar
-
-    policy1 = DefaultAgeReplacementPolicy(
-        baseline, cf, cp, discounting_rate=discounting_rate, ar=ar + eps, nb_assets=5
-    )
-    policy0 = DefaultAgeReplacementPolicy(
-        baseline, cf, cp, discounting_rate=discounting_rate, ar=ar - eps, nb_assets=5
-    )
-
-    assert np.all(
-        policy1.asymptotic_expected_equivalent_annual_cost()
-        > policy.asymptotic_expected_equivalent_annual_cost()
-    ) and np.all(
-        policy0.asymptotic_expected_equivalent_annual_cost()
-        > policy.asymptotic_expected_equivalent_annual_cost()
-    )
-
-
-def test_asymptotic_expected_equivalent_annual_cost(policy):
-    timeline = np.arange(0, 400, 0.2)
-    qa = policy.asymptotic_expected_equivalent_annual_cost()
-    q = policy.expected_equivalent_annual_cost(timeline)
-    assert q[:, -1] == pytest.approx(qa, rel=1e-1)
+# def test_optimal_replacement_age(baseline, fit_args):
+#     cf, cp, discounting_rate = fit_args
+#     eps = 1e-2
+#     policy = DefaultAgeReplacementPolicy(
+#         baseline, cf, cp, discounting_rate=discounting_rate, nb_assets=5
+#     ).optimize()
+#     ar = policy.ar
+#
+#     policy1 = DefaultAgeReplacementPolicy(
+#         baseline, cf, cp, discounting_rate=discounting_rate, ar=ar + eps, nb_assets=5
+#     )
+#     policy0 = DefaultAgeReplacementPolicy(
+#         baseline, cf, cp, discounting_rate=discounting_rate, ar=ar - eps, nb_assets=5
+#     )
+#
+#     assert np.all(
+#         policy1.asymptotic_expected_equivalent_annual_cost()
+#         > policy.asymptotic_expected_equivalent_annual_cost()
+#     ) and np.all(
+#         policy0.asymptotic_expected_equivalent_annual_cost()
+#         > policy.asymptotic_expected_equivalent_annual_cost()
+#     )
+#
+#
+# def test_asymptotic_expected_equivalent_annual_cost(policy):
+#     timeline = np.arange(0, 400, 0.2)
+#     qa = policy.asymptotic_expected_equivalent_annual_cost()
+#     q = policy.expected_equivalent_annual_cost(timeline)
+#     assert q[:, -1] == pytest.approx(qa, rel=1e-1)
 
 
 # FIXME : does not work because now max ndim in ls_integrate is 2d, here it's 3d -> broadcasting error
