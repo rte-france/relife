@@ -24,12 +24,10 @@ def renewal_equation_solver(
     f = model.cdf(timeline, *model_args)
     fm = model.cdf(tm, *model_args)
     y = evaluated_func(timeline)
-
     if discounting is not None:
         d = discounting.factor(timeline)
     else:
         d = np.ones_like(f)
-
     z = np.empty(y.shape)
     u = d * np.insert(f[..., 1:] - fm, 0, 1, axis=-1)
     v = d[..., :-1] * np.insert(np.diff(fm), 0, 1, axis=-1)
@@ -63,7 +61,6 @@ def delayed_renewal_equation_solver(
         d = discounting.factor(timeline)
     else:
         d = np.ones_like(f1)
-
     z1 = np.empty(y1.shape)
     u1 = d * np.insert(f1[..., 1:] - f1m, 0, 1, axis=-1)
     v1 = d[..., :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)
@@ -165,13 +162,13 @@ class RenewalProcess:
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
     model: LifetimeModel[*tuple[Args, ...]],
-    reward: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    rewards: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     model_args: tuple[Args, ...] = (),
     discounting: Optional[Discounting] = None,
 ) -> np.ndarray:
     def func(x):
-        return reward(x) * discounting.factor(x)
+        return rewards(x) * discounting.factor(x)
 
     ls = model.ls_integrate(func, np.zeros_like(timeline), timeline, *model_args)
     # reshape 2d -> final_dim
@@ -217,7 +214,7 @@ class RenewalRewardProcess(RenewalProcess):
             partial(
                 reward_partial_expectation,
                 model=self.model,
-                reward=self.rewards,
+                rewards=self.rewards,
                 model_args=self.model_args,
                 discounting=self.discounting,
             ),
@@ -235,7 +232,7 @@ class RenewalRewardProcess(RenewalProcess):
                 partial(
                     reward_partial_expectation,
                     model=self.model1,
-                    reward=self.rewards1,
+                    rewards=self.rewards1,
                     model_args=self.model1_args,
                     discounting_rate=self.discounting,
                 ),

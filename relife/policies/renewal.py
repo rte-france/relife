@@ -96,6 +96,8 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         self.nb_assets = nb_assets
+
+        self.a0 = a0
         if a0 is not None:
             model = LeftTruncatedModel(model)
             model_args = (a0, *model_args)
@@ -107,6 +109,10 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
         self.model_args = model_args
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
 
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return reward_partial_expectation(
@@ -206,6 +212,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
         self.nb_assets = nb_assets
 
+        self.a0 = a0
         if a0 is not None:
             if model1 is not None:
                 raise ValueError("model1 and a0 can't be set together")
@@ -236,6 +243,10 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
             rewards1=self.rewards,
         )
 
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
+
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.process.expected_total_reward(timeline)
 
@@ -251,7 +262,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         return self.process.asymptotic_expected_equivalent_annual_cost()
 
 
-class OneCycleAgeReplacementPolicy:
+class OneCycleAgeReplacementPolicy(RenewalPolicy):
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
@@ -311,11 +322,13 @@ class OneCycleAgeReplacementPolicy:
         nb_assets: int = 1,
         a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
+
+        self.nb_assets = nb_assets
+        self.a0 = a0
         if a0 is not None:
             model = LeftTruncatedModel(model)
             model_args = (a0, *model_args)
         self.model = AgeReplacementModel(model)
-        self.nb_assets = nb_assets
 
         self.ar = ar
         self.cf = cf
@@ -326,6 +339,10 @@ class OneCycleAgeReplacementPolicy:
         self.rewards = age_replacement_rewards(ar=self.ar, cf=self.cf, cp=self.cp)
         self.discounting = exp_discounting(discounting_rate)
         self.model_args = (ar,) + model_args
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
 
     @require_attributes("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -388,8 +405,11 @@ class OneCycleAgeReplacementPolicy:
         x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
         if np.size(x0) == 1:
             x0 = np.tile(x0, (self.nb_assets, 1))
+        print(x0)
 
         def eq(a):
+            print(self.discounting.factor(a))
+            print(self.discounting.annuity_factor(a))
             return np.sum(
                 self.discounting.factor(a)
                 / self.discounting.annuity_factor(a)
@@ -405,7 +425,17 @@ class OneCycleAgeReplacementPolicy:
         self.model_args = (ar,) + self.model_args[1:]
         self.ar = ar
         self.rewards = age_replacement_rewards(ar=ar, cf=self.cf, cp=self.cp)
-        return self
+        return OneCycleAgeReplacementPolicy(
+            self.model.baseline,
+            self.cf,
+            self.cp,
+            discounting_rate=self.discounting_rate,
+            period_before_discounting=self.period_before_discounting,
+            ar=ar,
+            model_args=self.model_args[1:],
+            nb_assets=self.nb_assets,
+            a0=self.a0,
+        )
 
 
 class DefaultAgeReplacementPolicy(RenewalPolicy):
@@ -492,6 +522,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
     ) -> None:
 
         self.nb_assets = nb_assets
+        self.a0 = a0
         if a0 is not None:
             if model1 is not None:
                 raise ValueError("model1 and a0 can't be set together")
@@ -539,6 +570,10 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
                 model1_args=self.model1_args,
                 rewards1=self.rewards1,
             )
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
 
     @require_attributes("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -616,26 +651,24 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
                 self.model1.baseline,
                 self.cf,
                 self.cp,
-                discounting_rate=self.discounting.rate,
+                discounting_rate=self.discounting_rate,
                 model_args=self.model1_args[1:],
             ).optimize()
             ar1 = onecycle.ar
 
-        self.ar = ar
-        self.ar1 = ar1
-        self.model_args = (ar,) + self.model_args[1:]
-        self.model1_args = (ar1,) + self.model1_args[1:] if self.model1 else None
-        self.process = RenewalRewardProcess(
-            self.model,
-            age_replacement_rewards(ar=ar, cf=self.cf, cp=self.cp),
+        return DefaultAgeReplacementPolicy(
+            self.model.baseline,
+            self.cf,
+            self.cp,
+            discounting_rate=self.discounting_rate,
+            ar=ar,
+            ar1=ar1,
+            model_args=self.model_args[1:],
+            model1=self.model1.baseline if self.model1 else None,
+            model1_args=self.model1_args[1:] if self.model1 else None,
             nb_assets=self.nb_assets,
-            model_args=self.model_args,
-            discounting_rate=self.discounting.rate,
-            model1=self.model1,
-            model1_args=self.model1_args,
-            rewards1=age_replacement_rewards(ar=ar1, cf=self.cf, cp=self.cp),
+            a0=self.a0,
         )
-        return self
 
 
 class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
@@ -652,8 +685,6 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         NHPP instance modeling the intensity and cumulative intensity.
     model_args : ModelArgs
         Additional arguments required by the lifetime model.
-    discounting_rate : float
-        Discount rate applied for present value calculations.
     ar : np.ndarray or None
         Optimized replacement age (optimized policy parameter).
     cp : np.ndarray
@@ -687,6 +718,10 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         self.cr = cr
         self.discounting = exp_discounting(discounting_rate)
         self.rewards = age_replacement_rewards(self.ar, self.cr, self.cp)
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
 
     @require_attributes("ar")
     def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
