@@ -35,5 +35,5 @@ OneCycleRunToFailurePolicy
             ~OneCycleRunToFailurePolicy.sample
         
         
-            ~OneCycleRunToFailurePolicy.sample_failure_data
+            ~OneCycleRunToFailurePolicy.to_failure_data
         

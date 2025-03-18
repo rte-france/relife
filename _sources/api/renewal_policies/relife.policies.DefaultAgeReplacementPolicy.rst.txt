@@ -38,5 +38,5 @@ DefaultAgeReplacementPolicy
             ~DefaultAgeReplacementPolicy.sample
         
         
-            ~DefaultAgeReplacementPolicy.sample_failure_data
+            ~DefaultAgeReplacementPolicy.to_failure_data
         

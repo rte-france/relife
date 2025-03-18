@@ -35,5 +35,5 @@ DefaultRunToFailurePolicy
             ~DefaultRunToFailurePolicy.sample
         
         
-            ~DefaultRunToFailurePolicy.sample_failure_data
+            ~DefaultRunToFailurePolicy.to_failure_data
         

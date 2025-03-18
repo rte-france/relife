@@ -38,5 +38,5 @@ OneCycleAgeReplacementPolicy
             ~OneCycleAgeReplacementPolicy.sample
         
         
-            ~OneCycleAgeReplacementPolicy.sample_failure_data
+            ~OneCycleAgeReplacementPolicy.to_failure_data
         
