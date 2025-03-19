@@ -474,11 +474,18 @@ def _(
     if use != "model":
         raise ValueError("Invalid 'use' value. Only 'model' can be set")
 
-    events_assets_ids = np.array([], dtype=np.int64)
+    timeline = np.array([], dtype=np.float64)
+    events_assets_ids = np.array([], dtype=np.str_)
     ages_at_events = np.array([], dtype=np.float64)
+    is_repaired = np.array([], dtype=np.bool_)
+    is_replaced = np.array([], dtype=np.bool_)
+    t0_entries = np.array([], dtype=np.float64)
+    tf_censorings = np.array([], dtype=np.bool_)
+    new_start_ages = np.array([], dtype=np.float64)
+    previous_end_ages = np.array([], dtype=np.float64)
 
     iterator = NonHomogeneousPoissonIterator(
-        size, tf, t0=t0, nb_assets=obj.nb_assets, seed=seed
+        size, tf, t0=t0, nb_assets=obj.nb_assets, seed=seed, keep_last=True
     )
     iterator.set_sampler(
         obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
@@ -488,41 +495,84 @@ def _(
         if data["timeline"].size == 0:
             continue
 
-        is_repaired = data["is_repaired"]
-        ages_at_events = np.concatenate((ages_at_events, data["ages"][is_repaired]))
+        timeline = np.concatenate((timeline, data["timeline"]))
+        is_repaired = np.concatenate((is_repaired, data["is_repaired"])) # ~ right censoring indicators
+        is_replaced = np.concatenate((is_replaced, data["is_replaced"]))
+        t0_entries = np.concatenate((t0_entries, data["t0_entries"]))
+        tf_censorings = np.concatenate((tf_censorings, data["tf_censorings"]))
+        new_start_ages = np.concatenate((new_start_ages, data["new_start_ages"]))
+        previous_end_ages = np.concatenate((previous_end_ages, data["previous_end_ages"]))
+        ages_at_events = np.concatenate((ages_at_events, data["ages"]))
+        prefix = np.char.add(np.full_like(data["samples_ids"], "S", dtype=np.str_), data["samples_ids"].astype(np.str_))
         events_assets_ids = np.concatenate(
-            (events_assets_ids, data["assets_ids"][is_repaired])
+            (events_assets_ids, np.char.add(prefix, data["assets_ids"].astype(np.str_)))
         )
+
 
         if len(events_assets_ids) > maxsample:
             raise ValueError(
                 "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
             )
 
-    sort_ind = np.lexsort((ages_at_events, events_assets_ids))
+    sort_ind = np.lexsort((timeline, events_assets_ids))
+
+    timeline = timeline[sort_ind]
+    is_repaired = is_repaired[sort_ind]
+    is_replaced = is_replaced[sort_ind]
+    t0_entries = t0_entries[sort_ind]
+    tf_censorings = tf_censorings[sort_ind]
+    new_start_ages = new_start_ages[sort_ind]
+    previous_end_ages = previous_end_ages[sort_ind]
     ages_at_events = ages_at_events[sort_ind]
     events_assets_ids = events_assets_ids[sort_ind]
 
-    first_age_index = np.where(np.roll(events_assets_ids, 1) != events_assets_ids)[0]
-    last_age_index = np.append(first_age_index[1:] - 1, len(events_assets_ids) - 1)
+    print("timeline", timeline)
+    print("is_repaired", is_repaired)
+    print("is_replaced", is_replaced)
+    print("ages_at_events", ages_at_events)
+    print("events_assets_ids", events_assets_ids)
+    print("t0_entries", t0_entries)
+    print("tf_censorings", tf_censorings)
 
-    assets_ids = events_assets_ids[first_age_index]
-    if t0 == 0.0:
-        start_ages = np.zeros_like(first_age_index, dtype=np.float64)
-    else:
-        start_ages = np.ones_like(first_age_index) * t0
+    assets_ids = np.unique(events_assets_ids)
+    print("assets_ids", assets_ids)
+    print("new_start_ages", new_start_ages)
+    print("previous_end_ages", previous_end_ages)
 
-    end_ages = ages_at_events[last_age_index]
-    ages_at_events = np.delete(ages_at_events, last_age_index)
-    events_assets_ids = np.delete(events_assets_ids, last_age_index)
 
-    model_args = tuple((np.take(arg, assets_ids) for arg in obj.model_args))
 
-    return (
-        events_assets_ids,
-        ages_at_events,
-        assets_ids,
-        start_ages,
-        end_ages,
-        model_args,
-    )
+    # first_age_index = np.where(np.roll(events_assets_ids, 1) != events_assets_ids)[0]
+    # last_age_index = np.append(first_age_index[1:] - 1, len(events_assets_ids) - 1)
+    #
+    # print(first_age_index)
+    # print(last_age_index)
+    #
+    #
+    #
+    # t0_entry_index = first_age_index[:iterator.size * iterator._nb_assets]
+    # assets_ids = events_assets_ids[t0_entry_index]
+    # start_ages = ages_at_events[t0_entry_index] - t0
+    #
+    # is_replaced = np.logical_and(~is_repaired, ages_at_events == 0.)
+    # start_ages = np.concatenate((start_ages, np.zeros_like(is_repaired, dtype=np.float64)))
+    #
+    #
+    # if t0 == 0.0:
+    #     start_ages = np.zeros_like(first_age_index, dtype=np.float64)
+    # else:
+    #     start_ages = np.ones_like(first_age_index) * t0
+    #
+    # end_ages = ages_at_events[last_age_index]
+    # ages_at_events = np.delete(ages_at_events, last_age_index)
+    # events_assets_ids = np.delete(events_assets_ids, last_age_index)
+    #
+    # model_args = tuple((np.take(arg, assets_ids) for arg in obj.model_args))
+    #
+    # return (
+    #     events_assets_ids,
+    #     ages_at_events,
+    #     assets_ids,
+    #     start_ages,
+    #     end_ages,
+    #     model_args,
+    # )

@@ -272,8 +272,9 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         nb_assets: int = 1,
         *,
         seed: Optional[int] = None,
+        keep_last: bool = True,
     ):
-        super().__init__(size, tf, t0, nb_assets=nb_assets, seed=seed)
+        super().__init__(size, tf, t0, nb_assets=nb_assets, seed=seed, keep_last=keep_last)
 
         self._rewards = None
         self._discounting = None
@@ -281,7 +282,6 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         self._hpp_timeline = None  # exposed attribute (set/get)
         self._failure_times = None
         self._ages = None
-        self._is_repaired = None
         self._assets_ids = None
         self._ar = None
         self._exponential_dist = Exponential(1.0)
@@ -313,7 +313,6 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
             self._hpp_timeline = np.zeros((self._nb_assets, self.size))
             self._failure_times = np.zeros((self._nb_assets, self.size))
-            self._is_repaired = np.zeros((self._nb_assets, self.size), dtype=np.bool_)
             self._ages = np.zeros((self._nb_assets, self.size))
             self._assets_ids = np.arange(
                 self._nb_assets * self.size, dtype=np.int64
@@ -322,7 +321,7 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         self._model = model
         self._model_type = type(model)
         self._model_args = model_args
-        self._ar = ar
+        self._ar = ar if ar is not None else (np.ones(self._nb_assets) * np.inf).reshape(-1, 1)
 
     def _sample_routine(self) -> tuple[NDArray[np.floating], ...]:
         """
@@ -337,37 +336,48 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         self._failure_times = failure_times.copy()  # update t_i <- t_i+1
         self.timeline += durations
         self._ages += durations
-        self._is_repaired.fill(True)
 
-        # update for those who are replaced
-        is_replaced = np.zeros_like(self._ages, dtype=np.bool_)
+        # is_start_age = np.zeros_like(self._ages, dtype=np.bool_)
+        # is_end_age = np.zeros_like(self._ages, dtype=np.bool_)
+        new_start_ages = np.full_like(self._ages, np.nan)
+        previous_end_ages = np.full_like(self._ages, np.nan)
+        t0_entries = np.full_like(self._ages, np.nan)
+        tf_censorings = np.zeros_like(self._ages, np.bool_)
 
-        if self._ar is not None:
-            is_replaced = self._ages >= self._ar
-            self.timeline = np.where(
-                is_replaced,
-                self.timeline - (self._ages - np.ones_like(self.timeline) * self._ar),
-                self.timeline,
-            )
-            self._assets_ids[is_replaced] += 1
-
-        # update start and stop counter
+        # ar update (before because it changes timeline, thus start and stop conditions)
+        self.timeline = np.where(
+            self._ages >= self._ar,
+            self.timeline - (self._ages - np.ones_like(self.timeline) * self._ar),
+            self.timeline,
+        ) # substract time after ar
+        self._ages = np.where(
+            self._ages >= self._ar,
+            np.ones_like(self._ages) * self._ar,
+            self._ages
+        ) # set ages to ar
         self._start[self.timeline > self.t0] += 1
         self._stop[self.timeline > self.tf] += 1
 
-        # update with respect to tf
+        # t0 update
+        t0_entries = np.where(self._just_crossed_t0, self._ages - (self.timeline - self.t0), t0_entries)
+
+        # only target assets within t0 - tf observation window
+        is_replaced = np.logical_and(self._ages >= self._ar, ~self._just_crossed_tf)
+        is_repaired = ~is_replaced
+        self._ages[is_replaced] = 0. # asset is replaced (0 aged asset)
+        self._assets_ids[is_replaced] += 1 # asset is replaced (new asset id)
+        self._hpp_timeline[is_replaced] = 0.0 # reset timeline
+        self._failure_times[is_replaced] = 0.0
+        new_start_ages[is_replaced] = 0.
+        previous_end_ages = np.where(is_replaced, np.ones_like(self.timeline) * self._ar, previous_end_ages)
+
+        # tf update
         self._ages = np.where(
             self._just_crossed_tf, self._ages - (self.timeline - self.tf), self._ages
         )
+        tf_censorings[self._just_crossed_tf] = True
         self.timeline[self._just_crossed_tf] = self.tf
-        self._is_repaired[self._just_crossed_tf] = False  # do not count repair
-
-        # update those who are replaced (do it now and not above)
-        self._hpp_timeline[is_replaced] = 0.0
-        self._failure_times[is_replaced] = 0.0
-        # self._ages[is_replaced] = 0.0 # do it later
-        self._is_repaired[is_replaced] = False  # if not repaired, it is replaced
-        self._ages[np.logical_and(is_replaced, ~self._just_crossed_tf)] = 0.0
+        is_repaired[self._just_crossed_tf] = False
 
         # update seed to avoid having the same rvs result
         if self.seed is not None:
@@ -376,7 +386,12 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         return (
             self._ages,
             self._assets_ids,
-            self._is_repaired,
+            is_repaired,
+            is_replaced,
+            t0_entries,
+            tf_censorings,
+            new_start_ages,
+            previous_end_ages,
         )
 
     def __next__(self) -> tuple[NDArray[np.floating], ...]:
@@ -387,6 +402,11 @@ class NonHomogeneousPoissonIterator(SampleIterator):
                 ages,
                 assets_ids,
                 is_repaired,
+                is_replaced,
+                t0_entries,
+                tf_censorings,
+                new_start_ages,
+                previous_end_ages,
             ) = self._sample_routine()
             rewards = (
                 self.compute_rewards(self.timeline, ages) if self._rewards else None
@@ -394,6 +414,11 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             return self.output_as_dict_of_1d(
                 ages=ages,
                 is_repaired=is_repaired,
+                is_replaced=is_replaced,
+                t0_entries=t0_entries,
+                tf_censorings=tf_censorings,
+                new_start_ages=new_start_ages,
+                previous_end_ages=previous_end_ages,
                 assets_ids=assets_ids,
                 rewards=rewards,
             )
