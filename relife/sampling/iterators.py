@@ -341,8 +341,8 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         # is_end_age = np.zeros_like(self._ages, dtype=np.bool_)
         new_start_ages = np.full_like(self._ages, np.nan)
         previous_end_ages = np.full_like(self._ages, np.nan)
-        t0_entries = np.full_like(self._ages, np.nan)
-        tf_censorings = np.zeros_like(self._ages, np.bool_)
+        entries = np.zeros_like(self._ages)
+        event_indicators = np.zeros_like(self._ages, np.bool_)
 
         # ar update (before because it changes timeline, thus start and stop conditions)
         self.timeline = np.where(
@@ -359,23 +359,39 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         self._stop[self.timeline > self.tf] += 1
 
         # t0 update
-        t0_entries = np.where(self._just_crossed_t0, self._ages - (self.timeline - self.t0), t0_entries)
+        entries = np.where(self._just_crossed_t0, self._ages - (self.timeline - self.t0), entries)
 
         # only target assets within t0 - tf observation window
-        is_replaced = np.logical_and(self._ages >= self._ar, ~self._just_crossed_tf)
-        is_repaired = ~is_replaced
-        self._ages[is_replaced] = 0. # asset is replaced (0 aged asset)
-        self._assets_ids[is_replaced] += 1 # asset is replaced (new asset id)
-        self._hpp_timeline[is_replaced] = 0.0 # reset timeline
-        self._failure_times[is_replaced] = 0.0
-        new_start_ages[is_replaced] = 0.
-        previous_end_ages = np.where(is_replaced, np.ones_like(self.timeline) * self._ar, previous_end_ages)
+
+        #  keep is_new_asset (is_replaced in memory), return age at ar and reset ages, hpp_timeline, failure_times
+        #  at beginning of sample_routine
+
+        # if replaced
+        # return bool indicators flagging replacement occured (True)
+        # return censored age (ar)
+        # return bool indicator flagging event indicators to False
+        # entries is always previous ages except at t0
+
+        # if not replaced
+        # return bool indicators flagging replacement occured (False)
+        # return age of repair
+        # return bool indicator flagging event indicators to True
+        # entries is always previous ages except at t0
+
+        is_new_asset = np.logical_and(self._ages >= self._ar, ~self._just_crossed_tf) # is_replaced
+        is_repaired = ~is_new_asset
+        self._ages[is_new_asset] = 0. # asset is replaced (0 aged asset)
+        self._assets_ids[is_new_asset] += 1 # asset is replaced (new asset id)
+        self._hpp_timeline[is_new_asset] = 0.0 # reset timeline
+        self._failure_times[is_new_asset] = 0.0
+        new_start_ages[is_new_asset] = 0.
+        previous_end_ages = np.where(is_new_asset, np.ones_like(self.timeline) * self._ar, previous_end_ages)
 
         # tf update
         self._ages = np.where(
             self._just_crossed_tf, self._ages - (self.timeline - self.tf), self._ages
         )
-        tf_censorings[self._just_crossed_tf] = True
+        event_indicators[self._just_crossed_tf] = True
         self.timeline[self._just_crossed_tf] = self.tf
         is_repaired[self._just_crossed_tf] = False
 
@@ -387,9 +403,9 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             self._ages,
             self._assets_ids,
             is_repaired,
-            is_replaced,
-            t0_entries,
-            tf_censorings,
+            is_new_asset,
+            entries,
+            event_indicators,
             new_start_ages,
             previous_end_ages,
         )
@@ -402,9 +418,9 @@ class NonHomogeneousPoissonIterator(SampleIterator):
                 ages,
                 assets_ids,
                 is_repaired,
-                is_replaced,
-                t0_entries,
-                tf_censorings,
+                is_new_asset,
+                entries,
+                event_indicators,
                 new_start_ages,
                 previous_end_ages,
             ) = self._sample_routine()
@@ -414,9 +430,9 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             return self.output_as_dict_of_1d(
                 ages=ages,
                 is_repaired=is_repaired,
-                is_replaced=is_replaced,
-                t0_entries=t0_entries,
-                tf_censorings=tf_censorings,
+                is_new_asset=is_new_asset,
+                entries=entries,
+                event_indicators=event_indicators,
                 new_start_ages=new_start_ages,
                 previous_end_ages=previous_end_ages,
                 assets_ids=assets_ids,

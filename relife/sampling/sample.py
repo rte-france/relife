@@ -478,9 +478,9 @@ def _(
     events_assets_ids = np.array([], dtype=np.str_)
     ages_at_events = np.array([], dtype=np.float64)
     is_repaired = np.array([], dtype=np.bool_)
-    is_replaced = np.array([], dtype=np.bool_)
-    t0_entries = np.array([], dtype=np.float64)
-    tf_censorings = np.array([], dtype=np.bool_)
+    is_new_asset = np.array([], dtype=np.bool_)
+    entries = np.array([], dtype=np.float64)
+    event_indicators = np.array([], dtype=np.bool_)
     new_start_ages = np.array([], dtype=np.float64)
     previous_end_ages = np.array([], dtype=np.float64)
 
@@ -497,9 +497,9 @@ def _(
 
         timeline = np.concatenate((timeline, data["timeline"]))
         is_repaired = np.concatenate((is_repaired, data["is_repaired"])) # ~ right censoring indicators
-        is_replaced = np.concatenate((is_replaced, data["is_replaced"]))
-        t0_entries = np.concatenate((t0_entries, data["t0_entries"]))
-        tf_censorings = np.concatenate((tf_censorings, data["tf_censorings"]))
+        is_new_asset = np.concatenate((is_new_asset, data["is_new_asset"]))
+        entries = np.concatenate((entries, data["entries"]))
+        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
         new_start_ages = np.concatenate((new_start_ages, data["new_start_ages"]))
         previous_end_ages = np.concatenate((previous_end_ages, data["previous_end_ages"]))
         ages_at_events = np.concatenate((ages_at_events, data["ages"]))
@@ -518,21 +518,31 @@ def _(
 
     timeline = timeline[sort_ind]
     is_repaired = is_repaired[sort_ind]
-    is_replaced = is_replaced[sort_ind]
-    t0_entries = t0_entries[sort_ind]
-    tf_censorings = tf_censorings[sort_ind]
+    is_new_asset = is_new_asset[sort_ind]
+    entries = entries[sort_ind]
+    event_indicators = event_indicators[sort_ind]
     new_start_ages = new_start_ages[sort_ind]
     previous_end_ages = previous_end_ages[sort_ind]
     ages_at_events = ages_at_events[sort_ind]
     events_assets_ids = events_assets_ids[sort_ind]
 
+
+    # if is_new_asset but entry is not 0, a new asset was created immediatly loosing information about previous asset
+    immediatly_replaced = np.logical_and(is_new_asset, entries != 0)
+    prefix = np.full_like(events_assets_ids[immediatly_replaced], "Z", dtype=np.str_)
+    forgotten_assets = np.char.add(prefix, events_assets_ids[immediatly_replaced])
+    print("forgotten_assets", forgotten_assets)
+    print(entries[immediatly_replaced])
+    print(previous_end_ages[immediatly_replaced])
+
+
     print("timeline", timeline)
     print("is_repaired", is_repaired)
-    print("is_replaced", is_replaced)
+    print("is_new_asset", is_new_asset)
     print("ages_at_events", ages_at_events)
     print("events_assets_ids", events_assets_ids)
-    print("t0_entries", t0_entries)
-    print("tf_censorings", tf_censorings)
+    print("entries", entries)
+    print("event_indicators", event_indicators)
 
     assets_ids = np.unique(events_assets_ids)
     print("assets_ids", assets_ids)
@@ -553,7 +563,7 @@ def _(
     # assets_ids = events_assets_ids[t0_entry_index]
     # start_ages = ages_at_events[t0_entry_index] - t0
     #
-    # is_replaced = np.logical_and(~is_repaired, ages_at_events == 0.)
+    # is_new_asset = np.logical_and(~is_repaired, ages_at_events == 0.)
     # start_ages = np.concatenate((start_ages, np.zeros_like(is_repaired, dtype=np.float64)))
     #
     #
