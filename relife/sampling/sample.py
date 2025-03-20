@@ -226,7 +226,7 @@ def _(
     assets_ids = np.array([], dtype=np.int64)
     timeline = np.array([], dtype=np.float64)
     ages = np.array([], dtype=np.float64)
-    events = np.array([], dtype=np.bool_)
+    events_indicators = np.array([], dtype=np.bool_)
     rewards = None
     if isinstance(
         obj,
@@ -254,7 +254,7 @@ def _(
         iterator.set_discounting(obj.discounting)
 
     for data in iterator:
-        events = np.concatenate((events, data["is_repaired"]))
+        events_indicators = np.concatenate((events_indicators, data["events_indicators"]))
         ages = np.concatenate((ages, data["ages"]))
         timeline = np.concatenate((timeline, data["timeline"]))
         samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
@@ -277,7 +277,7 @@ def _(
         rewards = np.zeros_like(timeline)
 
     return NHPPCountData(
-        t0, tf, samples_ids, assets_ids, timeline, ages, events, rewards
+        t0, tf, samples_ids, assets_ids, timeline, ages, events_indicators, rewards
     )
 
 
@@ -475,14 +475,10 @@ def _(
         raise ValueError("Invalid 'use' value. Only 'model' can be set")
 
     timeline = np.array([], dtype=np.float64)
-    events_assets_ids = np.array([], dtype=np.str_)
-    ages_at_events = np.array([], dtype=np.float64)
-    is_repaired = np.array([], dtype=np.bool_)
-    is_new_asset = np.array([], dtype=np.bool_)
+    assets_ids = np.array([], dtype=np.str_)
+    ages = np.array([], dtype=np.float64)
     entries = np.array([], dtype=np.float64)
-    event_indicators = np.array([], dtype=np.bool_)
-    new_start_ages = np.array([], dtype=np.float64)
-    previous_end_ages = np.array([], dtype=np.float64)
+    events_indicators = np.array([], dtype=np.bool_)
 
     iterator = NonHomogeneousPoissonIterator(
         size, tf, t0=t0, nb_assets=obj.nb_assets, seed=seed, keep_last=True
@@ -496,93 +492,35 @@ def _(
             continue
 
         timeline = np.concatenate((timeline, data["timeline"]))
-        is_repaired = np.concatenate((is_repaired, data["is_repaired"])) # ~ right censoring indicators
-        is_new_asset = np.concatenate((is_new_asset, data["is_new_asset"]))
-        entries = np.concatenate((entries, data["entries"]))
-        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
-        new_start_ages = np.concatenate((new_start_ages, data["new_start_ages"]))
-        previous_end_ages = np.concatenate((previous_end_ages, data["previous_end_ages"]))
-        ages_at_events = np.concatenate((ages_at_events, data["ages"]))
         prefix = np.char.add(np.full_like(data["samples_ids"], "S", dtype=np.str_), data["samples_ids"].astype(np.str_))
-        events_assets_ids = np.concatenate(
-            (events_assets_ids, np.char.add(prefix, data["assets_ids"].astype(np.str_)))
+        assets_ids = np.concatenate(
+            (assets_ids, np.char.add(prefix, data["assets_ids"].astype(np.str_)))
         )
+        entries = np.concatenate((entries, data["entries"]))
+        events_indicators = np.concatenate((events_indicators, data["events_indicators"]))
+        ages = np.concatenate((ages, data["ages"]))
 
-
-        if len(events_assets_ids) > maxsample:
+        if len(assets_ids) > maxsample:
             raise ValueError(
                 "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
             )
 
-    sort_ind = np.lexsort((timeline, events_assets_ids))
+    sort_ind = np.lexsort((timeline, assets_ids))
 
     timeline = timeline[sort_ind]
-    is_repaired = is_repaired[sort_ind]
-    is_new_asset = is_new_asset[sort_ind]
     entries = entries[sort_ind]
-    event_indicators = event_indicators[sort_ind]
-    new_start_ages = new_start_ages[sort_ind]
-    previous_end_ages = previous_end_ages[sort_ind]
-    ages_at_events = ages_at_events[sort_ind]
-    events_assets_ids = events_assets_ids[sort_ind]
+    events_indicators = events_indicators[sort_ind]
+    ages = ages[sort_ind]
+    assets_ids = assets_ids[sort_ind]
 
 
-    # if is_new_asset but entry is not 0, a new asset was created immediatly loosing information about previous asset
-    immediatly_replaced = np.logical_and(is_new_asset, entries != 0)
-    prefix = np.full_like(events_assets_ids[immediatly_replaced], "Z", dtype=np.str_)
-    forgotten_assets = np.char.add(prefix, events_assets_ids[immediatly_replaced])
-    print("forgotten_assets", forgotten_assets)
-    print(entries[immediatly_replaced])
-    print(previous_end_ages[immediatly_replaced])
-
-
-    print("timeline", timeline)
-    print("is_repaired", is_repaired)
-    print("is_new_asset", is_new_asset)
-    print("ages_at_events", ages_at_events)
-    print("events_assets_ids", events_assets_ids)
-    print("entries", entries)
-    print("event_indicators", event_indicators)
-
-    assets_ids = np.unique(events_assets_ids)
     print("assets_ids", assets_ids)
-    print("new_start_ages", new_start_ages)
-    print("previous_end_ages", previous_end_ages)
+    print("timeline", timeline)
+    print("ages", ages)
+    print("events_indicators", events_indicators)
+    print("entries", entries)
 
 
 
-    # first_age_index = np.where(np.roll(events_assets_ids, 1) != events_assets_ids)[0]
-    # last_age_index = np.append(first_age_index[1:] - 1, len(events_assets_ids) - 1)
-    #
-    # print(first_age_index)
-    # print(last_age_index)
-    #
-    #
-    #
-    # t0_entry_index = first_age_index[:iterator.size * iterator._nb_assets]
-    # assets_ids = events_assets_ids[t0_entry_index]
-    # start_ages = ages_at_events[t0_entry_index] - t0
-    #
-    # is_new_asset = np.logical_and(~is_repaired, ages_at_events == 0.)
-    # start_ages = np.concatenate((start_ages, np.zeros_like(is_repaired, dtype=np.float64)))
-    #
-    #
-    # if t0 == 0.0:
-    #     start_ages = np.zeros_like(first_age_index, dtype=np.float64)
-    # else:
-    #     start_ages = np.ones_like(first_age_index) * t0
-    #
-    # end_ages = ages_at_events[last_age_index]
-    # ages_at_events = np.delete(ages_at_events, last_age_index)
-    # events_assets_ids = np.delete(events_assets_ids, last_age_index)
-    #
-    # model_args = tuple((np.take(arg, assets_ids) for arg in obj.model_args))
-    #
-    # return (
-    #     events_assets_ids,
-    #     ages_at_events,
-    #     assets_ids,
-    #     start_ages,
-    #     end_ages,
-    #     model_args,
-    # )
+
+
