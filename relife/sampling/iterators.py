@@ -241,11 +241,7 @@ class LifetimeIterator(SampleIterator):
             raise ValueError("Set sampler first")
         while not self.stop:  # recompute stop condition automatically
             durations, event_indicators, entries = self._sample_routine()
-            rewards = (
-                self.compute_rewards(self.timeline, durations)
-                if self._rewards
-                else None
-            )
+            rewards = self.compute_rewards(self.timeline, durations)
 
             return self.output_as_dict_of_1d(
                 durations=durations,
@@ -274,7 +270,9 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         seed: Optional[int] = None,
         keep_last: bool = True,
     ):
-        super().__init__(size, tf, t0, nb_assets=nb_assets, seed=seed, keep_last=keep_last)
+        super().__init__(
+            size, tf, t0, nb_assets=nb_assets, seed=seed, keep_last=keep_last
+        )
 
         self._rewards = None
         self._discounting = None
@@ -282,10 +280,11 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         self._hpp_timeline = None  # exposed attribute (set/get)
         self._failure_times = None
         self._ages = None
-        self._assets_ids = None
+        # self._assets_ids = None
         self._ar = None
         self.is_new_asset = None
         self.entries = None
+        self.renewals_ids = None
         self._exponential_dist = Exponential(1.0)
 
     def set_rewards(self, rewards: RewardsFunc):
@@ -317,15 +316,20 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             self._failure_times = np.zeros((self._nb_assets, self.size))
             self._ages = np.zeros((self._nb_assets, self.size))
             self.entries = np.zeros((self._nb_assets, self.size))
-            self.is_new_asset = np.zeros((self._nb_assets, self.size), dtype=np.bool_) # flag to indicate replacement
-            self._assets_ids = np.arange(
-                self._nb_assets * self.size, dtype=np.int64
-            ).reshape(self._nb_assets, self.size)
+            self.is_new_asset = np.zeros(
+                (self._nb_assets, self.size), dtype=np.bool_
+            )  # flag to indicate replacement
+            # self._assets_ids = np.arange(
+            #     self._nb_assets * self.size, dtype=np.int64
+            # ).reshape(self._nb_assets, self.size)
+            self.renewals_ids = np.zeros((self._nb_assets, self.size), dtype=np.int64)
 
         self._model = model
         self._model_type = type(model)
         self._model_args = model_args
-        self._ar = ar if ar is not None else (np.ones(self._nb_assets) * np.inf).reshape(-1, 1)
+        self._ar = (
+            ar if ar is not None else (np.ones(self._nb_assets) * np.inf).reshape(-1, 1)
+        )
 
     def _sample_routine(self) -> tuple[NDArray[np.floating], ...]:
         """
@@ -348,15 +352,16 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
         """
 
-        # reset those who are replaced
-        self._ages[self.is_new_asset] = 0. # asset is replaced (0 aged asset)
-        self._assets_ids[self.is_new_asset] += 1 # asset is replaced (new asset id)
-        self._hpp_timeline[self.is_new_asset] = 0.0 # reset timeline
+        # reset those who are replaced
+        self._ages[self.is_new_asset] = 0.0  # asset is replaced (0 aged asset)
+        # self._assets_ids[self.is_new_asset] += 1 # asset is replaced (new asset id)
+        self._hpp_timeline[self.is_new_asset] = 0.0  # reset timeline
         self._failure_times[self.is_new_asset] = 0.0
         self.entries[self.is_new_asset] = 0.0
-        self.is_new_asset.fill(False) # reset to False
+        self.renewals_ids[self.is_new_asset] += 1
+        self.is_new_asset.fill(False)  # reset to False
 
-        # generate new values
+        # generate new values
         self._hpp_timeline += self._exponential_dist.rvs(
             size=self.nb_samples * self._nb_assets, seed=self.seed
         ).reshape((self._nb_assets, self.nb_samples))
@@ -367,42 +372,47 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         self.timeline += durations
         self._ages += durations
 
-        # create arrays of entries and event_indicators
-        entries = np.zeros_like(self._ages)
+        # create array of events_indicators
         events_indicators = np.ones_like(self._ages, np.bool_)
 
-        # ar update (before because it changes timeline, thus start and stop conditions)
+        # ar update (before because it changes timeline, thus start and stop conditions)
         self.timeline = np.where(
             self._ages >= self._ar,
             self.timeline - (self._ages - np.ones_like(self.timeline) * self._ar),
             self.timeline,
-        ) # substract time after ar
+        )  # substract time after ar
         self._ages = np.where(
-            self._ages >= self._ar,
-            np.ones_like(self._ages) * self._ar,
-            self._ages
-        ) # set ages to ar
-        self.is_new_asset[np.logical_and(self._ages >= self._ar, ~self._just_crossed_tf)] = True
-        events_indicators[np.logical_and(self._ages >= self._ar, ~self._just_crossed_tf)] = False
+            self._ages >= self._ar, np.ones_like(self._ages) * self._ar, self._ages
+        )  # set ages to ar
+        self.is_new_asset[
+            np.logical_and(self._ages >= self._ar, ~self._just_crossed_tf)
+        ] = True
+        events_indicators[
+            np.logical_and(self._ages >= self._ar, ~self._just_crossed_tf)
+        ] = False
 
-        # update stop conditions
+        # update stop conditions
         self._start[self.timeline > self.t0] += 1
         self._stop[self.timeline > self.tf] += 1
 
-        # t0 update
-        self.entries = np.where(self._just_crossed_t0, self._ages - (self.timeline - self.t0), self.entries)
+        # t0 entries update
+        self.entries = np.where(
+            self._just_crossed_t0, self._ages - (self.timeline - self.t0), self.entries
+        )
 
-        # tf update
+        # tf update censoring update
         self._ages = np.where(
             self._just_crossed_tf, self._ages - (self.timeline - self.tf), self._ages
         )
         self.timeline[self._just_crossed_tf] = self.tf
         events_indicators[self._just_crossed_tf] = False
 
-
-        # update entries
-        entries = self.entries.copy()  #  returned entries
-        self.entries = np.where(events_indicators, self._ages, self.entries) # keep previous ages as entry for next iteration
+        # returned entries
+        entries = self.entries.copy()
+        # update for next iteration (keep previous ages)
+        self.entries = np.where(
+            events_indicators, self._ages, self.entries
+        )  # keep previous ages as entry for next iteration
 
         # update seed to avoid having the same rvs result
         if self.seed is not None:
@@ -410,7 +420,7 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
         return (
             self._ages,
-            self._assets_ids,
+            self.renewals_ids,
             entries,
             events_indicators,
         )
@@ -421,16 +431,18 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         while not self.stop:  # recompute stop condition automatically
             (
                 ages,
-                assets_ids,
+                renewals_ids,
                 entries,
                 events_indicators,
             ) = self._sample_routine()
-            rewards = (
-                self.compute_rewards(self.timeline, ages) if self._rewards else None
-            )
+            rewards = self.compute_rewards(self.timeline, ages)
+            # samples_ids = np.tile(np.arange(self.size).astype(np.str_), (self._nb_assets, 1))
+            # prefix = np.char.add(samples_ids, np.full_like(samples_ids, "-", dtype=np.str_))
+            # assets_ids = np.char.add(prefix, assets_ids.astype(np.str_))
+
             return self.output_as_dict_of_1d(
                 ages=ages,
-                assets_ids=assets_ids,
+                renewals_ids=renewals_ids,
                 entries=entries,
                 events_indicators=events_indicators,
                 rewards=rewards,

@@ -1,5 +1,6 @@
 from functools import singledispatch
-from typing import Optional, Union
+from itertools import islice
+from typing import Iterator, Optional, Union
 
 import numpy as np
 
@@ -26,6 +27,31 @@ from relife.rewards import (
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 
 
+def stack1d(
+    iterator: Iterator,
+    keys: tuple[str],
+    maxsample: int = 1e5,
+    stack: Optional[dict[str, np.ndarray]] = None,
+):
+    stack = {} if stack is None else stack
+    for i, data in enumerate(iterator):
+        if i == 0 and not bool(stack):
+            stack.update(
+                {k: np.array([], dtype=v.dtype) for k, v in data.items() if k in keys}
+            )
+
+        if len(stack[list(stack.keys())[0]]) > maxsample:
+            raise ValueError(
+                "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
+            )
+
+        stack.update(
+            {k: np.concatenate((stack[k], v)) for k, v in data.items() if k in keys}
+        )
+
+    return stack
+
+
 # noinspection PyUnusedLocal
 @singledispatch
 def sample_count_data(
@@ -48,73 +74,28 @@ def _(
     maxsample: int = 1e5,
     seed: Optional[int] = None,
 ):
-    durations = np.array([], dtype=np.float64)
-    timeline = np.array([], dtype=np.float64)
-    samples_ids = np.array([], dtype=np.int64)
-    assets_ids = np.array([], dtype=np.int64)
-
+    keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
 
-    rewards = None
     if isinstance(obj, RenewalRewardProcess):
-        rewards = np.array([], dtype=np.float64)
         iterator.set_rewards(obj.rewards1)
         iterator.set_discounting(obj.discounting)
 
-    # first cycle : set model1 in iterator
+    stack = None
     if obj.model1 is not None:
         iterator.set_sampler(obj.model1, obj.model1_args)
-        try:
-            data = next(iterator)
-            durations = np.concatenate((durations, data["durations"]))
-            timeline = np.concatenate((timeline, data["timeline"]))
-            samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
-            assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
-            if isinstance(obj, RenewalRewardProcess):
-                rewards = np.concatenate((rewards, data["rewards"]))
+        stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
 
-        except StopIteration:
-            return RenewalData(
-                t0,
-                tf,
-                samples_ids,
-                assets_ids,
-                timeline,
-                durations,
-                rewards,
-            )
-
-    # next cycles : set model in iterator and change rewards
     iterator.set_sampler(obj.model, obj.model_args)
     if isinstance(obj, RenewalRewardProcess):
         iterator.set_rewards(obj.rewards)
 
-    for data in iterator:
-        if data["timeline"].size == 0:
-            continue
-        durations = np.concatenate((durations, data["durations"]))
-        timeline = np.concatenate((timeline, data["timeline"]))
-        samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
-        assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
-        if isinstance(obj, RenewalRewardProcess):
-            rewards = np.concatenate((rewards, data["rewards"]))
-
-        if len(samples_ids) > maxsample:
-            raise ValueError(
-                f"Max number of sample has been reach : {maxsample}. Modify maxsample or set different arguments"
-            )
-
-    if rewards is None:
-        rewards = np.zeros_like(timeline)
+    stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample, stack=stack)
 
     return RenewalData(
         t0,
         tf,
-        samples_ids,
-        assets_ids,
-        timeline,
-        durations,
-        rewards,
+        **stack,
     )
 
 
@@ -127,33 +108,18 @@ def _(
     maxsample: int = 1e5,
     seed: Optional[int] = None,
 ):
-
+    keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_rewards(run_to_failure_rewards(obj.cf))
     iterator.set_discounting(obj.discounting)
     iterator.set_sampler(obj.model, obj.model_args)
 
-    data = next(iterator)
-
-    durations = data["durations"]
-    timeline = data["timeline"]
-    rewards = data["rewards"]
-    samples_ids = data["samples_ids"]
-    assets_ids = data["assets_ids"]
-
-    if len(samples_ids) > maxsample:
-        raise ValueError(
-            f"Max number of sample has been reach : {maxsample}. Modify maxsample or set different arguments"
-        )
+    stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
 
     return RenewalData(
         t0,
         tf,
-        samples_ids,
-        assets_ids,
-        timeline,
-        durations,
-        rewards,
+        **stack,
     )
 
 
@@ -166,33 +132,18 @@ def _(
     maxsample: int = 1e5,
     seed: Optional[int] = None,
 ):
-
+    keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_rewards(age_replacement_rewards(obj.ar, obj.cf, obj.cp))
     iterator.set_discounting(obj.discounting)
     iterator.set_sampler(obj.model, obj.model_args)
 
-    data = next(iterator)
-
-    durations = data["durations"]
-    timeline = data["timeline"]
-    rewards = data["rewards"]
-    samples_ids = data["samples_ids"]
-    assets_ids = data["assets_ids"]
-
-    if len(samples_ids) > maxsample:
-        raise ValueError(
-            f"Max number of sample has been reach : {maxsample}. Modify maxsample or set different arguments"
-        )
+    stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
 
     return RenewalData(
         t0,
         tf,
-        samples_ids,
-        assets_ids,
-        timeline,
-        durations,
-        rewards,
+        **stack,
     )
 
 
@@ -221,22 +172,14 @@ def _(
     maxsample: int = 1e5,
     seed: Optional[int] = None,
 ):
-
-    samples_ids = np.array([], dtype=np.int64)
-    assets_ids = np.array([], dtype=np.int64)
-    timeline = np.array([], dtype=np.float64)
-    ages = np.array([], dtype=np.float64)
-    events_indicators = np.array([], dtype=np.bool_)
-    rewards = None
-    if isinstance(
-        obj,
-        (
-            NonHomogeneousPoissonAgeReplacementPolicy,
-            NonHomogeneousPoissonProcessWithRewards,
-        ),
-    ):
-        rewards = np.array([], dtype=np.float64)
-
+    keys = (
+        "timeline",
+        "ages",
+        "events_indicators",
+        "samples_ids",
+        "assets_ids",
+        "rewards",
+    )
     iterator = NonHomogeneousPoissonIterator(
         size, tf, t0=t0, nb_assets=obj.nb_assets, seed=seed
     )
@@ -252,33 +195,9 @@ def _(
     ):
         iterator.set_rewards(obj.rewards)
         iterator.set_discounting(obj.discounting)
+    stack = stack1d(iterator, keys, maxsample=maxsample)
 
-    for data in iterator:
-        events_indicators = np.concatenate((events_indicators, data["events_indicators"]))
-        ages = np.concatenate((ages, data["ages"]))
-        timeline = np.concatenate((timeline, data["timeline"]))
-        samples_ids = np.concatenate((samples_ids, data["samples_ids"]))
-        assets_ids = np.concatenate((assets_ids, data["assets_ids"]))
-        if isinstance(
-            obj,
-            (
-                NonHomogeneousPoissonAgeReplacementPolicy,
-                NonHomogeneousPoissonProcessWithRewards,
-            ),
-        ):
-            rewards = np.concatenate((rewards, data["rewards"]))
-
-        if len(samples_ids) > maxsample:
-            raise ValueError(
-                f"Max number of sample has been reach : {maxsample}. Modify maxsample or set different arguments"
-            )
-
-    if rewards is None:
-        rewards = np.zeros_like(timeline)
-
-    return NHPPCountData(
-        t0, tf, samples_ids, assets_ids, timeline, ages, events_indicators, rewards
-    )
+    return NHPPCountData(t0, tf, **stack)
 
 
 def get_baseline_type(model):
@@ -343,9 +262,8 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    durations = np.array([], dtype=np.float64)
-    event_indicators = np.array([], dtype=np.float64)
-    entries = np.array([], dtype=np.float64)
+
+    keys = ("durations", "events_indicators", "entries", "assets_ids")
 
     model, model_args = get_model_model1(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
@@ -354,23 +272,10 @@ def _(
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_sampler(obj.model, obj.model_args)
 
-    stack_model_args = tuple(([] for _ in range(len(model_args))))
-    for data in iterator:
-        durations = np.concatenate((durations, data["durations"]))
-        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
-        entries = np.concatenate((entries, data["entries"]))
+    stack = stack1d(iterator, keys, maxsample=maxsample)
+    model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in model_args))
 
-        for i, v in enumerate(stack_model_args):
-            v.append(np.take(model_args[i], data["assets_ids"], axis=0))
-
-        if len(durations) > maxsample:
-            raise ValueError(
-                f"Max number of sample has been reach : {maxsample}. Modify maxsample or set different arguments"
-            )
-
-    model_args = tuple((np.concatenate(x) for x in stack_model_args))
-
-    return durations, event_indicators, entries, model_args
+    return stack["durations"], stack["event_indicators"], stack["entries"], model_args
 
 
 @sample_failure_data.register
@@ -383,9 +288,7 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    durations = np.array([], dtype=np.float64)
-    event_indicators = np.array([], dtype=np.float64)
-    entries = np.array([], dtype=np.float64)
+    keys = ("durations", "events_indicators", "entries", "assets_ids")
 
     if use in ("both", "model1"):
         raise ValueError(
@@ -395,25 +298,10 @@ def _(
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_sampler(obj.model, obj.model_args)
 
-    model_args = ()
-    for data in iterator:
-        durations = np.concatenate((durations, data["durations"]))
-        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
-        entries = np.concatenate((entries, data["entries"]))
+    stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
+    model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in obj.model_args))
 
-        model_args = tuple(
-            (np.take(v, data["assets_ids"], axis=0) for v in obj.model_args)
-        )
-
-        if len(durations) > maxsample:
-            raise ValueError(
-                f"Max number of sample has been reach : {maxsample}. Modify maxsample or set different arguments"
-            )
-
-        # break loop after first iteration (one cycle only)
-        break
-
-    return durations, event_indicators, entries, model_args
+    return stack["durations"], stack["event_indicators"], stack["entries"], model_args
 
 
 @sample_failure_data.register
@@ -426,9 +314,7 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
-    durations = np.array([], dtype=np.float64)
-    event_indicators = np.array([], dtype=np.float64)
-    entries = np.array([], dtype=np.float64)
+    keys = ("durations", "events_indicators", "entries", "assets_ids")
 
     model, model_args = get_model_model1(
         obj.model, obj.model1, obj.model_args, obj.model1_args, use
@@ -437,23 +323,10 @@ def _(
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.set_sampler(model, model_args)
 
-    stack_model_args = tuple(([] for _ in range(len(model_args))))
-    for data in iterator:
-        durations = np.concatenate((durations, data["durations"]))
-        event_indicators = np.concatenate((event_indicators, data["event_indicators"]))
-        entries = np.concatenate((entries, data["entries"]))
+    stack = stack1d(iterator, keys, maxsample=maxsample)
+    model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in model_args))
 
-        for i, v in enumerate(stack_model_args):
-            v.append(np.take(model_args[i], data["assets_ids"], axis=0))
-
-        if len(durations) > maxsample:
-            raise ValueError(
-                f"Max number of sample has been reach : {maxsample}. Modify maxsample or set different arguments"
-            )
-
-    model_args = tuple((np.concatenate(x) for x in stack_model_args))
-
-    return durations, event_indicators, entries, model_args
+    return stack["durations"], stack["event_indicators"], stack["entries"], model_args
 
 
 @sample_failure_data.register
@@ -470,15 +343,18 @@ def _(
     seed: Optional[int] = None,
     use: str = "model",
 ):
+    keys = (
+        "timeline",
+        "samples_ids",
+        "assets_ids",
+        "ages",
+        "entries",
+        "events_indicators",
+        "renewals_ids",
+    )
 
     if use != "model":
         raise ValueError("Invalid 'use' value. Only 'model' can be set")
-
-    timeline = np.array([], dtype=np.float64)
-    assets_ids = np.array([], dtype=np.str_)
-    ages = np.array([], dtype=np.float64)
-    entries = np.array([], dtype=np.float64)
-    events_indicators = np.array([], dtype=np.bool_)
 
     iterator = NonHomogeneousPoissonIterator(
         size, tf, t0=t0, nb_assets=obj.nb_assets, seed=seed, keep_last=True
@@ -487,40 +363,70 @@ def _(
         obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
     )
 
-    for data in iterator:
-        if data["timeline"].size == 0:
-            continue
+    stack = stack1d(iterator, keys, maxsample=maxsample)
 
-        timeline = np.concatenate((timeline, data["timeline"]))
-        prefix = np.char.add(np.full_like(data["samples_ids"], "S", dtype=np.str_), data["samples_ids"].astype(np.str_))
-        assets_ids = np.concatenate(
-            (assets_ids, np.char.add(prefix, data["assets_ids"].astype(np.str_)))
-        )
-        entries = np.concatenate((entries, data["entries"]))
-        events_indicators = np.concatenate((events_indicators, data["events_indicators"]))
-        ages = np.concatenate((ages, data["ages"]))
+    str_samples_ids = np.char.add(
+        np.full_like(stack["samples_ids"], "S", dtype=np.str_),
+        stack["samples_ids"].astype(np.str_),
+    )
+    str_assets_ids = np.char.add(
+        np.full_like(stack["assets_ids"], "A", dtype=np.str_),
+        stack["assets_ids"].astype(np.str_),
+    )
+    str_renewals_ids = np.char.add(
+        np.full_like(stack["assets_ids"], "R", dtype=np.str_),
+        stack["renewals_ids"].astype(np.str_),
+    )
+    assets_ids = np.char.add(str_samples_ids, str_assets_ids)
+    assets_ids = np.char.add(assets_ids, str_renewals_ids)
 
-        if len(assets_ids) > maxsample:
-            raise ValueError(
-                "Max number of sample has been reach : 1e5. Modify maxsample or set different arguments"
-            )
+    sort_ind = np.lexsort((stack["timeline"], assets_ids))
 
-    sort_ind = np.lexsort((timeline, assets_ids))
-
-    timeline = timeline[sort_ind]
-    entries = entries[sort_ind]
-    events_indicators = events_indicators[sort_ind]
-    ages = ages[sort_ind]
+    entries = stack["entries"][sort_ind]
+    events_indicators = stack["events_indicators"][sort_ind]
+    ages = stack["ages"][sort_ind]
     assets_ids = assets_ids[sort_ind]
 
+    # print("assets_ids", assets_ids)
+    # print("timeline", timeline)
+    # print("ages", ages)
+    # print("events_indicators", events_indicators)
+    # print("entries", entries)
 
-    print("assets_ids", assets_ids)
-    print("timeline", timeline)
-    print("ages", ages)
-    print("events_indicators", events_indicators)
-    print("entries", entries)
+    first_ages_index = np.roll(assets_ids, 1) != assets_ids
+    last_ages_index = np.roll(first_ages_index, -1)
 
+    immediatly_replaced = np.logical_and(~events_indicators, first_ages_index)
 
+    # print("first_ages_index", first_ages_index)
+    # print("last_ages_index", last_ages_index)
+    # print("immediatly_replaced", immediatly_replaced)
 
+    prefix = np.full_like(assets_ids[immediatly_replaced], "Z", dtype=np.str_)
 
+    _assets_ids = np.char.add(prefix, assets_ids[immediatly_replaced])
+    first_ages = entries[immediatly_replaced].copy()
+    last_ages = ages[immediatly_replaced].copy()
 
+    # print("assets_ids", _assets_ids)
+    # print("first_ages", first_ages)
+    # print("last_ages", last_ages)
+
+    events_assets_ids = assets_ids[events_indicators]
+    events_ages = ages[events_indicators]
+    other_assets_ids = np.unique(events_assets_ids)
+    _assets_ids = np.concatenate((_assets_ids, other_assets_ids))
+    first_ages = np.concatenate(
+        (first_ages, entries[first_ages_index & events_indicators])
+    )
+    last_ages = np.concatenate(
+        (last_ages, ages[last_ages_index & ~immediatly_replaced])
+    )
+
+    # print("events_assets_ids", events_assets_ids)
+    # print("events_ages", events_ages)
+    # print("assets_ids", _assets_ids)
+    # print("first_ages", first_ages)
+    # print("last_ages", last_ages)
+
+    return events_assets_ids, events_ages, _assets_ids, first_ages, last_ages

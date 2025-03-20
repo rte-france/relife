@@ -135,7 +135,7 @@ class RenewalData(CountData):
 @dataclass
 class NHPPCountData(CountData):
     ages: NDArray[np.float64] = field(repr=False)
-    events: NDArray[np.bool_] = field(repr=False)
+    events_indicators: NDArray[np.bool_] = field(repr=False)
     rewards: NDArray[np.float64] = field(repr=False)
 
     @override
@@ -143,13 +143,13 @@ class NHPPCountData(CountData):
         sort = np.argsort(self.timeline)
         timeline = self.timeline[sort]
         timeline = np.insert(timeline, 0, self.t0)
-        counts = self.events[sort].copy()
+        counts = self.events_indicators[sort].copy()
         counts = np.insert(counts, 0, 0)
         return timeline, np.cumsum(counts)
 
     @override
     def __len__(self):
-        # assets ids are separated TODO: do the same for LifetimeIterator
+        # assets ids are separated TODO: do the same for LifetimeIterator
         return self.nb_assets
 
     def nb_repairs(self):
