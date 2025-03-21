@@ -1,1 +1,1 @@
-from .sample import sample_count_data, sample_failure_data
+from .sample import sample_count_data, failure_data_sample

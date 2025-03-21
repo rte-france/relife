@@ -195,7 +195,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
         return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
 
-    def to_failure_data(
+    def failure_data_sample(
         self,
         size: int,
         tf: float,
@@ -203,9 +203,9 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sampling import sample_failure_data
+        from relife.sampling import failure_data_sample
 
-        return sample_failure_data(
+        return failure_data_sample(
             self, size, tf, t0, maxsample=maxsample, seed=seed, use="model"
         )
 

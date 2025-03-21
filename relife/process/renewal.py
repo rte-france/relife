@@ -154,9 +154,9 @@ class RenewalProcess:
         seed: Optional[int] = None,
         use: str = "model",
     ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sampling import sample_failure_data
+        from relife.sampling import failure_data_sample
 
-        return sample_failure_data(self, size, tf, t0, seed, use)
+        return failure_data_sample(self, size, tf, t0, seed, use)
 
 
 def reward_partial_expectation(

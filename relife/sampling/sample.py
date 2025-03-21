@@ -226,7 +226,7 @@ def get_model_model1(model, model1, model_args, model1_args, use: str):
 
 # noinspection PyUnusedLocal
 @singledispatch
-def sample_failure_data(
+def failure_data_sample(
     obj,
     size: int,
     tf: float,
@@ -252,7 +252,7 @@ def sample_failure_data(
     ValueError(f"No sample for {type(obj)}")
 
 
-@sample_failure_data.register
+@failure_data_sample.register
 def _(
     obj: Union[RenewalProcess, RenewalRewardProcess],
     size: int,
@@ -278,7 +278,7 @@ def _(
     return stack["durations"], stack["event_indicators"], stack["entries"], model_args
 
 
-@sample_failure_data.register
+@failure_data_sample.register
 def _(
     obj: Union[OneCycleRunToFailurePolicy, OneCycleAgeReplacementPolicy],
     size: int,
@@ -304,7 +304,7 @@ def _(
     return stack["durations"], stack["event_indicators"], stack["entries"], model_args
 
 
-@sample_failure_data.register
+@failure_data_sample.register
 def _(
     obj: Union[DefaultRunToFailurePolicy, DefaultAgeReplacementPolicy],
     size: int,
@@ -329,7 +329,7 @@ def _(
     return stack["durations"], stack["event_indicators"], stack["entries"], model_args
 
 
-@sample_failure_data.register
+@failure_data_sample.register
 def _(
     obj: Union[
         NonHomogeneousPoissonProcess,
@@ -402,9 +402,9 @@ def _(
     # print("last_ages_index", last_ages_index)
     # print("immediatly_replaced", immediatly_replaced)
 
-    prefix = np.full_like(assets_ids[immediatly_replaced], "Z", dtype=np.str_)
-
-    _assets_ids = np.char.add(prefix, assets_ids[immediatly_replaced])
+    # prefix = np.full_like(assets_ids[immediatly_replaced], "Z", dtype=np.str_)
+    # _assets_ids = np.char.add(prefix, assets_ids[immediatly_replaced])
+    _assets_ids = assets_ids[immediatly_replaced]
     first_ages = entries[immediatly_replaced].copy()
     last_ages = ages[immediatly_replaced].copy()
 
@@ -428,5 +428,14 @@ def _(
     # print("assets_ids", _assets_ids)
     # print("first_ages", first_ages)
     # print("last_ages", last_ages)
+
+    # last sort (optional but convenient to control data)
+    sort_ind = np.argsort(events_assets_ids)
+    events_assets_ids = events_assets_ids[sort_ind]
+
+    sort_ind = np.argsort(_assets_ids)
+    _assets_ids = _assets_ids[sort_ind]
+    first_ages = first_ages[sort_ind]
+    last_ages = last_ages[sort_ind]
 
     return events_assets_ids, events_ages, _assets_ids, first_ages, last_ages
