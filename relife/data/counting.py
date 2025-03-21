@@ -147,11 +147,6 @@ class NHPPCountData(CountData):
         counts = np.insert(counts, 0, 0)
         return timeline, np.cumsum(counts)
 
-    @override
-    def __len__(self):
-        # assets ids are separated TODO: do the same for LifetimeIterator
-        return self.nb_assets
-
     def nb_repairs(self):
         return self.nb_events()
 

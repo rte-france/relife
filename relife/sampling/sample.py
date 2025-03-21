@@ -78,8 +78,8 @@ def _(
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
 
     if isinstance(obj, RenewalRewardProcess):
-        iterator.set_rewards(obj.rewards1)
-        iterator.set_discounting(obj.discounting)
+        iterator.rewards = obj.rewards1
+        iterator.discounting = obj.discounting
 
     stack = None
     if obj.model1 is not None:
@@ -88,7 +88,7 @@ def _(
 
     iterator.set_sampler(obj.model, obj.model_args)
     if isinstance(obj, RenewalRewardProcess):
-        iterator.set_rewards(obj.rewards)
+        iterator.rewards = obj.rewards
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample, stack=stack)
 
@@ -110,8 +110,8 @@ def _(
 ):
     keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
-    iterator.set_rewards(run_to_failure_rewards(obj.cf))
-    iterator.set_discounting(obj.discounting)
+    iterator.rewards = run_to_failure_rewards(obj.cf)
+    iterator.discounting = obj.discounting
     iterator.set_sampler(obj.model, obj.model_args)
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
@@ -134,8 +134,8 @@ def _(
 ):
     keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
-    iterator.set_rewards(age_replacement_rewards(obj.ar, obj.cf, obj.cp))
-    iterator.set_discounting(obj.discounting)
+    iterator.rewards = age_replacement_rewards(obj.ar, obj.cf, obj.cp)
+    iterator.discounting = obj.discounting
     iterator.set_sampler(obj.model, obj.model_args)
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
@@ -193,8 +193,8 @@ def _(
             NonHomogeneousPoissonProcessWithRewards,
         ),
     ):
-        iterator.set_rewards(obj.rewards)
-        iterator.set_discounting(obj.discounting)
+        iterator.rewards = obj.rewards
+        iterator.discounting = obj.discounting
     stack = stack1d(iterator, keys, maxsample=maxsample)
 
     return NHPPCountData(t0, tf, **stack)

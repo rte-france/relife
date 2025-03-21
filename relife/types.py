@@ -17,4 +17,8 @@ VariadicArgs = TypeVarTuple("VariadicArgs")
 Args = NewType(
     "Args", Union[NDArray[np.floating], NDArray[np.integer], NDArray[np.bool], float]
 )
+NDArrayOfAny = NewType(
+    "NDArrayOfAny", Union[NDArray[np.float64], NDArray[np.int64], NDArray[np.bool_]]
+)
+
 # tuple consisting of zero or more args
