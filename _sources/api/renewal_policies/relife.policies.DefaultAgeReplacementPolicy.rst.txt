@@ -32,11 +32,11 @@ DefaultAgeReplacementPolicy
             ~DefaultAgeReplacementPolicy.expected_total_cost
         
         
+            ~DefaultAgeReplacementPolicy.failure_data_sample
+        
+        
             ~DefaultAgeReplacementPolicy.optimize
         
         
             ~DefaultAgeReplacementPolicy.sample
-        
-        
-            ~DefaultAgeReplacementPolicy.to_failure_data
         

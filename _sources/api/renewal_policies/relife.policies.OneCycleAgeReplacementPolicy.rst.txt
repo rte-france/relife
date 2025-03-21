@@ -32,11 +32,11 @@ OneCycleAgeReplacementPolicy
             ~OneCycleAgeReplacementPolicy.expected_total_cost
         
         
+            ~OneCycleAgeReplacementPolicy.failure_data_sample
+        
+        
             ~OneCycleAgeReplacementPolicy.optimize
         
         
             ~OneCycleAgeReplacementPolicy.sample
-        
-        
-            ~OneCycleAgeReplacementPolicy.to_failure_data
         

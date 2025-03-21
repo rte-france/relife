@@ -32,8 +32,8 @@ DefaultRunToFailurePolicy
             ~DefaultRunToFailurePolicy.expected_total_cost
         
         
+            ~DefaultRunToFailurePolicy.failure_data_sample
+        
+        
             ~DefaultRunToFailurePolicy.sample
-        
-        
-            ~DefaultRunToFailurePolicy.to_failure_data
         

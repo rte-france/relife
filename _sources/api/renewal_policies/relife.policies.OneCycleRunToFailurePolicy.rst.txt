@@ -32,8 +32,8 @@ OneCycleRunToFailurePolicy
             ~OneCycleRunToFailurePolicy.expected_total_cost
         
         
+            ~OneCycleRunToFailurePolicy.failure_data_sample
+        
+        
             ~OneCycleRunToFailurePolicy.sample
-        
-        
-            ~OneCycleRunToFailurePolicy.to_failure_data
         
