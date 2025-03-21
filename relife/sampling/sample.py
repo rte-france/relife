@@ -90,7 +90,7 @@ def _(
     if isinstance(obj, RenewalRewardProcess):
         iterator.rewards = obj.rewards
 
-    stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample, stack=stack)
+    stack = stack1d(iterator, keys, maxsample=maxsample, stack=stack)
 
     return RenewalData(
         t0,

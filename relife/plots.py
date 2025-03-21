@@ -224,6 +224,16 @@ def nhpp_count_data_plot(
     if not hasattr(obj, fname):
         raise ValueError(f"No plot for {fname}")
     timeline, values = getattr(obj, fname)()
+    if fname in ("total_rewards", "mean_total_rewards"):
+        ax = kwargs.pop("ax", plt.gca())
+        alpha = kwargs.pop("alpha", 0.2)
+        ax.plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
+        ax.fill_between(
+            timeline, values, where=values >= 0, step="post", alpha=alpha, **kwargs
+        )
+        if label is not None:
+            ax.legend()
+        return ax
     return plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
 
 
@@ -341,3 +351,5 @@ class PlotNHPPData(PlotConstructor):
     mean_nb_events = PlotDescriptor()
     nb_repairs = PlotDescriptor()
     mean_nb_repairs = PlotDescriptor()
+    total_rewards = PlotDescriptor()
+    mean_total_rewards = PlotDescriptor()

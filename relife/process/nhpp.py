@@ -15,47 +15,47 @@ from relife.types import Args, VariadicArgs
 
 def nhpp_data_factory(
     events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
-    ages_at_events: NDArray[np.float64],
+    events_ages: NDArray[np.float64],
     assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
-    start_ages: Optional[NDArray[np.float64]] = None,
-    end_ages: Optional[NDArray[np.float64]] = None,
+    first_ages: Optional[NDArray[np.float64]] = None,
+    last_ages: Optional[NDArray[np.float64]] = None,
     model_args: tuple[Args, ...] = (),
 ):
     # convert inputs to arrays
     events_assets_ids = np.asarray(events_assets_ids)
-    ages_at_events = np.asarray(ages_at_events, dtype=np.float64)
+    events_ages = np.asarray(events_ages, dtype=np.float64)
     if assets_ids is not None:
         assets_ids = np.asarray(assets_ids)
-    if start_ages is not None:
-        start_ages = np.asarray(start_ages, dtype=np.float64)
-    if end_ages is not None:
-        end_ages = np.asarray(end_ages, dtype=np.float64)
+    if first_ages is not None:
+        first_ages = np.asarray(first_ages, dtype=np.float64)
+    if last_ages is not None:
+        last_ages = np.asarray(last_ages, dtype=np.float64)
 
     # control shapes
     if events_assets_ids.ndim != 1:
         raise ValueError("Invalid array shape for events_assets_ids. Expected 1d-array")
-    if ages_at_events.ndim != 1:
+    if events_ages.ndim != 1:
         raise ValueError("Invalid array shape for ages_at_event. Expected 1d-array")
-    if len(events_assets_ids) != len(ages_at_events):
+    if len(events_assets_ids) != len(events_ages):
         raise ValueError(
             "Shape of events_assets_ids and ages_at_event must be equal. Expected equal length 1d-arrays"
         )
     if assets_ids is not None:
         if assets_ids.ndim != 1:
             raise ValueError("Invalid array shape for assets_ids. Expected 1d-array")
-        if start_ages is not None:
-            if start_ages.ndim != 1:
+        if first_ages is not None:
+            if first_ages.ndim != 1:
                 raise ValueError(
                     "Invalid array shape for start_ages. Expected 1d-array"
                 )
-            if len(start_ages) != len(assets_ids):
+            if len(first_ages) != len(assets_ids):
                 raise ValueError(
                     "Shape of assets_ids and start_ages must be equal. Expected equal length 1d-arrays"
                 )
-        if end_ages is not None:
-            if end_ages.ndim != 1:
+        if last_ages is not None:
+            if last_ages.ndim != 1:
                 raise ValueError("Invalid array shape for end_ages. Expected 1d-array")
-            if len(end_ages) != len(assets_ids):
+            if len(last_ages) != len(assets_ids):
                 raise ValueError(
                     "Shape of assets_ids and end_ages must be equal. Expected equal length 1d-arrays"
                 )
@@ -73,11 +73,11 @@ def nhpp_data_factory(
                         "Invalid arg shape in model_args. Arrays must coherent with the number of assets given by assets_ids"
                     )
     else:
-        if start_ages is not None:
+        if first_ages is not None:
             raise ValueError(
                 "If start_ages is given, corresponding asset ids must be given in assets_ids"
             )
-        if end_ages is not None:
+        if last_ages is not None:
             raise ValueError(
                 "If end_ages is given, corresponding asset ids must be given in assets_ids"
             )
@@ -99,9 +99,9 @@ def nhpp_data_factory(
             )
 
     # sort fields
-    sort_ind = np.lexsort((ages_at_events, events_assets_ids))
+    sort_ind = np.lexsort((events_ages, events_assets_ids))
     events_assets_ids = events_assets_ids[sort_ind]
-    ages_at_events = ages_at_events[sort_ind]
+    events_ages = events_ages[sort_ind]
 
     # number of age value per asset id
     nb_ages_per_asset = np.unique_counts(events_assets_ids).counts
@@ -113,46 +113,44 @@ def nhpp_data_factory(
 
         # sort fields
         sort_ind = np.sort(assets_ids)
-        start_ages = start_ages[sort_ind] if start_ages is not None else start_ages
-        end_ages = end_ages[sort_ind] if end_ages is not None else end_ages
+        first_ages = first_ages[sort_ind] if first_ages is not None else first_ages
+        last_ages = last_ages[sort_ind] if last_ages is not None else last_ages
         model_args = tuple((arg[sort_ind] for arg in model_args))
 
-        if start_ages is not None:
+        if first_ages is not None:
             if np.any(
-                ages_at_events[first_age_index] <= start_ages[nb_ages_per_asset != 0]
+                events_ages[first_age_index] <= first_ages[nb_ages_per_asset != 0]
             ):
                 raise ValueError(
                     "Each start_ages value must be lower than all of its corresponding ages_at_event values"
                 )
-        if end_ages is not None:
-            if np.any(
-                ages_at_events[last_age_index] >= end_ages[nb_ages_per_asset != 0]
-            ):
+        if last_ages is not None:
+            if np.any(events_ages[last_age_index] >= last_ages[nb_ages_per_asset != 0]):
                 raise ValueError(
                     "Each end_ages value must be greater than all of its corresponding ages_at_event values"
                 )
 
-    event = np.ones_like(ages_at_events, dtype=np.bool_)
+    event = np.ones_like(events_ages, dtype=np.bool_)
     # insert_index = np.cumsum(nb_ages_per_asset)
     # insert_index = last_age_index + 1
-    if end_ages is not None:
-        time = np.insert(ages_at_events, last_age_index + 1, end_ages)
+    if last_ages is not None:
+        time = np.insert(events_ages, last_age_index + 1, last_ages)
         event = np.insert(event, last_age_index + 1, False)
         _ids = np.insert(events_assets_ids, last_age_index + 1, assets_ids)
-        if start_ages is not None:
+        if first_ages is not None:
             entry = np.insert(
-                ages_at_events, np.insert((last_age_index + 1)[:-1], 0, 0), start_ages
+                events_ages, np.insert((last_age_index + 1)[:-1], 0, 0), first_ages
             )
         else:
-            entry = np.insert(ages_at_events, first_age_index, 0.0)
+            entry = np.insert(events_ages, first_age_index, 0.0)
     else:
-        time = ages_at_events.copy()
+        time = events_ages.copy()
         _ids = events_assets_ids.copy()
-        if start_ages is not None:
-            entry = np.roll(ages_at_events, 1)
-            entry[first_age_index] = start_ages
+        if first_ages is not None:
+            entry = np.roll(events_ages, 1)
+            entry[first_age_index] = first_ages
         else:
-            entry = np.roll(ages_at_events, 1)
+            entry = np.roll(events_ages, 1)
             entry[first_age_index] = 0.0
     model_args = tuple((np.take(arg, _ids) for arg in model_args))
 
@@ -215,15 +213,25 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
     def fit(
         self,
-        a0: NDArray[np.float64],
-        af: NDArray[np.float64],
-        ages: NDArray[np.float64],
-        assets: NDArray[np.int64],
-        model_args: tuple[*VariadicArgs] = (),
+        events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
+        events_ages: NDArray[np.float64],
+        assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
+        first_ages: Optional[NDArray[np.float64]] = None,
+        last_ages: Optional[NDArray[np.float64]] = None,
+        model_args: tuple[Args, ...] = (),
         **kwargs: Any,
     ) -> Self:
 
-        lifetime_data = lifetime_data_factory(*nhpp_data_factory(a0, af, ages, assets))
+        time, event, entry, model_args = nhpp_data_factory(
+            events_assets_ids,
+            events_ages,
+            assets_ids=assets_ids,
+            first_ages=first_ages,
+            last_ages=last_ages,
+            model_args=model_args,
+        )
+
+        lifetime_data = lifetime_data_factory(time, event, entry)
 
         optimized_model = self.model.copy()
         optimized_model.init_params(lifetime_data, *model_args)
