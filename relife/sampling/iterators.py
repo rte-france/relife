@@ -166,13 +166,13 @@ class LifetimeIterator(SampleIterator):
             durations = np.tile(durations, (self.nb_assets, 1))
 
         # create events_indicators and entries
-        event_indicators = np.ones_like(self.timeline, dtype=np.bool_)
+        events_indicators = np.ones_like(self.timeline, dtype=np.bool_)
         entries = np.zeros_like(self.timeline)
 
         # ar right censorings
         if self.ar is not None:
             is_replaced = durations == self.ar
-            event_indicators[is_replaced] = False
+            events_indicators[is_replaced] = False
 
         # a0 left truncations
         if self.a0 is not None:
@@ -190,7 +190,7 @@ class LifetimeIterator(SampleIterator):
             self.just_crossed_tf, durations - (self.timeline - self.tf), durations
         )
         self.timeline[self.just_crossed_tf] = self.tf
-        event_indicators[self.just_crossed_tf] = False
+        events_indicators[self.just_crossed_tf] = False
 
         # t0 left truncations
         entries = np.where(
@@ -205,7 +205,7 @@ class LifetimeIterator(SampleIterator):
         rewards = self.compute_rewards(self.timeline, durations)
         return self.select_1d(
             durations=durations,
-            event_indicators=event_indicators,
+            events_indicators=events_indicators,
             entries=entries,
             rewards=rewards,
         )

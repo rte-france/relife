@@ -687,13 +687,6 @@ class FittingResults:
 class ParametricLifetimeModel(LifetimeModel[*VariadicArgs], ParametricModel, ABC):
 
     fitting_results: FittingResults | None
-    DEFAULT_MINIMIZE_KWARGS = {
-        "method": "L-BFGS-B",
-        "constraints": (),
-        "tol": None,
-        "callback": None,
-        "options": None,
-    }
 
     def __init__(self):
         super().__init__()

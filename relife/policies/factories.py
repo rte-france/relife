@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def renewal_policy(
-    obj: ParametricModel,  # ajouter NHPP
+    obj: ParametricModel,
     costs: dict[NDArray[np.float64]],
     one_cycle: bool = False,
     run_to_failure: bool = False,
@@ -32,6 +32,17 @@ def renewal_policy(
     OneCycleRunToFailurePolicy,
     OneCycleAgeReplacementPolicy,
 ]:
+    """
+    Parameters
+    ----------
+    obj : ParametricModel
+    costs : dict of np.ndarray
+    one_cycle : bool, default False
+    run_to_failure : bool, default False
+    discounting_rate : float
+    nb_assets : int
+    kwargs
+    """
 
     from relife.policies import (
         DefaultAgeReplacementPolicy,

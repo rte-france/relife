@@ -33,7 +33,7 @@ def example_2d_data():
 def nhpp_data_v0():
     return {
         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_events": (11, 13, 21, 25, 27),
+        "ages": (11, 13, 21, 25, 27),
     }
 
 
@@ -41,10 +41,10 @@ def nhpp_data_v0():
 def nhpp_data_v1():
     return {
         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_events": (11, 13, 21, 25, 27),
+        "ages": (11, 13, 21, 25, 27),
         "assets_ids": ("AB2", "CX13"),
-        "start_ages": (10, 12),
-        "end_ages": (35, 60),
+        "first_ages": (10, 12),
+        "last_ages": (35, 60),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
     }
 
@@ -53,7 +53,7 @@ def nhpp_data_v1():
 def nhpp_data_v2():
     return {
         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_events": (11, 13, 21, 25, 27),
+        "ages": (11, 13, 21, 25, 27),
         "assets_ids": ("AB2", "CX13"),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
     }
@@ -63,9 +63,9 @@ def nhpp_data_v2():
 def nhpp_data_v3():
     return {
         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_events": (11, 13, 21, 25, 27),
+        "ages": (11, 13, 21, 25, 27),
         "assets_ids": ("AB2", "CX13"),
-        "start_ages": (10, 12),
+        "first_ages": (10, 12),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
     }
 
@@ -74,9 +74,9 @@ def nhpp_data_v3():
 def nhpp_data_v4():
     return {
         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-        "ages_at_events": (11, 13, 21, 25, 27),
+        "ages": (11, 13, 21, 25, 27),
         "assets_ids": ("AB2", "CX13"),
-        "end_ages": (35, 60),
+        "last_ages": (35, 60),
         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
     }
 

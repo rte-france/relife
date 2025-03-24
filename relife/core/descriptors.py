@@ -89,8 +89,15 @@ class ShapedArgs:
                     )
 
                 for i, arg in enumerate(value):
-                    if arg.shape[0] == 1 and nb_assets != 1:
+                    if arg.shape[0] == 1 and arg.size == 1 and nb_assets != 1:
                         value[i] = np.tile(arg, (nb_assets, 1))
+                    if arg.shape[0] == 1 and arg.size > 1 and nb_assets != 1:
+                        new_value = arg.reshape(-1, 1)
+                        if new_value.shape[0] != nb_assets:
+                            raise ValueError(
+                                f"Args {self.public_name} got {new_value.shape[0]} assets but expected {nb_assets}"
+                            )
+                        value[i] = new_value
                     if arg.shape[0] != 1 and arg.shape[0] != nb_assets:
                         raise ValueError(
                             f"Args {self.public_name} shapes are inconsistent"

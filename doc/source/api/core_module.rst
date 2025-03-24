@@ -15,18 +15,6 @@ From advanced usage or contribution only.
 
     core.LikelihoodFromLifetimes
 
-.. rubric:: Nested models
-
-.. autosummary::
-    :toctree: nested_models
-    :template: parametric-lifetime-model-class.rst
-    :caption: Core module
-    :nosignatures:
-
-    core.AgeReplacementModel
-    core.LeftTruncatedModel
-    core.EquilibriumDistribution
-
 .. rubric:: Base models
 
 .. autosummary::

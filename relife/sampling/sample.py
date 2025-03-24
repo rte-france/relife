@@ -275,7 +275,7 @@ def _(
     stack = stack1d(iterator, keys, maxsample=maxsample)
     model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in model_args))
 
-    return stack["durations"], stack["event_indicators"], stack["entries"], model_args
+    return stack["durations"], stack["events_indicators"], stack["entries"], model_args
 
 
 @failure_data_sample.register
@@ -301,7 +301,7 @@ def _(
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
     model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in obj.model_args))
 
-    return stack["durations"], stack["event_indicators"], stack["entries"], model_args
+    return stack["durations"], stack["events_indicators"], stack["entries"], model_args
 
 
 @failure_data_sample.register
@@ -326,7 +326,7 @@ def _(
     stack = stack1d(iterator, keys, maxsample=maxsample)
     model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in model_args))
 
-    return stack["durations"], stack["event_indicators"], stack["entries"], model_args
+    return stack["durations"], stack["events_indicators"], stack["entries"], model_args
 
 
 @failure_data_sample.register

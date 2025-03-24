@@ -155,12 +155,13 @@ def nonparam_probfunc_plot(
     if not hasattr(obj, fname):
         raise ValueError(f"No plot for {fname}")
 
+    estimates = getattr(obj, "_" + fname)
     if timeline is None:
-        timeline = obj.estimates.get(fname).timeline
-        y = obj.estimates.get(fname).values
-        se = obj.estimates.get(fname).se
+        timeline = estimates.timeline
+        y = estimates.values
+        se = estimates.se
     else:
-        y, se = obj.estimates.get(fname).nearest_1dinterp(timeline)
+        y, se = estimates.nearest_1dinterp(timeline)
     return plot(
         timeline,
         y,
@@ -184,12 +185,13 @@ def nelsonaalen_plot(
     if not hasattr(obj, fname):
         raise ValueError(f"No plot for {fname}")
 
+    estimates = getattr(obj, "_" + fname)
     if timeline is None:
-        timeline = obj.estimates.get(fname).timeline
-        y = obj.estimates.get(fname).values
-        se = obj.estimates.get(fname).se
+        timeline = estimates.timeline
+        y = estimates.values
+        se = estimates.se
     else:
-        y, se = obj.estimates.get(fname).nearest_1dinterp(timeline)
+        y, se = estimates.nearest_1dinterp(timeline)
     return plot(
         timeline,
         y,
@@ -211,7 +213,6 @@ def count_data_plot(
     if not hasattr(obj, fname):
         raise ValueError(f"No plot for {fname}")
     timeline, values = getattr(obj, fname)()
-
     return plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
 
 

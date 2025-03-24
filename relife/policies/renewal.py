@@ -405,11 +405,8 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
         if np.size(x0) == 1:
             x0 = np.tile(x0, (self.nb_assets, 1))
-        print(x0)
 
         def eq(a):
-            print(self.discounting.factor(a))
-            print(self.discounting.annuity_factor(a))
             return np.sum(
                 self.discounting.factor(a)
                 / self.discounting.annuity_factor(a)
@@ -651,6 +648,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
                 self.model1.baseline,
                 self.cf,
                 self.cp,
+                nb_assets=self.nb_assets,
                 discounting_rate=self.discounting_rate,
                 model_args=self.model1_args[1:],
             ).optimize()
@@ -667,7 +665,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
             model1=self.model1.baseline if self.model1 else None,
             model1_args=self.model1_args[1:] if self.model1 else None,
             nb_assets=self.nb_assets,
-            a0=self.a0,
+            a0=self.a0 if self.model1 is None else None,
         )
 
 

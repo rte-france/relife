@@ -3,6 +3,7 @@ from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import override
 
 from relife.core.descriptors import ShapedArgs
 from relife.core.model import LifetimeModel
@@ -146,17 +147,19 @@ class RenewalProcess:
 
         return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
 
-    def to_failure_data(
+    def failure_data_sample(
         self,
         size: int,
         tf: float,
         t0: float = 0.0,
+        maxsample: int = 1e5,
         seed: Optional[int] = None,
-        use: str = "model",
     ) -> tuple[NDArray[np.float64], ...]:
         from relife.sampling import failure_data_sample
 
-        return failure_data_sample(self, size, tf, t0, seed, use)
+        return failure_data_sample(
+            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
+        )
 
 
 def reward_partial_expectation(
@@ -304,3 +307,19 @@ class RenewalRewardProcess(RenewalProcess):
             )
         else:
             return self.discounting.rate * self.asymptotic_expected_total_reward()
+
+    @override
+    def failure_data_sample(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+        use: str = "model",
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sampling import failure_data_sample
+
+        return failure_data_sample(
+            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use
+        )

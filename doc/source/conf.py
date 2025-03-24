@@ -65,7 +65,11 @@ else:
 #########################################################################################
 
 templates_path = ["_templates", "_templates/autosummary"]
-# exclude_patterns = ['_build', '_templates'] # note to be parsed by compiler
+exclude_patterns = [
+    "user_guide/_*",
+    "user_guide/.ipynb_checkpoints/*",
+    "learn/_*",
+]  # note to be parsed by compiler
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

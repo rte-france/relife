@@ -15,7 +15,7 @@ from relife.types import Args, VariadicArgs
 
 def nhpp_data_factory(
     events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
-    events_ages: NDArray[np.float64],
+    ages: NDArray[np.float64],
     assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
     first_ages: Optional[NDArray[np.float64]] = None,
     last_ages: Optional[NDArray[np.float64]] = None,
@@ -23,7 +23,7 @@ def nhpp_data_factory(
 ):
     # convert inputs to arrays
     events_assets_ids = np.asarray(events_assets_ids)
-    events_ages = np.asarray(events_ages, dtype=np.float64)
+    ages = np.asarray(ages, dtype=np.float64)
     if assets_ids is not None:
         assets_ids = np.asarray(assets_ids)
     if first_ages is not None:
@@ -34,9 +34,9 @@ def nhpp_data_factory(
     # control shapes
     if events_assets_ids.ndim != 1:
         raise ValueError("Invalid array shape for events_assets_ids. Expected 1d-array")
-    if events_ages.ndim != 1:
+    if ages.ndim != 1:
         raise ValueError("Invalid array shape for ages_at_event. Expected 1d-array")
-    if len(events_assets_ids) != len(events_ages):
+    if len(events_assets_ids) != len(ages):
         raise ValueError(
             "Shape of events_assets_ids and ages_at_event must be equal. Expected equal length 1d-arrays"
         )
@@ -99,9 +99,9 @@ def nhpp_data_factory(
             )
 
     # sort fields
-    sort_ind = np.lexsort((events_ages, events_assets_ids))
+    sort_ind = np.lexsort((ages, events_assets_ids))
     events_assets_ids = events_assets_ids[sort_ind]
-    events_ages = events_ages[sort_ind]
+    ages = ages[sort_ind]
 
     # number of age value per asset id
     nb_ages_per_asset = np.unique_counts(events_assets_ids).counts
@@ -118,39 +118,37 @@ def nhpp_data_factory(
         model_args = tuple((arg[sort_ind] for arg in model_args))
 
         if first_ages is not None:
-            if np.any(
-                events_ages[first_age_index] <= first_ages[nb_ages_per_asset != 0]
-            ):
+            if np.any(ages[first_age_index] <= first_ages[nb_ages_per_asset != 0]):
                 raise ValueError(
                     "Each start_ages value must be lower than all of its corresponding ages_at_event values"
                 )
         if last_ages is not None:
-            if np.any(events_ages[last_age_index] >= last_ages[nb_ages_per_asset != 0]):
+            if np.any(ages[last_age_index] >= last_ages[nb_ages_per_asset != 0]):
                 raise ValueError(
                     "Each end_ages value must be greater than all of its corresponding ages_at_event values"
                 )
 
-    event = np.ones_like(events_ages, dtype=np.bool_)
+    event = np.ones_like(ages, dtype=np.bool_)
     # insert_index = np.cumsum(nb_ages_per_asset)
     # insert_index = last_age_index + 1
     if last_ages is not None:
-        time = np.insert(events_ages, last_age_index + 1, last_ages)
+        time = np.insert(ages, last_age_index + 1, last_ages)
         event = np.insert(event, last_age_index + 1, False)
         _ids = np.insert(events_assets_ids, last_age_index + 1, assets_ids)
         if first_ages is not None:
             entry = np.insert(
-                events_ages, np.insert((last_age_index + 1)[:-1], 0, 0), first_ages
+                ages, np.insert((last_age_index + 1)[:-1], 0, 0), first_ages
             )
         else:
-            entry = np.insert(events_ages, first_age_index, 0.0)
+            entry = np.insert(ages, first_age_index, 0.0)
     else:
-        time = events_ages.copy()
+        time = ages.copy()
         _ids = events_assets_ids.copy()
         if first_ages is not None:
-            entry = np.roll(events_ages, 1)
+            entry = np.roll(ages, 1)
             entry[first_age_index] = first_ages
         else:
-            entry = np.roll(events_ages, 1)
+            entry = np.roll(ages, 1)
             entry[first_age_index] = 0.0
     model_args = tuple((np.take(arg, _ids) for arg in model_args))
 

@@ -24,6 +24,20 @@ data like parameters, other nested models, etc.
     models.AFT
 
 
+.. rubric:: Lifetime models
+
+.. autosummary::
+    :toctree: nested_models
+    :template: parametric-lifetime-model-class.rst
+    :caption: Lifetime models
+    :nosignatures:
+
+    models.AgeReplacementModel
+    models.LeftTruncatedModel
+    models.EquilibriumDistribution
+
+
+
 .. rubric:: Non-parametric lifetime models
 
 Non-parametric lifetime estimators are objects used to compute well-knowns non-parametric estimations of some
@@ -52,6 +66,21 @@ parameters but estimations of functions values.
     models.regression.CovarEffect
 
 
+.. rubric:: Stochastic process
+
+Renewal policies are objects that are generally composed of one underlying renewal process and one or more lifetime
+model. Their interfaces expose a bunch of statiscal properties like expections and a sample procedure to generate
+data.
+
+.. autosummary::
+    :toctree: stochastic_process
+    :caption: Stochastic process
+    :nosignatures:
+
+    process.renewal_process
+    process.poisson_process
+
+
 .. rubric:: Renewal policies
 
 Renewal policies are objects that are generally composed of one underlying renewal process and one or more lifetime
@@ -60,11 +89,7 @@ data.
 
 .. autosummary::
     :toctree: renewal_policies
-    :template: default.rst
     :caption: Renewal policies
     :nosignatures:
 
-    policies.OneCycleAgeReplacementPolicy
-    policies.OneCycleRunToFailurePolicy
-    policies.DefaultRunToFailurePolicy
-    policies.DefaultAgeReplacementPolicy
+    policies.renewal_policy
