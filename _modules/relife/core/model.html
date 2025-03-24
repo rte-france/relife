@@ -1144,13 +1144,6 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">ParametricLifetimeModel</span><span class="p">(</span><span class="n">LifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">VariadicArgs</span><span class="p">],</span> <span class="n">ParametricModel</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
 
     <span class="n">fitting_results</span><span class="p">:</span> <span class="n">FittingResults</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="n">DEFAULT_MINIMIZE_KWARGS</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;constraints&quot;</span><span class="p">:</span> <span class="p">(),</span>
-        <span class="s2">&quot;tol&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;callback&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>

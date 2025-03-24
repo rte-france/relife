@@ -397,15 +397,17 @@
 <li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.LogLogistic.html">LogLogistic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.ProportionalHazard.html">ProportionalHazard</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.AFT.html">AFT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nested_models/relife.models.AgeReplacementModel.html">AgeReplacementModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nested_models/relife.models.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nested_models/relife.models.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.ECDF.html">ECDF</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.KaplanMeier.html">KaplanMeier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.Turnbull.html">Turnbull</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parametric_models/relife.models.regression.CovarEffect.html">CovarEffect</a></li>
-<li class="toctree-l2"><a class="reference internal" href="renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="renewal_policies/relife.policies.DefaultRunToFailurePolicy.html">DefaultRunToFailurePolicy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html">DefaultAgeReplacementPolicy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochastic_process/relife.process.renewal_process.html">relife.process.renewal_process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochastic_process/relife.process.poisson_process.html">relife.process.poisson_process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="renewal_policies/relife.policies.renewal_policy.html">relife.policies.renewal_policy</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="data_module.html">Data management</a></li>
@@ -510,6 +512,21 @@ data like parameters, other nested models, etc.</p>
 </tbody>
 </table>
 </div>
+<p class="rubric">Lifetime models</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="nested_models/relife.models.AgeReplacementModel.html#relife.models.AgeReplacementModel" title="relife.models.AgeReplacementModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.AgeReplacementModel</span></code></a></p></td>
+<td><p>Age replacement core.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="nested_models/relife.models.LeftTruncatedModel.html#relife.models.LeftTruncatedModel" title="relife.models.LeftTruncatedModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.LeftTruncatedModel</span></code></a></p></td>
+<td><p>Left truncated core.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="nested_models/relife.models.EquilibriumDistribution.html#relife.models.EquilibriumDistribution" title="relife.models.EquilibriumDistribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.EquilibriumDistribution</span></code></a></p></td>
+<td><p>Equilibrium distribution.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Non-parametric lifetime models</p>
 <p>Non-parametric lifetime estimators are objects used to compute well-knowns non-parametric estimations of some
 probability functions. Their exposed interface follows the same logic of lifetime models except that they do not store
@@ -540,23 +557,29 @@ parameters but estimations of functions values.</p>
 </tbody>
 </table>
 </div>
+<p class="rubric">Stochastic process</p>
+<p>Renewal policies are objects that are generally composed of one underlying renewal process and one or more lifetime
+model. Their interfaces expose a bunch of statiscal properties like expections and a sample procedure to generate
+data.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="stochastic_process/relife.process.renewal_process.html#relife.process.renewal_process" title="relife.process.renewal_process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process.renewal_process</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="stochastic_process/relife.process.poisson_process.html#relife.process.poisson_process" title="relife.process.poisson_process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process.poisson_process</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Renewal policies</p>
 <p>Renewal policies are objects that are generally composed of one underlying renewal process and one or more lifetime
 model. Their interfaces expose a bunch of statiscal properties like expections and a sample procedure to generate
 data.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="renewal_policies/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy" title="relife.policies.OneCycleAgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.OneCycleAgeReplacementPolicy</span></code></a></p></td>
-<td><p>One-cyle age replacement policy.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="renewal_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy" title="relife.policies.OneCycleRunToFailurePolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.OneCycleRunToFailurePolicy</span></code></a></p></td>
-<td><p>One cyle run-to-failure policy</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="renewal_policies/relife.policies.DefaultRunToFailurePolicy.html#relife.policies.DefaultRunToFailurePolicy" title="relife.policies.DefaultRunToFailurePolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.DefaultRunToFailurePolicy</span></code></a></p></td>
-<td><p>Run-to-failure renewal policy.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="renewal_policies/relife.policies.DefaultAgeReplacementPolicy.html#relife.policies.DefaultAgeReplacementPolicy" title="relife.policies.DefaultAgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.DefaultAgeReplacementPolicy</span></code></a></p></td>
-<td><p>Time based replacement policy.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="renewal_policies/relife.policies.renewal_policy.html#relife.policies.renewal_policy" title="relife.policies.renewal_policy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.renewal_policy</span></code></a></p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>

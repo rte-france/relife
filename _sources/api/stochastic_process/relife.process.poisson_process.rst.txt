@@ -1,0 +1,6 @@
+﻿relife.process.poisson\_process
+===============================
+
+.. currentmodule:: relife.process
+
+.. autofunction:: poisson_process
