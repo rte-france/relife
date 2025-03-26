@@ -6,11 +6,11 @@ from scipy.optimize import minimize
 
 from relife.core.descriptors import ShapedArgs
 from relife.core.likelihoods import LikelihoodFromLifetimes
-from relife.core.model import LifetimeModel, ParametricModel
+from relife.core.models import LifetimeModel, ParametricModel
 from relife.data import CountData, lifetime_data_factory
 from relife.plots import PlotConstructor, PlotNHPP
-from relife.rewards import RewardsFunc, exp_discounting
-from relife.types import Args, VariadicArgs
+from relife.rewards import Rewards, exp_discounting
+from relife.types import NumericalArrayLike
 
 
 def nhpp_data_factory(
@@ -19,7 +19,7 @@ def nhpp_data_factory(
     assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
     first_ages: Optional[NDArray[np.float64]] = None,
     last_ages: Optional[NDArray[np.float64]] = None,
-    model_args: tuple[Args, ...] = (),
+    model_args: tuple[NumericalArrayLike, ...] = (),
 ):
     # convert inputs to arrays
     events_assets_ids = np.asarray(events_assets_ids)
@@ -161,8 +161,8 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Args, ...]],
-        model_args: tuple[Args, ...] = (),
+        model: LifetimeModel[*tuple[NumericalArrayLike, ...]],
+        model_args: tuple[NumericalArrayLike, ...] = (),
         *,
         nb_assets: int = 1,
     ):
@@ -171,11 +171,13 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         self.compose_with(model=model)
         self.model_args = model_args
 
-    def intensity(self, time: np.ndarray, *args: *tuple[Args, ...]) -> np.ndarray:
+    def intensity(
+        self, time: np.ndarray, *args: *tuple[NumericalArrayLike, ...]
+    ) -> np.ndarray:
         return self.model.hf(time, *args)
 
     def cumulative_intensity(
-        self, time: np.ndarray, *args: *tuple[Args, ...]
+        self, time: np.ndarray, *args: *tuple[NumericalArrayLike, ...]
     ) -> np.ndarray:
         return self.model.chf(time, *args)
 
@@ -216,7 +218,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
         first_ages: Optional[NDArray[np.float64]] = None,
         last_ages: Optional[NDArray[np.float64]] = None,
-        model_args: tuple[Args, ...] = (),
+        model_args: tuple[NumericalArrayLike, ...] = (),
         **kwargs: Any,
     ) -> Self:
 
@@ -266,9 +268,9 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 class NonHomogeneousPoissonProcessWithRewards(NonHomogeneousPoissonProcess):
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Args, ...]],
-        rewards: RewardsFunc,
-        model_args: tuple[Args, ...] = (),
+        model: LifetimeModel[*tuple[NumericalArrayLike, ...]],
+        rewards: Rewards,
+        model_args: tuple[NumericalArrayLike, ...] = (),
         *,
         discounting_rate: Optional[float] = None,
         nb_assets: int = 1,

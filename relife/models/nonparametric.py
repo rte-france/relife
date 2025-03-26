@@ -4,9 +4,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.core.decorators import require_attributes
-from relife.core.model import Estimates, NonParametricModel
+from relife.core.models import Estimates, NonParametricModel
 from relife.data.lifetime import LifetimeData, lifetime_data_factory
-from relife.process.nhpp import nhpp_data_factory
+from relife.processes.nhpp import nhpp_data_factory
 
 
 class ECDF(NonParametricModel):

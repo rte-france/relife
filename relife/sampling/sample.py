@@ -13,17 +13,16 @@ from relife.policies import (
     OneCycleAgeReplacementPolicy,
     OneCycleRunToFailurePolicy,
 )
-from relife.process import (
+from relife.processes import (
     NonHomogeneousPoissonProcess,
     NonHomogeneousPoissonProcessWithRewards,
     RenewalRewardProcess,
 )
-from relife.process.renewal import RenewalProcess
+from relife.processes.renewal import RenewalProcess
 from relife.rewards import (
     age_replacement_rewards,
     run_to_failure_rewards,
 )
-
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 
 
@@ -82,11 +81,11 @@ def _(
         iterator.discounting = obj.discounting
 
     stack = None
-    if obj.model1 is not None:
-        iterator.set_sampler(obj.model1, obj.model1_args)
+    if obj.distribution1 is not None:
+        iterator.set_sampler(obj.distribution1, obj.model1_args)
         stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
 
-    iterator.set_sampler(obj.model, obj.model_args)
+    iterator.set_sampler(obj.distribution, obj.model_args)
     if isinstance(obj, RenewalRewardProcess):
         iterator.rewards = obj.rewards
 
@@ -266,11 +265,11 @@ def _(
     keys = ("durations", "events_indicators", "entries", "assets_ids")
 
     model, model_args = get_model_model1(
-        obj.model, obj.model1, obj.model_args, obj.model1_args, use
+        obj.distribution, obj.distribution1, obj.model_args, obj.model1_args, use
     )
 
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
-    iterator.set_sampler(obj.model, obj.model_args)
+    iterator.set_sampler(obj.distribution, obj.model_args)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)
     model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in model_args))
@@ -317,7 +316,7 @@ def _(
     keys = ("durations", "events_indicators", "entries", "assets_ids")
 
     model, model_args = get_model_model1(
-        obj.model, obj.model1, obj.model_args, obj.model1_args, use
+        obj.distribution, obj.distribution1, obj.model_args, obj.model1_args, use
     )
 
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, NewType, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,9 +7,22 @@ from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.core.model import ParametricLifetimeModel
-from relife.core.quadratures import shifted_laguerre
+from relife.core import ParametricLifetimeModel
 from relife.data import LifetimeData
+from relife.quadratures import shifted_laguerre
+
+Time = NewType(
+    "Time",
+    Union[NDArray[np.floating], NDArray[np.integer], float, int],
+)
+Covar = NewType(
+    "Covar",
+    Union[NDArray[np.floating], NDArray[np.integer], float, int],
+)
+Args = NewType(
+    "Args",
+    Union[NDArray[np.floating], NDArray[np.integer], float, int],
+)
 
 
 class Distribution(ParametricLifetimeModel[()], ABC):
@@ -18,7 +31,7 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     """
 
     @override
-    def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def sf(self, time: Time) -> NDArray[np.float64]:
         return super().sf(time)
 
     @override
@@ -40,10 +53,10 @@ class Distribution(ParametricLifetimeModel[()], ABC):
         return self.ichf(cumulative_hazard_rate)
 
     @override
-    def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def cdf(self, time: Time) -> NDArray[np.float64]:
         return super().cdf(time)
 
-    def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def pdf(self, time: Time) -> NDArray[np.float64]:
         return super().pdf(time)
 
     @override
@@ -121,28 +134,28 @@ class Distribution(ParametricLifetimeModel[()], ABC):
     @abstractmethod
     def jac_hf(
         self,
-        time: float | NDArray[np.float64],
+        time: Time,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_chf(
         self,
-        time: float | NDArray[np.float64],
+        time: Time,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def dhf(
         self,
-        time: float | NDArray[np.float64],
+        time: Time,
     ) -> NDArray[np.float64]: ...
 
-    def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_sf(self, time: Time) -> NDArray[np.float64]:
         return -self.jac_chf(time) * self.sf(time)
 
-    def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_cdf(self, time: Time) -> NDArray[np.float64]:
         return -self.jac_sf(time)
 
-    def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_pdf(self, time: Time) -> NDArray[np.float64]:
         return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
 
 
@@ -182,10 +195,10 @@ class Exponential(Distribution):
         super().__init__()
         self.new_params(rate=rate)
 
-    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: Time) -> NDArray[np.float64]:
         return self.rate * np.ones_like(time)
 
-    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: Time) -> NDArray[np.float64]:
         return self.rate * time
 
     @override
@@ -197,7 +210,7 @@ class Exponential(Distribution):
         return 1 / self.rate**2
 
     @override
-    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: Time) -> NDArray[np.float64]:
         return 1 / self.rate * np.ones_like(time)
 
     @override
@@ -206,13 +219,13 @@ class Exponential(Distribution):
     ) -> NDArray[np.float64]:
         return cumulative_hazard_rate / self.rate
 
-    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: Time) -> NDArray[np.float64]:
         return np.ones((time.size, 1))
 
-    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: Time) -> NDArray[np.float64]:
         return np.ones((time.size, 1)) * time
 
-    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: Time) -> NDArray[np.float64]:
         return np.zeros_like(time)
 
 
@@ -255,10 +268,10 @@ class Weibull(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: Time) -> NDArray[np.float64]:
         return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
 
-    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: Time) -> NDArray[np.float64]:
         return (self.rate * time) ** self.shape
 
     @override
@@ -270,7 +283,7 @@ class Weibull(Distribution):
         return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
 
     @override
-    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: Time) -> NDArray[np.float64]:
         return (
             gamma(1 / self.shape)
             / (self.rate * self.shape * self.sf(time))
@@ -286,7 +299,7 @@ class Weibull(Distribution):
     ) -> NDArray[np.float64]:
         return cumulative_hazard_rate ** (1 / self.shape) / self.rate
 
-    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: Time) -> NDArray[np.float64]:
         return np.column_stack(
             (
                 self.rate
@@ -296,7 +309,7 @@ class Weibull(Distribution):
             )
         )
 
-    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: Time) -> NDArray[np.float64]:
         return np.column_stack(
             (
                 np.log(self.rate * time) * (self.rate * time) ** self.shape,
@@ -304,7 +317,7 @@ class Weibull(Distribution):
             )
         )
 
-    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: Time) -> NDArray[np.float64]:
         return (
             self.shape
             * (self.shape - 1)
@@ -364,10 +377,10 @@ class Gompertz(Distribution):
         param0[1] = rate
         self.params = param0
 
-    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: Time) -> NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
 
-    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: Time) -> NDArray[np.float64]:
         return self.shape * np.expm1(self.rate * time)
 
     @override
@@ -380,7 +393,7 @@ class Gompertz(Distribution):
         pass
 
     @override
-    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: Time) -> NDArray[np.float64]:
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
 
@@ -390,7 +403,7 @@ class Gompertz(Distribution):
     ) -> NDArray[np.float64]:
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
-    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: Time) -> NDArray[np.float64]:
         return np.column_stack(
             (
                 self.rate * np.exp(self.rate * time),
@@ -398,7 +411,7 @@ class Gompertz(Distribution):
             )
         )
 
-    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: Time) -> NDArray[np.float64]:
         return np.column_stack(
             (
                 np.expm1(self.rate * time),
@@ -406,7 +419,7 @@ class Gompertz(Distribution):
             )
         )
 
-    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: Time) -> NDArray[np.float64]:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
 
@@ -463,11 +476,11 @@ class Gamma(Distribution):
             ndim=np.ndim(x),
         )
 
-    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
 
-    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
@@ -485,7 +498,7 @@ class Gamma(Distribution):
     ) -> NDArray[np.float64]:
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
 
-    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return (
             x ** (self.shape - 1)
@@ -502,7 +515,7 @@ class Gamma(Distribution):
 
     def jac_chf(
         self,
-        time: float | NDArray[np.float64],
+        time: Time,
     ) -> NDArray[np.float64]:
         x = self.rate * time
         return np.column_stack(
@@ -513,11 +526,11 @@ class Gamma(Distribution):
             )
         )
 
-    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: Time) -> NDArray[np.float64]:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
     @override
-    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: Time) -> NDArray[np.float64]:
         return super().mrl(time)
 
 
@@ -564,11 +577,11 @@ class LogLogistic(Distribution):
         super().__init__()
         self.new_params(shape=shape, rate=rate)
 
-    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape)
 
-    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return np.array(np.log(1 + x**self.shape))
 
@@ -596,7 +609,7 @@ class LogLogistic(Distribution):
     ) -> NDArray[np.float64]:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
-    def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_hf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return np.column_stack(
             (
@@ -607,7 +620,7 @@ class LogLogistic(Distribution):
             )
         )
 
-    def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_chf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return np.column_stack(
             (
@@ -616,7 +629,7 @@ class LogLogistic(Distribution):
             )
         )
 
-    def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def dhf(self, time: Time) -> NDArray[np.float64]:
         x = self.rate * time
         return (
             self.shape
@@ -627,7 +640,7 @@ class LogLogistic(Distribution):
         )
 
     @override
-    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: Time) -> NDArray[np.float64]:
         return super().mrl(time)
 
 

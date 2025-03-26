@@ -8,12 +8,12 @@ import scipy.stats as stats
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
-from relife.types import Args
+from relife.types import NumericalArrayLike
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.core.model import LifetimeModel, NonParametricModel
+    from relife.core.models import LifetimeModel, NonParametricModel
     from relife.data import CountData, NHPPCountData, RenewalData
-    from relife.process import NonHomogeneousPoissonProcess
+    from relife.processes import NonHomogeneousPoissonProcess
 
 
 def plot(
@@ -65,9 +65,9 @@ def plot(
 
 def param_probfunc_plot(
     fname: str,
-    obj: LifetimeModel[*tuple[Args, ...]],
+    obj: LifetimeModel[*tuple[NumericalArrayLike, ...]],
     timeline: NDArray[np.float64] = None,
-    model_args: tuple[Args, ...] = (),
+    model_args: tuple[NumericalArrayLike, ...] = (),
     asset: Optional[ArrayLike] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -299,7 +299,7 @@ class PlotDescriptor:
         )
         from relife.models.distributions import Distribution
         from relife.models.regression import Regression
-        from relife.process import NonHomogeneousPoissonProcess
+        from relife.processes import NonHomogeneousPoissonProcess
 
         if isinstance(obj.obj, Distribution):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)

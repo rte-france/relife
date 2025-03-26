@@ -1,29 +1,26 @@
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, Optional, NewType
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.core.descriptors import ShapedArgs
-from relife.core.model import LifetimeModel
+from relife.core.models import LifetimeDistribution
 from relife.data import CountData
 from relife.rewards import Discounting, exp_discounting
-from relife.types import Args
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*tuple[Args, ...]],
+    distribution: LifetimeDistribution,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
-    model_args: tuple[Args, ...] = (),
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f = model.cdf(timeline, *model_args)
-    fm = model.cdf(tm, *model_args)
+    f = distribution.cdf(timeline)
+    fm = distribution.cdf(tm)
     y = evaluated_func(timeline)
     if discounting is not None:
         d = discounting.factor(timeline)
@@ -47,15 +44,14 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    model1: LifetimeModel[*tuple[Args, ...]],
+    distribution1: LifetimeDistribution,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    model1_args: tuple[Args, ...] = (),
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f1 = model1.cdf(timeline, *model1_args)
-    f1m = model1.cdf(tm, *model1_args)
+    f1 = distribution1.cdf(timeline)
+    f1m = distribution1.cdf(tm)
     y1 = evaluated_func(timeline)
 
     if discounting is not None:
@@ -80,59 +76,27 @@ def delayed_renewal_equation_solver(
 
 
 class RenewalProcess:
-    model_args = ShapedArgs(astuple=True)
-    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Args, ...]],
-        *,
-        nb_assets: int = 1,
-        model_args: tuple[Args, ...] = (),
-        model1: Optional[LifetimeModel[*tuple[Args, ...]]] = None,
-        model1_args: tuple[Args, ...] = (),
+        distribution: LifetimeDistribution,
+        distribution1: Optional[LifetimeDistribution] = None,
     ):
-        self.nb_assets = nb_assets
-        self.model = model
-        self.model1 = model1
-        self.model_args = model_args
-        self.model1_args = model1_args
+        self.distribution = distribution
+        self.distribution1 = distribution1
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        if self.model1 is None:
-            evaluated_func = partial(
-                lambda time, args: self.model.cdf(time, *args),
-                args=self.model_args,
-            )
-        else:
-            evaluated_func = partial(
-                lambda time, args: self.model1.cdf(time, *args),
-                args=self.model1_args,
-            )
         return renewal_equation_solver(
             timeline,
-            self.model,
-            evaluated_func,
-            model_args=self.model_args,
+            self.distribution,
+            self.distribution.cdf if not self.distribution1 else self.distribution1.cdf,
         )
 
     def renewal_density(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        if self.model1 is None:
-            evaluated_func = partial(
-                lambda time, args: self.model.pdf(time, *args),
-                args=self.model_args,
-            )
-        else:
-            evaluated_func = partial(
-                lambda time, args: self.model1.pdf(time, *args),
-                args=self.model1_args,
-            )
-
         return renewal_equation_solver(
             timeline,
-            self.model,
-            evaluated_func,
-            model_args=self.model_args,
+            self.distribution,
+            self.distribution.pdf if not self.distribution1 else self.distribution1.pdf,
         )
 
     def sample(
@@ -162,48 +126,42 @@ class RenewalProcess:
         )
 
 
+Rewards = NewType(
+    "Rewards",
+    Callable[[NDArray[np.float64]], NDArray[np.float64]],
+)
+
+
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    model: LifetimeModel[*tuple[Args, ...]],
-    rewards: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    distribution: LifetimeDistribution,
+    rewards: Rewards,
     *,
-    model_args: tuple[Args, ...] = (),
     discounting: Optional[Discounting] = None,
 ) -> np.ndarray:
     def func(x):
         return rewards(x) * discounting.factor(x)
 
-    ls = model.ls_integrate(func, np.zeros_like(timeline), timeline, *model_args)
+    ls = distribution.ls_integrate(func, np.zeros_like(timeline), timeline)
     # reshape 2d -> final_dim
-    ndim = max(map(np.ndim, (timeline, *model_args)), default=0)
+    ndim = max(map(np.ndim, (timeline, *distribution.args)), default=0)
     if ndim < 2:
         ls = np.squeeze(ls)
     return ls
 
 
 class RenewalRewardProcess(RenewalProcess):
-    model_args = ShapedArgs(astuple=True)
-    model1_args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[Args, ...]],
-        rewards: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        *,
-        nb_assets: int = 1,
-        model_args: tuple[Args, ...] = (),
+        distribution: LifetimeDistribution,
+        rewards: Rewards,
         discounting_rate: Optional[float] = None,
-        model1: Optional[LifetimeModel[*tuple[Args, ...]]] = None,
-        model1_args: tuple[Args, ...] = (),
-        rewards1: Optional[Callable[[NDArray[np.float64]], NDArray[np.float64]]] = None,
+        *,
+        distribution1: Optional[LifetimeDistribution] = None,
+        rewards1: Optional[Rewards] = None,
     ):
-        super().__init__(
-            model,
-            nb_assets=nb_assets,
-            model1=model1,
-            model_args=model_args,
-            model1_args=model1_args,
-        )
+        super().__init__(distribution, distribution1)
         self.rewards = rewards
         self.rewards1 = rewards1 if rewards1 is not None else rewards
         self.discounting = exp_discounting(discounting_rate)
@@ -213,33 +171,29 @@ class RenewalRewardProcess(RenewalProcess):
     ) -> NDArray[np.float64]:
         z = renewal_equation_solver(
             timeline,
-            self.model,
+            self.distribution,
             partial(
                 reward_partial_expectation,
-                model=self.model,
+                distribution=self.distribution,
                 rewards=self.rewards,
-                model_args=self.model_args,
                 discounting=self.discounting,
             ),
-            model_args=self.model_args,
             discounting=self.discounting,
         )
 
-        if self.model1 is None:
+        if self.distribution1 is None:
             return z
         else:
             return delayed_renewal_equation_solver(
                 timeline,
                 z,
-                self.model1,
+                self.distribution1,
                 partial(
                     reward_partial_expectation,
-                    model=self.model1,
+                    distribution=self.distribution1,
                     rewards=self.rewards1,
-                    model_args=self.model1_args,
-                    discounting_rate=self.discounting,
+                    discounting=self.discounting,
                 ),
-                model1_args=self.model1_args,
                 discounting=self.discounting,
             )
 
@@ -252,25 +206,17 @@ class RenewalRewardProcess(RenewalProcess):
         def y(x):
             return self.discounting.factor(x) * self.rewards(x)
 
-        lf = self.model.ls_integrate(
-            f, np.array(0.0), np.array(np.inf), *self.model_args
-        )
-        ly = self.model.ls_integrate(
-            y, np.array(0.0), np.array(np.inf), *self.model_args
-        )
+        lf = self.distribution.ls_integrate(f, np.array(0.0), np.array(np.inf))
+        ly = self.distribution.ls_integrate(y, np.array(0.0), np.array(np.inf))
         z = ly / (1 - lf)
 
-        if self.model1 is not None:
+        if self.distribution1 is not None:
 
             def y1(x):
                 return self.discounting.factor(x) * self.rewards1(x)
 
-            lf1 = self.model1.ls_integrate(
-                f, np.array(0.0), np.array(np.inf), *self.model1_args
-            )
-            ly1 = self.model1.ls_integrate(
-                y1, np.array(0.0), np.array(np.inf), *self.model1_args
-            )
+            lf1 = self.distribution1.ls_integrate(f, np.array(0.0), np.array(np.inf))
+            ly1 = self.distribution1.ls_integrate(y1, np.array(0.0), np.array(np.inf))
             z = ly1 + z * lf1
 
         return np.squeeze(z)
@@ -281,29 +227,25 @@ class RenewalRewardProcess(RenewalProcess):
 
         z = self.expected_total_reward(timeline)
         af = self.discounting.annuity_factor(timeline)
-        mask = af == 0.0
-        af = np.ma.masked_where(mask, af)
         q = z / af
-        if self.model1 is None:
-            q0 = self.rewards(np.array(0.0)) * self.model.pdf(
-                np.array(0.0), *self.model_args
-            )
+        res = np.full_like(af, q)
+        if self.distribution1 is None:
+            q0 = self.rewards(np.array(0.0)) * self.distribution.pdf(0.0)
         else:
-            q0 = self.rewards1(np.array(0.0)) * self.model1.pdf(
-                np.array(0.0), *self.model1_args
-            )
-        return np.where(mask, q0, q)
+            q0 = self.rewards1(np.array(0.0)) * self.distribution1.pdf(0.0)
+        res[af == 0.0] = q0
+
+        return res
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         if self.discounting.rate == 0.0:
             return np.squeeze(
-                self.model.ls_integrate(
+                self.distribution.ls_integrate(
                     lambda x: self.rewards(x),
                     np.array(0.0),
                     np.array(np.inf),
-                    *self.model_args,
                 )
-                / self.model.mean(*self.model_args)
+                / self.distribution.mean()
             )
         else:
             return self.discounting.rate * self.asymptotic_expected_total_reward()

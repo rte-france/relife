@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife.process.nhpp import nhpp_data_factory
+from relife.processes.nhpp import nhpp_data_factory
 from relife.data.lifetime import LifetimeData, Lifetime1DParser, Lifetime2DParser
 
 

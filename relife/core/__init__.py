@@ -1,2 +1,7 @@
 from .likelihoods import LikelihoodFromLifetimes
-from .model import LifetimeModel, ParametricLifetimeModel, ParametricModel
+from .models import (
+    LifetimeModel,
+    ParametricLifetimeModel,
+    ParametricModel,
+    LifetimeDistribution,
+)

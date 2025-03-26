@@ -11,7 +11,7 @@ from typing_extensions import override
 from relife.data import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from .model import ParametricLifetimeModel, ParametricModel
+    from .models import ParametricLifetimeModel, ParametricModel
 
 
 def hessian_cs(

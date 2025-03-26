@@ -45,8 +45,8 @@ def exp_discounting(rate: Optional[float] = None) -> Discounting:
     return ExpDiscounting(rate)
 
 
-RewardsFunc = NewType(
-    "RewardFunc",
+Rewards = NewType(
+    "Rewards",
     Callable[[NDArray[np.float64]], NDArray[np.float64]],
 )
 
@@ -64,7 +64,7 @@ def age_replacement_rewards(
     ar: NDArray[np.float64],
     cf: NDArray[np.float64],
     cp: NDArray[np.float64],
-) -> RewardsFunc:
+) -> Rewards:
     return partial(_age_replacement_rewards, ar=ar, cf=cf, cp=cp)
 
 
@@ -77,5 +77,5 @@ def _run_to_failure_rewards(
 
 def run_to_failure_rewards(
     cf: NDArray[np.float64], discounting_rate: float = 0.0
-) -> RewardsFunc:
+) -> Rewards:
     return partial(_run_to_failure_rewards, cf=cf)

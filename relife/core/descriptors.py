@@ -1,9 +1,8 @@
 from typing import Optional, Union
 
 import numpy as np
-from numpy.typing import NDArray
 
-from relife.types import Args
+from relife.types import NumericalArrayLike
 
 
 def np_at_least(nb_assets: int):
@@ -13,7 +12,7 @@ def np_at_least(nb_assets: int):
         return np.atleast_2d
 
 
-def get_nb_assets(args_tuple: tuple[Args, ...]) -> int:
+def get_nb_assets(args_tuple: tuple[NumericalArrayLike, ...]) -> int:
     def as_2d():
         for x in args_tuple:
             if not isinstance(x, np.ndarray):
@@ -56,8 +55,10 @@ class ShapedArgs:
         return getattr(obj, self.private_name)
 
     def __set__(
-        self, obj, value: Optional[Union[Args, tuple[Args, ...]]]
-    ) -> tuple[Args, ...]:
+        self,
+        obj,
+        value: Optional[Union[NumericalArrayLike, tuple[NumericalArrayLike, ...]]],
+    ) -> tuple[NumericalArrayLike, ...]:
         """
         if nb_assets is 1, values are all 1d array (event floats)
         if nb_assets is more than 1, values are all 2d array

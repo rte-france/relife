@@ -11,14 +11,14 @@ from relife.models import (
     Exponential,
     LeftTruncatedModel,
 )
-from relife.rewards import Discounting, RewardsFunc
-from relife.types import Args, NDArrayOfAny
+from relife.rewards import Discounting, Rewards
+from relife.types import NumericalArrayLike, NDArrayOfAny
 
 
 class SampleIterator(Iterator, ABC):
 
     model: Optional[ParametricModel]
-    model_args: Optional[tuple[Args, ...]]
+    model_args: Optional[tuple[NumericalArrayLike, ...]]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]
 
@@ -96,7 +96,7 @@ class SampleIterator(Iterator, ABC):
 
 class LifetimeIterator(SampleIterator):
 
-    rewards: Optional[RewardsFunc]
+    rewards: Optional[Rewards]
     discounting: Optional[Discounting]
     a0: Optional[NDArray[np.float64]]
     ar: Optional[NDArray[np.float64]]
@@ -120,7 +120,9 @@ class LifetimeIterator(SampleIterator):
         self.ar = None
 
     def set_sampler(
-        self, model: ParametricLifetimeModel, model_args: tuple[Args, ...] = ()
+        self,
+        model: ParametricLifetimeModel,
+        model_args: tuple[NumericalArrayLike, ...] = (),
     ) -> None:
 
         if self.model is None:
@@ -213,7 +215,7 @@ class LifetimeIterator(SampleIterator):
 
 class NonHomogeneousPoissonIterator(SampleIterator):
 
-    rewards: Optional[RewardsFunc]
+    rewards: Optional[Rewards]
     discounting: Optional[Discounting]
     hpp_timeline: Optional[NDArray[np.float64]]
     failure_times: Optional[NDArray[np.float64]]
@@ -263,7 +265,7 @@ class NonHomogeneousPoissonIterator(SampleIterator):
     def set_sampler(
         self,
         model: ParametricLifetimeModel,
-        model_args: tuple[Args, ...] = (),
+        model_args: tuple[NumericalArrayLike, ...] = (),
         ar: Optional[NDArray[np.float64]] = None,
     ) -> None:
 

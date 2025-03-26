@@ -1,4 +1,4 @@
-from typing import NewType, Tuple, TypeVarTuple, Union
+from typing import NewType, TypeVarTuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,7 +14,7 @@ VariadicArgs = TypeVarTuple("VariadicArgs")
 # float = np.float64
 # bool = np.bool_
 # see : https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-Args = NewType(
+NumericalArrayLike = NewType(
     "Args", Union[NDArray[np.floating], NDArray[np.integer], NDArray[np.bool], float]
 )
 NDArrayOfAny = NewType(

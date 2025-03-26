@@ -78,7 +78,8 @@ def policy_vec(request, baseline, fit_args):
     cf, cp, discounting_rate = fit_args
 
     if (
-        request.param == OneCycleRunToFailurePolicy or request.param == DefaultRunToFailurePolicy
+        request.param == OneCycleRunToFailurePolicy
+        or request.param == DefaultRunToFailurePolicy
     ):
         policy_obj = request.param(
             baseline, cf, discounting_rate=discounting_rate, nb_assets=5

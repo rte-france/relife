@@ -51,7 +51,7 @@ def renewal_policy(
         OneCycleAgeReplacementPolicy,
         OneCycleRunToFailurePolicy,
     )
-    from relife.process import NonHomogeneousPoissonProcess
+    from relife.processes import NonHomogeneousPoissonProcess
 
     if isinstance(obj, NonHomogeneousPoissonProcess):
         try:
