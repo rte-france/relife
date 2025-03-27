@@ -26,11 +26,22 @@ NumericalArrayLike = NewType(
 
 # RenewalPolicy
 class RenewalPolicy:
-    distribution: LifetimeDistribution
-    distribution1: Optional[LifetimeDistribution]
 
-    def __init__(self, discounting_rate: Optional[float] = None):
+    def __init__(
+        self,
+        distribution: LifetimeDistribution,
+        distribution1: Optional[LifetimeDistribution] = None,
+        discounting_rate: Optional[float] = None,
+    ):
+        if not isinstance(distribution, LifetimeDistribution):
+            raise ValueError
+        self.distribution = distribution
+        if distribution1 is not None:
+            if not isinstance(distribution1, LifetimeDistribution):
+                raise ValueError
+        self.distribution1 = distribution1
         self.discounting = exp_discounting(discounting_rate)
+        self.nb_assets = distribution.nb_assets
 
     @property
     def discounting_rate(self):
@@ -64,20 +75,40 @@ class RenewalPolicy:
         )
 
 
-def _reshape_like_nb_assets(arr: NumericalArrayLike, nb_assets: int):
+def _reshape_cost(arr: NumericalArrayLike, nb_assets: Optional[int] = None):
     arr = np.asarray(arr)
     if arr.ndim > 2:
         raise ValueError
     if arr.size == 1:
-        if nb_assets > 1:
+        if nb_assets > 1 and nb_assets is not None:
             return np.tile(arr, (nb_assets, 1))
         return arr
-    else:
-        if arr.ndim == 1:
+    else:  # more than 1 value
+        if arr.ndim == 1 and nb_assets is not None:
             arr = arr.reshape(-1, 1)
-        if arr.shape[0] != nb_assets:
+        if arr.shape[0] != nb_assets and nb_assets is not None:
             raise ValueError
         return arr
+
+
+class Cost:
+    def __set_name__(self, owner, name):
+        self.private_name = "_" + name
+        self.public_name = name
+
+    def __get__(self, obj, objtype=None):
+        return getattr(obj, self.private_name)
+
+    def __set__(
+        self,
+        obj,
+        value: Optional[NumericalArrayLike],
+    ) -> NDArray[np.float64]:
+        if value is not None:
+            nb_assets = obj.distribution.nb_assets
+            setattr(obj, self.private_name, _reshape_cost(value, nb_assets))
+        else:
+            setattr(obj, self.private_name, value)
 
 
 class OneCycleRunToFailurePolicy(RenewalPolicy):
@@ -87,25 +118,21 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
 
     Parameters
     ----------
-    model : LifetimeModel
-        The lifetime core of the assets.
+    distribution : LifetimeDistribution
+        The lifetime distribution of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
     discounting_rate : float, default is 0.
         The discounting rate.
     period_before_discounting: float, default is 1.
         The length of the first period before discounting.
-    model_args : ModelArgs, optional
-        ModelArgs is a tuple of zero or more ndarray required by the underlying
-        lifetime core of the processes.
-    nb_assets : int, optional
-        Number of assets (default is 1).
     a0 : ndarray, optional
         Current ages of the assets (default is None). Setting ``a0`` will add
         left truncations.
     """
 
     distribution1 = None
+    cf = Cost()
 
     def __init__(
         self,
@@ -116,18 +143,18 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
         period_before_discounting: float = 1.0,
         a0: Optional[NumericalArrayLike] = None,
     ) -> None:
-        super().__init__(discounting_rate)
-        nb_assets = 1 if distribution.nb_assets is None else distribution.nb_assets
+        super().__init__(distribution, discounting_rate=discounting_rate)
         self.a0 = a0  # no _reshape_like_nb_assets because if is passed to FrozenDistribution ShapedArgs
-        self.cf = _reshape_like_nb_assets(cf, nb_assets) if cf is not None else None
+        self.cf = cf
         self.rewards = run_to_failure_rewards(self.cf)
         if period_before_discounting == 0:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
 
         if self.a0 is not None:
-            distribution = LeftTruncatedModel(distribution).get_distribution(self.a0)
-        self.distribution = distribution
+            self.distribution = LeftTruncatedModel(self.distribution).get_distribution(
+                self.a0
+            )
 
     @property
     def discounting_rate(self):
@@ -182,28 +209,21 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     Parameters
     ----------
-    model : LifetimeModel
-        The lifetime core of the assets.
+    distribution : LifetimeDistribution
+        The lifetime distribution of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
     discounting_rate : float, default is 0.
         The discounting rate.
-    model_args : ModelArgs, optional
-        ModelArgs is a tuple of zero or more ndarray required by the underlying
-        lifetime core of the processes.
-    nb_assets : int, optional
-        Number of assets (default is 1).
     a0 : ndarray, optional
         Current ages of the assets (default is None). Setting ``a0`` will add
         left truncations.
-    model1 : LifetimeModel, optional
-        The lifetime core used for the cycle of replacements. When one adds
-        `model1`, we assume that `model1` is different from `core` meaning
+    distribution1 : LifetimeDistribution, optional
+        The lifetime distribution used for the first cycle of replacements. When one adds
+        `distribution1`, we assume that `distribution1` is different from `distribution` meaning
         the underlying survival probabilities behave differently for the first
-        cycle
-    model1_args : ModelArgs, optional
-        ModelArgs is a tuple of zero or more ndarray required by the lifetime
-        core of the first cycle of replacements.
+        cycle.
+
 
     References
     ----------
@@ -211,6 +231,8 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         theory with exponential and hyperbolic discounting. Probability in
         the Engineering and Informational Sciences, 22(1), 53-74.
     """
+
+    cf = Cost()
 
     def __init__(
         self,
@@ -221,27 +243,24 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         a0: Optional[NumericalArrayLike] = None,
         distribution1: Optional[LifetimeDistribution] = None,
     ) -> None:
-        super().__init__(discounting_rate)
-        nb_assets = 1 if distribution.nb_assets is None else distribution.nb_assets
+        super().__init__(distribution, distribution1, discounting_rate)
         self.a0 = a0  # no _reshape_like_nb_assets because if is passed to FrozenDistribution ShapedArgs
-        self.cf = _reshape_like_nb_assets(cf, nb_assets) if cf is not None else None
+        self.cf = cf
         self.rewards = run_to_failure_rewards(self.cf)
 
-        self.distribution1 = None
         if self.a0 is not None:
-            if distribution1 is not None:
+            if self.distribution1 is not None:
                 raise ValueError("distribution1 and a0 can't be set together")
-            self.distribution1 = LeftTruncatedModel(distribution).get_distribution(
+            self.distribution1 = LeftTruncatedModel(self.distribution).get_distribution(
                 self.a0
             )
-        self.distribution = distribution
 
         # if Policy is parametrized, set the underlying renewal reward processes
         # note the rewards are the same for the first cycle and the rest of the processes
         self.process = RenewalRewardProcess(
             self.distribution,
             self.rewards,
-            discounting_rate=discounting_rate,
+            discounting_rate=self.discounting_rate,
             distribution1=self.distribution1,
             rewards1=self.rewards,
         )
@@ -273,8 +292,8 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     Parameters
     ----------
-    model : LifetimeModel
-        The lifetime core of the assets.
+    distribution : LifetimeDistribution
+        The lifetime distribution of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
     cp : np.ndarray
@@ -286,11 +305,6 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
     ar : np.ndarray, optional
         Times until preventive replacements. This parameter can be optimized
         with ``optimize``
-    model_args : ModelArgs, optional
-        ModelArgs is a tuple of zero or more ndarray required by the underlying
-        lifetime core of the processes.
-    nb_assets : int, optional
-        Number of assets (default is 1).
     a0 : ndarray, optional
         Current ages of the assets (default is None). Setting ``a0`` will add
         left truncations.
@@ -306,6 +320,8 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     distribution1 = None
     ar1 = None
+    cp = Cost()
+    cf = Cost()
 
     def __init__(
         self,
@@ -318,38 +334,39 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         ar: Optional[NumericalArrayLike] = None,
         a0: Optional[NumericalArrayLike] = None,
     ) -> None:
-        super().__init__(discounting_rate)
-        nb_assets = 1 if distribution.nb_assets is None else distribution.nb_assets
+        super().__init__(distribution, discounting_rate=discounting_rate)
         self.a0 = a0  # no _reshape_like_nb_assets because if is passed to FrozenDistribution ShapedArgs
-        self.ar = ar
-        self.cf = _reshape_like_nb_assets(cf, nb_assets) if cf is not None else None
-        self.cp = _reshape_like_nb_assets(cp, nb_assets) if cf is not None else None
-        self.rewards = run_to_failure_rewards(self.cf)
+        self.cf = cf
+        self.cp = cp
+        self.rewards = age_replacement_rewards(self.ar, self.cp, self.cf)
+
         if period_before_discounting == 0:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
 
         if self.a0 is not None:
-            distribution = LeftTruncatedModel(distribution).get_distribution(self.a0)
-        self.distribution = distribution
-
-        if self.ar is not None:
-            self.distribution = AgeReplacementModel(distribution).get_distribution(
-                self.ar
+            self.distribution = LeftTruncatedModel(self.distribution).get_distribution(
+                self.a0
             )
+
+        self.ar = ar
+        if ar is not None:
+            self.distribution = AgeReplacementModel(distribution).get_distribution(ar)
+
 
     @property
     def discounting_rate(self):
         return self.discounting.rate
 
     @require_attributes("ar")
-    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+    def expected_total_cost(self, timeline: NDArray[np.float64], ar : Optional[NumericalArrayLike] = None) -> NDArray[np.float64]:
         return reward_partial_expectation(
             timeline,
-            self.distribution,
+            AgeReplacementModel(self.distribution).get_distribution(ar),
             self.rewards,
             discounting=self.discounting,
         )
+    :
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         return self.expected_total_cost(np.array(np.inf))
@@ -400,7 +417,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
         x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
         if np.size(x0) == 1:
-            x0 = np.tile(x0, (self.distribution.nb_assets, 1))
+            x0 = np.tile(x0, (self.nb_assets, 1))
 
         def eq(a):
             return np.sum(

@@ -13,6 +13,7 @@ from typing import (
     TypeVarTuple,
     NewType,
     Union,
+    runtime_checkable,
 )
 
 import numpy as np
@@ -283,14 +284,14 @@ class ParametricModel:
         class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
-        if name in super().__getattribute__("_params"):
-            return super().__getattribute__("_params")[name]
-        if name in super().__getattribute__("leaves"):
-            return super().__getattribute__("leaves")[name]
+        if name in super().__getattribute__("params_tree"):
+            return super().__getattribute__("params_tree")[name]
+        if name in super().__getattribute__("leaf_models"):
+            return super().__getattribute__("leaf_models")[name]
         raise AttributeError(f"{class_name} has no attribute named {name}")
 
     def __setattr__(self, name: str, value: Any):
-        if name in ["_params", "leaves"]:
+        if name in ["params_tree", "leaf_models"]:
             super().__setattr__(name, value)
         elif name in self.params_tree:
             self.params_tree[name] = value
@@ -609,7 +610,7 @@ class LifetimeModel(Generic[*Ts], ABC):
         #     except ValueError:
         #         raise ValueError("broadcast_to shape value is incompatible")
 
-    def get_distribution(self, *args: *Ts) -> "LifetimeDistribution":
+    def freeze_variables(self, *args: *Ts) -> "LifetimeDistribution":
         return FrozenDistribution(self, args)
 
     @property
@@ -618,6 +619,7 @@ class LifetimeModel(Generic[*Ts], ABC):
         return PlotSurvivalFunc(self)
 
 
+@runtime_checkable
 class LifetimeDistribution(Protocol):
 
     args: Union[ShapedArgs, tuple[()]] = ()
@@ -747,6 +749,9 @@ class FrozenDistribution(LifetimeDistribution):
     ) -> NDArray[np.float64]:
 
         return self.model.ls_integrate(func, a, b, deg, *self.args)
+    
+    
+    def unfreeze
 
 
 # in terms of type : LifetimeModel[()], ParametricLifetimeModel[()] and Distribution are LifetimeDistribution
