@@ -13,12 +13,12 @@ from typing import (
     TypeVarTuple,
     NewType,
     Union,
-    runtime_checkable,
 )
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize, newton
+from typing_extensions import override, runtime_checkable
 
 from relife.data import LifetimeData, lifetime_data_factory
 from relife.plots import PlotConstructor, PlotSurvivalFunc
@@ -302,16 +302,6 @@ class ParametricModel:
         else:
             super().__setattr__(name, value)
 
-    def copy(self):
-        """
-        Copy current instance.
-
-        Returns
-        -------
-            An independant copied instance.
-        """
-        return copy.deepcopy(self)
-
 
 Ts = TypeVarTuple("Ts")
 
@@ -340,10 +330,6 @@ class LifetimeModel(Generic[*Ts], ABC):
         NotImplementedError: Raised when an abstract method or feature in this
         class has not been implemented in a derived class.
     """
-
-    # adding these hidden attributes allows LifetimeModel[()] being struturally typed as LifetimeDistribution
-    args = ()
-    nb_assets = None
 
     @abstractmethod
     def hf(self, time: Time, *args: *Ts) -> NDArray[np.float64]:
@@ -610,58 +596,10 @@ class LifetimeModel(Generic[*Ts], ABC):
         #     except ValueError:
         #         raise ValueError("broadcast_to shape value is incompatible")
 
-    def freeze_variables(self, *args: *Ts) -> "LifetimeDistribution":
-        return FrozenDistribution(self, args)
-
     @property
     def plot(self) -> PlotConstructor:
         """Plot"""
         return PlotSurvivalFunc(self)
-
-
-@runtime_checkable
-class LifetimeDistribution(Protocol):
-
-    args: Union[ShapedArgs, tuple[()]] = ()
-    nb_assets: Optional[int] = None
-
-    def hf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def chf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def sf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def pdf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def mrl(self, time: Time) -> NDArray[np.float64]: ...
-
-    def moment(self, n: int) -> NDArray[np.float64]: ...
-
-    def mean(self) -> NDArray[np.float64]: ...
-
-    def var(self) -> NDArray[np.float64]: ...
-
-    def isf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]: ...
-
-    def ichf(
-        self, cumulative_hazard_rate: float | NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
-
-    def cdf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]: ...
-
-    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]: ...
-
-    def median(self) -> NDArray[np.float64]: ...
-
-    def ls_integrate(
-        self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        deg: int = 100,
-    ) -> NDArray[np.float64]: ...
 
 
 def _get_nb_assets(args: tuple[NumericalArrayLike, ...]) -> int:
@@ -674,87 +612,6 @@ def _get_nb_assets(args: tuple[NumericalArrayLike, ...]) -> int:
             yield np.atleast_2d(x)
 
     return max(map(lambda x: x.shape[0], as_2d()), default=1)
-
-
-class FrozenDistribution(LifetimeDistribution):
-
-    args = ShapedArgs(astuple=True)
-
-    def __init__(
-        self,
-        model: LifetimeModel[*tuple[NumericalArrayLike, ...]],
-        args: tuple[NumericalArrayLike, ...],
-    ):
-        self.model = model
-        self.nb_assets = _get_nb_assets(args)
-        self.args = args
-
-    @isbroadcastable("time")
-    def hf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.hf(time, *self.args)
-
-    @isbroadcastable("time")
-    def chf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.chf(time, *self.args)
-
-    @isbroadcastable("time")
-    def sf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.sf(time, *self.args)
-
-    @isbroadcastable("time")
-    def pdf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.pdf(time, *self.args)
-
-    @isbroadcastable("time")
-    def mrl(self, time: Time) -> NDArray[np.float64]:
-        return self.model.mrl(time, *self.args)
-
-    def moment(self, n: int) -> NDArray[np.float64]:
-        return self.model.moment(n)
-
-    def mean(self) -> NDArray[np.float64]:
-        return self.model.moment(1, *self.args)
-
-    def var(self) -> NDArray[np.float64]:
-        return self.model.moment(2, *self.args) - self.model.moment(1, *self.args) ** 2
-
-    @isbroadcastable("probability")
-    def isf(self, probability: float | NDArray[np.float64]):
-        return self.model.isf(probability, *self.args)
-
-    @isbroadcastable("cumulative_hazard_rate")
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
-        return self.model.ichf(cumulative_hazard_rate, *self.args)
-
-    @isbroadcastable("time")
-    def cdf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.cdf(time, *self.args)
-
-    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
-        return self.model.rvs(*self.args, size=size, seed=seed)
-
-    @isbroadcastable("probability")
-    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.ppf(probability, *self.args)
-
-    def median(self) -> NDArray[np.float64]:
-        return self.model.median(*self.args)
-
-    def ls_integrate(
-        self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        deg: int = 100,
-    ) -> NDArray[np.float64]:
-
-        return self.model.ls_integrate(func, a, b, deg, *self.args)
-    
-    
-    def unfreeze
-
-
-# in terms of type : LifetimeModel[()], ParametricLifetimeModel[()] and Distribution are LifetimeDistribution
 
 
 @dataclass
@@ -876,9 +733,6 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
             Left truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``.
         departure : np.ndarray, default is None
             Right truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``
-        model_args : tuple of np.ndarray, default is None
-            Any other variable values needed to compute model's functions. Those variables must be
-            broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
         **kwargs
             Other arguments used by the optimizer.
             See `scipy.optimize.mininize <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_.
@@ -909,7 +763,7 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
 
         # Step 2: Initialize the model and likelihood
         self.init_params(lifetime_data, *args)
-        optimized_model = self.copy()
+        optimized_model = copy.deepcopy(self)
         likelihood = LikelihoodFromLifetimes(
             optimized_model, lifetime_data, model_args=args
         )
@@ -942,6 +796,9 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
         )
         return self
 
+    def freeze_variables(self, *args: *Ts) -> "FrozenDistribution":
+        return FrozenDistribution(self, args)
+
     def __getattribute__(self, item):
         """
         Raises:
@@ -959,6 +816,143 @@ class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
                     f"Can't call {item} if one param is None. Got {self.params} as params"
                 )
         return super().__getattribute__(item)
+
+
+@runtime_checkable
+class LifetimeDistribution(Protocol):
+
+    def hf(self, time: Time) -> NDArray[np.float64]: ...
+
+    def chf(self, time: Time) -> NDArray[np.float64]: ...
+
+    def sf(self, time: Time) -> NDArray[np.float64]: ...
+
+    def pdf(self, time: Time) -> NDArray[np.float64]: ...
+
+    def mrl(self, time: Time) -> NDArray[np.float64]: ...
+
+    def moment(self, n: int) -> NDArray[np.float64]: ...
+
+    def mean(self) -> NDArray[np.float64]: ...
+
+    def var(self) -> NDArray[np.float64]: ...
+
+    def isf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]: ...
+
+    def ichf(
+        self, cumulative_hazard_rate: float | NDArray[np.float64]
+    ) -> NDArray[np.float64]: ...
+
+    def cdf(self, time: Time) -> NDArray[np.float64]: ...
+
+    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]: ...
+
+    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]: ...
+
+    def median(self) -> NDArray[np.float64]: ...
+
+    def ls_integrate(
+        self,
+        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        deg: int = 100,
+    ) -> NDArray[np.float64]: ...
+
+
+# inheritance so that Distribution and FrozenDistribution are both LifetimeModel[()]
+# FrozenDistribution =: LifetimeDistribution (structural)
+# Distribution =: LifetimeDistribution (structural)
+# (Fixed)AgeReplacementModel may be LifetimeDistribution
+# (Fixed)LeftTruncatedModel may be LifetimeDistribution
+class FrozenDistribution(LifetimeModel[()]):
+
+    args = ShapedArgs(astuple=True)
+
+    def __init__(
+        self,
+        model: ParametricLifetimeModel[*tuple[NumericalArrayLike, ...]],
+        args: tuple[NumericalArrayLike, ...],
+    ):
+        self.model = model
+        self.nb_assets = _get_nb_assets(args)
+        self.args = args
+
+    @override
+    @isbroadcastable("time")
+    def hf(self, time: Time) -> NDArray[np.float64]:
+        return self.model.hf(time, *self.args)
+
+    @override
+    @isbroadcastable("time")
+    def chf(self, time: Time) -> NDArray[np.float64]:
+        return self.model.chf(time, *self.args)
+
+    @override
+    @isbroadcastable("time")
+    def sf(self, time: Time) -> NDArray[np.float64]:
+        return self.model.sf(time, *self.args)
+
+    @override
+    @isbroadcastable("time")
+    def pdf(self, time: Time) -> NDArray[np.float64]:
+        return self.model.pdf(time, *self.args)
+
+    @override
+    @isbroadcastable("time")
+    def mrl(self, time: Time) -> NDArray[np.float64]:
+        return self.model.mrl(time, *self.args)
+
+    @override
+    def moment(self, n: int) -> NDArray[np.float64]:
+        return self.model.moment(n)
+
+    @override
+    def mean(self) -> NDArray[np.float64]:
+        return self.model.moment(1, *self.args)
+
+    @override
+    def var(self) -> NDArray[np.float64]:
+        return self.model.moment(2, *self.args) - self.model.moment(1, *self.args) ** 2
+
+    @override
+    @isbroadcastable("probability")
+    def isf(self, probability: float | NDArray[np.float64]):
+        return self.model.isf(probability, *self.args)
+
+    @override
+    @isbroadcastable("cumulative_hazard_rate")
+    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
+        return self.model.ichf(cumulative_hazard_rate, *self.args)
+
+    @override
+    @isbroadcastable("time")
+    def cdf(self, time: Time) -> NDArray[np.float64]:
+        return self.model.cdf(time, *self.args)
+
+    @override
+    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
+        return self.model.rvs(*self.args, size=size, seed=seed)
+
+    @override
+    @isbroadcastable("probability")
+    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.model.ppf(probability, *self.args)
+
+    @override
+    def median(self) -> NDArray[np.float64]:
+        return self.model.median(*self.args)
+
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        deg: int = 100,
+    ) -> NDArray[np.float64]:
+
+        return self.model.ls_integrate(func, a, b, deg, *self.args)
 
 
 @dataclass

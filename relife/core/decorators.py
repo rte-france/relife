@@ -1,29 +1,24 @@
 import functools
 
-ERROR_MESSAGE_TEMPLATE = (
-    "{attr_name} is not set. If fit exists, you may need to fit the object first"
-)
+ERROR_MESSAGE_TEMPLATE = "{attr_name} is not set. If fit exists, you may need to fit the object first or instanciate the object with {attr_name}"
 
 
-def require_attributes(*attribute_names: str):
-    """
-    A decorator to ensure that specified attributes are set on the instance
-    before executing the decorated method.
-
-    Parameters:
-    attribute_names: A list of attribute names (strings) that must not be None.
-
-    Raises:
-        ValueError: If any of the specified attributes is None.
-    """
-
+def choose(*attribute_names: str):
     def decorator(method):
         @functools.wraps(method)
         def wrapper(self, *args, **kwargs):
             for attr_name in attribute_names:
                 attr_value = getattr(self, attr_name)
-                if attr_value is None:
+                arg_value = kwargs.pop(attr_name, None)
+                if attr_value is None and arg_value is None:
                     raise ValueError(ERROR_MESSAGE_TEMPLATE.format(attr_name=attr_name))
+                if attr_value is not None and arg_value is not None:
+                    raise ValueError
+                elif attr_value is not None and arg_value is None:
+                    kwargs[attr_name] = attr_value
+                else:
+                    kwargs[attr_name] = arg_value
+
             return method(self, *args, **kwargs)
 
         return wrapper

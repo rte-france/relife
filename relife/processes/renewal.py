@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.core.models import LifetimeDistribution
+from relife.core.models import LifetimeDistribution, LifetimeModel
 from relife.data import CountData
 from relife.rewards import Discounting, exp_discounting
 
@@ -79,8 +79,8 @@ class RenewalProcess:
 
     def __init__(
         self,
-        distribution: LifetimeDistribution,
-        distribution1: Optional[LifetimeDistribution] = None,
+        distribution: LifetimeModel[()],
+        distribution1: Optional[LifetimeModel[()]] = None,
     ):
         self.distribution = distribution
         self.distribution1 = distribution1
@@ -154,11 +154,11 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        distribution: LifetimeDistribution,
+        distribution: LifetimeModel[()],
         rewards: Rewards,
         discounting_rate: Optional[float] = None,
         *,
-        distribution1: Optional[LifetimeDistribution] = None,
+        distribution1: Optional[LifetimeModel[()]] = None,
         rewards1: Optional[Rewards] = None,
     ):
         super().__init__(distribution, distribution1)

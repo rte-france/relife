@@ -1,13 +1,14 @@
-from typing import Any, Optional, Self, Sequence, Union
+import copy
+from typing import Any, Optional, Self, Sequence, Union, NewType
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-from relife.core.descriptors import ShapedArgs
 from relife.core.likelihoods import LikelihoodFromLifetimes
-from relife.core.models import LifetimeModel, ParametricModel
+from relife.core.models import LifetimeModel, FrozenDistribution
 from relife.data import CountData, lifetime_data_factory
+from relife.models.distributions import Distribution
 from relife.plots import PlotConstructor, PlotNHPP
 from relife.rewards import Rewards, exp_discounting
 from relife.types import NumericalArrayLike
@@ -155,31 +156,29 @@ def nhpp_data_factory(
     return time, event, entry, model_args
 
 
-class NonHomogeneousPoissonProcess(ParametricModel):
+Time = NewType(
+    "Time",
+    Union[NDArray[np.floating], NDArray[np.integer], float, int],
+)
 
-    model_args = ShapedArgs(astuple=True)
+LifetimeDistribution = NewType(
+    "LifetimeDistribution", Union[FrozenDistribution, Distribution]
+)
+
+
+class NonHomogeneousPoissonProcess:
 
     def __init__(
         self,
-        model: LifetimeModel[*tuple[NumericalArrayLike, ...]],
-        model_args: tuple[NumericalArrayLike, ...] = (),
-        *,
-        nb_assets: int = 1,
+        distribution: LifetimeDistribution,
     ):
-        super().__init__()
-        self.nb_assets = nb_assets
-        self.compose_with(model=model)
-        self.model_args = model_args
+        self.distribution = distribution
 
-    def intensity(
-        self, time: np.ndarray, *args: *tuple[NumericalArrayLike, ...]
-    ) -> np.ndarray:
-        return self.model.hf(time, *args)
+    def intensity(self, time: Time) -> NDArray[np.float64]:
+        return self.distribution.hf(time)
 
-    def cumulative_intensity(
-        self, time: np.ndarray, *args: *tuple[NumericalArrayLike, ...]
-    ) -> np.ndarray:
-        return self.model.chf(time, *args)
+    def cumulative_intensity(self, time: Time) -> NDArray[np.float64]:
+        return self.distribution.chf(time)
 
     def sample(
         self,
@@ -218,7 +217,6 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
         first_ages: Optional[NDArray[np.float64]] = None,
         last_ages: Optional[NDArray[np.float64]] = None,
-        model_args: tuple[NumericalArrayLike, ...] = (),
         **kwargs: Any,
     ) -> Self:
 
@@ -228,12 +226,20 @@ class NonHomogeneousPoissonProcess(ParametricModel):
             assets_ids=assets_ids,
             first_ages=first_ages,
             last_ages=last_ages,
-            model_args=model_args,
+            model_args=(
+                self.distribution.args
+                if isinstance(self.distribution, FrozenDistribution)
+                else ()
+            ),
         )
 
         lifetime_data = lifetime_data_factory(time, event, entry)
-
-        optimized_model = self.model.copy()
+        model = (
+            self.distribution.model
+            if isinstance(self.distribution, FrozenDistribution)
+            else self.distribution
+        )
+        optimized_model = copy.deepcopy(model)
         optimized_model.init_params(lifetime_data, *model_args)
         # or just optimized_model.init_params(observed_lifetimes, *model_args)
 
