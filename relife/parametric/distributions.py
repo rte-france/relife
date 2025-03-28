@@ -9,7 +9,7 @@ from typing_extensions import override
 
 from relife.data import LifetimeData
 from relife.distributions.abc import (
-    LifetimeDistributionABC,
+    SurvivalABC,
     FrozenLifetimeDistribution,
 )
 from relife.distributions.parameters import Parametric
@@ -20,11 +20,13 @@ from relife.quadratures import shifted_laguerre
 T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
-# type is ParametricLifetimeModel[()] or LifetimeModel[()]
-class Distribution(Parametric, LifetimeDistributionABC[()], ABC):
+# type is LifetimeDistribution[()] and FittableLifetimeDistribution[()]
+class Distribution(Parametric, SurvivalABC[()], ABC):
     """
     Base class for distribution distributions.
     """
+
+    univariate: bool = True
 
     @override
     def sf(self, time: T) -> NDArray[np.float64]:

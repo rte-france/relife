@@ -47,7 +47,7 @@ class SampleIterator(Iterator, ABC):
 
         # hidden attributes, control set/get interface
         self.distribution = None
-        self.nb_assets = None
+        self.nb_assets = 1  # default value
 
         self.start_counter = None
         self.stop_counter = None
@@ -133,6 +133,9 @@ class LifetimeIterator(SampleIterator):
         self,
         distribution: LifetimeDistribution[()],
     ) -> None:
+
+        if isinstance(distribution, FrozenLifetimeDistribution):
+            self.nb_assets = distribution.nb_assets
 
         if self.distribution is None:
             self.timeline = np.zeros((self.nb_assets, self.size))

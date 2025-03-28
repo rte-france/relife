@@ -16,7 +16,7 @@ from typing_extensions import override
 
 from relife.data import LifetimeData
 from relife.distributions.abc import (
-    LifetimeDistributionABC,
+    SurvivalABC,
     FrozenLifetimeDistribution,
 )
 from relife.distributions.parameters import Parametric
@@ -90,7 +90,7 @@ class CovarEffect(Parametric):
 
 
 # type is ParametricLifetimeModel[Covar, *Z] or LifetimeModel[Covar, *Z]
-class Regression(Parametric, LifetimeDistributionABC[Covar, *Z], ABC):
+class Regression(Parametric, SurvivalABC[Covar, *Z], ABC):
     """
     Base class for regression distributions.
     """

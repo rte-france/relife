@@ -162,6 +162,10 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
         self,
         distribution: FittableLifetimeDistribution[*Z],
     ):
+        if not isinstance(distribution, FittableLifetimeDistribution):
+            raise ValueError(
+                "Invalid distribution : must be FittableLifetimeDistribution object."
+            )
         self.distribution = distribution
 
     def intensity(self, time: T, *z: *Z) -> NDArray[np.float64]:

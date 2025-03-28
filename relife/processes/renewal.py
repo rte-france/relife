@@ -7,14 +7,13 @@ from typing_extensions import override
 
 from relife.data import CountData
 from relife.distributions.abc import FrozenLifetimeDistribution
-from relife.distributions.protocols import UnivariateLifetimeDistribution
+from relife.distributions.protocols import LifetimeDistribution
 from relife.economics.rewards import Discounting, exp_discounting
-from relife.parametric import Distribution
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    distribution: UnivariateLifetimeDistribution,
+    distribution: LifetimeDistribution[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
@@ -46,7 +45,7 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    distribution1: UnivariateLifetimeDistribution,
+    distribution1: LifetimeDistribution[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
@@ -81,14 +80,20 @@ class RenewalProcess:
 
     def __init__(
         self,
-        distribution: UnivariateLifetimeDistribution,
-        distribution1: Optional[UnivariateLifetimeDistribution] = None,
+        distribution: LifetimeDistribution[()],
+        distribution1: Optional[LifetimeDistribution[()]] = None,
     ):
-        if not isinstance(distribution, Distribution, FrozenLifetimeDistribution):
+
+        if not distribution.univariate:
             raise ValueError(
-                "Invalid distribution : must be UnivariateLifetimeDistribution object. You may call freeze_zvariables first"
+                "Invalid distribution : must be LifetimeDistribution[()] object. You may call freeze_zvariables first"
             )
         self.distribution = distribution
+        if distribution1 is not None:
+            if not distribution1.univariate:
+                raise ValueError(
+                    "Invalid distribution1 : must be LifetimeDistribution[()] object. You may call freeze_zvariables first"
+                )
         self.distribution1 = distribution1
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -140,7 +145,7 @@ Rewards = NewType(
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    distribution: UnivariateLifetimeDistribution,
+    distribution: LifetimeDistribution[()],
     rewards: Rewards,
     *,
     discounting: Optional[Discounting] = None,
@@ -163,11 +168,11 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        distribution: UnivariateLifetimeDistribution,
+        distribution: LifetimeDistribution[()],
         rewards: Rewards,
         discounting_rate: Optional[float] = None,
         *,
-        distribution1: Optional[UnivariateLifetimeDistribution] = None,
+        distribution1: Optional[LifetimeDistribution[()]] = None,
         rewards1: Optional[Rewards] = None,
     ):
         super().__init__(distribution, distribution1)

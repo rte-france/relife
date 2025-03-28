@@ -16,6 +16,7 @@ from relife.processes.renewal import reward_partial_expectation
 from relife.quadratures import gauss_legendre
 from ..distributions.abc import FrozenLifetimeDistribution
 from ..distributions.protocols import LifetimeDistribution
+from ..parametric import LeftTruncatedDistribution, AgeReplacementDistribution
 
 NumericalArrayLike = NewType(
     "NumericalArrayLike",
@@ -32,7 +33,11 @@ class RenewalPolicy:
         distribution1: Optional[LifetimeDistribution[()]] = None,
         discounting_rate: Optional[float] = None,
     ):
-
+        if not distribution.univariate:
+            raise ValueError
+        if distribution1 is not None:
+            if not distribution1.univariate:
+                raise ValueError
         self.distribution = distribution
         self.distribution1 = distribution1
         self.discounting = exp_discounting(discounting_rate)
@@ -151,7 +156,9 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
         self.period_before_discounting = period_before_discounting
 
         if self.a0 is not None:
-            self.distribution = left_truncated(self.distribution, self.a0)
+            self.distribution = LeftTruncatedDistribution(
+                self.distribution
+            ).freeze_zvariables(self.a0)
 
     @property
     def discounting_rate(self):
@@ -247,7 +254,9 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         if self.a0 is not None:
             if self.distribution1 is not None:
                 raise ValueError("distribution1 and a0 can't be set together")
-            self.distribution1 = left_truncated(self.distribution, self.a0)
+            self.distribution1 = LeftTruncatedDistribution(
+                self.distribution
+            ).freeze_zvariables(self.a0)
 
     @property
     def discounting_rate(self):
@@ -381,7 +390,9 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         self.period_before_discounting = period_before_discounting
 
         if self.a0 is not None:
-            self.distribution = left_truncated(self.distribution, self.a0)
+            self.distribution = LeftTruncatedDistribution(
+                self.distribution
+            ).freeze_zvariables(self.a0)
 
     @property
     def discounting_rate(self):
@@ -393,7 +404,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
     ) -> NDArray[np.float64]:
         return reward_partial_expectation(
             timeline,
-            replace_at_age(self.distribution, ar),
+            AgeReplacementDistribution(self.distribution).freeze_zvariables(ar),
             age_replacement_rewards(ar, self.cp, self.cf),
             discounting=self.discounting,
         )
@@ -417,7 +428,9 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         q0 = self.distribution.cdf(self.period_before_discounting) * f(
             self.period_before_discounting
         )
-        distribution = replace_at_age(self.distribution, ar)
+        distribution = AgeReplacementDistribution(self.distribution).freeze_zvariables(
+            ar
+        )
         return np.squeeze(
             q0
             + np.where(
@@ -542,7 +555,9 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         if self.a0 is not None:
             if distribution1 is not None:
                 raise ValueError("distribution1 and a0 can't be set together")
-            self.distribution1 = left_truncated(self.distribution, a0)
+            self.distribution1 = LeftTruncatedDistribution(
+                self.distribution
+            ).freeze_zvariables(a0)
         elif distribution1 is None and ar1 is not None:
             raise ValueError("model1 is not set, ar1 is useless")
 
@@ -616,10 +631,16 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         if np.size(x0) == 1:
             x0 = np.tile(x0, (self.nb_assets, 1))
 
-        ndim = max(
-            map(np.ndim, (cf_3d, cp_3d, *self.distribution.args)),
-            default=0,
-        )
+        if isinstance(self.distribution, FrozenLifetimeDistribution):
+            ndim = max(
+                map(np.ndim, (cf_3d, cp_3d, *self.distribution.z)),
+                default=0,
+            )
+        else:
+            ndim = max(
+                map(np.ndim, (cf_3d, cp_3d)),
+                default=0,
+            )
 
         def eq(a):
             f = gauss_legendre(

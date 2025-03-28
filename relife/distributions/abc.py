@@ -14,7 +14,7 @@ Z = TypeVarTuple("Z")
 T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
-class LifetimeDistributionABC(Generic[*Z], ABC):
+class SurvivalABC(Generic[*Z], ABC):
     r"""A generic base class for lifetime distributions.
 
     This class defines the structure for creating lifetime distributions. It is s a blueprint
@@ -33,6 +33,8 @@ class LifetimeDistributionABC(Generic[*Z], ABC):
         NotImplementedError: Raised when an abstract method or feature in this
         class has not been implemented in a derived class.
     """
+
+    univariate: bool = False
 
     @abstractmethod
     def hf(self, time: T, *z: *Z) -> NDArray[np.float64]:
@@ -333,6 +335,8 @@ def _reshape(*z: *Z):
 
 
 class FrozenLifetimeDistribution(Generic[*Z]):
+
+    univariate: bool = True
 
     def __init__(
         self,

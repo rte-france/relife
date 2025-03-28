@@ -23,10 +23,9 @@ Z = TypeVarTuple("Z")
 T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
-# LeftTruncatedModel must have params et nb_params accessible
-
-
 class LifetimeDistribution(Protocol[*Z]):
+
+    univariate: bool
 
     def hf(self, time: T, *z: *Z) -> NDArray[np.float64]: ...
 
@@ -97,52 +96,6 @@ class FittableLifetimeDistribution(LifetimeDistribution[*Z], Protocol):
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> FittingResults: ...
-
-
-# pycharm type checker bug
-# noinspection PyProtocol
-class UnivariateLifetimeDistribution(LifetimeDistribution[()], Protocol):
-    def hf(self, time: T) -> NDArray[np.float64]: ...
-
-    def chf(self, time: T) -> NDArray[np.float64]: ...
-
-    def sf(self, time: T) -> NDArray[np.float64]: ...
-
-    def pdf(self, time: T) -> NDArray[np.float64]: ...
-
-    def mrl(self, time: T) -> NDArray[np.float64]: ...
-
-    def moment(self, n: int) -> NDArray[np.float64]: ...
-
-    def mean(self) -> NDArray[np.float64]: ...
-
-    def var(self) -> NDArray[np.float64]: ...
-
-    def isf(
-        self, probability: float | NDArray[np.float64], *z: *Z
-    ) -> NDArray[np.float64]: ...
-
-    def ichf(
-        self, cumulative_hazard_rate: float | NDArray[np.float64], *z: *Z
-    ) -> NDArray[np.float64]: ...
-
-    def cdf(self, time: T, *z: *Z) -> NDArray[np.float64]: ...
-
-    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]: ...
-
-    def ppf(
-        self, probability: float | NDArray[np.float64], *z: *Z
-    ) -> NDArray[np.float64]: ...
-
-    def median(self, *z: *Z) -> NDArray[np.float64]: ...
-
-    def ls_integrate(
-        self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        deg: int = 100,
-    ) -> NDArray[np.float64]: ...
 
 
 class NonParametricModel(Protocol):

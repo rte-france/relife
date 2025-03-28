@@ -6,7 +6,7 @@ from scipy.optimize import newton
 from typing_extensions import override
 
 from relife.distributions.abc import (
-    LifetimeDistributionABC,
+    SurvivalABC,
     FrozenLifetimeDistribution,
 )
 from relife.distributions.parameters import Parametric
@@ -19,7 +19,7 @@ A0 = NewType("A0", NDArray[np.floating] | NDArray[np.integer] | float | int)
 Ar = NewType("Ar", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
-class AgeReplacementDistribution(Parametric, LifetimeDistributionABC[Ar, *Z]):
+class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
     r"""
     Age replacement core.
 
@@ -189,7 +189,7 @@ class AgeReplacementDistribution(Parametric, LifetimeDistributionABC[Ar, *Z]):
         return FrozenLifetimeDistribution(self, *(ar, *z))
 
 
-class LeftTruncatedDistribution(Parametric, LifetimeDistributionABC[A0, *Z]):
+class LeftTruncatedDistribution(Parametric, SurvivalABC[A0, *Z]):
     r"""Left truncated core.
 
     Conditional distribution of the lifetime core for an asset having reach age :math:`a_0`.
@@ -273,7 +273,7 @@ class LeftTruncatedDistribution(Parametric, LifetimeDistributionABC[A0, *Z]):
         return FrozenLifetimeDistribution(self, *(a0, *z))
 
 
-class EquilibriumDistribution(Parametric, LifetimeDistributionABC[*Z]):
+class EquilibriumDistribution(Parametric, SurvivalABC[*Z]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
