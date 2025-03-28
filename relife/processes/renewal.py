@@ -5,14 +5,15 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.core.models import LifetimeDistribution, LifetimeModel
 from relife.data import CountData
-from relife.rewards import Discounting, exp_discounting
+from relife.distributions.mixins import FrozenLifetimeDistribution
+from relife.distributions.protocols import LifetimeDistribution
+from relife.economics.rewards import Discounting, exp_discounting
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    distribution: LifetimeDistribution,
+    distribution: LifetimeDistribution[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
@@ -44,7 +45,7 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    distribution1: LifetimeDistribution,
+    distribution1: LifetimeDistribution[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
@@ -79,8 +80,8 @@ class RenewalProcess:
 
     def __init__(
         self,
-        distribution: LifetimeModel[()],
-        distribution1: Optional[LifetimeModel[()]] = None,
+        distribution: LifetimeDistribution[()],
+        distribution1: Optional[LifetimeDistribution[()]] = None,
     ):
         self.distribution = distribution
         self.distribution1 = distribution1
@@ -134,7 +135,7 @@ Rewards = NewType(
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    distribution: LifetimeDistribution,
+    distribution: LifetimeDistribution[()],
     rewards: Rewards,
     *,
     discounting: Optional[Discounting] = None,
@@ -144,7 +145,10 @@ def reward_partial_expectation(
 
     ls = distribution.ls_integrate(func, np.zeros_like(timeline), timeline)
     # reshape 2d -> final_dim
-    ndim = max(map(np.ndim, (timeline, *distribution.args)), default=0)
+    if isinstance(distribution, FrozenLifetimeDistribution):
+        ndim = max(map(np.ndim, (timeline, *distribution.z)), default=0)
+    else:
+        ndim = np.ndim(timeline)
     if ndim < 2:
         ls = np.squeeze(ls)
     return ls
@@ -154,11 +158,11 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        distribution: LifetimeModel[()],
+        distribution: LifetimeDistribution[()],
         rewards: Rewards,
         discounting_rate: Optional[float] = None,
         *,
-        distribution1: Optional[LifetimeModel[()]] = None,
+        distribution1: Optional[LifetimeDistribution[()]] = None,
         rewards1: Optional[Rewards] = None,
     ):
         super().__init__(distribution, distribution1)

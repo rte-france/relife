@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from relife.models import ECDF, KaplanMeier, NelsonAalen, Turnbull, Weibull
 from relife.datasets import load_input_turnbull, load_power_transformer
+from relife.distributions import ECDF, KaplanMeier, NelsonAalen, Turnbull, Weibull
 
 
 @pytest.fixture

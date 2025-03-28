@@ -1,26 +1,26 @@
-import copy
-from typing import Any, Optional, Self, Sequence, Union, NewType
+from typing import Any, Optional, Sequence, Union, NewType, Generic, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import minimize
 
-from relife.core.likelihoods import LikelihoodFromLifetimes
-from relife.core.models import LifetimeModel, FrozenDistribution
-from relife.data import CountData, lifetime_data_factory
-from relife.models.distributions import Distribution
+from relife.data import CountData
+from relife.distributions.protocols import ParametricLifetimeDistribution
+from relife.likelihoods.mle import FittingResults, maximum_likelihood_estimation
 from relife.plots import PlotConstructor, PlotNHPP
-from relife.rewards import Rewards, exp_discounting
-from relife.types import NumericalArrayLike
+
+Z = TypeVarTuple("Z")
+T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
+# generic function
 def nhpp_data_factory(
     events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
     ages: NDArray[np.float64],
+    /,
+    *z: *Z,
     assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
     first_ages: Optional[NDArray[np.float64]] = None,
     last_ages: Optional[NDArray[np.float64]] = None,
-    model_args: tuple[NumericalArrayLike, ...] = (),
 ):
     # convert inputs to arrays
     events_assets_ids = np.asarray(events_assets_ids)
@@ -60,8 +60,8 @@ def nhpp_data_factory(
                 raise ValueError(
                     "Shape of assets_ids and end_ages must be equal. Expected equal length 1d-arrays"
                 )
-        if bool(model_args):
-            for arg in model_args:
+        if bool(z):
+            for arg in z:
                 arg = np.atleast_2d(np.asarray(arg, dtype=np.float64))
                 if arg.ndim > 2:
                     raise ValueError(
@@ -82,7 +82,7 @@ def nhpp_data_factory(
             raise ValueError(
                 "If end_ages is given, corresponding asset ids must be given in assets_ids"
             )
-        if bool(model_args):
+        if bool(z):
             raise ValueError(
                 "If model_args is given, corresponding asset ids must be given in assets_ids"
             )
@@ -116,7 +116,7 @@ def nhpp_data_factory(
         sort_ind = np.sort(assets_ids)
         first_ages = first_ages[sort_ind] if first_ages is not None else first_ages
         last_ages = last_ages[sort_ind] if last_ages is not None else last_ages
-        model_args = tuple((arg[sort_ind] for arg in model_args))
+        z = tuple((arg[sort_ind] for arg in z))
 
         if first_ages is not None:
             if np.any(ages[first_age_index] <= first_ages[nb_ages_per_asset != 0]):
@@ -151,34 +151,24 @@ def nhpp_data_factory(
         else:
             entry = np.roll(ages, 1)
             entry[first_age_index] = 0.0
-    model_args = tuple((np.take(arg, _ids) for arg in model_args))
+    model_args = tuple((np.take(arg, _ids) for arg in z))
 
     return time, event, entry, model_args
 
 
-Time = NewType(
-    "Time",
-    Union[NDArray[np.floating], NDArray[np.integer], float, int],
-)
-
-LifetimeDistribution = NewType(
-    "LifetimeDistribution", Union[FrozenDistribution, Distribution]
-)
-
-
-class NonHomogeneousPoissonProcess:
+class NonHomogeneousPoissonProcess(Generic[*Z]):
 
     def __init__(
         self,
-        distribution: LifetimeDistribution,
+        distribution: ParametricLifetimeDistribution[*Z],
     ):
         self.distribution = distribution
 
-    def intensity(self, time: Time) -> NDArray[np.float64]:
-        return self.distribution.hf(time)
+    def intensity(self, time: T, *z: *Z) -> NDArray[np.float64]:
+        return self.distribution.hf(time, *z)
 
-    def cumulative_intensity(self, time: Time) -> NDArray[np.float64]:
-        return self.distribution.chf(time)
+    def cumulative_intensity(self, time: T, *z: *Z) -> NDArray[np.float64]:
+        return self.distribution.chf(time, *z)
 
     def sample(
         self,
@@ -214,73 +204,39 @@ class NonHomogeneousPoissonProcess:
         self,
         events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
         events_ages: NDArray[np.float64],
+        /,
+        *z: *Z,
         assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
         first_ages: Optional[NDArray[np.float64]] = None,
         last_ages: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
-    ) -> Self:
+    ) -> FittingResults:
 
         time, event, entry, model_args = nhpp_data_factory(
             events_assets_ids,
             events_ages,
+            *z,
             assets_ids=assets_ids,
             first_ages=first_ages,
             last_ages=last_ages,
-            model_args=(
-                self.distribution.args
-                if isinstance(self.distribution, FrozenDistribution)
-                else ()
-            ),
         )
-
-        lifetime_data = lifetime_data_factory(time, event, entry)
-        model = (
-            self.distribution.model
-            if isinstance(self.distribution, FrozenDistribution)
-            else self.distribution
+        fitting_results = maximum_likelihood_estimation(
+            self.distribution, time, *model_args, event=event, entry=entry, **kwargs
         )
-        optimized_model = copy.deepcopy(model)
-        optimized_model.init_params(lifetime_data, *model_args)
-        # or just optimized_model.init_params(observed_lifetimes, *model_args)
-
-        likelihood = LikelihoodFromLifetimes(
-            optimized_model, lifetime_data, model_args=model_args
-        )
-
-        minimize_kwargs = {
-            "method": kwargs.get("method", "Nelder-Mead"),  # Nelder-Mead better here
-            "constraints": kwargs.get("constraints", ()),
-            "tol": kwargs.get("tol", None),
-            "callback": kwargs.get("callback", None),
-            "options": kwargs.get("options", None),
-            "bounds": kwargs.get("bounds", optimized_model.params_bounds),
-            "x0": kwargs.get("x0", optimized_model.params),
-        }
-
-        optimizer = minimize(
-            likelihood.negative_log,
-            minimize_kwargs.pop("x0"),
-            # jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-            **minimize_kwargs,
-        )
-        optimized_model.params = optimizer.x
-
-        self.model.init_params(lifetime_data, *model_args)
-        self.model.params = optimized_model.params
-
-        return self
+        self.distribution.params = fitting_results.params
+        return fitting_results
 
 
-class NonHomogeneousPoissonProcessWithRewards(NonHomogeneousPoissonProcess):
-    def __init__(
-        self,
-        model: LifetimeModel[*tuple[NumericalArrayLike, ...]],
-        rewards: Rewards,
-        model_args: tuple[NumericalArrayLike, ...] = (),
-        *,
-        discounting_rate: Optional[float] = None,
-        nb_assets: int = 1,
-    ):
-        super().__init__(model, model_args, nb_assets=nb_assets)
-        self.rewards = rewards
-        self.discounting = exp_discounting(discounting_rate)
+# class NonHomogeneousPoissonProcessWithRewards(NonHomogeneousPoissonProcess):
+#     def __init__(
+#         self,
+#         model: LifetimeModel[*tuple[NumericalArrayLike, ...]],
+#         rewards: Rewards,
+#         model_args: tuple[NumericalArrayLike, ...] = (),
+#         *,
+#         discounting_rate: Optional[float] = None,
+#         nb_assets: int = 1,
+#     ):
+#         super().__init__(model, model_args, nb_assets=nb_assets)
+#         self.rewards = rewards
+#         self.discounting = exp_discounting(discounting_rate)

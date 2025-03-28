@@ -1,32 +1,28 @@
-import copy
 from abc import ABC, abstractmethod
-from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain
 from typing import (
     Any,
-    Callable,
-    Generic,
     Iterator,
-    Optional,
-    Protocol,
     Self,
+    Generic,
+    Optional,
+    Callable,
     TypeVarTuple,
     NewType,
-    Union,
 )
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, OptimizeResult, minimize, newton
-from typing_extensions import override, runtime_checkable
+from scipy.optimize import newton
 
-from relife.data import LifetimeData, lifetime_data_factory
+from relife.decorators import isbroadcastable
+from relife.descriptors import ShapedArgs
+from relife.distributions.protocols import LifetimeDistribution
 from relife.plots import PlotConstructor, PlotSurvivalFunc
 from relife.quadratures import gauss_legendre, quad_laguerre
-from relife.types import NumericalArrayLike
-from .decorators import isbroadcastable
-from .descriptors import ShapedArgs
-from .likelihoods import LikelihoodFromLifetimes
+
+Z = TypeVarTuple("Z")
+T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
 class ParamsTree:
@@ -158,7 +154,7 @@ class ParamsTree:
         self.update_parents()
 
 
-class ParametricModel:
+class ParametricMixin:
     """
     Base class to create a parametric core.
 
@@ -260,7 +256,7 @@ class ParametricModel:
 
         This method only affects **local** parameters. `ParametricModel` components are not
         affected. This is usefull when one wants to change core parameters for any reason. For
-        instance `Regression` models use `new_params` to change number of regression coefficients
+        instance `Regression` distributions use `new_params` to change number of regression coefficients
         depending on the number of covariates that are passed to the `fit` method.
 
         Parameters
@@ -279,6 +275,24 @@ class ParametricModel:
             if name in self.leaf_models.keys():
                 raise ValueError(f"{name} already exists as function name")
         self.params_tree.node_data = kwparams
+
+    def __getattribute__(self, item):
+        """
+        Raises:
+            ValueError: If any of the attributes in `params` is set to None when trying to
+            access the attribute.
+        """
+
+        if (
+            not item.startswith("_")
+            and not item.startswith("__")
+            and hasattr(self, item)
+        ):
+            if None in self.params:
+                raise ValueError(
+                    f"Can't call {item} if one param is None. Got {self.params} as params"
+                )
+        return super().__getattribute__(item)
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
@@ -303,19 +317,11 @@ class ParametricModel:
             super().__setattr__(name, value)
 
 
-Ts = TypeVarTuple("Ts")
+class LifetimeMixin(Generic[*Z], ABC):
+    r"""A generic base class for lifetime distributions.
 
-Time = NewType(
-    "Time",
-    Union[NDArray[np.floating], NDArray[np.integer], float, int],
-)
-
-
-class LifetimeModel(Generic[*Ts], ABC):
-    r"""A generic base class for lifetime models.
-
-    This class defines the structure for creating lifetime models. It is s a blueprint
-    for implementing lifetime models parametrized by a variadic set of arguments.
+    This class defines the structure for creating lifetime distributions. It is s a blueprint
+    for implementing lifetime distributions parametrized by a variadic set of arguments.
     It provides the framework for implementing hazard functions (``hf``), cumulative hazard functions (``chf``),
     probability density function (``pdf``) and survival function (``sf``).
     Other functions are implemented by default but can be overridden by derived classes.
@@ -332,9 +338,9 @@ class LifetimeModel(Generic[*Ts], ABC):
     """
 
     @abstractmethod
-    def hf(self, time: Time, *args: *Ts) -> NDArray[np.float64]:
+    def hf(self, time: T, *z: *Z) -> NDArray[np.float64]:
         if hasattr(self, "pdf") and hasattr(self, "sf"):
-            return self.pdf(time, *args) / self.sf(time, *args)
+            return self.pdf(time, *z) / self.sf(time, *z)
         if hasattr(self, "sf"):
             raise NotImplementedError(
                 """
@@ -351,11 +357,11 @@ class LifetimeModel(Generic[*Ts], ABC):
         )
 
     @abstractmethod
-    def chf(self, time: Time, *args: *Ts) -> NDArray[np.float64]:
+    def chf(self, time: T, *z: *Z) -> NDArray[np.float64]:
         if hasattr(self, "sf"):
-            return -np.log(self.sf(time, *args))
+            return -np.log(self.sf(time, *z))
         if hasattr(self, "pdf") and hasattr(self, "hf"):
-            return -np.log(self.pdf(time, *args) / self.hf(time, *args))
+            return -np.log(self.pdf(time, *z) / self.hf(time, *z))
         if hasattr(self, "hf"):
             raise NotImplementedError(
                 """
@@ -370,16 +376,16 @@ class LifetimeModel(Generic[*Ts], ABC):
         )
 
     @abstractmethod
-    def sf(self, time: Time, *args: *Ts) -> NDArray[np.float64]:
+    def sf(self, time: T, *z: *Z) -> NDArray[np.float64]:
         if hasattr(self, "chf"):
             return np.exp(
                 -self.chf(
                     time,
-                    *args,
+                    *z,
                 )
             )
         if hasattr(self, "pdf") and hasattr(self, "hf"):
-            return self.pdf(time, *args) / self.hf(time, *args)
+            return self.pdf(time, *z) / self.hf(time, *z)
 
         class_name = type(self).__name__
         raise NotImplementedError(
@@ -389,9 +395,9 @@ class LifetimeModel(Generic[*Ts], ABC):
         )
 
     @abstractmethod
-    def pdf(self, time: Time, *args: *Ts) -> NDArray[np.float64]:
+    def pdf(self, time: T, *z: *Z) -> NDArray[np.float64]:
         try:
-            return self.sf(time, *args) * self.hf(time, *args)
+            return self.sf(time, *z) * self.hf(time, *z)
         except NotImplementedError as err:
             class_name = type(self).__name__
             raise NotImplementedError(
@@ -400,20 +406,20 @@ class LifetimeModel(Generic[*Ts], ABC):
             """
             ) from err
 
-    def mrl(self, time: Time, *args: *Ts) -> NDArray[np.float64]:
-        sf = self.sf(time, *args)
-        ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
+    def mrl(self, time: T, *z: *Z) -> NDArray[np.float64]:
+        sf = self.sf(time, *z)
+        ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *z)
         if sf.ndim < 2:  # 2d to 1d or 0d
             ls = np.squeeze(ls)
         return ls / sf
 
-    def moment(self, n: int, *args: *Ts) -> NDArray[np.float64]:
+    def moment(self, n: int, *z: *Z) -> NDArray[np.float64]:
         """n-th order moment
 
         Parameters
         ----------
         n : order of the moment, at least 1.
-        *args : variadic arguments required by the function
+        *z : variadic arguments required by the function
 
         Returns
         -------
@@ -426,30 +432,30 @@ class LifetimeModel(Generic[*Ts], ABC):
             lambda x: x**n,
             np.array(0.0),
             np.array(np.inf),
-            *args,
+            *z,
         )
-        ndim = max(map(np.ndim, args), default=0)
+        ndim = max(map(np.ndim, *z), default=0)
         if ndim < 2:  # 2d to 1d or 0d
             ls = np.squeeze(ls)
         return ls
 
-    def mean(self, *args: *Ts) -> NDArray[np.float64]:
-        return self.moment(1, *args)
+    def mean(self, *z: *Z) -> NDArray[np.float64]:
+        return self.moment(1, *z)
 
-    def var(self, *args: *Ts) -> NDArray[np.float64]:
-        return self.moment(2, *args) - self.moment(1, *args) ** 2
+    def var(self, *z: *Z) -> NDArray[np.float64]:
+        return self.moment(2, *z) - self.moment(1, *z) ** 2
 
     def isf(
         self,
         probability: float | NDArray[np.float64],
-        *args: *Ts,
+        *z: *Z,
     ):
         """Inverse survival function.
 
         Parameters
         ----------
         probability : float or ndarray, shape (n, ) or (m, n)
-        *args : variadic arguments required by the function
+        *z : variadic arguments required by the function
 
         Returns
         -------
@@ -457,32 +463,32 @@ class LifetimeModel(Generic[*Ts], ABC):
             Complement quantile corresponding to probability.
         """
         return newton(
-            lambda x: self.sf(x, *args) - probability,
+            lambda x: self.sf(x, *z) - probability,
             x0=np.zeros_like(probability),
-            args=args,
+            args=z,
         )
 
     def ichf(
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
-        *args: *Ts,
+        *z: *Z,
     ):
         return newton(
-            lambda x: self.chf(x, *args) - cumulative_hazard_rate,
+            lambda x: self.chf(x, *z) - cumulative_hazard_rate,
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    def cdf(self, time: Time, *args: *Ts) -> NDArray[np.float64]:
-        return 1 - self.sf(time, *args)
+    def cdf(self, time: T, *z: *Z) -> NDArray[np.float64]:
+        return 1 - self.sf(time, *z)
 
     def rvs(
-        self, *args: *Ts, size: int = 1, seed: Optional[int] = None
+        self, *z: *Z, size: int = 1, seed: Optional[int] = None
     ) -> NDArray[np.float64]:
         """Random variable sampling.
 
         Parameters
         ----------
-        *args : variadic arguments required by the function
+        *z : variadic arguments required by the function
         size : int, default 1
             Sized of the generated sample.
         seed : int, default None
@@ -495,22 +501,22 @@ class LifetimeModel(Generic[*Ts], ABC):
         """
         generator = np.random.RandomState(seed=seed)
         probability = generator.uniform(size=size)
-        return self.isf(probability, *args)
+        return self.isf(probability, *z)
 
     def ppf(
-        self, probability: float | NDArray[np.float64], *args: *Ts
+        self, probability: float | NDArray[np.float64], *z: *Z
     ) -> NDArray[np.float64]:
-        return self.isf(1 - probability, *args)
+        return self.isf(1 - probability, *z)
 
-    def median(self, *args: *Ts) -> NDArray[np.float64]:
-        return self.ppf(np.array(0.5), *args)
+    def median(self, *z: *Z) -> NDArray[np.float64]:
+        return self.ppf(np.array(0.5), *z)
 
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
-        *args: *Ts,
+        *z: *Z,
         deg: int = 100,
     ) -> NDArray[np.float64]:
         r"""
@@ -540,7 +546,7 @@ class LifetimeModel(Generic[*Ts], ABC):
             Lower bound(s) of integration.
         b : ndarray (max dim of 2)
             Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.
-        args : ndarray (max dim of 2)
+        *z : ndarray (max dim of 2)
             Other arguments needed by the lifetime core (eg. covariates)
         deg : int, default 100
             Degree of the polynomials interpolation
@@ -553,7 +559,7 @@ class LifetimeModel(Generic[*Ts], ABC):
 
         Notes
         -----
-        `ls_integrate` operations rely on arguments number of dimensions passed in `a`, `b`, `*args` or
+        `ls_integrate` operations rely on arguments number of dimensions passed in `a`, `b`, `*z` or
         any other variable referenced in `func`. Because `func` callable is not easy to inspect, either one must specify
         the maximum number of dimensions used (0, 1 or 2), or `ls_integrate` converts all these objects to 2d-array.
         Currently, the second option is prefered. That's why, returns are always 2d-array.
@@ -563,20 +569,20 @@ class LifetimeModel(Generic[*Ts], ABC):
 
         b = np.minimum(np.inf, b)
         a, b = np.atleast_2d(*np.broadcast_arrays(a, b))
-        args_2d = np.atleast_2d(*args)  # type: ignore # Ts can't be bounded with current TypeVarTuple
-        if isinstance(args_2d, np.ndarray):
-            args_2d = (args_2d,)
+        z_2d = np.atleast_2d(*z)  # type: ignore # Ts can't be bounded with current TypeVarTuple
+        if isinstance(z_2d, np.ndarray):
+            z_2d = (z_2d,)
 
-        def integrand(x: NDArray[np.float64], *_: *Ts) -> NDArray[np.float64]:
+        def integrand(x: NDArray[np.float64], *_: *Z) -> NDArray[np.float64]:
             return np.atleast_2d(func(x) * self.pdf(x, *_))
 
         if np.all(np.isinf(b)):
-            b = np.atleast_2d(self.isf(np.array(1e-4), *args_2d))
+            b = np.atleast_2d(self.isf(np.array(1e-4), *z_2d))
             integration = gauss_legendre(
-                integrand, a, b, *args_2d, ndim=2, deg=deg
-            ) + quad_laguerre(integrand, b, *args_2d, ndim=2, deg=deg)
+                integrand, a, b, *z_2d, ndim=2, deg=deg
+            ) + quad_laguerre(integrand, b, *z_2d, ndim=2, deg=deg)
         else:
-            integration = gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
+            integration = gauss_legendre(integrand, a, b, *z_2d, ndim=2, deg=deg)
 
         # if ndim is not None:
         #     if ndim > 2:
@@ -601,10 +607,16 @@ class LifetimeModel(Generic[*Ts], ABC):
         """Plot"""
         return PlotSurvivalFunc(self)
 
+    def freeze_zvariables(
+        self, *z: *Z
+    ) -> LifetimeDistribution[()]:  # is equivalent to FrozenLifetimeModel[*Z]
+        return FrozenLifetimeDistribution(self, *z)
 
-def _get_nb_assets(args: tuple[NumericalArrayLike, ...]) -> int:
+
+# generic function
+def _get_nb_assets(*z: *Z) -> int:
     def as_2d():
-        for x in args:
+        for x in z:
             if not isinstance(x, np.ndarray):
                 x = np.asarray(x)
             if len(x.shape) > 2:
@@ -614,336 +626,70 @@ def _get_nb_assets(args: tuple[NumericalArrayLike, ...]) -> int:
     return max(map(lambda x: x.shape[0], as_2d()), default=1)
 
 
-@dataclass
-class FittingResults:
-    """Fitting results of the parametric core."""
-
-    nb_samples: InitVar[int]  #: Number of observations (samples).
-
-    opt: InitVar[OptimizeResult] = field(
-        repr=False
-    )  #: Optimization result (see scipy.optimize.OptimizeResult doc).
-    var: Optional[NDArray[np.float64]] = field(
-        repr=False, default=None
-    )  #: Covariance matrix (computed as the inverse of the Hessian matrix)
-    se: NDArray[np.float64] = field(
-        init=False, repr=False
-    )  #: Standard error, square root of the diagonal of the covariance matrix.
-
-    nb_params: int = field(init=False)  #: Number of parameters.
-    AIC: float = field(init=False)  #: Akaike Information Criterion.
-    AICc: float = field(
-        init=False
-    )  #: Akaike Information Criterion with a correction for small sample sizes.
-    BIC: float = field(init=False)  #: Bayesian Information Criterion.
-
-    def __post_init__(self, nb_samples, opt):
-        self.nb_params = opt.x.size
-        self.AIC = 2 * self.nb_params + 2 * opt.fun
-        self.AICc = self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (
-            nb_samples - self.nb_params - 1
-        )
-        self.BIC = np.log(nb_samples) * self.nb_params + 2 * opt.fun
-
-        self.se = None
-        if self.var is not None:
-            self.se = np.sqrt(np.diag(self.var))
-
-    def standard_error(self, jac_f: np.ndarray) -> np.ndarray:
-        """Standard error estimation function.
-
-        Parameters
-        ----------
-        jac_f : 1D array
-            The Jacobian of a function f with respect to params.
-
-        Returns
-        -------
-        1D array
-            Standard error for f(params).
-
-        References
-        ----------
-        .. [1] Meeker, W. Q., Escobar, L. A., & Pascual, F. G. (2022).
-            Statistical methods for reliability data. John Wiley & Sons.
-        """
-        # [1] equation B.10 in Appendix
-        return np.sqrt(np.einsum("ni,ij,nj->n", jac_f, self.var, jac_f))
-
-    def asdict(self) -> dict:
-        """converts FittingResult into a dictionary.
-
-        Returns
-        -------
-        dict
-            Returns the fitting result as a dictionary.
-        """
-        return asdict(self)
-
-
-class ParametricLifetimeModel(LifetimeModel[*Ts], ParametricModel, ABC):
-
-    fitting_results: FittingResults | None
-
-    def __init__(self):
-        super().__init__()
-        self.fitting_results = None
-
-    @property
-    @abstractmethod
-    def params_bounds(self) -> Bounds:
-        """Parameter bounds.
-
-        Parameters bounds are given for the optimization algorithm used to estimate the parameters.
-
-        Returns
-        -------
-        scipy.optimize.Bounds
-            Scipy Bounds object.
-        """
-
-    @abstractmethod
-    def init_params(self, lifetime_data: LifetimeData, *args: *Ts) -> None: ...
-
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        /,
-        *args: *Ts,
-        event: Optional[NDArray[np.bool_]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-        **kwargs: Any,
-    ) -> Self:
-        r"""
-        Estimates model parameters with respect to lifetime data.
-
-        Parameters
-        ----------
-        time : np.ndarray
-            Observed lifetime values. Dimensions can be either ``1d`` or ``2d`` :
-
-            - ``1d`` : ``(n_samples,)`` shape that provides complete lifetime observations and right censoring.
-            - ``2d`` : ``(n_samples, 2)`` shape that provides complete lifetime observations, right censoring, left censoring and interval censoring.
-
-        event : np.ndarray, default is None
-            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)`` and
-            is only valid if ``time`` is ``1d``.  By default, all lifetimes are assumed to be complete.
-        entry : np.ndarray, default is None
-            Left truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``.
-        departure : np.ndarray, default is None
-            Right truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``
-        **kwargs
-            Other arguments used by the optimizer.
-            See `scipy.optimize.mininize <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_.
-            Default values are:
-
-            - ``method`` : ``"L-BFGS-B"``
-            - ``contraints`` : ``()``
-            - ``tol`` : ``None``
-            - ``callback`` : ``None``
-            - ``options`` : ``None``
-            - ``bounds`` : ``self.params_bounds``
-            - ``x0`` : ``self.init_params``
-
-        Returns
-        -------
-        Self
-            Same instance with optimized parameters.
-
-        """
-
-        # Step 1: Prepare lifetime data
-        lifetime_data = lifetime_data_factory(
-            time,
-            event,
-            entry,
-            departure,
-        )
-
-        # Step 2: Initialize the model and likelihood
-        self.init_params(lifetime_data, *args)
-        optimized_model = copy.deepcopy(self)
-        likelihood = LikelihoodFromLifetimes(
-            optimized_model, lifetime_data, model_args=args
-        )
-
-        # Step 3: Configure and run the optimizer
-        minimize_kwargs = {
-            "method": kwargs.get("method", "L-BFGS-B"),
-            "constraints": kwargs.get("constraints", ()),
-            "tol": kwargs.get("tol", None),
-            "callback": kwargs.get("callback", None),
-            "options": kwargs.get("options", None),
-            "bounds": kwargs.get("bounds", optimized_model.params_bounds),
-            "x0": kwargs.get("x0", optimized_model.params),
-        }
-        optimizer = minimize(
-            likelihood.negative_log,
-            minimize_kwargs.pop("x0"),
-            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-            **minimize_kwargs,
-        )
-        optimized_model.params = optimizer.x
-
-        # Step 4: Compute parameters variance (Hessian inverse)
-        hessian_inverse = np.linalg.inv(likelihood.hessian())
-
-        # Step 5: Update model state and return
-        self.params = optimized_model.params = optimizer.x
-        self.fitting_results = optimized_model.fitting_results = FittingResults(
-            len(lifetime_data), optimizer, hessian_inverse
-        )
-        return self
-
-    def freeze_variables(self, *args: *Ts) -> "FrozenDistribution":
-        return FrozenDistribution(self, args)
-
-    def __getattribute__(self, item):
-        """
-        Raises:
-            ValueError: If any of the attributes in `params` is set to None when trying to
-            access the attribute.
-        """
-
-        if (
-            not item.startswith("_")
-            and not item.startswith("__")
-            and hasattr(LifetimeModel, item)
-        ):
-            if None in self.params:
-                raise ValueError(
-                    f"Can't call {item} if one param is None. Got {self.params} as params"
-                )
-        return super().__getattribute__(item)
-
-
-@runtime_checkable
-class LifetimeDistribution(Protocol):
-
-    def hf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def chf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def sf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def pdf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def mrl(self, time: Time) -> NDArray[np.float64]: ...
-
-    def moment(self, n: int) -> NDArray[np.float64]: ...
-
-    def mean(self) -> NDArray[np.float64]: ...
-
-    def var(self) -> NDArray[np.float64]: ...
-
-    def isf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]: ...
-
-    def ichf(
-        self, cumulative_hazard_rate: float | NDArray[np.float64]
-    ) -> NDArray[np.float64]: ...
-
-    def cdf(self, time: Time) -> NDArray[np.float64]: ...
-
-    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]: ...
-
-    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]: ...
-
-    def median(self) -> NDArray[np.float64]: ...
-
-    def ls_integrate(
-        self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        deg: int = 100,
-    ) -> NDArray[np.float64]: ...
-
-
-# inheritance so that Distribution and FrozenDistribution are both LifetimeModel[()]
-# FrozenDistribution =: LifetimeDistribution (structural)
-# Distribution =: LifetimeDistribution (structural)
-# (Fixed)AgeReplacementModel may be LifetimeDistribution
-# (Fixed)LeftTruncatedModel may be LifetimeDistribution
-class FrozenDistribution(LifetimeModel[()]):
+class FrozenLifetimeDistribution(Generic[*Z]):
 
     args = ShapedArgs(astuple=True)
 
     def __init__(
         self,
-        model: ParametricLifetimeModel[*tuple[NumericalArrayLike, ...]],
-        args: tuple[NumericalArrayLike, ...],
+        baseline: LifetimeDistribution[*Z],
+        *z: *Z,
     ):
-        self.model = model
-        self.nb_assets = _get_nb_assets(args)
-        self.args = args
+        self.baseline = baseline
+        self.nb_assets = _get_nb_assets(*z)
+        self.z = z
 
-    @override
     @isbroadcastable("time")
-    def hf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.hf(time, *self.args)
+    def hf(self, time: T) -> NDArray[np.float64]:
+        return self.baseline.hf(time, *self.z)
 
-    @override
     @isbroadcastable("time")
-    def chf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.chf(time, *self.args)
+    def chf(self, time: T) -> NDArray[np.float64]:
+        return self.baseline.chf(time, *self.z)
 
-    @override
     @isbroadcastable("time")
-    def sf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.sf(time, *self.args)
+    def sf(self, time: T) -> NDArray[np.float64]:
+        return self.baseline.sf(time, *self.z)
 
-    @override
     @isbroadcastable("time")
-    def pdf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.pdf(time, *self.args)
+    def pdf(self, time: T) -> NDArray[np.float64]:
+        return self.baseline.pdf(time, *self.z)
 
-    @override
     @isbroadcastable("time")
-    def mrl(self, time: Time) -> NDArray[np.float64]:
-        return self.model.mrl(time, *self.args)
+    def mrl(self, time: T) -> NDArray[np.float64]:
+        return self.baseline.mrl(time, *self.z)
 
-    @override
     def moment(self, n: int) -> NDArray[np.float64]:
-        return self.model.moment(n)
+        return self.baseline.moment(n)
 
-    @override
     def mean(self) -> NDArray[np.float64]:
-        return self.model.moment(1, *self.args)
+        return self.baseline.moment(1, *self.z)
 
-    @override
     def var(self) -> NDArray[np.float64]:
-        return self.model.moment(2, *self.args) - self.model.moment(1, *self.args) ** 2
+        return self.baseline.moment(2, *self.z) - self.baseline.moment(1, *self.z) ** 2
 
-    @override
     @isbroadcastable("probability")
     def isf(self, probability: float | NDArray[np.float64]):
-        return self.model.isf(probability, *self.args)
+        return self.baseline.isf(probability, *self.z)
 
-    @override
     @isbroadcastable("cumulative_hazard_rate")
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
-        return self.model.ichf(cumulative_hazard_rate, *self.args)
+        return self.baseline.ichf(cumulative_hazard_rate, *self.z)
 
-    @override
     @isbroadcastable("time")
-    def cdf(self, time: Time) -> NDArray[np.float64]:
-        return self.model.cdf(time, *self.args)
+    def cdf(self, time: T) -> NDArray[np.float64]:
+        return self.baseline.cdf(time, *self.z)
 
-    @override
     def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
-        return self.model.rvs(*self.args, size=size, seed=seed)
+        return self.baseline.rvs(*self.z, size=size, seed=seed)
 
-    @override
     @isbroadcastable("probability")
     def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.ppf(probability, *self.args)
+        return self.baseline.ppf(probability, *self.z)
 
-    @override
     def median(self) -> NDArray[np.float64]:
-        return self.model.median(*self.args)
+        return self.baseline.median(*self.z)
 
-    @override
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
@@ -952,76 +698,4 @@ class FrozenDistribution(LifetimeModel[()]):
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
-        return self.model.ls_integrate(func, a, b, deg, *self.args)
-
-
-@dataclass
-class Estimates:
-    """
-    Stores the estimates for a non-parametric lifetime core.
-
-    Parameters
-    ----------
-    timeline : np.ndarray of shape (n, )
-        The timeline of the estimates.
-    values : np.ndarray of shape (n, )
-        The estimated values.
-    se : np.ndarray of shape (n, ), optional
-        The standard errors of the estimates. If not provided, defaults to an array of zeros.
-
-    Raises
-    ------
-    ValueError
-        If the shapes of `timeline`, `values`, and `se` are not compatible.
-    """
-
-    timeline: NDArray[np.float64]
-    values: NDArray[np.float64]
-    se: Optional[NDArray[np.float64]] = None
-
-    def __post_init__(self):
-        if self.se is None:
-            self.se = np.zeros_like(
-                self.values
-            )  # garder None/Nan efaire le changement de valeur au niveau du plot
-
-        if self.timeline.shape != self.values.shape != self.se:
-            raise ValueError("Incompatible timeline, values and se in Estimates")
-
-    def nearest_1dinterp(
-        self, x: float | NDArray[np.float64]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        """Returns x nearest interpolation based on timeline and values data points
-        timeline has to be monotonically increasing
-
-        Args:
-            x (NDArray[np.float64]): 1d x coordinates to interpolate
-
-        Returns:
-            NDArray[np.float64]: interpolation values of x
-        """
-        spacing = np.diff(self.timeline) / 2
-        xp = np.hstack([spacing, spacing[-1]]) + self.timeline
-        values_p = np.concatenate([self.values, self.values[-1, None]])
-        se_p = np.concatenate([self.se, self.se[-1, None]])
-        return (
-            values_p[np.searchsorted(xp, np.asarray(x))],
-            se_p[np.searchsorted(xp, np.asarray(x))],
-        )
-
-
-class NonParametricModel(Protocol):
-    """
-    Non-parametric lifetime estimator.
-
-    Attributes
-    ----------
-    estimates : Estimations
-        The estimations produced when fitting the estimator.
-    """
-
-    estimates: dict[str, Optional[Estimates]]
-
-    @property
-    def plot(self):
-        return PlotSurvivalFunc(self)
+        return self.baseline.ls_integrate(func, a, b, deg, *self.z)

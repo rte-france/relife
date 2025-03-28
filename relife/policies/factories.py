@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.core import ParametricModel
+from relife.distributions.protocols import LifetimeDistribution
 
 if TYPE_CHECKING:
     from relife.policies import (
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def renewal_policy(
-    obj: ParametricModel,
+    obj: LifetimeDistribution[()],
     costs: dict[NDArray[np.float64]],
     one_cycle: bool = False,
     run_to_failure: bool = False,
@@ -35,7 +35,7 @@ def renewal_policy(
     """
     Parameters
     ----------
-    obj : ParametricModel
+    obj : Parametric
     costs : dict of np.ndarray
     one_cycle : bool, default False
     run_to_failure : bool, default False

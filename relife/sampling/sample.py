@@ -6,6 +6,10 @@ import numpy as np
 
 from relife.data import RenewalData
 from relife.data.counting import NHPPCountData
+from relife.economics.rewards import (
+    age_replacement_rewards,
+    run_to_failure_rewards,
+)
 from relife.policies import (
     DefaultAgeReplacementPolicy,
     DefaultRunToFailurePolicy,
@@ -19,10 +23,6 @@ from relife.processes import (
     RenewalRewardProcess,
 )
 from relife.processes.renewal import RenewalProcess
-from relife.rewards import (
-    age_replacement_rewards,
-    run_to_failure_rewards,
-)
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 
 

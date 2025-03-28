@@ -1,11 +1,12 @@
+from dataclasses import dataclass
 from typing import Optional, Self, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.core.decorators import require_attributes
-from relife.core.models import Estimates, NonParametricModel
 from relife.data.lifetime import LifetimeData, lifetime_data_factory
+from relife.decorators import require_attributes
+from relife.distributions.protocols import NonParametricModel
 from relife.processes.nhpp import nhpp_data_factory
 
 
@@ -101,7 +102,7 @@ class KaplanMeier(NonParametricModel):
 
     References
     ----------
-    .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
+    .. [1] Lawless, J. F. (2011). Statistical distributions and methods for lifetime
         data. John Wiley & Sons.
 
     .. [2] Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
@@ -239,7 +240,7 @@ class NelsonAalen(NonParametricModel):
 
     References
     ----------
-    .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
+    .. [1] Lawless, J. F. (2011). Statistical distributions and methods for lifetime
         data. John Wiley & Sons.
     """
 
@@ -612,3 +613,58 @@ Turnbull.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="the survival function")
 NHPPNonParametric.chf.__doc__ = TIME_BASE_DOCSTRING.format(
     name="the cumulative hazard function"
 )
+
+
+@dataclass
+class Estimates:
+    """
+    Stores the estimates for a non-parametric lifetime core.
+
+    Parameters
+    ----------
+    timeline : np.ndarray of shape (n, )
+        The timeline of the estimates.
+    values : np.ndarray of shape (n, )
+        The estimated values.
+    se : np.ndarray of shape (n, ), optional
+        The standard errors of the estimates. If not provided, defaults to an array of zeros.
+
+    Raises
+    ------
+    ValueError
+        If the shapes of `timeline`, `values`, and `se` are not compatible.
+    """
+
+    timeline: NDArray[np.float64]
+    values: NDArray[np.float64]
+    se: Optional[NDArray[np.float64]] = None
+
+    def __post_init__(self):
+        if self.se is None:
+            self.se = np.zeros_like(
+                self.values
+            )  # garder None/Nan efaire le changement de valeur au niveau du plot
+
+        if self.timeline.shape != self.values.shape != self.se:
+            raise ValueError("Incompatible timeline, values and se in Estimates")
+
+    def nearest_1dinterp(
+        self, x: float | NDArray[np.float64]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        """Returns x nearest interpolation based on timeline and values data points
+        timeline has to be monotonically increasing
+
+        Args:
+            x (NDArray[np.float64]): 1d x coordinates to interpolate
+
+        Returns:
+            NDArray[np.float64]: interpolation values of x
+        """
+        spacing = np.diff(self.timeline) / 2
+        xp = np.hstack([spacing, spacing[-1]]) + self.timeline
+        values_p = np.concatenate([self.values, self.values[-1, None]])
+        se_p = np.concatenate([self.se, self.se[-1, None]])
+        return (
+            values_p[np.searchsorted(xp, np.asarray(x))],
+            se_p[np.searchsorted(xp, np.asarray(x))],
+        )

@@ -4,20 +4,20 @@ from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from relife.core import Parametric, ParametricLifetimeModel
+from relife.types import NumericalArrayLike, NDArrayOfAny
 
-from relife.core import ParametricModel, ParametricLifetimeModel
-from relife.models import (
+from relife.distributions import (
     AgeReplacementModel,
     Exponential,
     LeftTruncatedModel,
 )
-from relife.rewards import Discounting, Rewards
-from relife.types import NumericalArrayLike, NDArrayOfAny
+from relife.economics.rewards import Discounting, Rewards
 
 
 class SampleIterator(Iterator, ABC):
 
-    model: Optional[ParametricModel]
+    model: Optional[Parametric]
     model_args: Optional[tuple[NumericalArrayLike, ...]]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]

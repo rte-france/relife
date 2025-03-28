@@ -7,32 +7,28 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Self, Any, Union, NewType
+from typing import Optional, Any, Union, NewType, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife.core import ParametricLifetimeModel, ParametricModel
 from relife.data import LifetimeData
+from relife.distributions.mixins import ParametricMixin, LifetimeMixin
+from relife.distributions.protocols import ParametricLifetimeDistribution
+from relife.likelihoods.mle import maximum_likelihood_estimation, FittingResults
 
-Time = NewType(
-    "Time",
-    Union[NDArray[np.floating], NDArray[np.integer], float, int],
-)
-Covar = NewType(
-    "Covar",
-    Union[NDArray[np.floating], NDArray[np.integer], float, int],
-)
-
+Z = TypeVarTuple("Z")
+T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
+Covar = NewType("Covar", NDArray[np.floating] | NDArray[np.integer] | float | int)
 NumericalArrayLike = NewType(
     "Args",
     Union[NDArray[np.floating], NDArray[np.integer], float, int],
 )
 
 
-class CovarEffect(ParametricModel):
+class CovarEffect(ParametricMixin):
     """
     Covariates effect.
 
@@ -90,20 +86,18 @@ class CovarEffect(ParametricModel):
         return covar * self.g(covar)
 
 
-class Regression(
-    ParametricLifetimeModel[Covar, *tuple[NumericalArrayLike, ...]],
-    ABC,
-):
+# type is ParametricLifetimeModel[Covar, *Z] or LifetimeModel[Covar, *Z]
+class Regression(ParametricMixin, LifetimeMixin[Covar, *Z], ABC):
     """
-    Base class for regression models.
+    Base class for regression distributions.
     """
 
-    baseline: ParametricLifetimeModel[*tuple[NumericalArrayLike, ...]]
+    baseline: ParametricLifetimeDistribution[*Z]
     covar_effect: CovarEffect
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*tuple[NumericalArrayLike, ...]],
+        baseline: ParametricLifetimeDistribution[*Z],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__()
@@ -116,7 +110,7 @@ class Regression(
         self,
         lifetime_data: LifetimeData,
         covar: NumericalArrayLike,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> None:
         """
         Initialize parameters for the regression core.
@@ -127,13 +121,13 @@ class Regression(
             The lifetime data used to initialize the baseline core.
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values. Should have shape (k, ) or (m, k) where m is the number of assets and k is the number of covariates.
-        *args : variable number of arguments
+        *z : variable number of arguments
             Any additional arguments needed by the baseline core.
         """
         self.covar_effect.new_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         )
-        self.baseline.init_params(lifetime_data, *args)
+        self.baseline.init_params(lifetime_data, *z)
 
     @property
     def params_bounds(self) -> Bounds:
@@ -154,18 +148,18 @@ class Regression(
     @override
     def sf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return super().sf(time, covar, *args)
+        return super().sf(time, covar, *z)
 
     @override
     def isf(
         self,
         probability: float | NDArray[np.float64],
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         """Inverse survival function.
 
@@ -176,7 +170,7 @@ class Regression(
             If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
         covar : np.ndarray
             Covariate values. The ndarray must be broadcastable with ``time``.
-        *args : variable number of np.ndarray
+        *z : variable number of np.ndarray
             Any variables needed to compute the function. Those variables must be
             broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
 
@@ -186,48 +180,48 @@ class Regression(
             Time values corresponding to the given survival probabilities.
         """
         cumulative_hazard_rate = -np.log(probability)
-        return self.ichf(cumulative_hazard_rate, covar, *args)
+        return self.ichf(cumulative_hazard_rate, covar, *z)
 
     @override
     def cdf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return super().cdf(time, covar, *args)
+        return super().cdf(time, covar, *z)
 
     def pdf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return super().pdf(time, covar, *args)
+        return super().pdf(time, covar, *z)
 
     @override
     def ppf(
         self,
         probability: float | NDArray[np.float64],
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return super().ppf(probability, covar, *args)
+        return super().ppf(probability, covar, *z)
 
     @override
     def mrl(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return super().mrl(time, covar, *args)
+        return super().mrl(time, covar, *z)
 
     @override
     def rvs(
         self,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
         size: Optional[int] = 1,
         seed: Optional[int] = None,
     ):
@@ -238,7 +232,7 @@ class Regression(
         ----------
         covar : np.ndarray
             Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
-        *args : variable number of np.ndarray
+        *z : variable number of np.ndarray
             Any variables needed to compute the function. Those variables must be
             broadcastable with ``covar``. They may exist and result from method chaining due to nested class instantiation.
         size : int, default 1
@@ -251,98 +245,97 @@ class Regression(
         np.ndarray
             Sample of random lifetimes.
         """
-        return super().rvs(covar, *args, size=size, seed=seed)
+        return super().rvs(covar, *z, size=size, seed=seed)
 
     @override
-    def mean(
-        self, covar: Covar, *args: *tuple[NumericalArrayLike, ...]
-    ) -> NDArray[np.float64]:
-        return super().mean(covar, *args)
+    def mean(self, covar: Covar, *z: *Z) -> NDArray[np.float64]:
+        return super().mean(covar, *z)
 
     @override
-    def var(
-        self, covar: Covar, *args: *tuple[NumericalArrayLike, ...]
-    ) -> NDArray[np.float64]:
-        return super().var(covar, *args)
+    def var(self, covar: Covar, *z: *Z) -> NDArray[np.float64]:
+        return super().var(covar, *z)
 
     @override
-    def median(
-        self, covar: Covar, *args: *tuple[NumericalArrayLike, ...]
-    ) -> NDArray[np.float64]:
-        return super().median(covar, *args)
+    def median(self, covar: Covar, *z: *Z) -> NDArray[np.float64]:
+        return super().median(covar, *z)
 
     @abstractmethod
     def jac_hf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_chf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def dhf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]: ...
 
     def jac_sf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return -self.jac_chf(time, covar, *args) * self.sf(time, covar, *args)
+        return -self.jac_chf(time, covar, *z) * self.sf(time, covar, *z)
 
     def jac_cdf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return -self.jac_sf(time, covar, *args)
+        return -self.jac_sf(time, covar, *z)
 
     def jac_pdf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return self.jac_hf(time, covar, *args) * self.sf(
-            time, covar, *args
-        ) + self.jac_sf(time, covar, *args) * self.hf(time, covar, *args)
+        return self.jac_hf(time, covar, *z) * self.sf(time, covar, *z) + self.jac_sf(
+            time, covar, *z
+        ) * self.hf(time, covar, *z)
 
     def fit(
         self,
         time: NDArray[np.float64],
         covar: Covar,
         /,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
-    ) -> Self:
-        return super().fit(
+    ) -> FittingResults:
+        # if update to 3.12 : maximum_likelihood_estimation[Covar, *Z](...), generic functions
+        fitting_results = maximum_likelihood_estimation(
+            self,
             time,
-            *(covar, *args),
+            covar,
+            *z,
             event=event,
             entry=entry,
             departure=departure,
             **kwargs,
         )
+        self.params = fitting_results.params
+        return fitting_results
 
 
-class ProportionalHazard(Regression):
+class ProportionalHazard(Regression[*Z]):
     r"""
     Proportional Hazard regression core.
 
@@ -361,7 +354,7 @@ class ProportionalHazard(Regression):
 
     Parameters
     ----------
-    baseline : :py:class:`~relife.core.models.ParametricLifetimeModel`
+    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
         Any parametric lifetime model to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
@@ -373,9 +366,9 @@ class ProportionalHazard(Regression):
         The model parameters (both baseline parameters and covariate effects parameters).
     params_names : np.ndarray
         The model parameters (both baseline parameters and covariate effects parameters).
-    baseline : :py:class:`~relife.core.models.ParametricLifetimeModel`
+    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
         The regression baseline model.
-    covar_effect : :py:class:`~relife.models.regression.CovarEffect`
+    covar_effect : :py:class:`~relife.distributions.regression.CovarEffect`
         The regression covariate effect.
 
 
@@ -392,74 +385,74 @@ class ProportionalHazard(Regression):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*tuple[NumericalArrayLike, ...]],
+        baseline: ParametricLifetimeDistribution[*Z],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
 
     def hf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
+        return self.covar_effect.g(covar) * self.baseline.hf(time, *z)
 
     def chf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
+        return self.covar_effect.g(covar) * self.baseline.chf(time, *z)
 
     @override
     def ichf(
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         return self.baseline.ichf(
-            cumulative_hazard_rate / self.covar_effect.g(covar), *args
+            cumulative_hazard_rate / self.covar_effect.g(covar), *z
         )
 
     def jac_hf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         return np.column_stack(
             (
-                self.covar_effect.jac_g(covar) * self.baseline.hf(time, *args),
-                self.covar_effect.g(covar) * self.baseline.jac_hf(time, *args),
+                self.covar_effect.jac_g(covar) * self.baseline.hf(time, *z),
+                self.covar_effect.g(covar) * self.baseline.jac_hf(time, *z),
             )
         )
 
     def jac_chf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         return np.column_stack(
             (
-                self.covar_effect.jac_g(covar) * self.baseline.chf(time, *args),
-                self.covar_effect.g(covar) * self.baseline.jac_chf(time, *args),
+                self.covar_effect.jac_g(covar) * self.baseline.chf(time, *z),
+                self.covar_effect.g(covar) * self.baseline.jac_chf(time, *z),
             )
         )
 
     def dhf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
+        return self.covar_effect.g(covar) * self.baseline.dhf(time, *z)
 
 
-class AFT(Regression):
+class AFT(Regression[*Z]):
     r"""
     Accelerated failure time regression.
 
@@ -479,7 +472,7 @@ class AFT(Regression):
 
     Parameters
     ----------
-    baseline : :py:class:`~relife.core.models.ParametricLifetimeModel`
+    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
         Any parametric lifetime model to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
@@ -490,9 +483,9 @@ class AFT(Regression):
         The model parameters (both baseline parameters and covariate effects parameters).
     params_names : np.ndarray
         The model parameters (both baseline parameters and covariate effects parameters).
-    baseline : :py:class:`~relife.core.models.ParametricLifetimeModel`
+    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
         The regression baseline model.
-    covar_effect : :py:class:`~relife.models.regression.CovarEffect`
+    covar_effect : :py:class:`~relife.distributions.regression.CovarEffect`
         The regression covariate effect.
 
     References
@@ -507,61 +500,61 @@ class AFT(Regression):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*tuple[NumericalArrayLike, ...]],
+        baseline: ParametricLifetimeDistribution[*Z],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
 
     def hf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
-        return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
+        return self.baseline.hf(t0, *z) / self.covar_effect.g(covar)
 
     def chf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
-        return self.baseline.chf(t0, *args)
+        return self.baseline.chf(t0, *z)
 
     @override
     def ichf(
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.ichf(
-            cumulative_hazard_rate, *args
+            cumulative_hazard_rate, *z
         )
 
     def jac_hf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
             (
                 -self.covar_effect.jac_g(covar)
                 / self.covar_effect.g(covar) ** 2
-                * (self.baseline.hf(t0, *args) + t0 * self.baseline.dhf(t0, *args)),
-                self.baseline.jac_hf(t0, *args) / self.covar_effect.g(covar),
+                * (self.baseline.hf(t0, *z) + t0 * self.baseline.dhf(t0, *z)),
+                self.baseline.jac_hf(t0, *z) / self.covar_effect.g(covar),
             )
         )
 
     def jac_chf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return np.column_stack(
@@ -569,19 +562,19 @@ class AFT(Regression):
                 -self.covar_effect.jac_g(covar)
                 / self.covar_effect.g(covar)
                 * t0
-                * self.baseline.hf(t0, *args),
-                self.baseline.jac_chf(t0, *args),
+                * self.baseline.hf(t0, *z),
+                self.baseline.jac_chf(t0, *z),
             )
         )
 
     def dhf(
         self,
-        time: Time,
+        time: T,
         covar: Covar,
-        *args: *tuple[NumericalArrayLike, ...],
+        *z: *Z,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
-        return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
+        return self.baseline.dhf(t0, *z) / self.covar_effect.g(covar) ** 2
 
 
 TIME_BASE_DOCSTRING = """
@@ -594,7 +587,7 @@ time : float or np.ndarray
     If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
 covar : np.ndarray
     Covariate values. The ndarray must be broadcastable with ``time``.
-*args : variable number of np.ndarray
+*z : variable number of np.ndarray
     Any variables needed to compute the function. Those variables must be
     broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
 
@@ -615,7 +608,7 @@ cumulative_hazard_rate : float or np.ndarray
     If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
 covar : np.ndarray
     Covariate values. The ndarray must be broadcastable with ``time``.
-*args : variable number of np.ndarray
+*z : variable number of np.ndarray
     Any variables needed to compute the function.
 
 Returns
@@ -631,7 +624,7 @@ Parameters
 ----------
 covar : np.ndarray
     Covariate values. The ndarray must be broadcastable with ``time``.
-*args : variable number of np.ndarray
+*z : variable number of np.ndarray
     Any variables needed to compute the function. Those variables must be
     broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
 

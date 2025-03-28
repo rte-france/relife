@@ -5,18 +5,17 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.core import LifetimeModel, LifetimeDistribution
 from relife.data import CountData
-from relife.processes import NonHomogeneousPoissonProcess, RenewalRewardProcess
-from relife.processes.renewal import reward_partial_expectation
-from relife.quadratures import gauss_legendre
-from relife.rewards import (
+from relife.economics.rewards import (
     age_replacement_rewards,
     exp_discounting,
     run_to_failure_rewards,
 )
-from ..core.models import FrozenDistribution
-from ..models.nested import left_truncated, replace_at_age
+from relife.processes import NonHomogeneousPoissonProcess, RenewalRewardProcess
+from relife.processes.renewal import reward_partial_expectation
+from relife.quadratures import gauss_legendre
+from ..distributions.mixins import FrozenLifetimeDistribution
+from ..distributions.protocols import LifetimeDistribution
 
 NumericalArrayLike = NewType(
     "NumericalArrayLike",
@@ -29,20 +28,16 @@ class RenewalPolicy:
 
     def __init__(
         self,
-        distribution: LifetimeDistribution,
-        distribution1: Optional[LifetimeDistribution] = None,
+        distribution: LifetimeDistribution[()],
+        distribution1: Optional[LifetimeDistribution[()]] = None,
         discounting_rate: Optional[float] = None,
     ):
-        if not isinstance(distribution, LifetimeDistribution):
-            raise ValueError
+
         self.distribution = distribution
-        if distribution1 is not None:
-            if not isinstance(distribution1, LifetimeDistribution):
-                raise ValueError
         self.distribution1 = distribution1
         self.discounting = exp_discounting(discounting_rate)
         self.nb_assets = None
-        if isinstance(distribution, FrozenDistribution):
+        if isinstance(distribution, FrozenLifetimeDistribution):
             self.nb_assets = distribution.nb_assets
 
     @property
@@ -238,7 +233,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        distribution: LifetimeDistribution,
+        distribution: LifetimeDistribution[()],
         cf: NumericalArrayLike,
         *,
         discounting_rate: Optional[float] = None,
@@ -334,7 +329,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     Parameters
     ----------
-    distribution : LifetimeDistribution
+    distribution : LifetimeDistribution[()]
         The lifetime distribution of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
@@ -366,7 +361,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        distribution: LifetimeDistribution,
+        distribution: LifetimeDistribution[()],
         cf: NumericalArrayLike,
         cp: NumericalArrayLike,
         *,
@@ -526,7 +521,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        distribution: LifetimeDistribution,
+        distribution: LifetimeDistribution[()],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
@@ -534,7 +529,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         ar: float | NDArray[np.float64] = None,
         ar1: float | NDArray[np.float64] = None,
         a0: Optional[float | NDArray[np.float64]] = None,
-        distribution1: Optional[LifetimeDistribution] = None,
+        distribution1: Optional[LifetimeDistribution[()]] = None,
     ) -> None:
         super().__init__(distribution, distribution1, discounting_rate)
 
