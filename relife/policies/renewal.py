@@ -14,8 +14,8 @@ from relife.economics.rewards import (
 from relife.processes import NonHomogeneousPoissonProcess, RenewalRewardProcess
 from relife.processes.renewal import reward_partial_expectation
 from relife.quadratures import gauss_legendre
-from ..distributions.abc import FrozenLifetimeDistribution
 from ..distributions.protocols import LifetimeDistribution
+from ..distributions.univariates import UnivariateLifetimeDistribution
 from ..parametric import LeftTruncatedDistribution, AgeReplacementDistribution
 
 NumericalArrayLike = NewType(
@@ -42,7 +42,7 @@ class RenewalPolicy:
         self.distribution1 = distribution1
         self.discounting = exp_discounting(discounting_rate)
         self.nb_assets = None
-        if isinstance(distribution, FrozenLifetimeDistribution):
+        if isinstance(distribution, UnivariateLifetimeDistribution):
             self.nb_assets = distribution.nb_assets
 
     @property
@@ -631,7 +631,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         if np.size(x0) == 1:
             x0 = np.tile(x0, (self.nb_assets, 1))
 
-        if isinstance(self.distribution, FrozenLifetimeDistribution):
+        if isinstance(self.distribution, UnivariateLifetimeDistribution):
             ndim = max(
                 map(np.ndim, (cf_3d, cp_3d, *self.distribution.z)),
                 default=0,

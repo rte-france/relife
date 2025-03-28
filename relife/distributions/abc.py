@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Optional, Callable, TypeVarTuple, NewType
+from typing import Generic, Optional, Callable, TypeVarTuple, NewType, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.decorators import isbroadcastable
 from relife.distributions.protocols import LifetimeDistribution
+from relife.distributions.univariates import UnivariateLifetimeDistribution
 from relife.plots import PlotConstructor, PlotSurvivalFunc
 from relife.quadratures import gauss_legendre, quad_laguerre
 
@@ -311,102 +311,7 @@ class SurvivalABC(Generic[*Z], ABC):
 
     def freeze_zvariables(
         self, *z: *Z
-    ) -> LifetimeDistribution[()]:  # is equivalent to FrozenLifetimeModel[*Z]
-        return FrozenLifetimeDistribution(self, *z)
-
-
-def _reshape(*z: *Z):
-    nb_assets = 1  # minimum value
-    for arr in z:
-        arr = np.asarray(arr)
-        if arr.ndim > 2:
-            raise ValueError("Number of dimension can't be higher than 2 in zvariables")
-        if arr.size == 1:
-            yield np.squeeze(arr).item()  # yield float
-        else:
-            arr = arr.reshape(-1, 1)
-            if (
-                nb_assets != 1 and arr.shape[0] != nb_assets
-            ):  # test if nb assets changed
-                raise ValueError("Different number of assets are given in zvariables")
-            else:  # update nb_assets
-                nb_assets = arr.shape[0]
-            yield arr.reshape(-1, 1)
-
-
-class FrozenLifetimeDistribution(Generic[*Z]):
-
-    univariate: bool = True
-
-    def __init__(
-        self,
-        baseline: LifetimeDistribution[*Z],
-        *z: *Z,
-    ):
-        self.baseline = baseline
-        self.z = tuple(_reshape(*z))
-        self.nb_assets = max(
-            map(lambda x: x.shape[0] if isinstance(x, np.ndarray) else 1, iter(self.z)),
-            default=1,
-        )
-
-    @isbroadcastable("time")
-    def hf(self, time: T) -> NDArray[np.float64]:
-        return self.baseline.hf(time, *self.z)
-
-    @isbroadcastable("time")
-    def chf(self, time: T) -> NDArray[np.float64]:
-        return self.baseline.chf(time, *self.z)
-
-    @isbroadcastable("time")
-    def sf(self, time: T) -> NDArray[np.float64]:
-        return self.baseline.sf(time, *self.z)
-
-    @isbroadcastable("time")
-    def pdf(self, time: T) -> NDArray[np.float64]:
-        return self.baseline.pdf(time, *self.z)
-
-    @isbroadcastable("time")
-    def mrl(self, time: T) -> NDArray[np.float64]:
-        return self.baseline.mrl(time, *self.z)
-
-    def moment(self, n: int) -> NDArray[np.float64]:
-        return self.baseline.moment(n)
-
-    def mean(self) -> NDArray[np.float64]:
-        return self.baseline.moment(1, *self.z)
-
-    def var(self) -> NDArray[np.float64]:
-        return self.baseline.moment(2, *self.z) - self.baseline.moment(1, *self.z) ** 2
-
-    @isbroadcastable("probability")
-    def isf(self, probability: float | NDArray[np.float64]):
-        return self.baseline.isf(probability, *self.z)
-
-    @isbroadcastable("cumulative_hazard_rate")
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
-        return self.baseline.ichf(cumulative_hazard_rate, *self.z)
-
-    @isbroadcastable("time")
-    def cdf(self, time: T) -> NDArray[np.float64]:
-        return self.baseline.cdf(time, *self.z)
-
-    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
-        return self.baseline.rvs(*self.z, size=size, seed=seed)
-
-    @isbroadcastable("probability")
-    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.ppf(probability, *self.z)
-
-    def median(self) -> NDArray[np.float64]:
-        return self.baseline.median(*self.z)
-
-    def ls_integrate(
-        self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        deg: int = 100,
-    ) -> NDArray[np.float64]:
-
-        return self.baseline.ls_integrate(func, a, b, deg, *self.z)
+    ) -> Union[
+        UnivariateLifetimeDistribution[*Z], LifetimeDistribution[()]
+    ]:  # both return type are equivalent
+        return UnivariateLifetimeDistribution(self, *z)

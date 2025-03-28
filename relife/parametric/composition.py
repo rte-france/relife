@@ -7,10 +7,10 @@ from typing_extensions import override
 
 from relife.distributions.abc import (
     SurvivalABC,
-    FrozenLifetimeDistribution,
 )
 from relife.distributions.parameters import Parametric
 from relife.distributions.protocols import LifetimeDistribution
+from relife.distributions.univariates import UnivariateLifetimeDistribution
 from relife.quadratures import gauss_legendre
 
 Z = TypeVarTuple("Z")
@@ -186,7 +186,7 @@ class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
 
     @override
     def freeze_zvariables(self, ar: Ar, *z: *Z) -> LifetimeDistribution[()]:
-        return FrozenLifetimeDistribution(self, *(ar, *z))
+        return UnivariateLifetimeDistribution(self, *(ar, *z))
 
 
 class LeftTruncatedDistribution(Parametric, SurvivalABC[A0, *Z]):
@@ -270,7 +270,7 @@ class LeftTruncatedDistribution(Parametric, SurvivalABC[A0, *Z]):
 
     @override
     def freeze_zvariables(self, a0: A0, *z: *Z) -> LifetimeDistribution[()]:
-        return FrozenLifetimeDistribution(self, *(a0, *z))
+        return UnivariateLifetimeDistribution(self, *(a0, *z))
 
 
 class EquilibriumDistribution(Parametric, SurvivalABC[*Z]):

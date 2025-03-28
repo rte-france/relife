@@ -1,30 +1,23 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Iterator
-from typing import Optional, NewType
+from typing import Optional, NewType, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.distributions.abc import FrozenLifetimeDistribution
-from relife.distributions.protocols import (
-    LifetimeDistribution,
-    ParametricLifetimeDistribution,
-)
+from relife.distributions.univariates import UnivariateLifetimeDistribution
 from relife.economics.rewards import Discounting, Rewards
-from relife.parametric.composition import (
-    AgeReplacementDistribution,
-    LeftTruncatedDistribution,
-)
-from relife.parametric.distributions import Exponential, Distribution
+from relife.parametric.distributions import Exponential
 
+Z = TypeVarTuple("Z")
 AnyNDArray = NewType(
     "AnyNDArray", NDArray[np.floating] | NDArray[np.integer] | NDArray[np.bool_]
 )
 
 
-class SampleIterator(Iterator, ABC):
+class SampleIterator(Iterator[*Z]):
 
-    distribution: Optional[LifetimeDistribution[()]]
+    distribution: Optional[UnivariateLifetimeDistribution[*Z]]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]
 
@@ -47,7 +40,6 @@ class SampleIterator(Iterator, ABC):
 
         # hidden attributes, control set/get interface
         self.distribution = None
-        self.nb_assets = 1  # default value
 
         self.start_counter = None
         self.stop_counter = None
@@ -98,13 +90,13 @@ class SampleIterator(Iterator, ABC):
         raise StopIteration
 
 
-def _get_nb_assets(distribution: LifetimeDistribution[()]) -> int:
-    if isinstance(distribution, Distribution):
-        return 1
-    elif isinstance(distribution, FrozenLifetimeDistribution):
-        return distribution.nb_assets
-    else:
-        return 1
+# def _get_nb_assets(distribution: LifetimeDistribution[()]) -> int:
+#     if isinstance(distribution, Distribution):
+#         return 1
+#     elif isinstance(distribution, UnivariateLifetimeDistribution):
+#         return distribution.nb_assets
+#     else:
+#         return 1
 
 
 class LifetimeIterator(SampleIterator):
@@ -131,32 +123,21 @@ class LifetimeIterator(SampleIterator):
 
     def set_distribution(
         self,
-        distribution: LifetimeDistribution[()],
+        distribution: UnivariateLifetimeDistribution[*Z],
     ) -> None:
 
-        if isinstance(distribution, FrozenLifetimeDistribution):
-            self.nb_assets = distribution.nb_assets
-
         if self.distribution is None:
-            self.timeline = np.zeros((self.nb_assets, self.size))
-            self.stop_counter = np.zeros((self.nb_assets, self.size), dtype=np.int64)
-            self.start_counter = np.zeros((self.nb_assets, self.size), dtype=np.int64)
+            self.timeline = np.zeros((distribution.nb_assets, self.size))
+            self.stop_counter = np.zeros(
+                (distribution.nb_assets, self.size), dtype=np.int64
+            )
+            self.start_counter = np.zeros(
+                (distribution.nb_assets, self.size), dtype=np.int64
+            )
 
-        ar = None
-        a0 = None
-        if isinstance(distribution, AgeReplacementDistribution):
-            ar = model_args[0].copy()
-            if isinstance(distribution, LeftTruncatedDistribution):
-                a0 = model_args[1].copy()
-        elif isinstance(distribution, LeftTruncatedDistribution):
-            a0 = model_args[0].copy()
-            if isinstance(distribution, AgeReplacementDistribution):
-                ar = model_args[1].copy()
-
-        self.model = model
-        self.model_args = model_args
-        self.a0 = a0
-        self.ar = ar
+        self.distribution = distribution
+        self.ar = getattr(distribution, "ar", None)  # see distributions.univariates
+        self.a0 = getattr(distribution, "a0", None)
 
     def compute_rewards(
         self, timeline: NDArray[np.float64], durations: NDArray[np.float64]
@@ -170,14 +151,14 @@ class LifetimeIterator(SampleIterator):
 
     def step(self) -> dict[str, AnyNDArray]:
 
-        durations = self.model.rvs(
-            *self.model_args,
+        durations = self.distribution.rvs(
+            *self.distribution.zvalues,
             size=self.size,
             seed=self.seed,
         ).reshape((-1, self.size))
-        if durations.shape != (self.nb_assets, self.size):
+        if durations.shape != (self.distribution.nb_assets, self.size):
             # sometimes, model1 has n assets but not model
-            durations = np.tile(durations, (self.nb_assets, 1))
+            durations = np.tile(durations, (self.distribution.nb_assets, 1))
 
         # create events_indicators and entries
         events_indicators = np.ones_like(self.timeline, dtype=np.bool_)
@@ -242,14 +223,11 @@ class NonHomogeneousPoissonIterator(SampleIterator):
         size: int,
         tf: float,  # calendar end time
         t0: float = 0.0,  # calendar beginning time
-        nb_assets: int = 1,
         *,
         seed: Optional[int] = None,
         keep_last: bool = True,
     ):
-        super().__init__(
-            size, tf, t0, nb_assets=nb_assets, seed=seed, keep_last=keep_last
-        )
+        super().__init__(size, tf, t0, seed=seed, keep_last=keep_last)
 
         self.rewards = None
         self.discounting = None

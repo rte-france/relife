@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any, NewType, TypeVarTuple
+from typing import Optional, Any, NewType, TypeVarTuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -17,13 +17,13 @@ from typing_extensions import override
 from relife.data import LifetimeData
 from relife.distributions.abc import (
     SurvivalABC,
-    FrozenLifetimeDistribution,
 )
 from relife.distributions.parameters import Parametric
 from relife.distributions.protocols import (
     FittableLifetimeDistribution,
     LifetimeDistribution,
 )
+from relife.distributions.univariates import UnivariateRegression
 from relife.likelihoods.mle import maximum_likelihood_estimation, FittingResults
 
 Z = TypeVarTuple("Z")
@@ -317,9 +317,11 @@ class Regression(Parametric, SurvivalABC[Covar, *Z], ABC):
         ) * self.hf(time, covar, *z)
 
     @override
-    def freeze_zvariables(self, covar: Covar, *z: *Z) -> LifetimeDistribution[()]:
+    def freeze_zvariables(
+        self, covar: Covar, *z: *Z
+    ) -> Union[UnivariateRegression[*Z], LifetimeDistribution[()]]:
         covar = np.atleast_2d(covar)
-        return FrozenLifetimeDistribution(self, *(covar, *z))
+        return UnivariateRegression(self, *(covar, *z))
 
     def fit(
         self,

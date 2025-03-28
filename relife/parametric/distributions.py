@@ -10,10 +10,10 @@ from typing_extensions import override
 from relife.data import LifetimeData
 from relife.distributions.abc import (
     SurvivalABC,
-    FrozenLifetimeDistribution,
 )
 from relife.distributions.parameters import Parametric
 from relife.distributions.protocols import LifetimeDistribution
+from relife.distributions.univariates import UnivariateLifetimeDistribution
 from relife.likelihoods.mle import FittingResults, maximum_likelihood_estimation
 from relife.quadratures import shifted_laguerre
 
@@ -158,7 +158,7 @@ class Distribution(Parametric, SurvivalABC[()], ABC):
 
     @override
     def freeze_zvariables(self) -> LifetimeDistribution[()]:
-        return FrozenLifetimeDistribution(self)
+        return UnivariateLifetimeDistribution(self)
 
     def fit(
         self,

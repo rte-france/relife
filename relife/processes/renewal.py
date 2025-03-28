@@ -6,8 +6,8 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.data import CountData
-from relife.distributions.abc import FrozenLifetimeDistribution
 from relife.distributions.protocols import LifetimeDistribution
+from relife.distributions.univariates import UnivariateLifetimeDistribution
 from relife.economics.rewards import Discounting, exp_discounting
 
 
@@ -155,7 +155,7 @@ def reward_partial_expectation(
 
     ls = distribution.ls_integrate(func, np.zeros_like(timeline), timeline)
     # reshape 2d -> final_dim
-    if isinstance(distribution, FrozenLifetimeDistribution):
+    if isinstance(distribution, UnivariateLifetimeDistribution):
         ndim = max(map(np.ndim, (timeline, *distribution.z)), default=0)
     else:
         ndim = np.ndim(timeline)
