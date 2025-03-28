@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Union, NewType, TypeVarTuple
+from typing import Optional, Any, NewType, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,20 +15,23 @@ from scipy.optimize import Bounds
 from typing_extensions import override
 
 from relife.data import LifetimeData
-from relife.distributions.mixins import ParametricMixin, LifetimeMixin
-from relife.distributions.protocols import ParametricLifetimeDistribution
+from relife.distributions.abc import (
+    LifetimeDistributionABC,
+    FrozenLifetimeDistribution,
+)
+from relife.distributions.parameters import Parametric
+from relife.distributions.protocols import (
+    FittableLifetimeDistribution,
+    LifetimeDistribution,
+)
 from relife.likelihoods.mle import maximum_likelihood_estimation, FittingResults
 
 Z = TypeVarTuple("Z")
 T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 Covar = NewType("Covar", NDArray[np.floating] | NDArray[np.integer] | float | int)
-NumericalArrayLike = NewType(
-    "Args",
-    Union[NDArray[np.floating], NDArray[np.integer], float, int],
-)
 
 
-class CovarEffect(ParametricMixin):
+class CovarEffect(Parametric):
     """
     Covariates effect.
 
@@ -87,20 +90,24 @@ class CovarEffect(ParametricMixin):
 
 
 # type is ParametricLifetimeModel[Covar, *Z] or LifetimeModel[Covar, *Z]
-class Regression(ParametricMixin, LifetimeMixin[Covar, *Z], ABC):
+class Regression(Parametric, LifetimeDistributionABC[Covar, *Z], ABC):
     """
     Base class for regression distributions.
     """
 
-    baseline: ParametricLifetimeDistribution[*Z]
+    baseline: FittableLifetimeDistribution[*Z]
     covar_effect: CovarEffect
 
     def __init__(
         self,
-        baseline: ParametricLifetimeDistribution[*Z],
+        baseline: FittableLifetimeDistribution[*Z],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__()
+        if not isinstance(baseline, FittableLifetimeDistribution):
+            raise ValueError(
+                "Invalid baseline : must be FittableLifetimeDistribution object."
+            )
         self.compose_with(
             covar_effect=CovarEffect(coef),
             baseline=baseline,
@@ -109,7 +116,7 @@ class Regression(ParametricMixin, LifetimeMixin[Covar, *Z], ABC):
     def init_params(
         self,
         lifetime_data: LifetimeData,
-        covar: NumericalArrayLike,
+        covar: Covar,
         *z: *Z,
     ) -> None:
         """
@@ -309,6 +316,11 @@ class Regression(ParametricMixin, LifetimeMixin[Covar, *Z], ABC):
             time, covar, *z
         ) * self.hf(time, covar, *z)
 
+    @override
+    def freeze_zvariables(self, covar: Covar, *z: *Z) -> LifetimeDistribution[()]:
+        covar = np.atleast_2d(covar)
+        return FrozenLifetimeDistribution(self, *(covar, *z))
+
     def fit(
         self,
         time: NDArray[np.float64],
@@ -354,7 +366,7 @@ class ProportionalHazard(Regression[*Z]):
 
     Parameters
     ----------
-    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
+    baseline : :py:class:`~relife.models.protocols.FittableLifetimeDistribution`
         Any parametric lifetime model to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
@@ -366,7 +378,7 @@ class ProportionalHazard(Regression[*Z]):
         The model parameters (both baseline parameters and covariate effects parameters).
     params_names : np.ndarray
         The model parameters (both baseline parameters and covariate effects parameters).
-    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
+    baseline : :py:class:`~relife.models.protocols.FittableLifetimeDistribution`
         The regression baseline model.
     covar_effect : :py:class:`~relife.distributions.regression.CovarEffect`
         The regression covariate effect.
@@ -385,7 +397,7 @@ class ProportionalHazard(Regression[*Z]):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeDistribution[*Z],
+        baseline: FittableLifetimeDistribution[*Z],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
@@ -423,12 +435,14 @@ class ProportionalHazard(Regression[*Z]):
         covar: Covar,
         *z: *Z,
     ) -> NDArray[np.float64]:
-        return np.column_stack(
-            (
-                self.covar_effect.jac_g(covar) * self.baseline.hf(time, *z),
-                self.covar_effect.g(covar) * self.baseline.jac_hf(time, *z),
+        if hasattr(self.baseline, "jac_hf"):
+            return np.column_stack(
+                (
+                    self.covar_effect.jac_g(covar) * self.baseline.hf(time, *z),
+                    self.covar_effect.g(covar) * self.baseline.jac_hf(time, *z),
+                )
             )
-        )
+        raise AttributeError
 
     def jac_chf(
         self,
@@ -436,12 +450,14 @@ class ProportionalHazard(Regression[*Z]):
         covar: Covar,
         *z: *Z,
     ) -> NDArray[np.float64]:
-        return np.column_stack(
-            (
-                self.covar_effect.jac_g(covar) * self.baseline.chf(time, *z),
-                self.covar_effect.g(covar) * self.baseline.jac_chf(time, *z),
+        if hasattr(self.baseline, "jac_chf"):
+            return np.column_stack(
+                (
+                    self.covar_effect.jac_g(covar) * self.baseline.chf(time, *z),
+                    self.covar_effect.g(covar) * self.baseline.jac_chf(time, *z),
+                )
             )
-        )
+        raise AttributeError
 
     def dhf(
         self,
@@ -449,7 +465,9 @@ class ProportionalHazard(Regression[*Z]):
         covar: Covar,
         *z: *Z,
     ) -> NDArray[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.dhf(time, *z)
+        if hasattr(self.baseline, "dhf"):
+            return self.covar_effect.g(covar) * self.baseline.dhf(time, *z)
+        raise AttributeError
 
 
 class AFT(Regression[*Z]):
@@ -472,7 +490,7 @@ class AFT(Regression[*Z]):
 
     Parameters
     ----------
-    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
+    baseline : :py:class:`~relife.models.protocols.FittableLifetimeDistribution`
         Any parametric lifetime model to serve as the baseline.
     coef : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
@@ -483,7 +501,7 @@ class AFT(Regression[*Z]):
         The model parameters (both baseline parameters and covariate effects parameters).
     params_names : np.ndarray
         The model parameters (both baseline parameters and covariate effects parameters).
-    baseline : :py:class:`~relife.models.protocols.ParametricLifetimeDistribution`
+    baseline : :py:class:`~relife.models.protocols.FittableLifetimeDistribution`
         The regression baseline model.
     covar_effect : :py:class:`~relife.distributions.regression.CovarEffect`
         The regression covariate effect.
@@ -500,7 +518,7 @@ class AFT(Regression[*Z]):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeDistribution[*Z],
+        baseline: FittableLifetimeDistribution[*Z],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
@@ -540,15 +558,17 @@ class AFT(Regression[*Z]):
         covar: Covar,
         *z: *Z,
     ) -> NDArray[np.float64]:
-        t0 = time / self.covar_effect.g(covar)
-        return np.column_stack(
-            (
-                -self.covar_effect.jac_g(covar)
-                / self.covar_effect.g(covar) ** 2
-                * (self.baseline.hf(t0, *z) + t0 * self.baseline.dhf(t0, *z)),
-                self.baseline.jac_hf(t0, *z) / self.covar_effect.g(covar),
+        if hasattr(self.baseline, "jac_hf") and hasattr(self.baseline, "dhf"):
+            t0 = time / self.covar_effect.g(covar)
+            return np.column_stack(
+                (
+                    -self.covar_effect.jac_g(covar)
+                    / self.covar_effect.g(covar) ** 2
+                    * (self.baseline.hf(t0, *z) + t0 * self.baseline.dhf(t0, *z)),
+                    self.baseline.jac_hf(t0, *z) / self.covar_effect.g(covar),
+                )
             )
-        )
+        raise AttributeError
 
     def jac_chf(
         self,
@@ -556,16 +576,18 @@ class AFT(Regression[*Z]):
         covar: Covar,
         *z: *Z,
     ) -> NDArray[np.float64]:
-        t0 = time / self.covar_effect.g(covar)
-        return np.column_stack(
-            (
-                -self.covar_effect.jac_g(covar)
-                / self.covar_effect.g(covar)
-                * t0
-                * self.baseline.hf(t0, *z),
-                self.baseline.jac_chf(t0, *z),
+        if hasattr(self.baseline, "jac_chf"):
+            t0 = time / self.covar_effect.g(covar)
+            return np.column_stack(
+                (
+                    -self.covar_effect.jac_g(covar)
+                    / self.covar_effect.g(covar)
+                    * t0
+                    * self.baseline.hf(t0, *z),
+                    self.baseline.jac_chf(t0, *z),
+                )
             )
-        )
+        raise AttributeError
 
     def dhf(
         self,
@@ -573,8 +595,10 @@ class AFT(Regression[*Z]):
         covar: Covar,
         *z: *Z,
     ) -> NDArray[np.float64]:
-        t0 = time / self.covar_effect.g(covar)
-        return self.baseline.dhf(t0, *z) / self.covar_effect.g(covar) ** 2
+        if hasattr(self.baseline, "dhf"):
+            t0 = time / self.covar_effect.g(covar)
+            return self.baseline.dhf(t0, *z) / self.covar_effect.g(covar) ** 2
+        raise AttributeError
 
 
 TIME_BASE_DOCSTRING = """

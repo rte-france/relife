@@ -5,7 +5,11 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.distributions.mixins import LifetimeMixin
+from relife.distributions.abc import (
+    LifetimeDistributionABC,
+    FrozenLifetimeDistribution,
+)
+from relife.distributions.parameters import Parametric
 from relife.distributions.protocols import LifetimeDistribution
 from relife.quadratures import gauss_legendre
 
@@ -15,7 +19,7 @@ A0 = NewType("A0", NDArray[np.floating] | NDArray[np.integer] | float | int)
 Ar = NewType("Ar", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
-class AgeReplacementModel(LifetimeMixin[Ar, *Z]):
+class AgeReplacementDistribution(Parametric, LifetimeDistributionABC[Ar, *Z]):
     r"""
     Age replacement core.
 
@@ -33,7 +37,8 @@ class AgeReplacementModel(LifetimeMixin[Ar, *Z]):
     """
 
     def __init__(self, baseline: LifetimeDistribution[*Z]):
-        self.baseline = baseline
+        super().__init__()
+        self.compose_with(baseline=baseline)
 
     def sf(
         self,
@@ -179,8 +184,12 @@ class AgeReplacementModel(LifetimeMixin[Ar, *Z]):
         w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *z_2d), 0)
         return gauss_legendre(integrand, a, b, *z_2d, ndim=2, deg=deg) + w
 
+    @override
+    def freeze_zvariables(self, ar: Ar, *z: *Z) -> LifetimeDistribution[()]:
+        return FrozenLifetimeDistribution(self, *(ar, *z))
 
-class LeftTruncatedModel(LifetimeMixin[A0, *Z]):
+
+class LeftTruncatedDistribution(Parametric, LifetimeDistributionABC[A0, *Z]):
     r"""Left truncated core.
 
     Conditional distribution of the lifetime core for an asset having reach age :math:`a_0`.
@@ -192,7 +201,8 @@ class LeftTruncatedModel(LifetimeMixin[A0, *Z]):
     """
 
     def __init__(self, baseline: LifetimeDistribution[*Z]):
-        self.baseline = baseline
+        super().__init__()
+        self.compose_with(baseline=baseline)
 
     # TODO : correct formula ? if not, does LeftTruncatedModel have to be LifetimeModel ?
     def sf(
@@ -258,8 +268,12 @@ class LeftTruncatedModel(LifetimeMixin[A0, *Z]):
     ) -> NDArray[np.float64]:
         return super().rvs(*(a0, *z), size=size, seed=seed)
 
+    @override
+    def freeze_zvariables(self, a0: A0, *z: *Z) -> LifetimeDistribution[()]:
+        return FrozenLifetimeDistribution(self, *(a0, *z))
 
-class EquilibriumDistribution(LifetimeMixin[*Z]):
+
+class EquilibriumDistribution(Parametric, LifetimeDistributionABC[*Z]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
@@ -277,7 +291,7 @@ class EquilibriumDistribution(LifetimeMixin[*Z]):
 
     def __init__(self, baseline: LifetimeDistribution[*Z]):
         super().__init__()
-        self.baseline = baseline
+        self.compose_with(baseline=baseline)
 
     def sf(self, time: T, *z: *Z) -> NDArray[np.float64]:
         return 1 - self.cdf(time, *z)

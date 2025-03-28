@@ -8,7 +8,12 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.data import LifetimeData
-from relife.distributions.mixins import ParametricMixin, LifetimeMixin
+from relife.distributions.abc import (
+    LifetimeDistributionABC,
+    FrozenLifetimeDistribution,
+)
+from relife.distributions.parameters import Parametric
+from relife.distributions.protocols import LifetimeDistribution
 from relife.likelihoods.mle import FittingResults, maximum_likelihood_estimation
 from relife.quadratures import shifted_laguerre
 
@@ -16,7 +21,7 @@ T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
 # type is ParametricLifetimeModel[()] or LifetimeModel[()]
-class Distribution(ParametricMixin, LifetimeMixin[()], ABC):
+class Distribution(Parametric, LifetimeDistributionABC[()], ABC):
     """
     Base class for distribution distributions.
     """
@@ -148,6 +153,10 @@ class Distribution(ParametricMixin, LifetimeMixin[()], ABC):
 
     def jac_pdf(self, time: T) -> NDArray[np.float64]:
         return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
+
+    @override
+    def freeze_zvariables(self) -> LifetimeDistribution[()]:
+        return FrozenLifetimeDistribution(self)
 
     def fit(
         self,

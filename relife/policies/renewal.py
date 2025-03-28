@@ -14,7 +14,7 @@ from relife.economics.rewards import (
 from relife.processes import NonHomogeneousPoissonProcess, RenewalRewardProcess
 from relife.processes.renewal import reward_partial_expectation
 from relife.quadratures import gauss_legendre
-from ..distributions.mixins import FrozenLifetimeDistribution
+from ..distributions.abc import FrozenLifetimeDistribution
 from ..distributions.protocols import LifetimeDistribution
 
 NumericalArrayLike = NewType(

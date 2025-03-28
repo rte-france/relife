@@ -19,7 +19,6 @@ from relife.policies import (
 )
 from relife.processes import (
     NonHomogeneousPoissonProcess,
-    NonHomogeneousPoissonProcessWithRewards,
     RenewalRewardProcess,
 )
 from relife.processes.renewal import RenewalProcess
@@ -82,10 +81,10 @@ def _(
 
     stack = None
     if obj.distribution1 is not None:
-        iterator.set_sampler(obj.distribution1, obj.model1_args)
+        iterator.set_distribution(obj.distribution1, obj.model1_args)
         stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
 
-    iterator.set_sampler(obj.distribution, obj.model_args)
+    iterator.set_distribution(obj.distribution, obj.model_args)
     if isinstance(obj, RenewalRewardProcess):
         iterator.rewards = obj.rewards
 
@@ -111,7 +110,7 @@ def _(
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.rewards = run_to_failure_rewards(obj.cf)
     iterator.discounting = obj.discounting
-    iterator.set_sampler(obj.model, obj.model_args)
+    iterator.set_distribution(obj.model, obj.model_args)
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
 
@@ -135,7 +134,7 @@ def _(
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
     iterator.rewards = age_replacement_rewards(obj.ar, obj.cf, obj.cp)
     iterator.discounting = obj.discounting
-    iterator.set_sampler(obj.model, obj.model_args)
+    iterator.set_distribution(obj.model, obj.model_args)
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
 
@@ -269,7 +268,7 @@ def _(
     )
 
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
-    iterator.set_sampler(obj.distribution, obj.model_args)
+    iterator.set_distribution(obj.distribution, obj.model_args)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)
     model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in model_args))
@@ -295,7 +294,7 @@ def _(
         )
 
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
-    iterator.set_sampler(obj.model, obj.model_args)
+    iterator.set_distribution(obj.model, obj.model_args)
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
     model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in obj.model_args))
@@ -320,7 +319,7 @@ def _(
     )
 
     iterator = LifetimeIterator(size, tf, t0, nb_assets=obj.nb_assets, seed=seed)
-    iterator.set_sampler(model, model_args)
+    iterator.set_distribution(model, model_args)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)
     model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in model_args))

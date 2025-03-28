@@ -1,24 +1,30 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from typing import Optional
+from typing import Optional, NewType
 
 import numpy as np
 from numpy.typing import NDArray
-from relife.core import Parametric, ParametricLifetimeModel
-from relife.types import NumericalArrayLike, NDArrayOfAny
 
-from relife.distributions import (
-    AgeReplacementModel,
-    Exponential,
-    LeftTruncatedModel,
+from relife.distributions.abc import FrozenLifetimeDistribution
+from relife.distributions.protocols import (
+    LifetimeDistribution,
+    ParametricLifetimeDistribution,
 )
 from relife.economics.rewards import Discounting, Rewards
+from relife.parametric.composition import (
+    AgeReplacementDistribution,
+    LeftTruncatedDistribution,
+)
+from relife.parametric.distributions import Exponential, Distribution
+
+AnyNDArray = NewType(
+    "AnyNDArray", NDArray[np.floating] | NDArray[np.integer] | NDArray[np.bool_]
+)
 
 
 class SampleIterator(Iterator, ABC):
 
-    model: Optional[Parametric]
-    model_args: Optional[tuple[NumericalArrayLike, ...]]
+    distribution: Optional[LifetimeDistribution[()]]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]
 
@@ -27,7 +33,6 @@ class SampleIterator(Iterator, ABC):
         size: int,  # nb samples
         tf: float,  # calendar end time
         t0: float = 0.0,  # calendar beginning time
-        nb_assets: int = 1,
         *,
         seed: Optional[int] = None,
         keep_last: bool = True,
@@ -41,9 +46,8 @@ class SampleIterator(Iterator, ABC):
         self.timeline = None  # exposed attribute (set/get)
 
         # hidden attributes, control set/get interface
-        self.model = None
-        self.model_args = None
-        self.nb_assets = nb_assets
+        self.distribution = None
+        self.nb_assets = None
 
         self.start_counter = None
         self.stop_counter = None
@@ -64,7 +68,7 @@ class SampleIterator(Iterator, ABC):
         if self.stop_counter is not None:
             return self.stop_counter == 1
 
-    def select_1d(self, **kwvalues: NDArrayOfAny) -> dict[str, NDArrayOfAny]:
+    def select_1d(self, **kwvalues: AnyNDArray) -> dict[str, AnyNDArray]:
         output_dict = {}
         if self.keep_last:
             selection = np.logical_and(self.start_counter >= 1, self.stop_counter <= 1)
@@ -83,15 +87,24 @@ class SampleIterator(Iterator, ABC):
         return output_dict
 
     @abstractmethod
-    def step(self) -> dict[str, NDArrayOfAny]:
+    def step(self) -> dict[str, AnyNDArray]:
         pass
 
-    def __next__(self) -> dict[str, NDArrayOfAny]:
-        if self.model is None:
+    def __next__(self) -> dict[str, AnyNDArray]:
+        if self.distribution is None:
             raise ValueError("Set sampler first")
         while not self.stop:
             return self.step()
         raise StopIteration
+
+
+def _get_nb_assets(distribution: LifetimeDistribution[()]) -> int:
+    if isinstance(distribution, Distribution):
+        return 1
+    elif isinstance(distribution, FrozenLifetimeDistribution):
+        return distribution.nb_assets
+    else:
+        return 1
 
 
 class LifetimeIterator(SampleIterator):
@@ -106,39 +119,35 @@ class LifetimeIterator(SampleIterator):
         size: int,
         tf: float,  # calendar end time
         t0: float = 0.0,  # calendar start time
-        nb_assets: int = 1,
         *,
         seed: Optional[int] = None,
         keep_last: bool = True,
     ):
-        super().__init__(
-            size, tf, t0, nb_assets=nb_assets, seed=seed, keep_last=keep_last
-        )
+        super().__init__(size, tf, t0, seed=seed, keep_last=keep_last)
         self.rewards = None
         self.discounting = None
         self.a0 = None
         self.ar = None
 
-    def set_sampler(
+    def set_distribution(
         self,
-        model: ParametricLifetimeModel,
-        model_args: tuple[NumericalArrayLike, ...] = (),
+        distribution: LifetimeDistribution[()],
     ) -> None:
 
-        if self.model is None:
+        if self.distribution is None:
             self.timeline = np.zeros((self.nb_assets, self.size))
             self.stop_counter = np.zeros((self.nb_assets, self.size), dtype=np.int64)
             self.start_counter = np.zeros((self.nb_assets, self.size), dtype=np.int64)
 
         ar = None
         a0 = None
-        if isinstance(model, AgeReplacementModel):
+        if isinstance(distribution, AgeReplacementDistribution):
             ar = model_args[0].copy()
-            if isinstance(model, LeftTruncatedModel):
+            if isinstance(distribution, LeftTruncatedDistribution):
                 a0 = model_args[1].copy()
-        elif isinstance(model, LeftTruncatedModel):
+        elif isinstance(distribution, LeftTruncatedDistribution):
             a0 = model_args[0].copy()
-            if isinstance(model, AgeReplacementModel):
+            if isinstance(distribution, AgeReplacementDistribution):
                 ar = model_args[1].copy()
 
         self.model = model
@@ -156,7 +165,7 @@ class LifetimeIterator(SampleIterator):
             rewards = self.rewards(durations)
         return rewards
 
-    def step(self) -> dict[str, NDArrayOfAny]:
+    def step(self) -> dict[str, AnyNDArray]:
 
         durations = self.model.rvs(
             *self.model_args,
@@ -262,14 +271,13 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             rewards = self.rewards(ages)
         return rewards
 
-    def set_sampler(
+    def set_distribution(
         self,
-        model: ParametricLifetimeModel,
-        model_args: tuple[NumericalArrayLike, ...] = (),
+        distribution: ParametricLifetimeDistribution[()],
         ar: Optional[NDArray[np.float64]] = None,
     ) -> None:
 
-        if self.model is None:
+        if self.distribution is None:
             # self._nb_assets = get_nb_assets(model_args)
             self.timeline = np.zeros((self.nb_assets, self.size))
             # counting arrays to catch values crossing t0 and tf bounds
@@ -283,13 +291,13 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             self.is_new_asset = np.zeros((self.nb_assets, self.size), dtype=np.bool_)
             self.renewals_ids = np.zeros((self.nb_assets, self.size), dtype=np.int64)
 
-        self.model = model
+        self.model = distribution
         self.model_args = model_args
         self.ar = (
             ar if ar is not None else (np.ones(self.nb_assets) * np.inf).reshape(-1, 1)
         )
 
-    def step(self) -> dict[str, NDArrayOfAny]:
+    def step(self) -> dict[str, AnyNDArray]:
 
         # reset those who are replaced
         self.ages[self.is_new_asset] = 0.0  # asset is replaced (0 aged asset)

@@ -7,7 +7,6 @@
 import numpy as np
 import pytest
 
-from relife.composition import AgeReplacementModel, EquilibriumDistribution
 from relife.distributions import (
     AFT,
     Gamma,
@@ -17,6 +16,10 @@ from relife.distributions import (
     Weibull,
 )
 from relife.economics.rewards import run_to_failure_rewards
+from relife.parametric.composition import (
+    AgeReplacementDistribution,
+    EquilibriumDistribution,
+)
 from relife.processes import RenewalProcess, RenewalRewardProcess
 
 
@@ -42,7 +45,7 @@ def regression(request):
     scope="module",
     params=[
         None,
-        AgeReplacementModel,
+        AgeReplacementDistribution,
     ],
 )
 def age_replacement_model(request):

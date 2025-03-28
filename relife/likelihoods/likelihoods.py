@@ -12,7 +12,7 @@ from relife.data import LifetimeData
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
     from relife.distributions.protocols import ParametricLifetimeDistribution
-    from relife.distributions.mixins import ParametricMixin
+    from relife.distributions.parameters import Parametric
 
 
 def hessian_cs(
@@ -82,7 +82,7 @@ def _hessian_scheme(obj: ParametricLifetimeDistribution):
 
 
 class Likelihood(Protocol):
-    model: ParametricMixin
+    model: Parametric
 
     @property
     def params(self) -> NDArray[np.float64]:  # read only property allowed with Protocol

@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.data import CountData
-from relife.distributions.protocols import ParametricLifetimeDistribution
+from relife.distributions.protocols import FittableLifetimeDistribution
 from relife.likelihoods.mle import FittingResults, maximum_likelihood_estimation
 from relife.plots import PlotConstructor, PlotNHPP
 
@@ -160,7 +160,7 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
 
     def __init__(
         self,
-        distribution: ParametricLifetimeDistribution[*Z],
+        distribution: FittableLifetimeDistribution[*Z],
     ):
         self.distribution = distribution
 
@@ -174,18 +174,27 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
         self,
         size: int,
         tf: float,
+        *z: *Z,
         t0: float = 0.0,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> CountData:
         from relife.sampling import sample_count_data
 
-        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+        return sample_count_data(
+            self.distribution.freeze_zvariables(*z),
+            size,
+            tf,
+            t0=t0,
+            maxsample=maxsample,
+            seed=seed,
+        )
 
     def failure_data_sample(
         self,
         size: int,
         tf: float,
+        *z: *Z,
         t0: float = 0.0,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
@@ -193,7 +202,13 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
         from relife.sampling import failure_data_sample
 
         return failure_data_sample(
-            self, size, tf, t0, maxsample=maxsample, seed=seed, use="model"
+            self.distribution.freeze_zvariables(*z),
+            size,
+            tf,
+            t0,
+            maxsample=maxsample,
+            seed=seed,
+            use="model",
         )
 
     @property

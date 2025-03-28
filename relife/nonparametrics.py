@@ -4,6 +4,7 @@ from typing import Optional, Self, Union
 import numpy as np
 from numpy.typing import NDArray
 
+import relife.distributions.abc
 from relife.data.lifetime import LifetimeData, lifetime_data_factory
 from relife.decorators import require_attributes
 from relife.distributions.protocols import NonParametricModel
@@ -399,18 +400,7 @@ class Turnbull(NonParametricModel):
         )
         timeline_len = len(timeline_temp)
         if not self.lowmem:
-            event_occurence = (
-                np.greater_equal.outer(
-                    timeline_temp[:-1],
-                    lifetime_data.interval_censoring.values[
-                        :, 0
-                    ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
-                )
-                * np.less_equal.outer(
-                    timeline_temp[1:],
-                    lifetime_data.interval_censoring.values[:, 1],
-                )
-            ).T
+            event_occurence = relife.distributions.abstractions.T
 
             s = self._estimate_with_high_memory(
                 lifetime_data,
@@ -536,9 +526,7 @@ class Turnbull(NonParametricModel):
 
             if np.any(event_occurence):
                 event_occurence_proba = event_occurence * p.T
-                d = (event_occurence_proba.T / event_occurence_proba.sum(axis=1)).T.sum(
-                    axis=0
-                )
+                d = relife.distributions.abstractions.T.sum(axis=0)
                 d += d_tilde
             else:
                 d = d_tilde
