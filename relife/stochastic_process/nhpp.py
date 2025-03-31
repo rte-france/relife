@@ -3,13 +3,18 @@ from typing import Any, Optional, Sequence, Union, NewType, Generic, TypeVarTupl
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.data import CountData
-from relife.distributions.protocols import FittableLifetimeDistribution
-from relife.likelihoods.mle import FittingResults, maximum_likelihood_estimation
+from relife.likelihood.mle import FittingResults, maximum_likelihood_estimation
+from relife.model import Parametric
+from relife.model.frozen import FrozenNonHomogeneousPoissonProcess
+from relife.model.protocol import ParametricLifetimeModel
 from relife.plots import PlotConstructor, PlotNHPP
+from relife.sampling import CountData
 
-Z = TypeVarTuple("Z")
+Ts = TypeVarTuple("Ts")
 T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
+ModelArgs = NewType(
+    "ModelArgs", NDArray[np.floating] | NDArray[np.integer] | float | int
+)
 
 
 # generic function
@@ -17,7 +22,7 @@ def nhpp_data_factory(
     events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
     ages: NDArray[np.float64],
     /,
-    *z: *Z,
+    *args: *Ts,
     assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
     first_ages: Optional[NDArray[np.float64]] = None,
     last_ages: Optional[NDArray[np.float64]] = None,
@@ -60,8 +65,8 @@ def nhpp_data_factory(
                 raise ValueError(
                     "Shape of assets_ids and end_ages must be equal. Expected equal length 1d-arrays"
                 )
-        if bool(z):
-            for arg in z:
+        if bool(args):
+            for arg in args:
                 arg = np.atleast_2d(np.asarray(arg, dtype=np.float64))
                 if arg.ndim > 2:
                     raise ValueError(
@@ -82,7 +87,7 @@ def nhpp_data_factory(
             raise ValueError(
                 "If end_ages is given, corresponding asset ids must be given in assets_ids"
             )
-        if bool(z):
+        if bool(args):
             raise ValueError(
                 "If model_args is given, corresponding asset ids must be given in assets_ids"
             )
@@ -116,7 +121,7 @@ def nhpp_data_factory(
         sort_ind = np.sort(assets_ids)
         first_ages = first_ages[sort_ind] if first_ages is not None else first_ages
         last_ages = last_ages[sort_ind] if last_ages is not None else last_ages
-        z = tuple((arg[sort_ind] for arg in z))
+        z = tuple((arg[sort_ind] for arg in args))
 
         if first_ages is not None:
             if np.any(ages[first_age_index] <= first_ages[nb_ages_per_asset != 0]):
@@ -156,37 +161,39 @@ def nhpp_data_factory(
     return time, event, entry, model_args
 
 
-class NonHomogeneousPoissonProcess(Generic[*Z]):
+class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
 
     def __init__(
         self,
-        distribution: FittableLifetimeDistribution[*Z],
+        baseline: ParametricLifetimeModel[*Ts],
     ):
-        if not isinstance(distribution, FittableLifetimeDistribution):
+        super().__init__()
+        self.compose_with(baseline=baseline)
+        if not isinstance(baseline, ParametricLifetimeModel):
             raise ValueError(
                 "Invalid distribution : must be FittableLifetimeDistribution object."
             )
-        self.distribution = distribution
+        self.baseline = baseline
 
-    def intensity(self, time: T, *z: *Z) -> NDArray[np.float64]:
-        return self.distribution.hf(time, *z)
+    def intensity(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+        return self.baseline.hf(time, *args)
 
-    def cumulative_intensity(self, time: T, *z: *Z) -> NDArray[np.float64]:
-        return self.distribution.chf(time, *z)
+    def cumulative_intensity(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+        return self.baseline.chf(time, *args)
 
     def sample(
         self,
         size: int,
         tf: float,
-        *z: *Z,
         t0: float = 0.0,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
+        **model_args: ModelArgs,
     ) -> CountData:
         from relife.sampling import sample_count_data
 
         return sample_count_data(
-            self.distribution.freeze_zvariables(*z),
+            self.baseline.freeze(**model_args),
             size,
             tf,
             t0=t0,
@@ -198,15 +205,15 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
         self,
         size: int,
         tf: float,
-        *z: *Z,
         t0: float = 0.0,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
+        **model_args: ModelArgs,
     ) -> tuple[NDArray[np.float64], ...]:
         from relife.sampling import failure_data_sample
 
         return failure_data_sample(
-            self.distribution.freeze_zvariables(*z),
+            self.baseline.freeze(**model_args),
             size,
             tf,
             t0,
@@ -214,6 +221,9 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
             seed=seed,
             use="model",
         )
+
+    def freeze(self, **kwargs: ModelArgs):
+        return FrozenNonHomogeneousPoissonProcess(self, **kwargs)
 
     @property
     def plot(self) -> PlotConstructor:
@@ -224,7 +234,7 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
         events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
         events_ages: NDArray[np.float64],
         /,
-        *z: *Z,
+        *args: *Ts,
         assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
         first_ages: Optional[NDArray[np.float64]] = None,
         last_ages: Optional[NDArray[np.float64]] = None,
@@ -234,15 +244,15 @@ class NonHomogeneousPoissonProcess(Generic[*Z]):
         time, event, entry, model_args = nhpp_data_factory(
             events_assets_ids,
             events_ages,
-            *z,
+            *args,
             assets_ids=assets_ids,
             first_ages=first_ages,
             last_ages=last_ages,
         )
         fitting_results = maximum_likelihood_estimation(
-            self.distribution, time, *model_args, event=event, entry=entry, **kwargs
+            self.baseline, time, *model_args, event=event, entry=entry, **kwargs
         )
-        self.distribution.params = fitting_results.params
+        self.baseline.params = fitting_results.params
         return fitting_results
 
 

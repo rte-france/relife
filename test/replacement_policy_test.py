@@ -7,7 +7,7 @@
 import numpy as np
 import pytest
 
-from relife.distributions import Gamma, Gompertz, LogLogistic, Weibull
+from relife.model import Gamma, Gompertz, LogLogistic, Weibull
 from relife.policies import (
     DefaultAgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,

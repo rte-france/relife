@@ -5,21 +5,24 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.distributions.abc import (
+from relife.model.abc import (
     SurvivalABC,
 )
-from relife.distributions.parameters import Parametric
-from relife.distributions.protocols import LifetimeDistribution
-from relife.distributions.univariates import UnivariateLifetimeDistribution
+from relife.model.frozen import FrozenLifetimeModel
+from relife.model.parameters import Parametric
+from relife.model.protocol import LifetimeModel
 from relife.quadratures import gauss_legendre
 
-Z = TypeVarTuple("Z")
+Ts = TypeVarTuple("Ts")
 T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 A0 = NewType("A0", NDArray[np.floating] | NDArray[np.integer] | float | int)
 Ar = NewType("Ar", NDArray[np.floating] | NDArray[np.integer] | float | int)
+ModelArgs = NewType(
+    "ModelArgs", NDArray[np.floating] | NDArray[np.integer] | float | int
+)
 
 
-class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
+class AgeReplacementModel(Parametric, SurvivalABC[Ar, *Ts]):
     r"""
     Age replacement core.
 
@@ -27,7 +30,7 @@ class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
 
     Parameters
     ----------
-    baseline : LifetimeDistribution
+    baseline : LifetimeModel
         Underlying lifetime core.
 
     Notes
@@ -36,7 +39,7 @@ class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
     :math:`X` is a baseline lifetime and ar the age of replacement.
     """
 
-    def __init__(self, baseline: LifetimeDistribution[*Z]):
+    def __init__(self, baseline: LifetimeModel[*Ts]):
         super().__init__()
         self.compose_with(baseline=baseline)
 
@@ -44,107 +47,107 @@ class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
         self,
         time: T,
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return np.where(time < ar, self.baseline.sf(time, *z), 0.0)
+        return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
     # TODO : check if correct formula
     def hf(
         self,
         time: T,
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
 
-        return np.where(time < ar, self.baseline.hf(time, *z), 0.0)
+        return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
     # TODO : check if correct formula
     def chf(
         self,
         time: T,
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return np.where(time < ar, self.baseline.chf(time, *z), 0.0)
+        return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     @override
     def isf(
         self,
         probability: NDArray[np.float64],
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return np.minimum(self.baseline.isf(probability, *z), ar)
+        return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
     def ichf(
         self,
         probability: NDArray[np.float64],
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return np.minimum(self.baseline.ichf(probability, *z), ar)
+        return np.minimum(self.baseline.ichf(probability, *args), ar)
 
     def pdf(
         self,
         time: T,
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return np.where(time < ar, self.baseline.pdf(time, *z), 0)
+        return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     @override
-    def moment(self, n: int, ar: Ar, *z: *Z) -> NDArray[np.float64]:
+    def moment(self, n: int, ar: Ar, *args: *Ts) -> NDArray[np.float64]:
         return self.ls_integrate(
             lambda x: x**n,
             np.array(0.0),
             np.array(np.inf),
             ar,
-            *z,
+            *args,
         )
 
     @override
-    def mean(self, ar: Ar, *z: *Z) -> NDArray[np.float64]:
-        return self.moment(1, ar, *z)
+    def mean(self, ar: Ar, *args: *Ts) -> NDArray[np.float64]:
+        return self.moment(1, ar, *args)
 
     @override
-    def var(self, ar: Ar, *z: *Z) -> NDArray[np.float64]:
-        return self.moment(2, ar, *z) - self.moment(1, ar, *z) ** 2
+    def var(self, ar: Ar, *args: *Ts) -> NDArray[np.float64]:
+        return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     def rvs(
         self,
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
         size: Optional[int] = 1,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
-        return np.minimum(self.baseline.rvs(*z, size=size, seed=seed), ar)
+        return np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
 
     def ppf(
         self,
         probability: float | NDArray[np.float64],
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return self.isf(1 - probability, ar, *z)
+        return self.isf(1 - probability, ar, *args)
 
-    def median(self, ar: Ar, *z: *Z) -> NDArray[np.float64]:
-        return self.ppf(np.array(0.5), ar, *z)
+    def median(self, ar: Ar, *args: *Ts) -> NDArray[np.float64]:
+        return self.ppf(np.array(0.5), ar, *args)
 
     def cdf(
         self,
         time: float | NDArray[np.float64],
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return np.where(time < ar, self.baseline.cdf(time, *z), 1.0)
+        return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
 
     @override
     def mrl(
         self,
         time: T,
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
         ub = np.array(np.inf)
         mask = time >= ar
@@ -152,8 +155,8 @@ class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)
             ub = np.ma.MaskedArray(ub, mask)
-        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *z) / self.sf(
-            time, ar, *z
+        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args) / self.sf(
+            time, ar, *args
         )
         return np.ma.filled(mu, 0)
 
@@ -164,7 +167,7 @@ class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
         a: NDArray[np.float64],
         b: NDArray[np.float64],
         ar: Ar,
-        *z: *Z,
+        *args: *Ts,
         ndim: int = 0,
         deg: int = 100,
     ) -> NDArray[np.float64]:
@@ -172,35 +175,35 @@ class AgeReplacementDistribution(Parametric, SurvivalABC[Ar, *Z]):
         ub = np.minimum(np.inf, ar)
         b = np.minimum(ub, b)
         a, b = np.atleast_2d(*np.broadcast_arrays(a, b))
-        z_2d = np.atleast_2d(*z)
-        if isinstance(z_2d, np.ndarray):
-            z_2d = (z_2d,)
+        args_2d = np.atleast_2d(*args)
+        if isinstance(args_2d, np.ndarray):
+            args_2d = (args_2d,)
 
         def integrand(
             x: NDArray[np.float64], *_: *tuple[NDArray[np.float64], ...]
         ) -> NDArray[np.float64]:
             return np.atleast_2d(func(x) * self.baseline.pdf(x, *_))
 
-        w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *z_2d), 0)
-        return gauss_legendre(integrand, a, b, *z_2d, ndim=2, deg=deg) + w
+        w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *args_2d), 0)
+        return gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg) + w
 
     @override
-    def freeze_zvariables(self, ar: Ar, *z: *Z) -> LifetimeDistribution[()]:
-        return UnivariateLifetimeDistribution(self, *(ar, *z))
+    def freeze(self, ar: Ar, **kwargs: ModelArgs) -> LifetimeModel[()]:
+        return FrozenLifetimeModel(self, ar=ar, **kwargs)
 
 
-class LeftTruncatedDistribution(Parametric, SurvivalABC[A0, *Z]):
+class LeftTruncatedModel(Parametric, SurvivalABC[A0, *Ts]):
     r"""Left truncated core.
 
     Conditional distribution of the lifetime core for an asset having reach age :math:`a_0`.
 
     Parameters
     ----------
-    baseline : LifetimeDistribution
+    baseline : LifetimeModel
         Underlying lifetime core.
     """
 
-    def __init__(self, baseline: LifetimeDistribution[*Z]):
+    def __init__(self, baseline: LifetimeModel[*Ts]):
         super().__init__()
         self.compose_with(baseline=baseline)
 
@@ -209,52 +212,54 @@ class LeftTruncatedDistribution(Parametric, SurvivalABC[A0, *Z]):
         self,
         time: T,
         a0: A0,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return super().sf(time, a0, *z)
+        return super().sf(time, a0, *args)
 
     # TODO : correct formula ? if not, does LeftTruncatedModel have to be LifetimeModel ?
     def pdf(
         self,
         time: T,
         a0: A0,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return super().pdf(time, a0, *z)
+        return super().pdf(time, a0, *args)
 
     def isf(
         self,
         probability: NDArray[np.float64],
         a0: A0,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability)
-        return self.ichf(cumulative_hazard_rate, a0, *z)
+        return self.ichf(cumulative_hazard_rate, a0, *args)
 
     def chf(
         self,
         time: T,
         a0: A0,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return self.baseline.chf(a0 + time, *z) - self.baseline.chf(a0, *z)
+        return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
     def hf(
         self,
         time: T,
         a0: A0,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return self.baseline.hf(a0 + time, *z)
+        return self.baseline.hf(a0 + time, *args)
 
     def ichf(
         self,
         cumulative_hazard_rate: NDArray[np.float64],
         a0: A0,
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
         return (
-            self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *z), *z)
+            self.baseline.ichf(
+                cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
+            )
             - a0
         )
 
@@ -262,59 +267,59 @@ class LeftTruncatedDistribution(Parametric, SurvivalABC[A0, *Z]):
     def rvs(
         self,
         a0: A0,
-        *z: *Z,
+        *args: *Ts,
         size: Optional[int] = 1,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
-        return super().rvs(*(a0, *z), size=size, seed=seed)
+        return super().rvs(*(a0, *args), size=size, seed=seed)
 
     @override
-    def freeze_zvariables(self, a0: A0, *z: *Z) -> LifetimeDistribution[()]:
-        return UnivariateLifetimeDistribution(self, *(a0, *z))
+    def freeze(self, a0: A0, **kwargs: ModelArgs) -> LifetimeModel[()]:
+        return FrozenLifetimeModel(self, a0=a0, **kwargs)
 
 
-class EquilibriumDistribution(Parametric, SurvivalABC[*Z]):
+class EquilibriumDistribution(Parametric, SurvivalABC[*Ts]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
-    core that makes the associated delayed renewal processes stationary.
+    core that makes the associated delayed renewal stochastic_process stationary.
 
     Parameters
     ----------
-    baseline : LifetimeDistribution
+    baseline : LifetimeModel
         Underlying lifetime core.
 
     References
     ----------
-    .. [1] Ross, S. M. (1996). Stochastic processes. New York: Wiley.
+    .. [1] Ross, S. M. (1996). Stochastic stochastic_process. New York: Wiley.
     """
 
-    def __init__(self, baseline: LifetimeDistribution[*Z]):
+    def __init__(self, baseline: LifetimeModel[*Ts]):
         super().__init__()
         self.compose_with(baseline=baseline)
 
-    def sf(self, time: T, *z: *Z) -> NDArray[np.float64]:
-        return 1 - self.cdf(time, *z)
+    def sf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+        return 1 - self.cdf(time, *args)
 
     @override
-    def cdf(self, time: T, *z: *Z) -> NDArray[np.float64]:
-        z_2d = np.atleast_2d(*z)
+    def cdf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+        args_2d = np.atleast_2d(*args)
         time_2d = np.atleast_2d(time)
-        if isinstance(z_2d, np.ndarray):
-            z_2d = (z_2d,)
+        if isinstance(args_2d, np.ndarray):
+            args_2d = (args_2d,)
         res = gauss_legendre(
-            self.baseline.sf, 0, time_2d, *z_2d, ndim=2
-        ) / self.baseline.mean(*z_2d)
+            self.baseline.sf, 0, time_2d, *args_2d, ndim=2
+        ) / self.baseline.mean(*args_2d)
         # reshape 2d -> final_dim
-        ndim = max(map(np.ndim, (time, *z)), default=0)
+        ndim = max(map(np.ndim, (time, *args)), default=0)
         if ndim < 2:
             res = np.squeeze(res)
         return res
 
-    def pdf(self, time: T, *z: *Z) -> NDArray[np.float64]:
+    def pdf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
         # self.baseline.mean can squeeze -> broadcast error (origin : ls_integrate output shape)
-        mean = self.baseline.mean(*z)
-        sf = self.baseline.sf(time, *z)
+        mean = self.baseline.mean(*args)
+        sf = self.baseline.sf(time, *args)
         if mean.ndim < sf.ndim:  # if args is empty, sf can have more dim than mean
             if sf.ndim == 1:
                 mean = np.reshape(mean, (-1,))
@@ -322,24 +327,24 @@ class EquilibriumDistribution(Parametric, SurvivalABC[*Z]):
                 mean = np.broadcast_to(mean, (sf.shape[0], -1))
         return sf / mean
 
-    def hf(self, time: T, *z: *Z) -> NDArray[np.float64]:
-        return 1 / self.baseline.mrl(time, *z)
+    def hf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+        return 1 / self.baseline.mrl(time, *args)
 
-    def chf(self, time: T, *z: *Z) -> NDArray[np.float64]:
-        return -np.log(self.sf(time, *z))
+    def chf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+        return -np.log(self.sf(time, *args))
 
     @override
-    def isf(self, probability: NDArray[np.float64], *z: *Z) -> NDArray[np.float64]:
+    def isf(self, probability: NDArray[np.float64], *args: *Ts) -> NDArray[np.float64]:
         return newton(
-            lambda x: self.sf(x, *z) - probability,
-            self.baseline.isf(probability, *z),
-            args=z,
+            lambda x: self.sf(x, *args) - probability,
+            self.baseline.isf(probability, *args),
+            args=args,
         )
 
     @override
     def ichf(
         self,
         cumulative_hazard_rate: NDArray[np.float64],
-        *z: *Z,
+        *args: *Ts,
     ) -> NDArray[np.float64]:
-        return self.isf(np.exp(-cumulative_hazard_rate), *z)
+        return self.isf(np.exp(-cumulative_hazard_rate), *args)

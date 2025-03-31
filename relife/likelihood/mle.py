@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import OptimizeResult, minimize
 
-from relife.distributions.protocols import ParametricLifetimeDistribution
+from relife.model.protocol import ParametricLifetimeDistribution
 from .likelihoods import LikelihoodFromLifetimes
 from ..data import lifetime_data_factory
 
@@ -16,7 +16,7 @@ T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 @dataclass
 class FittingResults:
-    """Fitting results of the parametric core."""
+    """Fitting results of the parametric_model core."""
 
     nb_samples: InitVar[int]  #: Number of observations (samples).
 

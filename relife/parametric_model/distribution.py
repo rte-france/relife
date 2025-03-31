@@ -7,26 +7,26 @@ from scipy.optimize import Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.data import LifetimeData
-from relife.distributions.abc import (
+from relife.likelihood import LifetimeData
+from relife.likelihood.mle import FittingResults, maximum_likelihood_estimation
+from relife.model.abc import (
     SurvivalABC,
 )
-from relife.distributions.parameters import Parametric
-from relife.distributions.protocols import LifetimeDistribution
-from relife.distributions.univariates import UnivariateLifetimeDistribution
-from relife.likelihoods.mle import FittingResults, maximum_likelihood_estimation
+from relife.model.frozen import FrozenLifetimeModel
+from relife.model.parameters import Parametric
+from relife.model.protocol import LifetimeModel
 from relife.quadratures import shifted_laguerre
 
 T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
 
-# type is LifetimeDistribution[()] and FittableLifetimeDistribution[()]
+# type LifetimeDistribution[()]
 class Distribution(Parametric, SurvivalABC[()], ABC):
     """
-    Base class for distribution distributions.
+    Base class for distribution model.
     """
 
-    univariate: bool = True
+    frozen: bool = True
 
     @override
     def sf(self, time: T) -> NDArray[np.float64]:
@@ -157,8 +157,8 @@ class Distribution(Parametric, SurvivalABC[()], ABC):
         return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
 
     @override
-    def freeze_zvariables(self) -> LifetimeDistribution[()]:
-        return UnivariateLifetimeDistribution(self)
+    def freeze(self) -> LifetimeModel[()]:
+        return FrozenLifetimeModel(self)
 
     def fit(
         self,

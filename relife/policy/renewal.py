@@ -1,42 +1,112 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, NewType
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.distributions.protocols import LifetimeDistribution
+from relife.economic import CostStructure
+from relife.economic.rewards import (
+    exponential_discounting,
+)
+from relife.model.protocol import LifetimeModel
+from relife.sampling import CountData
+from ..model.frozen import FrozenLifetimeModel
+from ..parametric_model import Distribution
 
 if TYPE_CHECKING:
-    from relife.policies import (
+    from .age_replacement import (
         DefaultAgeReplacementPolicy,
-        DefaultRunToFailurePolicy,
         NonHomogeneousPoissonAgeReplacementPolicy,
         OneCycleAgeReplacementPolicy,
-        OneCycleRunToFailurePolicy,
     )
+    from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
 
 
-def renewal_policy(
-    obj: LifetimeDistribution[()],
-    costs: dict[NDArray[np.float64]],
+Cost = NewType("Cost", NDArray[np.floating] | NDArray[np.integer] | float | int)
+
+
+# RenewalPolicy
+class RenewalPolicy:
+
+    cost_structure: CostStructure
+    model: FrozenLifetimeModel
+    model1: Optional[FrozenLifetimeModel]
+
+    def __init__(
+        self,
+        model: LifetimeModel[()],
+        model1: Optional[LifetimeModel[()]] = None,
+        discounting_rate: Optional[float] = None,
+        **kwcosts: Cost,
+    ):
+        if not model.frozen:
+            raise ValueError
+        if isinstance(model, Distribution):
+            model = model.freeze()
+        if model1 is not None:
+            if not model1.frozen:
+                raise ValueError
+            if isinstance(model1, Distribution):
+                model1 = model1.freeze()
+
+        self.model = model
+        self.model1 = model1
+        self.discounting = exponential_discounting(discounting_rate)
+        if self.model.nb_assets != self.model1.nb_assets:
+            raise ValueError
+        self.nb_assets = self.model.nb_assets
+
+        self.cost_structure = CostStructure(**kwcosts)
+
+        if self.cost_structure.nb_assets != self.nb_assets:
+            raise ValueError("Given model args and costs differ in nb of assets")
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
+
+    def sample(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from relife.sampling import sample_count_data
+
+        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+
+    def failure_data_sample(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+        use: str = "model",
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sampling import failure_data_sample
+
+        return failure_data_sample(
+            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use
+        )
+
+
+def make_renewal_policy(
+    obj: Union[LifetimeModel[()], NonHomogeneousPoissonProcess],
+    cost_structure: CostStructure,
     one_cycle: bool = False,
     run_to_failure: bool = False,
     discounting_rate: Optional[float] = None,
-    nb_assets: int = 1,
     **kwargs,
-) -> Union[
-    NonHomogeneousPoissonAgeReplacementPolicy,
-    DefaultAgeReplacementPolicy,
-    DefaultRunToFailurePolicy,
-    OneCycleRunToFailurePolicy,
-    OneCycleAgeReplacementPolicy,
-]:
+) -> RenewalPolicy:
     """
     Parameters
     ----------
     obj : Parametric
-    costs : dict of np.ndarray
+    cost_structure : dict of np.ndarray
     one_cycle : bool, default False
     run_to_failure : bool, default False
     discounting_rate : float
@@ -44,20 +114,19 @@ def renewal_policy(
     kwargs
     """
 
-    from relife.policies import (
+    from .age_replacement import (
         DefaultAgeReplacementPolicy,
-        DefaultRunToFailurePolicy,
         NonHomogeneousPoissonAgeReplacementPolicy,
         OneCycleAgeReplacementPolicy,
-        OneCycleRunToFailurePolicy,
     )
-    from relife.processes import NonHomogeneousPoissonProcess
+    from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
+    from relife.stochastic_process import NonHomogeneousPoissonProcess
 
     if isinstance(obj, NonHomogeneousPoissonProcess):
         try:
             cp, cr = (
-                costs["cp"],
-                costs["cr"],
+                cost_structure["cp"],
+                cost_structure["cr"],
             )
         except KeyError:
             raise ValueError("Costs must contain cf and cr")
@@ -68,32 +137,26 @@ def renewal_policy(
             cr,
             discounting_rate=discounting_rate,
             ar=ar,
-            nb_assets=nb_assets,
         )
 
     if run_to_failure:
         if not one_cycle:
             try:
-                cf = costs["cf"]
+                cf = cost_structure["cf"]
             except KeyError:
                 raise ValueError("Costs must only contain cf")
-            model_args = kwargs.get("model_args", ())
             a0 = kwargs.get("a0", None)
             model1 = kwargs.get("model1", None)
-            model1_args = kwargs.get("model1_args", None)
             return DefaultRunToFailurePolicy(
                 obj,
                 cf,
                 discounting_rate=discounting_rate,
-                model_args=model_args,
-                nb_assets=nb_assets,
                 a0=a0,
                 model1=model1,
-                model1_args=model1_args,
             )
         else:
             try:
-                cf = costs["cf"]
+                cf = cost_structure["cf"]
             except KeyError:
                 raise ValueError("Costs must only contain cf")
             model_args = kwargs.get("model_args", ())
@@ -110,8 +173,8 @@ def renewal_policy(
         if not one_cycle:
             try:
                 cf, cp = (
-                    costs["cf"],
-                    costs["cp"],
+                    cost_structure["cf"],
+                    cost_structure["cp"],
                 )
             except KeyError:
                 raise ValueError("Costs must contain cf and cp")
@@ -137,8 +200,8 @@ def renewal_policy(
         else:
             try:
                 cf, cp = (
-                    costs["cf"],
-                    costs["cp"],
+                    cost_structure["cf"],
+                    cost_structure["cp"],
                 )
             except KeyError:
                 raise ValueError("Costs must contain cf and cp")

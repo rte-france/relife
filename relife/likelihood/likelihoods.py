@@ -5,14 +5,13 @@ from typing import TYPE_CHECKING, Protocol, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from relife.data import LifetimeData
 from scipy.optimize import approx_fprime
 from typing_extensions import override
 
-from relife.data import LifetimeData
-
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.distributions.protocols import ParametricLifetimeDistribution
-    from relife.distributions.parameters import Parametric
+    from relife.model.protocol import ParametricLifetimeDistribution
+    from relife.model.parameters import Parametric
 
 
 def hessian_cs(
@@ -72,7 +71,7 @@ def hessian_2point(
 
 
 def _hessian_scheme(obj: ParametricLifetimeDistribution):
-    from relife.distributions import Gamma
+    from relife.model import Gamma
 
     if hasattr(obj, "baseline"):
         return _hessian_scheme(obj.baseline)
@@ -136,7 +135,7 @@ class Likelihood(Protocol):
 
 class LikelihoodFromLifetimes(Likelihood):
     """
-    Generic likelihood object for parametric lifetime distributions
+    Generic likelihood object for parametric_model lifetime model
 
     Parameters
     ----------

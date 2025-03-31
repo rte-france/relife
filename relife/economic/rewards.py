@@ -17,7 +17,7 @@ class Discounting(ABC):
     def annuity_factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]: ...
 
 
-class ExpDiscounting:
+class ExponentialDiscounting:
     def __init__(self, rate: Optional[float] = None):
         self.rate = rate
 
@@ -41,8 +41,8 @@ class ExpDiscounting:
             return timeline
 
 
-def exp_discounting(rate: Optional[float] = None) -> Discounting:
-    return ExpDiscounting(rate)
+def exponential_discounting(rate: Optional[float] = None) -> Discounting:
+    return ExponentialDiscounting(rate)
 
 
 Rewards = NewType(

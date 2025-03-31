@@ -1,23 +1,22 @@
 from abc import abstractmethod
 from collections.abc import Iterator
-from typing import Optional, NewType, TypeVarTuple
+from typing import Optional, NewType
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.distributions.univariates import UnivariateLifetimeDistribution
-from relife.economics.rewards import Discounting, Rewards
-from relife.parametric.distributions import Exponential
+from relife.economic.rewards import Discounting, Rewards
+from relife.model.frozen import FrozenLifetimeModel
+from relife.parametric_model import Exponential
 
-Z = TypeVarTuple("Z")
 AnyNDArray = NewType(
     "AnyNDArray", NDArray[np.floating] | NDArray[np.integer] | NDArray[np.bool_]
 )
 
 
-class SampleIterator(Iterator[*Z]):
+class SampleIterator(Iterator):
 
-    distribution: Optional[UnivariateLifetimeDistribution[*Z]]
+    model: Optional[FrozenLifetimeModel]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]
 
@@ -39,7 +38,7 @@ class SampleIterator(Iterator[*Z]):
         self.timeline = None  # exposed attribute (set/get)
 
         # hidden attributes, control set/get interface
-        self.distribution = None
+        self.model = None
 
         self.start_counter = None
         self.stop_counter = None
@@ -83,7 +82,7 @@ class SampleIterator(Iterator[*Z]):
         pass
 
     def __next__(self) -> dict[str, AnyNDArray]:
-        if self.distribution is None:
+        if self.model is None:
             raise ValueError("Set sampler first")
         while not self.stop:
             return self.step()
@@ -121,23 +120,19 @@ class LifetimeIterator(SampleIterator):
         self.a0 = None
         self.ar = None
 
-    def set_distribution(
+    def set_model(
         self,
-        distribution: UnivariateLifetimeDistribution[*Z],
+        model: FrozenLifetimeModel,
     ) -> None:
 
-        if self.distribution is None:
-            self.timeline = np.zeros((distribution.nb_assets, self.size))
-            self.stop_counter = np.zeros(
-                (distribution.nb_assets, self.size), dtype=np.int64
-            )
-            self.start_counter = np.zeros(
-                (distribution.nb_assets, self.size), dtype=np.int64
-            )
+        if self.model is None:
+            self.timeline = np.zeros((model.nb_assets, self.size))
+            self.stop_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
+            self.start_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
 
-        self.distribution = distribution
-        self.ar = getattr(distribution, "ar", None)  # see distributions.univariates
-        self.a0 = getattr(distribution, "a0", None)
+        self.model = model
+        self.ar = model.model_args.get("ar", None)
+        self.a0 = model.model_args.get("a0", None)
 
     def compute_rewards(
         self, timeline: NDArray[np.float64], durations: NDArray[np.float64]
@@ -151,14 +146,13 @@ class LifetimeIterator(SampleIterator):
 
     def step(self) -> dict[str, AnyNDArray]:
 
-        durations = self.distribution.rvs(
-            *self.distribution.zvalues,
+        durations = self.model.rvs(
             size=self.size,
             seed=self.seed,
         ).reshape((-1, self.size))
-        if durations.shape != (self.distribution.nb_assets, self.size):
+        if durations.shape != (self.model.nb_assets, self.size):
             # sometimes, model1 has n assets but not model
-            durations = np.tile(durations, (self.distribution.nb_assets, 1))
+            durations = np.tile(durations, (self.model.nb_assets, 1))
 
         # create events_indicators and entries
         events_indicators = np.ones_like(self.timeline, dtype=np.bool_)
@@ -252,30 +246,29 @@ class NonHomogeneousPoissonIterator(SampleIterator):
             rewards = self.rewards(ages)
         return rewards
 
-    def set_distribution(
+    def set_model(
         self,
-        distribution: ParametricLifetimeDistribution[()],
+        model: FrozenLifetimeModel,
         ar: Optional[NDArray[np.float64]] = None,
     ) -> None:
 
-        if self.distribution is None:
+        if self.model is None:
             # self._nb_assets = get_nb_assets(model_args)
-            self.timeline = np.zeros((self.nb_assets, self.size))
+            self.timeline = np.zeros((model.nb_assets, self.size))
             # counting arrays to catch values crossing t0 and tf bounds
-            self.stop_counter = np.zeros((self.nb_assets, self.size), dtype=np.int64)
-            self.start_counter = np.zeros((self.nb_assets, self.size), dtype=np.int64)
+            self.stop_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
+            self.start_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
 
-            self.hpp_timeline = np.zeros((self.nb_assets, self.size))
-            self.failure_times = np.zeros((self.nb_assets, self.size))
-            self.ages = np.zeros((self.nb_assets, self.size))
-            self.entries = np.zeros((self.nb_assets, self.size))
-            self.is_new_asset = np.zeros((self.nb_assets, self.size), dtype=np.bool_)
-            self.renewals_ids = np.zeros((self.nb_assets, self.size), dtype=np.int64)
+            self.hpp_timeline = np.zeros((model.nb_assets, self.size))
+            self.failure_times = np.zeros((model.nb_assets, self.size))
+            self.ages = np.zeros((model.nb_assets, self.size))
+            self.entries = np.zeros((model.nb_assets, self.size))
+            self.is_new_asset = np.zeros((model.nb_assets, self.size), dtype=np.bool_)
+            self.renewals_ids = np.zeros((model.nb_assets, self.size), dtype=np.int64)
 
-        self.model = distribution
-        self.model_args = model_args
+        self.model = model
         self.ar = (
-            ar if ar is not None else (np.ones(self.nb_assets) * np.inf).reshape(-1, 1)
+            ar if ar is not None else (np.ones(self.model) * np.inf).reshape(-1, 1)
         )
 
     def step(self) -> dict[str, AnyNDArray]:
@@ -291,10 +284,10 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
         # generate new values
         self.hpp_timeline += self.exponential_dist.rvs(
-            size=self.size * self.nb_assets, seed=self.seed
-        ).reshape((self.nb_assets, self.size))
+            size=self.size * self.model.nb_assets, seed=self.seed
+        ).reshape((self.model.nb_assets, self.size))
 
-        failure_times = self.model.ichf(self.hpp_timeline, *self.model_args)
+        failure_times = self.model.ichf(self.hpp_timeline)
         durations = failure_times - self.failure_times  # t_i+1 - t_i
         self.failure_times = failure_times.copy()  # update t_i <- t_i+1
         self.timeline += durations

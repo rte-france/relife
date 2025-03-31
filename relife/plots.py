@@ -10,9 +10,9 @@ from numpy.typing import ArrayLike, NDArray
 from relife.types import NumericalArrayLike
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.distributions.protocols import LifetimeDistribution, NonParametricModel
+    from relife.model.protocol import LifetimeModel, NonParametricModel
     from relife.data import CountData, NHPPCountData, RenewalData
-    from relife.processes import NonHomogeneousPoissonProcess
+    from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
 def plot(
@@ -64,7 +64,7 @@ def plot(
 
 def param_probfunc_plot(
     fname: str,
-    obj: LifetimeDistribution[*tuple[NumericalArrayLike, ...]],
+    obj: LifetimeModel[*tuple[NumericalArrayLike, ...]],
     timeline: NDArray[np.float64] = None,
     model_args: tuple[NumericalArrayLike, ...] = (),
     asset: Optional[ArrayLike] = None,
@@ -80,7 +80,7 @@ def param_probfunc_plot(
     timeline : 1D array, optional
         Timeline of the plot (x-axis), by default guessed by the millile.
     model_args : Tuple[ndarray], optional
-        Extra arguments required by the parametric lifetime core, by
+        Extra arguments required by the parametric_model lifetime core, by
         default ().
     alpha_ci : float, optional
         :math:`\alpha`-value to define the :math:`100(1-\alpha)\%`
@@ -291,14 +291,14 @@ class PlotDescriptor:
 
     def __get__(self, obj, objtype=None):
         from relife.data import CountData, NHPPCountData, RenewalData
-        from relife.distributions import (  # avoid circular import
+        from relife.model import (  # avoid circular import
             ECDF,
             KaplanMeier,
             NelsonAalen,
         )
-        from relife.parametric.distributions import Distribution
-        from relife.parametric.regressions import Regression
-        from relife.processes import NonHomogeneousPoissonProcess
+        from relife.parametric_model.distribution import Distribution
+        from relife.parametric_model.regression import Regression
+        from relife.stochastic_process import NonHomogeneousPoissonProcess
 
         if isinstance(obj.obj, Distribution):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)

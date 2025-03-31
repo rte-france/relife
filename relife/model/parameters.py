@@ -136,9 +136,9 @@ class ParamsTree:
 
 class Parametric:
     """
-    Base class to create a parametric core.
+    Base class to create a parametric_model core.
 
-    Any parametric core must inherit from `ParametricModel`.
+    Any parametric_model core must inherit from `ParametricModel`.
     """
 
     def __init__(self):
@@ -236,7 +236,7 @@ class Parametric:
 
         This method only affects **local** parameters. `ParametricModel` components are not
         affected. This is usefull when one wants to change core parameters for any reason. For
-        instance `Regression` distributions use `new_params` to change number of regression coefficients
+        instance `Regression` model use `new_params` to change number of regression coefficients
         depending on the number of covariates that are passed to the `fit` method.
 
         Parameters
@@ -285,7 +285,7 @@ class Parametric:
         raise AttributeError(f"{class_name} has no attribute named {name}")
 
     def __setattr__(self, name: str, value: Any):
-        if name in ["params_tree", "leaf_models"]:
+        if name in ("params_tree", "leaf_models"):
             super().__setattr__(name, value)
         elif name in self.params_tree:
             self.params_tree[name] = value

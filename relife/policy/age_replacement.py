@@ -1,0 +1,534 @@
+from __future__ import annotations
+
+from typing import Optional, NewType
+
+import numpy as np
+from numpy.typing import NDArray
+from scipy.optimize import newton
+
+from relife.economic.rewards import age_replacement_rewards
+from relife.model import LifetimeModel
+from relife.model.frozen import FrozenLifetimeModel
+from relife.parametric_model import LeftTruncatedModel, AgeReplacementModel
+from relife.quadratures import gauss_legendre
+from relife.stochastic_process import RenewalRewardProcess, NonHomogeneousPoissonProcess
+from relife.stochastic_process.renewal import reward_partial_expectation
+from .decorator import get_if_none
+from .renewal import RenewalPolicy
+
+Ar = NewType("Ar", NDArray[np.floating] | NDArray[np.integer] | float | int)
+A0 = NewType("A0", NDArray[np.floating] | NDArray[np.integer] | float | int)
+Cost = NewType("Cost", NDArray[np.floating] | NDArray[np.integer] | float | int)
+
+
+class OneCycleAgeReplacementPolicy(RenewalPolicy):
+    r"""One-cyle age replacement policy.
+
+    The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
+    with costs :math:`c_f` if earlier.
+
+    Parameters
+    ----------
+    model : Lifetimemodel[()]
+        The lifetime model of the assets.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    cp : np.ndarray
+        The cost of preventive replacements for each asset.
+    discounting_rate : float, default is 0.
+        The discounting rate.
+    period_before_discounting: float, default is 1.
+         The length of the first period before discounting.
+    ar : np.ndarray, optional
+        Times until preventive replacements. This parameter can be optimized
+        with ``optimize``
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
+
+
+    References
+    ----------
+    .. [1] Coolen-Schrijner, P., & Coolen, F. P. A. (2006). On optimality
+        criteria for age replacement. Proceedings of the Institution of
+        Mechanical Engineers, Part O: Journal of Risk and Reliability,
+        220(1), 21-29
+    """
+
+    model1 = None
+
+    def __init__(
+        self,
+        model: LifetimeModel[()],
+        cf: Cost,
+        cp: Cost,
+        *,
+        discounting_rate: Optional[float] = None,
+        period_before_discounting: float = 1.0,
+        ar: Optional[Ar] = None,
+        a0: Optional[A0] = None,
+    ) -> None:
+        super().__init__(model, discounting_rate=discounting_rate, cf=cf, cp=cp)
+
+        if period_before_discounting == 0:
+            raise ValueError("The period_before_discounting must be greater than 0")
+        self.period_before_discounting = period_before_discounting
+
+        if a0 is not None:
+            self.model = LeftTruncatedModel(self.model).freeze(a0=a0)
+
+        self._set_ar("ar", ar)
+
+    def _set_ar(self, name: str, value: Optional[Ar] = None):
+        if value is not None:
+            value = np.asarray(value)
+            if value.size != 1:
+                value = value.reshape(-1, 1)
+                if value.shape[0] != self.nb_assets:
+                    raise ValueError
+            else:
+                value = value.item()
+        setattr(self, name, value)
+
+    @property
+    def cp(self):
+        return self.cost_structure["cp"]
+
+    @property
+    def cf(self):
+        return self.cost_structure["cf"]
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
+
+    @get_if_none("ar")
+    def expected_total_cost(
+        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+    ) -> NDArray[np.float64]:
+        return reward_partial_expectation(
+            timeline,
+            AgeReplacementModel(self.model).freeze(ar),
+            age_replacement_rewards(ar, self.cp, self.cf),
+            discounting=self.discounting,
+        )
+
+    @get_if_none("ar")
+    def asymptotic_expected_total_cost(
+        self, ar: Optional[Ar] = None
+    ) -> NDArray[np.float64]:
+        return self.expected_total_cost(np.array(np.inf), ar=ar)
+
+    @get_if_none("ar")
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+    ) -> NDArray[np.float64]:
+        f = (
+            lambda x: age_replacement_rewards(ar, self.cf, self.cp)(x)
+            * self.discounting.factor(x)
+            / self.discounting.annuity_factor(x)
+        )
+        mask = timeline < self.period_before_discounting
+        q0 = self.model.cdf(self.period_before_discounting) * f(
+            self.period_before_discounting
+        )
+        model = AgeReplacementModel(self.model).freeze(ar)
+        return np.squeeze(
+            q0
+            + np.where(
+                mask,
+                0,
+                model.ls_integrate(
+                    f,
+                    np.array(self.period_before_discounting),
+                    timeline,
+                ),
+            )
+        )
+
+    @get_if_none("ar")
+    def asymptotic_expected_equivalent_annual_cost(
+        self, ar: Optional[Ar] = None
+    ) -> NDArray[np.float64]:
+        return self.expected_equivalent_annual_cost(np.array(np.inf), ar=ar)
+
+    def optimize(
+        self,
+    ) -> NDArray[np.float64]:
+        """
+        Computes the optimal age(s) of replacement and updates the internal ``ar`̀` value(s) and, optionally ``ar1``.
+
+        Returns
+        -------
+        Self
+             Same instance with optimized ``ar`` (optionnaly ``ar1``).
+        """
+
+        cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
+        x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
+        if np.size(x0) == 1:
+            x0 = np.tile(x0, (self.nb_assets, 1))
+
+        def eq(a):
+            return np.sum(
+                self.discounting.factor(a)
+                / self.discounting.annuity_factor(a)
+                * (
+                    (cf_3d - cp_3d) * self.model.hf(a)
+                    - cp_3d / self.discounting.annuity_factor(a)
+                ),
+                axis=0,
+            )
+
+        ar = np.asarray(newton(eq, x0), dtype=np.float64)
+        self.ar = ar
+        return ar
+
+
+class DefaultAgeReplacementPolicy(RenewalPolicy):
+    r"""Time based replacement policy.
+
+    Renewal reward stochastic_process where assets are replaced at a fixed age :math:`a_r`
+    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.
+
+    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
+        Maintenance optimization. Encyclopedia of Statistics in Quality and
+        Reliability, 1000-1008.
+
+    |
+
+    Parameters
+    ----------
+    model : LifetimeModel
+        The lifetime core of the assets.
+    cf : np.ndarray
+        The cost of failure for each asset.
+    cp : np.ndarray
+        The cost of preventive replacements for each asset.
+    ar : np.ndarray, optional
+        Times until preventive replacements. This parameter can be optimized
+        with ``optimize``
+    ar1 : np.ndarray, optional
+        Times until preventive replacements for the first cycle. This parameter can be optimized
+        with ``optimize``
+    discounting_rate : float, default is 0.
+        The discounting rate.
+    a0 : ndarray, optional
+        Current ages of the assets (default is None). Setting ``a0`` will add
+        left truncations.
+
+    Attributes
+    ----------
+    ar : np.ndarray or None
+        Times until preventive replacements. This parameter can be optimized
+        with ``optimize``
+    ar1 : np.ndarray or None
+        Times until preventive replacements for the first cycle. This parameter can be optimized
+        with ``optimize``
+    """
+
+    def __init__(
+        self,
+        model: LifetimeModel[()],
+        cf: Cost,
+        cp: Cost,
+        *,
+        discounting_rate: Optional[float] = None,
+        ar: Optional[Ar] = None,
+        ar1: Optional[Ar] = None,
+        a0: Optional[A0] = None,
+        model1: Optional[LifetimeModel[()]] = None,
+    ) -> None:
+        super().__init__(model, model1, discounting_rate, cf=cf, cp=cp)
+
+        if a0 is not None:
+            if model1 is not None:
+                raise ValueError("model1 and a0 can't be set together")
+            self.model1 = LeftTruncatedModel(self.model).freeze(a0)
+        elif model1 is None and ar1 is not None:
+            raise ValueError("model1 is not set, ar1 is useless")
+
+        self._set_ar("ar", ar)
+        self._set_ar("ar1", ar1)
+
+    def _set_ar(self, name: str, value: Optional[Ar] = None):
+        if value is not None:
+            value = np.asarray(value)
+            if value.size != 1:
+                value = value.reshape(-1, 1)
+                if value.shape[0] != self.nb_assets:
+                    raise ValueError
+            else:
+                value = value.item()
+        setattr(self, name, value)
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
+
+    @property
+    def cp(self):
+        return self.cost_structure["cp"]
+
+    @property
+    def cf(self):
+        return self.cost_structure["cf"]
+
+    def underlying_process(self, ar: Ar, ar1: Ar) -> RenewalRewardProcess:
+        return RenewalRewardProcess(
+            self.model,
+            age_replacement_rewards(ar, self.cf, self.cp),
+            discounting_rate=self.discounting_rate,
+            model1=self.model1,
+            rewards1=age_replacement_rewards(ar1, self.cf, self.cp) if ar1 else None,
+        )
+
+    @get_if_none("ar", "ar1")
+    def expected_total_cost(
+        self,
+        timeline: NDArray[np.float64],
+        ar: Optional[Ar] = None,
+        ar1: Optional[Ar] = None,
+    ) -> NDArray[np.float64]:
+        return self.underlying_process(ar, ar1).expected_total_reward(timeline)
+
+    @get_if_none("ar", "ar1")
+    def expected_equivalent_annual_cost(
+        self,
+        timeline: NDArray[np.float64],
+        ar: Optional[Ar] = None,
+        ar1: Optional[Ar] = None,
+    ) -> NDArray[np.float64]:
+        return self.underlying_process(ar, ar1).expected_equivalent_annual_cost(
+            timeline
+        )
+
+    @get_if_none("ar", "ar1")
+    def asymptotic_expected_total_cost(
+        self,
+        ar: Optional[Ar] = None,
+        ar1: Optional[Ar] = None,
+    ) -> NDArray[np.float64]:
+        return self.underlying_process(ar, ar1).asymptotic_expected_total_reward()
+
+    @get_if_none("ar", "ar1")
+    def asymptotic_expected_equivalent_annual_cost(
+        self,
+        ar: Optional[Ar] = None,
+        ar1: Optional[Ar] = None,
+    ) -> NDArray[np.float64]:
+        return self.underlying_process(
+            ar, ar1
+        ).asymptotic_expected_equivalent_annual_cost()
+
+    def optimize(
+        self,
+    ) -> tuple[NDArray[np.float64], Optional[NDArray[np.float64]]]:
+        """
+        Computes the optimal age(s) of replacement and updates the internal ``ar`̀` value(s) and, optionally ``ar1``.
+
+        Returns
+        -------
+        Self
+             Same instance with optimized ``ar`` (optionnaly ``ar1``).
+        """
+
+        cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
+        x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)
+        if np.size(x0) == 1:
+            x0 = np.tile(x0, (self.nb_assets, 1))
+
+        if isinstance(self.model, FrozenLifetimeModel):
+            ndim = max(
+                map(np.ndim, (cf_3d, cp_3d, *self.model.z)),
+                default=0,
+            )
+        else:
+            ndim = max(
+                map(np.ndim, (cf_3d, cp_3d)),
+                default=0,
+            )
+
+        def eq(a):
+            f = gauss_legendre(
+                lambda x: self.discounting.factor(x) * self.model.sf(x),
+                0,
+                a,
+                ndim=ndim,
+            )
+            g = gauss_legendre(
+                lambda x: self.discounting.factor(x) * self.model.pdf(x),
+                0,
+                a,
+                ndim=ndim,
+            )
+            return np.sum(
+                self.discounting.factor(a)
+                * ((cf_3d - cp_3d) * (self.model.hf(a) * f - g) - cp_3d)
+                / f**2,
+                axis=0,
+            )
+
+        ar = newton(eq, x0)
+        if np.size(ar) == 1:
+            ar = np.squeeze(ar)
+
+        ar1 = None
+        if self.model1 is not None:
+            ar1 = OneCycleAgeReplacementPolicy(
+                self.model1,
+                self.cf,
+                self.cp,
+                discounting_rate=self.discounting_rate,
+            ).optimize()
+
+        return ar, ar1
+
+
+class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
+    """
+    Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..
+
+    Attributes
+    ----------
+    ar : np.ndarray or None
+        Optimized replacement age (optimized policy parameter).
+    cp : np.ndarray
+        The cost of failure for each asset.
+    cr : np.ndarray
+        The cost of repair for each asset.
+    """
+
+    cp = Cost()
+    cr = Cost()
+
+    def __init__(
+        self,
+        process: NonHomogeneousPoissonProcess,
+        cp: NDArray[np.float64],
+        cr: NDArray[np.float64],
+        *,
+        discounting_rate: Optional[float] = None,
+        ar: Optional[NDArray[np.float64]] = None,
+    ) -> None:
+        super().__init__(process.model, discounting_rate=discounting_rate)
+        self.ar = ar
+        self.cp = cp
+        self.cr = cr
+        self._underlying_process = process
+
+    @property
+    def underlying_process(self):
+        return self._underlying_process
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
+
+    @get_if_none("ar")
+    def expected_total_cost(
+        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+    ) -> NDArray[np.float64]:
+        pass
+
+    @get_if_none("ar")
+    def asymptotic_expected_total_cost(
+        self, ar: Optional[Ar] = None
+    ) -> NDArray[np.float64]:
+        pass
+
+    @get_if_none("ar")
+    def expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+    ) -> NDArray[np.float64]:
+        pass
+
+    def number_of_replacements(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def expected_number_of_repairs(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        pass
+
+    def optimize(
+        self,
+    ) -> NDArray[np.float64]:
+
+        x0 = self.model.mean()
+
+        if self.discounting.rate != 0:
+
+            def dcost(a):
+                a = np.atleast_2d(a)
+                return (
+                    (1 - self.discounting.factor(a))
+                    / self.discounting.rate
+                    * self.underlying_process.intensity(a)
+                    - gauss_legendre(
+                        lambda t: self.discounting.factor(t)
+                        * self.underlying_process.intensity(t),
+                        np.array(0.0),
+                        a,
+                        ndim=2,
+                    )
+                    - self.cp / self.cr
+                )
+
+        else:
+
+            def dcost(a):
+                a = np.atleast_2d(a)
+                return (
+                    a * self.underlying_process.intensity(a)
+                    - self.underlying_process.cumulative_intensity(a)
+                    - self.cp / self.cr
+                )
+
+        ar = np.squeeze(newton(dcost, x0))
+        self.ar = ar
+        return ar
+
+
+from .docstrings import (
+    ASYMPTOTIC_EEAC_DOCSTRING,
+    ASYMPTOTIC_ETC_DOCSTRING,
+    EEAC_DOCSTRING,
+    ETC_DOCSTRING,
+)
+
+WARNING = r"""
+
+.. warning::
+
+    This method requires the ``ar`` attribute to be set either at initialization
+    or with the ``optimize`` method.
+"""
+
+OneCycleAgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
+OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = (
+    EEAC_DOCSTRING + WARNING
+)
+OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = (
+    ASYMPTOTIC_ETC_DOCSTRING + WARNING
+)
+OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+    ASYMPTOTIC_EEAC_DOCSTRING + WARNING
+)
+
+DefaultAgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
+DefaultAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = (
+    EEAC_DOCSTRING + WARNING
+)
+DefaultAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = (
+    ASYMPTOTIC_ETC_DOCSTRING + WARNING
+)
+
+DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
+    ASYMPTOTIC_EEAC_DOCSTRING + WARNING
+)

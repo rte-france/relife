@@ -4,11 +4,11 @@ from typing import Optional, Self, Union
 import numpy as np
 from numpy.typing import NDArray
 
-import relife.distributions.abc
-from relife.data.lifetime import LifetimeData, lifetime_data_factory
+import relife.model.abc
 from relife.decorators import require_attributes
-from relife.distributions.protocols import NonParametricModel
-from relife.processes.nhpp import nhpp_data_factory
+from relife.likelihood.lifetime_data import LifetimeData, lifetime_data_factory
+from relife.model.protocol import NonParametricModel
+from relife.stochastic_process.nhpp import nhpp_data_factory
 
 
 class ECDF(NonParametricModel):
@@ -103,7 +103,7 @@ class KaplanMeier(NonParametricModel):
 
     References
     ----------
-    .. [1] Lawless, J. F. (2011). Statistical distributions and methods for lifetime
+    .. [1] Lawless, J. F. (2011). Statistical model and methods for lifetime
         data. John Wiley & Sons.
 
     .. [2] Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
@@ -241,7 +241,7 @@ class NelsonAalen(NonParametricModel):
 
     References
     ----------
-    .. [1] Lawless, J. F. (2011). Statistical distributions and methods for lifetime
+    .. [1] Lawless, J. F. (2011). Statistical model and methods for lifetime
         data. John Wiley & Sons.
     """
 
@@ -606,7 +606,7 @@ NHPPNonParametric.chf.__doc__ = TIME_BASE_DOCSTRING.format(
 @dataclass
 class Estimates:
     """
-    Stores the estimates for a non-parametric lifetime core.
+    Stores the estimates for a non-parametric_model lifetime core.
 
     Parameters
     ----------

@@ -5,23 +5,23 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.data import CountData
-from relife.distributions.protocols import LifetimeDistribution
-from relife.distributions.univariates import UnivariateLifetimeDistribution
-from relife.economics.rewards import Discounting, exp_discounting
+from relife.economic.rewards import Discounting, exponential_discounting
+from relife.model.frozen import FrozenLifetimeModel
+from relife.model.protocol import LifetimeModel
+from relife.sampling import CountData
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    distribution: LifetimeDistribution[()],
+    model: LifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f = distribution.cdf(timeline)
-    fm = distribution.cdf(tm)
+    f = model.cdf(timeline)
+    fm = model.cdf(tm)
     y = evaluated_func(timeline)
     if discounting is not None:
         d = discounting.factor(timeline)
@@ -45,14 +45,14 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    distribution1: LifetimeDistribution[()],
+    model1: LifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
     tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f1 = distribution1.cdf(timeline)
-    f1m = distribution1.cdf(tm)
+    f1 = model1.cdf(timeline)
+    f1m = model1.cdf(tm)
     y1 = evaluated_func(timeline)
 
     if discounting is not None:
@@ -80,34 +80,37 @@ class RenewalProcess:
 
     def __init__(
         self,
-        distribution: LifetimeDistribution[()],
-        distribution1: Optional[LifetimeDistribution[()]] = None,
+        model: LifetimeModel[()],
+        model1: Optional[LifetimeModel[()]] = None,
     ):
 
-        if not distribution.univariate:
+        if not model.univariate:
             raise ValueError(
-                "Invalid distribution : must be LifetimeDistribution[()] object. You may call freeze_zvariables first"
+                "Invalid model : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
             )
-        self.distribution = distribution
-        if distribution1 is not None:
-            if not distribution1.univariate:
+        if not isinstance(model, FrozenLifetimeModel):
+            pass
+
+        self.model = model
+        if model1 is not None:
+            if not model1.univariate:
                 raise ValueError(
-                    "Invalid distribution1 : must be LifetimeDistribution[()] object. You may call freeze_zvariables first"
+                    "Invalid model1 : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
                 )
-        self.distribution1 = distribution1
+        self.model1 = model1
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return renewal_equation_solver(
             timeline,
-            self.distribution,
-            self.distribution.cdf if not self.distribution1 else self.distribution1.cdf,
+            self.model,
+            self.model.cdf if not self.model1 else self.model1.cdf,
         )
 
     def renewal_density(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return renewal_equation_solver(
             timeline,
-            self.distribution,
-            self.distribution.pdf if not self.distribution1 else self.distribution1.pdf,
+            self.model,
+            self.model.pdf if not self.model1 else self.model1.pdf,
         )
 
     def sample(
@@ -145,7 +148,7 @@ Rewards = NewType(
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    distribution: LifetimeDistribution[()],
+    model: LifetimeModel[()],
     rewards: Rewards,
     *,
     discounting: Optional[Discounting] = None,
@@ -153,10 +156,10 @@ def reward_partial_expectation(
     def func(x):
         return rewards(x) * discounting.factor(x)
 
-    ls = distribution.ls_integrate(func, np.zeros_like(timeline), timeline)
+    ls = model.ls_integrate(func, np.zeros_like(timeline), timeline)
     # reshape 2d -> final_dim
-    if isinstance(distribution, UnivariateLifetimeDistribution):
-        ndim = max(map(np.ndim, (timeline, *distribution.z)), default=0)
+    if isinstance(model, FrozenLifetimeModel):
+        ndim = max(map(np.ndim, (timeline, *model.z)), default=0)
     else:
         ndim = np.ndim(timeline)
     if ndim < 2:
@@ -168,43 +171,43 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        distribution: LifetimeDistribution[()],
+        model: LifetimeModel[()],
         rewards: Rewards,
         discounting_rate: Optional[float] = None,
         *,
-        distribution1: Optional[LifetimeDistribution[()]] = None,
+        model1: Optional[LifetimeModel[()]] = None,
         rewards1: Optional[Rewards] = None,
     ):
-        super().__init__(distribution, distribution1)
+        super().__init__(model, model1)
         self.rewards = rewards
         self.rewards1 = rewards1 if rewards1 is not None else rewards
-        self.discounting = exp_discounting(discounting_rate)
+        self.discounting = exponential_discounting(discounting_rate)
 
     def expected_total_reward(
         self, timeline: NDArray[np.float64]
     ) -> NDArray[np.float64]:
         z = renewal_equation_solver(
             timeline,
-            self.distribution,
+            self.model,
             partial(
                 reward_partial_expectation,
-                distribution=self.distribution,
+                model=self.model,
                 rewards=self.rewards,
                 discounting=self.discounting,
             ),
             discounting=self.discounting,
         )
 
-        if self.distribution1 is None:
+        if self.model1 is None:
             return z
         else:
             return delayed_renewal_equation_solver(
                 timeline,
                 z,
-                self.distribution1,
+                self.model1,
                 partial(
                     reward_partial_expectation,
-                    distribution=self.distribution1,
+                    model=self.model1,
                     rewards=self.rewards1,
                     discounting=self.discounting,
                 ),
@@ -220,17 +223,17 @@ class RenewalRewardProcess(RenewalProcess):
         def y(x):
             return self.discounting.factor(x) * self.rewards(x)
 
-        lf = self.distribution.ls_integrate(f, np.array(0.0), np.array(np.inf))
-        ly = self.distribution.ls_integrate(y, np.array(0.0), np.array(np.inf))
+        lf = self.model.ls_integrate(f, np.array(0.0), np.array(np.inf))
+        ly = self.model.ls_integrate(y, np.array(0.0), np.array(np.inf))
         z = ly / (1 - lf)
 
-        if self.distribution1 is not None:
+        if self.model1 is not None:
 
             def y1(x):
                 return self.discounting.factor(x) * self.rewards1(x)
 
-            lf1 = self.distribution1.ls_integrate(f, np.array(0.0), np.array(np.inf))
-            ly1 = self.distribution1.ls_integrate(y1, np.array(0.0), np.array(np.inf))
+            lf1 = self.model1.ls_integrate(f, np.array(0.0), np.array(np.inf))
+            ly1 = self.model1.ls_integrate(y1, np.array(0.0), np.array(np.inf))
             z = ly1 + z * lf1
 
         return np.squeeze(z)
@@ -243,10 +246,10 @@ class RenewalRewardProcess(RenewalProcess):
         af = self.discounting.annuity_factor(timeline)
         q = z / af
         res = np.full_like(af, q)
-        if self.distribution1 is None:
-            q0 = self.rewards(np.array(0.0)) * self.distribution.pdf(0.0)
+        if self.model1 is None:
+            q0 = self.rewards(np.array(0.0)) * self.model.pdf(0.0)
         else:
-            q0 = self.rewards1(np.array(0.0)) * self.distribution1.pdf(0.0)
+            q0 = self.rewards1(np.array(0.0)) * self.model1.pdf(0.0)
         res[af == 0.0] = q0
 
         return res
@@ -254,12 +257,12 @@ class RenewalRewardProcess(RenewalProcess):
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         if self.discounting.rate == 0.0:
             return np.squeeze(
-                self.distribution.ls_integrate(
+                self.model.ls_integrate(
                     lambda x: self.rewards(x),
                     np.array(0.0),
                     np.array(np.inf),
                 )
-                / self.distribution.mean()
+                / self.model.mean()
             )
         else:
             return self.discounting.rate * self.asymptotic_expected_total_reward()

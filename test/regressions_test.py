@@ -11,7 +11,7 @@ import pytest
 from scipy.stats import boxcox, zscore
 
 from relife.datasets import load_insulator_string
-from relife.distributions import (
+from relife.model import (
     AFT,
     Exponential,
     Gamma,

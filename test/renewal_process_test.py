@@ -7,7 +7,8 @@
 import numpy as np
 import pytest
 
-from relife.distributions import (
+from relife.economic.rewards import run_to_failure_rewards
+from relife.model import (
     AFT,
     Gamma,
     Gompertz,
@@ -15,12 +16,11 @@ from relife.distributions import (
     ProportionalHazard,
     Weibull,
 )
-from relife.economics.rewards import run_to_failure_rewards
-from relife.parametric.composition import (
-    AgeReplacementDistribution,
+from relife.parametric_model.conditional_model import (
+    AgeReplacementModel,
     EquilibriumDistribution,
 )
-from relife.processes import RenewalProcess, RenewalRewardProcess
+from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 
 @pytest.fixture(
@@ -45,7 +45,7 @@ def regression(request):
     scope="module",
     params=[
         None,
-        AgeReplacementDistribution,
+        AgeReplacementModel,
     ],
 )
 def age_replacement_model(request):
