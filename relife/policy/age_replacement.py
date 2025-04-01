@@ -15,7 +15,7 @@ from ._decorator import get_if_none
 from .renewal import RenewalPolicy
 
 if TYPE_CHECKING:
-    from relife.model import LifetimeModel
+    from relife.model import BaseLifetimeModel
 
 
 class OneCycleAgeReplacementPolicy(RenewalPolicy):
@@ -56,7 +56,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel[()],
+        model: BaseLifetimeModel[()],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
@@ -202,7 +202,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
 
     Parameters
     ----------
-    model : LifetimeModel
+    model : BaseLifetimeModel
         The lifetime core of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
@@ -232,7 +232,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel[()],
+        model: BaseLifetimeModel[()],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
@@ -240,7 +240,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         ar: Optional[float | NDArray[np.float64]] = None,
         ar1: Optional[float | NDArray[np.float64]] = None,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[()]] = None,
+        model1: Optional[BaseLifetimeModel[()]] = None,
     ) -> None:
         super().__init__(model, model1, discounting_rate, cf=cf, cp=cp)
 

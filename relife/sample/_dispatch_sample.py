@@ -10,21 +10,21 @@ from relife.economic.rewards import (
     age_replacement_rewards,
     run_to_failure_rewards,
 )
+from relife.policy import (
+    DefaultAgeReplacementPolicy,
+    DefaultRunToFailurePolicy,
+    NonHomogeneousPoissonAgeReplacementPolicy,
+    OneCycleAgeReplacementPolicy,
+    OneCycleRunToFailurePolicy,
+)
+from relife.stochastic_process import (
+    RenewalProcess,
+    NonHomogeneousPoissonProcess,
+    RenewalRewardProcess,
+)
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 
 if TYPE_CHECKING:
-    from relife.policy import (
-        DefaultAgeReplacementPolicy,
-        DefaultRunToFailurePolicy,
-        NonHomogeneousPoissonAgeReplacementPolicy,
-        OneCycleAgeReplacementPolicy,
-        OneCycleRunToFailurePolicy,
-    )
-    from relife.stochastic_process.renewal import RenewalProcess
-    from relife.stochastic_process import (
-        NonHomogeneousPoissonProcess,
-        RenewalRewardProcess,
-    )
     from relife.sample.counting_data import NHPPCountData
     from .counting_data import RenewalData
 

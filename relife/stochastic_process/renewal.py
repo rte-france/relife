@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 from functools import partial
-from typing import Callable, NewType, Optional
+from typing import Callable, NewType, Optional, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.economic.discounting import Discounting, exponential_discounting
-from relife.model._frozen import FrozenLifetimeModel
-from relife.model._protocol import LifetimeModel
-from relife.sample import CountData
+from relife.economic.discounting import exponential_discounting
+from relife.parametric_model import Distribution
+
+if TYPE_CHECKING:
+    from relife.sample import CountData
+    from relife.model import FrozenLifetimeModel, LifetimeModel
+    from relife.economic.discounting import Discounting
 
 
 def renewal_equation_solver(
@@ -77,6 +82,8 @@ def delayed_renewal_equation_solver(
 
 
 class RenewalProcess:
+    model: FrozenLifetimeModel
+    model1: Optional[FrozenLifetimeModel]
 
     def __init__(
         self,
@@ -84,19 +91,21 @@ class RenewalProcess:
         model1: Optional[LifetimeModel[()]] = None,
     ):
 
-        if not model.univariate:
+        if not model.frozen:
             raise ValueError(
                 "Invalid model : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
             )
-        if not isinstance(model, FrozenLifetimeModel):
-            pass
+        if not isinstance(model, Distribution):
+            model = model.freeze()
 
         self.model = model
         if model1 is not None:
-            if not model1.univariate:
+            if not model1.frozen:
                 raise ValueError(
                     "Invalid model1 : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
                 )
+            if not isinstance(model1, Distribution):
+                model1 = model1.freeze()
         self.model1 = model1
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -159,7 +168,7 @@ def reward_partial_expectation(
     ls = model.ls_integrate(func, np.zeros_like(timeline), timeline)
     # reshape 2d -> final_dim
     if isinstance(model, FrozenLifetimeModel):
-        ndim = max(map(np.ndim, (timeline, *model.z)), default=0)
+        ndim = max(map(np.ndim, (timeline, *model.args)), default=0)
     else:
         ndim = np.ndim(timeline)
     if ndim < 2:

@@ -6,12 +6,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.economic import CostStructure
-from relife.sample import CountData
-from relife.stochastic_process import NonHomogeneousPoissonProcess
 from ..economic.discounting import exponential_discounting
 
 if TYPE_CHECKING:
-    from relife.model import LifetimeModel, FrozenLifetimeModel
+    from relife.stochastic_process import NonHomogeneousPoissonProcess
+    from relife.model import BaseLifetimeModel, FrozenLifetimeModel
+    from relife.sample import CountData
 
 
 # RenewalPolicy
@@ -24,8 +24,8 @@ class RenewalPolicy:
 
     def __init__(
         self,
-        model: LifetimeModel[()],
-        model1: Optional[LifetimeModel[()]] = None,
+        model: BaseLifetimeModel[()],
+        model1: Optional[BaseLifetimeModel[()]] = None,
         discounting_rate: Optional[float] = None,
         **kwcosts: float | NDArray[np.float64],
     ):
@@ -85,12 +85,12 @@ class RenewalPolicy:
 
 
 def make_renewal_policy(
-    model: LifetimeModel[()] | NonHomogeneousPoissonProcess,
+    model: BaseLifetimeModel[()] | NonHomogeneousPoissonProcess,
     cost_structure: CostStructure,
     one_cycle: bool = False,
     run_to_failure: bool = False,
     discounting_rate: Optional[float] = None,
-    model1: Optional[LifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    model1: Optional[BaseLifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, TypeVarTuple
+from typing import Any, Optional, TypeVarTuple, Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,15 +8,20 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.likelihood import LifetimeData
-from relife.likelihood.mle import FittingResults, maximum_likelihood_estimation
-from relife.model import FrozenLifetimeModel, LifetimeModel, Parametric, SurvivalABC
+from relife.likelihood.mle import maximum_likelihood_estimation
+from relife.model import (
+    FrozenLifetimeModel,
+    Parametric,
+    BaseLifetimeModel,
+    BaseParametricLifetimeModel,
+)
 from relife.quadratures import gauss_legendre, shifted_laguerre
 
 Args = TypeVarTuple("Args")
 
 
 # type LifetimeDistribution[()]
-class Distribution(Parametric, SurvivalABC[()], ABC):
+class Distribution(BaseParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
@@ -163,7 +168,7 @@ class Distribution(Parametric, SurvivalABC[()], ABC):
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
-    ) -> FittingResults:
+    ) -> Self:
         # if update to 3.12 : maximum_likelihood_estimation[()](...), generic functions
         fitting_results = maximum_likelihood_estimation(
             self,
@@ -174,7 +179,8 @@ class Distribution(Parametric, SurvivalABC[()], ABC):
             **kwargs,
         )
         self.params = fitting_results.params
-        return fitting_results
+        self.fitting_results = fitting_results
+        return self
 
 
 class Exponential(Distribution):
@@ -744,7 +750,7 @@ for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
     class_obj.ichf.__doc__ = ICHF_DOCSTRING
 
 
-class EquilibriumDistribution(Parametric, SurvivalABC[*Args]):
+class EquilibriumDistribution(Parametric, BaseLifetimeModel[*Args]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
@@ -752,7 +758,7 @@ class EquilibriumDistribution(Parametric, SurvivalABC[*Args]):
 
     Parameters
     ----------
-    baseline : LifetimeModel
+    baseline : BaseLifetimeModel
         Underlying lifetime core.
 
     References
@@ -760,7 +766,7 @@ class EquilibriumDistribution(Parametric, SurvivalABC[*Args]):
     .. [1] Ross, S. M. (1996). Stochastic stochastic_process. New York: Wiley.
     """
 
-    def __init__(self, baseline: LifetimeModel[*Args]):
+    def __init__(self, baseline: BaseLifetimeModel[*Args]):
         super().__init__()
         self.compose_with(baseline=baseline)
 

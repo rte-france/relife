@@ -1,20 +1,35 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Optional, TypeVarTuple
+from typing import (
+    Callable,
+    Generic,
+    Optional,
+    TypeVarTuple,
+    TYPE_CHECKING,
+    Any,
+    Self,
+    NewType,
+)
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import newton
+from scipy.optimize import newton, Bounds
 
-from relife._plots import PlotConstructor, PlotSurvivalFunc
+from relife._plots import PlotSurvivalFunc
 from relife.quadratures import gauss_legendre, quad_laguerre
-
 from ._frozen import FrozenLifetimeModel
+from ._parameters import Parametric
+
+if TYPE_CHECKING:
+    from relife.likelihood import LifetimeData
+
 
 Args = TypeVarTuple("Args")
 
 
-class SurvivalABC(Generic[*Args], ABC):
-    r"""A generic base class for lifetime model.
+class BaseLifetimeModel(Generic[*Args], ABC):
+    r"""Base class for lifetime model.
 
     This class defines the structure for creating lifetime model. It is s a blueprint
     for implementing lifetime model parametrized by a variadic set of arguments.
@@ -327,3 +342,60 @@ class SurvivalABC(Generic[*Args], ABC):
         *args: *Args,
     ) -> FrozenLifetimeModel[*Args]:
         return FrozenLifetimeModel(self, *args)
+
+
+class BaseParametricLifetimeModel(Parametric, BaseLifetimeModel[*Args], ABC):
+    def __init__(self):
+        super().__init__()
+        self.fitting_results = None
+
+    @property
+    @abstractmethod
+    def params_bounds(self) -> Bounds: ...
+
+    @abstractmethod
+    def init_params(self, lifetime_data: LifetimeData, *args: *Args) -> None: ...
+
+    @abstractmethod
+    def fit(
+        self,
+        time: float | NDArray[np.float64],
+        /,
+        *args: *Args,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        **kwargs: Any,
+    ) -> Self: ...
+
+
+NonParametricEstimation = NewType(
+    "NonParametricEstimation",
+    dict[
+        str,
+        tuple[NDArray[np.float64], NDArray[np.float64], Optional[NDArray[np.float64]]],
+    ],
+)
+
+
+class BaseNonParametricLifetimeModel(ABC):
+    estimations: Optional[NonParametricEstimation]
+
+    def __init__(self):
+        self.estimations = None
+
+    @abstractmethod
+    def fit(
+        self,
+        time: float | NDArray[np.float64],
+        /,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+    ) -> Self: ...
+
+    @property
+    def plot(self) -> PlotSurvivalFunc:
+        if self.estimations is None:
+            raise ValueError
+        return PlotSurvivalFunc(self)

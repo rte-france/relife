@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional, TypeVarTuple
+from typing import Any, Optional, TypeVarTuple, Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,12 +15,12 @@ from scipy.optimize import Bounds
 from typing_extensions import override
 
 from relife.likelihood import LifetimeData
-from relife.likelihood.mle import FittingResults, maximum_likelihood_estimation
+from relife.likelihood.mle import maximum_likelihood_estimation
 from relife.model import (
     FrozenLifetimeModel,
     Parametric,
     ParametricLifetimeModel,
-    SurvivalABC,
+    BaseParametricLifetimeModel,
 )
 
 Args = TypeVarTuple("Args")
@@ -85,7 +85,7 @@ class CovarEffect(Parametric):
 
 
 # type LifetimeModel[float|NDArray[np.float64], *Ts]
-class Regression(Parametric, SurvivalABC[float | NDArray[np.float64], *Args], ABC):
+class Regression(BaseParametricLifetimeModel[float | NDArray[np.float64], *Args], ABC):
     """
     Base class for regression model.
     """
@@ -333,7 +333,7 @@ class Regression(Parametric, SurvivalABC[float | NDArray[np.float64], *Args], AB
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
-    ) -> FittingResults:
+    ) -> Self:
         # if update to 3.12 : maximum_likelihood_estimation[float|NDArray[np.float64], *args](...), generic functions
         fitting_results = maximum_likelihood_estimation(
             self,
@@ -346,7 +346,8 @@ class Regression(Parametric, SurvivalABC[float | NDArray[np.float64], *Args], AB
             **kwargs,
         )
         self.params = fitting_results.params
-        return fitting_results
+        self.fitting_results = fitting_results
+        return self
 
 
 class ProportionalHazard(Regression[*Args]):

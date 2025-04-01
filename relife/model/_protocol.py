@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import (
     Any,
     Callable,
@@ -5,16 +7,22 @@ from typing import (
     Protocol,
     TypeVarTuple,
     runtime_checkable,
+    Self,
+    TYPE_CHECKING,
 )
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from relife.likelihood import LifetimeData
-from relife.likelihood.mle import FittingResults
+if TYPE_CHECKING:
 
-from ._frozen import FrozenLifetimeModel
+    from ._frozen import FrozenLifetimeModel
+    from ._base import NonParametricEstimation
+    from relife.likelihood.mle import FittingResults
+    from relife.likelihood import LifetimeData
+    from relife._plots import PlotConstructor
+
 
 Args = TypeVarTuple("Args")
 
@@ -110,3 +118,22 @@ class ParametricLifetimeModel(LifetimeModel[*Args], Protocol):
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> FittingResults: ...
+
+
+@runtime_checkable
+class NonParametricLifetimeModel(Protocol):
+    estimations: Optional[NonParametricEstimation]
+
+    def __init__(self):
+        self.estimations = None
+
+    def fit(
+        self,
+        time: float | NDArray[np.float64],
+        /,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+    ) -> Self: ...
+
+    def plot(self) -> PlotConstructor: ...

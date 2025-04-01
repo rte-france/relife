@@ -12,7 +12,7 @@ from relife.stochastic_process.renewal import reward_partial_expectation
 from .renewal import RenewalPolicy
 
 if TYPE_CHECKING:
-    from relife.model import LifetimeModel
+    from relife.model import BaseLifetimeModel
 
 
 class OneCycleRunToFailurePolicy(RenewalPolicy):
@@ -22,7 +22,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
 
     Parameters
     ----------
-    model : LifetimeModel
+    model : BaseLifetimeModel
         The lifetime model of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
@@ -39,7 +39,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel,
+        model: BaseLifetimeModel,
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
@@ -109,7 +109,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     Parameters
     ----------
-    model : LifetimeModel
+    model : BaseLifetimeModel
         The lifetime model of the assets.
     cf : np.ndarray
         The cost of failure for each asset.
@@ -134,12 +134,12 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: LifetimeModel[()],
+        model: BaseLifetimeModel[()],
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[LifetimeModel[()]] = None,
+        model1: Optional[BaseLifetimeModel[()]] = None,
     ) -> None:
         super().__init__(model, model1, discounting_rate, cf=cf)
 

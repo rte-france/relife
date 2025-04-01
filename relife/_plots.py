@@ -9,7 +9,7 @@ from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.model import LifetimeModel, NonParametricModel
+    from relife.model import LifetimeModel, NonParametricLifetimeModel
     from relife.sample import CountData, NHPPCountData, RenewalData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
@@ -147,58 +147,23 @@ def param_probfunc_plot(
 
 def nonparam_probfunc_plot(
     fname: str,
-    obj: NonParametricModel,
-    timeline: NDArray[np.float64] = None,
+    obj: NonParametricLifetimeModel,
     alpha_ci: float = 0.05,
     **kwargs,
 ):
+    from relife.non_parametric_model import NelsonAalen
+
     label = kwargs.pop("label", f"{obj.__class__.__name__}" + f".{fname}")
     if not hasattr(obj, fname):
         raise ValueError(f"No plot for {fname}")
 
-    estimates = getattr(obj, "_" + fname)
-    if timeline is None:
-        timeline = estimates.timeline
-        y = estimates.values
-        se = estimates.se
-    else:
-        y, se = estimates.nearest_1dinterp(timeline)
+    timeline, y, se = getattr(obj, fname)
     return plot(
         timeline,
         y,
         se,
         alpha_ci,
-        bounds=(0.0, 1.0),
-        label=label,
-        drawstyle="steps-post",
-        **kwargs,
-    )
-
-
-def nelsonaalen_plot(
-    fname: str,
-    obj: NonParametricModel,
-    timeline: NDArray[np.float64] = None,
-    alpha_ci: float = 0.05,
-    **kwargs,
-):
-    label = kwargs.pop("label", f"{obj.__class__.__name__}" + f".{fname}")
-    if not hasattr(obj, fname):
-        raise ValueError(f"No plot for {fname}")
-
-    estimates = getattr(obj, "_" + fname)
-    if timeline is None:
-        timeline = estimates.timeline
-        y = estimates.values
-        se = estimates.se
-    else:
-        y, se = estimates.nearest_1dinterp(timeline)
-    return plot(
-        timeline,
-        y,
-        se,
-        alpha_ci,
-        bounds=(0.0, np.inf),
+        bounds=(0.0, np.inf) if isinstance(obj, NelsonAalen) else (0.0, 1.0),
         label=label,
         drawstyle="steps-post",
         **kwargs,
@@ -292,11 +257,7 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
-        from relife.nonparametric_model import (  # avoid circular import
-            ECDF,
-            KaplanMeier,
-            NelsonAalen,
-        )
+        from relife.model import NonParametricLifetimeModel
         from relife.parametric_model import Distribution, Regression
         from relife.sample import CountData, NHPPCountData, RenewalData
         from relife.stochastic_process import NonHomogeneousPoissonProcess
@@ -305,10 +266,8 @@ class PlotDescriptor:
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
         if isinstance(obj.obj, Regression):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
-        if isinstance(obj.obj, ECDF | KaplanMeier):
+        if isinstance(obj.obj, NonParametricLifetimeModel):
             return BoundPlot(obj.obj, nonparam_probfunc_plot, self.name)
-        if isinstance(obj.obj, NelsonAalen):
-            return BoundPlot(obj.obj, nelsonaalen_plot, self.name)
         if isinstance(obj.obj, CountData):
             if isinstance(obj.obj, RenewalData):
                 return BoundPlot(obj.obj, renewal_data_plot, self.name)

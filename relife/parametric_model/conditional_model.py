@@ -6,16 +6,18 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.model import Parametric, SurvivalABC, FrozenLifetimeModel
+from relife.model import Parametric, BaseLifetimeModel, FrozenLifetimeModel
 from relife.quadratures import gauss_legendre
 
 if TYPE_CHECKING:
-    from relife.model import LifetimeModel
+    from relife.model import BaseLifetimeModel
 
 Args = TypeVarTuple("Args")
 
 
-class AgeReplacementModel(Parametric, SurvivalABC[float | NDArray[np.float64], *Args]):
+class AgeReplacementModel(
+    Parametric, BaseLifetimeModel[float | NDArray[np.float64], *Args]
+):
     r"""
     Age replacement core.
 
@@ -23,7 +25,7 @@ class AgeReplacementModel(Parametric, SurvivalABC[float | NDArray[np.float64], *
 
     Parameters
     ----------
-    baseline : LifetimeModel
+    baseline : BaseLifetimeModel
         Underlying lifetime core.
 
     Notes
@@ -32,7 +34,7 @@ class AgeReplacementModel(Parametric, SurvivalABC[float | NDArray[np.float64], *
     :math:`X` is a baseline lifetime and ar the age of replacement.
     """
 
-    def __init__(self, baseline: LifetimeModel[*Args]):
+    def __init__(self, baseline: BaseLifetimeModel[*Args]):
         super().__init__()
         self.compose_with(baseline=baseline)
 
@@ -193,18 +195,20 @@ class AgeReplacementModel(Parametric, SurvivalABC[float | NDArray[np.float64], *
         return FrozenLifetimeModel(self, *(ar, *args))
 
 
-class LeftTruncatedModel(Parametric, SurvivalABC[float | NDArray[np.float64], *Args]):
+class LeftTruncatedModel(
+    Parametric, BaseLifetimeModel[float | NDArray[np.float64], *Args]
+):
     r"""Left truncated core.
 
     Conditional distribution of the lifetime core for an asset having reach age :math:`a_0`.
 
     Parameters
     ----------
-    baseline : LifetimeModel
+    baseline : BaseLifetimeModel
         Underlying lifetime core.
     """
 
-    def __init__(self, baseline: LifetimeModel[*Args]):
+    def __init__(self, baseline: BaseLifetimeModel[*Args]):
         super().__init__()
         self.compose_with(baseline=baseline)
 
