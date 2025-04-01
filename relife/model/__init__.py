@@ -1,6 +1,8 @@
-from .abc import SurvivalABC
-from .parameters import Parametric
-from .protocol import (
+from ._abc import SurvivalABC
+from ._frozen import FrozenLifetimeModel, FrozenNonHomogeneousPoissonProcess
+from ._parameters import Parametric
+from ._protocol import (
     LifetimeModel,
+    NonParametricModel,
     ParametricLifetimeModel,
 )

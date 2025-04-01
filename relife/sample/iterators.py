@@ -1,12 +1,13 @@
 from abc import abstractmethod
 from collections.abc import Iterator
-from typing import Optional, NewType
+from typing import NewType, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic.rewards import Discounting, Rewards
-from relife.model.frozen import FrozenLifetimeModel
+from relife.economic.discounting import Discounting
+from relife.economic.rewards import Rewards
+from relife.model import FrozenLifetimeModel
 from relife.parametric_model import Exponential
 
 AnyNDArray = NewType(
@@ -131,8 +132,8 @@ class LifetimeIterator(SampleIterator):
             self.start_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
 
         self.model = model
-        self.ar = model.model_args.get("ar", None)
-        self.a0 = model.model_args.get("a0", None)
+        self.ar = model.kwargs.get("ar", None)
+        self.a0 = model.kwargs.get("a0", None)
 
     def compute_rewards(
         self, timeline: NDArray[np.float64], durations: NDArray[np.float64]

@@ -16,9 +16,9 @@ from relife.model import (
     ProportionalHazard,
     Weibull,
 )
+from relife.parametric_model import EquilibriumDistribution
 from relife.parametric_model.conditional_model import (
     AgeReplacementModel,
-    EquilibriumDistribution,
 )
 from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 

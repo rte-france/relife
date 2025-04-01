@@ -1,14 +1,14 @@
 from functools import partial
-from typing import Callable, Optional, NewType
+from typing import Callable, NewType, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.economic.rewards import Discounting, exponential_discounting
-from relife.model.frozen import FrozenLifetimeModel
-from relife.model.protocol import LifetimeModel
-from relife.sampling import CountData
+from relife.economic.discounting import Discounting, exponential_discounting
+from relife.model._frozen import FrozenLifetimeModel
+from relife.model._protocol import LifetimeModel
+from relife.sample import CountData
 
 
 def renewal_equation_solver(
@@ -121,7 +121,7 @@ class RenewalProcess:
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> CountData:
-        from relife.sampling import sample_count_data
+        from relife.sample import sample_count_data
 
         return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
 
@@ -133,7 +133,7 @@ class RenewalProcess:
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sampling import failure_data_sample
+        from relife.sample import failure_data_sample
 
         return failure_data_sample(
             self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
@@ -277,7 +277,7 @@ class RenewalRewardProcess(RenewalProcess):
         seed: Optional[int] = None,
         use: str = "model",
     ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sampling import failure_data_sample
+        from relife.sample import failure_data_sample
 
         return failure_data_sample(
             self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use

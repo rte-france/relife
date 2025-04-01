@@ -1,2 +1,2 @@
 from .lifetime_data import LifetimeData
-from .likelihoods import LikelihoodFromLifetimes
+from .lifetime_likelihood import LikelihoodFromLifetimes

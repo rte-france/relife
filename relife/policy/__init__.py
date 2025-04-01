@@ -1,6 +1,6 @@
 from .age_replacement import (
-    OneCycleAgeReplacementPolicy,
     DefaultAgeReplacementPolicy,
     NonHomogeneousPoissonAgeReplacementPolicy,
+    OneCycleAgeReplacementPolicy,
 )
-from .run_to_failure import OneCycleRunToFailurePolicy, DefaultRunToFailurePolicy
+from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy

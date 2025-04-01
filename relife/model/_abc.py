@@ -1,23 +1,19 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Optional, Callable, TypeVarTuple, NewType, Union
+from typing import Callable, Generic, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.model.frozen import FrozenLifetimeModel
-from relife.model.protocol import LifetimeModel
-from relife.plots import PlotConstructor, PlotSurvivalFunc
+from relife._plots import PlotConstructor, PlotSurvivalFunc
 from relife.quadratures import gauss_legendre, quad_laguerre
 
-Ts = TypeVarTuple("Ts")
-T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
-ModelArgs = NewType(
-    "ModelArgs", NDArray[np.floating] | NDArray[np.integer] | float | int
-)
+from ._frozen import FrozenLifetimeModel
+
+Args = TypeVarTuple("Args")
 
 
-class SurvivalABC(Generic[*Ts], ABC):
+class SurvivalABC(Generic[*Args], ABC):
     r"""A generic base class for lifetime model.
 
     This class defines the structure for creating lifetime model. It is s a blueprint
@@ -40,7 +36,9 @@ class SurvivalABC(Generic[*Ts], ABC):
     frozen: bool = False
 
     @abstractmethod
-    def hf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def hf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         if hasattr(self, "pdf") and hasattr(self, "sf"):
             return self.pdf(time, *args) / self.sf(time, *args)
         if hasattr(self, "sf"):
@@ -59,7 +57,9 @@ class SurvivalABC(Generic[*Ts], ABC):
         )
 
     @abstractmethod
-    def chf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def chf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         if hasattr(self, "sf"):
             return -np.log(self.sf(time, *args))
         if hasattr(self, "pdf") and hasattr(self, "hf"):
@@ -78,7 +78,9 @@ class SurvivalABC(Generic[*Ts], ABC):
         )
 
     @abstractmethod
-    def sf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def sf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         if hasattr(self, "chf"):
             return np.exp(
                 -self.chf(
@@ -97,7 +99,9 @@ class SurvivalABC(Generic[*Ts], ABC):
         )
 
     @abstractmethod
-    def pdf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def pdf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         try:
             return self.sf(time, *args) * self.hf(time, *args)
         except NotImplementedError as err:
@@ -108,7 +112,9 @@ class SurvivalABC(Generic[*Ts], ABC):
             """
             ) from err
 
-    def mrl(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def mrl(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
         if sf.ndim < 2:  # 2d to 1d or 0d
@@ -118,8 +124,8 @@ class SurvivalABC(Generic[*Ts], ABC):
     def isf(
         self,
         probability: float | NDArray[np.float64],
-        *args: *Ts,
-    ):
+        *args: *Args,
+    ) -> NDArray[np.float64]:
         """Inverse survival function.
 
         Parameters
@@ -141,23 +147,25 @@ class SurvivalABC(Generic[*Ts], ABC):
     def ichf(
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
-        *args: *Ts,
-    ):
+        *args: *Args,
+    ) -> NDArray[np.float64]:
         return newton(
             lambda x: self.chf(x, *args) - cumulative_hazard_rate,
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    def cdf(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def cdf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         return 1 - self.sf(time, *args)
 
     def rvs(
         self,
-        *args: *Ts,
+        *args: *Args,
         size: int = 1,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
-        """Random variable sampling.
+        """Random variable sample.
 
         Parameters
         ----------
@@ -177,18 +185,18 @@ class SurvivalABC(Generic[*Ts], ABC):
         return self.isf(probability, *args)
 
     def ppf(
-        self: LifetimeModel[*Ts],
+        self,
         probability: float | NDArray[np.float64],
-        *args: *Ts,
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
     def ls_integrate(
-        self: LifetimeModel[*Ts],
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
-        *args: *Ts,
+        *args: *Args,
         deg: int = 100,
     ) -> NDArray[np.float64]:
         r"""
@@ -245,7 +253,7 @@ class SurvivalABC(Generic[*Ts], ABC):
         if isinstance(args_2d, np.ndarray):
             args_2d = (args_2d,)
 
-        def integrand(x: NDArray[np.float64], *_: *Ts) -> NDArray[np.float64]:
+        def integrand(x: NDArray[np.float64], *_: *Args) -> NDArray[np.float64]:
             return np.atleast_2d(func(x) * self.pdf(x, *_))
 
         if np.all(np.isinf(b)):
@@ -274,7 +282,7 @@ class SurvivalABC(Generic[*Ts], ABC):
         #     except ValueError:
         #         raise ValueError("broadcast_to shape value is incompatible")
 
-    def moment(self, n: int, *args: *Ts) -> NDArray[np.float64]:
+    def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         """n-th order moment
 
         Parameters
@@ -300,13 +308,13 @@ class SurvivalABC(Generic[*Ts], ABC):
             ls = np.squeeze(ls)
         return ls
 
-    def mean(self, *args: *Ts) -> NDArray[np.float64]:
+    def mean(self, *args: *Args) -> NDArray[np.float64]:
         return self.moment(1, *args)
 
-    def var(self, *args: *Ts) -> NDArray[np.float64]:
+    def var(self, *args: *Args) -> NDArray[np.float64]:
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
-    def median(self: LifetimeModel[*Ts], *args: *Ts) -> NDArray[np.float64]:
+    def median(self, *args: *Args) -> NDArray[np.float64]:
         return self.ppf(np.array(0.5), *args)
 
     @property
@@ -315,8 +323,7 @@ class SurvivalABC(Generic[*Ts], ABC):
         return PlotSurvivalFunc(self)
 
     def freeze(
-        self, **kwargs: ModelArgs
-    ) -> Union[
-        FrozenLifetimeModel, LifetimeModel[()]
-    ]:  # both return type are equivalent
-        return FrozenLifetimeModel(self, **kwargs)
+        self,
+        *args: *Args,
+    ) -> FrozenLifetimeModel[*Args]:
+        return FrozenLifetimeModel(self, *args)

@@ -1,20 +1,18 @@
-from typing import Any, Optional, Sequence, Union, NewType, Generic, TypeVarTuple
+from typing import Any, Generic, Optional, Sequence, TypeVarTuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
+from relife._plots import PlotConstructor, PlotNHPP
 from relife.likelihood.mle import FittingResults, maximum_likelihood_estimation
-from relife.model import Parametric
-from relife.model.frozen import FrozenNonHomogeneousPoissonProcess
-from relife.model.protocol import ParametricLifetimeModel
-from relife.plots import PlotConstructor, PlotNHPP
-from relife.sampling import CountData
-
-Ts = TypeVarTuple("Ts")
-T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
-ModelArgs = NewType(
-    "ModelArgs", NDArray[np.floating] | NDArray[np.integer] | float | int
+from relife.model import (
+    FrozenNonHomogeneousPoissonProcess,
+    Parametric,
+    ParametricLifetimeModel,
 )
+from relife.sample import CountData
+
+Args = TypeVarTuple("Args")
 
 
 # generic function
@@ -22,7 +20,7 @@ def nhpp_data_factory(
     events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
     ages: NDArray[np.float64],
     /,
-    *args: *Ts,
+    *args: *Args,
     assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
     first_ages: Optional[NDArray[np.float64]] = None,
     last_ages: Optional[NDArray[np.float64]] = None,
@@ -156,16 +154,16 @@ def nhpp_data_factory(
         else:
             entry = np.roll(ages, 1)
             entry[first_age_index] = 0.0
-    model_args = tuple((np.take(arg, _ids) for arg in z))
+    model_args = tuple((np.take(arg, _ids) for arg in args))
 
     return time, event, entry, model_args
 
 
-class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
+class NonHomogeneousPoissonProcess(Parametric, Generic[*Args]):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*Ts],
+        baseline: ParametricLifetimeModel[*Args],
     ):
         super().__init__()
         self.compose_with(baseline=baseline)
@@ -175,10 +173,14 @@ class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
             )
         self.baseline = baseline
 
-    def intensity(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def intensity(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         return self.baseline.hf(time, *args)
 
-    def cumulative_intensity(self, time: T, *args: *Ts) -> NDArray[np.float64]:
+    def cumulative_intensity(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         return self.baseline.chf(time, *args)
 
     def sample(
@@ -188,9 +190,9 @@ class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
         t0: float = 0.0,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
-        **model_args: ModelArgs,
+        **model_args: float | NDArray[np.float64],
     ) -> CountData:
-        from relife.sampling import sample_count_data
+        from relife.sample import sample_count_data
 
         return sample_count_data(
             self.baseline.freeze(**model_args),
@@ -205,15 +207,16 @@ class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
         self,
         size: int,
         tf: float,
+        /,
+        *args: *Args,
         t0: float = 0.0,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
-        **model_args: ModelArgs,
     ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sampling import failure_data_sample
+        from relife.sample import failure_data_sample
 
         return failure_data_sample(
-            self.baseline.freeze(**model_args),
+            self.baseline.freeze(*args),
             size,
             tf,
             t0,
@@ -222,8 +225,8 @@ class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
             use="model",
         )
 
-    def freeze(self, **kwargs: ModelArgs):
-        return FrozenNonHomogeneousPoissonProcess(self, **kwargs)
+    def freeze(self, *args: *Args) -> FrozenNonHomogeneousPoissonProcess[*Args]:
+        return FrozenNonHomogeneousPoissonProcess(self, *args)
 
     @property
     def plot(self) -> PlotConstructor:
@@ -234,7 +237,7 @@ class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
         events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
         events_ages: NDArray[np.float64],
         /,
-        *args: *Ts,
+        *args: *Args,
         assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
         first_ages: Optional[NDArray[np.float64]] = None,
         last_ages: Optional[NDArray[np.float64]] = None,
@@ -254,18 +257,3 @@ class NonHomogeneousPoissonProcess(Parametric, Generic[*Ts]):
         )
         self.baseline.params = fitting_results.params
         return fitting_results
-
-
-# class NonHomogeneousPoissonProcessWithRewards(NonHomogeneousPoissonProcess):
-#     def __init__(
-#         self,
-#         model: LifetimeModel[*tuple[NumericalArrayLike, ...]],
-#         rewards: Rewards,
-#         model_args: tuple[NumericalArrayLike, ...] = (),
-#         *,
-#         discounting_rate: Optional[float] = None,
-#         nb_assets: int = 1,
-#     ):
-#         super().__init__(model, model_args, nb_assets=nb_assets)
-#         self.rewards = rewards
-#         self.discounting = exp_discounting(discounting_rate)

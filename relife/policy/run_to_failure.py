@@ -1,4 +1,4 @@
-from typing import Optional, NewType
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,10 +8,8 @@ from relife.model import LifetimeModel
 from relife.parametric_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process.renewal import reward_partial_expectation
-from .renewal import RenewalPolicy
 
-A0 = NewType("A0", NDArray[np.floating] | NDArray[np.integer] | float | int)
-Cost = NewType("Cost", NDArray[np.floating] | NDArray[np.integer] | float | int)
+from .renewal import RenewalPolicy
 
 
 class OneCycleRunToFailurePolicy(RenewalPolicy):
@@ -39,11 +37,11 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
     def __init__(
         self,
         model: LifetimeModel,
-        cf: Cost,
+        cf: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
         period_before_discounting: float = 1.0,
-        a0: Optional[A0] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         super().__init__(model, discounting_rate=discounting_rate, cf=cf)
         if period_before_discounting == 0:
@@ -131,16 +129,14 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         the Engineering and Informational Sciences, 22(1), 53-74.
     """
 
-    cf = Cost()
-
     def __init__(
         self,
         model: LifetimeModel[()],
-        cf: Cost,
+        cf: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
-        a0: Optional[A0] = None,
-        model1: Optional[LifetimeModel] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
+        model1: Optional[LifetimeModel[()]] = None,
     ) -> None:
         super().__init__(model, model1, discounting_rate, cf=cf)
 
@@ -184,13 +180,12 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         return self.underlying_process.asymptotic_expected_equivalent_annual_cost()
 
 
-from .docstrings import (
+from ._docstring import (
     ASYMPTOTIC_EEAC_DOCSTRING,
     ASYMPTOTIC_ETC_DOCSTRING,
     EEAC_DOCSTRING,
     ETC_DOCSTRING,
 )
-
 
 OneCycleRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
 OneCycleRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING

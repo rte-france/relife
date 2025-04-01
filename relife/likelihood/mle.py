@@ -1,17 +1,17 @@
 import copy
-from dataclasses import dataclass, InitVar, field, asdict
-from typing import Optional, NewType, TypeVarTuple, Any
+from dataclasses import InitVar, asdict, dataclass, field
+from typing import Any, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import OptimizeResult, minimize
 
-from relife.model.protocol import ParametricLifetimeDistribution
-from .likelihoods import LikelihoodFromLifetimes
-from ..data import lifetime_data_factory
+from relife.model import ParametricLifetimeModel
 
-Z = TypeVarTuple("Z")
-T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
+from .lifetime_data import lifetime_data_factory
+from .lifetime_likelihood import LikelihoodFromLifetimes
+
+Args = TypeVarTuple("Args")
 
 
 @dataclass
@@ -84,10 +84,10 @@ class FittingResults:
 
 
 def maximum_likelihood_estimation(
-    distribution: ParametricLifetimeDistribution[*Z],
+    model: ParametricLifetimeModel[*Args],
     time: NDArray[np.float64],
     /,
-    *z: *Z,
+    *args: *Args,
     event: Optional[NDArray[np.bool_]] = None,
     entry: Optional[NDArray[np.float64]] = None,
     departure: Optional[NDArray[np.float64]] = None,
@@ -102,9 +102,11 @@ def maximum_likelihood_estimation(
     )
 
     # Step 2: Initialize the model and likelihood
-    optimized_model = copy.deepcopy(distribution)
-    optimized_model.init_params(lifetime_data, *z)
-    likelihood = LikelihoodFromLifetimes(optimized_model, lifetime_data, model_args=z)
+    optimized_model = copy.deepcopy(model)
+    optimized_model.init_params(lifetime_data, *args)
+    likelihood = LikelihoodFromLifetimes(
+        optimized_model, lifetime_data, model_args=args
+    )
 
     # Step 3: Configure and run the optimizer
     minimize_kwargs = {

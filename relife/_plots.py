@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, TypeVarTuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
-from relife.types import NumericalArrayLike
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.model.protocol import LifetimeModel, NonParametricModel
-    from relife.data import CountData, NHPPCountData, RenewalData
+    from relife.model import LifetimeModel, NonParametricModel
+    from relife.sample import CountData, NHPPCountData, RenewalData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
+
+
+Args = TypeVarTuple("Args")
 
 
 def plot(
@@ -64,9 +66,9 @@ def plot(
 
 def param_probfunc_plot(
     fname: str,
-    obj: LifetimeModel[*tuple[NumericalArrayLike, ...]],
+    obj: LifetimeModel[*Args],
     timeline: NDArray[np.float64] = None,
-    model_args: tuple[NumericalArrayLike, ...] = (),
+    model_args: tuple[*Args] = (),
     asset: Optional[ArrayLike] = None,
     alpha_ci: float = 0.05,
     **kwargs,
@@ -290,14 +292,13 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
-        from relife.data import CountData, NHPPCountData, RenewalData
-        from relife.model import (  # avoid circular import
+        from relife.nonparametric_model import (  # avoid circular import
             ECDF,
             KaplanMeier,
             NelsonAalen,
         )
-        from relife.parametric_model.distribution import Distribution
-        from relife.parametric_model.regression import Regression
+        from relife.parametric_model import Distribution, Regression
+        from relife.sample import CountData, NHPPCountData, RenewalData
         from relife.stochastic_process import NonHomogeneousPoissonProcess
 
         if isinstance(obj.obj, Distribution):

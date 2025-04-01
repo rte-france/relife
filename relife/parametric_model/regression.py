@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any, NewType, TypeVarTuple, Union
+from typing import Any, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,23 +15,15 @@ from scipy.optimize import Bounds
 from typing_extensions import override
 
 from relife.likelihood import LifetimeData
-from relife.likelihood.mle import maximum_likelihood_estimation, FittingResults
-from relife.model.abc import (
+from relife.likelihood.mle import FittingResults, maximum_likelihood_estimation
+from relife.model import (
+    FrozenLifetimeModel,
+    Parametric,
+    ParametricLifetimeModel,
     SurvivalABC,
 )
-from relife.model.frozen import FrozenLifetimeModel
-from relife.model.parameters import Parametric
-from relife.model.protocol import (
-    ParametricLifetimeModel,
-    LifetimeModel,
-)
 
-Ts = TypeVarTuple("Ts")
-T = NewType("T", NDArray[np.floating] | NDArray[np.integer] | float | int)
-Covar = NewType("Covar", NDArray[np.floating] | NDArray[np.integer] | float | int)
-ModelArgs = NewType(
-    "ModelArgs", NDArray[np.floating] | NDArray[np.integer] | float | int
-)
+Args = TypeVarTuple("Args")
 
 
 class CovarEffect(Parametric):
@@ -48,7 +40,7 @@ class CovarEffect(Parametric):
         super().__init__()
         self.new_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
 
-    def g(self, covar: Covar) -> NDArray[np.float64]:
+    def g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """
         Compute the covariates effect.
 
@@ -74,7 +66,7 @@ class CovarEffect(Parametric):
             )
         return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
 
-    def jac_g(self, covar: Covar) -> NDArray[np.float64]:
+    def jac_g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """
         Compute the Jacobian of the covariates effect.
 
@@ -92,18 +84,18 @@ class CovarEffect(Parametric):
         return covar * self.g(covar)
 
 
-# type LifetimeModel[Covar, *Ts]
-class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
+# type LifetimeModel[float|NDArray[np.float64], *Ts]
+class Regression(Parametric, SurvivalABC[float | NDArray[np.float64], *Args], ABC):
     """
     Base class for regression model.
     """
 
-    baseline: ParametricLifetimeModel[*Ts]
+    baseline: ParametricLifetimeModel[*Args]
     covar_effect: CovarEffect
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*Ts],
+        baseline: ParametricLifetimeModel[*Args],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__()
@@ -119,8 +111,8 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
     def init_params(
         self,
         lifetime_data: LifetimeData,
-        covar: Covar,
-        *args: *Ts,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> None:
         """
         Initialize parameters for the regression core.
@@ -158,9 +150,9 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
     @override
     def sf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return super().sf(time, covar, *args)
 
@@ -168,8 +160,8 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
     def isf(
         self,
         probability: float | NDArray[np.float64],
-        covar: Covar,
-        *args: *Ts,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         """Inverse survival function.
 
@@ -195,17 +187,17 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
     @override
     def cdf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return super().cdf(time, covar, *args)
 
     def pdf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return super().pdf(time, covar, *args)
 
@@ -213,25 +205,25 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
     def ppf(
         self,
         probability: float | NDArray[np.float64],
-        covar: Covar,
-        *args: *Ts,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return super().ppf(probability, covar, *args)
 
     @override
     def mrl(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return super().mrl(time, covar, *args)
 
     @override
     def rvs(
         self,
-        covar: Covar,
-        *args: *Ts,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
         size: Optional[int] = 1,
         seed: Optional[int] = None,
     ):
@@ -258,62 +250,68 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
         return super().rvs(covar, *args, size=size, seed=seed)
 
     @override
-    def mean(self, covar: Covar, *args: *Ts) -> NDArray[np.float64]:
+    def mean(
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         return super().mean(covar, *args)
 
     @override
-    def var(self, covar: Covar, *args: *Ts) -> NDArray[np.float64]:
+    def var(
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         return super().var(covar, *args)
 
     @override
-    def median(self, covar: Covar, *args: *Ts) -> NDArray[np.float64]:
+    def median(
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         return super().median(covar, *args)
 
     @abstractmethod
     def jac_hf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_chf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]: ...
 
     @abstractmethod
     def dhf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]: ...
 
     def jac_sf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return -self.jac_chf(time, covar, *args) * self.sf(time, covar, *args)
 
     def jac_cdf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return -self.jac_sf(time, covar, *args)
 
     def jac_pdf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return self.jac_hf(time, covar, *args) * self.sf(
             time, covar, *args
@@ -321,22 +319,22 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
 
     @override
     def freeze(
-        self, covar: Covar, **kwargs: ModelArgs
-    ) -> Union[FrozenLifetimeModel, LifetimeModel[()]]:
-        return FrozenLifetimeModel(self, covar=covar, **kwargs)
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> FrozenLifetimeModel[float | NDArray[np.float64], *Args]:
+        return FrozenLifetimeModel(self, *(covar, *args))
 
     def fit(
         self,
         time: NDArray[np.float64],
-        covar: Covar,
+        covar: float | NDArray[np.float64],
         /,
-        *args: *Ts,
+        *args: *Args,
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> FittingResults:
-        # if update to 3.12 : maximum_likelihood_estimation[Covar, *args](...), generic functions
+        # if update to 3.12 : maximum_likelihood_estimation[float|NDArray[np.float64], *args](...), generic functions
         fitting_results = maximum_likelihood_estimation(
             self,
             time,
@@ -351,7 +349,7 @@ class Regression(Parametric, SurvivalABC[Covar, *Ts], ABC):
         return fitting_results
 
 
-class ProportionalHazard(Regression[*Ts]):
+class ProportionalHazard(Regression[*Args]):
     r"""
     Proportional Hazard regression core.
 
@@ -401,24 +399,24 @@ class ProportionalHazard(Regression[*Ts]):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*Ts],
+        baseline: ParametricLifetimeModel[*Args],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
 
     def hf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
     def chf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
@@ -426,8 +424,8 @@ class ProportionalHazard(Regression[*Ts]):
     def ichf(
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
-        covar: Covar,
-        *args: *Ts,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return self.baseline.ichf(
             cumulative_hazard_rate / self.covar_effect.g(covar), *args
@@ -435,9 +433,9 @@ class ProportionalHazard(Regression[*Ts]):
 
     def jac_hf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "jac_hf"):
             return np.column_stack(
@@ -450,9 +448,9 @@ class ProportionalHazard(Regression[*Ts]):
 
     def jac_chf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "jac_chf"):
             return np.column_stack(
@@ -465,16 +463,16 @@ class ProportionalHazard(Regression[*Ts]):
 
     def dhf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "dhf"):
             return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
         raise AttributeError
 
 
-class AFT(Regression[*Ts]):
+class AFT(Regression[*Args]):
     r"""
     Accelerated failure time regression.
 
@@ -522,25 +520,25 @@ class AFT(Regression[*Ts]):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*Ts],
+        baseline: ParametricLifetimeModel[*Args],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
 
     def hf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
 
     def chf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
@@ -549,8 +547,8 @@ class AFT(Regression[*Ts]):
     def ichf(
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
-        covar: Covar,
-        *args: *Ts,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.ichf(
             cumulative_hazard_rate, *args
@@ -558,9 +556,9 @@ class AFT(Regression[*Ts]):
 
     def jac_hf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "jac_hf") and hasattr(self.baseline, "dhf"):
             t0 = time / self.covar_effect.g(covar)
@@ -576,9 +574,9 @@ class AFT(Regression[*Ts]):
 
     def jac_chf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "jac_chf"):
             t0 = time / self.covar_effect.g(covar)
@@ -595,9 +593,9 @@ class AFT(Regression[*Ts]):
 
     def dhf(
         self,
-        time: T,
-        covar: Covar,
-        *args: *Ts,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "dhf"):
             t0 = time / self.covar_effect.g(covar)

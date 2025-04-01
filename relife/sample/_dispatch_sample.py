@@ -15,12 +15,13 @@ from relife.policy import (
     OneCycleAgeReplacementPolicy,
     OneCycleRunToFailurePolicy,
 )
-from relife.sampling.counting_data import NHPPCountData
+from relife.sample.counting_data import NHPPCountData
 from relife.stochastic_process import (
     NonHomogeneousPoissonProcess,
     RenewalRewardProcess,
 )
 from relife.stochastic_process.renewal import RenewalProcess
+
 from .counting_data import RenewalData
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 
@@ -178,7 +179,7 @@ def _(
         "rewards",
     )
     iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed)
-    iterator.set_sampler(
+    iterator.set_model(
         obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
     )
     if isinstance(
@@ -288,9 +289,7 @@ def _(
     iterator.set_model(obj.model)
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
-    model_args = tuple(
-        (np.take(arg, stack["assets_ids"]) for arg in obj.model.model_args)
-    )
+    model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in obj.model.args))
 
     return stack["durations"], stack["events_indicators"], stack["entries"], model_args
 
@@ -313,9 +312,7 @@ def _(
     iterator.set_model(model)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)
-    model_args = tuple(
-        (np.take(arg, stack["assets_ids"]) for arg in obj.model.model_args)
-    )
+    model_args = tuple((np.take(arg, stack["assets_ids"]) for arg in obj.model.args))
 
     return stack["durations"], stack["events_indicators"], stack["entries"], model_args
 
@@ -346,12 +343,8 @@ def _(
     if use != "model":
         raise ValueError("Invalid 'use' value. Only 'model' can be set")
 
-    iterator = NonHomogeneousPoissonIterator(
-        size, tf, t0=t0, nb_assets=obj.nb_assets, seed=seed, keep_last=True
-    )
-    iterator.set_sampler(
-        obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
-    )
+    iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed, keep_last=True)
+    iterator.set_model(obj.model, ar=obj.ar if hasattr(obj, "ar") else None)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)
 

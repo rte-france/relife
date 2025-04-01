@@ -1,2 +1,2 @@
-from .nhpp import NonHomogeneousPoissonProcess, NonHomogeneousPoissonProcessWithRewards
+from .nhpp import NonHomogeneousPoissonProcess
 from .renewal import RenewalProcess, RenewalRewardProcess

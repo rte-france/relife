@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.plots import (
+from relife._plots import (
     PlotConstructor,
     PlotCountingData,
     PlotNHPPData,

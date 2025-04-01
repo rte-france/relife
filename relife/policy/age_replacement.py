@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, NewType
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,17 +8,13 @@ from scipy.optimize import newton
 
 from relife.economic.rewards import age_replacement_rewards
 from relife.model import LifetimeModel
-from relife.model.frozen import FrozenLifetimeModel
-from relife.parametric_model import LeftTruncatedModel, AgeReplacementModel
+from relife.parametric_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadratures import gauss_legendre
-from relife.stochastic_process import RenewalRewardProcess, NonHomogeneousPoissonProcess
+from relife.stochastic_process import NonHomogeneousPoissonProcess, RenewalRewardProcess
 from relife.stochastic_process.renewal import reward_partial_expectation
-from .decorator import get_if_none
-from .renewal import RenewalPolicy
 
-Ar = NewType("Ar", NDArray[np.floating] | NDArray[np.integer] | float | int)
-A0 = NewType("A0", NDArray[np.floating] | NDArray[np.integer] | float | int)
-Cost = NewType("Cost", NDArray[np.floating] | NDArray[np.integer] | float | int)
+from ._decorator import get_if_none
+from .renewal import RenewalPolicy
 
 
 class OneCycleAgeReplacementPolicy(RenewalPolicy):
@@ -60,13 +56,13 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
     def __init__(
         self,
         model: LifetimeModel[()],
-        cf: Cost,
-        cp: Cost,
+        cf: float | NDArray[np.float64],
+        cp: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
         period_before_discounting: float = 1.0,
-        ar: Optional[Ar] = None,
-        a0: Optional[A0] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         super().__init__(model, discounting_rate=discounting_rate, cf=cf, cp=cp)
 
@@ -77,18 +73,20 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         if a0 is not None:
             self.model = LeftTruncatedModel(self.model).freeze(a0=a0)
 
-        self._set_ar("ar", ar)
+        self.ar = self._reshape_ar(ar)
 
-    def _set_ar(self, name: str, value: Optional[Ar] = None):
-        if value is not None:
-            value = np.asarray(value)
-            if value.size != 1:
-                value = value.reshape(-1, 1)
-                if value.shape[0] != self.nb_assets:
+    def _reshape_ar(
+        self, ar: Optional[float | NDArray[np.float64]]
+    ) -> Optional[float | NDArray[np.float64]]:
+        if ar is not None:
+            ar = np.asarray(ar)
+            if ar.size != 1:
+                ar = ar.reshape(-1, 1)
+                if ar.shape[0] != self.nb_assets:
                     raise ValueError
             else:
-                value = value.item()
-        setattr(self, name, value)
+                ar = ar.item()
+        return ar
 
     @property
     def cp(self):
@@ -104,7 +102,9 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     @get_if_none("ar")
     def expected_total_cost(
-        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+        self,
+        timeline: NDArray[np.float64],
+        ar: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         return reward_partial_expectation(
             timeline,
@@ -115,13 +115,15 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     @get_if_none("ar")
     def asymptotic_expected_total_cost(
-        self, ar: Optional[Ar] = None
+        self, ar: Optional[float | NDArray[np.float64]] = None
     ) -> NDArray[np.float64]:
         return self.expected_total_cost(np.array(np.inf), ar=ar)
 
     @get_if_none("ar")
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+        self,
+        timeline: NDArray[np.float64],
+        ar: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         f = (
             lambda x: age_replacement_rewards(ar, self.cf, self.cp)(x)
@@ -148,7 +150,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     @get_if_none("ar")
     def asymptotic_expected_equivalent_annual_cost(
-        self, ar: Optional[Ar] = None
+        self, ar: Optional[float | NDArray[np.float64]] = None
     ) -> NDArray[np.float64]:
         return self.expected_equivalent_annual_cost(np.array(np.inf), ar=ar)
 
@@ -230,13 +232,13 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
     def __init__(
         self,
         model: LifetimeModel[()],
-        cf: Cost,
-        cp: Cost,
+        cf: float | NDArray[np.float64],
+        cp: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
-        ar: Optional[Ar] = None,
-        ar1: Optional[Ar] = None,
-        a0: Optional[A0] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
+        ar1: Optional[float | NDArray[np.float64]] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
         model1: Optional[LifetimeModel[()]] = None,
     ) -> None:
         super().__init__(model, model1, discounting_rate, cf=cf, cp=cp)
@@ -248,19 +250,21 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         elif model1 is None and ar1 is not None:
             raise ValueError("model1 is not set, ar1 is useless")
 
-        self._set_ar("ar", ar)
-        self._set_ar("ar1", ar1)
+        self.ar = self._reshape_ar(ar)
+        self.ar1 = self._reshape_ar(ar1)
 
-    def _set_ar(self, name: str, value: Optional[Ar] = None):
-        if value is not None:
-            value = np.asarray(value)
-            if value.size != 1:
-                value = value.reshape(-1, 1)
-                if value.shape[0] != self.nb_assets:
+    def _reshape_ar(
+        self, ar: Optional[float | NDArray[np.float64]]
+    ) -> Optional[float | NDArray[np.float64]]:
+        if ar is not None:
+            ar = np.asarray(ar)
+            if ar.size != 1:
+                ar = ar.reshape(-1, 1)
+                if ar.shape[0] != self.nb_assets:
                     raise ValueError
             else:
-                value = value.item()
-        setattr(self, name, value)
+                ar = ar.item()
+        return ar
 
     @property
     def discounting_rate(self):
@@ -274,7 +278,9 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
     def cf(self):
         return self.cost_structure["cf"]
 
-    def underlying_process(self, ar: Ar, ar1: Ar) -> RenewalRewardProcess:
+    def underlying_process(
+        self, ar: float | NDArray[np.float64], ar1: float | NDArray[np.float64]
+    ) -> RenewalRewardProcess:
         return RenewalRewardProcess(
             self.model,
             age_replacement_rewards(ar, self.cf, self.cp),
@@ -287,8 +293,8 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
     def expected_total_cost(
         self,
         timeline: NDArray[np.float64],
-        ar: Optional[Ar] = None,
-        ar1: Optional[Ar] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
+        ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         return self.underlying_process(ar, ar1).expected_total_reward(timeline)
 
@@ -296,8 +302,8 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
     def expected_equivalent_annual_cost(
         self,
         timeline: NDArray[np.float64],
-        ar: Optional[Ar] = None,
-        ar1: Optional[Ar] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
+        ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         return self.underlying_process(ar, ar1).expected_equivalent_annual_cost(
             timeline
@@ -306,16 +312,16 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
     @get_if_none("ar", "ar1")
     def asymptotic_expected_total_cost(
         self,
-        ar: Optional[Ar] = None,
-        ar1: Optional[Ar] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
+        ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         return self.underlying_process(ar, ar1).asymptotic_expected_total_reward()
 
     @get_if_none("ar", "ar1")
     def asymptotic_expected_equivalent_annual_cost(
         self,
-        ar: Optional[Ar] = None,
-        ar1: Optional[Ar] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
+        ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         return self.underlying_process(
             ar, ar1
@@ -338,16 +344,10 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         if np.size(x0) == 1:
             x0 = np.tile(x0, (self.nb_assets, 1))
 
-        if isinstance(self.model, FrozenLifetimeModel):
-            ndim = max(
-                map(np.ndim, (cf_3d, cp_3d, *self.model.z)),
-                default=0,
-            )
-        else:
-            ndim = max(
-                map(np.ndim, (cf_3d, cp_3d)),
-                default=0,
-            )
+        ndim = max(
+            map(np.ndim, (cf_3d, cp_3d, *self.model.args)),
+            default=0,
+        )
 
         def eq(a):
             f = gauss_legendre(
@@ -399,17 +399,14 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         The cost of repair for each asset.
     """
 
-    cp = Cost()
-    cr = Cost()
-
     def __init__(
         self,
         process: NonHomogeneousPoissonProcess,
-        cp: NDArray[np.float64],
-        cr: NDArray[np.float64],
+        cp: float | NDArray[np.float64],
+        cr: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
-        ar: Optional[NDArray[np.float64]] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         super().__init__(process.model, discounting_rate=discounting_rate)
         self.ar = ar
@@ -427,19 +424,23 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
 
     @get_if_none("ar")
     def expected_total_cost(
-        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+        self,
+        timeline: NDArray[np.float64],
+        ar: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         pass
 
     @get_if_none("ar")
     def asymptotic_expected_total_cost(
-        self, ar: Optional[Ar] = None
+        self, ar: Optional[float | NDArray[np.float64]] = None
     ) -> NDArray[np.float64]:
         pass
 
     @get_if_none("ar")
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64], ar: Optional[Ar] = None
+        self,
+        timeline: NDArray[np.float64],
+        ar: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
         pass
 
@@ -495,7 +496,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         return ar
 
 
-from .docstrings import (
+from ._docstring import (
     ASYMPTOTIC_EEAC_DOCSTRING,
     ASYMPTOTIC_ETC_DOCSTRING,
     EEAC_DOCSTRING,

@@ -1,12 +1,10 @@
-from typing import NewType
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-Cost = NewType("Cost", NDArray[np.floating] | NDArray[np.integer] | float | int)
 
-
-def _reshape_mapping(mapping: dict[str, Cost]):
+def _reshape_mapping(mapping: dict[str, float | NDArray[np.float64]]):
     nb_assets = 1  # minimum value
     for k, v in mapping.items():
         arr = np.asarray(v)
@@ -30,7 +28,12 @@ def _reshape_mapping(mapping: dict[str, Cost]):
 class CostStructure(dict):
     _allowed_keys = ("cp", "cf", "cr")
 
-    def __init__(self, mapping=None, /, **kwargs: Cost):
+    def __init__(
+        self,
+        mapping: Optional[dict[str, float | NDArray[np.float64]]] = None,
+        /,
+        **kwargs: float | NDArray[np.float64],
+    ):
         if mapping is None:
             mapping = {}
         mapping.update(kwargs)
