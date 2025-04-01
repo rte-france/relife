@@ -162,7 +162,7 @@ class Parametric:
         Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
         by specifying all parameters values when the core object is initialized.
         """
-        return np.array(self.params_tree.values)
+        return np.array(self.params_tree.values, dtype=np.float64)
 
     @params.setter
     def params(self, new_values: NDArray[np.float64]):
@@ -256,23 +256,20 @@ class Parametric:
                 raise ValueError(f"{name} already exists as function name")
         self.params_tree.node_data = kwparams
 
-    def __getattribute__(self, item):
-        """
-        Raises:
-            ValueError: If any of the attributes in `params` is set to None when trying to
-            access the attribute.
-        """
-
-        if (
-            not item.startswith("_")
-            and not item.startswith("__")
-            and hasattr(self, item)
-        ):
-            if None in self.params:
-                raise ValueError(
-                    f"Can't call {item} if one param is None. Got {self.params} as params"
-                )
-        return super().__getattribute__(item)
+    # def __getattribute__(self, item):
+    #     if not item.startswith("_") and not item.startswith("__"):
+    #         return super().__getattribute__(item)
+    #     if item in (
+    #         "new_params",
+    #         "compose_with",
+    #         "params",
+    #         "params_names",
+    #         "nb_params",
+    #     ):
+    #         return super().__getattribute__(item)
+    #     if not self._all_params_set:
+    #         raise ValueError(f"Can't call {item} if one parameter value is not set")
+    #     return super().__getattribute__(item)
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
