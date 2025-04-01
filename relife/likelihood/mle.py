@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import copy
 from dataclasses import InitVar, asdict, dataclass, field
-from typing import Any, Optional, TypeVarTuple
+from typing import Any, Optional, TypeVarTuple, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import OptimizeResult, minimize
 
-from relife.model import ParametricLifetimeModel
-
 from .lifetime_data import lifetime_data_factory
 from .lifetime_likelihood import LikelihoodFromLifetimes
+
+if TYPE_CHECKING:
+    from relife.model import ParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 

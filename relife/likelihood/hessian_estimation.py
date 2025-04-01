@@ -1,16 +1,18 @@
-from typing import Union
+from __future__ import annotations
+
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 
-from relife.model import ParametricLifetimeModel
-
-from ._abc import LikelihoodABC
+if TYPE_CHECKING:
+    from ._protocol import Likelihood
+    from relife.model import ParametricLifetimeModel
 
 
 def hessian_cs(
-    likelihood: LikelihoodABC,
+    likelihood: Likelihood,
     eps: float = 1e-6,
 ) -> Union[NDArray[np.float64], None]:
     """
@@ -39,7 +41,7 @@ def hessian_cs(
 
 
 def hessian_2point(
-    likelihood: LikelihoodABC,
+    likelihood: Likelihood,
     eps: float = 1e-6,
 ) -> Union[NDArray[np.float64], None]:
     """

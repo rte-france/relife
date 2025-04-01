@@ -1,17 +1,20 @@
-from abc import ABC, abstractmethod
-from typing import Generic, TypeVarTuple
+from __future__ import annotations
+
+from abc import abstractmethod
+from typing import Protocol, TypeVarTuple, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.model import ParametricLifetimeModel
-
 from .hessian_estimation import _hessian_scheme
+
+if TYPE_CHECKING:
+    from relife.model import ParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
 
-class LikelihoodABC(Generic[*Args], ABC):
+class Likelihood(Protocol[*Args]):
     model: ParametricLifetimeModel[*Args]
 
     @property

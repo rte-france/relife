@@ -1,11 +1,16 @@
-from typing import Callable, Optional, TypeVarTuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.model import FrozenLifetimeModel, LifetimeModel, Parametric, SurvivalABC
+from relife.model import Parametric, SurvivalABC, FrozenLifetimeModel
 from relife.quadratures import gauss_legendre
+
+if TYPE_CHECKING:
+    from relife.model import LifetimeModel
 
 Args = TypeVarTuple("Args")
 

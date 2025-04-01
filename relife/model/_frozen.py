@@ -1,20 +1,17 @@
+from __future__ import annotations
+
 import functools
-from typing import Callable, Generic, Optional, TypeVarTuple
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife._plots import PlotConstructor, PlotNHPP
-from relife.parametric_model import (
-    AgeReplacementModel,
-    Distribution,
-    LeftTruncatedModel,
-    Regression,
-)
-from relife.sample import CountData
-from relife.stochastic_process import NonHomogeneousPoissonProcess
 
-from ._protocol import LifetimeModel
+if TYPE_CHECKING:
+    from ._protocol import LifetimeModel
+    from relife.sample import CountData
+    from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 Args = TypeVarTuple("Args")
 
@@ -53,6 +50,13 @@ def _reshape_args(
 def _get_args_names(
     model: LifetimeModel[*Args],
 ) -> tuple[str, ...]:
+
+    from relife.parametric_model import (
+        Regression,
+        AgeReplacementModel,
+        LeftTruncatedModel,
+        Distribution,
+    )
 
     def arg_name(
         obj: LifetimeModel[*Args],

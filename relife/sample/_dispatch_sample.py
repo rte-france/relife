@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from functools import singledispatch
 from itertools import islice
-from typing import Iterator, Optional, Union
+from typing import Iterator, Optional, Union, TYPE_CHECKING
 
 import numpy as np
 
@@ -8,22 +10,23 @@ from relife.economic.rewards import (
     age_replacement_rewards,
     run_to_failure_rewards,
 )
-from relife.policy import (
-    DefaultAgeReplacementPolicy,
-    DefaultRunToFailurePolicy,
-    NonHomogeneousPoissonAgeReplacementPolicy,
-    OneCycleAgeReplacementPolicy,
-    OneCycleRunToFailurePolicy,
-)
-from relife.sample.counting_data import NHPPCountData
-from relife.stochastic_process import (
-    NonHomogeneousPoissonProcess,
-    RenewalRewardProcess,
-)
-from relife.stochastic_process.renewal import RenewalProcess
-
-from .counting_data import RenewalData
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
+
+if TYPE_CHECKING:
+    from relife.policy import (
+        DefaultAgeReplacementPolicy,
+        DefaultRunToFailurePolicy,
+        NonHomogeneousPoissonAgeReplacementPolicy,
+        OneCycleAgeReplacementPolicy,
+        OneCycleRunToFailurePolicy,
+    )
+    from relife.stochastic_process.renewal import RenewalProcess
+    from relife.stochastic_process import (
+        NonHomogeneousPoissonProcess,
+        RenewalRewardProcess,
+    )
+    from relife.sample.counting_data import NHPPCountData
+    from .counting_data import RenewalData
 
 
 def stack1d(

@@ -1,28 +1,17 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NewType, Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.economic import CostStructure
-from relife.model import FrozenLifetimeModel, LifetimeModel
-from relife.parametric_model import Distribution
 from relife.sample import CountData
 from relife.stochastic_process import NonHomogeneousPoissonProcess
-
 from ..economic.discounting import exponential_discounting
 
 if TYPE_CHECKING:
-    from .age_replacement import (
-        DefaultAgeReplacementPolicy,
-        NonHomogeneousPoissonAgeReplacementPolicy,
-        OneCycleAgeReplacementPolicy,
-    )
-    from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
-
-
-Cost = NewType("Cost", NDArray[np.floating] | NDArray[np.integer] | float | int)
+    from relife.model import LifetimeModel, FrozenLifetimeModel
 
 
 # RenewalPolicy
@@ -40,6 +29,8 @@ class RenewalPolicy:
         discounting_rate: Optional[float] = None,
         **kwcosts: float | NDArray[np.float64],
     ):
+        from relife.parametric_model import Distribution
+
         if not model.frozen:
             raise ValueError
         if isinstance(model, Distribution):

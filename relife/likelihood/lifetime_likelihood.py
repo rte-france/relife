@@ -1,19 +1,22 @@
+from __future__ import annotations
+
 import copy
-from typing import TypeVarTuple
+from typing import TypeVarTuple, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.model import ParametricLifetimeModel
+from ._protocol import Likelihood
 
-from ._abc import LikelihoodABC
-from .lifetime_data import LifetimeData
+if TYPE_CHECKING:
+    from relife.model import ParametricLifetimeModel
+    from .lifetime_data import LifetimeData
 
 Args = TypeVarTuple("Args")
 
 
-class LikelihoodFromLifetimes(LikelihoodABC[*Args]):
+class LikelihoodFromLifetimes(Likelihood[*Args]):
     """
     Generic likelihood object for parametric_model lifetime model
 
