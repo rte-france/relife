@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,6 +9,7 @@ from relife.economic.rewards import run_to_failure_rewards
 from relife.parametric_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process.renewal import reward_partial_expectation
+
 from .renewal import RenewalPolicy
 
 if TYPE_CHECKING:

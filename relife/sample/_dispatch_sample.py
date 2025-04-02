@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import singledispatch
 from itertools import islice
-from typing import Iterator, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 import numpy as np
 
@@ -18,14 +18,16 @@ from relife.policy import (
     OneCycleRunToFailurePolicy,
 )
 from relife.stochastic_process import (
-    RenewalProcess,
     NonHomogeneousPoissonProcess,
+    RenewalProcess,
     RenewalRewardProcess,
 )
+
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 
 if TYPE_CHECKING:
     from relife.sample.counting_data import NHPPCountData
+
     from .counting_data import RenewalData
 
 

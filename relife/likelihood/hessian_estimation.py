@@ -28,7 +28,8 @@ def hessian_cs(
         size = likelihood.params.size
         hess = np.empty((size, size))
         u = eps * 1j * np.eye(size)
-        params = likelihood.params.copy()
+        # params = likelihood.params.copy()
+        params = np.copy(likelihood.params).astype(np.complex64)
         for i in range(size):
             for j in range(i, size):
                 hess[i, j] = (
@@ -68,9 +69,10 @@ def hessian_2point(
 
 
 def _hessian_scheme(model: ParametricLifetimeModel):
-    from relife.parametric_model import Gamma, Regression
+    from relife.model import BaseRegression
+    from relife.parametric_model import Gamma
 
-    if isinstance(model, Regression):
+    if isinstance(model, BaseRegression):
         return _hessian_scheme(model.baseline)
     if isinstance(model, Gamma):
         return hessian_2point

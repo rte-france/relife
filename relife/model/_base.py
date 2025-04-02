@@ -2,28 +2,31 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import (
-    Callable,
-    Generic,
-    Optional,
-    TypeVarTuple,
     TYPE_CHECKING,
     Any,
-    Self,
+    Callable,
+    Generic,
     NewType,
+    Optional,
+    Self,
+    TypeVarTuple,
 )
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import newton, Bounds
+from scipy.optimize import Bounds, newton
+from typing_extensions import override
 
 from relife._plots import PlotSurvivalFunc
+from relife.likelihood import maximum_likelihood_estimation
 from relife.quadratures import gauss_legendre, quad_laguerre
+
 from ._frozen import FrozenLifetimeModel
 from ._parametric import ParametricModel
 
 if TYPE_CHECKING:
     from relife.likelihood import LifetimeData
-
+    from relife.model import ParametricLifetimeModel, ParametricModel
 
 Args = TypeVarTuple("Args")
 
@@ -399,3 +402,491 @@ class BaseNonParametricLifetimeModel(ABC):
         if self.estimations is None:
             raise ValueError
         return PlotSurvivalFunc(self)
+
+
+# type ParametricLifetimeModel[()]
+class BaseDistribution(BaseParametricLifetimeModel[()], ABC):
+    """
+    Base class for distribution model.
+    """
+
+    frozen: bool = True
+
+    @override
+    def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().sf(time)
+
+    @override
+    def isf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        """Inverse survival function.
+
+        Parameters
+        ----------
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        cumulative_hazard_rate = -np.log(probability)
+        return self.ichf(cumulative_hazard_rate)
+
+    @override
+    def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().cdf(time)
+
+    def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return super().pdf(time)
+
+    @override
+    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        """Percent point function.
+
+        The percent point corresponds to the inverse of the cumulative distribution function.
+
+        Parameters
+        ----------
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        return super().ppf(probability)
+
+    @override
+    def rvs(self, *, size: int = 1, seed: Optional[int] = None):
+        """Random variable sampling.
+
+        Parameters
+        ----------
+        size : int, default 1
+            Size of the sample.
+        seed : int, default None
+            Random seed.
+
+        Returns
+        -------
+        np.ndarray
+            Sample of random lifetimes.
+        """
+
+        return super().rvs(size=size, seed=seed)
+
+    @override
+    def moment(self, n: int) -> np.float64:
+        """
+        n-th order moment of the distribution.
+
+        Parameters
+        ----------
+        n : int
+            Order of the moment, at least 1.
+
+        Returns
+        -------
+        np.float64
+            n-th order moment of the distribution.
+        """
+
+        return super().moment(n)
+
+    @override
+    def median(self) -> np.float64:
+        return super().median()
+
+    def init_params(self, lifetime_data: LifetimeData) -> None:
+        param0 = np.ones(self.nb_params)
+        param0[-1] = 1 / np.median(lifetime_data.rc.values)
+        self.params = param0
+
+    @property
+    def params_bounds(self) -> Bounds:
+        return Bounds(
+            np.full(self.nb_params, np.finfo(float).resolution),
+            np.full(self.nb_params, np.inf),
+        )
+
+    @abstractmethod
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+    ) -> NDArray[np.float64]: ...
+
+    @abstractmethod
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+    ) -> NDArray[np.float64]: ...
+
+    @abstractmethod
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+    ) -> NDArray[np.float64]: ...
+
+    def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return -self.jac_chf(time) * self.sf(time)
+
+    def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return -self.jac_sf(time)
+
+    def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
+
+    @override
+    def freeze(self) -> FrozenLifetimeModel[()]:
+        return FrozenLifetimeModel(self)
+
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        /,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        **kwargs: Any,
+    ) -> Self:
+        # if update to 3.12 : maximum_likelihood_estimation[()](...), generic functions
+        optimized_model = maximum_likelihood_estimation(
+            self,
+            time,
+            event=event,
+            entry=entry,
+            departure=departure,
+            **kwargs,
+        )
+        return optimized_model
+
+
+class CovarEffect(ParametricModel):
+    """
+    Covariates effect.
+
+    Parameters
+    ----------
+    coef : tuple of float or tuple of None, optional
+        Coefficients of the covariates effect. Values can be None.
+    """
+
+    def __init__(self, coef: tuple[float, ...] | tuple[None] = (None,)):
+        super().__init__()
+        self.set_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
+
+    def g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        Compute the covariates effect.
+
+        Parameters
+        ----------
+        covar : np.ndarray of shape (k, ) or (m, k)
+            Covariate values. Should have shape (k, ) or (m, k) where m is
+            the number of assets and k is the number of covariates.
+
+        Returns
+        -------
+        np.ndarray
+            The covariate effect values, with shape (1,) or (m, 1).
+
+        Raises
+        ------
+        ValueError
+            If the number of covariates does not match the number of parameters.
+        """
+        covar: NDArray[np.float64] = np.asarray(covar)
+        covar = np.atleast_2d(covar)
+        if covar.ndim > 2:
+            raise ValueError
+        if covar.shape[-1] != self.nb_params:
+            raise ValueError(
+                f"Invalid number of covar : expected {self.nb_params}, got {covar.shape[-1]}"
+            )
+        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
+
+    def jac_g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        Compute the Jacobian of the covariates effect.
+
+        Parameters
+        ----------
+        covar : np.ndarray of shape (k, ) or (m, k)
+            Covariate values. Should have shape (k, ) or (m, k) where m is
+            the number of assets and k is the number of covariates.
+
+        Returns
+        -------
+        np.ndarray of shape (nb_params, ) or (m, nb_params)
+            The values of the Jacobian (eventually for m assets).
+        """
+        covar: NDArray[np.float64] = np.asarray(covar)
+        if covar.ndim > 2:
+            raise ValueError
+        return covar * self.g(covar)
+
+
+# type ParametricLifetimeModel[float | NDArray[np.float64], *Args]
+class BaseRegression(
+    BaseParametricLifetimeModel[float | NDArray[np.float64], *Args], ABC
+):
+    """
+    Base class for regression model.
+    """
+
+    baseline: ParametricLifetimeModel[*Args]
+    covar_effect: CovarEffect
+
+    def __init__(
+        self,
+        baseline: ParametricLifetimeModel[*Args],
+        coef: tuple[float, ...] | tuple[None] = (None,),
+    ):
+        super().__init__()
+        self.compose_with(
+            covar_effect=CovarEffect(coef),
+            baseline=baseline,
+        )
+
+    def init_params(
+        self,
+        lifetime_data: LifetimeData,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> None:
+        """
+        Initialize parameters for the regression core.
+
+        Parameters
+        ----------
+        lifetime_data : LifetimeData
+            The lifetime data used to initialize the baseline core.
+        covar : np.ndarray of shape (k, ) or (m, k)
+            Covariate values. Should have shape (k, ) or (m, k) where m is the number of assets and k is the number of covariates.
+        *args : variable number of arguments
+            Any additional arguments needed by the baseline core.
+        """
+        self.covar_effect.set_params(
+            **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
+        )
+        self.baseline.init_params(lifetime_data, *args)
+
+    @property
+    def params_bounds(self) -> Bounds:
+        lb = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, -np.inf),
+                self.baseline.params_bounds.lb,
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, np.inf),
+                self.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
+
+    @override
+    def sf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return np.squeeze(super().sf(time, covar, *args))
+
+    @override
+    def isf(
+        self,
+        probability: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        """Inverse survival function.
+
+        Parameters
+        ----------
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : np.ndarray
+            Covariate values. The ndarray must be broadcastable with ``time``.
+        *args : variable number of np.ndarray
+            Any variables needed to compute the function. Those variables must be
+            broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
+
+        Returns
+        -------
+        ndarray of shape (), (n, ) or (m, n)
+            Time values corresponding to the given survival probabilities.
+        """
+        cumulative_hazard_rate = -np.log(probability)
+        return self.ichf(cumulative_hazard_rate, covar, *args)
+
+    @override
+    def cdf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return super().cdf(time, covar, *args)
+
+    def pdf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return super().pdf(time, covar, *args)
+
+    @override
+    def ppf(
+        self,
+        probability: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return super().ppf(probability, covar, *args)
+
+    @override
+    def mrl(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return super().mrl(time, covar, *args)
+
+    @override
+    def rvs(
+        self,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+        size: Optional[int] = 1,
+        seed: Optional[int] = None,
+    ):
+        """
+        Random variable sampling.
+
+        Parameters
+        ----------
+        covar : np.ndarray
+            Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
+        *args : variable number of np.ndarray
+            Any variables needed to compute the function. Those variables must be
+            broadcastable with ``covar``. They may exist and result from method chaining due to nested class instantiation.
+        size : int, default 1
+            Size of the sample.
+        seed : int, default None
+            Random seed.
+
+        Returns
+        -------
+        np.ndarray
+            Sample of random lifetimes.
+        """
+        return super().rvs(covar, *args, size=size, seed=seed)
+
+    @override
+    def mean(
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
+        return super().mean(covar, *args)
+
+    @override
+    def var(
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
+        return super().var(covar, *args)
+
+    @override
+    def median(
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
+        return super().median(covar, *args)
+
+    @abstractmethod
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]: ...
+
+    @abstractmethod
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]: ...
+
+    @abstractmethod
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]: ...
+
+    def jac_sf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return -self.jac_chf(time, covar, *args) * self.sf(time, covar, *args)
+
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return -self.jac_sf(time, covar, *args)
+
+    def jac_pdf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]:
+        return self.jac_hf(time, covar, *args) * self.sf(
+            time, covar, *args
+        ) + self.jac_sf(time, covar, *args) * self.hf(time, covar, *args)
+
+    @override
+    def freeze(
+        self, covar: float | NDArray[np.float64], *args: *Args
+    ) -> FrozenLifetimeModel[float | NDArray[np.float64], *Args]:
+        return FrozenLifetimeModel(self, *(covar, *args))
+
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        /,
+        *args: *Args,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        **kwargs: Any,
+    ) -> Self:
+        # if update to 3.12 : maximum_likelihood_estimation[float|NDArray[np.float64], *args](...), generic functions
+        optimized_model = maximum_likelihood_estimation(
+            self,
+            time,
+            covar,
+            *args,
+            event=event,
+            entry=entry,
+            departure=departure,
+            **kwargs,
+        )
+        return optimized_model

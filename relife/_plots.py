@@ -258,13 +258,13 @@ class PlotDescriptor:
 
     def __get__(self, obj, objtype=None):
         from relife.model import NonParametricLifetimeModel
-        from relife.parametric_model import Distribution, Regression
+        from relife.model._base import BaseDistribution, BaseRegression
         from relife.sample import CountData, NHPPCountData, RenewalData
         from relife.stochastic_process import NonHomogeneousPoissonProcess
 
-        if isinstance(obj.obj, Distribution):
+        if isinstance(obj.obj, BaseDistribution):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
-        if isinstance(obj.obj, Regression):
+        if isinstance(obj.obj, BaseRegression):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
         if isinstance(obj.obj, NonParametricLifetimeModel):
             return BoundPlot(obj.obj, nonparam_probfunc_plot, self.name)

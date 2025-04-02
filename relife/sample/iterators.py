@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Iterator
-from typing import NewType, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, NewType, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,9 +10,9 @@ from numpy.typing import NDArray
 from relife.parametric_model import Exponential
 
 if TYPE_CHECKING:
-    from relife.model import FrozenLifetimeModel
     from relife.economic.discounting import Discounting
     from relife.economic.rewards import Rewards
+    from relife.model import FrozenLifetimeModel
 
 AnyNDArray = NewType(
     "AnyNDArray", NDArray[np.floating] | NDArray[np.integer] | NDArray[np.bool_]

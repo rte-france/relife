@@ -9,9 +9,10 @@ from numpy.typing import NDArray
 from relife._plots import PlotConstructor, PlotNHPP
 
 if TYPE_CHECKING:
-    from ._protocol import LifetimeModel
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
+
+    from ._protocol import LifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -52,22 +53,22 @@ def _get_args_names(
 ) -> tuple[str, ...]:
 
     from relife.parametric_model import (
-        Regression,
         AgeReplacementModel,
         LeftTruncatedModel,
-        Distribution,
     )
+
+    from ._base import BaseDistribution, BaseRegression
 
     def arg_name(
         obj: LifetimeModel[*Args],
     ) -> tuple[str, ...]:
-        if isinstance(obj, Regression):
+        if isinstance(obj, BaseRegression):
             return ("covar",)
         if isinstance(obj, AgeReplacementModel):
             return ("ar",)
         if isinstance(obj, LeftTruncatedModel):
             return ("a0",)
-        if isinstance(obj, Distribution):
+        if isinstance(obj, BaseDistribution):
             return ()
 
     args_names = []

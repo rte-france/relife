@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.model import ParametricModel, BaseLifetimeModel, FrozenLifetimeModel
+from relife.model import BaseLifetimeModel, FrozenLifetimeModel, ParametricModel
 from relife.quadratures import gauss_legendre
 
 if TYPE_CHECKING:

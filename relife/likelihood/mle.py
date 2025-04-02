@@ -95,7 +95,7 @@ def maximum_likelihood_estimation(
     entry: Optional[NDArray[np.float64]] = None,
     departure: Optional[NDArray[np.float64]] = None,
     **kwargs: Any,
-) -> FittingResults:
+) -> ParametricLifetimeModel[*Args]:
     # Step 1: Prepare lifetime data
     lifetime_data = lifetime_data_factory(
         time,
@@ -130,7 +130,8 @@ def maximum_likelihood_estimation(
 
     # Step 4: Compute parameters variance (Hessian inverse)
     hessian_inverse = np.linalg.inv(likelihood.hessian())
-    fitting_results = optimized_model.fitting_results = FittingResults(
-        len(lifetime_data), optimizer, hessian_inverse
+    optimized_model.fitting_results = FittingResults(
+        len(lifetime_data), optimizer, var=hessian_inverse
     )
-    return fitting_results
+    optimized_model.params = optimizer.x
+    return optimized_model

@@ -1,12 +1,14 @@
 from ._base import (
+    BaseDistribution,
     BaseLifetimeModel,
-    BaseParametricLifetimeModel,
     BaseNonParametricLifetimeModel,
+    BaseParametricLifetimeModel,
+    BaseRegression,
 )
 from ._frozen import FrozenLifetimeModel, FrozenNonHomogeneousPoissonProcess
 from ._parametric import ParametricModel
 from ._protocol import (
     LifetimeModel,
-    ParametricLifetimeModel,
     NonParametricLifetimeModel,
+    ParametricLifetimeModel,
 )

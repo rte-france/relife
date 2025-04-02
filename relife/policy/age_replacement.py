@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,6 +11,7 @@ from relife.parametric_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadratures import gauss_legendre
 from relife.stochastic_process import NonHomogeneousPoissonProcess, RenewalRewardProcess
 from relife.stochastic_process.renewal import reward_partial_expectation
+
 from ._decorator import get_if_none
 from .renewal import RenewalPolicy
 

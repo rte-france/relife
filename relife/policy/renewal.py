@@ -6,12 +6,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.economic import CostStructure
+
 from ..economic.discounting import exponential_discounting
 
 if TYPE_CHECKING:
-    from relife.stochastic_process import NonHomogeneousPoissonProcess
     from relife.model import BaseLifetimeModel, FrozenLifetimeModel
     from relife.sample import CountData
+    from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
 # RenewalPolicy
@@ -29,16 +30,16 @@ class RenewalPolicy:
         discounting_rate: Optional[float] = None,
         **kwcosts: float | NDArray[np.float64],
     ):
-        from relife.parametric_model import Distribution
+        from ..model._base import BaseDistribution
 
         if not model.frozen:
             raise ValueError
-        if isinstance(model, Distribution):
+        if isinstance(model, BaseDistribution):
             model = model.freeze()
         if model1 is not None:
             if not model1.frozen:
                 raise ValueError
-            if isinstance(model1, Distribution):
+            if isinstance(model1, BaseDistribution):
                 model1 = model1.freeze()
 
         self.model = model

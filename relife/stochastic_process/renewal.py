@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Callable, NewType, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, NewType, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.economic.discounting import exponential_discounting
-from relife.parametric_model import Distribution
+from relife.model._base import BaseDistribution
 
 if TYPE_CHECKING:
-    from relife.sample import CountData
-    from relife.model import FrozenLifetimeModel, LifetimeModel
     from relife.economic.discounting import Discounting
+    from relife.model import FrozenLifetimeModel, LifetimeModel
+    from relife.sample import CountData
 
 
 def renewal_equation_solver(
@@ -95,7 +95,7 @@ class RenewalProcess:
             raise ValueError(
                 "Invalid model : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
             )
-        if not isinstance(model, Distribution):
+        if not isinstance(model, BaseDistribution):
             model = model.freeze()
 
         self.model = model
@@ -104,7 +104,7 @@ class RenewalProcess:
                 raise ValueError(
                     "Invalid model1 : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
                 )
-            if not isinstance(model1, Distribution):
+            if not isinstance(model1, BaseDistribution):
                 model1 = model1.freeze()
         self.model1 = model1
 

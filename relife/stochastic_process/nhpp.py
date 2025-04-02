@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from typing import (
+    TYPE_CHECKING,
     Any,
     Generic,
     Optional,
+    Self,
     Sequence,
     TypeVarTuple,
     Union,
-    Self,
-    TYPE_CHECKING,
 )
 
 import numpy as np
@@ -18,13 +18,13 @@ from relife._plots import PlotNHPP
 from relife.likelihood.mle import maximum_likelihood_estimation
 from relife.model import (
     FrozenNonHomogeneousPoissonProcess,
-    ParametricModel,
     ParametricLifetimeModel,
+    ParametricModel,
 )
 
 if TYPE_CHECKING:
-    from relife.sample import CountData
     from relife.likelihood.mle import FittingResults
+    from relife.sample import CountData
 
 Args = TypeVarTuple("Args")
 

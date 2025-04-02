@@ -3,7 +3,6 @@ from .conditional_model import (
     LeftTruncatedModel,
 )
 from .distribution import (
-    Distribution,
     EquilibriumDistribution,
     Exponential,
     Gamma,
@@ -11,4 +10,4 @@ from .distribution import (
     LogLogistic,
     Weibull,
 )
-from .regression import AFT, ProportionalHazard, Regression
+from .regression import AFT, ProportionalHazard

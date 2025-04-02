@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Any, Iterator, Self, Optional
+from typing import Any, Iterator, Optional, Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -17,14 +17,15 @@ class ParamsTree:
         self._data = {}
         self.leaves = {}
         self._all_keys, self._all_values = (), ()
+        self.dtype = float
 
     @property
-    def data(self) -> dict[str, Optional[float]]:
+    def data(self) -> dict[str, Optional[float|complex]]:
         """data of current node as dict"""
         return self._data
 
     @data.setter
-    def data(self, mapping: dict[str, Optional[float]]):
+    def data(self, mapping: dict[str, Optional[float|complex]]):
         self._data = mapping
         self.update()
 
@@ -39,16 +40,16 @@ class ParamsTree:
         self.update_parents()
 
     @property
-    def all_values(self) -> tuple[Optional[float], ...]:
+    def all_values(self) -> tuple[Optional[float|complex], ...]:
         """values of current and leaf nodes as list"""
         return self._all_values
 
     @all_values.setter
-    def all_values(self, values: tuple[Optional[float], ...]):
+    def all_values(self, values: tuple[Optional[float|complex], ...]):
         self.set_all_values(*values)
         self.update_parents()
 
-    def set_all_values(self, *values: Optional[float]):
+    def set_all_values(self, *values: Optional[float|complex]):
         if len(values) != len(self):
             raise ValueError(f"values expects {len(self)} items but got {len(values)}")
         self._all_values = values
@@ -140,7 +141,7 @@ class ParametricModel:
         self.leaves_of_models = {}
 
     @property
-    def params(self) -> NDArray[np.float64]:
+    def params(self) -> NDArray[np.float64|np.complex64]:
         """
         Parameters values.
 
@@ -156,14 +157,14 @@ class ParametricModel:
         Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
         by specifying all parameters values when the core object is initialized.
         """
-        return np.array(self.params_tree.all_values, dtype=np.float64)
+        return np.array(self.params_tree.all_values)
 
     @params.setter
-    def params(self, values: NDArray[np.float64]):
+    def params(self, values: NDArray[np.float64|np.complex64]):
         if values.ndim > 1:
             raise ValueError
         values: tuple[Optional[float], ...] = tuple(
-            map(lambda x: float(x) if x != np.nan else None, values)
+            map(lambda x: x.item() if x != np.nan else None, values)
         )
         self.params_tree.all_values = values
 

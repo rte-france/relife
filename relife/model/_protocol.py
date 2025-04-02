@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Optional,
     Protocol,
+    Self,
     TypeVarTuple,
     runtime_checkable,
-    Self,
-    TYPE_CHECKING,
 )
 
 import numpy as np
@@ -17,11 +17,12 @@ from scipy.optimize import Bounds
 
 if TYPE_CHECKING:
 
-    from ._frozen import FrozenLifetimeModel
-    from ._base import NonParametricEstimation
-    from relife.likelihood.mle import FittingResults
-    from relife.likelihood import LifetimeData
     from relife._plots import PlotConstructor
+    from relife.likelihood import LifetimeData
+    from relife.likelihood.mle import FittingResults
+
+    from ._base import NonParametricEstimation
+    from ._frozen import FrozenLifetimeModel
 
 
 Args = TypeVarTuple("Args")
