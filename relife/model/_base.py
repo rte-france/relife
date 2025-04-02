@@ -19,7 +19,7 @@ from scipy.optimize import newton, Bounds
 from relife._plots import PlotSurvivalFunc
 from relife.quadratures import gauss_legendre, quad_laguerre
 from ._frozen import FrozenLifetimeModel
-from ._parameters import Parametric
+from ._parametric import ParametricModel
 
 if TYPE_CHECKING:
     from relife.likelihood import LifetimeData
@@ -333,7 +333,7 @@ class BaseLifetimeModel(Generic[*Args], ABC):
         return self.ppf(np.array(0.5), *args)
 
     @property
-    def plot(self) -> PlotConstructor:
+    def plot(self) -> PlotSurvivalFunc:
         """Plot"""
         return PlotSurvivalFunc(self)
 
@@ -344,7 +344,7 @@ class BaseLifetimeModel(Generic[*Args], ABC):
         return FrozenLifetimeModel(self, *args)
 
 
-class BaseParametricLifetimeModel(Parametric, BaseLifetimeModel[*Args], ABC):
+class BaseParametricLifetimeModel(ParametricModel, BaseLifetimeModel[*Args], ABC):
     def __init__(self):
         super().__init__()
         self.fitting_results = None

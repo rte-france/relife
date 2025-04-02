@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Any, Iterator, Self
+from typing import Any, Iterator, Self, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,87 +9,81 @@ class ParamsTree:
     """
     Tree-structured parameters.
 
-    Every ``ParametricModel`` are composed of ``Parameters`` instance.
+    Every ``Parametric`` are composed of ``Parameters`` instance.
     """
 
-    def __init__(self, **kwargs):
-        self._node_data = {}
-        if kwargs:
-            self._node_data = kwargs
+    def __init__(self):
         self.parent = None
+        self._data = {}
         self.leaves = {}
-        self._names, self._values = [], []
+        self._all_keys, self._all_values = (), ()
 
     @property
-    def node_data(self):
+    def data(self) -> dict[str, Optional[float]]:
         """data of current node as dict"""
-        return self._node_data
+        return self._data
 
-    @node_data.setter
-    def node_data(self, new_values: dict[str, Any]):
-        self._node_data = new_values
+    @data.setter
+    def data(self, mapping: dict[str, Optional[float]]):
+        self._data = mapping
         self.update()
 
     @property
-    def names(self):
+    def all_keys(self) -> tuple[str, ...]:
         """keys of current and leaf nodes as list"""
-        return self._names
+        return self._all_keys
 
-    @names.setter
-    def names(self, new_names: list[str]):
-        self.set_names(new_names)
+    @all_keys.setter
+    def all_keys(self, keys: tuple[str, ...]):
+        self.set_all_keys(*keys)
         self.update_parents()
 
     @property
-    def values(self):
+    def all_values(self) -> tuple[Optional[float], ...]:
         """values of current and leaf nodes as list"""
-        return self._values
+        return self._all_values
 
-    @values.setter
-    def values(self, new_values: list[Any]):
-        self.set_values(new_values)
+    @all_values.setter
+    def all_values(self, values: tuple[Optional[float], ...]):
+        self.set_all_values(*values)
         self.update_parents()
 
-    def set_values(self, new_values: list[Any]):
-        if len(new_values) != len(self):
-            raise ValueError(
-                f"values expects {len(self)} items but got {len(new_values)}"
-            )
-        self._values = new_values
-        pos = len(self._node_data)
-        self._node_data.update(zip(self._node_data, new_values[:pos]))
+    def set_all_values(self, *values: Optional[float]):
+        if len(values) != len(self):
+            raise ValueError(f"values expects {len(self)} items but got {len(values)}")
+        self._all_values = values
+        pos = len(self._data)
+        self._data.update(zip(self._data, values[:pos]))
         for leaf in self.leaves.values():
-            leaf.set_values(new_values[pos : pos + len(leaf)])
+            leaf.set_all_values(*values[pos : pos + len(leaf)])
             pos += len(leaf)
 
-    def set_names(self, new_names: list[str]):
-        if len(new_names) != len(self):
-            raise ValueError(
-                f"names expects {len(self)} items but got {len(new_names)}"
-            )
-        self._names = new_names
-        pos = len(self._node_data)
-        self._node_data = {new_names[:pos][i]: v for i, v in self._node_data.values()}
+    def set_all_keys(self, *keys: str):
+        if len(keys) != len(self):
+            raise ValueError(f"names expects {len(self)} items but got {len(keys)}")
+        self._all_keys = keys
+        pos = len(self._data)
+        self._data = {keys[:pos][i]: v for i, v in self._data.values()}
         for leaf in self.leaves.values():
-            leaf.set_names(new_names[pos : pos + len(leaf)])
+            leaf.set_all_keys(*keys[pos : pos + len(leaf)])
             pos += len(leaf)
 
     def __len__(self):
-        return len(self._names)
+        return len(self._all_keys)
 
     def __contains__(self, item):
         """contains only applies on current node"""
-        return item in self._node_data
+        return item in self._data
 
     def __getitem__(self, item):
-        return self._node_data[item]
+        return self._data[item]
 
     def __setitem__(self, key, value):
-        self._node_data[key] = value
+        self._data[key] = value
         self.update()
 
     def __delitem__(self, key):
-        del self._node_data[key]
+        del self._data[key]
         self.update()
 
     def get_leaf(self, item):
@@ -107,7 +101,7 @@ class ParamsTree:
 
     def items_walk(self) -> Iterator:
         """parallel walk through key value pairs"""
-        yield list(self._node_data.items())
+        yield list(self._data.items())
         for leaf in self.leaves.values():
             yield list(chain.from_iterable(leaf.items_walk()))
 
@@ -119,8 +113,8 @@ class ParamsTree:
         try:
             next(self.all_items())
             _k, _v = zip(*self.all_items())
-            self._names = list(_k)
-            self._values = list(_v)
+            self._all_keys = list(_k)
+            self._all_values = list(_v)
         except StopIteration:
             pass
 
@@ -134,7 +128,7 @@ class ParamsTree:
         self.update_parents()
 
 
-class Parametric:
+class ParametricModel:
     """
     Base class to create a parametric_model core.
 
@@ -143,7 +137,7 @@ class Parametric:
 
     def __init__(self):
         self.params_tree = ParamsTree()
-        self.leaf_models = {}
+        self.leaves_of_models = {}
 
     @property
     def params(self) -> NDArray[np.float64]:
@@ -162,11 +156,16 @@ class Parametric:
         Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
         by specifying all parameters values when the core object is initialized.
         """
-        return np.array(self.params_tree.values, dtype=np.float64)
+        return np.array(self.params_tree.all_values, dtype=np.float64)
 
     @params.setter
-    def params(self, new_values: NDArray[np.float64]):
-        self.params_tree.values = new_values
+    def params(self, values: NDArray[np.float64]):
+        if values.ndim > 1:
+            raise ValueError
+        values: tuple[Optional[float], ...] = tuple(
+            map(lambda x: float(x) if x != np.nan else None, values)
+        )
+        self.params_tree.all_values = values
 
     @property
     def params_names(self):
@@ -182,7 +181,7 @@ class Parametric:
         -----
         Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
-        return self.params_tree.names
+        return self.params_tree.all_keys
 
     @property
     def nb_params(self):
@@ -223,15 +222,15 @@ class Parametric:
         with `**` operator or you will get a nasty `TypeError`.
         """
         for name in kwcomponents.keys():
-            if name in self.params_tree.node_data:
+            if name in self.params_tree.data:
                 raise ValueError(f"{name} already exists as param name")
-            if name in self.leaf_models:
+            if name in self.leaves_of_models:
                 raise ValueError(f"{name} already exists as leaf function")
-        for name, module in kwcomponents.items():
-            self.leaf_models[name] = module
-            self.params_tree.set_leaf(f"{name}.params", module.params_tree)
+        for name, model in kwcomponents.items():
+            self.leaves_of_models[name] = model
+            self.params_tree.set_leaf(f"{name}.params", model.params_tree)
 
-    def new_params(self, **kwparams: float):
+    def set_params(self, **kwparams: Optional[float]):
         """Change local parameters structure.
 
         This method only affects **local** parameters. `ParametricModel` components are not
@@ -252,9 +251,9 @@ class Parametric:
         """
 
         for name in kwparams.keys():
-            if name in self.leaf_models.keys():
+            if name in self.leaves_of_models.keys():
                 raise ValueError(f"{name} already exists as function name")
-        self.params_tree.node_data = kwparams
+        self.params_tree.data = kwparams
 
     # def __getattribute__(self, item):
     #     if not item.startswith("_") and not item.startswith("__"):
@@ -277,16 +276,16 @@ class Parametric:
             return self.__dict__[name]
         if name in super().__getattribute__("params_tree"):
             return super().__getattribute__("params_tree")[name]
-        if name in super().__getattribute__("leaf_models"):
-            return super().__getattribute__("leaf_models")[name]
+        if name in super().__getattribute__("leaves_of_models"):
+            return super().__getattribute__("leaves_of_models")[name]
         raise AttributeError(f"{class_name} has no attribute named {name}")
 
     def __setattr__(self, name: str, value: Any):
-        if name in ("params_tree", "leaf_models"):
+        if name in ("params_tree", "leaves_of_models"):
             super().__setattr__(name, value)
         elif name in self.params_tree:
             self.params_tree[name] = value
-        elif name in self.leaf_models:
+        elif name in self.leaves_of_models:
             raise ValueError(
                 "Can't modify leaf ParametricComponent. Recreate ParametricComponent instance instead"
             )

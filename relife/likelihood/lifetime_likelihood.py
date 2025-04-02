@@ -58,7 +58,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
     def _right_censored_contribs(self, lifetime_data: LifetimeData) -> float:
         return np.sum(
             self.model.chf(
-                lifetime_data.rc.values,
+                lifetime_data.rc.all_values,
                 *(args[lifetime_data.rc.index] for args in self.model_args),
             ),
             dtype=np.float64,
@@ -114,7 +114,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
         if hasattr(self.model, "jac_chf"):
             return np.sum(
                 self.model.jac_chf(
-                    lifetime_data.rc.values,
+                    lifetime_data.rc.all_values,
                     *(args[lifetime_data.rc.index] for args in self.model_args),
                 ),
                 axis=0,

@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.model import Parametric, BaseLifetimeModel, FrozenLifetimeModel
+from relife.model import ParametricModel, BaseLifetimeModel, FrozenLifetimeModel
 from relife.quadratures import gauss_legendre
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ Args = TypeVarTuple("Args")
 
 
 class AgeReplacementModel(
-    Parametric, BaseLifetimeModel[float | NDArray[np.float64], *Args]
+    ParametricModel, BaseLifetimeModel[float | NDArray[np.float64], *Args]
 ):
     r"""
     Age replacement core.
@@ -196,7 +196,7 @@ class AgeReplacementModel(
 
 
 class LeftTruncatedModel(
-    Parametric, BaseLifetimeModel[float | NDArray[np.float64], *Args]
+    ParametricModel, BaseLifetimeModel[float | NDArray[np.float64], *Args]
 ):
     r"""Left truncated core.
 

@@ -4,7 +4,7 @@ from ._base import (
     BaseNonParametricLifetimeModel,
 )
 from ._frozen import FrozenLifetimeModel, FrozenNonHomogeneousPoissonProcess
-from ._parameters import Parametric
+from ._parametric import ParametricModel
 from ._protocol import (
     LifetimeModel,
     ParametricLifetimeModel,

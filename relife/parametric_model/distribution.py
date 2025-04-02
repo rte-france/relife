@@ -11,7 +11,7 @@ from relife.likelihood import LifetimeData
 from relife.likelihood.mle import maximum_likelihood_estimation
 from relife.model import (
     FrozenLifetimeModel,
-    Parametric,
+    ParametricModel,
     BaseLifetimeModel,
     BaseParametricLifetimeModel,
 )
@@ -119,7 +119,7 @@ class Distribution(BaseParametricLifetimeModel[()], ABC):
 
     def init_params(self, lifetime_data: LifetimeData) -> None:
         param0 = np.ones(self.nb_params)
-        param0[-1] = 1 / np.median(lifetime_data.rc.values)
+        param0[-1] = 1 / np.median(lifetime_data.rc.all_values)
         self.params = param0
 
     @property
@@ -217,7 +217,7 @@ class Exponential(Distribution):
 
     def __init__(self, rate: Optional[float] = None):
         super().__init__()
-        self.new_params(rate=rate)
+        self.set_params(rate=rate)
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.rate * np.ones_like(time)
@@ -290,7 +290,7 @@ class Weibull(Distribution):
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        self.set_params(shape=shape, rate=rate)
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
@@ -391,12 +391,12 @@ class Gompertz(Distribution):
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        self.set_params(shape=shape, rate=rate)
 
     def init_params(self, lifetime_data: LifetimeData) -> None:
         param0 = np.empty(self.nb_params, dtype=float)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.rc.values))
-        shape = np.exp(-rate * np.mean(lifetime_data.rc.values))
+        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.rc.all_values))
+        shape = np.exp(-rate * np.mean(lifetime_data.rc.all_values))
         param0[0] = shape
         param0[1] = rate
         self.params = param0
@@ -488,7 +488,7 @@ class Gamma(Distribution):
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        self.set_params(shape=shape, rate=rate)
 
     def _uppergamma(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
         return gammaincc(self.shape, x) * gamma(self.shape)
@@ -599,7 +599,7 @@ class LogLogistic(Distribution):
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        self.set_params(shape=shape, rate=rate)
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
@@ -750,7 +750,7 @@ for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
     class_obj.ichf.__doc__ = ICHF_DOCSTRING
 
 
-class EquilibriumDistribution(Parametric, BaseLifetimeModel[*Args]):
+class EquilibriumDistribution(ParametricModel, BaseLifetimeModel[*Args]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime

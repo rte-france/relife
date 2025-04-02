@@ -53,11 +53,11 @@ class ECDF(BaseNonParametricLifetimeModel):
             departure,
         )
 
-        timeline, counts = np.unique(lifetime_data.rc.values, return_counts=True)
+        timeline, counts = np.unique(lifetime_data.rc.all_values, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         sf = 1 - cdf
-        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.rc.values))
+        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.rc.all_values))
         self.estimations = dict(
             sf=Estimation(timeline, sf, se), cdf=Estimation(time, cdf, se)
         )
@@ -150,11 +150,11 @@ class KaplanMeier(BaseNonParametricLifetimeModel):
         if len(lifetime_data.left_censoring) > 0:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.rc.values, return_inverse=True, return_counts=True
+            lifetime_data.rc.all_values, return_inverse=True, return_counts=True
         )
         death_set = np.zeros_like(timeline, int)  # death at each timeline step
         complete_observation_indic = np.zeros_like(
-            lifetime_data.rc.values
+            lifetime_data.rc.all_values
         )  # just creating an array to fill it next line
         complete_observation_indic[lifetime_data.complete.index] = 1
         np.add.at(death_set, unique_indices, complete_observation_indic)
@@ -166,7 +166,7 @@ class KaplanMeier(BaseNonParametricLifetimeModel):
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.rc.values)
+                                len(lifetime_data.rc.all_values)
                                 - len(lifetime_data.left_truncation.values)
                             )
                         ]
@@ -275,14 +275,14 @@ class NelsonAalen(BaseNonParametricLifetimeModel):
             )
 
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.rc.values, return_inverse=True, return_counts=True
+            lifetime_data.rc.all_values, return_inverse=True, return_counts=True
         )
         death_set = np.zeros_like(
             timeline, dtype=np.int64
         )  # death at each timeline step
 
         complete_observation_indic = np.zeros_like(
-            lifetime_data.rc.values
+            lifetime_data.rc.all_values
         )  # just creating an array to fill it next line
         complete_observation_indic[lifetime_data.complete.index] = 1
 
@@ -295,7 +295,7 @@ class NelsonAalen(BaseNonParametricLifetimeModel):
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.rc.values)
+                                len(lifetime_data.rc.all_values)
                                 - len(lifetime_data.left_truncation.values)
                             )
                         ]

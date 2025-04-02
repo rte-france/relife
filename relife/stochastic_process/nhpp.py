@@ -18,7 +18,7 @@ from relife._plots import PlotNHPP
 from relife.likelihood.mle import maximum_likelihood_estimation
 from relife.model import (
     FrozenNonHomogeneousPoissonProcess,
-    Parametric,
+    ParametricModel,
     ParametricLifetimeModel,
 )
 
@@ -173,7 +173,7 @@ def nhpp_data_factory(
     return time, event, entry, model_args
 
 
-class NonHomogeneousPoissonProcess(Parametric, Generic[*Args]):
+class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
 
     fitting_results: Optional[FittingResults]
 

@@ -104,14 +104,14 @@ class LifetimeData:
                         # take right bound when left bound is 0, otherwise take the min value of the bounds
                         # for none interval lifetimes, min equals the value
                         np.where(
-                            intersect_data.values[:, [0]] == 0,
-                            intersect_data.values[:, [-2]],
+                            intersect_data.all_values[:, [0]] == 0,
+                            intersect_data.all_values[:, [-2]],
                             np.min(
-                                intersect_data.values[:, :-1], axis=1, keepdims=True
+                                intersect_data.all_values[:, :-1], axis=1, keepdims=True
                             ),
                             # min of all cols but last
                         )
-                        < intersect_data.values[
+                        < intersect_data.all_values[
                             :, [-1]
                         ]  # then check if any is under left truncation bound
                     ):
@@ -125,14 +125,14 @@ class LifetimeData:
                         # take left bound when right bound is inf, otherwise take the max value of the bounds
                         # for none interval lifetimes, max equals the value
                         np.where(
-                            intersect_data.values[:, [-2]] == np.inf,
-                            intersect_data.values[:, [0]],
+                            intersect_data.all_values[:, [-2]] == np.inf,
+                            intersect_data.all_values[:, [0]],
                             np.max(
-                                intersect_data.values[:, :-1], axis=1, keepdims=True
+                                intersect_data.all_values[:, :-1], axis=1, keepdims=True
                             ),
                             # max of all cols but last
                         )
-                        > intersect_data.values[
+                        > intersect_data.all_values[
                             :, [-1]
                         ]  # then check if any is above right truncation bound
                     ):

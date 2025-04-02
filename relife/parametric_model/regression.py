@@ -18,7 +18,7 @@ from relife.likelihood import LifetimeData
 from relife.likelihood.mle import maximum_likelihood_estimation
 from relife.model import (
     FrozenLifetimeModel,
-    Parametric,
+    ParametricModel,
     ParametricLifetimeModel,
     BaseParametricLifetimeModel,
 )
@@ -26,7 +26,7 @@ from relife.model import (
 Args = TypeVarTuple("Args")
 
 
-class CovarEffect(Parametric):
+class CovarEffect(ParametricModel):
     """
     Covariates effect.
 
@@ -38,7 +38,7 @@ class CovarEffect(Parametric):
 
     def __init__(self, coef: tuple[float, ...] | tuple[None] = (None,)):
         super().__init__()
-        self.new_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
+        self.set_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
 
     def g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """
@@ -126,7 +126,7 @@ class Regression(BaseParametricLifetimeModel[float | NDArray[np.float64], *Args]
         *args : variable number of arguments
             Any additional arguments needed by the baseline core.
         """
-        self.covar_effect.new_params(
+        self.covar_effect.set_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         )
         self.baseline.init_params(lifetime_data, *args)
