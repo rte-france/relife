@@ -17,29 +17,28 @@ if TYPE_CHECKING:
 
 Args = TypeVarTuple("Args")
 
-from relife.parametric_model import (
-    AFT,
-    AgeReplacementModel,
-    LeftTruncatedModel,
-    ProportionalHazard,
-)
-
 
 def _args_names(
     model: ParametricModel,
 ) -> Generator[str]:
-    match model:
-        case (ProportionalHazard(), AFT()):
-            yield "covar"
-            return _args_names(model.baseline)
-        case AgeReplacementModel():
-            yield "ar"
-            return _args_names(model.baseline)
-        case LeftTruncatedModel():
-            yield "a0"
-            return _args_names(model.baseline)
-        case _:  # in other case, stop generator and yield nothing
-            return
+    from relife.parametric_model import (
+        AFT,
+        AgeReplacementModel,
+        LeftTruncatedModel,
+        ProportionalHazard,
+    )
+
+    if isinstance(model , (ProportionalHazard, AFT)):
+        yield "covar"
+        yield from _args_names(model.baseline)
+    elif isinstance(model, AgeReplacementModel):
+        yield "ar"
+        yield from _args_names(model.baseline)
+    elif isinstance(model, LeftTruncatedModel):
+        yield "a0"
+        yield from _args_names(model.baseline)
+    else:  # in other case, stop generator and yield nothing
+        return
 
 
 def _reshape(arg_name: str, arg_value: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
