@@ -21,10 +21,10 @@ from relife.model import (
     ParametricLifetimeModel,
     ParametricModel,
 )
+from relife.sample.base import SampleFailureDataMixin, SampleMixin
 
 if TYPE_CHECKING:
     from relife.likelihood.mle import FittingResults
-    from relife.sample import CountData
 
 Args = TypeVarTuple("Args")
 
@@ -173,7 +173,9 @@ def nhpp_data_factory(
     return time, event, entry, model_args
 
 
-class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
+class NonHomogeneousPoissonProcess(
+    ParametricModel, SampleMixin[*Args], SampleFailureDataMixin[*Args], Generic[*Args]
+):
 
     fitting_results: Optional[FittingResults]
 
@@ -195,48 +197,48 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
     ) -> NDArray[np.float64]:
         return self.baseline.chf(time, *args)
 
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        /,
-        *args: *Args,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> CountData:
-        from relife.sample import sample_count_data
-
-        return sample_count_data(
-            self.baseline.freeze(*args),
-            size,
-            tf,
-            t0=t0,
-            maxsample=maxsample,
-            seed=seed,
-        )
-
-    def failure_data_sample(
-        self,
-        size: int,
-        tf: float,
-        /,
-        *args: *Args,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sample import failure_data_sample
-
-        return failure_data_sample(
-            self.baseline.freeze(*args),
-            size,
-            tf,
-            t0,
-            maxsample=maxsample,
-            seed=seed,
-            use="model",
-        )
+    # def sample(
+    #     self,
+    #     size: int,
+    #     tf: float,
+    #     /,
+    #     *args: *Args,
+    #     t0: float = 0.0,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    # ) -> CountData:
+    #     from relife.sample import sample_count_data
+    #
+    #     return sample_count_data(
+    #         self.baseline.freeze(*args),
+    #         size,
+    #         tf,
+    #         t0=t0,
+    #         maxsample=maxsample,
+    #         seed=seed,
+    #     )
+    #
+    # def failure_data_sample(
+    #     self,
+    #     size: int,
+    #     tf: float,
+    #     /,
+    #     *args: *Args,
+    #     t0: float = 0.0,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    # ) -> tuple[NDArray[np.float64], ...]:
+    #     from relife.sample import failure_data_sample
+    #
+    #     return failure_data_sample(
+    #         self.baseline.freeze(*args),
+    #         size,
+    #         tf,
+    #         t0,
+    #         maxsample=maxsample,
+    #         seed=seed,
+    #         use="model",
+    #     )
 
     def freeze(self, *args: *Args) -> FrozenNonHomogeneousPoissonProcess:
         return FrozenNonHomogeneousPoissonProcess(self, *args)

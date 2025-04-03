@@ -9,14 +9,15 @@ from relife.economic import CostStructure
 
 from ..economic.discounting import exponential_discounting
 
+from relife.sample import SampleFailureDataMixin, SampleMixin
+
 if TYPE_CHECKING:
     from relife.model import BaseLifetimeModel, FrozenLifetimeModel
-    from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
 # RenewalPolicy
-class RenewalPolicy:
+class RenewalPolicy(SampleMixin[()], SampleFailureDataMixin[()]):
 
     cost_structure: CostStructure
     model: FrozenLifetimeModel
@@ -57,32 +58,32 @@ class RenewalPolicy:
     def discounting_rate(self):
         return self.discounting.rate
 
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> CountData:
-        from relife.sample import sample_count_data
-
-        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
-
-    def failure_data_sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-        use: str = "model",
-    ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sample import failure_data_sample
-
-        return failure_data_sample(
-            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use
-        )
+    # def sample(
+    #     self,
+    #     size: int,
+    #     tf: float,
+    #     t0: float = 0.0,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    # ) -> CountData:
+    #     from relife.sample import sample_count_data
+    #
+    #     return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+    #
+    # def failure_data_sample(
+    #     self,
+    #     size: int,
+    #     tf: float,
+    #     t0: float = 0.0,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    #     use: str = "model",
+    # ) -> tuple[NDArray[np.float64], ...]:
+    #     from relife.sample import failure_data_sample
+    #
+    #     return failure_data_sample(
+    #         self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use
+    #     )
 
 
 def make_renewal_policy(

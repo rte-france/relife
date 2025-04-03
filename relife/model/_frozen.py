@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Callable, Optional, TypeVarTuple, Generator
+from typing import TYPE_CHECKING, Callable, Generator, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -28,7 +28,7 @@ def _args_names(
         ProportionalHazard,
     )
 
-    if isinstance(model , (ProportionalHazard, AFT)):
+    if isinstance(model, (ProportionalHazard, AFT)):
         yield "covar"
         yield from _args_names(model.baseline)
     elif isinstance(model, AgeReplacementModel):
@@ -41,7 +41,9 @@ def _args_names(
         return
 
 
-def _reshape(arg_name: str, arg_value: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
+def _reshape(
+    arg_name: str, arg_value: float | NDArray[np.float64]
+) -> float | NDArray[np.float64]:
     arg_value = np.asarray(arg_value)
     ndim = arg_value.ndim
     if ndim > 2:

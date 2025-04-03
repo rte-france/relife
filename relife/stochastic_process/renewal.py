@@ -8,12 +8,12 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.economic.discounting import exponential_discounting
-from relife.model._base import BaseDistribution
+from relife.model import BaseDistribution
+from relife.sample import SampleFailureDataMixin, SampleMixin
 
 if TYPE_CHECKING:
     from relife.economic.discounting import Discounting
     from relife.model import FrozenLifetimeModel, LifetimeModel
-    from relife.sample import CountData
 
 
 def renewal_equation_solver(
@@ -81,7 +81,7 @@ def delayed_renewal_equation_solver(
     return z1
 
 
-class RenewalProcess:
+class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
     model: FrozenLifetimeModel
     model1: Optional[FrozenLifetimeModel]
 
@@ -122,31 +122,31 @@ class RenewalProcess:
             self.model.pdf if not self.model1 else self.model1.pdf,
         )
 
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> CountData:
-        from relife.sample import sample_count_data
-
-        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
-
-    def failure_data_sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sample import failure_data_sample
-
-        return failure_data_sample(
-            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
-        )
+    # def sample(
+    #     self,
+    #     size: int,
+    #     tf: float,
+    #     t0: float = 0.0,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    # ) -> CountData:
+    #     from relife.sample import sample_count_data
+    #
+    #     return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+    #
+    # def failure_data_sample(
+    #     self,
+    #     size: int,
+    #     tf: float,
+    #     t0: float = 0.0,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    # ) -> tuple[NDArray[np.float64], ...]:
+    #     from relife.sample import failure_data_sample
+    #
+    #     return failure_data_sample(
+    #         self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
+    #     )
 
 
 Rewards = NewType(

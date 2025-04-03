@@ -13,7 +13,7 @@ from relife.stochastic_process import NonHomogeneousPoissonProcess, RenewalRewar
 from relife.stochastic_process.renewal import reward_partial_expectation
 
 from ._decorator import get_if_none
-from .renewal import RenewalPolicy
+from .base import RenewalPolicy
 
 if TYPE_CHECKING:
     from relife.model import BaseLifetimeModel

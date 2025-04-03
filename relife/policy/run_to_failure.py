@@ -10,7 +10,7 @@ from relife.parametric_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process.renewal import reward_partial_expectation
 
-from .renewal import RenewalPolicy
+from .base import RenewalPolicy
 
 if TYPE_CHECKING:
     from relife.model import BaseLifetimeModel
