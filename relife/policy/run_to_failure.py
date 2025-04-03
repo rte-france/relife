@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic import run_to_failure_rewards, reward_partial_expectation
+from relife.economic import reward_partial_expectation, run_to_failure_rewards
 from relife.parametric_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 

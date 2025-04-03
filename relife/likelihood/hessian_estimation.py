@@ -6,6 +6,7 @@ from scipy.optimize import approx_fprime
 
 if TYPE_CHECKING:
     from relife.model import ParametricLifetimeModel
+
     from ._protocol import Likelihood
 
 

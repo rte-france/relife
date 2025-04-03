@@ -5,6 +5,7 @@ Copyright (c) 2022, RTE (https://www.rte-france.com)
 See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
+
 from typing import TYPE_CHECKING, TypeVarTuple
 
 import numpy as np
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from relife.model import ParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
+
 
 # type ParametricLifetimeModel[float|NDArray[np.float64], *Ts]
 class ProportionalHazard(BaseRegression[*Args]):

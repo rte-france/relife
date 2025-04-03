@@ -15,8 +15,8 @@ from scipy.optimize import Bounds
 
 if TYPE_CHECKING:
     from relife._plots import PlotConstructor
-    from relife.likelihood import LifetimeData
-    from relife.likelihood.mle import FittingResults
+    from relife.data import LifetimeData
+
     from ._base import NonParametricEstimation
     from ._frozen import FrozenLifetimeModel
 
@@ -116,7 +116,7 @@ class ParametricLifetimeModel(LifetimeModel[*Args], Protocol):
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
-    ) -> FittingResults: ...
+    ) -> Self: ...
 
 
 @runtime_checkable

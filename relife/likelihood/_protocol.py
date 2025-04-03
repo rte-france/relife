@@ -7,13 +7,15 @@ from numpy.typing import NDArray
 from .hessian_estimation import _hessian_scheme
 
 if TYPE_CHECKING:
-    from relife.model import ParametricLifetimeModel
+    from relife.data import FailureData
+    from relife.model import ParametricModel
 
 Args = TypeVarTuple("Args")
 
 
 class Likelihood(Protocol[*Args]):
-    model: ParametricLifetimeModel[*Args]
+    model: ParametricModel[*Args]
+    data: FailureData
 
     @property
     def params(self) -> NDArray[np.float64]:

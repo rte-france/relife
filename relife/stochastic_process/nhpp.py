@@ -114,7 +114,7 @@ class NonHomogeneousPoissonProcess(
         **kwargs: Any,
     ) -> Self:
 
-        time, event, entry, model_args = nhpp_data_factory(
+        nhpp_data = nhpp_data_factory(
             events_assets_ids,
             events_ages,
             *args,
@@ -122,9 +122,5 @@ class NonHomogeneousPoissonProcess(
             first_ages=first_ages,
             last_ages=last_ages,
         )
-        fitting_results = maximum_likelihood_estimation(
-            self.baseline, time, *model_args, event=event, entry=entry, **kwargs
-        )
-        self.baseline.params = fitting_results.params
-        self.fitting_results = fitting_results
-        return self
+        optimized_model = maximum_likelihood_estimation(self, nhpp_data, **kwargs)
+        return optimized_model

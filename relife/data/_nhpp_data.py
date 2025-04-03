@@ -1,11 +1,9 @@
-from typing import Union, Sequence, Optional, TypeVarTuple
+from typing import Optional, Sequence, TypeVarTuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
-
 Args = TypeVarTuple("Args")
-
 
 
 def nhpp_data_factory(

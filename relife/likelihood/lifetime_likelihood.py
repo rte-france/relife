@@ -10,9 +10,8 @@ from typing_extensions import override
 from ._protocol import Likelihood
 
 if TYPE_CHECKING:
+    from relife.data import LifetimeData
     from relife.model import ParametricLifetimeModel
-
-    from relife.data._lifetime_data import LifetimeData
 
 Args = TypeVarTuple("Args")
 
@@ -27,19 +26,15 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
         Underlying core used to compute probability functions
     lifetime_data : LifetimeData
         Observed lifetime data used one which the likelihood is evaluated
-    model_args : tuple of zero or more ndarray, default is ()
-        Variadic arguments required by probability functions
     """
 
     def __init__(
         self,
         model: ParametricLifetimeModel[*Args],
         lifetime_data: LifetimeData,
-        model_args: tuple[*Args] = (),
     ):
         self.model = copy.deepcopy(model)
         self.lifetime_data = lifetime_data
-        self.model_args = model_args
 
     @override
     @property
@@ -51,7 +46,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             np.log(
                 self.model.hf(
                     lifetime_data.complete.values,
-                    *(args[lifetime_data.complete.index] for args in self.model_args),
+                    *lifetime_data.complete.args,
                 )
             )
         )
@@ -60,7 +55,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
         return np.sum(
             self.model.chf(
                 lifetime_data.rc.values,
-                *(args[lifetime_data.rc.index] for args in self.model_args),
+                *lifetime_data.rc.args,
             ),
             dtype=np.float64,
         )
@@ -71,10 +66,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 -np.expm1(
                     -self.model.chf(
                         lifetime_data.left_censoring.values,
-                        *(
-                            args[lifetime_data.left_censoring.index]
-                            for args in self.model_args
-                        ),
+                        *lifetime_data.left_censoring.args,
                     )
                 )
             )
@@ -84,10 +76,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
         return -np.sum(
             self.model.chf(
                 lifetime_data.left_truncation.values,
-                *(
-                    args[lifetime_data.left_truncation.index]
-                    for args in self.model_args
-                ),
+                *lifetime_data.left_truncation.args,
             ),
             dtype=np.float64,
         )
@@ -99,11 +88,11 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             return -np.sum(
                 self.model.jac_hf(
                     lifetime_data.complete.values,
-                    *(args[lifetime_data.complete.index] for args in self.model_args),
+                    *lifetime_data.complete.args,
                 )
                 / self.model.hf(
                     lifetime_data.complete.values,
-                    *(args[lifetime_data.complete.index] for args in self.model_args),
+                    *lifetime_data.complete.args,
                 ),
                 axis=0,
             )
@@ -116,7 +105,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             return np.sum(
                 self.model.jac_chf(
                     lifetime_data.rc.values,
-                    *(args[lifetime_data.rc.index] for args in self.model_args),
+                    *lifetime_data.rc.args,
                 ),
                 axis=0,
             )
@@ -129,18 +118,12 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             return -np.sum(
                 self.model.jac_chf(
                     lifetime_data.left_censoring.values,
-                    *(
-                        args[lifetime_data.left_censoring.index]
-                        for args in self.model_args
-                    ),
+                    *lifetime_data.left_censoring.args,
                 )
                 / np.expm1(
                     self.model.chf(
                         lifetime_data.left_censoring.values,
-                        *(
-                            args[lifetime_data.left_censoring.index]
-                            for args in self.model_args
-                        ),
+                        *lifetime_data.left_censoring.args,
                     )
                 ),
                 axis=0,
@@ -154,10 +137,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             return -np.sum(
                 self.model.jac_chf(
                     lifetime_data.left_truncation.values,
-                    *(
-                        args[lifetime_data.left_truncation.index]
-                        for args in self.model_args
-                    ),
+                    *lifetime_data.left_truncation.args,
                 ),
                 axis=0,
             )

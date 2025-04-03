@@ -1,4 +1,4 @@
-from typing import Optional, TypeVarTuple
+from typing import TYPE_CHECKING, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -6,9 +6,11 @@ from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.likelihood import LifetimeData
 from relife.model import BaseDistribution, BaseLifetimeModel, ParametricModel
 from relife.quadratures import gauss_legendre, shifted_laguerre
+
+if TYPE_CHECKING:
+    from relife.data import LifetimeData
 
 
 class Exponential(BaseDistribution):

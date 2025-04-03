@@ -9,11 +9,12 @@ from relife.economic.discounting import exponential_discounting
 from relife.economic.rewards import reward_partial_expectation
 from relife.model import BaseDistribution
 from relife.sample import SampleFailureDataMixin, SampleMixin
-from ._renewal_equation import renewal_equation_solver, delayed_renewal_equation_solver
+
+from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
 
 if TYPE_CHECKING:
-    from relife.model import FrozenLifetimeModel, LifetimeModel
     from relife.economic import Rewards
+    from relife.model import FrozenLifetimeModel, LifetimeModel
 
 
 class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):

@@ -1,18 +1,20 @@
-from __future__ import annotations
-
 import copy
 from dataclasses import InitVar, asdict, dataclass, field
+from functools import singledispatch
 from typing import TYPE_CHECKING, Any, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import OptimizeResult, minimize
 
-from relife.data import lifetime_data_factory
+from relife.data import FailureData, LifetimeData
+
+from ..stochastic_process import NonHomogeneousPoissonProcess
 from .lifetime_likelihood import LikelihoodFromLifetimes
 
 if TYPE_CHECKING:
-    from relife.model import ParametricLifetimeModel
+    from relife.data import LifetimeData, NHPPData
+    from relife.model import ParametricLifetimeModel, ParametricModel
 
 Args = TypeVarTuple("Args")
 
@@ -86,23 +88,26 @@ class FittingResults:
         return asdict(self)
 
 
+# noinspection PyUnusedLocal
+@singledispatch
+def maximum_likelihood_estimation(
+    model: ParametricModel,
+    data: FailureData,
+    **kwargs: Any,
+) -> ParametricModel:
+    raise ValueError(f"No MLE for {type(model)}")
+
+
+@maximum_likelihood_estimation.register
 def maximum_likelihood_estimation(
     model: ParametricLifetimeModel[*Args],
-    time: NDArray[np.float64],
-    /,
-    *args: *Args,
-    event: Optional[NDArray[np.bool_]] = None,
-    entry: Optional[NDArray[np.float64]] = None,
-    departure: Optional[NDArray[np.float64]] = None,
+    data: LifetimeData,
     **kwargs: Any,
 ) -> ParametricLifetimeModel[*Args]:
-    # Step 1: Prepare lifetime data
-    lifetime_data = lifetime_data_factory(
-        time,
-        event,
-        entry,
-        departure,
-    )
+    from relife.data import LifetimeData
+
+    if not isinstance(data, LifetimeData):
+        raise ValueError
 
     # Step 2: Initialize the model and likelihood
     optimized_model = copy.deepcopy(model)
@@ -135,3 +140,19 @@ def maximum_likelihood_estimation(
     )
     optimized_model.params = optimizer.x
     return optimized_model
+
+
+@maximum_likelihood_estimation.register
+def maximum_likelihood_estimation(
+    model: NonHomogeneousPoissonProcess[*Args],
+    data: NHPPData,
+    **kwargs: Any,
+) -> NonHomogeneousPoissonProcess[*Args]:
+    from relife.data import NHPPData
+
+    if not isinstance(data, NHPPData):
+        raise ValueError
+
+    lifetime_data = data.to_lifetime_data()
+
+    return maximum_likelihood_estimation(model.baseline, lifetime_data, **kwargs)

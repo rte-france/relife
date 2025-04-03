@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, NewType, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, NewType, Optional
 
 import numpy as np
 from numpy.typing import NDArray

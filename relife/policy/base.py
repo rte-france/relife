@@ -6,10 +6,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.economic import CostStructure
+from relife.sample import SampleFailureDataMixin, SampleMixin
 
 from ..economic.discounting import exponential_discounting
-
-from relife.sample import SampleFailureDataMixin, SampleMixin
 
 if TYPE_CHECKING:
     from relife.model import BaseLifetimeModel, FrozenLifetimeModel

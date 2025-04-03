@@ -16,6 +16,7 @@ from scipy.optimize import Bounds, newton
 from typing_extensions import override
 
 from relife._plots import PlotSurvivalFunc
+from relife.data import lifetime_data_factory
 from relife.likelihood import maximum_likelihood_estimation
 from relife.quadratures import gauss_legendre, quad_laguerre
 
@@ -23,10 +24,11 @@ from ._frozen import FrozenLifetimeModel
 from ._parametric import ParametricModel
 
 if TYPE_CHECKING:
-    from relife.likelihood import LifetimeData
+    from relife.data import LifetimeData
     from relife.model import ParametricLifetimeModel, ParametricModel
 
 Args = TypeVarTuple("Args")
+
 
 class BaseLifetimeModel(Generic[*Args], ABC):
     r"""Base class for lifetime model.
@@ -551,12 +553,16 @@ class BaseDistribution(BaseParametricLifetimeModel[()], ABC):
         **kwargs: Any,
     ) -> Self:
         # if update to 3.12 : maximum_likelihood_estimation[()](...), generic functions
+        # Step 1: Prepare lifetime data
+        lifetime_data = lifetime_data_factory(
+            time,
+            event,
+            entry,
+            departure,
+        )
         optimized_model = maximum_likelihood_estimation(
             self,
-            time,
-            event=event,
-            entry=entry,
-            departure=departure,
+            lifetime_data,
             **kwargs,
         )
         return optimized_model
@@ -876,14 +882,16 @@ class BaseRegression(
         **kwargs: Any,
     ) -> Self:
         # if update to 3.12 : maximum_likelihood_estimation[float|NDArray[np.float64], *args](...), generic functions
-        optimized_model = maximum_likelihood_estimation(
-            self,
+        lifetime_data = lifetime_data_factory(
             time,
             covar,
             *args,
             event=event,
             entry=entry,
             departure=departure,
-            **kwargs,
+        )
+        optimized_model = maximum_likelihood_estimation(
+            self,
+            lifetime_data**kwargs,
         )
         return optimized_model
