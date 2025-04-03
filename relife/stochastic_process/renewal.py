@@ -1,84 +1,19 @@
-from __future__ import annotations
-
 from functools import partial
-from typing import TYPE_CHECKING, Callable, NewType, Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.economic.discounting import exponential_discounting
+from relife.economic.rewards import reward_partial_expectation
 from relife.model import BaseDistribution
 from relife.sample import SampleFailureDataMixin, SampleMixin
+from ._renewal_equation import renewal_equation_solver, delayed_renewal_equation_solver
 
 if TYPE_CHECKING:
-    from relife.economic.discounting import Discounting
     from relife.model import FrozenLifetimeModel, LifetimeModel
-
-
-def renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    model: LifetimeModel[()],
-    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    *,
-    discounting: Optional[Discounting] = None,
-) -> NDArray[np.float64]:
-
-    tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f = model.cdf(timeline)
-    fm = model.cdf(tm)
-    y = evaluated_func(timeline)
-    if discounting is not None:
-        d = discounting.factor(timeline)
-    else:
-        d = np.ones_like(f)
-    z = np.empty(y.shape)
-    u = d * np.insert(f[..., 1:] - fm, 0, 1, axis=-1)
-    v = d[..., :-1] * np.insert(np.diff(fm), 0, 1, axis=-1)
-    q0 = 1 / (1 - d[..., 0] * fm[..., 0])
-    z[..., 0] = y[..., 0]
-    z[..., 1] = q0 * (y[..., 1] + z[..., 0] * u[..., 1])
-    for n in range(2, f.shape[-1]):
-        z[..., n] = q0 * (
-            y[..., n]
-            + z[..., 0] * u[..., n]
-            + np.sum(z[..., 1:n][..., ::-1] * v[..., 1:n], axis=-1)
-        )
-    return z
-
-
-def delayed_renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    z: NDArray[np.float64],
-    model1: LifetimeModel[()],
-    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    discounting: Optional[Discounting] = None,
-) -> NDArray[np.float64]:
-
-    tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f1 = model1.cdf(timeline)
-    f1m = model1.cdf(tm)
-    y1 = evaluated_func(timeline)
-
-    if discounting is not None:
-        d = discounting.factor(timeline)
-    else:
-        d = np.ones_like(f1)
-    z1 = np.empty(y1.shape)
-    u1 = d * np.insert(f1[..., 1:] - f1m, 0, 1, axis=-1)
-    v1 = d[..., :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)
-    z1[..., 0] = y1[..., 0]
-    z1[..., 1] = (
-        y1[..., 1] + z[..., 0] * u1[..., 1] + z[..., 1] * d[..., 0] * f1m[..., 0]
-    )
-    for n in range(2, f1.shape[-1]):
-        z1[..., n] = (
-            y1[..., n]
-            + z[..., 0] * u1[..., n]
-            + z[..., n] * d[..., 0] * f1m[..., 0]
-            + np.sum(z[..., 1:n][..., ::-1] * v1[..., 1:n], axis=-1)
-        )
-    return z1
+    from relife.economic import Rewards
 
 
 class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
@@ -97,8 +32,6 @@ class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
             )
         if not isinstance(model, BaseDistribution):
             model = model.freeze()
-
-        self.model = model
         if model1 is not None:
             if not model1.frozen:
                 raise ValueError(
@@ -106,6 +39,7 @@ class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
                 )
             if not isinstance(model1, BaseDistribution):
                 model1 = model1.freeze()
+        self.model = model
         self.model1 = model1
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -147,33 +81,6 @@ class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
     #     return failure_data_sample(
     #         self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
     #     )
-
-
-Rewards = NewType(
-    "Rewards",
-    Callable[[NDArray[np.float64]], NDArray[np.float64]],
-)
-
-
-def reward_partial_expectation(
-    timeline: NDArray[np.float64],
-    model: LifetimeModel[()],
-    rewards: Rewards,
-    *,
-    discounting: Optional[Discounting] = None,
-) -> np.ndarray:
-    def func(x):
-        return rewards(x) * discounting.factor(x)
-
-    ls = model.ls_integrate(func, np.zeros_like(timeline), timeline)
-    # reshape 2d -> final_dim
-    if isinstance(model, FrozenLifetimeModel):
-        ndim = max(map(np.ndim, (timeline, *model.args)), default=0)
-    else:
-        ndim = np.ndim(timeline)
-    if ndim < 2:
-        ls = np.squeeze(ls)
-    return ls
 
 
 class RenewalRewardProcess(RenewalProcess):

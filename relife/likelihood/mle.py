@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import OptimizeResult, minimize
 
-from .lifetime_data import lifetime_data_factory
+from relife.data import lifetime_data_factory
 from .lifetime_likelihood import LikelihoodFromLifetimes
 
 if TYPE_CHECKING:

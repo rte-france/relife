@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, NamedTuple, Optional, Self
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.likelihood.lifetime_data import lifetime_data_factory
+from relife.data._lifetime_data import lifetime_data_factory
 from relife.model import BaseNonParametricLifetimeModel
 
 if TYPE_CHECKING:

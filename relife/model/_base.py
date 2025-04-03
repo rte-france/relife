@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -29,7 +27,6 @@ if TYPE_CHECKING:
     from relife.model import ParametricLifetimeModel, ParametricModel
 
 Args = TypeVarTuple("Args")
-
 
 class BaseLifetimeModel(Generic[*Args], ABC):
     r"""Base class for lifetime model.

@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from relife.likelihood.lifetime_data import (
+from relife.data._lifetime_data import (
     LifetimeData,
     Lifetime1DParser,
     Lifetime2DParser,
 )
-from relife.stochastic_process.nhpp import nhpp_data_factory
+from relife.data._nhpp_data import nhpp_data_factory
 
 
 @pytest.fixture

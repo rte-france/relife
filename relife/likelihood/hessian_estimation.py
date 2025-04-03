@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Union
 
 import numpy as np
@@ -8,7 +6,6 @@ from scipy.optimize import approx_fprime
 
 if TYPE_CHECKING:
     from relife.model import ParametricLifetimeModel
-
     from ._protocol import Likelihood
 
 

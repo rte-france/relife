@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -16,11 +14,9 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
 if TYPE_CHECKING:
-
     from relife._plots import PlotConstructor
     from relife.likelihood import LifetimeData
     from relife.likelihood.mle import FittingResults
-
     from ._base import NonParametricEstimation
     from ._frozen import FrozenLifetimeModel
 

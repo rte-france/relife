@@ -1,8 +1,13 @@
 from functools import partial
-from typing import Callable, NewType
+from typing import Callable, NewType, Optional, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
+
+from relife.economic.discounting import Discounting
+
+if TYPE_CHECKING:
+    from relife.model import FrozenLifetimeModel
 
 Rewards = NewType(
     "Rewards",
@@ -36,3 +41,21 @@ def _run_to_failure_rewards(
 
 def run_to_failure_rewards(cf: float | NDArray[np.float64]) -> Rewards:
     return partial(_run_to_failure_rewards, cf=cf)
+
+
+def reward_partial_expectation(
+    timeline: NDArray[np.float64],
+    model: FrozenLifetimeModel,
+    rewards: Rewards,
+    *,
+    discounting: Optional[Discounting] = None,
+) -> NDArray[np.float64]:
+    def func(x):
+        return rewards(x) * discounting.factor(x)
+
+    ls = model.ls_integrate(func, np.zeros_like(timeline), timeline)
+    # reshape 2d -> final_dim
+    ndim = max(map(np.ndim, (timeline, *model.args)), default=0)
+    if ndim < 2:
+        ls = np.squeeze(ls)
+    return ls

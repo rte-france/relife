@@ -12,7 +12,7 @@ from ._protocol import Likelihood
 if TYPE_CHECKING:
     from relife.model import ParametricLifetimeModel
 
-    from .lifetime_data import LifetimeData
+    from relife.data._lifetime_data import LifetimeData
 
 Args = TypeVarTuple("Args")
 

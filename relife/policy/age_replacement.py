@@ -1,22 +1,20 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.economic.rewards import age_replacement_rewards
+from relife.economic import age_replacement_rewards, reward_partial_expectation
 from relife.parametric_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadratures import gauss_legendre
-from relife.stochastic_process import NonHomogeneousPoissonProcess, RenewalRewardProcess
-from relife.stochastic_process.renewal import reward_partial_expectation
+from relife.stochastic_process import RenewalRewardProcess
 
 from ._decorator import get_if_none
 from .base import RenewalPolicy
 
 if TYPE_CHECKING:
     from relife.model import BaseLifetimeModel
+    from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
 class OneCycleAgeReplacementPolicy(RenewalPolicy):

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import functools
 from typing import TYPE_CHECKING, Callable, Generator, Optional, TypeVarTuple
 
@@ -11,7 +9,6 @@ from relife._plots import PlotConstructor, PlotNHPP
 if TYPE_CHECKING:
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
-
     from ._parametric import ParametricModel
     from ._protocol import LifetimeModel
 
