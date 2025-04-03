@@ -183,10 +183,6 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
     ):
         super().__init__()
         self.compose_with(baseline=baseline)
-        if not isinstance(baseline, ParametricLifetimeModel):
-            raise ValueError(
-                "Invalid distribution : must be FittableLifetimeDistribution object."
-            )
         self.baseline = baseline
 
     def intensity(
@@ -242,7 +238,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
             use="model",
         )
 
-    def freeze(self, *args: *Args) -> FrozenNonHomogeneousPoissonProcess[*Args]:
+    def freeze(self, *args: *Args) -> FrozenNonHomogeneousPoissonProcess:
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
     @property

@@ -20,12 +20,12 @@ class ParamsTree:
         self.dtype = float
 
     @property
-    def data(self) -> dict[str, Optional[float|complex]]:
+    def data(self) -> dict[str, Optional[float | complex]]:
         """data of current node as dict"""
         return self._data
 
     @data.setter
-    def data(self, mapping: dict[str, Optional[float|complex]]):
+    def data(self, mapping: dict[str, Optional[float | complex]]):
         self._data = mapping
         self.update()
 
@@ -40,16 +40,16 @@ class ParamsTree:
         self.update_parents()
 
     @property
-    def all_values(self) -> tuple[Optional[float|complex], ...]:
+    def all_values(self) -> tuple[Optional[float | complex], ...]:
         """values of current and leaf nodes as list"""
         return self._all_values
 
     @all_values.setter
-    def all_values(self, values: tuple[Optional[float|complex], ...]):
+    def all_values(self, values: tuple[Optional[float | complex], ...]):
         self.set_all_values(*values)
         self.update_parents()
 
-    def set_all_values(self, *values: Optional[float|complex]):
+    def set_all_values(self, *values: Optional[float | complex]):
         if len(values) != len(self):
             raise ValueError(f"values expects {len(self)} items but got {len(values)}")
         self._all_values = values
@@ -141,7 +141,7 @@ class ParametricModel:
         self.leaves_of_models = {}
 
     @property
-    def params(self) -> NDArray[np.float64|np.complex64]:
+    def params(self) -> NDArray[np.float64 | np.complex64]:
         """
         Parameters values.
 
@@ -160,7 +160,7 @@ class ParametricModel:
         return np.array(self.params_tree.all_values)
 
     @params.setter
-    def params(self, values: NDArray[np.float64|np.complex64]):
+    def params(self, values: NDArray[np.float64 | np.complex64]):
         if values.ndim > 1:
             raise ValueError
         values: tuple[Optional[float], ...] = tuple(

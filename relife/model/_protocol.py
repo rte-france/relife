@@ -92,7 +92,7 @@ class LifetimeModel(Protocol[*Args]):
     def freeze(
         self,
         *args: *Args,
-    ) -> FrozenLifetimeModel[*Args]: ...
+    ) -> FrozenLifetimeModel: ...
 
 
 # Only to differentiate those that can be fit from the others
@@ -100,6 +100,8 @@ class LifetimeModel(Protocol[*Args]):
 class ParametricLifetimeModel(LifetimeModel[*Args], Protocol):
 
     params: NDArray[np.float64]
+    params_names: tuple[str, ...]
+    components: tuple[Self, ...]
 
     @property
     def params_names(self) -> tuple[str, ...]: ...

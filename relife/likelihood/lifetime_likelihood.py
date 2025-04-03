@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import TypeVarTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,6 +11,7 @@ from ._protocol import Likelihood
 
 if TYPE_CHECKING:
     from relife.model import ParametricLifetimeModel
+
     from .lifetime_data import LifetimeData
 
 Args = TypeVarTuple("Args")

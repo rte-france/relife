@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 
 if TYPE_CHECKING:
-    from ._protocol import Likelihood
     from relife.model import ParametricLifetimeModel
+
+    from ._protocol import Likelihood
 
 
 def hessian_cs(
@@ -28,7 +29,7 @@ def hessian_cs(
         size = likelihood.params.size
         hess = np.empty((size, size))
         u = eps * 1j * np.eye(size)
-        # params = likelihood.params.copy()
+        # params = likelihood.params.copy()
         params = np.copy(likelihood.params).astype(np.complex64)
         for i in range(size):
             for j in range(i, size):

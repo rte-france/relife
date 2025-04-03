@@ -335,16 +335,16 @@ class BaseLifetimeModel(Generic[*Args], ABC):
     def median(self, *args: *Args) -> NDArray[np.float64]:
         return self.ppf(np.array(0.5), *args)
 
+    def freeze(
+        self,
+        *args: *Args,
+    ) -> FrozenLifetimeModel:
+        return FrozenLifetimeModel(self, *args)
+
     @property
     def plot(self) -> PlotSurvivalFunc:
         """Plot"""
         return PlotSurvivalFunc(self)
-
-    def freeze(
-        self,
-        *args: *Args,
-    ) -> FrozenLifetimeModel[*Args]:
-        return FrozenLifetimeModel(self, *args)
 
 
 class BaseParametricLifetimeModel(ParametricModel, BaseLifetimeModel[*Args], ABC):
@@ -541,7 +541,7 @@ class BaseDistribution(BaseParametricLifetimeModel[()], ABC):
         return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
 
     @override
-    def freeze(self) -> FrozenLifetimeModel[()]:
+    def freeze(self) -> FrozenLifetimeModel:
         return FrozenLifetimeModel(self)
 
     def fit(
@@ -864,7 +864,7 @@ class BaseRegression(
     @override
     def freeze(
         self, covar: float | NDArray[np.float64], *args: *Args
-    ) -> FrozenLifetimeModel[float | NDArray[np.float64], *Args]:
+    ) -> FrozenLifetimeModel:
         return FrozenLifetimeModel(self, *(covar, *args))
 
     def fit(

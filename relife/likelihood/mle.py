@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import InitVar, asdict, dataclass, field
-from typing import Any, Optional, TypeVarTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray

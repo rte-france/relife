@@ -191,7 +191,7 @@ class AgeReplacementModel(
     @override
     def freeze(
         self, ar: float | NDArray[np.float64], *args: *Args
-    ) -> FrozenLifetimeModel[float | NDArray[np.float64], *Args]:
+    ) -> FrozenLifetimeModel:
         return FrozenLifetimeModel(self, *(ar, *args))
 
 
@@ -281,5 +281,5 @@ class LeftTruncatedModel(
     @override
     def freeze(
         self, a0: float | NDArray[np.float64], *args: *Args
-    ) -> FrozenLifetimeModel[*Args]:
+    ) -> FrozenLifetimeModel:
         return FrozenLifetimeModel(self, *(a0, *args))

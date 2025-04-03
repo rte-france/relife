@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVarTuple
+from typing import TYPE_CHECKING, Callable, Optional, TypeVarTuple, Generator
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,78 +12,81 @@ if TYPE_CHECKING:
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
+    from ._parametric import ParametricModel
     from ._protocol import LifetimeModel
 
 Args = TypeVarTuple("Args")
 
+from relife.parametric_model import (
+    AFT,
+    AgeReplacementModel,
+    LeftTruncatedModel,
+    ProportionalHazard,
+)
 
-def _reshape_args(
-    args_names: tuple[str, ...], args: tuple[float | NDArray[np.float64], ...]
-) -> tuple[float | NDArray[np.float64], ...]:
+
+def _args_names(
+    model: ParametricModel,
+) -> Generator[str]:
+    match model:
+        case (ProportionalHazard(), AFT()):
+            yield "covar"
+            return _args_names(model.baseline)
+        case AgeReplacementModel():
+            yield "ar"
+            return _args_names(model.baseline)
+        case LeftTruncatedModel():
+            yield "a0"
+            return _args_names(model.baseline)
+        case _:  # in other case, stop generator and yield nothing
+            return
+
+
+def _reshape(arg_name: str, arg_value: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
+    arg_value = np.asarray(arg_value)
+    ndim = arg_value.ndim
+    if ndim > 2:
+        raise ValueError(
+            f"Number of dimension can't be higher than 2. Got {ndim} for {arg_name}"
+        )
+    match arg_name:
+        case "covar":
+            if arg_value.ndim <= 1:
+                return arg_value.reshape(1, -1)
+            return arg_value
+        case ("a0", "ar"):
+            if arg_value.ndim <= 1:
+                if arg_value.size == 1:
+                    return arg_value.item()
+                return arg_value.reshape(-1, 1)
+            return arg_value
+
+
+def _make_kwargs(
+    model: ParametricModel, *args: float | NDArray[np.float64]
+) -> dict[str, float | NDArray[np.float64]]:
+
+    args_names = tuple(_args_names(model))
+    if len(args_names) != len(args):
+        raise TypeError(
+            f"{model.__class__.__name__}.freeze() requires {args_names} positional argument but got {len(args)} argument.s only"
+        )
+
     nb_assets = 1  # minimum value
-    values = []
+    kwargs = {}
     for k, v in zip(args_names, args):
-        arr = np.asarray(v)
-        ndim = arr.ndim
-        if ndim > 2:
-            raise ValueError(
-                f"Number of dimension can't be higher than 2. Got {ndim} for {k}"
-            )
-        min_ndim = _get_minimum_arg_ndim(k)
-        if ndim < min_ndim:
-            raise ValueError(
-                f"Expected at least {min_ndim} dimensions for {k} but got {ndim}"
-            )
-        if arr.size == 1:
-            values.append(arr.item())
-        else:
-            arr = arr.reshape(-1, 1)
-            if (
-                nb_assets != 1 and arr.shape[0] != nb_assets
-            ):  # test if nb assets changed
-                raise ValueError("Different number of assets are given in model args")
-            else:  # update nb_assets
-                nb_assets = arr.shape[0]
-            values.append(arr)
-    return tuple(values)
-
-
-def _get_args_names(
-    model: LifetimeModel[*Args],
-) -> tuple[str, ...]:
-
-    from relife.parametric_model import (
-        AgeReplacementModel,
-        LeftTruncatedModel,
-    )
-
-    from ._base import BaseDistribution, BaseRegression
-
-    def arg_name(
-        obj: LifetimeModel[*Args],
-    ) -> tuple[str, ...]:
-        if isinstance(obj, BaseRegression):
-            return ("covar",)
-        if isinstance(obj, AgeReplacementModel):
-            return ("ar",)
-        if isinstance(obj, LeftTruncatedModel):
-            return ("a0",)
-        if isinstance(obj, BaseDistribution):
-            return ()
-
-    args_names = []
-    args_names.extend(arg_name(model))
-    while hasattr(model, "baseline") and not model.frozen:
-        model = model.baseline
-        args_names.extend(arg_name(model))
-
-    return tuple(args_names)
-
-
-def _get_minimum_arg_ndim(arg_name: str):
-    if arg_name == "covar":
-        return 2
-    return 0
+        v = _reshape(k, v)
+        if isinstance(v, np.ndarray):  # if float, nb_assets is unchanged
+            # test if nb assets changed
+            if nb_assets != 1 and v.shape[0] != nb_assets:
+                raise ValueError(
+                    "Different number of assets are passed through arguments"
+                )
+            # update nb_assets
+            else:
+                nb_assets = v.shape[0]
+        kwargs[k] = v
+    return kwargs
 
 
 def isbroadcastable(argname: str):
@@ -102,88 +105,87 @@ def isbroadcastable(argname: str):
     return decorator
 
 
-class FrozenLifetimeModel(Generic[*Args]):
+class FrozenParametricModel:
 
     frozen: bool = True
 
     def __init__(
         self,
-        baseline: LifetimeModel[*Args],
-        *args: *Args,
+        model: ParametricModel,
+        *args: float | NDArray[np.float64],
     ):
-        args_names = _get_args_names(baseline)
-        if len(args_names) != len(args):
-            raise ValueError(
-                f"Expected {args_names} args but got {len(args)} args only"
-            )
-        args = _reshape_args(args_names, args)
-
-        self.baseline = baseline
-        self.kwargs = {k: v for (k, v) in zip(args_names, args)}
+        self.model = model
+        self.kwargs = _make_kwargs(model, *args)
 
     @property
     def args(self) -> tuple[float | NDArray[np.float64], ...]:
-        return self.kwargs.values()
+        return tuple(self.kwargs.values())
 
     @property
     def nb_assets(self) -> int:
         return max(
-            map(lambda x: x.shape[0] if x.ndim >= 1 else 1, self.args), default=1
+            map(
+                lambda x: np.asarray(x).shape[0] if x.ndim >= 1 else 1,
+                self.kwargs.values(),
+            ),
+            default=1,
         )
+
+
+# better with FrozenLifetimeModel and freeze in LifetimeModel (match with AgeReplacementModel and LeftTruncatedModel)
+class FrozenLifetimeModel(FrozenParametricModel):
+    model: LifetimeModel[*tuple[float | NDArray, ...]]
 
     @isbroadcastable("time")
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.hf(time, *self.args)
+        return self.model.hf(time, *self.args)
 
     @isbroadcastable("time")
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.chf(time, *self.args)
+        return self.model.chf(time, *self.args)
 
     @isbroadcastable("time")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.sf(time, *self.args)
+        return self.model.sf(time, *self.args)
 
     @isbroadcastable("time")
     def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.pdf(time, *self.args)
+        return self.model.pdf(time, *self.args)
 
     @isbroadcastable("time")
     def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.mrl(time, *self.args)
+        return self.model.mrl(time, *self.args)
 
     def moment(self, n: int) -> NDArray[np.float64]:
-        return self.baseline.moment(n)
+        return self.model.moment(n)
 
     def mean(self) -> NDArray[np.float64]:
-        return self.baseline.moment(1, *self.args)
+        return self.model.moment(1, *self.args)
 
     def var(self) -> NDArray[np.float64]:
-        return (
-            self.baseline.moment(2, *self.args)
-            - self.baseline.moment(1, *self.args) ** 2
-        )
+        return self.model.moment(2, *self.args) - self.model.moment(1, *self.args) ** 2
 
     @isbroadcastable("probability")
     def isf(self, probability: float | NDArray[np.float64]):
-        return self.baseline.isf(probability, *self.args)
+        return self.model.isf(probability, *self.args)
 
     @isbroadcastable("cumulative_hazard_rate")
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
-        return self.baseline.ichf(cumulative_hazard_rate, *self.args)
+        return self.model.ichf(cumulative_hazard_rate, *self.args)
 
     @isbroadcastable("time")
     def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.cdf(time, *self.args)
+        return self.model.cdf(time, *self.args)
 
     def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
-        return self.baseline.rvs(*self.args, size=size, seed=seed)
+        return self.model.rvs(*self.args, size=size, seed=seed)
 
     @isbroadcastable("probability")
     def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.ppf(probability, *self.args)
+        return self.model.ppf(probability, *self.args)
 
     def median(self) -> NDArray[np.float64]:
-        return self.baseline.median(*self.args)
+        return self.model.median(*self.args)
 
     def ls_integrate(
         self,
@@ -193,45 +195,19 @@ class FrozenLifetimeModel(Generic[*Args]):
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
-        return self.baseline.ls_integrate(func, a, b, deg, *self.args)
+        return self.model.ls_integrate(func, a, b, deg, *self.args)
 
 
-class FrozenNonHomogeneousPoissonProcess(Generic[*Args]):
-
-    frozen: bool = True
-
-    def __init__(
-        self,
-        baseline: NonHomogeneousPoissonProcess[*Args],
-        *args: *Args,
-    ):
-        args_names = _get_args_names(baseline)
-        if len(args_names) != len(args):
-            raise ValueError(
-                f"Expected {args_names} args but got {len(args)} args only"
-            )
-        args = _reshape_args(args_names, args)
-
-        self.baseline = baseline
-        self.kwargs = {k: v for (k, v) in zip(args_names, args)}
-
-    @property
-    def args(self) -> tuple[float | NDArray[np.float64], ...]:
-        return self.kwargs.values()
-
-    @property
-    def nb_assets(self) -> int:
-        return max(
-            map(lambda x: x.shape[0] if x.ndim >= 1 else 1, self.args), default=1
-        )
+class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel):
+    model: NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]
 
     def intensity(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.intensity(time, *self.args)
+        return self.model.intensity(time, *self.args)
 
     def cumulative_intensity(
         self, time: float | NDArray[np.float64]
     ) -> NDArray[np.float64]:
-        return self.baseline.cumulative_intensity(time, *self.args)
+        return self.model.cumulative_intensity(time, *self.args)
 
     def sample(
         self,
@@ -244,7 +220,7 @@ class FrozenNonHomogeneousPoissonProcess(Generic[*Args]):
         from relife.sample import sample_count_data
 
         return sample_count_data(
-            self.baseline,
+            self.model,
             size,
             tf,
             t0=t0,
@@ -263,7 +239,7 @@ class FrozenNonHomogeneousPoissonProcess(Generic[*Args]):
         from relife.sample import failure_data_sample
 
         return failure_data_sample(
-            self.baseline,
+            self.model,
             size,
             tf,
             t0,
