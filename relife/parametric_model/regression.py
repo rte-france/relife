@@ -15,7 +15,7 @@ from typing_extensions import override
 from relife.model import BaseRegression
 
 if TYPE_CHECKING:
-    from relife.model import ParametricLifetimeModel
+    from relife.model import FittableLifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -71,7 +71,7 @@ class ProportionalHazard(BaseRegression[*Args]):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*Args],
+        baseline: FittableLifetimeModel[*Args],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
@@ -192,7 +192,7 @@ class AFT(BaseRegression[*Args]):
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*Args],
+        baseline: FittableLifetimeModel[*Args],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Protocol, TypeVarTuple
 
@@ -8,13 +9,13 @@ from .hessian_estimation import _hessian_scheme
 
 if TYPE_CHECKING:
     from relife.data import FailureData
-    from relife.model import ParametricModel
+    from relife.model import BaseParametricModel
 
 Args = TypeVarTuple("Args")
 
 
 class Likelihood(Protocol[*Args]):
-    model: ParametricModel[*Args]
+    model: BaseParametricModel[*Args]
     data: FailureData
 
     @property

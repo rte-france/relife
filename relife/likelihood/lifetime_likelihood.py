@@ -11,7 +11,7 @@ from ._protocol import Likelihood
 
 if TYPE_CHECKING:
     from relife.data import LifetimeData
-    from relife.model import ParametricLifetimeModel
+    from relife.model import FittableLifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -24,17 +24,17 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
     ----------
     model : ParametricLifetimeDistribution
         Underlying core used to compute probability functions
-    lifetime_data : LifetimeData
+    data : LifetimeData
         Observed lifetime data used one which the likelihood is evaluated
     """
 
     def __init__(
         self,
-        model: ParametricLifetimeModel[*Args],
-        lifetime_data: LifetimeData,
+        model: FittableLifetimeModel[*Args],
+        data: LifetimeData,
     ):
         self.model = copy.deepcopy(model)
-        self.lifetime_data = lifetime_data
+        self.data = data
 
     @override
     @property
@@ -149,10 +149,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
     ) -> float:
         self.model.params = params
         return (
-            self._complete_contribs(self.lifetime_data)
-            + self._right_censored_contribs(self.lifetime_data)
-            + self._left_censored_contribs(self.lifetime_data)
-            + self._left_truncations_contribs(self.lifetime_data)
+            self._complete_contribs(self.data)
+            + self._right_censored_contribs(self.data)
+            + self._left_censored_contribs(self.data)
+            + self._left_truncations_contribs(self.data)
         )
 
     @override
@@ -166,8 +166,8 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             )
         self.model.params = params
         return (
-            self._jac_complete_contribs(self.lifetime_data)
-            + self._jac_right_censored_contribs(self.lifetime_data)
-            + self._jac_left_censored_contribs(self.lifetime_data)
-            + self._jac_left_truncations_contribs(self.lifetime_data)
+            self._jac_complete_contribs(self.data)
+            + self._jac_right_censored_contribs(self.data)
+            + self._jac_left_censored_contribs(self.data)
+            + self._jac_left_truncations_contribs(self.data)
         )

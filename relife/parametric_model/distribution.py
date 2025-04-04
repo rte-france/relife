@@ -6,7 +6,7 @@ from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.model import BaseDistribution, BaseLifetimeModel, ParametricModel
+from relife.model import BaseDistribution, BaseLifetimeModel, BaseParametricModel
 from relife.quadratures import gauss_legendre, shifted_laguerre
 
 if TYPE_CHECKING:
@@ -223,13 +223,6 @@ class Gompertz(BaseDistribution):
         super().__init__()
         self.set_params(shape=shape, rate=rate)
 
-    def init_params(self, lifetime_data: LifetimeData) -> None:
-        param0 = np.empty(self.nb_params, dtype=float)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.rc.values))
-        shape = np.exp(-rate * np.mean(lifetime_data.rc.values))
-        param0[0] = shape
-        param0[1] = rate
-        self.params = param0
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
@@ -501,7 +494,7 @@ class LogLogistic(BaseDistribution):
 Args = TypeVarTuple("Args")
 
 
-class EquilibriumDistribution(ParametricModel, BaseLifetimeModel[*Args]):
+class EquilibriumDistribution(BaseParametricModel, BaseLifetimeModel[*Args]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime

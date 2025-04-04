@@ -9,15 +9,14 @@ from relife._plots import PlotConstructor, PlotNHPP
 if TYPE_CHECKING:
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
-
-    from ._parametric import ParametricModel
-    from ._protocol import LifetimeModel
+    from . import BaseParametricModel
+    from ._protocol import LifetimeModel, Model
 
 Args = TypeVarTuple("Args")
 
 
 def _args_names(
-    model: ParametricModel,
+    model: BaseParametricModel,
 ) -> Generator[str]:
     from relife.parametric_model import (
         AFT,
@@ -62,7 +61,7 @@ def _reshape(
 
 
 def _make_kwargs(
-    model: ParametricModel, *args: float | NDArray[np.float64]
+    model: BaseParametricModel, *args: float | NDArray[np.float64]
 ) -> dict[str, float | NDArray[np.float64]]:
 
     args_names = tuple(_args_names(model))
@@ -104,7 +103,7 @@ def isbroadcastable(argname: str):
     return decorator
 
 
-class FrozenParametricModel:
+class FrozenModel:
 
     frozen: bool = True
 
@@ -132,7 +131,7 @@ class FrozenParametricModel:
 
 
 # better with FrozenLifetimeModel and freeze in LifetimeModel (match with AgeReplacementModel and LeftTruncatedModel)
-class FrozenLifetimeModel(FrozenParametricModel):
+class FrozenLifetimeModel(FrozenModel):
     model: LifetimeModel[*tuple[float | NDArray, ...]]
 
     @isbroadcastable("time")
@@ -197,7 +196,7 @@ class FrozenLifetimeModel(FrozenParametricModel):
         return self.model.ls_integrate(func, a, b, deg, *self.args)
 
 
-class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel):
+class FrozenNonHomogeneousPoissonProcess(FrozenModel):
     model: NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]
 
     def intensity(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:

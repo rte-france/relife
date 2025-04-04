@@ -1,20 +1,21 @@
 import copy
 from dataclasses import InitVar, asdict, dataclass, field
 from functools import singledispatch
-from typing import TYPE_CHECKING, Any, Optional, TypeVarTuple
+from typing import TYPE_CHECKING, Any, Optional, TypeVarTuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import OptimizeResult, minimize
+from scipy.optimize import OptimizeResult, minimize, Bounds
 
 from relife.data import FailureData, LifetimeData
 
-from ..stochastic_process import NonHomogeneousPoissonProcess
+from relife.stochastic_process import NonHomogeneousPoissonProcess
+from relife.model import FittableLifetimeModel, BaseParametricModel
 from .lifetime_likelihood import LikelihoodFromLifetimes
+from ..parametric_model import Gompertz, Exponential, LogLogistic, Weibull, Gamma, ProportionalHazard, AFT
 
 if TYPE_CHECKING:
     from relife.data import LifetimeData, NHPPData
-    from relife.model import ParametricLifetimeModel, ParametricModel
 
 Args = TypeVarTuple("Args")
 
@@ -90,20 +91,81 @@ class FittingResults:
 
 # noinspection PyUnusedLocal
 @singledispatch
+def params_bounds(model : BaseParametricModel) -> Bounds:
+    raise NotImplemented
+
+
+@params_bounds.register
+def _(model : Union[Exponential, Weibull, LogLogistic, Gamma, Gompertz]) -> Bounds:
+    return Bounds(
+        np.full(model.nb_params, np.finfo(float).resolution),
+        np.full(model.nb_params, np.inf),
+    )
+
+@params_bounds.register
+def _(model : Union[ProportionalHazard[*Args], AFT[*Args]]) -> Bounds:
+    lb = np.concatenate(
+        (
+            np.full(model.covar_effect.nb_params, -np.inf),
+            params_bounds(model.baseline).lb,
+        )
+    )
+    ub = np.concatenate(
+        (
+            np.full(model.covar_effect.nb_params, np.inf),
+            params_bounds(model.baseline).ub,
+        )
+    )
+    return Bounds(lb, ub)
+
+
+# noinspection PyUnusedLocal
+@singledispatch
+def init_params_from_lifetimes(model : BaseParametricModel, lifetime_data: LifetimeData) -> NDArray[np.float64]:
+    raise NotImplemented
+
+
+@init_params_from_lifetimes.register
+def _(model : Union[Exponential, Weibull, LogLogistic, Gamma], lifetime_data : LifetimeData) -> Union[Exponential, Weibull, LogLogistic, Gamma]:
+    param0 = np.ones(model.nb_params)
+    param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.values)
+    return param0
+
+
+@init_params_from_lifetimes.register
+def _(model : Gompertz, lifetime_data : LifetimeData) -> Gompertz:
+    param0 = np.empty(model.nb_params, dtype=float)
+    rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.values))
+    shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.values))
+    param0[0] = shape
+    param0[1] = rate
+    return param0
+
+
+@init_params_from_lifetimes.register
+def _(model : Union[ProportionalHazard[*Args], AFT[*Args]], lifetime_data : LifetimeData) -> Union[ProportionalHazard[*Args], AFT[*Args]]:
+    baseline_param0 = init_params_from_lifetimes(model.baseline, lifetime_data)
+    param0 = np.zeros_like(model.params)
+    param0[-baseline_param0.size:] = baseline_param0
+    return param0
+
+
+# noinspection PyUnusedLocal
+@singledispatch
 def maximum_likelihood_estimation(
-    model: ParametricModel,
+    model: BaseParametricModel,
     data: FailureData,
     **kwargs: Any,
-) -> ParametricModel:
+) -> BaseParametricModel:
     raise ValueError(f"No MLE for {type(model)}")
 
 
 @maximum_likelihood_estimation.register
-def maximum_likelihood_estimation(
-    model: ParametricLifetimeModel[*Args],
+def _(
+    model: FittableLifetimeModel[*Args],
     data: LifetimeData,
     **kwargs: Any,
-) -> ParametricLifetimeModel[*Args]:
+) -> FittableLifetimeModel[*Args]:
     from relife.data import LifetimeData
 
     if not isinstance(data, LifetimeData):
@@ -111,10 +173,13 @@ def maximum_likelihood_estimation(
 
     # Step 2: Initialize the model and likelihood
     optimized_model = copy.deepcopy(model)
-    optimized_model.init_params(lifetime_data, *args)
-    likelihood = LikelihoodFromLifetimes(
-        optimized_model, lifetime_data, model_args=args
-    )
+    optimized_model.params = init_params_from_lifetimes(optimized_model, data)
+    likelihood = LikelihoodFromLifetimes(optimized_model, data)
+
+    try:
+        bounds = params_bounds(optimized_model)
+    except NotImplemented:
+        bounds = None
 
     # Step 3: Configure and run the optimizer
     minimize_kwargs = {
@@ -123,7 +188,7 @@ def maximum_likelihood_estimation(
         "tol": kwargs.get("tol", None),
         "callback": kwargs.get("callback", None),
         "options": kwargs.get("options", None),
-        "bounds": kwargs.get("bounds", optimized_model.params_bounds),
+        "bounds": kwargs.get("bounds", bounds),
         "x0": kwargs.get("x0", optimized_model.params),
     }
     optimizer = minimize(
@@ -136,14 +201,14 @@ def maximum_likelihood_estimation(
     # Step 4: Compute parameters variance (Hessian inverse)
     hessian_inverse = np.linalg.inv(likelihood.hessian())
     optimized_model.fitting_results = FittingResults(
-        len(lifetime_data), optimizer, var=hessian_inverse
+        len(data), optimizer, var=hessian_inverse
     )
     optimized_model.params = optimizer.x
     return optimized_model
 
 
 @maximum_likelihood_estimation.register
-def maximum_likelihood_estimation(
+def _(
     model: NonHomogeneousPoissonProcess[*Args],
     data: NHPPData,
     **kwargs: Any,

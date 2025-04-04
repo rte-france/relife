@@ -6,7 +6,7 @@ from typing import (
     Protocol,
     Self,
     TypeVarTuple,
-    runtime_checkable,
+    runtime_checkable, NewType,
 )
 
 import numpy as np
@@ -23,8 +23,14 @@ if TYPE_CHECKING:
 
 Args = TypeVarTuple("Args")
 
+class ParametricModel(Protocol):
 
-class LifetimeModel(Protocol[*Args]):
+    params: NDArray[np.float64]
+    params_names: tuple[str, ...]
+    components: tuple[Self, ...]
+
+
+class LifetimeModel(ParametricModel, Protocol[*Args]):
 
     frozen: bool
 
@@ -93,19 +99,7 @@ class LifetimeModel(Protocol[*Args]):
 
 # Only to differentiate those that can be fit from the others
 @runtime_checkable
-class ParametricLifetimeModel(LifetimeModel[*Args], Protocol):
-
-    params: NDArray[np.float64]
-    params_names: tuple[str, ...]
-    components: tuple[Self, ...]
-
-    @property
-    def params_names(self) -> tuple[str, ...]: ...
-
-    def init_params(self, lifetime_data: LifetimeData, *args: *Args) -> None: ...
-
-    @property
-    def params_bounds(self) -> Bounds: ...
+class FittableLifetimeModel(LifetimeModel[*Args], Protocol):
 
     def fit(
         self,
@@ -136,3 +130,6 @@ class NonParametricLifetimeModel(Protocol):
     ) -> Self: ...
 
     def plot(self) -> PlotConstructor: ...
+
+
+Model = NewType("Model", LifetimeModel | FittableLifetimeModel)
