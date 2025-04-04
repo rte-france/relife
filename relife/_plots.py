@@ -8,9 +8,11 @@ import scipy.stats as stats
 from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
-if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.lifetime_model._base import ParametricLifetimeModel
-    from relife.model import NonParametricLifetimeModel
+if TYPE_CHECKING:
+    from relife.lifetime_model import (
+        NonParametricLifetimeModel,
+        ParametricLifetimeModel,
+    )
     from relife.sample import CountData, NHPPCountData, RenewalData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
@@ -258,14 +260,17 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
-        from relife.lifetime_model._base import Distribution, Regression
-        from relife.model import NonParametricLifetimeModel
+        from relife.lifetime_model import (
+            LifetimeDistribution,
+            LifetimeRegression,
+            NonParametricLifetimeModel,
+        )
         from relife.sample import CountData, NHPPCountData, RenewalData
         from relife.stochastic_process import NonHomogeneousPoissonProcess
 
-        if isinstance(obj.obj, Distribution):
+        if isinstance(obj.obj, LifetimeDistribution):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
-        if isinstance(obj.obj, Regression):
+        if isinstance(obj.obj, LifetimeRegression):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
         if isinstance(obj.obj, NonParametricLifetimeModel):
             return BoundPlot(obj.obj, nonparam_probfunc_plot, self.name)

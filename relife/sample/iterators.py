@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, NewType, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.parametric_model import Exponential
+from relife.lifetime_model import Exponential
 
 if TYPE_CHECKING:
     from relife.economic.discounting import Discounting
     from relife.economic.rewards import Rewards
-    from relife.model import FrozenLifetimeModel
+    from relife.lifetime_model import FrozenParametricLifetimeModel
 
 AnyNDArray = NewType(
     "AnyNDArray", NDArray[np.floating] | NDArray[np.integer] | NDArray[np.bool_]
@@ -21,7 +21,7 @@ AnyNDArray = NewType(
 
 class SampleIterator(Iterator):
 
-    model: Optional[FrozenLifetimeModel]
+    model: Optional[FrozenParametricLifetimeModel]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]
 
@@ -127,7 +127,7 @@ class LifetimeIterator(SampleIterator):
 
     def set_model(
         self,
-        model: FrozenLifetimeModel,
+        model: FrozenParametricLifetimeModel,
     ) -> None:
 
         if self.model is None:
@@ -253,7 +253,7 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
     def set_model(
         self,
-        model: FrozenLifetimeModel,
+        model: FrozenParametricLifetimeModel,
         ar: Optional[NDArray[np.float64]] = None,
     ) -> None:
 
