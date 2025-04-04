@@ -9,6 +9,7 @@ from relife.economic.discounting import Discounting
 if TYPE_CHECKING:
     from relife.model import FrozenLifetimeModel
 
+
 Rewards = NewType(
     "Rewards",
     Callable[[NDArray[np.float64]], NDArray[np.float64]],

@@ -7,11 +7,11 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from ._protocol import Likelihood
+from relife.likelihood._base import Likelihood
 
 if TYPE_CHECKING:
     from relife.data import LifetimeData
-    from relife.model import FittableLifetimeModel
+    from relife.lifetime_model import FittableParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -30,7 +30,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
 
     def __init__(
         self,
-        model: FittableLifetimeModel[*Args],
+        model: FittableParametricLifetimeModel[*Args],
         data: LifetimeData,
     ):
         self.model = copy.deepcopy(model)

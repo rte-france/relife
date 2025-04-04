@@ -1,21 +1,18 @@
-from typing import TYPE_CHECKING, Callable, Optional, TypeVarTuple
+from typing import Callable, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.model import BaseLifetimeModel, FrozenLifetimeModel, BaseParametricModel
 from relife.quadratures import gauss_legendre
 
-if TYPE_CHECKING:
-    from relife.model import BaseLifetimeModel
+from ._base import ParametricLifetimeModel
+from .frozen_model import FrozenParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
 
-class AgeReplacementModel(
-    BaseLifetimeModel[float | NDArray[np.float64], *Args]
-):
+class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
     r"""
     Age replacement core.
 
@@ -32,7 +29,7 @@ class AgeReplacementModel(
     :math:`X` is a baseline lifetime and ar the age of replacement.
     """
 
-    def __init__(self, baseline: BaseLifetimeModel[*Args]):
+    def __init__(self, baseline: ParametricLifetimeModel[*Args]):
         super().__init__()
         self.compose_with(baseline=baseline)
 
@@ -189,13 +186,11 @@ class AgeReplacementModel(
     @override
     def freeze(
         self, ar: float | NDArray[np.float64], *args: *Args
-    ) -> FrozenLifetimeModel:
-        return FrozenLifetimeModel(self, *(ar, *args))
+    ) -> FrozenParametricLifetimeModel:
+        return FrozenParametricLifetimeModel(self, *(ar, *args))
 
 
-class LeftTruncatedModel(
-    BaseLifetimeModel[float | NDArray[np.float64], *Args]
-):
+class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
     r"""Left truncated core.
 
     Conditional distribution of the lifetime core for an asset having reach age :math:`a_0`.
@@ -206,7 +201,7 @@ class LeftTruncatedModel(
         Underlying lifetime core.
     """
 
-    def __init__(self, baseline: BaseLifetimeModel[*Args]):
+    def __init__(self, baseline: ParametricLifetimeModel[*Args]):
         super().__init__()
         self.compose_with(baseline=baseline)
 
@@ -279,5 +274,5 @@ class LeftTruncatedModel(
     @override
     def freeze(
         self, a0: float | NDArray[np.float64], *args: *Args
-    ) -> FrozenLifetimeModel:
-        return FrozenLifetimeModel(self, *(a0, *args))
+    ) -> FrozenParametricLifetimeModel:
+        return FrozenParametricLifetimeModel(self, *(a0, *args))

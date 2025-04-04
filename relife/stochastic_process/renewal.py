@@ -14,7 +14,8 @@ from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation
 
 if TYPE_CHECKING:
     from relife.economic import Rewards
-    from relife.model import FrozenLifetimeModel, LifetimeModel
+    from relife.lifetime_model._base import ParametricLifetimeModel
+    from relife.model import FrozenLifetimeModel
 
 
 class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
@@ -23,15 +24,15 @@ class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
 
     def __init__(
         self,
-        model: LifetimeModel[()],
-        model1: Optional[LifetimeModel[()]] = None,
+        model: ParametricLifetimeModel[()],
+        model1: Optional[ParametricLifetimeModel[()]] = None,
     ):
 
         if not model.frozen:
             raise ValueError(
                 "Invalid model : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
             )
-        if not isinstance(model, BaseDistribution):
+        if isinstance(model, BaseDistribution):
             model = model.freeze()
         if model1 is not None:
             if not model1.frozen:
@@ -88,11 +89,11 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        model: LifetimeModel[()],
+        model: ParametricLifetimeModel[()],
         rewards: Rewards,
         discounting_rate: Optional[float] = None,
         *,
-        model1: Optional[LifetimeModel[()]] = None,
+        model1: Optional[ParametricLifetimeModel[()]] = None,
         rewards1: Optional[Rewards] = None,
     ):
         super().__init__(model, model1)

@@ -1,37 +1,14 @@
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Optional,
-    Protocol,
-    Self,
-    TypeVarTuple,
-    runtime_checkable, NewType,
-)
+from typing import Any, Callable, Optional, Protocol, Self, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds
 
-if TYPE_CHECKING:
-    from relife._plots import PlotConstructor
-    from relife.data import LifetimeData
-
-    from ._base import NonParametricEstimation
-    from ._frozen import FrozenLifetimeModel
-
+from .frozen_model import FrozenParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
-class ParametricModel(Protocol):
 
-    params: NDArray[np.float64]
-    params_names: tuple[str, ...]
-    components: tuple[Self, ...]
-
-
-class LifetimeModel(ParametricModel, Protocol[*Args]):
-
+class FittableParametricLifetimeModel(Protocol[*Args]):
     frozen: bool
 
     def hf(
@@ -94,12 +71,7 @@ class LifetimeModel(ParametricModel, Protocol[*Args]):
     def freeze(
         self,
         *args: *Args,
-    ) -> FrozenLifetimeModel: ...
-
-
-# Only to differentiate those that can be fit from the others
-@runtime_checkable
-class FittableLifetimeModel(LifetimeModel[*Args], Protocol):
+    ) -> FrozenParametricLifetimeModel: ...
 
     def fit(
         self,
@@ -111,25 +83,3 @@ class FittableLifetimeModel(LifetimeModel[*Args], Protocol):
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self: ...
-
-
-@runtime_checkable
-class NonParametricLifetimeModel(Protocol):
-    estimations: Optional[NonParametricEstimation]
-
-    def __init__(self):
-        self.estimations = None
-
-    def fit(
-        self,
-        time: float | NDArray[np.float64],
-        /,
-        event: Optional[NDArray[np.bool_]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-    ) -> Self: ...
-
-    def plot(self) -> PlotConstructor: ...
-
-
-Model = NewType("Model", LifetimeModel | FittableLifetimeModel)

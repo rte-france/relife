@@ -6,22 +6,24 @@ See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.model import BaseRegression
+from ._base import Regression
 
 if TYPE_CHECKING:
-    from relife.model import FittableLifetimeModel
+    from ._new_type import FittableParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
 
 # type ParametricLifetimeModel[float|NDArray[np.float64], *Ts]
-class ProportionalHazard(BaseRegression[*Args]):
+class ProportionalHazard(Regression[*Args]):
     r"""
     Proportional Hazard regression core.
 
@@ -71,7 +73,7 @@ class ProportionalHazard(BaseRegression[*Args]):
 
     def __init__(
         self,
-        baseline: FittableLifetimeModel[*Args],
+        baseline: FittableParametricLifetimeModel[*Args],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)
@@ -144,7 +146,7 @@ class ProportionalHazard(BaseRegression[*Args]):
         raise AttributeError
 
 
-class AFT(BaseRegression[*Args]):
+class AFT(Regression[*Args]):
     r"""
     Accelerated failure time regression.
 
@@ -192,7 +194,7 @@ class AFT(BaseRegression[*Args]):
 
     def __init__(
         self,
-        baseline: FittableLifetimeModel[*Args],
+        baseline: FittableParametricLifetimeModel[*Args],
         coef: tuple[float, ...] | tuple[None] = (None,),
     ):
         super().__init__(baseline, coef)

@@ -1,21 +1,22 @@
 from __future__ import annotations
-from abc import abstractmethod
-from typing import TYPE_CHECKING, Protocol, TypeVarTuple
+
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Generic, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 
-from .hessian_estimation import _hessian_scheme
+from relife.likelihood.hessian_estimation import _hessian_scheme
 
 if TYPE_CHECKING:
+    from relife._base import ParametricModel
     from relife.data import FailureData
-    from relife.model import BaseParametricModel
 
 Args = TypeVarTuple("Args")
 
 
-class Likelihood(Protocol[*Args]):
-    model: BaseParametricModel[*Args]
+class Likelihood(Generic[*Args], ABC):
+    model: ParametricModel[*Args]
     data: FailureData
 
     @property

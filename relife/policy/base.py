@@ -11,7 +11,8 @@ from relife.sample import SampleFailureDataMixin, SampleMixin
 from ..economic.discounting import exponential_discounting
 
 if TYPE_CHECKING:
-    from relife.model import FrozenLifetimeModel, LifetimeModel
+    from relife.lifetime_model._base import ParametricLifetimeModel
+    from relife.model import FrozenLifetimeModel
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
@@ -25,21 +26,21 @@ class RenewalPolicy(SampleMixin[()], SampleFailureDataMixin[()]):
 
     def __init__(
         self,
-        model: LifetimeModel[()],
-        model1: Optional[LifetimeModel[()]] = None,
+        model: ParametricLifetimeModel[()],
+        model1: Optional[ParametricLifetimeModel[()]] = None,
         discounting_rate: Optional[float] = None,
         **kwcosts: float | NDArray[np.float64],
     ):
-        from relife.model import BaseDistribution
+        from relife.lifetime_model._base import Distribution
 
         if not model.frozen:
             raise ValueError
-        if isinstance(model, BaseDistribution):
+        if isinstance(model, Distribution):
             model = model.freeze()
         if model1 is not None:
             if not model1.frozen:
                 raise ValueError
-            if isinstance(model1, BaseDistribution):
+            if isinstance(model1, Distribution):
                 model1 = model1.freeze()
 
         self.model = model
@@ -86,11 +87,11 @@ class RenewalPolicy(SampleMixin[()], SampleFailureDataMixin[()]):
 
 
 def age_replacement_policy(
-    model: LifetimeModel[()] | NonHomogeneousPoissonProcess,
+    model: ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess,
     cost_structure: CostStructure,
     one_cycle: bool = False,
     discounting_rate: Optional[float] = None,
-    model1: Optional[LifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    model1: Optional[ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,
@@ -99,24 +100,23 @@ def age_replacement_policy(
 
 
 def run_to_failure_policy(
-    model: LifetimeModel[()] | NonHomogeneousPoissonProcess,
+    model: ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess,
     cost_structure: CostStructure,
     one_cycle: bool = False,
     discounting_rate: Optional[float] = None,
-    model1: Optional[LifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    model1: Optional[ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
 ) -> RenewalPolicy:
     pass
 
 
-
 def make_renewal_policy(
-    model: LifetimeModel[()] | NonHomogeneousPoissonProcess,
+    model: ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess,
     cost_structure: CostStructure,
     one_cycle: bool = False,
     run_to_failure: bool = False,
     discounting_rate: Optional[float] = None,
-    model1: Optional[LifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    model1: Optional[ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,

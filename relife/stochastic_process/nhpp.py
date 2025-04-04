@@ -12,27 +12,30 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
+from relife._base import ParametricModel
 from relife._plots import PlotNHPP
-from relife.model import BaseParametricModel
-
 from relife.sample import SampleFailureDataMixin, SampleMixin
 
 if TYPE_CHECKING:
-    from relife.likelihood.mle import FittingResults
-    from relife.model import FrozenModel, FittableLifetimeModel
+    from relife import FrozenParametricModel
+    from relife.lifetime_model import FittableParametricLifetimeModel
+    from relife.likelihood.maximum_likelihood_estimation import FittingResults
 
 Args = TypeVarTuple("Args")
 
 
 class NonHomogeneousPoissonProcess(
-    BaseParametricModel, SampleMixin[*Args], SampleFailureDataMixin[*Args], Generic[*Args]
+    ParametricModel,
+    SampleMixin[*Args],
+    SampleFailureDataMixin[*Args],
+    Generic[*Args],
 ):
 
     fitting_results: Optional[FittingResults]
 
     def __init__(
         self,
-        baseline: FittableLifetimeModel[*Args],
+        baseline: FittableParametricLifetimeModel[*Args],
     ):
         super().__init__()
         self.compose_with(baseline=baseline)
@@ -91,8 +94,8 @@ class NonHomogeneousPoissonProcess(
     #         use="model",
     #     )
 
-    def freeze(self, *args: *Args) -> FrozenModel:
-        from relife.model import FrozenNonHomogeneousPoissonProcess
+    def freeze(self, *args: *Args) -> FrozenParametricModel:
+        from .frozen_process import FrozenNonHomogeneousPoissonProcess
 
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
@@ -113,7 +116,6 @@ class NonHomogeneousPoissonProcess(
     ) -> Self:
         from relife.data import nhpp_data_factory
         from relife.likelihood import maximum_likelihood_estimation
-
 
         nhpp_data = nhpp_data_factory(
             events_assets_ids,

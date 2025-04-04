@@ -9,7 +9,8 @@ from matplotlib.axes import Axes
 from numpy.typing import ArrayLike, NDArray
 
 if TYPE_CHECKING:  # avoid circular imports due to typing
-    from relife.model import LifetimeModel, NonParametricLifetimeModel
+    from relife.lifetime_model._base import ParametricLifetimeModel
+    from relife.model import NonParametricLifetimeModel
     from relife.sample import CountData, NHPPCountData, RenewalData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
@@ -66,7 +67,7 @@ def plot(
 
 def param_probfunc_plot(
     fname: str,
-    obj: LifetimeModel[*Args],
+    obj: ParametricLifetimeModel[*Args],
     timeline: NDArray[np.float64] = None,
     model_args: tuple[*Args] = (),
     asset: Optional[ArrayLike] = None,
@@ -151,7 +152,7 @@ def nonparam_probfunc_plot(
     alpha_ci: float = 0.05,
     **kwargs,
 ):
-    from relife.non_parametric_model import NelsonAalen
+    from relife.lifetime_model import NelsonAalen
 
     label = kwargs.pop("label", f"{obj.__class__.__name__}" + f".{fname}")
     if not hasattr(obj, fname):
@@ -257,14 +258,14 @@ class PlotDescriptor:
         self.name = name
 
     def __get__(self, obj, objtype=None):
+        from relife.lifetime_model._base import Distribution, Regression
         from relife.model import NonParametricLifetimeModel
-        from relife.model._base import BaseDistribution, BaseRegression
         from relife.sample import CountData, NHPPCountData, RenewalData
         from relife.stochastic_process import NonHomogeneousPoissonProcess
 
-        if isinstance(obj.obj, BaseDistribution):
+        if isinstance(obj.obj, Distribution):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
-        if isinstance(obj.obj, BaseRegression):
+        if isinstance(obj.obj, Regression):
             return BoundPlot(obj.obj, param_probfunc_plot, self.name)
         if isinstance(obj.obj, NonParametricLifetimeModel):
             return BoundPlot(obj.obj, nonparam_probfunc_plot, self.name)

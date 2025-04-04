@@ -6,14 +6,12 @@ from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.model import BaseDistribution, BaseLifetimeModel, BaseParametricModel
 from relife.quadratures import gauss_legendre, shifted_laguerre
 
-if TYPE_CHECKING:
-    from relife.data import LifetimeData
+from ._base import Distribution, ParametricLifetimeModel
 
 
-class Exponential(BaseDistribution):
+class Exponential(Distribution):
     r"""
     Exponential lifetime distribution.
 
@@ -83,7 +81,7 @@ class Exponential(BaseDistribution):
         return np.zeros_like(time)
 
 
-class Weibull(BaseDistribution):
+class Weibull(Distribution):
     r"""
     Weibull lifetime distribution.
 
@@ -180,7 +178,7 @@ class Weibull(BaseDistribution):
         )
 
 
-class Gompertz(BaseDistribution):
+class Gompertz(Distribution):
     r"""
     Gompertz lifetime distribution.
 
@@ -222,7 +220,6 @@ class Gompertz(BaseDistribution):
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__()
         self.set_params(shape=shape, rate=rate)
-
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
@@ -270,7 +267,7 @@ class Gompertz(BaseDistribution):
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
 
-class Gamma(BaseDistribution):
+class Gamma(Distribution):
     r"""
     Gamma lifetime distribution.
 
@@ -381,7 +378,7 @@ class Gamma(BaseDistribution):
         return super().mrl(time)
 
 
-class LogLogistic(BaseDistribution):
+class LogLogistic(Distribution):
     r"""
     Log-logistic probability distribution.
 
@@ -494,7 +491,7 @@ class LogLogistic(BaseDistribution):
 Args = TypeVarTuple("Args")
 
 
-class EquilibriumDistribution(BaseParametricModel, BaseLifetimeModel[*Args]):
+class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
@@ -510,7 +507,7 @@ class EquilibriumDistribution(BaseParametricModel, BaseLifetimeModel[*Args]):
     .. [1] Ross, S. M. (1996). Stochastic stochastic_process. New York: Wiley.
     """
 
-    def __init__(self, baseline: BaseLifetimeModel[*Args]):
+    def __init__(self, baseline: ParametricLifetimeModel[*Args]):
         super().__init__()
         self.compose_with(baseline=baseline)
 

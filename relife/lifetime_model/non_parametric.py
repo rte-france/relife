@@ -6,7 +6,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.data import lifetime_data_factory
-from relife.model import BaseNonParametricLifetimeModel
+
+from ._base import NonParametricLifetimeModel
 
 if TYPE_CHECKING:
     from relife.data import LifetimeData
@@ -18,7 +19,7 @@ class Estimation(NamedTuple):
     se: Optional[NDArray[np.float64]] = None
 
 
-class ECDF(BaseNonParametricLifetimeModel):
+class ECDF(NonParametricLifetimeModel):
     """
     Empirical Cumulative Distribution Function.
     """
@@ -53,11 +54,15 @@ class ECDF(BaseNonParametricLifetimeModel):
             departure,
         )
 
-        timeline, counts = np.unique(lifetime_data.rc.values, return_counts=True)
+        timeline, counts = np.unique(
+            lifetime_data.complete_or_right_censored.values, return_counts=True
+        )
         timeline = np.insert(timeline, 0, 0)
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         sf = 1 - cdf
-        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.rc.values))
+        se = np.sqrt(
+            cdf * (1 - cdf) / len(lifetime_data.complete_or_right_censored.values)
+        )
         self.estimations = dict(
             sf=Estimation(timeline, sf, se), cdf=Estimation(time, cdf, se)
         )
@@ -76,7 +81,7 @@ class ECDF(BaseNonParametricLifetimeModel):
         return self.estimations["cdf"]
 
 
-class KaplanMeier(BaseNonParametricLifetimeModel):
+class KaplanMeier(NonParametricLifetimeModel):
     r"""Kaplan-Meier estimator.
 
     Compute the non-parametric Kaplan-Meier estimator (also known as the product
@@ -150,11 +155,13 @@ class KaplanMeier(BaseNonParametricLifetimeModel):
         if len(lifetime_data.left_censoring) > 0:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.rc.values, return_inverse=True, return_counts=True
+            lifetime_data.complete_or_right_censored.values,
+            return_inverse=True,
+            return_counts=True,
         )
         death_set = np.zeros_like(timeline, int)  # death at each timeline step
         complete_observation_indic = np.zeros_like(
-            lifetime_data.rc.values
+            lifetime_data.complete_or_right_censored.values
         )  # just creating an array to fill it next line
         complete_observation_indic[lifetime_data.complete.index] = 1
         np.add.at(death_set, unique_indices, complete_observation_indic)
@@ -166,7 +173,7 @@ class KaplanMeier(BaseNonParametricLifetimeModel):
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.rc.values)
+                                len(lifetime_data.complete_or_right_censored.values)
                                 - len(lifetime_data.left_truncation.values)
                             )
                         ]
@@ -201,7 +208,7 @@ class KaplanMeier(BaseNonParametricLifetimeModel):
         return self.estimations["sf"]
 
 
-class NelsonAalen(BaseNonParametricLifetimeModel):
+class NelsonAalen(NonParametricLifetimeModel):
     r"""Nelson-Aalen estimator.
 
     Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
@@ -275,14 +282,16 @@ class NelsonAalen(BaseNonParametricLifetimeModel):
             )
 
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.rc.values, return_inverse=True, return_counts=True
+            lifetime_data.complete_or_right_censored.values,
+            return_inverse=True,
+            return_counts=True,
         )
         death_set = np.zeros_like(
             timeline, dtype=np.int64
         )  # death at each timeline step
 
         complete_observation_indic = np.zeros_like(
-            lifetime_data.rc.values
+            lifetime_data.complete_or_right_censored.values
         )  # just creating an array to fill it next line
         complete_observation_indic[lifetime_data.complete.index] = 1
 
@@ -295,7 +304,7 @@ class NelsonAalen(BaseNonParametricLifetimeModel):
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.rc.values)
+                                len(lifetime_data.complete_or_right_censored.values)
                                 - len(lifetime_data.left_truncation.values)
                             )
                         ]
@@ -322,7 +331,7 @@ class NelsonAalen(BaseNonParametricLifetimeModel):
         return self.estimations["chf"]
 
 
-class Turnbull(BaseNonParametricLifetimeModel):
+class Turnbull(NonParametricLifetimeModel):
     """Turnbull estimator"""
 
     def __init__(

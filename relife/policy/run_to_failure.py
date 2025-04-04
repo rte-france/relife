@@ -10,7 +10,7 @@ from relife.stochastic_process import RenewalRewardProcess
 from .base import RenewalPolicy
 
 if TYPE_CHECKING:
-    from relife.model import BaseLifetimeModel
+    from relife.lifetime_model._base import ParametricLifetimeModel
 
 
 class OneCycleRunToFailurePolicy(RenewalPolicy):
@@ -37,7 +37,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: BaseLifetimeModel,
+        model: ParametricLifetimeModel,
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
@@ -132,12 +132,12 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: BaseLifetimeModel[()],
+        model: ParametricLifetimeModel[()],
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[BaseLifetimeModel[()]] = None,
+        model1: Optional[ParametricLifetimeModel[()]] = None,
     ) -> None:
         super().__init__(model, model1, discounting_rate, cf=cf)
 

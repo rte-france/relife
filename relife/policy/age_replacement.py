@@ -13,7 +13,6 @@ from ._decorator import get_if_none
 from .base import RenewalPolicy
 
 if TYPE_CHECKING:
-    from relife.model import BaseLifetimeModel
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 

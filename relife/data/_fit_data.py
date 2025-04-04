@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from itertools import zip_longest, product
-from typing import NewType, Optional, Self, Sequence, Union, Generic, TypeVarTuple
+from itertools import product, zip_longest
+from typing import Generic, NewType, Optional, Self, Sequence, TypeVarTuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -149,15 +149,26 @@ class LifetimeData:
                             "Some lifetimes are above right truncation bounds"
                         )
 
-        # compute complete_or_right_censored
-        values = np.concatenate([self.complete.values, self.right_censoring.values], axis=0)
-        index = np.concatenate([self.complete.index, self.right_censoring.values], axis=0)
-        args = tuple((np.concatenate(x, axis=0) for x in zip_longest(self.complete.args, self.right_censoring.args)))
+        # compute complete_or_right_censored
+        values = np.concatenate(
+            [self.complete.values, self.right_censoring.values], axis=0
+        )
+        index = np.concatenate(
+            [self.complete.index, self.right_censoring.values], axis=0
+        )
+        args = tuple(
+            (
+                np.concatenate(x, axis=0)
+                for x in zip_longest(self.complete.args, self.right_censoring.args)
+            )
+        )
         # FIXME: orders of the values seems to affects estimations of the parameters in Regression
         sort_index = np.argsort(index)
 
-        self.complete_or_right_censored =  IndexedLifetimeData(
-            values[sort_index], index[sort_index], tuple((arg[sort_index] for arg in args))
+        self.complete_or_right_censored = IndexedLifetimeData(
+            values[sort_index],
+            index[sort_index],
+            tuple((arg[sort_index] for arg in args)),
         )
 
 
@@ -257,8 +268,8 @@ class NHPPData:
         return lifetime_data_factory(time, *model_args, event=event, entry=entry)
 
 
-FailureData = NewType("FailureData", Union[LifetimeData, NHPPData])
 Args = TypeVarTuple("Args")
+
 
 class LifetimeParser(Generic[*Args], ABC):
     """
@@ -563,3 +574,6 @@ def nhpp_data_factory(
             )
 
     return NHPPData(events_assets_ids, ages, first_ages, last_ages, args)
+
+
+FailureData = NewType("FailureData", Union[LifetimeData, NHPPData])

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Union
 
 import numpy as np
@@ -6,8 +7,8 @@ from numpy.typing import NDArray
 from scipy.optimize import approx_fprime
 
 if TYPE_CHECKING:
-    from ._protocol import Likelihood
-    from relife.model import FittableLifetimeModel
+    from relife.lifetime_model import FittableParametricLifetimeModel
+    from relife.likelihood import Likelihood
 
 
 def hessian_cs(
@@ -67,11 +68,10 @@ def hessian_2point(
     return None
 
 
-def _hessian_scheme(model: FittableLifetimeModel):
-    from relife.model import BaseRegression
-    from relife.parametric_model import Gamma
+def _hessian_scheme(model: FittableParametricLifetimeModel):
+    from relife.lifetime_model import Gamma, Regression
 
-    if isinstance(model, BaseRegression):
+    if isinstance(model, Regression):
         return _hessian_scheme(model.baseline)
     if isinstance(model, Gamma):
         return hessian_2point
