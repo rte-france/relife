@@ -4,7 +4,7 @@ from typing import Generic, Optional, Sequence, TypeVarTuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.data.base import IndexedLifetimeData, LifetimeData, NHPPData
+from relife.data._base import IndexedLifetimeData, LifetimeData, NHPPData
 
 Args = TypeVarTuple("Args")
 

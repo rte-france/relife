@@ -11,7 +11,7 @@ from relife.sample import SampleFailureDataMixin, SampleMixin
 from ..economic.discounting import exponential_discounting
 
 if TYPE_CHECKING:
-    from relife.model import BaseLifetimeModel, FrozenLifetimeModel
+    from relife.model import FrozenLifetimeModel, LifetimeModel
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
@@ -25,12 +25,12 @@ class RenewalPolicy(SampleMixin[()], SampleFailureDataMixin[()]):
 
     def __init__(
         self,
-        model: BaseLifetimeModel[()],
-        model1: Optional[BaseLifetimeModel[()]] = None,
+        model: LifetimeModel[()],
+        model1: Optional[LifetimeModel[()]] = None,
         discounting_rate: Optional[float] = None,
         **kwcosts: float | NDArray[np.float64],
     ):
-        from ..model._base import BaseDistribution
+        from relife.model import BaseDistribution
 
         if not model.frozen:
             raise ValueError
@@ -85,13 +85,38 @@ class RenewalPolicy(SampleMixin[()], SampleFailureDataMixin[()]):
     #     )
 
 
+def age_replacement_policy(
+    model: LifetimeModel[()] | NonHomogeneousPoissonProcess,
+    cost_structure: CostStructure,
+    one_cycle: bool = False,
+    discounting_rate: Optional[float] = None,
+    model1: Optional[LifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    a0: Optional[float | NDArray[np.float64]] = None,
+    ar: Optional[float | NDArray[np.float64]] = None,
+    ar1: Optional[float | NDArray[np.float64]] = None,
+) -> RenewalPolicy:
+    pass
+
+
+def run_to_failure_policy(
+    model: LifetimeModel[()] | NonHomogeneousPoissonProcess,
+    cost_structure: CostStructure,
+    one_cycle: bool = False,
+    discounting_rate: Optional[float] = None,
+    model1: Optional[LifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    a0: Optional[float | NDArray[np.float64]] = None,
+) -> RenewalPolicy:
+    pass
+
+
+
 def make_renewal_policy(
-    model: BaseLifetimeModel[()] | NonHomogeneousPoissonProcess,
+    model: LifetimeModel[()] | NonHomogeneousPoissonProcess,
     cost_structure: CostStructure,
     one_cycle: bool = False,
     run_to_failure: bool = False,
     discounting_rate: Optional[float] = None,
-    model1: Optional[BaseLifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    model1: Optional[LifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,

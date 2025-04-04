@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from itertools import zip_longest, product
 from typing import NewType, Optional, Self, Sequence, Union
 
 import numpy as np
@@ -30,34 +31,7 @@ class IndexedLifetimeData:
     def __len__(self) -> int:
         return len(self.index)
 
-    def intersection(*others: Self) -> Self:
-        """
-        Args:
-            *: LifetimeData object.s containing values of shape (n1, p1), (n2, p2), etc.
-
-        Returns:
-
-        Examples:
-            >>> data_1 = IndexedLifetimeData(values = np.array([[1.], [2.]]), index = np.array([3, 10]))
-            >>> data_2 = IndexedLifetimeData(values = np.array([[3.], [5.]]), index = np.array([10, 2]))
-            >>> data_1.intersection(data_2)
-            IndexedData(values=array([[2, 3]]), index=array([10]))
-        """
-
-        inter_ids = np.array(
-            list(set.intersection(*[set(other.index) for other in others]))
-        ).astype(np.int64)
-        args = None
-        return IndexedLifetimeData(
-            np.concatenate(
-                [other.values[np.isin(other.index, inter_ids)] for other in others],
-                axis=1,
-            ),
-            inter_ids,
-            args,
-        )
-
-    def union(*others: Self) -> Self:
+    def union(self, *others: Self) -> Self:
         # return IndexedData(
         #     np.concatenate(
         #         [other.values for other in others],
@@ -65,16 +39,26 @@ class IndexedLifetimeData:
         #     ),
         #     np.concatenate([other.index for other in others]),
         # )
-        values = np.concatenate(
+        other_values = np.concatenate(
             [other.values for other in others],
             axis=0,
         )
-        index = np.concatenate([other.index for other in others])
-        args = None
+        values = np.concatenate([self.values, other_values])
+        other_index = np.concatenate([other.index for other in others])
+        index = np.concatenate([self.index, other_index])
+
+        other_args = tuple(
+            (np.concatenate(x) for x in product(*(other.args for other in others)))
+        )
+        args = tuple((np.concatenate(x) for x in product(self.args, other_args)))
+
         sort_ind = np.argsort(
             index
         )  # FIXME: orders of the values seems to affects estimations of the parameters in Regression
-        return IndexedLifetimeData(values[sort_ind], index[sort_ind], args)
+
+        return IndexedLifetimeData(
+            values[sort_ind], index[sort_ind], tuple((arg[index] for arg in args))
+        )
 
 
 @dataclass
@@ -93,10 +77,7 @@ class LifetimeData:
         return self.nb_samples
 
     def __post_init__(self):
-        self.rc = self.right_censoring.union(self.complete)
-        self.rlc = self.complete.union(self.left_censoring, self.right_censoring)
-
-        # sanity check that observed lifetimes are inside truncation bounds
+        # sanity checks that observed lifetimes are inside truncation bounds
         for field_name in [
             "complete",
             "left_censoring",
@@ -105,20 +86,30 @@ class LifetimeData:
         ]:
             data = getattr(self, field_name)
             if len(self.left_truncation) != 0 and len(data) != 0:
-                intersect_data = data.intersection(self.left_truncation)
-                if len(intersect_data) != 0:
+                inter_ids = np.array(
+                    list(set.intersection(*(data.index, self.left_truncation.index))),
+                    dtype=np.int64,
+                )
+                intersection_values = np.concatenate(
+                    (
+                        data.values[np.isin(data.index, inter_ids)],
+                        self.left_truncation.values[
+                            np.isin(self.left_truncation.index, inter_ids)
+                        ],
+                    ),
+                    axis=1,
+                )
+                if len(intersection_values) != 0:
                     if np.any(
                         # take right bound when left bound is 0, otherwise take the min value of the bounds
                         # for none interval lifetimes, min equals the value
                         np.where(
-                            intersect_data.values[:, [0]] == 0,
-                            intersect_data.values[:, [-2]],
-                            np.min(
-                                intersect_data.values[:, :-1], axis=1, keepdims=True
-                            ),
+                            intersection_values[:, [0]] == 0,
+                            intersection_values[:, [-2]],
+                            np.min(intersection_values[:, :-1], axis=1, keepdims=True),
                             # min of all cols but last
                         )
-                        < intersect_data.values[
+                        < intersection_values[
                             :, [-1]
                         ]  # then check if any is under left truncation bound
                     ):
@@ -126,26 +117,49 @@ class LifetimeData:
                             "Some lifetimes are under left truncation bounds"
                         )
             if len(self.right_truncation) != 0 and len(data) != 0:
-                intersect_data = data.intersection(self.right_truncation)
-                if len(intersect_data) != 0:
+
+                inter_ids = np.array(
+                    list(set.intersection(*(data.index, self.right_truncation.index))),
+                    dtype=np.int64,
+                )
+                intersection_values = np.concatenate(
+                    (
+                        data.values[np.isin(data.index, inter_ids)],
+                        self.right_truncation.values[
+                            np.isin(self.right_truncation.index, inter_ids)
+                        ],
+                    ),
+                    axis=1,
+                )
+
+                if len(intersection_values) != 0:
                     if np.any(
                         # take left bound when right bound is inf, otherwise take the max value of the bounds
                         # for none interval lifetimes, max equals the value
                         np.where(
-                            intersect_data.values[:, [-2]] == np.inf,
-                            intersect_data.values[:, [0]],
-                            np.max(
-                                intersect_data.values[:, :-1], axis=1, keepdims=True
-                            ),
+                            intersection_values[:, [-2]] == np.inf,
+                            intersection_values[:, [0]],
+                            np.max(intersection_values[:, :-1], axis=1, keepdims=True),
                             # max of all cols but last
                         )
-                        > intersect_data.values[
+                        > intersection_values[
                             :, [-1]
                         ]  # then check if any is above right truncation bound
                     ):
                         raise ValueError(
                             "Some lifetimes are above right truncation bounds"
                         )
+
+        # compute complete_or_right_censored
+        values = np.concatenate([self.complete.values, self.right_censoring.values], axis=0)
+        index = np.concatenate([self.complete.index, self.right_censoring.values], axis=0)
+        args = tuple((np.concatenate(x, axis=0) for x in zip_longest(self.complete.args, self.right_censoring.args)))
+        # FIXME: orders of the values seems to affects estimations of the parameters in Regression
+        sort_index = np.argsort(index)
+
+        self.complete_or_right_censored =  IndexedLifetimeData(
+            values[sort_index], index[sort_index], tuple((arg[sort_index] for arg in args))
+        )
 
 
 @dataclass

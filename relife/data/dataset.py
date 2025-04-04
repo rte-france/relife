@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 def load_power_transformer() -> NDArray[np.float64]:
     """BLABLA"""
     data = np.loadtxt(
-        Path(Path(__file__).parents[0], "power_transformer.csv"),
+        Path(Path(__file__).parents[0], "csv/power_transformer.csv"),
         delimiter=",",
         skiprows=1,
         unpack=True,
@@ -20,7 +20,7 @@ def load_insulator_string() -> NDArray[np.float64]:
     """BLABLA"""
 
     data = np.loadtxt(
-        Path(Path(__file__).parents[0], "insulator_string.csv"),
+        Path(Path(__file__).parents[0], "csv/insulator_string.csv"),
         delimiter=",",
         skiprows=1,
         unpack=True,
@@ -32,7 +32,7 @@ def load_circuit_breaker() -> NDArray[np.float64]:
     """BLABLA"""
 
     data = np.loadtxt(
-        Path(Path(__file__).parents[0], "circuit_breaker.csv"),
+        Path(Path(__file__).parents[0], "csv/circuit_breaker.csv"),
         delimiter=",",
         skiprows=1,
         unpack=True,
@@ -47,7 +47,7 @@ def load_input_turnbull() -> NDArray[np.float64]:
         np.ndarray: _description_
     """
     data = np.loadtxt(
-        Path(Path(__file__).parents[0], "input_turnbull.csv"),
+        Path(Path(__file__).parents[0], "csv/input_turnbull.csv"),
         delimiter=",",
         skiprows=1,
         unpack=True,
