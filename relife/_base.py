@@ -15,6 +15,7 @@ class ParametricModel:
     def __init__(self):
         self.params_tree = ParamsTree()
         self.leaves_of_models = {}
+        self._fitting_results = None
 
     @property
     def params(self) -> NDArray[np.float64 | np.complex64]:

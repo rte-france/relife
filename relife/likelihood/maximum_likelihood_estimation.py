@@ -86,19 +86,19 @@ class FittingResults:
 
 
 def params_bounds(model: ParametricModel) -> Bounds:
-    from relife.lifetime_model import Distribution, Regression
+    from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
     match model:
 
-        case Distribution():
-            model: Distribution
+        case LifetimeDistribution():
+            model: LifetimeDistribution
             return Bounds(
                 np.full(model.nb_params, np.finfo(float).resolution),
                 np.full(model.nb_params, np.inf),
             )
 
-        case Regression():
-            model: Regression
+        case LifetimeRegression():
+            model: LifetimeRegression
             lb = np.concatenate(
                 (
                     np.full(model.covar_effect.nb_params, -np.inf),
@@ -123,26 +123,26 @@ def init_params_from_lifetimes(
 ) -> NDArray[np.float64]:
     from relife.lifetime_model import (
         AFT,
-        Distribution,
         Exponential,
         Gamma,
         Gompertz,
+        LifetimeDistribution,
+        LifetimeRegression,
         LogLogistic,
         ProportionalHazard,
-        Regression,
         Weibull,
     )
 
     match model:
 
         case Exponential() | Weibull() | LogLogistic() | Gamma():
-            model: Distribution
+            model: LifetimeDistribution
             param0 = np.ones(model.nb_params)
             param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.values)
             return param0
 
         case Gompertz():
-            model: Distribution
+            model: LifetimeDistribution
             param0 = np.empty(model.nb_params, dtype=float)
             rate = np.pi / (
                 np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.values)
@@ -155,7 +155,7 @@ def init_params_from_lifetimes(
             return param0
 
         case ProportionalHazard() | AFT():
-            model: Regression
+            model: LifetimeRegression
             baseline_param0 = init_params_from_lifetimes(model.baseline, lifetime_data)
             param0 = np.zeros_like(model.params)
             param0[-baseline_param0.size :] = baseline_param0
@@ -168,11 +168,11 @@ def init_params_from_lifetimes(
 def maximum_likelihood_estimation(
     model: ParametricModel, data: FailureData, **kwargs: Any
 ) -> ParametricModel:
-    from relife.lifetime_model import Distribution, Regression
+    from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
     match model:
-        case Distribution() | Regression():
+        case LifetimeDistribution() | LifetimeRegression():
             from relife.data import LifetimeData
 
             if not isinstance(data, LifetimeData):

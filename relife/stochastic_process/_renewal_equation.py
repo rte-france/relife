@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Callable, Optional
 
 import numpy as np
@@ -5,12 +7,12 @@ from numpy.typing import NDArray
 
 if TYPE_CHECKING:
     from relife.economic.discounting import Discounting
-    from relife.model import FrozenLifetimeModel
+    from relife.lifetime_model import FrozenParametricLifetimeModel
 
 
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
-    model: FrozenLifetimeModel,
+    model: FrozenParametricLifetimeModel,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
@@ -42,7 +44,7 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    model1: FrozenLifetimeModel,
+    model1: FrozenParametricLifetimeModel,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:

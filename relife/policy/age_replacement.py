@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 
 from relife.economic import age_replacement_rewards, reward_partial_expectation
-from relife.parametric_model import AgeReplacementModel, LeftTruncatedModel
+from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadratures import gauss_legendre
 from relife.stochastic_process import RenewalRewardProcess
 
@@ -13,6 +13,7 @@ from ._decorator import get_if_none
 from .base import RenewalPolicy
 
 if TYPE_CHECKING:
+    from relife.lifetime_model import ParametricLifetimeModel
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
@@ -54,7 +55,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: BaseLifetimeModel[()],
+        model: ParametricLifetimeModel[()],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
@@ -230,7 +231,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: BaseLifetimeModel[()],
+        model: ParametricLifetimeModel[()],
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         *,
@@ -238,7 +239,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         ar: Optional[float | NDArray[np.float64]] = None,
         ar1: Optional[float | NDArray[np.float64]] = None,
         a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[BaseLifetimeModel[()]] = None,
+        model1: Optional[ParametricLifetimeModel[()]] = None,
     ) -> None:
         super().__init__(model, model1, discounting_rate, cf=cf, cp=cp)
 

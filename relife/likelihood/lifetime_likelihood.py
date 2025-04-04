@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.likelihood._base import Likelihood
+from ._base import Likelihood
 
 if TYPE_CHECKING:
     from relife.data import LifetimeData

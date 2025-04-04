@@ -69,9 +69,9 @@ def hessian_2point(
 
 
 def _hessian_scheme(model: FittableParametricLifetimeModel):
-    from relife.lifetime_model import Gamma, Regression
+    from relife.lifetime_model import Gamma, LifetimeRegression
 
-    if isinstance(model, Regression):
+    if isinstance(model, LifetimeRegression):
         return _hessian_scheme(model.baseline)
     if isinstance(model, Gamma):
         return hessian_2point

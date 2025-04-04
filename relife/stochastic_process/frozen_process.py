@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife import FrozenParametricModel
 from relife._plots import PlotConstructor, PlotNHPP
-from relife.sample import CountData
 
-from .nhpp import NonHomogeneousPoissonProcess
+if TYPE_CHECKING:
+    from relife.sample import CountData
+
+    from .non_homogeneous_poisson_process import NonHomogeneousPoissonProcess
 
 
 class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel):

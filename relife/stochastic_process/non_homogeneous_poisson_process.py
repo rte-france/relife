@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -14,24 +16,18 @@ from numpy.typing import NDArray
 
 from relife._base import ParametricModel
 from relife._plots import PlotNHPP
-from relife.sample import SampleFailureDataMixin, SampleMixin
+
+from .frozen_process import FrozenNonHomogeneousPoissonProcess
 
 if TYPE_CHECKING:
-    from relife import FrozenParametricModel
     from relife.lifetime_model import FittableParametricLifetimeModel
     from relife.likelihood.maximum_likelihood_estimation import FittingResults
+    from relife.sample import CountData
 
 Args = TypeVarTuple("Args")
 
 
-class NonHomogeneousPoissonProcess(
-    ParametricModel,
-    SampleMixin[*Args],
-    SampleFailureDataMixin[*Args],
-    Generic[*Args],
-):
-
-    fitting_results: Optional[FittingResults]
+class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
 
     def __init__(
         self,
@@ -39,7 +35,14 @@ class NonHomogeneousPoissonProcess(
     ):
         super().__init__()
         self.compose_with(baseline=baseline)
-        self.baseline = baseline
+
+    @property
+    def fitting_results(self) -> Optional[FittingResults]:
+        return self._fitting_results
+
+    @fitting_results.setter
+    def fitting_results(self, value: FittingResults):
+        self._fitting_results = value
 
     def intensity(
         self, time: float | NDArray[np.float64], *args: *Args
@@ -51,52 +54,50 @@ class NonHomogeneousPoissonProcess(
     ) -> NDArray[np.float64]:
         return self.baseline.chf(time, *args)
 
-    # def sample(
-    #     self,
-    #     size: int,
-    #     tf: float,
-    #     /,
-    #     *args: *Args,
-    #     t0: float = 0.0,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ) -> CountData:
-    #     from relife.sample import sample_count_data
-    #
-    #     return sample_count_data(
-    #         self.baseline.freeze(*args),
-    #         size,
-    #         tf,
-    #         t0=t0,
-    #         maxsample=maxsample,
-    #         seed=seed,
-    #     )
-    #
-    # def failure_data_sample(
-    #     self,
-    #     size: int,
-    #     tf: float,
-    #     /,
-    #     *args: *Args,
-    #     t0: float = 0.0,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ) -> tuple[NDArray[np.float64], ...]:
-    #     from relife.sample import failure_data_sample
-    #
-    #     return failure_data_sample(
-    #         self.baseline.freeze(*args),
-    #         size,
-    #         tf,
-    #         t0,
-    #         maxsample=maxsample,
-    #         seed=seed,
-    #         use="model",
-    #     )
+    def sample(
+        self,
+        size: int,
+        tf: float,
+        /,
+        *args: *Args,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from relife.sample import sample_count_data
 
-    def freeze(self, *args: *Args) -> FrozenParametricModel:
-        from .frozen_process import FrozenNonHomogeneousPoissonProcess
+        return sample_count_data(
+            self.baseline.freeze(*args),
+            size,
+            tf,
+            t0=t0,
+            maxsample=maxsample,
+            seed=seed,
+        )
 
+    def failure_data_sample(
+        self,
+        size: int,
+        tf: float,
+        /,
+        *args: *Args,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sample import failure_data_sample
+
+        return failure_data_sample(
+            self.baseline.freeze(*args),
+            size,
+            tf,
+            t0,
+            maxsample=maxsample,
+            seed=seed,
+            use="model",
+        )
+
+    def freeze(self, *args: *Args) -> FrozenNonHomogeneousPoissonProcess:
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
     @property
@@ -125,5 +126,5 @@ class NonHomogeneousPoissonProcess(
             first_ages=first_ages,
             last_ages=last_ages,
         )
-        optimized_model = maximum_likelihood_estimation(self, nhpp_data, **kwargs)
-        return optimized_model
+        fitted_model = maximum_likelihood_estimation(self, nhpp_data, **kwargs)
+        return fitted_model

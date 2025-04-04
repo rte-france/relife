@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import partial
 from typing import TYPE_CHECKING, Optional
 
@@ -5,44 +7,48 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.economic.discounting import exponential_discounting
-from relife.economic.rewards import reward_partial_expectation
-from relife.model import BaseDistribution
-from relife.sample import SampleFailureDataMixin, SampleMixin
+from relife import ParametricModel
+from relife.economic import exponential_discounting, reward_partial_expectation
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
 
 if TYPE_CHECKING:
     from relife.economic import Rewards
-    from relife.lifetime_model._base import ParametricLifetimeModel
-    from relife.model import FrozenLifetimeModel
+    from relife.lifetime_model import (
+        FrozenParametricLifetimeModel,
+        ParametricLifetimeModel,
+    )
+    from relife.sample import CountData
 
 
-class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
-    model: FrozenLifetimeModel
-    model1: Optional[FrozenLifetimeModel]
+class RenewalProcess(ParametricModel):
+    model: FrozenParametricLifetimeModel
+    model1: Optional[FrozenParametricLifetimeModel]
 
     def __init__(
         self,
         model: ParametricLifetimeModel[()],
         model1: Optional[ParametricLifetimeModel[()]] = None,
     ):
+        super().__init__()
+
+        from relife.lifetime_model import LifetimeDistribution
 
         if not model.frozen:
             raise ValueError(
                 "Invalid model : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
             )
-        if isinstance(model, BaseDistribution):
+        if isinstance(model, LifetimeDistribution):
             model = model.freeze()
+        self.compose_with(model=model)
         if model1 is not None:
             if not model1.frozen:
                 raise ValueError(
                     "Invalid model1 : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
                 )
-            if not isinstance(model1, BaseDistribution):
+            if not isinstance(model1, LifetimeDistribution):
                 model1 = model1.freeze()
-        self.model = model
-        self.model1 = model1
+            self.compose_with(model1=model1)
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return renewal_equation_solver(
@@ -58,31 +64,31 @@ class RenewalProcess(SampleMixin[()], SampleFailureDataMixin[()]):
             self.model.pdf if not self.model1 else self.model1.pdf,
         )
 
-    # def sample(
-    #     self,
-    #     size: int,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ) -> CountData:
-    #     from relife.sample import sample_count_data
-    #
-    #     return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
-    #
-    # def failure_data_sample(
-    #     self,
-    #     size: int,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ) -> tuple[NDArray[np.float64], ...]:
-    #     from relife.sample import failure_data_sample
-    #
-    #     return failure_data_sample(
-    #         self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
-    #     )
+    def sample(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from relife.sample import sample_count_data
+
+        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
+
+    def failure_data_sample(
+        self,
+        size: int,
+        tf: float,
+        t0: float = 0.0,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> tuple[NDArray[np.float64], ...]:
+        from relife.sample import failure_data_sample
+
+        return failure_data_sample(
+            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
+        )
 
 
 class RenewalRewardProcess(RenewalProcess):

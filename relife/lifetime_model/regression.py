@@ -14,16 +14,16 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from ._base import Regression
+from ._base import LifetimeRegression
 
 if TYPE_CHECKING:
-    from ._new_type import FittableParametricLifetimeModel
+    from ._fittable_type import FittableParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
 
 # type ParametricLifetimeModel[float|NDArray[np.float64], *Ts]
-class ProportionalHazard(Regression[*Args]):
+class ProportionalHazard(LifetimeRegression[*Args]):
     r"""
     Proportional Hazard regression core.
 
@@ -146,7 +146,7 @@ class ProportionalHazard(Regression[*Args]):
         raise AttributeError
 
 
-class AFT(Regression[*Args]):
+class AFT(LifetimeRegression[*Args]):
     r"""
     Accelerated failure time regression.
 

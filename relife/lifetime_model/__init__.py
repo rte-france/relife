@@ -1,10 +1,10 @@
 from ._base import (
-    Distribution,
+    LifetimeDistribution,
+    LifetimeRegression,
     NonParametricLifetimeModel,
     ParametricLifetimeModel,
-    Regression,
 )
-from ._new_type import FittableParametricLifetimeModel
+from ._fittable_type import FittableParametricLifetimeModel
 from .conditional_model import AgeReplacementModel, LeftTruncatedModel
 from .distribution import (
     EquilibriumDistribution,

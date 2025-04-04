@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import partial
 from typing import TYPE_CHECKING, Callable, NewType, Optional
 
@@ -7,7 +9,7 @@ from numpy.typing import NDArray
 from relife.economic.discounting import Discounting
 
 if TYPE_CHECKING:
-    from relife.model import FrozenLifetimeModel
+    from relife.lifetime_model import FrozenParametricLifetimeModel
 
 
 Rewards = NewType(
@@ -46,7 +48,7 @@ def run_to_failure_rewards(cf: float | NDArray[np.float64]) -> Rewards:
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
-    model: FrozenLifetimeModel,
+    model: FrozenParametricLifetimeModel,
     rewards: Rewards,
     *,
     discounting: Optional[Discounting] = None,

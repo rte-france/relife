@@ -27,7 +27,7 @@ from relife.quadratures import gauss_legendre, quad_laguerre
 from .frozen_model import FrozenParametricLifetimeModel
 
 if TYPE_CHECKING:
-    from ._new_type import FittableParametricLifetimeModel
+    from ._fittable_type import FittableParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -56,7 +56,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     def __init__(self):
         super().__init__()
-        self._fitting_results = None
 
     @abstractmethod
     def hf(
@@ -352,7 +351,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         return PlotSurvivalFunc(self)
 
 
-class Distribution(ParametricLifetimeModel[()], ABC):
+class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
@@ -496,21 +495,18 @@ class Distribution(ParametricLifetimeModel[()], ABC):
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self:
-        # if update to 3.12 : maximum_likelihood_estimation[()](...), generic functions
-        # Step 1: Prepare lifetime data
         lifetime_data = lifetime_data_factory(
             time,
-            event,
-            entry,
-            departure,
+            event=event,
+            entry=entry,
+            departure=departure,
         )
-        # TODO : fitted_model
-        optimized_model = maximum_likelihood_estimation(
+        fitted_model = maximum_likelihood_estimation(
             self,
             lifetime_data,
             **kwargs,
         )
-        return optimized_model
+        return fitted_model
 
 
 class CovarEffect(ParametricModel):
@@ -578,7 +574,9 @@ class CovarEffect(ParametricModel):
         return covar * self.g(covar)
 
 
-class Regression(ParametricLifetimeModel[float | NDArray[np.float64], *Args], ABC):
+class LifetimeRegression(
+    ParametricLifetimeModel[float | NDArray[np.float64], *Args], ABC
+):
     """
     Base class for regression model.
     """
@@ -792,7 +790,6 @@ class Regression(ParametricLifetimeModel[float | NDArray[np.float64], *Args], AB
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self:
-        # if update to 3.12 : maximum_likelihood_estimation[float|NDArray[np.float64], *args](...), generic functions
         lifetime_data = lifetime_data_factory(
             time,
             covar,
@@ -804,12 +801,12 @@ class Regression(ParametricLifetimeModel[float | NDArray[np.float64], *Args], AB
         self.covar_effect.set_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         )
-        optimized_model = maximum_likelihood_estimation(
+        fitted_model = maximum_likelihood_estimation(
             self,
             lifetime_data,
             **kwargs,
         )
-        return optimized_model
+        return fitted_model
 
 
 NonParametricEstimation = NewType(

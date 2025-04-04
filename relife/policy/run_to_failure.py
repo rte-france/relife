@@ -4,13 +4,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.economic import reward_partial_expectation, run_to_failure_rewards
-from relife.parametric_model import LeftTruncatedModel
+from relife.lifetime_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 
 from .base import RenewalPolicy
 
 if TYPE_CHECKING:
-    from relife.lifetime_model._base import ParametricLifetimeModel
+
+    from relife.lifetime_model import ParametricLifetimeModel
 
 
 class OneCycleRunToFailurePolicy(RenewalPolicy):
@@ -37,7 +38,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: ParametricLifetimeModel,
+        model: ParametricLifetimeModel[()],
         cf: float | NDArray[np.float64],
         *,
         discounting_rate: Optional[float] = None,
@@ -158,6 +159,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
     def underlying_process(
         self,
     ) -> RenewalRewardProcess:
+
         return RenewalRewardProcess(
             self.model,
             run_to_failure_rewards(self.cf),

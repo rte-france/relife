@@ -8,10 +8,10 @@ from typing_extensions import override
 
 from relife.quadratures import gauss_legendre, shifted_laguerre
 
-from ._base import Distribution, ParametricLifetimeModel
+from ._base import LifetimeDistribution, ParametricLifetimeModel
 
 
-class Exponential(Distribution):
+class Exponential(LifetimeDistribution):
     r"""
     Exponential lifetime distribution.
 
@@ -81,7 +81,7 @@ class Exponential(Distribution):
         return np.zeros_like(time)
 
 
-class Weibull(Distribution):
+class Weibull(LifetimeDistribution):
     r"""
     Weibull lifetime distribution.
 
@@ -178,7 +178,7 @@ class Weibull(Distribution):
         )
 
 
-class Gompertz(Distribution):
+class Gompertz(LifetimeDistribution):
     r"""
     Gompertz lifetime distribution.
 
@@ -267,7 +267,7 @@ class Gompertz(Distribution):
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
 
-class Gamma(Distribution):
+class Gamma(LifetimeDistribution):
     r"""
     Gamma lifetime distribution.
 
@@ -378,7 +378,7 @@ class Gamma(Distribution):
         return super().mrl(time)
 
 
-class LogLogistic(Distribution):
+class LogLogistic(LifetimeDistribution):
     r"""
     Log-logistic probability distribution.
 

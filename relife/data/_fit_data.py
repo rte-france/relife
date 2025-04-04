@@ -85,10 +85,7 @@ class LifetimeData:
         ]:
             data = getattr(self, field_name)
             if len(self.left_truncation) != 0 and len(data) != 0:
-                inter_ids = np.array(
-                    list(set.intersection(*(data.index, self.left_truncation.index))),
-                    dtype=np.int64,
-                )
+                inter_ids = (np.intersect1d(data.index, self.left_truncation.index),)
                 intersection_values = np.concatenate(
                     (
                         data.values[np.isin(data.index, inter_ids)],
@@ -117,10 +114,7 @@ class LifetimeData:
                         )
             if len(self.right_truncation) != 0 and len(data) != 0:
 
-                inter_ids = np.array(
-                    list(set.intersection(*(data.index, self.right_truncation.index))),
-                    dtype=np.int64,
-                )
+                inter_ids = np.intersect1d(data.index, self.right_truncation.index)
                 intersection_values = np.concatenate(
                     (
                         data.values[np.isin(data.index, inter_ids)],
@@ -154,7 +148,7 @@ class LifetimeData:
             [self.complete.values, self.right_censoring.values], axis=0
         )
         index = np.concatenate(
-            [self.complete.index, self.right_censoring.values], axis=0
+            [self.complete.index, self.right_censoring.index], axis=0
         )
         args = tuple(
             (
