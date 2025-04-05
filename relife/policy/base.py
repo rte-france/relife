@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
     from .run_to_failure import OneCycleRunToFailurePolicy, DefaultRunToFailurePolicy
+    from .age_replacement import OneCycleAgeReplacementPolicy, DefaultAgeReplacementPolicy
 
 # TODO : expect a stochastic process and a cost structure
 # TODO : override __new__ to custom the control of the underlying process
@@ -99,7 +100,7 @@ def age_replacement_policy(
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,
-) -> RenewalPolicy:
+) -> Union[OneCycleRunToFailurePolicy, DefaultRunToFailurePolicy]:
     from .age_replacement import (
         DefaultAgeReplacementPolicy,
         OneCycleAgeReplacementPolicy,

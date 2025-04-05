@@ -22,10 +22,11 @@ def isbroadcastable(argname: str):
             if x.size == 1:
                 x = x.item()
             elif x.ndim == 2:
-                if x.shape[0] != 1 and x.shape[0] != self.nb_assets:
-                    raise ValueError(
-                        f"Inconsistent {argname} shape. Got {self.nb_assets} nb of assets but got {x.shape} {argname} shape"
-                    )
+                if self.nb_assets != 1:
+                    if x.shape[0] != 1 and x.shape[0] != self.nb_assets:
+                        raise ValueError(
+                            f"Inconsistent {argname} shape. Got {self.nb_assets} nb of assets but got {x.shape} {argname} shape"
+                        )
             return method(self, x)
 
         return wrapper

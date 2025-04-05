@@ -285,30 +285,34 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         self, ar: float | NDArray[np.float64], ar1: float | NDArray[np.float64]
     ) -> RenewalRewardProcess:
         return RenewalRewardProcess(
-            self.model,
+            AgeReplacementModel(self.model).freeze(ar),
             age_replacement_rewards(ar, self.cf, self.cp),
             discounting_rate=self.discounting_rate,
-            model1=self.model1,
+            model1=AgeReplacementModel(self.model1).freeze(ar1) if self.model1 is not None else None,
             rewards1=age_replacement_rewards(ar1, self.cf, self.cp) if ar1 else None,
         )
 
     @get_if_none("ar", "ar1")
     def expected_total_cost(
         self,
-        timeline: NDArray[np.float64],
+        tf : float,
+        nb_steps : int,
         ar: Optional[float | NDArray[np.float64]] = None,
         ar1: Optional[float | NDArray[np.float64]] = None,
-    ) -> NDArray[np.float64]:
-        return self.underlying_process(ar, ar1).expected_total_reward(timeline)
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline = np.linspace(0, tf, nb_steps)
+        return timeline, self.underlying_process(ar, ar1).expected_total_reward(timeline)
 
     @get_if_none("ar", "ar1")
     def expected_equivalent_annual_cost(
         self,
-        timeline: NDArray[np.float64],
+        tf : float,
+        nb_steps : int,
         ar: Optional[float | NDArray[np.float64]] = None,
         ar1: Optional[float | NDArray[np.float64]] = None,
-    ) -> NDArray[np.float64]:
-        return self.underlying_process(ar, ar1).expected_equivalent_annual_cost(
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline = np.linspace(0, tf, nb_steps)
+        return timeline, self.underlying_process(ar, ar1).expected_equivalent_annual_cost(
             timeline
         )
 
@@ -326,6 +330,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         ar: Optional[float | NDArray[np.float64]] = None,
         ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
+
         return self.underlying_process(
             ar, ar1
         ).asymptotic_expected_equivalent_annual_cost()

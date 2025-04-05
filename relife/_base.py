@@ -332,7 +332,7 @@ def _reshape(
             if arg_value.ndim <= 1:
                 return arg_value.reshape(1, -1)
             return arg_value
-        case ("a0", "ar"):
+        case "a0"|"ar":
             if arg_value.ndim <= 1:
                 if arg_value.size == 1:
                     return arg_value.item()
