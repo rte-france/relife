@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING, TypeVarTuple
+from typing import TYPE_CHECKING, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -41,7 +41,9 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
     def hasjac(self) -> bool:
         return hasattr(self.model, "jac_hf") and hasattr(self.model, "jac_chf")
 
-    def _complete_contribs(self, lifetime_data: LifetimeData) -> float:
+    def _complete_contribs(self, lifetime_data: LifetimeData) -> Optional[float]:
+        if lifetime_data.complete is None:
+            return None
         return -np.sum(
             np.log(
                 self.model.hf(
@@ -51,7 +53,9 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             )
         )
 
-    def _right_censored_contribs(self, lifetime_data: LifetimeData) -> float:
+    def _right_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[float]:
+        if lifetime_data.complete_or_right_censored is None:
+            return None
         return np.sum(
             self.model.chf(
                 lifetime_data.complete_or_right_censored.values,
@@ -60,7 +64,9 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             dtype=np.float64,
         )
 
-    def _left_censored_contribs(self, lifetime_data: LifetimeData) -> float:
+    def _left_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[float]:
+        if lifetime_data.left_censoring is None:
+            return None
         return -np.sum(
             np.log(
                 -np.expm1(
@@ -72,7 +78,11 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             )
         )
 
-    def _left_truncations_contribs(self, lifetime_data: LifetimeData) -> float:
+    def _left_truncations_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[float]:
+        if lifetime_data.left_truncation is None:
+            return None
         return -np.sum(
             self.model.chf(
                 lifetime_data.left_truncation.values,
@@ -83,8 +93,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
 
     def _jac_complete_contribs(
         self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
+    ) -> Optional[NDArray[np.float64]]:
         if hasattr(self.model, "jac_hf"):
+            if lifetime_data.complete is None:
+                return None
             return -np.sum(
                 self.model.jac_hf(
                     lifetime_data.complete.values,
@@ -100,8 +112,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
 
     def _jac_right_censored_contribs(
         self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
+    ) -> Optional[NDArray[np.float64]]:
         if hasattr(self.model, "jac_chf"):
+            if lifetime_data.complete_or_right_censored is None:
+                return None
             return np.sum(
                 self.model.jac_chf(
                     lifetime_data.complete_or_right_censored.values,
@@ -113,8 +127,11 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
 
     def _jac_left_censored_contribs(
         self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
+    ) -> Optional[NDArray[np.float64]]:
         if hasattr(self.model, "jac_chf"):
+            if lifetime_data.left_censoring is None:
+                return None
+            print("ok")
             return -np.sum(
                 self.model.jac_chf(
                     lifetime_data.left_censoring.values,
@@ -132,8 +149,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
 
     def _jac_left_truncations_contribs(
         self, lifetime_data: LifetimeData
-    ) -> NDArray[np.float64]:
+    ) -> Optional[NDArray[np.float64]]:
         if hasattr(self.model, "jac_chf"):
+            if lifetime_data is None:
+                return None
             return -np.sum(
                 self.model.jac_chf(
                     lifetime_data.left_truncation.values,
@@ -148,12 +167,13 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
         params: NDArray[np.float64],
     ) -> float:
         self.model.params = params
-        return (
-            self._complete_contribs(self.data)
-            + self._right_censored_contribs(self.data)
-            + self._left_censored_contribs(self.data)
-            + self._left_truncations_contribs(self.data)
+        contributions = (
+            self._complete_contribs(self.data),
+            self._right_censored_contribs(self.data),
+            self._left_censored_contribs(self.data),
+            self._left_truncations_contribs(self.data),
         )
+        return sum(x for x in contributions if x is not None)
 
     @override
     def jac_negative_log(
@@ -165,9 +185,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 f"No support of jac negative likelihood for {self.model.__class__.__name__}"
             )
         self.model.params = params
-        return (
-            self._jac_complete_contribs(self.data)
-            + self._jac_right_censored_contribs(self.data)
-            + self._jac_left_censored_contribs(self.data)
-            + self._jac_left_truncations_contribs(self.data)
+        jac_contributions = (
+            self._jac_complete_contribs(self.data),
+            self._jac_right_censored_contribs(self.data),
+            self._jac_left_censored_contribs(self.data),
+            self._jac_left_truncations_contribs(self.data),
         )
+        return sum(x for x in jac_contributions if x is not None)

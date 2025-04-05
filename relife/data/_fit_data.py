@@ -1,3 +1,4 @@
+import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from itertools import product, zip_longest
@@ -65,12 +66,25 @@ class LifetimeData:
     """BLABLABLA"""
 
     nb_samples: int
-    complete: IndexedLifetimeData = field(repr=False)  # values shape (m, 1)
-    left_censoring: IndexedLifetimeData = field(repr=False)  # values shape (m, 1)
-    right_censoring: IndexedLifetimeData = field(repr=False)  # values shape (m, 1)
-    interval_censoring: IndexedLifetimeData = field(repr=False)  # values shape (m, 2)
-    left_truncation: IndexedLifetimeData = field(repr=False)  # values shape (m, 1)
-    right_truncation: IndexedLifetimeData = field(repr=False)  # values shape (m, 1)
+    complete: Optional[IndexedLifetimeData] = field(repr=False)  # values shape (m, 1)
+    right_censoring: Optional[IndexedLifetimeData] = field(
+        repr=False
+    )  # values shape (m, 1)
+    left_censoring: Optional[IndexedLifetimeData] = field(
+        repr=False
+    )  # values shape (m, 1)
+    interval_censoring: Optional[IndexedLifetimeData] = field(
+        repr=False
+    )  # values shape (m, 2)
+    left_truncation: Optional[IndexedLifetimeData] = field(
+        repr=False
+    )  # values shape (m, 1)
+    right_truncation: Optional[IndexedLifetimeData] = field(
+        repr=False
+    )  # values shape (m, 1)
+    complete_or_right_censored: Optional[IndexedLifetimeData] = field(
+        repr=False, init=False
+    )
 
     def __len__(self):
         return self.nb_samples
@@ -84,7 +98,7 @@ class LifetimeData:
             "interval_censoring",
         ]:
             data = getattr(self, field_name)
-            if len(self.left_truncation) != 0 and len(data) != 0:
+            if data is not None and self.left_truncation is not None:
                 inter_ids = (np.intersect1d(data.index, self.left_truncation.index),)
                 intersection_values = np.concatenate(
                     (
@@ -112,8 +126,7 @@ class LifetimeData:
                         raise ValueError(
                             "Some lifetimes are under left truncation bounds"
                         )
-            if len(self.right_truncation) != 0 and len(data) != 0:
-
+            if data is not None and self.right_truncation is not None:
                 inter_ids = np.intersect1d(data.index, self.right_truncation.index)
                 intersection_values = np.concatenate(
                     (
@@ -144,26 +157,32 @@ class LifetimeData:
                         )
 
         # compute complete_or_right_censored
-        values = np.concatenate(
-            [self.complete.values, self.right_censoring.values], axis=0
-        )
-        index = np.concatenate(
-            [self.complete.index, self.right_censoring.index], axis=0
-        )
-        args = tuple(
-            (
-                np.concatenate(x, axis=0)
-                for x in zip_longest(self.complete.args, self.right_censoring.args)
+        self.complete_or_right_censored = None
+        if self.complete is not None and self.right_censoring is not None:
+            values = np.concatenate(
+                [self.complete.values, self.right_censoring.values], axis=0
             )
-        )
-        # FIXME: orders of the values seems to affects estimations of the parameters in Regression
-        sort_index = np.argsort(index)
+            index = np.concatenate(
+                [self.complete.index, self.right_censoring.index], axis=0
+            )
+            args = tuple(
+                (
+                    np.concatenate(x, axis=0)
+                    for x in zip_longest(self.complete.args, self.right_censoring.args)
+                )
+            )
+            # FIXME: orders of the values seems to affects estimations of the parameters in Regression
+            sort_index = np.argsort(index)
 
-        self.complete_or_right_censored = IndexedLifetimeData(
-            values[sort_index],
-            index[sort_index],
-            tuple((arg[sort_index] for arg in args)),
-        )
+            self.complete_or_right_censored = IndexedLifetimeData(
+                values[sort_index],
+                index[sort_index],
+                tuple((arg[sort_index] for arg in args)),
+            )
+        elif self.complete is not None:
+            self.complete_or_right_censored = copy.deepcopy(self.complete)
+        elif self.right_censoring is not None:
+            self.complete_or_right_censored = copy.deepcopy(self.right_censoring)
 
 
 @dataclass
@@ -296,42 +315,42 @@ class LifetimeParser(Generic[*Args], ABC):
         self.args = args
 
     @abstractmethod
-    def get_complete(self) -> IndexedLifetimeData:
+    def get_complete(self) -> Optional[IndexedLifetimeData]:
         """
         Returns:
             IndexedLifetimeData: object containing complete lifetime values and index
         """
 
     @abstractmethod
-    def get_left_censoring(self) -> IndexedLifetimeData:
+    def get_left_censoring(self) -> Optional[IndexedLifetimeData]:
         """
         Returns:
             IndexedLifetimeData: object containing left censorhips values and index
         """
 
     @abstractmethod
-    def get_right_censoring(self) -> IndexedLifetimeData:
+    def get_right_censoring(self) -> Optional[IndexedLifetimeData]:
         """
         Returns:
             IndexedLifetimeData: object containing right censorhips values and index
         """
 
     @abstractmethod
-    def get_interval_censoring(self) -> IndexedLifetimeData:
+    def get_interval_censoring(self) -> Optional[IndexedLifetimeData]:
         """
         Returns:
             IndexedLifetimeData: object containing interval censorhips valuess and index
         """
 
     @abstractmethod
-    def get_left_truncation(self) -> IndexedLifetimeData:
+    def get_left_truncation(self) -> Optional[IndexedLifetimeData]:
         """
         Returns:
             IndexedLifetimeData: object containing left truncations values and index
         """
 
     @abstractmethod
-    def get_right_truncation(self) -> IndexedLifetimeData:
+    def get_right_truncation(self) -> Optional[IndexedLifetimeData]:
         """
         Returns:
             IndexedLifetimeData: object containing right truncations values and index
@@ -343,43 +362,50 @@ class Lifetime1DParser(LifetimeParser):
     Concrete implementation of LifetimeDataReader for 1D encoding
     """
 
-    def get_complete(self) -> IndexedLifetimeData:
+    def get_complete(self) -> Optional[IndexedLifetimeData]:
         index = np.where(self.event)[0]
-        values = self.time[index]
-        args = tuple((arg[index].copy() for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.time[index]
+            args = tuple((arg[index].copy() for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
-    def get_left_censoring(self) -> IndexedLifetimeData:
-        return IndexedLifetimeData(
-            np.empty((0, 1), dtype=np.float64),
-            np.empty((0,), dtype=np.int64),
-        )
+    def get_left_censoring(self) -> None:
+        return None
 
-    def get_right_censoring(self) -> IndexedLifetimeData:
+    def get_right_censoring(self) -> Optional[IndexedLifetimeData]:
         index = np.where(~self.event)[0]
-        values = self.time[index]
-        args = tuple((arg[index].copy() for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.time[index]
+            args = tuple((arg[index].copy() for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
-    def get_interval_censoring(self) -> IndexedLifetimeData:
+    def get_interval_censoring(self) -> Optional[IndexedLifetimeData]:
         rc_index = np.where(~self.event)[0]
-        rc_values = np.c_[
-            self.time[rc_index], np.ones(len(rc_index)) * np.inf
-        ]  # add a column of inf
-        args = tuple((arg[rc_index].copy() for arg in self.args))
-        return IndexedLifetimeData(rc_values, rc_index, args)
+        if rc_index.size > 0:
+            rc_values = np.c_[
+                self.time[rc_index], np.ones(len(rc_index)) * np.inf
+            ]  # add a column of inf
+            args = tuple((arg[rc_index].copy() for arg in self.args))
+            return IndexedLifetimeData(rc_values, rc_index, args)
+        return None
 
-    def get_left_truncation(self) -> IndexedLifetimeData:
+    def get_left_truncation(self) -> Optional[IndexedLifetimeData]:
         index = np.where(self.entry > 0)[0]
-        values = self.entry[index]
-        args = tuple((arg[index].copy() for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.entry[index]
+            args = tuple((arg[index].copy() for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
-    def get_right_truncation(self) -> IndexedLifetimeData:
+    def get_right_truncation(self) -> Optional[IndexedLifetimeData]:
         index = np.where(self.departure < np.inf)[0]
-        values = self.departure[index]
-        args = tuple((arg[index] for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.departure[index]
+            args = tuple((arg[index] for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
 
 class Lifetime2DParser(LifetimeParser):
@@ -387,52 +413,64 @@ class Lifetime2DParser(LifetimeParser):
     Concrete implementation of LifetimeDataReader for 2D encoding
     """
 
-    def get_complete(self) -> IndexedLifetimeData:
+    def get_complete(self) -> Optional[IndexedLifetimeData]:
         index = np.where(self.time[:, 0] == self.time[:, 1])[0]
-        values = self.time[index, 0]
-        args = tuple((arg[index] for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.time[index, 0]
+            args = tuple((arg[index] for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
     def get_left_censoring(
         self,
-    ) -> IndexedLifetimeData:
+    ) -> Optional[IndexedLifetimeData]:
         index = np.where(self.time[:, 0] == 0)[0]
-        values = self.time[index, 1]
-        args = tuple((arg[index] for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.time[index, 1]
+            args = tuple((arg[index] for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
     def get_right_censoring(
         self,
     ) -> IndexedLifetimeData:
         index = np.where(self.time[:, 1] == np.inf)[0]
-        values = self.time[index, 0]
-        args = tuple((arg[index] for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.time[index, 0]
+            args = tuple((arg[index] for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
-    def get_interval_censoring(self) -> IndexedLifetimeData:
+    def get_interval_censoring(self) -> Optional[IndexedLifetimeData]:
         index = np.where(
             np.not_equal(self.time[:, 0], self.time[:, 1]),
         )[0]
-        values = self.time[index]
-        if values.size != 0:
-            if np.any(values[:, 0] >= values[:, 1]):
-                raise ValueError(
-                    "Interval censorships lower bounds can't be higher or equal to its upper bounds"
-                )
-        args = tuple((arg[index] for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.time[index]
+            if values.size != 0:
+                if np.any(values[:, 0] >= values[:, 1]):
+                    raise ValueError(
+                        "Interval censorships lower bounds can't be higher or equal to its upper bounds"
+                    )
+            args = tuple((arg[index] for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
-    def get_left_truncation(self) -> IndexedLifetimeData:
+    def get_left_truncation(self) -> Optional[IndexedLifetimeData]:
         index = np.where(self.entry > 0)[0]
-        values = self.entry[index]
-        args = tuple((arg[index] for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.entry[index]
+            args = tuple((arg[index] for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
-    def get_right_truncation(self) -> IndexedLifetimeData:
+    def get_right_truncation(self) -> Optional[IndexedLifetimeData]:
         index = np.where(self.departure < np.inf)[0]
-        values = self.departure[index]
-        args = tuple((arg[index] for arg in self.args))
-        return IndexedLifetimeData(values, index, args)
+        if index.size > 0:
+            values = self.departure[index]
+            args = tuple((arg[index] for arg in self.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
 
 
 Args = TypeVarTuple("Args")
@@ -473,8 +511,8 @@ def lifetime_data_factory(
     return LifetimeData(
         len(time),
         reader.get_complete(),
-        reader.get_left_censoring(),
         reader.get_right_censoring(),
+        reader.get_left_censoring(),
         reader.get_interval_censoring(),
         reader.get_left_truncation(),
         reader.get_right_truncation(),

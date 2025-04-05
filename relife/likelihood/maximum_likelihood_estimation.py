@@ -137,13 +137,13 @@ def init_params_from_lifetimes(
 
         case Exponential() | Weibull() | LogLogistic() | Gamma():
             model: LifetimeDistribution
-            param0 = np.ones(model.nb_params)
+            param0 = np.ones(model.nb_params, dtype=np.float64)
             param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.values)
             return param0
 
         case Gompertz():
             model: LifetimeDistribution
-            param0 = np.empty(model.nb_params, dtype=float)
+            param0 = np.empty(model.nb_params, dtype=np.float64)
             rate = np.pi / (
                 np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.values)
             )
@@ -157,7 +157,7 @@ def init_params_from_lifetimes(
         case ProportionalHazard() | AFT():
             model: LifetimeRegression
             baseline_param0 = init_params_from_lifetimes(model.baseline, lifetime_data)
-            param0 = np.zeros_like(model.params)
+            param0 = np.zeros_like(model.params, dtype=np.float64)
             param0[-baseline_param0.size :] = baseline_param0
             return param0
 
@@ -179,12 +179,12 @@ def maximum_likelihood_estimation(
                 raise ValueError
 
             # Step 2: Initialize the model and likelihood
-            optimized_model = copy.deepcopy(model)
-            optimized_model.params = init_params_from_lifetimes(optimized_model, data)
-            likelihood = LikelihoodFromLifetimes(optimized_model, data)
+            model_copy = copy.deepcopy(model)
+            model_copy.params = init_params_from_lifetimes(model_copy, data)
+            likelihood = LikelihoodFromLifetimes(model_copy, data)
 
             try:
-                bounds = params_bounds(optimized_model)
+                bounds = params_bounds(model_copy)
             except NotImplemented:
                 bounds = None
 
@@ -196,7 +196,7 @@ def maximum_likelihood_estimation(
                 "callback": kwargs.get("callback", None),
                 "options": kwargs.get("options", None),
                 "bounds": kwargs.get("bounds", bounds),
-                "x0": kwargs.get("x0", optimized_model.params),
+                "x0": kwargs.get("x0", model_copy.params),
             }
             optimizer = minimize(
                 likelihood.negative_log,
@@ -207,11 +207,11 @@ def maximum_likelihood_estimation(
 
             # Step 4: Compute parameters variance (Hessian inverse)
             hessian_inverse = np.linalg.inv(likelihood.hessian())
-            optimized_model.fitting_results = FittingResults(
+            model_copy.fitting_results = FittingResults(
                 len(data), optimizer, var=hessian_inverse
             )
-            optimized_model.params = optimizer.x
-            return optimized_model
+            model_copy.params = optimizer.x
+            return model_copy
 
         case NonHomogeneousPoissonProcess():
             model: NonHomogeneousPoissonProcess[

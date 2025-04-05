@@ -506,6 +506,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             lifetime_data,
             **kwargs,
         )
+        self.params = fitted_model.params
         return fitted_model
 
 
@@ -806,6 +807,7 @@ class LifetimeRegression(
             lifetime_data,
             **kwargs,
         )
+        self.params = fitted_model.params
         return fitted_model
 
 

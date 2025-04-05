@@ -127,4 +127,5 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
             last_ages=last_ages,
         )
         fitted_model = maximum_likelihood_estimation(self, nhpp_data, **kwargs)
+        self.params = fitted_model.params
         return fitted_model
