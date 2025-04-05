@@ -22,9 +22,6 @@ if TYPE_CHECKING:
 
 
 class RenewalProcess(ParametricModel):
-    model: FrozenParametricLifetimeModel
-    model1: Optional[FrozenParametricLifetimeModel]
-
     def __init__(
         self,
         model: ParametricLifetimeModel[()],
@@ -40,7 +37,7 @@ class RenewalProcess(ParametricModel):
             )
         if isinstance(model, LifetimeDistribution):
             model = model.freeze()
-        self.compose_with(model=model)
+        self.compose_with(_model=model)
         if model1 is not None:
             if not model1.frozen:
                 raise ValueError(
@@ -48,7 +45,15 @@ class RenewalProcess(ParametricModel):
                 )
             if not isinstance(model1, LifetimeDistribution):
                 model1 = model1.freeze()
-            self.compose_with(model1=model1)
+            self.compose_with(_model1=model1)
+
+    @property
+    def model(self) -> FrozenParametricLifetimeModel:
+        return self._model
+
+    @property
+    def model1(self) -> Optional[FrozenParametricLifetimeModel]:
+        return getattr(self, "_model1", None)
 
     def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         return renewal_equation_solver(
@@ -168,7 +173,7 @@ class RenewalRewardProcess(RenewalProcess):
 
         z = self.expected_total_reward(timeline)
         af = self.discounting.annuity_factor(timeline)
-        q = z / af
+        q = z / (af + 1e-5) # avoid zero division
         res = np.full_like(af, q)
         if self.model1 is None:
             q0 = self.rewards(np.array(0.0)) * self.model.pdf(0.0)

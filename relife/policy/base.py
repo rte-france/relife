@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -16,8 +16,10 @@ if TYPE_CHECKING:
     )
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
+    from .run_to_failure import OneCycleRunToFailurePolicy, DefaultRunToFailurePolicy
 
-
+# TODO : expect a stochastic process and a cost structure
+# TODO : override __new__ to custom the control of the underlying process
 # RenewalPolicy
 class RenewalPolicy:
 
@@ -40,16 +42,16 @@ class RenewalPolicy:
         if isinstance(model, LifetimeDistribution):
             model = model.freeze()
         if model1 is not None:
-            if not model1.frozen:
-                raise ValueError
             if isinstance(model1, LifetimeDistribution):
                 model1 = model1.freeze()
+            if not model1.frozen:
+                raise ValueError
+            if self.model.nb_assets != self.model1.nb_assets:
+                raise ValueError
 
         self.model = model
         self.model1 = model1
         self.discounting = exponential_discounting(discounting_rate)
-        if self.model.nb_assets != self.model1.nb_assets:
-            raise ValueError
         self.nb_assets = self.model.nb_assets
         self.cost_structure = CostStructure(**kwcosts)
 
@@ -89,27 +91,87 @@ class RenewalPolicy:
 
 
 def age_replacement_policy(
-    model: ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess,
+    model: ParametricLifetimeModel[()],
     cost_structure: CostStructure,
     one_cycle: bool = False,
     discounting_rate: Optional[float] = None,
-    model1: Optional[ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    model1: Optional[ParametricLifetimeModel[()]] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,
 ) -> RenewalPolicy:
-    pass
+    from .age_replacement import (
+        DefaultAgeReplacementPolicy,
+        OneCycleAgeReplacementPolicy,
+    )
+    if not one_cycle:
+        try:
+            cf, cp = (
+                cost_structure["cf"],
+                cost_structure["cp"],
+            )
+        except KeyError:
+            raise ValueError("Costs must contain cf and cp")
+        return DefaultAgeReplacementPolicy(
+            model,
+            cf,
+            cp,
+            discounting_rate=discounting_rate,
+            ar=ar,
+            ar1=ar1,
+            a0=a0,
+            model1=model1,
+        )
+    else:
+        try:
+            cf, cp = (
+                cost_structure["cf"],
+                cost_structure["cp"],
+            )
+        except KeyError:
+            raise ValueError("Costs must contain cf and cp")
+        return OneCycleAgeReplacementPolicy(
+            model,
+            cf,
+            cp,
+            discounting_rate=discounting_rate,
+            ar=ar,
+            a0=a0,
+        )
 
 
 def run_to_failure_policy(
-    model: ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess,
+    model: ParametricLifetimeModel[()],
     cost_structure: CostStructure,
     one_cycle: bool = False,
     discounting_rate: Optional[float] = None,
-    model1: Optional[ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess] = None,
+    model1: Optional[ParametricLifetimeModel[()]] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
-) -> RenewalPolicy:
-    pass
+) -> Union[DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy]:
+    from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
+    if not one_cycle:
+        try:
+            cf = cost_structure["cf"]
+        except KeyError:
+            raise ValueError("Costs must only contain cf")
+        return DefaultRunToFailurePolicy(
+            model,
+            cf,
+            discounting_rate=discounting_rate,
+            a0=a0,
+            model1=model1,
+        )
+    else:
+        try:
+            cf = cost_structure["cf"]
+        except KeyError:
+            raise ValueError("Costs must only contain cf")
+        return OneCycleRunToFailurePolicy(
+            model,
+            cf,
+            discounting_rate=discounting_rate,
+            a0=a0,
+        )
 
 
 def make_renewal_policy(

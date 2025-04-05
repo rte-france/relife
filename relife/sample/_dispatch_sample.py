@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import Iterator, Optional, Union
 
 import numpy as np
 
@@ -22,13 +20,8 @@ from relife.stochastic_process import (
     RenewalProcess,
     RenewalRewardProcess,
 )
-
+from .counting_data import RenewalData, NHPPCountData
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
-
-if TYPE_CHECKING:
-    from relife.sample.counting_data import NHPPCountData
-
-    from .counting_data import RenewalData
 
 
 def stack1d(
@@ -184,14 +177,12 @@ def _(
         "rewards",
     )
     iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed)
-    iterator.set_model(
-        obj.model, obj.model_args, ar=obj.ar if hasattr(obj, "ar") else None
-    )
+    iterator.set_model(obj.model, ar=getattr(obj, "ar", None))
     if isinstance(
         obj,
-        (NonHomogeneousPoissonAgeReplacementPolicy,),
+        NonHomogeneousPoissonAgeReplacementPolicy,
     ):
-        iterator.rewards = obj.rewards
+        iterator.rewards = age_replacement_rewards(obj.ar, obj.cr, obj.cp)
         iterator.discounting = obj.discounting
     stack = stack1d(iterator, keys, maxsample=maxsample)
 

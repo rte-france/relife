@@ -4,3 +4,4 @@ from .age_replacement import (
     OneCycleAgeReplacementPolicy,
 )
 from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
+from .base import run_to_failure_policy

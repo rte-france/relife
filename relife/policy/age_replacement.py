@@ -13,6 +13,7 @@ from relife.stochastic_process import RenewalRewardProcess
 
 from ._decorator import get_if_none
 from .base import RenewalPolicy
+from ..stochastic_process.frozen_process import FrozenNonHomogeneousPoissonProcess
 
 if TYPE_CHECKING:
     from relife.lifetime_model import ParametricLifetimeModel
@@ -403,7 +404,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
 
     def __init__(
         self,
-        process: NonHomogeneousPoissonProcess,
+        process: NonHomogeneousPoissonProcess[()],
         cp: float | NDArray[np.float64],
         cr: float | NDArray[np.float64],
         *,
@@ -414,11 +415,13 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         self.ar = ar
         self.cp = cp
         self.cr = cr
-        self._underlying_process = process
+        if not isinstance(process, FrozenNonHomogeneousPoissonProcess):
+            raise ValueError
+        self._process = process
 
     @property
-    def underlying_process(self):
-        return self._underlying_process
+    def underlying_process(self) -> FrozenNonHomogeneousPoissonProcess:
+        return self._process
 
     @property
     def discounting_rate(self):

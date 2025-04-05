@@ -18,7 +18,10 @@ def isbroadcastable(argname: str):
     def decorator(method):
         @functools.wraps(method)
         def wrapper(self, x):
-            if x.ndim == 2:
+            x = np.asarray(x)
+            if x.size == 1:
+                x = x.item()
+            elif x.ndim == 2:
                 if x.shape[0] != 1 and x.shape[0] != self.nb_assets:
                     raise ValueError(
                         f"Inconsistent {argname} shape. Got {self.nb_assets} nb of assets but got {x.shape} {argname} shape"
@@ -92,4 +95,4 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
-        return self.model.ls_integrate(func, a, b, deg, *self.args)
+        return self.model.ls_integrate(func, a, b, *self.args, deg=deg)

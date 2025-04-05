@@ -170,16 +170,23 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
             rewards1=run_to_failure_rewards(self.cf) if self.model1 else None,
         )
 
-    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.underlying_process.expected_total_reward(timeline)
+    def expected_nb_replacements(self, tf : float, nb_steps : int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline = np.linspace(0, tf, nb_steps)
+        return timeline, self.underlying_process.renewal_function(timeline)
+
+
+    def expected_total_cost(self, tf : float, nb_steps : int) -> NDArray[np.float64]:
+        timeline = np.linspace(0, tf, nb_steps)
+        return timeline, self.underlying_process.expected_total_reward(timeline)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         return self.underlying_process.asymptotic_expected_total_reward()
 
     def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64]
+        self, tf : float, nb_steps : int
     ) -> NDArray[np.float64]:
-        return self.underlying_process.expected_equivalent_annual_cost(timeline)
+        timeline = np.linspace(0, tf, nb_steps)
+        return timeline, self.underlying_process.expected_equivalent_annual_cost(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.underlying_process.asymptotic_expected_equivalent_annual_cost()
