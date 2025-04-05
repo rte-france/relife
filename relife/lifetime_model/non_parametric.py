@@ -49,9 +49,9 @@ class ECDF(NonParametricLifetimeModel):
 
         lifetime_data = lifetime_data_factory(
             time,
-            event,
-            entry,
-            departure,
+            event=event,
+            entry=entry,
+            departure=departure,
         )
 
         timeline, counts = np.unique(
@@ -147,12 +147,12 @@ class KaplanMeier(NonParametricLifetimeModel):
 
         lifetime_data = lifetime_data_factory(
             time,
-            event,
-            entry,
-            departure,
+            event=event,
+            entry=entry,
+            departure=departure,
         )
 
-        if len(lifetime_data.left_censoring) > 0:
+        if lifetime_data.left_censoring is not None:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
         timeline, unique_indices, counts = np.unique(
             lifetime_data.complete_or_right_censored.values,
@@ -271,9 +271,9 @@ class NelsonAalen(NonParametricLifetimeModel):
 
         lifetime_data = lifetime_data_factory(
             time,
-            event,
-            entry,
-            departure,
+            event=event,
+            entry=entry,
+            departure=departure,
         )
 
         if len(lifetime_data.left_censoring) > 0:
@@ -371,9 +371,9 @@ class Turnbull(NonParametricLifetimeModel):
 
         lifetime_data = lifetime_data_factory(
             time,
-            event,
-            entry,
-            departure,
+            event=event,
+            entry=entry,
+            departure=departure,
         )
 
         timeline_temp = np.unique(

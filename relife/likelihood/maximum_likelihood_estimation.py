@@ -179,12 +179,11 @@ def maximum_likelihood_estimation(
                 raise ValueError
 
             # Step 2: Initialize the model and likelihood
-            model_copy = copy.deepcopy(model)
-            model_copy.params = init_params_from_lifetimes(model_copy, data)
-            likelihood = LikelihoodFromLifetimes(model_copy, data)
+            model.params = init_params_from_lifetimes(model, data)
+            likelihood = LikelihoodFromLifetimes(model, data)
 
             try:
-                bounds = params_bounds(model_copy)
+                bounds = params_bounds(model)
             except NotImplemented:
                 bounds = None
 
@@ -196,7 +195,7 @@ def maximum_likelihood_estimation(
                 "callback": kwargs.get("callback", None),
                 "options": kwargs.get("options", None),
                 "bounds": kwargs.get("bounds", bounds),
-                "x0": kwargs.get("x0", model_copy.params),
+                "x0": kwargs.get("x0", model.params),
             }
             optimizer = minimize(
                 likelihood.negative_log,
@@ -207,11 +206,11 @@ def maximum_likelihood_estimation(
 
             # Step 4: Compute parameters variance (Hessian inverse)
             hessian_inverse = np.linalg.inv(likelihood.hessian())
-            model_copy.fitting_results = FittingResults(
+            model.fitting_results = FittingResults(
                 len(data), optimizer, var=hessian_inverse
             )
-            model_copy.params = optimizer.x
-            return model_copy
+            model.params = optimizer.x
+            return model
 
         case NonHomogeneousPoissonProcess():
             model: NonHomogeneousPoissonProcess[

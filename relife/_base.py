@@ -46,7 +46,7 @@ class ParametricModel:
         self.params_tree.all_values = values
 
     @property
-    def params_names(self):
+    def params_names(self) -> tuple[str, ...]:
         """
         Parameters names.
 
@@ -59,7 +59,7 @@ class ParametricModel:
         -----
         Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
-        return self.params_tree.all_keys
+        return tuple(self.params_tree.all_keys)
 
     @property
     def nb_params(self):

@@ -501,13 +501,12 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             entry=entry,
             departure=departure,
         )
-        fitted_model = maximum_likelihood_estimation(
+        maximum_likelihood_estimation(
             self,
             lifetime_data,
             **kwargs,
         )
-        self.params = fitted_model.params
-        return fitted_model
+        return self
 
 
 class CovarEffect(ParametricModel):
@@ -802,13 +801,12 @@ class LifetimeRegression(
         self.covar_effect.set_params(
             **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         )
-        fitted_model = maximum_likelihood_estimation(
+        maximum_likelihood_estimation(
             self,
             lifetime_data,
             **kwargs,
         )
-        self.params = fitted_model.params
-        return fitted_model
+        return self
 
 
 NonParametricEstimation = NewType(
