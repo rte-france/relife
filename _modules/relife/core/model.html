@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=da1e0c12" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=733aff7d" />
   
   <!-- So that users can add custom icons -->
   <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -91,6 +91,9 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content"><em>beta version</em> : the code is still in development (expected release by the end of April 2025). The documentation might not be up-to-date</div>
+</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -119,8 +122,8 @@
       
     
     
-    <img src="../../../_static/pixel_full_logo_clip.png" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/pixel_full_logo_clip.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -143,15 +146,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../api/index.html">
-    API
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
-    User’s guide
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API
   </a>
 </li>
 
@@ -293,15 +296,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../api/index.html">
-    API
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
-    User’s guide
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API
   </a>
 </li>
 
@@ -435,21 +438,23 @@
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">InitVar</span><span class="p">,</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Self</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Protocol</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span><span class="p">,</span> <span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">minimize</span><span class="p">,</span> <span class="n">newton</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeData</span><span class="p">,</span> <span class="n">lifetime_data_factory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.plots</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotConstructor</span><span class="p">,</span> <span class="n">PlotSurvivalFunc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.likelihoods</span><span class="w"> </span><span class="kn">import</span> <span class="n">LikelihoodFromLifetimes</span><span class="p">,</span> <span class="n">hessian_from_likelihood</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.plots</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotSurvivalFunc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.quadratures</span><span class="w"> </span><span class="kn">import</span> <span class="n">gauss_legendre</span><span class="p">,</span> <span class="n">quad_laguerre</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">VariadicArgs</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.likelihoods</span><span class="w"> </span><span class="kn">import</span> <span class="n">LikelihoodFromLifetimes</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.quadratures</span><span class="w"> </span><span class="kn">import</span> <span class="n">gauss_legendre</span><span class="p">,</span> <span class="n">quad_laguerre</span>
 
-
+<div class="viewcode-block" id="Parameters">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.Parameters.html#relife.core.model.Parameters">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Parameters</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tree-structured parameters.</span>
@@ -550,15 +555,20 @@
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">leaves</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
+<div class="viewcode-block" id="Parameters.items_walk">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.Parameters.html#relife.core.model.Parameters.items_walk">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">items_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;parallel walk through key value pairs&quot;&quot;&quot;</span>
         <span class="k">yield</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_node_data</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">leaves</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="k">yield</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">leaf</span><span class="o">.</span><span class="n">items_walk</span><span class="p">()))</span>
+            <span class="k">yield</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">leaf</span><span class="o">.</span><span class="n">items_walk</span><span class="p">()))</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">all_items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items_walk</span><span class="p">())</span>
 
+<div class="viewcode-block" id="Parameters.update_items">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.Parameters.html#relife.core.model.Parameters.update_items">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;parallel iterations : faster than update_value followed by update_keys&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
@@ -567,20 +577,25 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_k</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_v</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="k">pass</span>
+            <span class="k">pass</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
+<div class="viewcode-block" id="Parameters.update">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.Parameters.html#relife.core.model.Parameters.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;update names and values of current and parent nodes&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_items</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_parents</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_parents</span><span class="p">()</span></div>
+</div>
+
 
 
 <div class="viewcode-block" id="ParametricModel">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.ParametricModel.html#relife.core.ParametricModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.ParametricModel.html#relife.core.model.ParametricModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParametricModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class to create a parametric core.</span>
@@ -644,6 +659,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_all_params_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ParametricModel.compose_with">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.ParametricModel.html#relife.core.model.ParametricModel.compose_with">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compose_with</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwcomponents</span><span class="p">:</span> <span class="n">Self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compose with new ``ParametricModel`` instance(s).</span>
 
@@ -676,8 +697,11 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists as leaf function&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">kwcomponents</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">leaves</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">set_leaf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.params&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">_params</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">set_leaf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.params&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">_params</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="ParametricModel.new_params">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.ParametricModel.html#relife.core.model.ParametricModel.new_params">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwparams</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Change local parameters structure.</span>
 
@@ -701,7 +725,8 @@
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">kwparams</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">leaves</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists as function name&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">node_data</span> <span class="o">=</span> <span class="n">kwparams</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">node_data</span> <span class="o">=</span> <span class="n">kwparams</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">class_name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
@@ -726,7 +751,7 @@
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ParametricModel.copy">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.ParametricModel.html#relife.core.ParametricModel.copy">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.ParametricModel.html#relife.core.model.ParametricModel.copy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Copy current instance.</span>
@@ -741,31 +766,52 @@
 
 
 <div class="viewcode-block" id="LifetimeModel">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.LifetimeModel.html#relife.core.LifetimeModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LifetimeModel</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="o">*</span><span class="n">VariadicArgs</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A generic base class for lifetime models.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class to create a lifetime core.</span>
 
-<span class="sd">    This class defines the structure for creating lifetime models. It is s a blueprint</span>
-<span class="sd">    for implementing lifetime models parametrized by a variadic set of arguments.</span>
-<span class="sd">    It provides the framework for implementing hazard functions (``hf``), cumulative hazard functions (``chf``),</span>
-<span class="sd">    probability density function (``pdf``) and survival function (``sf``).</span>
-<span class="sd">    Other functions are implemented by default but can be overridden by derived classes.</span>
-
-<span class="sd">    Methods:</span>
-<span class="sd">        hf: Abstract method to compute the hazard function.</span>
-<span class="sd">        chf: Abstract method to compute the cumulative hazard function.</span>
-<span class="sd">        sf: Abstract method to compute the survival function.</span>
-<span class="sd">        pdf: Abstract method to compute the probability density function.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        NotImplementedError: Raised when an abstract method or feature in this</span>
-<span class="sd">        class has not been implemented in a derived class.</span>
+<span class="sd">    A lifetime core is an object that can answer to traditional lifetime probability</span>
+<span class="sd">    functions (``sf``, ``hf`` etc.) and other common probabilitu functions (``pdf``,</span>
+<span class="sd">    ``cdf``, etc.).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># def __init_subclass__(cls, **kwargs):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     TODO : something to parse *args names and to fill args_names and nb_args</span>
+    <span class="c1">#     see Descriptors</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1"># @property</span>
+    <span class="c1"># def args_names(self):</span>
+    <span class="c1">#     return self._args.names</span>
+    <span class="c1">#</span>
+    <span class="c1"># @property</span>
+    <span class="c1"># def nb_args(self):</span>
+    <span class="c1">#     return len(self._args)</span>
+
+<div class="viewcode-block" id="LifetimeModel.hf">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.hf">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hazard function.</span>
+
+<span class="sd">        The hazard function of the distribution</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">            Elapsed time.</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            Hazard values at each given time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pdf&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;sf&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;sf&quot;</span><span class="p">):</span>
@@ -781,12 +827,29 @@
             <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> must implement concrete hf function</span>
 <span class="s2">            &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="LifetimeModel.chf">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.chf">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cumulative hazard function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">            Elapsed time.</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            Cumulative hazard values at each given time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;sf&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pdf&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;hf&quot;</span><span class="p">):</span>
@@ -802,12 +865,28 @@
             <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> must implement concrete chf or at least concrete hf function</span>
 <span class="s2">        &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="LifetimeModel.sf">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.sf">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Survival function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">            Elapsed time.</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            Survival function values at each given time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;chf&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
                 <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span>
@@ -823,12 +902,28 @@
             <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> must implement concrete sf function</span>
 <span class="s2">        &quot;&quot;&quot;</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="LifetimeModel.pdf">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.pdf">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">pdf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Probability density function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">            Elapsed time.</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            The probability density function evaluated at each given time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -837,19 +932,63 @@
                 <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> must implement pdf or the above functions</span>
 <span class="s2">            &quot;&quot;&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span></div>
 
+
+<div class="viewcode-block" id="LifetimeModel.mrl">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.mrl">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">mrl</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mean residual life.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">            Elapsed time.</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            Mean residual life values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">sf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="n">ls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">-</span> <span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">sf</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># 2d to 1d or 0d</span>
             <span class="n">ls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">ls</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ls</span> <span class="o">/</span> <span class="n">sf</span>
+        <span class="k">return</span> <span class="n">ls</span> <span class="o">/</span> <span class="n">sf</span></div>
+
+
+        <span class="c1"># masked_time: ma.MaskedArray = ma.MaskedArray(</span>
+        <span class="c1">#     time, time &gt;= self.support_upper_bound</span>
+        <span class="c1"># )</span>
+        <span class="c1"># upper_bound = np.broadcast_to(</span>
+        <span class="c1">#     np.asarray(self.isf(np.array(1e-4), *args)),</span>
+        <span class="c1">#     time.shape,</span>
+        <span class="c1"># )</span>
+        <span class="c1"># masked_upper_bound: ma.MaskedArray = ma.MaskedArray(</span>
+        <span class="c1">#     upper_bound, time &gt;= self.support_upper_bound</span>
+        <span class="c1"># )</span>
+        <span class="c1">#</span>
+        <span class="c1"># def integrand(x):</span>
+        <span class="c1">#     return (x - masked_time) * self.pdf(x, *args)</span>
+        <span class="c1">#</span>
+        <span class="c1"># integration = gauss_legendre(</span>
+        <span class="c1">#     integrand,</span>
+        <span class="c1">#     masked_time,</span>
+        <span class="c1">#     masked_upper_bound,</span>
+        <span class="c1">#     ndim=2,</span>
+        <span class="c1"># ) + quad_laguerre(</span>
+        <span class="c1">#     integrand,</span>
+        <span class="c1">#     masked_upper_bound,</span>
+        <span class="c1">#     ndim=2,</span>
+        <span class="c1"># )</span>
+        <span class="c1"># mrl_values = integration / self.sf(masked_time, *args)</span>
+        <span class="c1"># return np.squeeze(ma.filled(mrl_values, 0.0))</span>
 
 <div class="viewcode-block" id="LifetimeModel.moment">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.LifetimeModel.html#relife.core.LifetimeModel.moment">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.moment">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;n-th order moment</span>
 
@@ -891,14 +1030,42 @@
         <span class="c1">#     + quad_laguerre(integrand, upper_bound, ndim=2)</span>
         <span class="c1"># )</span>
 
+<div class="viewcode-block" id="LifetimeModel.mean">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.mean">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mean.</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (0,)</span>
+<span class="sd">            Mean value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LifetimeModel.var">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.var">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Variance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (0,)</span>
+<span class="sd">            Variance value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
+
 
 <div class="viewcode-block" id="LifetimeModel.isf">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.LifetimeModel.html#relife.core.LifetimeModel.isf">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.isf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">isf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">probability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -919,27 +1086,56 @@
         <span class="k">return</span> <span class="n">newton</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="n">probability</span><span class="p">,</span>
             <span class="n">x0</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">probability</span><span class="p">),</span>
-            <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="LifetimeModel.ichf">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.ichf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cumulative_hazard_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inverse cumulative hazard function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Cumulative hazard rate : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            Inverse cumulative hazard values, i.e. time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">newton</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="n">cumulative_hazard_rate</span><span class="p">,</span>
             <span class="n">x0</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="LifetimeModel.cdf">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.cdf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cumulative distribution function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            Cumulative distribution function values at each given time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="LifetimeModel.rvs">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.LifetimeModel.html#relife.core.LifetimeModel.rvs">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.rvs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -963,16 +1159,45 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="LifetimeModel.ppf">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.ppf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ppf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">probability</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Percent point function.</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        probability : float or ndarray, shape (n, ) or (m, n)</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (), (n, ) or (m, n)</span>
+<span class="sd">            Quantile corresponding to probability.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">probability</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LifetimeModel.median">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.median">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Median</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : variadic arguments required by the function</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray of shape (0,)</span>
+<span class="sd">            Median value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="LifetimeModel.ls_integrate">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.LifetimeModel.html#relife.core.LifetimeModel.ls_integrate">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel.ls_integrate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ls_integrate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
@@ -1066,7 +1291,7 @@
         <span class="c1">#         raise ValueError(&quot;broadcast_to shape value is incompatible&quot;)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlotConstructor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlotSurvivalFunc</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">PlotSurvivalFunc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
@@ -1140,8 +1365,28 @@
 
 
 <div class="viewcode-block" id="ParametricLifetimeModel">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.ParametricLifetimeModel.html#relife.core.ParametricLifetimeModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.ParametricLifetimeModel.html#relife.core.model.ParametricLifetimeModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParametricLifetimeModel</span><span class="p">(</span><span class="n">LifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">VariadicArgs</span><span class="p">],</span> <span class="n">ParametricModel</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class to create a parametric lifetime core</span>
+
+<span class="sd">    A parametric lifetime core is an ``LifetimeModel`` having parameters that can</span>
+<span class="sd">    be estimated, i.e. it has a `fit` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># def __init_subclass__(cls, **kwargs):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     TODO : something to parse *args names and to fill args_names and nb_args</span>
+    <span class="c1">#     see Descriptors</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1"># @property</span>
+    <span class="c1"># def args_names(self):</span>
+    <span class="c1">#     return self._args.names</span>
+    <span class="c1">#</span>
+    <span class="c1"># @property</span>
+    <span class="c1"># def nb_args(self):</span>
+    <span class="c1">#     return len(self._args)</span>
 
     <span class="n">fitting_results</span><span class="p">:</span> <span class="n">FittingResults</span> <span class="o">|</span> <span class="kc">None</span>
 
@@ -1152,23 +1397,37 @@
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">params_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parameter bounds.</span>
-
-<span class="sd">        Parameters bounds are given for the optimization algorithm used to estimate the parameters.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bounds of the parameters</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        scipy.optimize.Bounds</span>
-<span class="sd">            Scipy Bounds object.</span>
+<span class="sd">        Bounds</span>
+<span class="sd">            The lower and upper bounds for the parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="ParametricLifetimeModel.init_params">
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.ParametricLifetimeModel.html#relife.core.model.ParametricLifetimeModel.init_params">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">init_params</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_data</span><span class="p">:</span> <span class="n">LifetimeData</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_data</span><span class="p">:</span> <span class="n">LifetimeData</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">VariadicArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialization of the parameters</span>
+
+<span class="sd">        Initialize parameters values with respect to lifetime data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lifetime_data : LifetimeData object</span>
+<span class="sd">            lalal.</span>
+<span class="sd">        args : tuple of numpy arrays</span>
+<span class="sd">            lala.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_hess_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;cs&quot;</span>
 
 <div class="viewcode-block" id="ParametricLifetimeModel.fit">
-<a class="viewcode-back" href="../../../api/base_models/relife.core.ParametricLifetimeModel.html#relife.core.ParametricLifetimeModel.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/base_class/relife.core.model.ParametricLifetimeModel.html#relife.core.model.ParametricLifetimeModel.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -1176,50 +1435,50 @@
         <span class="n">entry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="o">*</span><span class="n">VariadicArgs</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Estimates model parameters with respect to lifetime data.</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Self</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimation of lifetime core parameters with respect to lifetime data.</span>
+
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        time : np.ndarray</span>
-<span class="sd">            Observed lifetime values. Dimensions can be either ``1d`` or ``2d`` :</span>
-
-<span class="sd">            - ``1d`` : ``(n_samples,)`` shape that provides complete lifetime observations and right censoring.</span>
-<span class="sd">            - ``2d`` : ``(n_samples, 2)`` shape that provides complete lifetime observations, right censoring, left censoring and interval censoring.</span>
-
-<span class="sd">        event : np.ndarray, default is None</span>
-<span class="sd">            Booleans that indicated if lifetime values are right censored. Shape must be ``(n_samples,)`` and</span>
-<span class="sd">            is only valid if ``time`` is ``1d``.  By default, all lifetimes are assumed to be complete.</span>
-<span class="sd">        entry : np.ndarray, default is None</span>
-<span class="sd">            Left truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``.</span>
-<span class="sd">        departure : np.ndarray, default is None</span>
-<span class="sd">            Right truncations values. Shape is always ``(n_samples,)`` for ``1d`` and ``2d-time``</span>
-<span class="sd">        model_args : tuple of np.ndarray, default is None</span>
-<span class="sd">            Any other variable values needed to compute model&#39;s functions. Those variables must be</span>
-<span class="sd">            broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.</span>
+<span class="sd">        time : ndarray (1d or 2d)</span>
+<span class="sd">            Observed lifetime values.</span>
+<span class="sd">        event : ndarray of boolean values (1d), default is None</span>
+<span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
+<span class="sd">        entry : ndarray of float (1d), default is None</span>
+<span class="sd">            Left truncations applied to lifetime values.</span>
+<span class="sd">        departure : ndarray of float (1d), default is None</span>
+<span class="sd">            Right truncations applied to lifetime values.</span>
+<span class="sd">        model_args : tuple of ndarray, default is None</span>
+<span class="sd">            Other arguments needed by the lifetime core.</span>
+<span class="sd">        inplace : boolean, default is True</span>
+<span class="sd">            If true, parameters of the lifetime core will be replaced by estimated parameters.</span>
 <span class="sd">        **kwargs</span>
-<span class="sd">            Other arguments used by the optimizer.</span>
-<span class="sd">            See `scipy.optimize.mininize &lt;https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html&gt;`_.</span>
-<span class="sd">            Default values are:</span>
-
-<span class="sd">            - ``method`` : ``&quot;L-BFGS-B&quot;``</span>
-<span class="sd">            - ``contraints`` : ``()``</span>
-<span class="sd">            - ``tol`` : ``None``</span>
-<span class="sd">            - ``callback`` : ``None``</span>
-<span class="sd">            - ``options`` : ``None``</span>
-<span class="sd">            - ``bounds`` : ``self.params_bounds``</span>
-<span class="sd">            - ``x0`` : ``self.init_params``</span>
+<span class="sd">            Extra arguments used by `scipy.minimize`. Default values are:</span>
+<span class="sd">                - `method` : `&quot;L-BFGS-B&quot;`</span>
+<span class="sd">                - `contraints` : `()`</span>
+<span class="sd">                - `tol` : `None`</span>
+<span class="sd">                - `callback` : `None`</span>
+<span class="sd">                - `options` : `None`</span>
+<span class="sd">                - `bounds` : `self.params_bounds`</span>
+<span class="sd">                - `x0` : `self.init_params`</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Self</span>
-<span class="sd">            Same instance with optimized parameters.</span>
+<span class="sd">        ndarray of float</span>
+<span class="sd">            Estimated parameters.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced</span>
+<span class="sd">        format that allows to pass other information as left-censored or interval-censored values. In this case,</span>
+<span class="sd">        `event` is not needed as 2d-array encodes right-censored values by itself.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># Step 1: Prepare lifetime data</span>
         <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">lifetime_data_factory</span><span class="p">(</span>
             <span class="n">time</span><span class="p">,</span>
             <span class="n">event</span><span class="p">,</span>
@@ -1227,14 +1486,14 @@
             <span class="n">departure</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># Step 2: Initialize the model and likelihood</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span><span class="p">(</span><span class="n">lifetime_data</span><span class="p">,</span> <span class="o">*</span><span class="n">model_args</span><span class="p">)</span>
         <span class="n">optimized_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">optimized_model</span><span class="o">.</span><span class="n">init_params</span><span class="p">(</span><span class="n">lifetime_data</span><span class="p">,</span> <span class="o">*</span><span class="n">model_args</span><span class="p">)</span>
+        <span class="c1"># or just optimized_model.init_params(observed_lifetimes, *model_args)</span>
+
         <span class="n">likelihood</span> <span class="o">=</span> <span class="n">LikelihoodFromLifetimes</span><span class="p">(</span>
             <span class="n">optimized_model</span><span class="p">,</span> <span class="n">lifetime_data</span><span class="p">,</span> <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span>
         <span class="p">)</span>
 
-        <span class="c1"># Step 3: Configure and run the optimizer</span>
         <span class="n">minimize_kwargs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">),</span>
             <span class="s2">&quot;constraints&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;constraints&quot;</span><span class="p">,</span> <span class="p">()),</span>
@@ -1244,6 +1503,7 @@
             <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bounds&quot;</span><span class="p">,</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">params_bounds</span><span class="p">),</span>
             <span class="s2">&quot;x0&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x0&quot;</span><span class="p">,</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">params</span><span class="p">),</span>
         <span class="p">}</span>
+
         <span class="n">optimizer</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
             <span class="n">likelihood</span><span class="o">.</span><span class="n">negative_log</span><span class="p">,</span>
             <span class="n">minimize_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;x0&quot;</span><span class="p">),</span>
@@ -1251,33 +1511,34 @@
             <span class="o">**</span><span class="n">minimize_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">optimized_model</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">x</span>
-
-        <span class="c1"># Step 4: Compute parameters variance (Hessian inverse)</span>
-        <span class="n">hessian_inverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">likelihood</span><span class="o">.</span><span class="n">hessian</span><span class="p">())</span>
-
-        <span class="c1"># Step 5: Update model state and return</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">x</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">FittingResults</span><span class="p">(</span>
-            <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="p">),</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">hessian_inverse</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span>
+            <span class="n">hessian_from_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_hess_scheme</span><span class="p">)(</span><span class="n">likelihood</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
+
+        <span class="n">optimized_model</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">FittingResults</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="p">),</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">var</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span><span class="p">(</span><span class="n">lifetime_data</span><span class="p">,</span> <span class="o">*</span><span class="n">model_args</span><span class="p">)</span>
+            <span class="c1"># or just self.init_params(observed_lifetimes, *model_args)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">params</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">FittingResults</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="p">),</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">optimized_model</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            ValueError: If any of the attributes in `params` is set to None when trying to</span>
-<span class="sd">            access the attribute.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;control if params are set&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="p">(</span>
             <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">LifetimeModel</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
         <span class="p">):</span>
-            <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_params_set</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Can&#39;t call </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2"> if one param is None. Got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="si">}</span><span class="s2"> as params&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Can&#39;t call </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2"> if one core params is not set. Instanciate fully parametrized core or fit it&quot;</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
 
@@ -1338,6 +1599,18 @@
         <span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">estimated</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">return</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> instance has not been fitted yet, call fit first&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">NonParametricModel</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Non-parametric lifetime estimator.</span>
@@ -1351,6 +1624,7 @@
     <span class="n">estimates</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Estimates</span><span class="p">]]</span>
 
     <span class="nd">@property</span>
+    <span class="nd">@estimated</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">PlotSurvivalFunc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 </pre></div>

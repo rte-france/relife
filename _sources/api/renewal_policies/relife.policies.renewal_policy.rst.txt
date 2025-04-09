@@ -1,6 +1,0 @@
-﻿relife.policies.renewal\_policy
-===============================
-
-.. currentmodule:: relife.policies
-
-.. autofunction:: renewal_policy

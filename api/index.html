@@ -33,7 +33,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=da1e0c12" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=733aff7d" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -54,8 +54,8 @@
     <script src="../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="User API" href="user_api.html" />
-    <link rel="prev" title="First example" href="../get_started/get_started_example.html" />
+    <link rel="next" title="Exponential" href="lifetime_models/relife.models.Exponential.html" />
+    <link rel="prev" title="5. Renewal theory" href="../user_guide/demo_renewal_theory.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -96,6 +96,9 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content"><em>beta version</em> : the code is still in development (expected release by the end of April 2025). The documentation might not be up-to-date</div>
+</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -124,8 +127,8 @@
       
     
     
-    <img src="../_static/pixel_full_logo_clip.png" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../_static/pixel_full_logo_clip.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -147,16 +150,16 @@
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    API
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user_guide/index.html">
-    User’s guide
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API
   </a>
 </li>
 
@@ -299,16 +302,16 @@
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    API
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User’s guide
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user_guide/index.html">
-    User’s guide
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API
   </a>
 </li>
 
@@ -388,38 +391,46 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="user_api.html">User API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.Exponential.html">Exponential</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.Weibull.html">Weibull</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.Gompertz.html">Gompertz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.Gamma.html">Gamma</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.LogLogistic.html">LogLogistic</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.ProportionalHazard.html">ProportionalHazard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parametric_lifetime_models/relife.models.AFT.html">AFT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nested_models/relife.models.AgeReplacementModel.html">AgeReplacementModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nested_models/relife.models.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nested_models/relife.models.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.ECDF.html">ECDF</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nonparametric_models/relife.models.Turnbull.html">Turnbull</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parametric_models/relife.models.regression.CovarEffect.html">CovarEffect</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stochastic_process/relife.process.renewal_process.html">relife.process.renewal_process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stochastic_process/relife.process.poisson_process.html">relife.process.poisson_process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="renewal_policies/relife.policies.renewal_policy.html">relife.policies.renewal_policy</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="lifetime_models/relife.models.Exponential.html">Exponential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_models/relife.models.Weibull.html">Weibull</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_models/relife.models.Gompertz.html">Gompertz</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_models/relife.models.Gamma.html">Gamma</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_models/relife.models.LogLogistic.html">LogLogistic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_models/relife.models.ProportionalHazard.html">ProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_models/relife.models.AFT.html">AFT</a></li>
 </ul>
-</details></li>
-<li class="toctree-l1"><a class="reference internal" href="data_module.html">Data management</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasets_module.html">Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generator_module.html">Generators</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="core_module.html">Core features (subsystems)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="likelihoods/relife.core.LikelihoodFromLifetimes.html">LikelihoodFromLifetimes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="base_models/relife.core.ParametricModel.html">ParametricModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="base_models/relife.core.LifetimeModel.html">LifetimeModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="base_models/relife.core.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Non-parametric lifetime estimators</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="nonparametric/relife.models.ECDF.html">ECDF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonparametric/relife.models.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonparametric/relife.models.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonparametric/relife.models.Turnbull.html">Turnbull</a></li>
 </ul>
-</details></li>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Renewal policies</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="renewal_policy/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="renewal_policy/relife.policies.OneCycleRunToFailure.html">OneCycleRunToFailure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="renewal_policy/relife.policies.RunToFailure.html">RunToFailure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="renewal_policy/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="likelihood/relife.core.likelihoods.LikelihoodFromLifetimes.html">LikelihoodFromLifetimes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Nested models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="nested_models/relife.core.nested_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nested_models/relife.core.nested_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nested_models/relife.core.nested_model.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Base class</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="base_class/relife.core.model.Parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_class/relife.core.model.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_class/relife.core.model.LifetimeModel.html">LifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_class/relife.core.model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -479,18 +490,136 @@
                   
   <section id="api">
 <h1>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h1>
-<p>This section provides comprehensive details about the exposed ReLife API.
-It includes information about various object interfaces, such as the number of parameters required by functions, their types, and other essential details.</p>
-<p>ReLife is structured into different modules, each with a clear and specific role. We divided the API documentation close to the same logic:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="user_api.html">User API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_module.html">Data management</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasets_module.html">Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generator_module.html">Generators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="core_module.html">Core features (subsystems)</a></li>
-</ul>
+<p>The content of the exposed ReLife API. It is where one can find details about object interfaces (how many parameters
+are needeed by a function, what are their types, etc.).</p>
+<section id="usual-api">
+<h2>Usual API<a class="headerlink" href="#usual-api" title="Link to this heading">#</a></h2>
+<p class="rubric">Lifetime models</p>
+<p>Lifetime models are objects whose exposed interface can answer basic probility functions of the survival analysis. In
+object-oriented programming, one must not see them as a group of probability functions solely : it also encapsulates
+data like parameters, other nested models, etc.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_models/relife.models.Exponential.html#relife.models.Exponential" title="relife.models.Exponential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.Exponential</span></code></a></p></td>
+<td><p>Exponential lifetime distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_models/relife.models.Weibull.html#relife.models.Weibull" title="relife.models.Weibull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.Weibull</span></code></a></p></td>
+<td><p>Weibull lifetime distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_models/relife.models.Gompertz.html#relife.models.Gompertz" title="relife.models.Gompertz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.Gompertz</span></code></a></p></td>
+<td><p>Gompertz lifetime distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_models/relife.models.Gamma.html#relife.models.Gamma" title="relife.models.Gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.Gamma</span></code></a></p></td>
+<td><p>Gamma lifetime distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_models/relife.models.LogLogistic.html#relife.models.LogLogistic" title="relife.models.LogLogistic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.LogLogistic</span></code></a></p></td>
+<td><p>Log-logistic probability distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_models/relife.models.ProportionalHazard.html#relife.models.ProportionalHazard" title="relife.models.ProportionalHazard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.ProportionalHazard</span></code></a></p></td>
+<td><p>Proportional Hazard regression core.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_models/relife.models.AFT.html#relife.models.AFT" title="relife.models.AFT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.AFT</span></code></a></p></td>
+<td><p>Accelerated failure time regression.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
+<p class="rubric">Non-parametric lifetime estimators</p>
+<p>Non-parametric lifetime estimators are objects used to compute well-knowns non-parametric estimations of some
+probability functions. Their exposed interface follows the same logic of lifetime models except that they do not store
+parameters but estimations of functions values.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="nonparametric/relife.models.ECDF.html#relife.models.ECDF" title="relife.models.ECDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.ECDF</span></code></a></p></td>
+<td><p>Empirical Cumulative Distribution Function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="nonparametric/relife.models.KaplanMeier.html#relife.models.KaplanMeier" title="relife.models.KaplanMeier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.KaplanMeier</span></code></a></p></td>
+<td><p>Kaplan-Meier estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="nonparametric/relife.models.NelsonAalen.html#relife.models.NelsonAalen" title="relife.models.NelsonAalen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.NelsonAalen</span></code></a></p></td>
+<td><p>Nelson-Aalen estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="nonparametric/relife.models.Turnbull.html#relife.models.Turnbull" title="relife.models.Turnbull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">models.Turnbull</span></code></a></p></td>
+<td><p>Turnbull estimator</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Renewal policies</p>
+<p>Renewal policies are objects that are generally composed of one underlying renewal process and one or more lifetime
+model. Their interfaces expose a bunch of statiscal properties like expections and a sample procedure to generate
+data.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="renewal_policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy" title="relife.policies.OneCycleAgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.OneCycleAgeReplacementPolicy</span></code></a></p></td>
+<td><p>One-cyle age replacement policy.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="renewal_policy/relife.policies.OneCycleRunToFailure.html#relife.policies.OneCycleRunToFailure" title="relife.policies.OneCycleRunToFailure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.OneCycleRunToFailure</span></code></a></p></td>
+<td><p>One cyle run-to-failure policy</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="renewal_policy/relife.policies.RunToFailure.html#relife.policies.RunToFailure" title="relife.policies.RunToFailure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.RunToFailure</span></code></a></p></td>
+<td><p>Run-to-failure renewal policy.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="renewal_policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy" title="relife.policies.AgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">policies.AgeReplacementPolicy</span></code></a></p></td>
+<td><p>Time based replacement policy.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="core-objects">
+<h2>Core objects<a class="headerlink" href="#core-objects" title="Link to this heading">#</a></h2>
+<p class="rubric">Likelihoods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="likelihood/relife.core.likelihoods.LikelihoodFromLifetimes.html#relife.core.likelihoods.LikelihoodFromLifetimes" title="relife.core.likelihoods.LikelihoodFromLifetimes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.likelihoods.LikelihoodFromLifetimes</span></code></a></p></td>
+<td><p>Generic likelihood object for parametric lifetime models</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Nested models</p>
+<p>A nested model is basically a <cite>LifetimeModel</cite> object that wraps another <cite>LifetimeModel</cite> object set as a baseline.
+Those models mainly deserves to some functionnalities in <cite>Policy</cite> object but advanced users can clearly use them for a
+specific purpose. For instance <cite>LeftTruncatedModel</cite> wraps a baseline model by overriding some of its probibability function
+in order to take into account the time condition imposed by a left trunctation <cite>a0</cite>.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="nested_models/relife.core.nested_model.AgeReplacementModel.html#relife.core.nested_model.AgeReplacementModel" title="relife.core.nested_model.AgeReplacementModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.nested_model.AgeReplacementModel</span></code></a></p></td>
+<td><p>Age replacement core.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="nested_models/relife.core.nested_model.LeftTruncatedModel.html#relife.core.nested_model.LeftTruncatedModel" title="relife.core.nested_model.LeftTruncatedModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.nested_model.LeftTruncatedModel</span></code></a></p></td>
+<td><p>Left truncated core.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="nested_models/relife.core.nested_model.EquilibriumDistribution.html#relife.core.nested_model.EquilibriumDistribution" title="relife.core.nested_model.EquilibriumDistribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.nested_model.EquilibriumDistribution</span></code></a></p></td>
+<td><p>Equilibrium distribution.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Base model</p>
+<p>What we call <cite>base model</cite> are objects (in Python class are objects) used at the core of ReLife subsystems.
+For beginners, it is not necessary to know them. If you start to inspect ReLife code, you will encounter them regularly
+in inheritance hierarchy. In fact, most objects created for fiability theory inherits from one of those objects. One can
+think of them as <cite>engines</cite> that empower objects with special functionalities to make ReLife model creation easier.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="base_class/relife.core.model.Parameters.html#relife.core.model.Parameters" title="relife.core.model.Parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.model.Parameters</span></code></a></p></td>
+<td><p>Tree-structured parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="base_class/relife.core.model.ParametricModel.html#relife.core.model.ParametricModel" title="relife.core.model.ParametricModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.model.ParametricModel</span></code></a></p></td>
+<td><p>Base class to create a parametric core.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="base_class/relife.core.model.LifetimeModel.html#relife.core.model.LifetimeModel" title="relife.core.model.LifetimeModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.model.LifetimeModel</span></code></a></p></td>
+<td><p>Base class to create a lifetime core.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="base_class/relife.core.model.ParametricLifetimeModel.html#relife.core.model.ParametricLifetimeModel" title="relife.core.model.ParametricLifetimeModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core.model.ParametricLifetimeModel</span></code></a></p></td>
+<td><p>Base class to create a parametric lifetime core</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 </section>
 
 
@@ -507,6 +636,23 @@ It includes information about various object interfaces, such as the number of p
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usual-api">Usual API</a><ul class="nav section-nav flex-column">
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#core-objects">Core objects</a><ul class="nav section-nav flex-column">
+</ul>
+</li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">

@@ -1,6 +1,7 @@
 :html_theme.sidebar_secondary.remove: true
 
-.. image:: ./_static/pixel_full_logo_clip.png
+ReLife
+======
 
 .. grid:: 3
 
@@ -64,13 +65,14 @@
     :maxdepth: 2
     :hidden:
 
-    api/index
+    user_guide/index
+
 
 .. toctree::
     :maxdepth: 2
     :hidden:
 
-    user_guide/index
+    api/index
 
 .. toctree::
     :maxdepth: 2
@@ -78,17 +80,20 @@
 
     learn/index
 
+
 .. toctree::
     :maxdepth: 2
     :hidden:
 
     contributor_guide/index
 
+
 .. toctree::
     :hidden:
     :maxdepth: 2
 
     future/index
+
 
 .. rubric:: Supported by
 

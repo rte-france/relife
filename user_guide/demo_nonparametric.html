@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=da1e0c12" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=733aff7d" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -97,6 +97,9 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content"><em>beta version</em> : the code is still in development (expected release by the end of April 2025). The documentation might not be up-to-date</div>
+</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -125,8 +128,8 @@
       
     
     
-    <img src="../_static/pixel_full_logo_clip.png" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../_static/pixel_full_logo_clip.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
   
 </a></div>
@@ -148,16 +151,16 @@
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
-    API
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User’s guide
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="index.html">
-    User’s guide
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API
   </a>
 </li>
 
@@ -300,16 +303,16 @@
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
-    API
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User’s guide
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="index.html">
-    User’s guide
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API
   </a>
 </li>
 
@@ -507,7 +510,7 @@
 <img alt="../_images/user_guide_demo_nonparametric_5_1.png" src="../_images/user_guide_demo_nonparametric_5_1.png" />
 </div>
 </div>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
@@ -515,38 +518,6 @@
 <span class="n">gompertz</span> <span class="o">=</span> <span class="n">Gompertz</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[0.01552913 0.11288209]
-[1.e-15 1.e-15]
-[0.00712812 0.05181466]
-[0.00779472 0.05269408]
-[0.01017636 0.0582193 ]
-[0.01013678 0.0586174 ]
-[0.00987998 0.05933774]
-[0.00822896 0.06302625]
-[0.0016249  0.07778027]
-[0.00628091 0.06737834]
-[0.00453933 0.07126918]
-[0.00548846 0.06914875]
-[0.00428593 0.07216957]
-[0.00527678 0.06968049]
-[0.00493356 0.0710481 ]
-[0.00432953 0.07376959]
-[0.00401612 0.07515613]
-[0.00397142 0.07570882]
-[0.00399657 0.07539786]
-[0.00390302 0.07581034]
-[0.00390853 0.07579229]
-[0.00390781 0.07579546]
-[0.00390781+1.e-06j 0.07579546+0.e+00j]
-[0.00390781+1.e-06j 0.07579546+0.e+00j]
-[0.00390781+0.e+00j 0.07579546+1.e-06j]
-</pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
