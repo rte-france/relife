@@ -9,6 +9,7 @@ from typing_extensions import override
 from relife.quadratures import gauss_legendre, shifted_laguerre
 
 from ._base import LifetimeDistribution, ParametricLifetimeModel
+from .._args import get_nb_assets
 
 
 class Exponential(LifetimeDistribution):
@@ -310,15 +311,12 @@ class Gamma(LifetimeDistribution):
         super().__init__()
         self.set_params(shape=shape, rate=rate)
 
-    def _uppergamma(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def _uppergamma(self, x: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return gammaincc(self.shape, x) * gamma(self.shape)
 
-    def _jac_uppergamma_shape(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
-        return shifted_laguerre(
-            lambda s: np.log(s) * s ** (self.shape - 1),
-            x,
-            ndim=np.ndim(x),
-        )
+    def _jac_uppergamma_shape(self, x: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        x = np.asarray(x)
+        return shifted_laguerre(lambda s: np.log(s) * s ** (self.shape - 1), x, ndim=np.ndim(x))
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
@@ -520,17 +518,9 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
     def cdf(
         self, time: float | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
-        args_2d = np.atleast_2d(*args)
-        time_2d = np.atleast_2d(time)
-        if isinstance(args_2d, np.ndarray):
-            args_2d = (args_2d,)
-        res = gauss_legendre(
-            self.baseline.sf, 0, time_2d, *args_2d, ndim=2
-        ) / self.baseline.mean(*args_2d)
-        # reshape 2d -> final_dim
-        ndim = max(map(np.ndim, (time, *args)), default=0)
-        if ndim < 2:
-            res = np.squeeze(res)
+        frozen_model = self.baseline.freeze(*args)
+        time = np.asarray(time).reshape(-1, 1)
+        res = gauss_legendre(frozen_model.sf, 0, time, ndim=frozen_model.ndim) / frozen_model.mean()
         return res
 
     def pdf(

@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.quadratures import gauss_legendre
+from relife.quadratures import gauss_legendre, ls_integrate
 
 from ._base import ParametricLifetimeModel
 from .frozen_model import FrozenParametricLifetimeModel
@@ -159,29 +159,17 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     @override
     def ls_integrate(
         self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: NDArray[np.float64],
-        b: NDArray[np.float64],
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
         ar: float | NDArray[np.float64],
         *args: *Args,
         ndim: int = 0,
         deg: int = 100,
     ) -> NDArray[np.float64]:
+        frozen_model = self.freeze(ar, *args)
+        return ls_integrate(frozen_model, func, a, b, deg=deg)
 
-        ub = np.minimum(np.inf, ar)
-        b = np.minimum(ub, b)
-        a, b = np.atleast_2d(*np.broadcast_arrays(a, b))
-        args_2d = np.atleast_2d(*args)
-        if isinstance(args_2d, np.ndarray):
-            args_2d = (args_2d,)
-
-        def integrand(
-            x: NDArray[np.float64], *_: *tuple[NDArray[np.float64], ...]
-        ) -> NDArray[np.float64]:
-            return np.atleast_2d(func(x) * self.baseline.pdf(x, *_))
-
-        w = np.where(b == ar, func(ar) * self.baseline.sf(ar, *args_2d), 0)
-        return gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg) + w
 
     @override
     def freeze(

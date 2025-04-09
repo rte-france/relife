@@ -7,6 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife import FrozenParametricModel
+from relife.quadratures import ls_integrate
 
 if TYPE_CHECKING:
     from relife.lifetime_model._base import ParametricLifetimeModel
@@ -101,4 +102,4 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
-        return self.model.ls_integrate(func, a, b, *self.args, deg=deg)
+        return ls_integrate(self, func, a, b, deg=deg)

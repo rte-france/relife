@@ -18,11 +18,11 @@ from scipy.optimize import newton
 from typing_extensions import override
 
 from relife import ParametricModel
-from relife._plots import PlotSurvivalFunc
 from relife.data import lifetime_data_factory
+from relife._plots import PlotSurvivalFunc
 from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
-from relife.quadratures import gauss_legendre, quad_laguerre
+from relife.quadratures import ls_integrate
 
 from .frozen_model import FrozenParametricLifetimeModel
 
@@ -218,7 +218,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
-        *args: *Args,
+        *args : *Args,
         deg: int = 100,
     ) -> NDArray[np.float64]:
         r"""
@@ -247,9 +247,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         a : ndarray (max dim of 2)
             Lower bound(s) of integration.
         b : ndarray (max dim of 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.
-        *args : ndarray (max dim of 2)
-            Other arguments needed by the lifetime core (eg. covariates)
+            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
         deg : int, default 100
             Degree of the polynomials interpolation
 
@@ -268,41 +266,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
 
         """
-
-        b = np.minimum(np.inf, b)
-        a, b = np.atleast_2d(*np.broadcast_arrays(a, b))
-        args_2d = np.atleast_2d(*args)  # type: ignore # Ts can't be bounded with current TypeVarTuple
-        if isinstance(args_2d, np.ndarray):
-            args_2d = (args_2d,)
-
-        def integrand(x: NDArray[np.float64], *_: *Args) -> NDArray[np.float64]:
-            return np.atleast_2d(func(x) * self.pdf(x, *_))
-
-        if np.all(np.isinf(b)):
-            b = np.atleast_2d(self.isf(np.array(1e-4), *args_2d))
-            integration = gauss_legendre(
-                integrand, a, b, *args_2d, ndim=2, deg=deg
-            ) + quad_laguerre(integrand, b, *args_2d, ndim=2, deg=deg)
-        else:
-            integration = gauss_legendre(integrand, a, b, *args_2d, ndim=2, deg=deg)
-
-        # if ndim is not None:
-        #     if ndim > 2:
-        #         raise ValueError("ndim can't be greater than 2")
-        #     try:
-        #         integration = np.reshape(
-        #             integration, (-1,) + (1,) * (ndim - 1) if ndim > 0 else ()
-        #         )
-        #     except ValueError:
-        #         raise ValueError("incompatible ndim value")
-
-        return integration
-
-        # if broadcast_to is not None:
-        #     try:
-        #         integration = np.broadcast_to(np.squeeze(integration), broadcast_to)
-        #     except ValueError:
-        #         raise ValueError("broadcast_to shape value is incompatible")
+        frozen_model = self.freeze(self, *args)
+        return ls_integrate(frozen_model, func, a, b, deg=deg)
 
     def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         """n-th order moment

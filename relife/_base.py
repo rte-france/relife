@@ -313,3 +313,7 @@ class FrozenParametricModel(ParametricModel):
     @property
     def args(self) -> tuple[float | NDArray[np.float64], ...]:
         return tuple(self.kwargs.values())
+
+    @property
+    def ndim(self) -> int:
+        return max(map(lambda x: x.ndim if isinstance(x, np.ndarray) else 1, self.args), default=1)
