@@ -1,10 +1,13 @@
 import copy
 import functools
+
 import numpy as np
 from numpy.typing import NDArray
 
 
-def _reshape_like(arg_value : float|NDArray[np.float64], arg_name : str, nb_assets : int):
+def _reshape_like(
+    arg_value: float | NDArray[np.float64], arg_name: str, nb_assets: int
+):
     arg_value = np.asarray(arg_value)
     ndim = arg_value.ndim
     if ndim > 2:
@@ -12,7 +15,7 @@ def _reshape_like(arg_value : float|NDArray[np.float64], arg_name : str, nb_asse
             f"Number of dimension can't be higher than 2. Got {ndim} for {arg_name}"
         )
     match arg_name:
-        case "ar"|"ar1":
+        case "ar" | "ar1":
             if arg_value.ndim <= 1:
                 if arg_value.size == 1:
                     return arg_value.item()
@@ -20,7 +23,9 @@ def _reshape_like(arg_value : float|NDArray[np.float64], arg_name : str, nb_asse
                 arg_value = arg_value.reshape(-1, 1)
                 if nb_assets != 1:
                     if arg_value.shape[0] != nb_assets:
-                        raise ValueError(f"Invalid {arg_name} shape. Got {nb_assets} nb assets but got {arg_value.shape} {arg_name} shape")
+                        raise ValueError(
+                            f"Invalid {arg_name} shape. Got {nb_assets} nb assets but got {arg_value.shape} {arg_name} shape"
+                        )
             return arg_value
 
 
@@ -54,14 +59,22 @@ def get_if_none(*args_names: str):
                         )
                 elif attr_value is not None and arg_value is not None:
                     # priority on arg
-                    new_kwargs[name] = _reshape_like(arg_value, name, self.model.nb_assets)
+                    new_kwargs[name] = _reshape_like(
+                        arg_value, name, self.model.nb_assets
+                    )
                 elif attr_value is None and arg_value is not None:
                     # priority on argue)
-                    new_kwargs[name] = _reshape_like(arg_value, name, self.model.nb_assets)
+                    new_kwargs[name] = _reshape_like(
+                        arg_value, name, self.model.nb_assets
+                    )
                 elif attr_value is not None and arg_value is None:
-                    new_kwargs[name] = _reshape_like(attr_value, name, self.model.nb_assets)
+                    new_kwargs[name] = _reshape_like(
+                        attr_value, name, self.model.nb_assets
+                    )
                 else:
-                    new_kwargs[name] = _reshape_like(arg_value, name, self.model.nb_assets)
+                    new_kwargs[name] = _reshape_like(
+                        arg_value, name, self.model.nb_assets
+                    )
             return method(self, *args, **new_kwargs)
 
         return wrapper

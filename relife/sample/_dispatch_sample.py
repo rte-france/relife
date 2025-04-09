@@ -20,7 +20,8 @@ from relife.stochastic_process import (
     RenewalProcess,
     RenewalRewardProcess,
 )
-from .counting_data import RenewalData, NHPPCountData
+
+from .counting_data import NHPPCountData, RenewalData
 from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
 
 

@@ -4,6 +4,8 @@ from typing import Any, Generator, Iterator, Optional, Self
 import numpy as np
 from numpy.typing import NDArray
 
+from relife._args import reshape_args
+
 
 class ParametricModel:
     """
@@ -295,78 +297,6 @@ class ParamsTree:
         self.update_parents()
 
 
-def _args_names(
-    model: ParametricModel,
-) -> Generator[str, None, None]:
-    from relife.lifetime_model import (
-        AFT,
-        AgeReplacementModel,
-        LeftTruncatedModel,
-        ProportionalHazard,
-    )
-
-    if isinstance(model, (ProportionalHazard, AFT)):
-        yield "covar"
-        yield from _args_names(model.baseline)
-    elif isinstance(model, AgeReplacementModel):
-        yield "ar"
-        yield from _args_names(model.baseline)
-    elif isinstance(model, LeftTruncatedModel):
-        yield "a0"
-        yield from _args_names(model.baseline)
-    else:  # in other case, stop generator and yield nothing
-        return
-
-
-def _reshape(
-    arg_name: str, arg_value: float | NDArray[np.float64]
-) -> float | NDArray[np.float64]:
-    arg_value = np.asarray(arg_value)
-    ndim = arg_value.ndim
-    if ndim > 2:
-        raise ValueError(
-            f"Number of dimension can't be higher than 2. Got {ndim} for {arg_name}"
-        )
-    match arg_name:
-        case "covar":
-            if arg_value.ndim <= 1:
-                return arg_value.reshape(1, -1)
-            return arg_value
-        case "a0"|"ar":
-            if arg_value.ndim <= 1:
-                if arg_value.size == 1:
-                    return arg_value.item()
-                return arg_value.reshape(-1, 1)
-            return arg_value
-
-
-def _make_kwargs(
-    model: ParametricModel, *args: float | NDArray[np.float64]
-) -> dict[str, float | NDArray[np.float64]]:
-
-    args_names = tuple(_args_names(model))
-    if len(args_names) != len(args):
-        raise TypeError(
-            f"{model.__class__.__name__}.freeze() requires {args_names} positional argument but got {len(args)} argument.s only"
-        )
-
-    nb_assets = 1  # minimum value
-    kwargs = {}
-    for k, v in zip(args_names, args):
-        v = _reshape(k, v)
-        if isinstance(v, np.ndarray):  # if float, nb_assets is unchanged
-            # test if nb assets changed
-            if nb_assets != 1 and v.shape[0] != nb_assets:
-                raise ValueError(
-                    "Different number of assets are passed through arguments"
-                )
-            # update nb_assets
-            else:
-                nb_assets = v.shape[0]
-        kwargs[k] = v
-    return kwargs
-
-
 class FrozenParametricModel(ParametricModel):
 
     frozen: bool = True
@@ -378,18 +308,8 @@ class FrozenParametricModel(ParametricModel):
     ):
         super().__init__()
         self.compose_with(model=model)
-        self.kwargs = _make_kwargs(model, *args)
+        self.kwargs = reshape_args(model, *args)
 
     @property
     def args(self) -> tuple[float | NDArray[np.float64], ...]:
         return tuple(self.kwargs.values())
-
-    @property
-    def nb_assets(self) -> int:
-        return max(
-            map(
-                lambda x: np.asarray(x).shape[0] if x.ndim >= 1 else 1,
-                self.kwargs.values(),
-            ),
-            default=1,
-        )

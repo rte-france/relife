@@ -3,5 +3,5 @@ from .age_replacement import (
     NonHomogeneousPoissonAgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,
 )
+from ._base import age_replacement_policy, run_to_failure_policy
 from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
-from .base import run_to_failure_policy, age_replacement_policy

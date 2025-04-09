@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife import ParametricModel
+from relife._args import get_nb_assets
 from relife.economic import exponential_discounting, reward_partial_expectation
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
@@ -45,6 +46,9 @@ class RenewalProcess(ParametricModel):
                 )
             if not isinstance(model1, LifetimeDistribution):
                 model1 = model1.freeze()
+            if get_nb_assets(model.args) != get_nb_assets(model1.args):
+                raise ValueError
+
             self.compose_with(_model1=model1)
 
     @property
@@ -173,7 +177,7 @@ class RenewalRewardProcess(RenewalProcess):
 
         z = self.expected_total_reward(timeline)
         af = self.discounting.annuity_factor(timeline)
-        q = z / (af + 1e-5) # avoid zero division
+        q = z / (af + 1e-5)  # avoid zero division
         res = np.full_like(af, q)
         if self.model1 is None:
             q0 = self.rewards(np.array(0.0)) * self.model.pdf(0.0)

@@ -10,10 +10,11 @@ from relife.economic import age_replacement_rewards, reward_partial_expectation
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadratures import gauss_legendre
 from relife.stochastic_process import RenewalRewardProcess
+from .._args import reshape_args
 
-from ._decorator import get_if_none
-from .base import RenewalPolicy
 from ..stochastic_process.frozen_process import FrozenNonHomogeneousPoissonProcess
+from ._decorator import get_if_none
+from ._base import RenewalPolicy
 
 if TYPE_CHECKING:
     from relife.lifetime_model import ParametricLifetimeModel
@@ -253,6 +254,9 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         elif model1 is None and ar1 is not None:
             raise ValueError("model1 is not set, ar1 is useless")
 
+        reshape_args(ar=ar)
+
+
         self.ar = self._reshape_ar(ar)
         self.ar1 = self._reshape_ar(ar1)
 
@@ -288,33 +292,39 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
             AgeReplacementModel(self.model).freeze(ar),
             age_replacement_rewards(ar, self.cf, self.cp),
             discounting_rate=self.discounting_rate,
-            model1=AgeReplacementModel(self.model1).freeze(ar1) if self.model1 is not None else None,
+            model1=(
+                AgeReplacementModel(self.model1).freeze(ar1)
+                if self.model1 is not None
+                else None
+            ),
             rewards1=age_replacement_rewards(ar1, self.cf, self.cp) if ar1 else None,
         )
 
     @get_if_none("ar", "ar1")
     def expected_total_cost(
         self,
-        tf : float,
-        nb_steps : int,
+        tf: float,
+        nb_steps: int,
         ar: Optional[float | NDArray[np.float64]] = None,
         ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process(ar, ar1).expected_total_reward(timeline)
+        return timeline, self.underlying_process(ar, ar1).expected_total_reward(
+            timeline
+        )
 
     @get_if_none("ar", "ar1")
     def expected_equivalent_annual_cost(
         self,
-        tf : float,
-        nb_steps : int,
+        tf: float,
+        nb_steps: int,
         ar: Optional[float | NDArray[np.float64]] = None,
         ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process(ar, ar1).expected_equivalent_annual_cost(
-            timeline
-        )
+        return timeline, self.underlying_process(
+            ar, ar1
+        ).expected_equivalent_annual_cost(timeline)
 
     @get_if_none("ar", "ar1")
     def asymptotic_expected_total_cost(

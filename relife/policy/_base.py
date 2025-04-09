@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Optional, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic import CostStructure
+from relife.economic import CostStructure, exponential_discounting
+from relife._args import get_nb_assets
 
-from ..economic.discounting import exponential_discounting
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -16,11 +16,16 @@ if TYPE_CHECKING:
     )
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
-    from .run_to_failure import OneCycleRunToFailurePolicy, DefaultRunToFailurePolicy
-    from .age_replacement import OneCycleAgeReplacementPolicy, DefaultAgeReplacementPolicy
 
-# TODO : expect a stochastic process and a cost structure
-# TODO : override __new__ to custom the control of the underlying process
+    from .age_replacement import (
+        DefaultAgeReplacementPolicy,
+        OneCycleAgeReplacementPolicy,
+    )
+    from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
+
+
+# TODO : expect a stochastic process and a cost structure
+# TODO : override __new__ to custom the control of the underlying process
 # RenewalPolicy
 class RenewalPolicy:
 
@@ -47,18 +52,23 @@ class RenewalPolicy:
                 model1 = model1.freeze()
             if not model1.frozen:
                 raise ValueError
-            if self.model.nb_assets != self.model1.nb_assets:
+            if get_nb_assets(model.args) != get_nb_assets(model1.args):
                 raise ValueError
 
         self.model = model
         self.model1 = model1
         self.discounting = exponential_discounting(discounting_rate)
-        self.nb_assets = self.model.nb_assets
         self.cost_structure = CostStructure(**kwcosts)
+
+
 
         if self.nb_assets != 1:
             if self.cost_structure.nb_assets != self.nb_assets:
                 raise ValueError("Given model args and costs differ in nb of assets")
+
+    @property
+    def nb_assets(self):
+        return get_nb_assets(self.model)
 
     @property
     def discounting_rate(self):
@@ -106,6 +116,7 @@ def age_replacement_policy(
         DefaultAgeReplacementPolicy,
         OneCycleAgeReplacementPolicy,
     )
+
     if not one_cycle:
         try:
             cf, cp = (
@@ -151,6 +162,7 @@ def run_to_failure_policy(
     a0: Optional[float | NDArray[np.float64]] = None,
 ) -> Union[DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy]:
     from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
+
     if not one_cycle:
         try:
             cf = cost_structure["cf"]

@@ -9,7 +9,7 @@ from relife.economic import reward_partial_expectation, run_to_failure_rewards
 from relife.lifetime_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 
-from .base import RenewalPolicy
+from ._base import RenewalPolicy
 
 if TYPE_CHECKING:
 
@@ -170,12 +170,13 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
             rewards1=run_to_failure_rewards(self.cf) if self.model1 else None,
         )
 
-    def expected_nb_replacements(self, tf : float, nb_steps : int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def expected_nb_replacements(
+        self, tf: float, nb_steps: int
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps)
         return timeline, self.underlying_process.renewal_function(timeline)
 
-
-    def expected_total_cost(self, tf : float, nb_steps : int) -> NDArray[np.float64]:
+    def expected_total_cost(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps)
         return timeline, self.underlying_process.expected_total_reward(timeline)
 
@@ -183,10 +184,12 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         return self.underlying_process.asymptotic_expected_total_reward()
 
     def expected_equivalent_annual_cost(
-        self, tf : float, nb_steps : int
+        self, tf: float, nb_steps: int
     ) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process.expected_equivalent_annual_cost(timeline)
+        return timeline, self.underlying_process.expected_equivalent_annual_cost(
+            timeline
+        )
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.underlying_process.asymptotic_expected_equivalent_annual_cost()
