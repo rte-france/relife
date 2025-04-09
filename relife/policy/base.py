@@ -56,8 +56,9 @@ class RenewalPolicy:
         self.nb_assets = self.model.nb_assets
         self.cost_structure = CostStructure(**kwcosts)
 
-        if self.cost_structure.nb_assets != self.nb_assets:
-            raise ValueError("Given model args and costs differ in nb of assets")
+        if self.nb_assets != 1:
+            if self.cost_structure.nb_assets != self.nb_assets:
+                raise ValueError("Given model args and costs differ in nb of assets")
 
     @property
     def discounting_rate(self):
