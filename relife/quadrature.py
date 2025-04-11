@@ -8,12 +8,10 @@ def _reshape_bounds(
     a: float | NDArray[np.float64],
     b: Optional[float | NDArray[np.float64]] = None,
 ) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
-    arr_a = np.asarray(a)
 
+    arr_a = np.asarray(a)
     if arr_a.ndim > 2:
         raise ValueError
-    if arr_a.ndim <= 1:
-        arr_a = arr_a.reshape(-1, 1)
     if np.any(arr_a < 0):
         raise ValueError
     if b is not None:
@@ -43,9 +41,12 @@ def legendre_quadrature(
     a, b shapes can be either 0d (float like), 1d or 2d
     """
 
-    arr_a, arr_b = _reshape_bounds(a, b)  # same shape (m, n)
+    arr_a, arr_b = _reshape_bounds(a, b)  # same shape (m, n) or (n,)
     if np.any(arr_b == np.inf):
         raise ValueError
+    if arr_a.ndim <= 1 and arr_b.ndim <= 1:
+        arr_a = arr_a.reshape(-1, 1) # (m, n)
+        arr_b = arr_b.reshape(-1, 1) # (m, n)
     x, w = np.polynomial.legendre.leggauss(deg)  # (deg,)
     x, w = x.reshape(-1, 1, 1), w.reshape(-1, 1, 1)  # (deg, 1, 1)
     p = (arr_b - arr_a) / 2  # (m, n)
@@ -70,7 +71,9 @@ def laguerre_quadrature(
     a shape can be either 0d (float like), 1d or 2d
     """
 
-    arr_a = _reshape_bounds(a)  # (m, n)
+    arr_a = _reshape_bounds(a)  # (m, n) or (n,)
+    if arr_a.ndim <= 1:
+        arr_a = arr_a.reshape(-1, 1) # (m, n)
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     shifted_x = (x.reshape(-1, 1, 1) + arr_a).reshape(deg, -1)  # (deg, arr_a.size)
     fvalues = func(shifted_x)  # (deg, arr_a.size)
@@ -94,6 +97,8 @@ def unweighted_laguerre_quadrature(
     """
 
     arr_a = _reshape_bounds(a)  # (m, n) or (n,)
+    if arr_a.ndim <= 1:
+        arr_a = arr_a.reshape(-1, 1) # (m, n)
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     shifted_x = (x.reshape(-1, 1, 1) + arr_a).reshape(deg, -1)  # (deg, arr_a.size)
     fvalues = func(shifted_x) * np.exp(x.reshape(-1, 1))  # (deg, arr_a.size)
@@ -128,12 +133,14 @@ def quadrature(
     integration = np.empty_like(arr_a)  # (m*n,)
     is_inf = np.isinf(arr_b)
 
-    integration[is_inf] = unweighted_laguerre_quadrature(
-        func, arr_a[is_inf].copy(), deg=deg
-    )
-    integration[~is_inf] = legendre_quadrature(
-        func, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
-    )
+    if arr_a[is_inf].size != 0:
+        integration[is_inf] = unweighted_laguerre_quadrature(
+            func, arr_a[is_inf].copy(), deg=deg
+        )
+    if arr_a[~is_inf].size != 0:
+        integration[~is_inf] = legendre_quadrature(
+            func, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
+        )
 
     shape = np.asarray(a).shape
     if np.asarray(b).ndim > len(shape):

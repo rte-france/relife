@@ -30,6 +30,7 @@ from relife.quadrature import (
 )
 
 from .frozen_model import FrozenParametricLifetimeModel
+from .._args import get_nb_assets
 
 if TYPE_CHECKING:
     from ._fittable_type import FittableParametricLifetimeModel
@@ -275,6 +276,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
 
         frozen_model = self.freeze(self, *args)
+        if get_nb_assets(*frozen_model.args) > 1:
+            if arr_a.ndim != 2 and arr_b.ndim != 0:
+                raise ValueError
 
         def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
             return func(x) * frozen_model.pdf(x)
@@ -289,12 +293,14 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         is_inf = np.isinf(arr_b)
         arr_b[is_inf] = frozen_model.isf(1e-4)
 
-        integration[is_inf] = legendre_quadrature(
-            integrand, a[is_inf].copy(), b[is_inf].copy(), deg=deg
-        ) + unweighted_laguerre_quadrature(integrand, b[is_inf].copy(), deg=deg)
-        integration[~is_inf] = legendre_quadrature(
-            integrand, a[~is_inf].copy(), b[~is_inf].copy(), deg=deg
-        )
+        if arr_a[is_inf].size != 0:
+            integration[is_inf] = legendre_quadrature(
+                integrand, arr_a[is_inf].copy(), arr_b[is_inf].copy(), deg=deg
+            ) + unweighted_laguerre_quadrature(integrand, b[is_inf].copy(), deg=deg)
+        if arr_a[~is_inf].size != 0:
+            integration[~is_inf] = legendre_quadrature(
+                integrand, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
+            )
 
         shape = np.asarray(a).shape
         if np.asarray(b).ndim > len(shape):
