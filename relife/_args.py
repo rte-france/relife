@@ -78,7 +78,9 @@ def get_nb_assets(*args: float | NDArray[np.float64]) -> int:
 
 
 def reshape_args(
-    obj: Union[ParametricModel, CostStructure], *args: float | NDArray[np.float64], **kwargs: float | NDArray[np.float64]
+    obj: Union[ParametricModel, CostStructure],
+    *args: float | NDArray[np.float64],
+    **kwargs: float | NDArray[np.float64],
 ) -> dict[str, float | NDArray[np.float64]]:
 
     args = args + tuple(kwargs.values())
@@ -102,4 +104,3 @@ def reshape_args(
                 nb_assets = v.shape[0]
         new_kwargs[k] = v
     return new_kwargs
-

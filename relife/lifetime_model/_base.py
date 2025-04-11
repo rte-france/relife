@@ -18,11 +18,16 @@ from scipy.optimize import newton
 from typing_extensions import override
 
 from relife import ParametricModel
-from relife.data import lifetime_data_factory
 from relife._plots import PlotSurvivalFunc
+from relife.data import lifetime_data_factory
 from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
-from relife.quadratures import ls_integrate
+from relife.quadrature import (
+    legendre_quadrature,
+    ls_integrate,
+    squeeze_like,
+    unweighted_laguerre_quadrature,
+)
 
 from .frozen_model import FrozenParametricLifetimeModel
 
@@ -218,7 +223,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
-        *args : *Args,
+        *args: *Args,
         deg: int = 100,
     ) -> NDArray[np.float64]:
         r"""
@@ -263,11 +268,39 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         any other variable referenced in `func`. Because `func` callable is not easy to inspect, either one must specify
         the maximum number of dimensions used (0, 1 or 2), or `ls_integrate` converts all these objects to 2d-array.
         Currently, the second option is prefered. That's why, returns are always 2d-array.
-
-
         """
+
+        arr_a = np.asarray(a)  #  (m, n) or (n,)
+        arr_b = np.asarray(b)  #  (m, n) or (n,)
+        arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
+
         frozen_model = self.freeze(self, *args)
-        return ls_integrate(frozen_model, func, a, b, deg=deg)
+
+        def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
+            return func(x) * frozen_model.pdf(x)
+
+        arr_a = arr_a.flatten()  # (m*n,) or # (n,)
+        arr_b = arr_b.flatten()  # (m*n,) or # (n,)
+
+        assert arr_a.shape == arr_b.shape
+
+        integration = np.empty_like(arr_b)  # (m*n,) or # (n,)
+
+        is_inf = np.isinf(arr_b)
+        arr_b[is_inf] = frozen_model.isf(1e-4)
+
+        integration[is_inf] = legendre_quadrature(
+            integrand, a[is_inf].copy(), b[is_inf].copy(), deg=deg
+        ) + unweighted_laguerre_quadrature(integrand, b[is_inf].copy(), deg=deg)
+        integration[~is_inf] = legendre_quadrature(
+            integrand, a[~is_inf].copy(), b[~is_inf].copy(), deg=deg
+        )
+
+        shape = np.asarray(a).shape
+        if np.asarray(b).ndim > len(shape):
+            shape = np.asarray(b).shape
+
+        return integration.reshape(shape)
 
     def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         """n-th order moment

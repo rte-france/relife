@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife import FrozenParametricModel
-from relife.quadratures import ls_integrate
+from relife.quadrature import ls_integrate
 
 if TYPE_CHECKING:
     from relife.lifetime_model._base import ParametricLifetimeModel

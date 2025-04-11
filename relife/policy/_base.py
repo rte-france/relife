@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, Optional, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic import CostStructure, exponential_discounting
 from relife._args import get_nb_assets
-
+from relife.economic import CostStructure, exponential_discounting
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -59,8 +58,6 @@ class RenewalPolicy:
         self.model1 = model1
         self.discounting = exponential_discounting(discounting_rate)
         self.cost_structure = CostStructure(**kwcosts)
-
-
 
         if self.nb_assets != 1:
             if self.cost_structure.nb_assets != self.nb_assets:

@@ -8,13 +8,13 @@ from scipy.optimize import newton
 
 from relife.economic import age_replacement_rewards, reward_partial_expectation
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
-from relife.quadratures import gauss_legendre
+from relife.quadrature import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
-from .._args import reshape_args
 
+from .._args import reshape_args
 from ..stochastic_process.frozen_process import FrozenNonHomogeneousPoissonProcess
-from ._decorator import get_if_none
 from ._base import RenewalPolicy
+from ._decorator import get_if_none
 
 if TYPE_CHECKING:
     from relife.lifetime_model import ParametricLifetimeModel
@@ -256,7 +256,6 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
 
         reshape_args(ar=ar)
 
-
         self.ar = self._reshape_ar(ar)
         self.ar1 = self._reshape_ar(ar1)
 
@@ -368,13 +367,13 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         )
 
         def eq(a):
-            f = gauss_legendre(
+            f = legendre_quadrature(
                 lambda x: self.discounting.factor(x) * self.model.sf(x),
                 0,
                 a,
                 ndim=ndim,
             )
-            g = gauss_legendre(
+            g = legendre_quadrature(
                 lambda x: self.discounting.factor(x) * self.model.pdf(x),
                 0,
                 a,
@@ -491,7 +490,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
                     (1 - self.discounting.factor(a))
                     / self.discounting.rate
                     * self.underlying_process.intensity(a)
-                    - gauss_legendre(
+                    - legendre_quadrature(
                         lambda t: self.discounting.factor(t)
                         * self.underlying_process.intensity(t),
                         np.array(0.0),

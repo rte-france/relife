@@ -316,4 +316,7 @@ class FrozenParametricModel(ParametricModel):
 
     @property
     def ndim(self) -> int:
-        return max(map(lambda x: x.ndim if isinstance(x, np.ndarray) else 1, self.args), default=1)
+        return max(
+            map(lambda x: x.ndim if isinstance(x, np.ndarray) else 1, self.args),
+            default=1,
+        )

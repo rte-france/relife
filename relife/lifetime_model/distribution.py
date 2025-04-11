@@ -6,10 +6,10 @@ from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.quadratures import gauss_legendre, shifted_laguerre
+from relife.quadrature import laguerre_quadrature, legendre_quadrature, shifted_laguerre
 
-from ._base import LifetimeDistribution, ParametricLifetimeModel
 from .._args import get_nb_assets
+from ._base import LifetimeDistribution, ParametricLifetimeModel
 
 
 class Exponential(LifetimeDistribution):
@@ -314,9 +314,10 @@ class Gamma(LifetimeDistribution):
     def _uppergamma(self, x: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return gammaincc(self.shape, x) * gamma(self.shape)
 
-    def _jac_uppergamma_shape(self, x: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        x = np.asarray(x)
-        return shifted_laguerre(lambda s: np.log(s) * s ** (self.shape - 1), x, ndim=np.ndim(x))
+    def _jac_uppergamma_shape(
+        self, x: float | NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x)
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
@@ -520,7 +521,10 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
     ) -> NDArray[np.float64]:
         frozen_model = self.baseline.freeze(*args)
         time = np.asarray(time).reshape(-1, 1)
-        res = gauss_legendre(frozen_model.sf, 0, time, ndim=frozen_model.ndim) / frozen_model.mean()
+        res = (
+            legendre_quadrature(frozen_model.sf, 0, time, ndim=frozen_model.ndim)
+            / frozen_model.mean()
+        )
         return res
 
     def pdf(
