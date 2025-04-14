@@ -555,9 +555,10 @@ class CovarEffect(ParametricModel):
             raise ValueError(
                 f"Invalid number of covar : expected {self.nb_params}, got {covar.shape[-1]}"
             )
-        if ndim == 2:
-            return np.exp(np.sum(self.params * covar, axis=1, keepdims=True)) # (m,1)
-        return np.exp(np.sum(self.params * covar, axis=1))  #  (m,)
+        if ndim <= 1:
+            return np.exp(np.sum(self.params * covar, axis=1))  #  (m,)
+        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True)) # (m,1)
+
 
     def jac_g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """
