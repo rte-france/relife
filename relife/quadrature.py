@@ -30,7 +30,7 @@ def legendre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64],
     b: float | NDArray[np.float64],
-    deg: int = 100,
+    deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of func over the interval `[a,b]`
 
@@ -57,11 +57,11 @@ def legendre_quadrature(
     wsum = np.sum(v * fvalues, axis=0)  # (arr_a.size,)
     return wsum.reshape(np.asarray(a).shape)
 
-
+# TODO : potentiellement devoir laisser ndim
 def laguerre_quadrature(
-    func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    a: float | NDArray[np.float64],
-    deg: int = 100,
+    func: Callable[[NDArray[np.float64]], NDArray[np.float64]], # tester avec func : 1d -> 2d / 0d -> 2d / 1d -> 1d , etc.
+    a: float | NDArray[np.float64], # TODO : passer a en option (defaut à zero, => exp = 1)
+    deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func * exp(-x)` over the interval `[a, inf]`
 
@@ -71,22 +71,21 @@ def laguerre_quadrature(
     a shape can be either 0d (float like), 1d or 2d
     """
 
-    arr_a = _reshape_bounds(a)  # (m, n) or (n,)
+    arr_a = _reshape_bounds(a)  # (m, n) or (m,)
     if arr_a.ndim <= 1:
         arr_a = arr_a.reshape(-1, 1) # (m, n)
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    shifted_x = (x.reshape(-1, 1, 1) + arr_a).reshape(deg, -1)  # (deg, arr_a.size)
-    fvalues = func(shifted_x)  # (deg, arr_a.size)
-    exp_a = np.exp(-arr_a).reshape(1, -1)  # (1, arr_a.size)
-    exp_a = np.where(arr_a.reshape(1, -1) == 0, 1.0, exp_a)  # (1, arr_a.size)
-    wsum = np.sum(w.reshape(-1, 1) * fvalues * exp_a, axis=0)  # (arr_a.size,)
+    shifted_x =  x.reshape(-1, 1, 1) + arr_a # (deg, m, n)
+    fvalues = func(shifted_x)  # (deg, m, n)
+    exp_a = np.where(np.exp(-arr_a) == 0, 1.0, np.exp(-arr_a)) # (m, n)
+    wsum = np.sum(w.reshape(-1, 1, 1) * fvalues * exp_a, axis=0)  # (m, n)
     return wsum.reshape(np.asarray(a).shape)
 
-
+# TODO : nommage ET repasser par laguerre_quadrature en transformant func -> func * exp(x)
 def unweighted_laguerre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64],
-    deg: int = 100,
+    deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a, inf]`
 
@@ -110,7 +109,7 @@ def quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64],
     b: Optional[float | NDArray[np.float64]] = None,
-    deg: int = 100,
+    deg: int = 10,
 ):
     r"""Numerical integration of func over the interval `[a,b]`
 

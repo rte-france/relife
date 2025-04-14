@@ -7,7 +7,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife import FrozenParametricModel
-from relife.quadrature import ls_integrate
 
 if TYPE_CHECKING:
     from relife.lifetime_model._base import ParametricLifetimeModel
@@ -16,50 +15,50 @@ Args = TypeVarTuple("Args")
 P = ParamSpec("P")
 
 
-def _isbroadcastable(
-    arg_name: str,
-) -> Callable[[Callable[[P], NDArray[np.float64]]], Callable[[P], NDArray[np.float64]]]:
-    def decorator(
-        method: Callable[P, NDArray[np.float64]],
-    ) -> Callable[[P], NDArray[np.float64]]:
-        @functools.wraps(method)
-        def wrapper(self, *args: P.args, **kwargs: P.kwargs) -> NDArray[np.float64]:
-            x: NDArray[np.float64] = np.asarray(args[0])
-            if x.size == 1:
-                x = x.item()
-            elif x.ndim == 2:
-                if self.nb_assets != 1:
-                    if x.shape[0] != 1 and x.shape[0] != self.nb_assets:
-                        raise ValueError(
-                            f"Inconsistent {arg_name} shape. Got {self.nb_assets} nb of assets but got {x.shape} {arg_name} shape"
-                        )
-            return method(self, x, **kwargs)
-
-        return wrapper
-
-    return decorator
+# def _isbroadcastable(
+#     arg_name: str,
+# ) -> Callable[[Callable[[P], NDArray[np.float64]]], Callable[[P], NDArray[np.float64]]]:
+#     def decorator(
+#         method: Callable[P, NDArray[np.float64]],
+#     ) -> Callable[[P], NDArray[np.float64]]:
+#         @functools.wraps(method)
+#         def wrapper(self, *args: P.args, **kwargs: P.kwargs) -> NDArray[np.float64]:
+#             x: NDArray[np.float64] = np.asarray(args[0])
+#             if x.size == 1:
+#                 x = x.item()
+#             elif x.ndim == 2:
+#                 if self.nb_assets != 1:
+#                     if x.shape[0] != 1 and x.shape[0] != self.nb_assets:
+#                         raise ValueError(
+#                             f"Inconsistent {arg_name} shape. Got {self.nb_assets} nb of assets but got {x.shape} {arg_name} shape"
+#                         )
+#             return method(self, x, **kwargs)
+#
+#         return wrapper
+#
+#     return decorator
 
 
 class FrozenParametricLifetimeModel(FrozenParametricModel):
     model: ParametricLifetimeModel[*tuple[float | NDArray, ...]]
 
-    @_isbroadcastable("time")
+    # @_isbroadcastable("time")
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.hf(time, *self.args)
 
-    @_isbroadcastable("time")
+    # @_isbroadcastable("time")
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.chf(time, *self.args)
 
-    @_isbroadcastable("time")
+    # @_isbroadcastable("time")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.sf(time, *self.args)
 
-    @_isbroadcastable("time")
+    # @_isbroadcastable("time")
     def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.pdf(time, *self.args)
 
-    @_isbroadcastable("time")
+    # @_isbroadcastable("time")
     def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.mrl(time, *self.args)
 
@@ -72,22 +71,22 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
     def var(self) -> NDArray[np.float64]:
         return self.model.moment(2, *self.args) - self.model.moment(1, *self.args) ** 2
 
-    @_isbroadcastable("probability")
+    # @_isbroadcastable("probability")
     def isf(self, probability: float | NDArray[np.float64]):
         return self.model.isf(probability, *self.args)
 
-    @_isbroadcastable("cumulative_hazard_rate")
+    # @_isbroadcastable("cumulative_hazard_rate")
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
         return self.model.ichf(cumulative_hazard_rate, *self.args)
 
-    @_isbroadcastable("time")
+    # @_isbroadcastable("time")
     def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.cdf(time, *self.args)
 
     def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
         return self.model.rvs(*self.args, size=size, seed=seed)
 
-    @_isbroadcastable("probability")
+    # @_isbroadcastable("probability")
     def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.ppf(probability, *self.args)
 
@@ -102,4 +101,4 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
-        return ls_integrate(self, func, a, b, deg=deg)
+        return self.model.ls_integrate(self, func, a, b, deg=deg)

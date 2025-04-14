@@ -315,6 +315,16 @@ class FrozenParametricModel(ParametricModel):
         return tuple(self.kwargs.values())
 
     @property
+    def nb_assets(self) -> int:
+        def get_nb_asset(x: float | NDArray[np.float64]):
+            if isinstance(x, np.ndarray):
+                return x.shape[0]
+            else:
+                return 1
+
+        return max(map(lambda x: get_nb_asset(x), self.kwargs.values()), default=1)
+
+    @property
     def ndim(self) -> int:
         return max(
             map(lambda x: x.ndim if isinstance(x, np.ndarray) else 1, self.args),

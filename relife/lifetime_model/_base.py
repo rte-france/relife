@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -9,7 +10,7 @@ from typing import (
     NewType,
     Optional,
     Self,
-    TypeVarTuple,
+    TypeVarTuple, ParamSpec,
 )
 
 import numpy as np
@@ -24,8 +25,6 @@ from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
 from relife.quadrature import (
     legendre_quadrature,
-    ls_integrate,
-    squeeze_like,
     unweighted_laguerre_quadrature,
 )
 
@@ -275,7 +274,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         arr_b = np.asarray(b)  #  (m, n) or (n,)
         arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
 
-        frozen_model = self.freeze(self, *args)
+        frozen_model = self.freeze(*args)
         if get_nb_assets(*frozen_model.args) > 1:
             if arr_a.ndim != 2 and arr_b.ndim != 0:
                 raise ValueError
@@ -527,7 +526,7 @@ class CovarEffect(ParametricModel):
         super().__init__()
         self.set_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
 
-    def g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def g(self, covar: float | NDArray[np.float64], ndim : int = 1) -> NDArray[np.float64]:
         """
         Compute the covariates effect.
 
@@ -548,14 +547,17 @@ class CovarEffect(ParametricModel):
             If the number of covariates does not match the number of parameters.
         """
         covar: NDArray[np.float64] = np.asarray(covar)
-        covar = np.atleast_2d(covar)
+        if covar.ndim < 2:
+            covar = covar.reshape(-1, 1) # (m, k) m assets, k values
         if covar.ndim > 2:
             raise ValueError
-        if covar.shape[-1] != self.nb_params:
+        if covar.shape[-1] != self.nb_params: # params (k,) k coefficients
             raise ValueError(
                 f"Invalid number of covar : expected {self.nb_params}, got {covar.shape[-1]}"
             )
-        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True))
+        if ndim == 2:
+            return np.exp(np.sum(self.params * covar, axis=1, keepdims=True)) # (m,1)
+        return np.exp(np.sum(self.params * covar, axis=1))  #  (m,)
 
     def jac_g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """
@@ -575,7 +577,7 @@ class CovarEffect(ParametricModel):
         covar: NDArray[np.float64] = np.asarray(covar)
         if covar.ndim > 2:
             raise ValueError
-        return covar * self.g(covar)
+        return covar * self.g(covar) # (m, k) m assets, k values
 
 
 class LifetimeRegression(
@@ -614,7 +616,7 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        return np.squeeze(super().sf(time, covar, *args))
+        return super().sf(time, covar, *args)
 
     @override
     def isf(

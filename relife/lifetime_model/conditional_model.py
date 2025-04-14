@@ -73,11 +73,11 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     @override
     def ichf(
         self,
-        probability: NDArray[np.float64],
+        cumulative_hazard_rate: NDArray[np.float64],
         ar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        return np.minimum(self.baseline.ichf(probability, *args), ar)
+        return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
     def pdf(
         self,

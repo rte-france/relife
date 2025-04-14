@@ -3,12 +3,11 @@ from typing import TYPE_CHECKING, Optional, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
-from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
+from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 from typing_extensions import override
 
-from relife.quadrature import laguerre_quadrature, legendre_quadrature, shifted_laguerre
+from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
-from .._args import get_nb_assets
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
 
@@ -122,18 +121,18 @@ class Weibull(LifetimeDistribution):
         self.set_params(shape=shape, rate=rate)
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
+        return np.asarray(self.shape * self.rate * (self.rate * time) ** (self.shape - 1))
 
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return (self.rate * time) ** self.shape
+        return np.asarray((self.rate * time) ** self.shape)
 
     @override
-    def mean(self) -> np.float64:
-        return gamma(1 + 1 / self.shape) / self.rate
+    def mean(self) -> NDArray[np.float64]:
+        return np.asarray(gamma(1 + 1 / self.shape) / self.rate)
 
     @override
-    def var(self) -> np.float64:
-        return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
+    def var(self) -> NDArray[np.float64]:
+        return np.asarray(gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2)
 
     @override
     def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -150,7 +149,7 @@ class Weibull(LifetimeDistribution):
     def ichf(
         self, cumulative_hazard_rate: float | NDArray[np.float64]
     ) -> NDArray[np.float64]:
-        return cumulative_hazard_rate ** (1 / self.shape) / self.rate
+        return np.asarray(cumulative_hazard_rate ** (1 / self.shape) / self.rate)
 
     def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return np.column_stack(
@@ -229,13 +228,12 @@ class Gompertz(LifetimeDistribution):
         return self.shape * np.expm1(self.rate * time)
 
     @override
-    def mean(self) -> np.float64:
-        return np.exp(self.shape) * exp1(self.shape) / self.rate
+    def mean(self) -> NDArray[np.float64]:
+        return np.asarray(np.exp(self.shape) * exp1(self.shape) / self.rate)
 
     @override
-    def var(self) -> np.float64:
-        # return np.array(polygamma(1, 1).item() / self.rate**2)
-        pass
+    def var(self) -> NDArray[np.float64]:
+        return polygamma(1, 1) / self.rate**2
 
     @override
     def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -422,11 +420,11 @@ class LogLogistic(LifetimeDistribution):
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
-        return self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape)
+        return np.asarray(self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape))
 
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
-        return np.array(np.log(1 + x**self.shape))
+        return np.asarray(np.log(1 + x**self.shape))
 
     @override
     def mean(self) -> NDArray[np.float64]:

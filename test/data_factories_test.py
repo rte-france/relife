@@ -3,6 +3,7 @@ import pytest
 
 from relife.data import lifetime_data_factory, nhpp_data_factory
 
+
 @pytest.fixture
 def example_1d_data():
     return {
