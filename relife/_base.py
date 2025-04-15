@@ -307,7 +307,7 @@ class FrozenParametricModel(ParametricModel):
         *args: float | NDArray[np.float64],
     ):
         super().__init__()
-        self.compose_with(model=model)
+        self.compose_with(baseline=model)
         self.kwargs = broadcast_args(model, *args)
 
     @property

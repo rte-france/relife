@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 from typing import TYPE_CHECKING, Callable, Optional, ParamSpec, TypeVarTuple
 
 import numpy as np
@@ -40,58 +39,58 @@ P = ParamSpec("P")
 
 
 class FrozenParametricLifetimeModel(FrozenParametricModel):
-    model: ParametricLifetimeModel[*tuple[float | NDArray, ...]]
+    baseline: ParametricLifetimeModel[*tuple[float | NDArray, ...]]
 
     # @_isbroadcastable("time")
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.hf(time, *self.args)
+        return self.baseline.hf(time, *self.args)
 
     # @_isbroadcastable("time")
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.chf(time, *self.args)
+        return self.baseline.chf(time, *self.args)
 
     # @_isbroadcastable("time")
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.sf(time, *self.args)
+        return self.baseline.sf(time, *self.args)
 
     # @_isbroadcastable("time")
     def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.pdf(time, *self.args)
+        return self.baseline.pdf(time, *self.args)
 
     # @_isbroadcastable("time")
     def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.mrl(time, *self.args)
+        return self.baseline.mrl(time, *self.args)
 
     def moment(self, n: int) -> NDArray[np.float64]:
-        return self.model.moment(n)
+        return self.baseline.moment(n)
 
     def mean(self) -> NDArray[np.float64]:
-        return self.model.moment(1, *self.args)
+        return self.baseline.moment(1, *self.args)
 
     def var(self) -> NDArray[np.float64]:
-        return self.model.moment(2, *self.args) - self.model.moment(1, *self.args) ** 2
+        return self.baseline.moment(2, *self.args) - self.baseline.moment(1, *self.args) ** 2
 
     # @_isbroadcastable("probability")
     def isf(self, probability: float | NDArray[np.float64]):
-        return self.model.isf(probability, *self.args)
+        return self.baseline.isf(probability, *self.args)
 
     # @_isbroadcastable("cumulative_hazard_rate")
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
-        return self.model.ichf(cumulative_hazard_rate, *self.args)
+        return self.baseline.ichf(cumulative_hazard_rate, *self.args)
 
     # @_isbroadcastable("time")
     def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.cdf(time, *self.args)
+        return self.baseline.cdf(time, *self.args)
 
     def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
-        return self.model.rvs(*self.args, size=size, seed=seed)
+        return self.baseline.rvs(*self.args, size=size, seed=seed)
 
     # @_isbroadcastable("probability")
     def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.model.ppf(probability, *self.args)
+        return self.baseline.ppf(probability, *self.args)
 
     def median(self) -> NDArray[np.float64]:
-        return self.model.median(*self.args)
+        return self.baseline.median(*self.args)
 
     def ls_integrate(
         self,
@@ -101,4 +100,4 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
-        return self.model.ls_integrate(self, func, a, b, deg=deg)
+        return self.baseline.ls_integrate(self, func, a, b, deg=deg)

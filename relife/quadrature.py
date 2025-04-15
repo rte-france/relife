@@ -19,8 +19,8 @@ def _reshape_and_broadcast(*args : float | NDArray[np.float64]) -> NDArray[np.fl
             raise ValueError
         return arr
     if len(args) > 1:
-        return np.broadcast_arrays(map(reshape, args))
-    return args[0]
+        return np.broadcast_arrays(*map(reshape, args))
+    return reshape(args[0])
 
 
 def legendre_quadrature(
