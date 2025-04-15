@@ -4,11 +4,10 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.quadrature import legendre_quadrature
+from relife.quadrature import ls_integrate
 
 from ._base import ParametricLifetimeModel
 from .frozen_model import FrozenParametricLifetimeModel
-from .._args import get_nb_assets
 
 Args = TypeVarTuple("Args")
 
@@ -168,52 +167,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ndim: int = 0,
         deg: int = 100,
     ) -> NDArray[np.float64]:
-
-        arr_a = np.asarray(a)  #  (m, n) or (n,)
-        arr_b = np.asarray(b)  #  (m, n) or (n,)
-        arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
-
-        frozen_model = self.freeze(ar, *args)
-        if get_nb_assets(*frozen_model.args) > 1:
-            if arr_a.ndim != 2 and arr_b.ndim != 0:
-                raise ValueError
-
-        def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
-            return func(x) * frozen_model.pdf(x)
-
-        arr_ar = frozen_model.args[0] # (m, 1)
-        if arr_a.ndim < 2 and arr_b.ndim < 2:
-            arr_a = arr_a.reshape(-1, 1)  #  (m, n)
-            arr_b = arr_b.reshape(-1, 1) # (m, n)
-        if arr_b.shape[0] != arr_ar.shape[0]:
-            raise ValueError
-        arr_b = np.minimum(arr_ar, arr_b)
-        arr_b, arr_ar = np.broadcast_arrays(arr_b, arr_ar)  # same shape (m, n)
-
-        arr_a = arr_a.flatten()  # (m*n,)
-        arr_b = arr_b.flatten()  # (m*n,)
-        flat_ar = arr_ar.flatten()  # (m*n,)
-
-        assert arr_a.shape == arr_b.shape == arr_ar.shape
-
-        integration = np.empty_like(arr_b)  # (m*n,) or # (n,)
-
-        is_ar = arr_b == flat_ar
-
-        if arr_a[is_ar].size != 0:
-            integration[is_ar] = legendre_quadrature(
-                integrand, arr_a[is_ar].copy(), arr_b[is_ar].copy(), deg=deg
-            ) + func(flat_ar[is_ar]) * frozen_model.sf(flat_ar[is_ar])
-        if arr_a[~is_ar].size != 0:
-            integration[~is_ar] = legendre_quadrature(
-                integrand, arr_a[~is_ar].copy(), arr_b[~is_ar].copy(), deg=deg
-            )
-
-        shape = np.asarray(a).shape
-        if np.asarray(b).ndim > len(shape):
-            shape = np.asarray(b).shape
-
-        return integration.reshape(shape)
+        return ls_integrate(self.freeze(ar, *args), func, a, b, deg=deg)
 
     @override
     def freeze(

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -10,7 +9,7 @@ from typing import (
     NewType,
     Optional,
     Self,
-    TypeVarTuple, ParamSpec,
+    TypeVarTuple,
 )
 
 import numpy as np
@@ -23,13 +22,9 @@ from relife._plots import PlotSurvivalFunc
 from relife.data import lifetime_data_factory
 from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
-from relife.quadrature import (
-    legendre_quadrature,
-    unweighted_laguerre_quadrature,
-)
+from relife.quadrature import ls_integrate
 
 from .frozen_model import FrozenParametricLifetimeModel
-from .._args import get_nb_assets
 
 if TYPE_CHECKING:
     from ._fittable_type import FittableParametricLifetimeModel
@@ -269,45 +264,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         the maximum number of dimensions used (0, 1 or 2), or `ls_integrate` converts all these objects to 2d-array.
         Currently, the second option is prefered. That's why, returns are always 2d-array.
         """
-
-        arr_a = np.asarray(a)  #  (m, n) or (n,)
-        arr_b = np.asarray(b)  #  (m, n) or (n,)
-        arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
-
-        frozen_model = self.freeze(*args)
-
-
-        if get_nb_assets(*frozen_model.args) > 1:
-            if arr_a.ndim != 2 and arr_b.ndim != 0:
-                raise ValueError
-
-        def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
-            return func(x) * frozen_model.pdf(x)
-
-        arr_a = arr_a.flatten()  # (m*n,) or # (n,)
-        arr_b = arr_b.flatten()  # (m*n,) or # (n,)
-
-        assert arr_a.shape == arr_b.shape
-
-        integration = np.empty_like(arr_b)  # (m*n,) or # (n,)
-
-        is_inf = np.isinf(arr_b)
-        arr_b[is_inf] = frozen_model.isf(1e-4)
-
-        if arr_a[is_inf].size != 0:
-            integration[is_inf] = legendre_quadrature(
-                integrand, arr_a[is_inf].copy(), arr_b[is_inf].copy(), deg=deg
-            ) + unweighted_laguerre_quadrature(integrand, b[is_inf].copy(), deg=deg)
-        if arr_a[~is_inf].size != 0:
-            integration[~is_inf] = legendre_quadrature(
-                integrand, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
-            )
-
-        shape = np.asarray(a).shape
-        if np.asarray(b).ndim > len(shape):
-            shape = np.asarray(b).shape
-
-        return integration.reshape(shape)
+        return ls_integrate(self.freeze(*args), func, a, b, deg=deg)
 
     def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         """n-th order moment
@@ -537,6 +494,8 @@ class CovarEffect(ParametricModel):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values. Should have shape (k, ) or (m, k) where m is
             the number of assets and k is the number of covariates.
+        ndim : int
+            Expected number of dimensions on the output
 
         Returns
         -------

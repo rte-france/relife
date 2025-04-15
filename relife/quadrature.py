@@ -1,40 +1,26 @@
-from typing import Callable, Optional
+from __future__ import annotations
+from typing import Callable, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 
+if TYPE_CHECKING:
+    from relife.lifetime_model import FrozenParametricLifetimeModel
 
-"""
-(a or b)    out
-float       float or (m,)
-(m,)        (m,) or (m, n)
-(m, n)      (m, n)
-"""
 
-def _reshape_bounds(
-    a: float | NDArray[np.float64],
-    b: Optional[float | NDArray[np.float64]] = None,
-) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
-
-    arr_a = np.asarray(a)
-    if arr_a.ndim > 2:
-        raise ValueError
-    if arr_a.ndim <= 1:
-        arr_a = arr_a.reshape(-1, 1)
-    if np.any(arr_a < 0):
-        raise ValueError
-    if b is not None:
-        arr_b = np.asarray(b)
-        if arr_b.ndim > 2:
+def _reshape_and_broadcast(*args : float | NDArray[np.float64]) -> NDArray[np.float64] | tuple[NDArray[np.float64], ...]:
+    def reshape(x : float | NDArray[np.float64]) -> NDArray[np.float64]:
+        arr = np.asarray(x)
+        if arr.ndim > 2:
             raise ValueError
-        if arr_b.ndim <= 1:
-            arr_b = arr_b.reshape(-1, 1)
-        arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
-        if np.any(arr_a >= arr_b):
+        if arr.ndim <= 1:
+            arr = arr.reshape(-1, 1)
+        if np.any(arr < 0):
             raise ValueError
-        return arr_a, arr_b
-    else:
-        return arr_a
+        return arr
+    if len(args) > 1:
+        return np.broadcast_arrays(map(reshape, args))
+    return args[0]
 
 
 def legendre_quadrature(
@@ -53,8 +39,10 @@ def legendre_quadrature(
     """
 
     x, w = np.polynomial.legendre.leggauss(deg)  # (deg,)
-    arr_a, arr_b = _reshape_bounds(a, b)  # same shape (m, n)
+    arr_a, arr_b = _reshape_and_broadcast(a, b)  # same shape (m, n)
     if np.any(arr_b == np.inf):
+        raise ValueError
+    if np.any(arr_a >= arr_b):
         raise ValueError
     bound_shape = arr_a.shape
 
@@ -96,7 +84,7 @@ def laguerre_quadrature(
     """
 
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    arr_a = _reshape_bounds(a)  # (m, n)
+    arr_a = _reshape_and_broadcast(a)  # (m, n)
     bound_shape = arr_a.shape
 
     shifted_x = x + np.expand_dims(arr_a, axis=-1) # (m, n, deg)
@@ -123,8 +111,6 @@ def laguerre_quadrature(
     return np.squeeze(wsum.reshape(bound_shape))
 
 
-
-
 def unweighted_laguerre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.,
@@ -139,7 +125,7 @@ def unweighted_laguerre_quadrature(
     """
 
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    arr_a = _reshape_bounds(a)  # (m, n)
+    arr_a = _reshape_and_broadcast(a)  # (m, n)
     bound_shape = arr_a.shape
 
     shifted_x = x + np.expand_dims(arr_a, axis=-1) # (m, n, deg)
@@ -161,43 +147,61 @@ def unweighted_laguerre_quadrature(
         return np.squeeze(wsum)
     return np.squeeze(wsum.reshape(bound_shape))
 
-# def quadrature(
-#     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-#     a: float | NDArray[np.float64] = 0.,
-#     b: float | NDArray[np.float64] = np.inf,
-#     deg: int = 10,
-# ):
-#     r"""Numerical integration of func over the interval `[a,b]`
-#
-#     func must be continuous and expects one input only
-#     a can be zero
-#     b can be inf
-#
-#     a, b shapes can be either 0d (float like), 1d or 2d
-#     """
-#     arr_a, arr_b = _reshape_bounds(a, b)
-#     if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
-#         arr_a = arr_a.flatten()  # (m*n,)
-#         arr_b = arr_b.flatten()  # (m*n,)
-#
-#         integration = np.empty_like(arr_a)  # (m*n,)
-#         is_inf = np.isinf(arr_b)
-#
-#         if arr_a[is_inf].size != 0:
-#             integration[is_inf] = unweighted_laguerre_quadrature(
-#                 func, arr_a[is_inf].copy(), deg=deg
-#             )
-#         if arr_a[~is_inf].size != 0:
-#             integration[~is_inf] = legendre_quadrature(
-#                 func, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
-#             )
-#
-#         return integration.reshape(
-#             np.broadcast_shapes(np.asarray(a).shape, np.asarray(b).shape)
-#         )
-#     else:  # both are float-like
-#         a = arr_a.item()
-#         b = arr_b.item()
-#         if b == np.inf:
-#             return unweighted_laguerre_quadrature(func, a)
-#         return legendre_quadrature(func, a, b)
+
+def ls_integrate(
+    model : FrozenParametricLifetimeModel,
+    func : Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    a: float | NDArray[np.float64] = 0.0,
+    b: float | NDArray[np.float64] = np.inf,
+    deg: int = 10,
+) -> NDArray[np.float64]:
+    from relife.lifetime_model import AgeReplacementModel
+
+    def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return func(x) * model.pdf(x)
+
+    match model.baseline:
+        case AgeReplacementModel():
+            ar = model.args[0].copy()
+            arr_a, arr_b, arr_ar = _reshape_and_broadcast(a, b, ar)
+            bound_shape = arr_a.shape
+
+            if np.any(arr_a >= arr_b):
+                raise ValueError
+            arr_b = np.minimum(arr_b, arr_ar)
+            is_ar = arr_b == arr_ar
+
+            integration = legendre_quadrature(integrand, arr_a, arr_b, deg=deg)
+            if np.any(is_ar):
+                integration[is_ar] += func(arr_ar[is_ar].copy()) * model.sf(arr_ar[is_ar].copy())
+
+            if max(bound_shape) == 1:
+                return np.squeeze(integration)
+            return np.squeeze(integration.reshape(bound_shape))
+
+        case _:
+            arr_a, arr_b = _reshape_and_broadcast(a, b)
+            if np.any(arr_a >= arr_b):
+                raise ValueError
+            bound_shape = arr_a.shape
+
+            arr_a = arr_a.flatten()  # (m*n,)
+            arr_b = arr_b.flatten()  # (m*n,)
+
+            integration = np.empty_like(arr_a)  # (m*n,)
+
+            is_inf = np.isinf(arr_b)
+            arr_b[is_inf] = model.isf(1e-4)
+
+            if np.any(is_inf):
+                integration[is_inf] = legendre_quadrature(
+                    integrand, arr_a[is_inf].copy(), arr_b[is_inf].copy(), deg=deg
+                ) + unweighted_laguerre_quadrature(integrand, b[is_inf].copy(), deg=deg)
+            if np.any(~is_inf):
+                integration[~is_inf] = legendre_quadrature(
+                    integrand, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
+                )
+
+            if max(bound_shape) == 1:
+                return np.squeeze(integration)
+            return np.squeeze(integration.reshape(bound_shape))
