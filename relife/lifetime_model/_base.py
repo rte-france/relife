@@ -275,6 +275,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
 
         frozen_model = self.freeze(*args)
+
+
         if get_nb_assets(*frozen_model.args) > 1:
             if arr_a.ndim != 2 and arr_b.ndim != 0:
                 raise ValueError

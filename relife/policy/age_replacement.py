@@ -11,7 +11,7 @@ from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadrature import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
 
-from .._args import reshape_args
+from .._args import broadcast_args
 from ..stochastic_process.frozen_process import FrozenNonHomogeneousPoissonProcess
 from ._base import RenewalPolicy
 from ._decorator import get_if_none
@@ -254,7 +254,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         elif model1 is None and ar1 is not None:
             raise ValueError("model1 is not set, ar1 is useless")
 
-        reshape_args(ar=ar)
+        broadcast_args(ar=ar)
 
         self.ar = self._reshape_ar(ar)
         self.ar1 = self._reshape_ar(ar1)

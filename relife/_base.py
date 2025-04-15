@@ -4,7 +4,7 @@ from typing import Any, Generator, Iterator, Optional, Self
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._args import reshape_args
+from relife._args import broadcast_args
 
 
 class ParametricModel:
@@ -308,7 +308,7 @@ class FrozenParametricModel(ParametricModel):
     ):
         super().__init__()
         self.compose_with(model=model)
-        self.kwargs = reshape_args(model, *args)
+        self.kwargs = broadcast_args(model, *args)
 
     @property
     def args(self) -> tuple[float | NDArray[np.float64], ...]:
@@ -316,17 +316,4 @@ class FrozenParametricModel(ParametricModel):
 
     @property
     def nb_assets(self) -> int:
-        def get_nb_asset(x: float | NDArray[np.float64]):
-            if isinstance(x, np.ndarray):
-                return x.shape[0]
-            else:
-                return 1
-
-        return max(map(lambda x: get_nb_asset(x), self.kwargs.values()), default=1)
-
-    @property
-    def ndim(self) -> int:
-        return max(
-            map(lambda x: x.ndim if isinstance(x, np.ndarray) else 1, self.args),
-            default=1,
-        )
+        return np.broadcast_shapes(*self.kwargs.values())[0]

@@ -60,9 +60,7 @@ def reshape_arg(
                 return value.reshape(1, -1)
             return value
         case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
-            if value.ndim <= 1:
-                if value.size == 1:
-                    return value.item()
+            if ndim <= 2:
                 return value.reshape(-1, 1)
             raise ValueError(f"{name} arg can't have more than 1 dim")
 
@@ -77,30 +75,21 @@ def get_nb_assets(*args: float | NDArray[np.float64]) -> int:
     return max(map(lambda x: get_nb_asset(x), args), default=1)
 
 
-def reshape_args(
+def broadcast_args(
     obj: Union[ParametricModel, CostStructure],
     *args: float | NDArray[np.float64],
     **kwargs: float | NDArray[np.float64],
-) -> dict[str, float | NDArray[np.float64]]:
+) -> dict[str, NDArray[np.float64]]:
 
     args = args + tuple(kwargs.values())
-    nb_assets = 1  # minimum value
     args_names = tuple(args_names_generator(obj)) + tuple(kwargs.keys())
     if len(args_names) != len(args):
         raise TypeError(
             f"{obj.__class__.__name__} requires {args_names} positional argument but got {len(args)} argument.s only"
         )
-    new_kwargs = {}
-    for k, v in zip(args_names, args):
-        v = reshape_arg(k, v)
-        if isinstance(v, np.ndarray):  # if float, nb_assets is unchanged
-            # test if nb assets changed
-            if nb_assets != 1 and v.shape[0] != nb_assets:
-                raise ValueError(
-                    "Different number of assets are passed through arguments"
-                )
-            # update nb_assets
-            else:
-                nb_assets = v.shape[0]
-        new_kwargs[k] = v
-    return new_kwargs
+    new_args = tuple((reshape_arg(k, v) for k,v in zip(args_names, args)))
+    try :
+        np.broadcast_shapes(*tuple((arg.shape for arg in new_args)))
+    except ValueError as err:
+        raise ValueError("Unbroadcastable args") from err
+    return {k : v for k, v in zip(args_names, new_args)}
