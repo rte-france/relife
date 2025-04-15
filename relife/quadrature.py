@@ -4,6 +4,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+"""
+(a or b)    out
+float       float or (m,)
+(m,)        (m,) or (m, n)
+(m, n)      (m, n)
+"""
+
 def _reshape_bounds(
     a: float | NDArray[np.float64],
     b: Optional[float | NDArray[np.float64]] = None,
@@ -55,7 +62,7 @@ def legendre_quadrature(
         u = p.reshape(arr_a.shape + (1,)) * x + m.reshape(
             arr_a.shape + (1,)
         )  # (m, n, deg)
-        v = (p.reshape(arr_a.shape + (1,)) * w).reshape(deg, -1)  # (m, n, deg)
+        v = p.reshape(arr_a.shape + (1,)) * w  # (m, n, deg)
 
         try:
             #  avoid passing more than 2d to func
@@ -131,7 +138,7 @@ def laguerre_quadrature(
 
 def unweighted_laguerre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    a: float | NDArray[np.float64],
+    a: float | NDArray[np.float64] = 0.,
     deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a, inf]`
@@ -171,7 +178,7 @@ def unweighted_laguerre_quadrature(
 
 def quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    a: float | NDArray[np.float64],
+    a: float | NDArray[np.float64] = 0.,
     b: float | NDArray[np.float64] = np.inf,
     deg: int = 10,
 ):
@@ -193,11 +200,11 @@ def quadrature(
 
         if arr_a[is_inf].size != 0:
             integration[is_inf] = unweighted_laguerre_quadrature(
-                func, arr_a[is_inf].copy()
+                func, arr_a[is_inf].copy(), deg=deg
             )
         if arr_a[~is_inf].size != 0:
             integration[~is_inf] = legendre_quadrature(
-                func, arr_a[~is_inf].copy(), arr_b[~is_inf].copy()
+                func, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
             )
 
         return integration.reshape(
