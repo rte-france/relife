@@ -85,7 +85,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         *args: *Args,
     ) -> NDArray[np.float64]:
         baseline_hf = self.baseline.chf(time, *args) # (m,) ou (m, n)
-        covar_effect = self.covar_effect.g(covar, ndim=baseline_hf.ndim)
+        covar_effect = self.covar_effect.g(covar, ndim=baseline_hf.ndim) # (m, 1)
         return covar_effect * self.baseline.hf(time, *args)
 
     def chf(

@@ -316,4 +316,6 @@ class FrozenParametricModel(ParametricModel):
 
     @property
     def nb_assets(self) -> int:
-        return np.broadcast_shapes(*self.kwargs.values())[0]
+        if bool(self.kwargs):
+            return np.broadcast_shapes(*map(np.shape, self.kwargs.values()))[0]
+        return 1

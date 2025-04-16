@@ -8,8 +8,10 @@ if TYPE_CHECKING:
     from relife.lifetime_model import FrozenParametricLifetimeModel
 
 
-def _reshape_and_broadcast(*args : float | NDArray[np.float64]) -> NDArray[np.float64] | tuple[NDArray[np.float64], ...]:
-    def reshape(x : float | NDArray[np.float64]) -> NDArray[np.float64]:
+def _reshape_and_broadcast(
+    *args: float | NDArray[np.float64],
+) -> NDArray[np.float64] | tuple[NDArray[np.float64], ...]:
+    def reshape(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
         arr = np.asarray(x)
         if arr.ndim > 2:
             raise ValueError
@@ -18,8 +20,9 @@ def _reshape_and_broadcast(*args : float | NDArray[np.float64]) -> NDArray[np.fl
         if np.any(arr < 0):
             raise ValueError
         return arr
+
     if len(args) > 1:
-        return np.broadcast_arrays(*map(reshape, args))
+        return tuple((arg.copy() for arg in np.broadcast_arrays(*map(reshape, args))))
     return reshape(args[0])
 
 
@@ -48,7 +51,7 @@ def legendre_quadrature(
 
     p = (arr_b - arr_a) / 2  # (m, n)
     m = (arr_a + arr_b) / 2  # (m, n)
-    u = np.expand_dims(p, -1) * x + np.expand_dims(m, -1) # (m, n, deg)
+    u = np.expand_dims(p, -1) * x + np.expand_dims(m, -1)  # (m, n, deg)
     v = np.expand_dims(p, -1) * w  # (m, n, deg)
     try:
         #  avoid passing more than 2d to func
@@ -87,12 +90,11 @@ def laguerre_quadrature(
     arr_a = _reshape_and_broadcast(a)  # (m, n)
     bound_shape = arr_a.shape
 
-    shifted_x = x + np.expand_dims(arr_a, axis=-1) # (m, n, deg)
+    shifted_x = x + np.expand_dims(arr_a, axis=-1)  # (m, n, deg)
     try:
         #  avoid passing more than 2d to func
         fvalues = func(shifted_x.reshape(shifted_x.shape[0], -1))  # (m, n*deg)
-        nb_assets = fvalues.shape[0] # m
-        fvalues = fvalues.reshape((nb_assets, -1, deg))  # (m, n, deg)
+        fvalues = fvalues.reshape((fvalues.shape[0], -1, deg))  #  (m, n, deg)
     except ValueError as err:
         func_shape = func(1.0).shape
         if len(func_shape) > 0:
@@ -102,9 +104,7 @@ def laguerre_quadrature(
         raise ValueError from err
 
     exp_a = np.where(np.exp(-arr_a) == 0, 1.0, np.exp(-arr_a))  # (m, n)
-    wsum = np.sum(
-        w * fvalues * np.expand_dims(exp_a, axis=-1), axis=-1
-    )  # (m, n)
+    wsum = np.sum(w * fvalues * np.expand_dims(exp_a, axis=-1), axis=-1)  # (m, n)
 
     if max(bound_shape) == 1:
         return np.squeeze(wsum)
@@ -113,7 +113,7 @@ def laguerre_quadrature(
 
 def unweighted_laguerre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    a: float | NDArray[np.float64] = 0.,
+    a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a, inf]`
@@ -128,12 +128,11 @@ def unweighted_laguerre_quadrature(
     arr_a = _reshape_and_broadcast(a)  # (m, n)
     bound_shape = arr_a.shape
 
-    shifted_x = x + np.expand_dims(arr_a, axis=-1) # (m, n, deg)
+    shifted_x = x + np.expand_dims(arr_a, axis=-1)  # (m, n, deg)
     try:
         #  avoid passing more than 2d to func
         fvalues = func(shifted_x.reshape(shifted_x.shape[0], -1))  # (m, n*deg)
-        nb_assets = fvalues.shape[0] # m
-        fvalues = fvalues.reshape((nb_assets, -1, deg))  # (m, n, deg)
+        fvalues = fvalues.reshape((fvalues.shape[0], -1, deg))  #  (m, n, deg)
     except ValueError as err:
         func_shape = func(1.0).shape
         if len(func_shape) > 0:
@@ -149,8 +148,8 @@ def unweighted_laguerre_quadrature(
 
 
 def ls_integrate(
-    model : FrozenParametricLifetimeModel,
-    func : Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    model: FrozenParametricLifetimeModel,
+    func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     b: float | NDArray[np.float64] = np.inf,
     deg: int = 10,
@@ -164,16 +163,21 @@ def ls_integrate(
         case AgeReplacementModel():
             ar = model.args[0].copy()
             arr_a, arr_b, arr_ar = _reshape_and_broadcast(a, b, ar)
-            bound_shape = arr_a.shape
-
             if np.any(arr_a >= arr_b):
                 raise ValueError
+            nb_assets = model.nb_assets
+            if nb_assets > 1: # control shape coherence
+                if arr_a.shape[0] != nb_assets and arr_b.shape[0] != nb_assets:
+                    raise ValueError
+            bound_shape = arr_a.shape
+            m = max(nb_assets, bound_shape[0])
+
             arr_b = np.minimum(arr_b, arr_ar)
             is_ar = arr_b == arr_ar
 
             integration = legendre_quadrature(integrand, arr_a, arr_b, deg=deg)
             if np.any(is_ar):
-                integration[is_ar] += func(arr_ar[is_ar].copy()) * model.sf(arr_ar[is_ar].copy())
+                integration[is_ar] += (func(arr_ar[is_ar].copy()) * model.sf(arr_ar[is_ar].copy())).reshape(m, -1)
 
             if max(bound_shape) == 1:
                 return np.squeeze(integration)
@@ -183,24 +187,22 @@ def ls_integrate(
             arr_a, arr_b = _reshape_and_broadcast(a, b)
             if np.any(arr_a >= arr_b):
                 raise ValueError
+            nb_assets = model.nb_assets
+            if nb_assets > 1: # control shape coherence
+                if arr_a.shape[0] != nb_assets and arr_b.shape[0] != nb_assets:
+                    raise ValueError
+
             bound_shape = arr_a.shape
-
-            arr_a = arr_a.flatten()  # (m*n,)
-            arr_b = arr_b.flatten()  # (m*n,)
-
-            integration = np.empty_like(arr_a)  # (m*n,)
+            m = max(nb_assets, bound_shape[0])
 
             is_inf = np.isinf(arr_b)
-            arr_b[is_inf] = model.isf(1e-4)
+            arr_b[is_inf] = np.broadcast_to(model.isf(1e-4).reshape(-1, 1), arr_b.shape)[is_inf]
 
-            if np.any(is_inf):
-                integration[is_inf] = legendre_quadrature(
-                    integrand, arr_a[is_inf].copy(), arr_b[is_inf].copy(), deg=deg
-                ) + unweighted_laguerre_quadrature(integrand, b[is_inf].copy(), deg=deg)
-            if np.any(~is_inf):
-                integration[~is_inf] = legendre_quadrature(
-                    integrand, arr_a[~is_inf].copy(), arr_b[~is_inf].copy(), deg=deg
-                )
+            integration = np.where(
+                is_inf,
+                (legendre_quadrature(integrand, arr_a, arr_b, deg=deg) + unweighted_laguerre_quadrature(integrand, arr_b, deg=deg)).reshape(m, -1),
+                legendre_quadrature(integrand, arr_a, arr_b, deg=deg).reshape(m, -1)
+            )
 
             if max(bound_shape) == 1:
                 return np.squeeze(integration)

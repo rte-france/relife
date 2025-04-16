@@ -60,20 +60,20 @@ def get_if_none(*args_names: str):
                 elif attr_value is not None and arg_value is not None:
                     # priority on arg
                     new_kwargs[name] = _reshape_like(
-                        arg_value, name, self.model.nb_assets
+                        arg_value, name, self.model_instances.nb_assets
                     )
                 elif attr_value is None and arg_value is not None:
                     # priority on argue)
                     new_kwargs[name] = _reshape_like(
-                        arg_value, name, self.model.nb_assets
+                        arg_value, name, self.model_instances.nb_assets
                     )
                 elif attr_value is not None and arg_value is None:
                     new_kwargs[name] = _reshape_like(
-                        attr_value, name, self.model.nb_assets
+                        attr_value, name, self.model_instances.nb_assets
                     )
                 else:
                     new_kwargs[name] = _reshape_like(
-                        arg_value, name, self.model.nb_assets
+                        arg_value, name, self.model_instances.nb_assets
                     )
             return method(self, *args, **new_kwargs)
 

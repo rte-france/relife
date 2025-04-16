@@ -448,6 +448,16 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     def freeze(self) -> FrozenParametricLifetimeModel:
         return FrozenParametricLifetimeModel(self)
 
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        deg: int = 100,
+    ) -> NDArray[np.float64]:
+        return super().ls_integrate(func, a, b, deg=deg)
+
     def fit(
         self,
         time: NDArray[np.float64],
@@ -746,6 +756,17 @@ class LifetimeRegression(
         self, covar: float | NDArray[np.float64], *args: *Args
     ) -> FrozenParametricLifetimeModel:
         return FrozenParametricLifetimeModel(self, *(covar, *args))
+
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        covar : float | NDArray[np.float64],
+        *args: *Args,
+        deg: int = 100,
+    ) -> NDArray[np.float64]:
+        return super().ls_integrate(func, a, b, *(covar, *args), deg=deg)
 
     def fit(
         self,

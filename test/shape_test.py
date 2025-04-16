@@ -1,396 +1,184 @@
+import itertools
 import random
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
-from relife.lifetime_model import Weibull, Gompertz, ProportionalHazard, AFT, Gamma, LogLogistic
+from relife.lifetime_model import (
+    Weibull,
+    Gompertz,
+    ProportionalHazard,
+    AFT,
+    Gamma,
+    LogLogistic,
+)
 
 
-M = 2
+"""
+distribution : LifetimeDistribution
+
+IN (time)		| OUT
+()			 	| ()	# 1 asset, 1 time
+(n,)			| (n,)	# 1 asset, n times
+(m,1)			| (m,1)	# m assets, 1 time/asset
+(m, n)			| (m,n)	# m assets, n times/asset
+
+regression : LifetimeRegression
+
+IN (time, covar)| OUT
+(), (k,) 		| ()	# 1 asset, 1 time, broadcasted covar
+(n,), (k,) 		| (n,)	# 1 asset, n times, broadcasted covar
+(m,1), (k,) 	| (m,1)	# m assets, 1 time/asset, broadcasted covar
+(m,n), (k,) 	| (m,n)	# m assets, n times/asset, broadcasted covar
+(), (m,k) 		| (m,1)	# m assets, 1 time/asset
+(n,), (m,k)	    | (m,n)	# m assets, n times/asset
+(m,1), (m,k)	| (m,1)	# m assets, 1 time/asset
+(m,n), (m,k) 	| (m,n)	# m assets, n times/asset
+(m,n), (z,k) 	| Error # m assets in time, z assets in covar
+"""
+
 N = 10
-NB_COEF = 4
+M = 3
+K = 5
+random.seed(10)
+np.random.seed(10)
 
-lifetime_distributions = [
-    Weibull(2, 0.05),
-    Gompertz(0.01, 0.1),
-    Gamma(2, 0.05),
-    LogLogistic(3, 0.05),
+model_instances = {
+    "distribution": [
+        Weibull(2, 0.05),
+        Gompertz(0.01, 0.1),
+        Gamma(2, 0.05),
+        LogLogistic(3, 0.05),
+    ]
+}
+model_instances["regression"] = [
+    ProportionalHazard(distri, coef=(random.uniform(1.0, 2.0),) * K)
+    for distri in model_instances["distribution"]
+]
+model_instances["regression"] += [
+    AFT(distri, coef=(random.uniform(1.0, 2.0),) * K)
+    for distri in model_instances["distribution"]
+]
+model_instances["frozen_distribution"] = [
+    model.freeze() for model in model_instances["distribution"]
+]
+model_instances["frozen_regression"] = [
+    model.freeze() for model in model_instances["regression"]
 ]
 
-lifetime_regressions = [ProportionalHazard(distri, coef=(random.uniform(1.0, 2.0),) * NB_COEF) for distri in lifetime_distributions]
-lifetime_regressions += [AFT(distri, coef=(random.uniform(1.0, 2.0),) * NB_COEF) for distri in lifetime_distributions]
-
-frozen_distributions = [model.freeze() for model in lifetime_distributions]
-frozen_regressions = [model.freeze(np.random.randn(M, NB_COEF)) for model in lifetime_regressions]
-
-
-@pytest.mark.parametrize("model", lifetime_distributions)
-class Test0DDistribution:
-    time = random.uniform(2.5, 10.0)
-    probability = random.random()
-    cumulative_hazard_rate = random.uniform(2.5, 10.0)
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == ()
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == ()
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == ()
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == ()
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == ()
-
-    def test_ppf(self, model):
-        assert model.ppf(self.probability).shape == ()
-
-    def test_ichf(self, model):
-        assert model.ichf(self.probability).shape == ()
-
-    # def test_mrl(self, model):
-    #     assert model.mrl(self.time).shape == ()
-
-    # def test_mean(self, model):
-    #     assert model.mean().shape == ()
-    #
-    # def test_var(self, model):
-    #     assert model.var().shape == ()
-    #
-    # def test_median(self, model):
-    #     assert model.median().shape == ()
-
-
-
-
-@pytest.mark.parametrize("model", lifetime_distributions)
-class Test1DDistribution:
-    time = np.random.uniform(2.5, 10.0, size=(M,))
-    probability = np.random.uniform(0, 1, size=(M,))
-    cumulative_hazard_rate = np.random.uniform(2.5, 10.0, size=(M,))
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == (M,)
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == (M,)
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == (M,)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == (M,)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == (M,)
-
-    def test_ppf(self, model):
-        assert model.ppf(self.probability).shape == (M,)
-
-    def test_ichf(self, model):
-        assert model.ichf(self.probability).shape == (M,)
-
-    # def test_mrl(self, model):
-    #     assert model.mrl(self.time).shape == (M,)
-    #
-    # def test_mean(self, model):
-    #     assert model.mean().shape == (M,)
-    #
-    # def test_var(self, model):
-    #     assert model.var().shape == (M,)
-    #
-    # def test_median(self, model):
-    #     assert model.median().shape == (M,)
-
-
-
-
-@pytest.mark.parametrize("model", lifetime_distributions)
-class Test2DDistribution:
-    time = np.random.uniform(2.5, 10.0, size=(M,N))
-    probability = np.random.uniform(0, 1, size=(M,N))
-    cumulative_hazard_rate = np.random.uniform(2.5, 10.0, size=(M,N))
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == (M,N)
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == (M,N)
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == (M,N)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == (M,N)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == (M,N)
-
-    def test_ppf(self, model):
-        assert model.ppf(self.probability).shape == (M,N)
-
-    def test_ichf(self, model):
-        assert model.ichf(self.probability).shape == (M,N)
-
-    # def test_mrl(self, model):
-    #     assert model.mrl(self.time).shape == (M,N)
-    #
-    # def test_mean(self, model):
-    #     assert model.mean().shape == (M,N)
-    #
-    # def test_var(self, model):
-    #     assert model.var().shape == (M,N)
-    #
-    # def test_median(self, model):
-    #     assert model.median().shape == (M,N)
-    #
-
-
-
-
-@pytest.mark.parametrize("model", lifetime_regressions)
-class Test0DRegression:
-    time = random.uniform(2.5, 10.0)
-    covar = np.random.randn(M, NB_COEF)
-
-    def test_sf(self, model):
-        assert model.sf(self.time, self.covar).shape == (M,)
-
-    def test_hf(self, model):
-        assert model.hf(self.time, self.covar).shape == (M,)
-
-    def test_chf(self, model):
-        assert model.chf(self.time, self.covar).shape == (M,)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time, self.covar).shape == (M,)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time, self.covar).shape == (M,)
-
-
-
-@pytest.mark.parametrize("model", lifetime_regressions)
-class Test1DRegression:
-    time = np.random.uniform(2.5, 10.0, size=(M,))
-    covar = np.random.randn(M, NB_COEF)
-
-    def test_sf(self, model):
-        assert model.sf(self.time, self.covar).shape == (M,)
-
-    def test_hf(self, model):
-        assert model.hf(self.time, self.covar).shape == (M,)
-
-    def test_chf(self, model):
-        assert model.chf(self.time, self.covar).shape == (M,)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time, self.covar).shape == (M,)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time, self.covar).shape == (M,)
-
-
-
-@pytest.mark.parametrize("model", lifetime_regressions)
-class Test2DRegression:
-    time = np.random.uniform(2.5, 10.0, size=(M, N))
-    covar = np.random.randn(M, NB_COEF)
-
-    def test_sf(self, model):
-        assert model.sf(self.time, self.covar).shape == (M,N)
-
-    def test_hf(self, model):
-        assert model.hf(self.time, self.covar).shape == (M,N)
-
-    def test_chf(self, model):
-        assert model.chf(self.time, self.covar).shape == (M,N)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time, self.covar).shape == (M,N)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time, self.covar).shape == (M,N)
-
-
-
-
-@pytest.mark.parametrize("model", frozen_distributions)
-class Test0DFrozenDistribution:
-    time = random.uniform(2.5, 10.0)
-    probability = random.random()
-    cumulative_hazard_rate = random.uniform(2.5, 10.0)
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == ()
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == ()
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == ()
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == ()
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == ()
-
-    def test_ppf(self, model):
-        assert model.ppf(self.probability).shape == ()
-
-    def test_ichf(self, model):
-        assert model.ichf(self.probability).shape == ()
-
-    # def test_mrl(self, model):
-    #     assert model.mrl(self.time).shape == ()
-
-    # def test_mean(self, model):
-    #     assert model.mean().shape == ()
-    #
-    # def test_var(self, model):
-    #     assert model.var().shape == ()
-    #
-    # def test_median(self, model):
-    #     assert model.median().shape == ()
-
-
-
-
-@pytest.mark.parametrize("model", frozen_distributions)
-class Test1DFrozenDistribution:
-    time = np.random.uniform(2.5, 10.0, size=(M,))
-    probability = np.random.uniform(0, 1, size=(M,))
-    cumulative_hazard_rate = np.random.uniform(2.5, 10.0, size=(M,))
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == (M,)
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == (M,)
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == (M,)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == (M,)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == (M,)
-
-    def test_ppf(self, model):
-        assert model.ppf(self.probability).shape == (M,)
-
-    def test_ichf(self, model):
-        assert model.ichf(self.probability).shape == (M,)
-
-    # def test_mrl(self, model):
-    #     assert model.mrl(self.time).shape == (M,)
-    #
-    # def test_mean(self, model):
-    #     assert model.mean().shape == (M,)
-    #
-    # def test_var(self, model):
-    #     assert model.var().shape == (M,)
-    #
-    # def test_median(self, model):
-    #     assert model.median().shape == (M,)
-
-
-
-
-@pytest.mark.parametrize("model", frozen_distributions)
-class Test2DFrozenDistribution:
-    time = np.random.uniform(2.5, 10.0, size=(M,N))
-    probability = np.random.uniform(0, 1, size=(M,N))
-    cumulative_hazard_rate = np.random.uniform(2.5, 10.0, size=(M,N))
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == (M,N)
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == (M,N)
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == (M,N)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == (M,N)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == (M,N)
-
-    def test_ppf(self, model):
-        assert model.ppf(self.probability).shape == (M,N)
-
-    def test_ichf(self, model):
-        assert model.ichf(self.probability).shape == (M,N)
-
-
-
-@pytest.mark.parametrize("model", frozen_regressions)
-class Test0DFrozenRegression:
-    time = random.uniform(2.5, 10.0)
-    covar = np.random.randn(M, NB_COEF)
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == (M,)
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == (M,)
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == (M,)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == (M,)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == (M,)
-
-
-
-@pytest.mark.parametrize("model", frozen_regressions)
-class Test1DFrozenRegression:
-    time = np.random.uniform(2.5, 10.0, size=(M,))
-    covar = np.random.randn(M, NB_COEF)
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == (M,)
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == (M,)
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == (M,)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == (M,)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == (M,)
-
-
-
-@pytest.mark.parametrize("model", frozen_regressions)
-class Test2DFrozenRegression:
-    time = np.random.uniform(2.5, 10.0, size=(M, N))
-    covar = np.random.randn(M, NB_COEF)
-
-    def test_sf(self, model):
-        assert model.sf(self.time).shape == (M,N)
-
-    def test_hf(self, model):
-        assert model.hf(self.time).shape == (M,N)
-
-    def test_chf(self, model):
-        assert model.chf(self.time).shape == (M,N)
-
-    def test_cdf(self, model):
-        assert model.cdf(self.time).shape == (M,N)
-
-    def test_pdf(self, model):
-        assert model.pdf(self.time).shape == (M,N)
+io = {
+    "distribution": [
+        (np.random.uniform(2.5, 10.0, size=()), ()),
+        (np.random.uniform(2.5, 10.0, size=(N,)), (N,)),
+        (np.random.uniform(2.5, 10.0, size=(M, 1)), (M, 1)),
+        (np.random.uniform(2.5, 10.0, size=(M, N)), (M, N)),
+    ],
+    "regression": [
+        (
+            np.random.uniform(2.5, 10.0, size=()),
+            np.random.uniform(2.5, 10.0, size=(K,)),
+            (),
+        ),
+        (
+            np.random.uniform(2.5, 10.0, size=(N,)),
+            np.random.uniform(2.5, 10.0, size=(K,)),
+            (N,),
+        ),
+        (
+            np.random.uniform(2.5, 10.0, size=(M, 1)),
+            np.random.uniform(2.5, 10.0, size=(K,)),
+            (M, 1),
+        ),
+        (
+            np.random.uniform(2.5, 10.0, size=(M, N)),
+            np.random.uniform(2.5, 10.0, size=(K,)),
+            (M, N),
+        ),
+        (random.uniform(2.5, 10.0), np.random.uniform(2.5, 10.0, size=(M, K)), (M, 1)),
+        (
+            np.random.uniform(2.5, 10.0, size=(N,)),
+            np.random.uniform(2.5, 10.0, size=(M, K)),
+            (M, N),
+        ),
+        (
+            np.random.uniform(2.5, 10.0, size=(M, 1)),
+            np.random.uniform(2.5, 10.0, size=(M, K)),
+            (M, 1),
+        ),
+        (
+            np.random.uniform(2.5, 10.0, size=(M, N)),
+            np.random.uniform(2.5, 10.0, size=(M, K)),
+            (M, N),
+        ),
+    ],
+}
+
+
+@pytest.mark.parametrize(
+    "model, time, output_shape",
+    list(itertools.product(model_instances["distribution"], io["distribution"])),
+)
+def test_distribution(model, time: NDArray[np.float64], output_shape: tuple[int, ...]):
+    assert model.sf(time) == output_shape
+    assert model.hf(time) == output_shape
+    assert model.chf(time) == output_shape
+    assert model.cdf(time) == output_shape
+    assert model.pdf(time) == output_shape
+    probability = np.random.rand(*time.shape)
+    assert model.ppf(probability) == output_shape
+    assert model.ichf(probability) == output_shape
+
+
+@pytest.mark.parametrize(
+    "model, time, output_shape",
+    list(itertools.product(model_instances["frozen_regression"], io["regression"])),
+)
+def test_frozen_distribution(
+    model, time: NDArray[np.float64], output_shape: tuple[int, ...]
+):
+    assert model.sf(time) == output_shape
+    assert model.hf(time) == output_shape
+    assert model.chf(time) == output_shape
+    assert model.cdf(time) == output_shape
+    assert model.pdf(time) == output_shape
+    probability = np.random.rand(*time.shape)
+    assert model.ppf(probability) == output_shape
+    assert model.ichf(probability) == output_shape
+
+
+@pytest.mark.parametrize(
+    "model, time, covar, output_shape",
+    list(itertools.product(model_instances["regression"], io["regression"])),
+)
+def test_regression(
+    model,
+    time: NDArray[np.float64],
+    covar: NDArray[np.float64],
+    output_shape: tuple[int, ...],
+):
+    assert model.sf(time, covar) == output_shape
+    assert model.hf(time, covar) == output_shape
+    assert model.chf(time, covar) == output_shape
+    assert model.cdf(time, covar) == output_shape
+    assert model.pdf(time, covar) == output_shape
+    probability = np.random.rand(*time.shape)
+    assert model.ppf(probability, covar) == output_shape
+    assert model.ichf(probability, covar) == output_shape
+
+
+@pytest.mark.parametrize(
+    "model, time, _, output_shape",
+    list(itertools.product(model_instances["frozen_regression"], io["regression"])),
+)
+def test_frozen_regression(
+    model, time: NDArray[np.float64], _, output_shape: tuple[int, ...]
+):
+    assert model.sf(time) == output_shape
+    assert model.hf(time) == output_shape
+    assert model.chf(time) == output_shape
+    assert model.cdf(time) == output_shape
+    assert model.pdf(time) == output_shape
+    probability = np.random.rand(*time.shape)
+    assert model.ppf(probability) == output_shape
+    assert model.ichf(probability) == output_shape
