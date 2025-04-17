@@ -436,7 +436,11 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     ) -> NDArray[np.float64]: ...
 
     def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return -self.jac_chf(time) * self.sf(time)
+        time = np.asarray(time, dtype=np.float64)
+        if time.ndim == 2:
+            if time.shape[-1] > 1:
+                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
+        return -self.jac_chf(time) * self.sf(time).reshape(-1, 1)
 
     def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return -self.jac_sf(time)
@@ -495,7 +499,7 @@ class CovarEffect(ParametricModel):
         super().__init__()
         self.set_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
 
-    def g(self, covar: float | NDArray[np.float64], ndim : int = 1) -> NDArray[np.float64]:
+    def g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
         """
         Compute the covariates effect.
 
@@ -504,8 +508,6 @@ class CovarEffect(ParametricModel):
         covar : np.ndarray of shape (k, ) or (m, k)
             Covariate values. Should have shape (k, ) or (m, k) where m is
             the number of assets and k is the number of covariates.
-        ndim : int
-            Expected number of dimensions on the output
 
         Returns
         -------
@@ -526,8 +528,6 @@ class CovarEffect(ParametricModel):
             raise ValueError(
                 f"Invalid number of covar : expected {self.nb_params}, got {covar.shape[-1]}"
             )
-        if ndim <= 1:
-            return np.exp(np.sum(self.params * covar, axis=1))  #  (m,)
         return np.exp(np.sum(self.params * covar, axis=1, keepdims=True)) # (m,1)
 
 

@@ -84,9 +84,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        baseline_hf = self.baseline.chf(time, *args) # (m,) ou (m, n)
-        covar_effect = self.covar_effect.g(covar, ndim=baseline_hf.ndim) # (m, 1)
-        return covar_effect * self.baseline.hf(time, *args)
+        return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
     def chf(
         self,
@@ -95,9 +93,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         *args: *Args,
     ) -> NDArray[np.float64]:
         # (m,)
-        baseline_chf = self.baseline.chf(time, *args) # (m,) ou (m, n)
-        covar_effect = self.covar_effect.g(covar, ndim=baseline_chf.ndim)
-        return covar_effect * baseline_chf
+        return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
     @override
     def ichf(
@@ -106,8 +102,6 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        cumulative_hazard_rate = np.asarray(cumulative_hazard_rate)
-        covar_effect = self.covar_effect.g(covar, ndim=cumulative_hazard_rate.ndim)
         return self.baseline.ichf(
             cumulative_hazard_rate / self.covar_effect.g(covar), *args
         )
@@ -122,7 +116,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
             return np.column_stack(
                 (
                     self.covar_effect.jac_g(covar) * self.baseline.hf(time, *args),
-                    self.covar_effect.g(covar, ndim=2) * self.baseline.jac_hf(time, *args),
+                    self.covar_effect.g(covar) * self.baseline.jac_hf(time, *args),
                 )
             )
         raise AttributeError
@@ -137,7 +131,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
             return np.column_stack(
                 (
                     self.covar_effect.jac_g(covar) * self.baseline.chf(time, *args),
-                    self.covar_effect.g(covar, ndim=2) * self.baseline.jac_chf(time, *args),
+                    self.covar_effect.g(covar) * self.baseline.jac_chf(time, *args),
                 )
             )
         raise AttributeError
@@ -149,7 +143,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "dhf"):
-            return self.covar_effect.g(covar, ndim=2) * self.baseline.dhf(time, *args)
+            return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
         raise AttributeError
 
 
@@ -212,10 +206,8 @@ class AFT(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        time = np.asarray(time)
-        t0 = time / self.covar_effect.g(covar, ndim=time.ndim)
-        baseline_hf = self.baseline.hf(t0, *args)
-        return baseline_hf / self.covar_effect.g(covar, ndim=baseline_hf.ndim)
+        t0 = time / self.covar_effect.g(covar)
+        return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
 
     def chf(
         self,
@@ -223,8 +215,7 @@ class AFT(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        time = np.asarray(time)
-        t0 = time / self.covar_effect.g(covar, ndim=time.ndim)
+        t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
 
     @override
@@ -234,11 +225,9 @@ class AFT(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        cumulative_hazard_rate = np.asarray(cumulative_hazard_rate)
-        baseline_ichf = self.baseline.ichf(
+        return self.covar_effect.g(covar) * self.baseline.ichf(
             cumulative_hazard_rate, *args
         )
-        return self.covar_effect.g(covar, ndim=baseline_ichf.ndim) * baseline_ichf
 
     def jac_hf(
         self,
@@ -251,9 +240,9 @@ class AFT(LifetimeRegression[*Args]):
             return np.column_stack(
                 (
                     -self.covar_effect.jac_g(covar)
-                    / self.covar_effect.g(covar, ndim=2) ** 2
+                    / self.covar_effect.g(covar) ** 2
                     * (self.baseline.hf(t0, *args) + t0 * self.baseline.dhf(t0, *args)),
-                    self.baseline.jac_hf(t0, *args) / self.covar_effect.g(covar, ndim=2),
+                    self.baseline.jac_hf(t0, *args) / self.covar_effect.g(covar),
                 )
             )
         raise AttributeError
@@ -269,7 +258,7 @@ class AFT(LifetimeRegression[*Args]):
             return np.column_stack(
                 (
                     -self.covar_effect.jac_g(covar)
-                    / self.covar_effect.g(covar, ndim=2)
+                    / self.covar_effect.g(covar)
                     * t0
                     * self.baseline.hf(t0, *args),
                     self.baseline.jac_chf(t0, *args),
@@ -285,7 +274,7 @@ class AFT(LifetimeRegression[*Args]):
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "dhf"):
             t0 = time / self.covar_effect.g(covar)
-            return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar, ndim=2) ** 2
+            return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
         raise AttributeError
 
 

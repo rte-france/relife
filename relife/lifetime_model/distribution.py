@@ -170,6 +170,7 @@ class Weibull(LifetimeDistribution):
         )
 
     def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        time = np.asarray(time, dtype=np.float64)
         return (
             self.shape
             * (self.shape - 1)
