@@ -19,12 +19,12 @@ def test_weibull(weibull, time, probability):
     assert weibull.pdf(time()).shape  == ()
     assert weibull.ppf(probability()).shape  == ()
     assert weibull.ichf(probability()).shape  == ()
-
     assert weibull.dhf(time()).shape  == ()
     assert weibull.jac_sf(time()).shape  == (1,2)
     assert weibull.jac_hf(time()).shape  == (1,2)
     assert weibull.jac_chf(time()).shape  == (1,2)
     assert weibull.jac_cdf(time()).shape  == (1,2)
+    assert weibull.jac_pdf(time()).shape  == (1,2)
 
     n = 10
 
@@ -35,12 +35,12 @@ def test_weibull(weibull, time, probability):
     assert weibull.pdf(time((n,))).shape  == (n,)
     assert weibull.ppf(probability((n,))).shape  == (n,)
     assert weibull.ichf(probability((n,))).shape  == (n,)
-
     assert weibull.dhf(time(n,)).shape  == (n,)
     assert weibull.jac_sf(time(n,)).shape  == (n,2)
     assert weibull.jac_hf(time(n,)).shape  == (n,2)
     assert weibull.jac_chf(time(n,)).shape  == (n,2)
     assert weibull.jac_cdf(time(n,)).shape  == (n,2)
+    assert weibull.jac_pdf(time(n,)).shape  == (n,2)
 
     m = 3
 
@@ -51,13 +51,12 @@ def test_weibull(weibull, time, probability):
     assert weibull.pdf(time((m,1))).shape  == (m,1)
     assert weibull.ppf(probability((m,1))).shape  == (m,1)
     assert weibull.ichf(probability((m,1))).shape  == (m,1)
-
     assert weibull.dhf(time((m,1))).shape  == (m,1)
     assert weibull.jac_sf(time((m,1))).shape  == (m,2)
     assert weibull.jac_hf(time((m,1))).shape  == (m,2)
     assert weibull.jac_chf(time((m,1))).shape  == (m,2)
     assert weibull.jac_cdf(time((m,1))).shape  == (m,2)
-
+    assert weibull.jac_pdf(time((m,1))).shape  == (m,2)
 
     assert weibull.sf(time((m,n))).shape == (m,n)
     assert weibull.hf(time((m,n))).shape  == (m,n)
@@ -66,10 +65,7 @@ def test_weibull(weibull, time, probability):
     assert weibull.pdf(time((m,n))).shape  == (m,n)
     assert weibull.ppf(probability((m,n))).shape  == (m,n)
     assert weibull.ichf(probability((m,n))).shape  == (m,n)
-
-    with pytest.raises(ValueError) as err:
-        weibull.dhf(time((m, n)))
-    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    assert weibull.dhf(time((m, n))).shape == (m,n)
     with pytest.raises(ValueError) as err:
         weibull.jac_sf(time((m, n)))
     assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
@@ -78,6 +74,9 @@ def test_weibull(weibull, time, probability):
     assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
     with pytest.raises(ValueError) as err:
         weibull.jac_chf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        weibull.jac_pdf(time((m, n)))
     assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
     with pytest.raises(ValueError) as err:
         weibull.jac_cdf(time((m, n)))
@@ -94,6 +93,12 @@ def test_gompertz(gompertz, time, probability):
     assert gompertz.pdf(time()).shape  == ()
     assert gompertz.ppf(probability()).shape  == ()
     assert gompertz.ichf(probability()).shape  == ()
+    assert gompertz.dhf(time()).shape  == ()
+    assert gompertz.jac_sf(time()).shape  == (1,2)
+    assert gompertz.jac_hf(time()).shape  == (1,2)
+    assert gompertz.jac_chf(time()).shape  == (1,2)
+    assert gompertz.jac_cdf(time()).shape  == (1,2)
+    assert gompertz.jac_pdf(time()).shape  == (1,2)
 
     n = 10
 
@@ -104,6 +109,12 @@ def test_gompertz(gompertz, time, probability):
     assert gompertz.pdf(time((n,))).shape  == (n,)
     assert gompertz.ppf(probability((n,))).shape  == (n,)
     assert gompertz.ichf(probability((n,))).shape  == (n,)
+    assert gompertz.dhf(time(n,)).shape  == (n,)
+    assert gompertz.jac_sf(time(n,)).shape  == (n,2)
+    assert gompertz.jac_hf(time(n,)).shape  == (n,2)
+    assert gompertz.jac_chf(time(n,)).shape  == (n,2)
+    assert gompertz.jac_cdf(time(n,)).shape  == (n,2)
+    assert gompertz.jac_pdf(time(n,)).shape  == (n,2)
 
     m = 3
 
@@ -114,6 +125,12 @@ def test_gompertz(gompertz, time, probability):
     assert gompertz.pdf(time((m,1))).shape  == (m,1)
     assert gompertz.ppf(probability((m,1))).shape  == (m,1)
     assert gompertz.ichf(probability((m,1))).shape  == (m,1)
+    assert gompertz.dhf(time((m,1))).shape  == (m,1)
+    assert gompertz.jac_sf(time((m,1))).shape  == (m,2)
+    assert gompertz.jac_hf(time((m,1))).shape  == (m,2)
+    assert gompertz.jac_chf(time((m,1))).shape  == (m,2)
+    assert gompertz.jac_cdf(time((m,1))).shape  == (m,2)
+    assert gompertz.jac_pdf(time((m,1))).shape  == (m,2)
 
 
     assert gompertz.sf(time((m,n))).shape == (m,n)
@@ -123,6 +140,23 @@ def test_gompertz(gompertz, time, probability):
     assert gompertz.pdf(time((m,n))).shape  == (m,n)
     assert gompertz.ppf(probability((m,n))).shape  == (m,n)
     assert gompertz.ichf(probability((m,n))).shape  == (m,n)
+    assert gompertz.dhf(time((m, n))).shape == (m,n)
+    with pytest.raises(ValueError) as err:
+        gompertz.jac_sf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gompertz.jac_hf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gompertz.jac_chf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gompertz.jac_pdf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gompertz.jac_cdf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+
 
 
 def test_gamma(gamma, time, probability):
@@ -134,7 +168,13 @@ def test_gamma(gamma, time, probability):
     assert gamma.pdf(time()).shape  == ()
     assert gamma.ppf(probability()).shape  == ()
     assert gamma.ichf(probability()).shape  == ()
-
+    assert gamma.dhf(time()).shape  == ()
+    assert gamma.jac_sf(time()).shape  == (1,2)
+    assert gamma.jac_hf(time()).shape  == (1,2)
+    assert gamma.jac_chf(time()).shape  == (1,2)
+    assert gamma.jac_cdf(time()).shape  == (1,2)
+    assert gamma.jac_pdf(time()).shape  == (1,2)
+    #
     n = 10
 
     assert gamma.sf(time((n,))).shape == (n,)
@@ -144,6 +184,12 @@ def test_gamma(gamma, time, probability):
     assert gamma.pdf(time((n,))).shape  == (n,)
     assert gamma.ppf(probability((n,))).shape  == (n,)
     assert gamma.ichf(probability((n,))).shape  == (n,)
+    assert gamma.dhf(time(n,)).shape  == (n,)
+    assert gamma.jac_sf(time(n,)).shape  == (n,2)
+    assert gamma.jac_hf(time(n,)).shape  == (n,2)
+    assert gamma.jac_chf(time(n,)).shape  == (n,2)
+    assert gamma.jac_cdf(time(n,)).shape  == (n,2)
+    assert gamma.jac_pdf(time(n,)).shape  == (n,2)
 
     m = 3
 
@@ -154,6 +200,12 @@ def test_gamma(gamma, time, probability):
     assert gamma.pdf(time((m,1))).shape  == (m,1)
     assert gamma.ppf(probability((m,1))).shape  == (m,1)
     assert gamma.ichf(probability((m,1))).shape  == (m,1)
+    assert gamma.dhf(time((m,1))).shape  == (m,1)
+    assert gamma.jac_sf(time((m,1))).shape  == (m,2)
+    assert gamma.jac_hf(time((m,1))).shape  == (m,2)
+    assert gamma.jac_chf(time((m,1))).shape  == (m,2)
+    assert gamma.jac_cdf(time((m,1))).shape  == (m,2)
+    assert gamma.jac_pdf(time((m,1))).shape  == (m,2)
 
 
     assert gamma.sf(time((m,n))).shape == (m,n)
@@ -163,6 +215,22 @@ def test_gamma(gamma, time, probability):
     assert gamma.pdf(time((m,n))).shape  == (m,n)
     assert gamma.ppf(probability((m,n))).shape  == (m,n)
     assert gamma.ichf(probability((m,n))).shape  == (m,n)
+    assert gamma.dhf(time((m, n))).shape == (m,n)
+    with pytest.raises(ValueError) as err:
+        gamma.jac_sf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gamma.jac_hf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gamma.jac_chf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gamma.jac_pdf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        gamma.jac_cdf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
 
 
 
@@ -175,6 +243,12 @@ def test_loglogistic(loglogistic, time, probability):
     assert loglogistic.pdf(time()).shape  == ()
     assert loglogistic.ppf(probability()).shape  == ()
     assert loglogistic.ichf(probability()).shape  == ()
+    assert loglogistic.dhf(time()).shape  == ()
+    assert loglogistic.jac_sf(time()).shape  == (1,2)
+    assert loglogistic.jac_hf(time()).shape  == (1,2)
+    assert loglogistic.jac_chf(time()).shape  == (1,2)
+    assert loglogistic.jac_cdf(time()).shape  == (1,2)
+    assert loglogistic.jac_pdf(time()).shape  == (1,2)
 
     n = 10
 
@@ -185,6 +259,12 @@ def test_loglogistic(loglogistic, time, probability):
     assert loglogistic.pdf(time((n,))).shape  == (n,)
     assert loglogistic.ppf(probability((n,))).shape  == (n,)
     assert loglogistic.ichf(probability((n,))).shape  == (n,)
+    assert loglogistic.dhf(time(n,)).shape  == (n,)
+    assert loglogistic.jac_sf(time(n,)).shape  == (n,2)
+    assert loglogistic.jac_hf(time(n,)).shape  == (n,2)
+    assert loglogistic.jac_chf(time(n,)).shape  == (n,2)
+    assert loglogistic.jac_cdf(time(n,)).shape  == (n,2)
+    assert loglogistic.jac_pdf(time(n,)).shape  == (n,2)
 
     m = 3
 
@@ -195,6 +275,13 @@ def test_loglogistic(loglogistic, time, probability):
     assert loglogistic.pdf(time((m,1))).shape  == (m,1)
     assert loglogistic.ppf(probability((m,1))).shape  == (m,1)
     assert loglogistic.ichf(probability((m,1))).shape  == (m,1)
+    assert loglogistic.dhf(time((m,1))).shape  == (m,1)
+    assert loglogistic.jac_sf(time((m,1))).shape  == (m,2)
+    assert loglogistic.jac_hf(time((m,1))).shape  == (m,2)
+    assert loglogistic.jac_chf(time((m,1))).shape  == (m,2)
+    assert loglogistic.jac_cdf(time((m,1))).shape  == (m,2)
+    assert loglogistic.jac_pdf(time((m,1))).shape  == (m,2)
+
 
 
     assert loglogistic.sf(time((m,n))).shape == (m,n)
@@ -204,3 +291,19 @@ def test_loglogistic(loglogistic, time, probability):
     assert loglogistic.pdf(time((m,n))).shape  == (m,n)
     assert loglogistic.ppf(probability((m,n))).shape  == (m,n)
     assert loglogistic.ichf(probability((m,n))).shape  == (m,n)
+    assert loglogistic.dhf(time((m, n))).shape == (m,n)
+    with pytest.raises(ValueError) as err:
+        loglogistic.jac_sf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        loglogistic.jac_hf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        loglogistic.jac_chf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        loglogistic.jac_pdf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+    with pytest.raises(ValueError) as err:
+        loglogistic.jac_cdf(time((m, n)))
+    assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)

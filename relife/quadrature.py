@@ -1,35 +1,55 @@
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
-    from relife.lifetime_model import FrozenParametricLifetimeModel
+    from relife.lifetime_model import ParametricLifetimeModel, FrozenParametricLifetimeModel
 
 
-def _reshape_and_broadcast(
-    *args: float | NDArray[np.float64],
-) -> NDArray[np.float64] | tuple[NDArray[np.float64], ...]:
-    def reshape(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        arr = np.asarray(x)
+def _reshape_and_broadcast_bounds(
+    a : float | NDArray[np.float64],
+    b : Optional[float|NDArray[np.float64]] = None,
+    integrand_nb_assets : int = 1,
+):
+    """
+    nb_assets : int, default 1
+        0-axis length of the output returned by the integrand. If it is 1, a or b can be 2d and result is broadcasted.
+        If it is greater than 1, a and b must have the same 0-axis length if they are 2d. If the 0-axis has length value
+        of 1, it will be broadcasted.
+    """
+
+
+    def reshape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        arr = np.asarray(bound, dtype=np.float64)
+        if np.any(arr < 0):
+            raise ValueError
         if arr.ndim > 2:
             raise ValueError
         if arr.ndim <= 1:
-            arr = arr.reshape(-1, 1)
-        if np.any(arr < 0):
-            raise ValueError
+            arr = np.broadcast_to(arr, (integrand_nb_assets, arr.size))
+        if arr.ndim == 2 and integrand_nb_assets != 1: # maybe bound 0-axis is 1 or m
+            if arr.shape[0] != 1 and arr.shape[0] != integrand_nb_assets: # if 0-axis is m and m != assets -> error
+                raise ValueError
         return arr
 
-    if len(args) > 1:
-        return tuple((arg.copy() for arg in np.broadcast_arrays(*map(reshape, args))))
-    return reshape(args[0])
+    a = reshape(a)
+    if b is not None:
+        b = reshape(b)
+        try:
+            a, b = np.broadcast_arrays(a, b)
+            return a.copy(), b.copy()
+        except ValueError as err:
+            raise ValueError(f"Incompatible a, b shapes. Got a.shape, b.shape : {a.shape}, {b.shape}") from err
+    return a
 
 
 def legendre_quadrature(
-    func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    integrand: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64],
     b: float | NDArray[np.float64],
+    integrand_nb_assets : int = 1,
     deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of func over the interval `[a,b]`
@@ -42,40 +62,43 @@ def legendre_quadrature(
     """
 
     x, w = np.polynomial.legendre.leggauss(deg)  # (deg,)
-    arr_a, arr_b = _reshape_and_broadcast(a, b)  # same shape (m, n)
+    arr_a, arr_b = _reshape_and_broadcast_bounds(a, b, integrand_nb_assets=integrand_nb_assets)
     if np.any(arr_b == np.inf):
         raise ValueError
     if np.any(arr_a >= arr_b):
         raise ValueError
     bound_shape = arr_a.shape
 
+    # m == nb_assets
     p = (arr_b - arr_a) / 2  # (m, n)
     m = (arr_a + arr_b) / 2  # (m, n)
     u = np.expand_dims(p, -1) * x + np.expand_dims(m, -1)  # (m, n, deg)
     v = np.expand_dims(p, -1) * w  # (m, n, deg)
     try:
         #  avoid passing more than 2d to func
-        fvalues = func(u.reshape(u.shape[0], -1))  #  (m, n*deg)
+        fvalues = integrand(u.reshape(u.shape[0], -1))  #  (m, n*deg)
         fvalues = fvalues.reshape((fvalues.shape[0], -1, deg))  #  (m, n, deg)
     except ValueError as err:
-        func_shape = func(1.0).shape
+        func_shape = integrand(1.0).shape # (), or (m, 1)
         if len(func_shape) > 0:
             raise ValueError(
-                f"Broadcasting error between a and func. Expected a of shape {(func_shape[0],)} or {(func_shape[0], -1)}"
+                f"Broadcasting error between a and func : func returns {(func_shape[0],)} nb_assets but nb_assets is set to {integrand_nb_assets}"
             )
         raise ValueError from err
 
     wsum = np.sum(v * fvalues, axis=-1).reshape(bound_shape)
-    if max(bound_shape) == 1:
+    if integrand_nb_assets == 1:
         return np.squeeze(wsum)
-    return np.squeeze(wsum.reshape(bound_shape))
+    return wsum
+
 
 
 def laguerre_quadrature(
-    func: Callable[
+    integrand: Callable[
         [NDArray[np.float64]], NDArray[np.float64]
     ],  # tester avec func : 1d -> 2d / 0d -> 2d / 1d -> 1d , etc.
     a: float | NDArray[np.float64] = 0.0,
+    integrand_nb_assets : int = 1,
     deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func * exp(-x)` over the interval `[a, inf]`
@@ -87,33 +110,35 @@ def laguerre_quadrature(
     """
 
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    arr_a = _reshape_and_broadcast(a)  # (m, n)
+    # m == nb_assets
+    arr_a = _reshape_and_broadcast_bounds(a, integrand_nb_assets=integrand_nb_assets)  # (m, n)
     bound_shape = arr_a.shape
 
     shifted_x = x + np.expand_dims(arr_a, axis=-1)  # (m, n, deg)
     try:
         #  avoid passing more than 2d to func
-        fvalues = func(shifted_x.reshape(shifted_x.shape[0], -1))  # (m, n*deg)
+        fvalues = integrand(shifted_x.reshape(shifted_x.shape[0], -1))  # (m, n*deg)
         fvalues = fvalues.reshape((fvalues.shape[0], -1, deg))  #  (m, n, deg)
     except ValueError as err:
-        func_shape = func(1.0).shape
+        func_shape = integrand(1.0).shape
         if len(func_shape) > 0:
             raise ValueError(
-                f"Broadcasting error between a and func. Expected a of shape {(func_shape[0],)} or {(func_shape[0], -1)}"
+                f"Broadcasting error between a and func : func returns {(func_shape[0],)} nb_assets but nb_assets is set to {integrand_nb_assets}"
             )
         raise ValueError from err
 
     exp_a = np.where(np.exp(-arr_a) == 0, 1.0, np.exp(-arr_a))  # (m, n)
-    wsum = np.sum(w * fvalues * np.expand_dims(exp_a, axis=-1), axis=-1)  # (m, n)
+    wsum = np.sum(w * fvalues * np.expand_dims(exp_a, axis=-1), axis=-1).reshape(bound_shape)  # (m, n)
 
-    if max(bound_shape) == 1:
+    if integrand_nb_assets == 1:
         return np.squeeze(wsum)
-    return np.squeeze(wsum.reshape(bound_shape))
+    return wsum
 
 
 def unweighted_laguerre_quadrature(
-    func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    integrand: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
+    integrand_nb_assets : int = 1,
     deg: int = 10,
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a, inf]`
@@ -125,43 +150,51 @@ def unweighted_laguerre_quadrature(
     """
 
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    arr_a = _reshape_and_broadcast(a)  # (m, n)
+    # nb_assets == m
+    arr_a = _reshape_and_broadcast_bounds(a, integrand_nb_assets=integrand_nb_assets)  # (m, n)
     bound_shape = arr_a.shape
 
     shifted_x = x + np.expand_dims(arr_a, axis=-1)  # (m, n, deg)
     try:
         #  avoid passing more than 2d to func
-        fvalues = func(shifted_x.reshape(shifted_x.shape[0], -1))  # (m, n*deg)
+        fvalues = integrand(shifted_x.reshape(shifted_x.shape[0], -1))  # (m, n*deg)
         fvalues = fvalues.reshape((fvalues.shape[0], -1, deg))  #  (m, n, deg)
     except ValueError as err:
-        func_shape = func(1.0).shape
+        func_shape = integrand(1.0).shape
         if len(func_shape) > 0:
             raise ValueError(
-                f"Broadcasting error between a and func. Expected a of shape {(func_shape[0],)} or {(func_shape[0], -1)}"
+                f"Broadcasting error between a and func : func returns {(func_shape[0],)} nb_assets but nb_assets is set to {integrand_nb_assets}"
             )
         raise ValueError from err
 
-    wsum = np.sum(w * fvalues * np.exp(x), axis=-1)  # (m, n)
-    if max(bound_shape) == 1:
+    wsum = np.sum(w * fvalues * np.exp(x), axis=-1).reshape(bound_shape)  # (m, n)
+    if integrand_nb_assets == 1:
         return np.squeeze(wsum)
-    return np.squeeze(wsum.reshape(bound_shape))
+    return wsum
 
 
+Args = TypeVarTuple("Args")
+
+
+# NOTE: ls_integrate is implement here because it depends on _reshape_and_broadcast_bounds that must not be imported elsewhere
 def ls_integrate(
-    model: FrozenParametricLifetimeModel,
+    model: ParametricLifetimeModel,
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     b: float | NDArray[np.float64] = np.inf,
+    *args : *Args,
     deg: int = 10,
 ) -> NDArray[np.float64]:
     from relife.lifetime_model import AgeReplacementModel
 
-    def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return func(x) * model.pdf(x)
+    frozen_model = model.freeze(*args)
 
-    match model.baseline:
+    def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return func(x) * frozen_model.pdf(x)
+
+    match model:
         case AgeReplacementModel():
-            ar = model.args[0].copy()
+            ar = frozen_model.args[0].copy()
             arr_a, arr_b, arr_ar = _reshape_and_broadcast(a, b, ar)
             if np.any(arr_a >= arr_b):
                 raise ValueError
@@ -184,26 +217,24 @@ def ls_integrate(
             return np.squeeze(integration.reshape(bound_shape))
 
         case _:
-            arr_a, arr_b = _reshape_and_broadcast(a, b)
+            nb_assets = frozen_model.nb_assets
+            # the nb of assets returned by the integrand is suppposed to be equal the nb assets returned by model.pdf
+            # nb_assets == m
+            arr_a, arr_b = _reshape_and_broadcast_bounds(a, b, integrand_nb_assets=nb_assets) # (m,n)
             if np.any(arr_a >= arr_b):
                 raise ValueError
-            nb_assets = model.nb_assets
-            if nb_assets > 1: # control shape coherence
-                if arr_a.shape[0] != nb_assets and arr_b.shape[0] != nb_assets:
-                    raise ValueError
 
             bound_shape = arr_a.shape
-            m = max(nb_assets, bound_shape[0])
 
             is_inf = np.isinf(arr_b)
-            arr_b[is_inf] = np.broadcast_to(model.isf(1e-4).reshape(-1, 1), arr_b.shape)[is_inf]
+            arr_b[is_inf] = np.broadcast_to(frozen_model.isf(1e-4).reshape(-1, 1), arr_b.shape)[is_inf] # frozen_model.isf(1e-4).shape == () or (m,1)
 
             integration = np.where(
                 is_inf,
-                (legendre_quadrature(integrand, arr_a, arr_b, deg=deg) + unweighted_laguerre_quadrature(integrand, arr_b, deg=deg)).reshape(m, -1),
-                legendre_quadrature(integrand, arr_a, arr_b, deg=deg).reshape(m, -1)
+                legendre_quadrature(integrand, arr_a, arr_b, integrand_nb_assets=nb_assets, deg=deg) + unweighted_laguerre_quadrature(integrand, arr_b, integrand_nb_assets=nb_assets, deg=deg),
+                legendre_quadrature(integrand, arr_a, arr_b, integrand_nb_assets=nb_assets, deg=deg)
             )
 
-            if max(bound_shape) == 1:
+            if nb_assets == 1:
                 return np.squeeze(integration)
-            return np.squeeze(integration.reshape(bound_shape))
+            return integration.reshape(bound_shape)

@@ -264,7 +264,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         the maximum number of dimensions used (0, 1 or 2), or `ls_integrate` converts all these objects to 2d-array.
         Currently, the second option is prefered. That's why, returns are always 2d-array.
         """
-        return ls_integrate(self.freeze(*args), func, a, b, deg=deg)
+        return ls_integrate(self, func, a, b, *args, deg=deg)
 
     def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         """n-th order moment
@@ -446,7 +446,11 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return -self.jac_sf(time)
 
     def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
+        time = np.asarray(time, dtype=np.float64)
+        if time.ndim == 2:
+            if time.shape[-1] > 1:
+                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
+        return self.jac_hf(time) * self.sf(time).reshape(-1, 1) + self.jac_sf(time) * self.hf(time).reshape(-1, 1)
 
     @override
     def freeze(self) -> FrozenParametricLifetimeModel:

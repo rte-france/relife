@@ -4,30 +4,30 @@ import pytest
 from relife.lifetime_model import Weibull, LogLogistic, Gamma, Gompertz, ProportionalHazard, AFT
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="module")
 def weibull():
     return Weibull(2, 0.05)
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="module")
 def gompertz():
     return Gompertz(0.01, 0.1)
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="module")
 def gamma():
     return Gamma(2, 0.05)
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="module")
 def loglogistic():
     return LogLogistic(3, 0.05)
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="module")
 def nb_coef():
     return 3
 
 
 @pytest.fixture(
-    scope="package",
+    scope="module",
     params=[
         Weibull(2, 0.05),
         Gompertz(0.01, 0.1),
@@ -46,7 +46,7 @@ def proportional_hazard(request, nb_coef):
 
 
 @pytest.fixture(
-    scope="package",
+    scope="module",
     params=[
         Weibull(2, 0.05),
         Gompertz(0.01, 0.1),
@@ -90,3 +90,19 @@ def covar(nb_coef):
     return _covar
 
 
+
+@pytest.fixture
+def a():
+    def _a(shape = None):
+        if shape is None:
+            return 2.
+        return 2.*np.ones(shape, dtype=np.float64)
+    return _a
+
+@pytest.fixture
+def b():
+    def _b(shape = None):
+        if shape is None:
+            return 8.
+        return 8.*np.ones(shape, dtype=np.float64)
+    return _b
