@@ -1,12 +1,15 @@
 import numpy as np
+from pytest import approx
 
 
 def test_weibull_ls_integrate(weibull, a, b):
     m = 10
     n = 3
 
+    # integral_a^b f(t)dt
     integration = weibull.ls_integrate(np.ones_like, a(), b())
     assert integration.shape == ()
+    assert integration == approx(weibull.cdf(b()) - weibull.cdf(a()))
 
     integration = weibull.ls_integrate(np.ones_like, a(), b((n,)))
     assert integration.shape == (n,)
@@ -37,6 +40,14 @@ def test_weibull_ls_integrate(weibull, a, b):
 
     integration = weibull.ls_integrate(np.ones_like, a((m,n)), b((m,n)))
     assert integration.shape == (m,n)
+
+    # integral_0^inf t*f(t)dt
+    integration = weibull.ls_integrate(lambda t: t, 0., np.inf)
+    assert integration == approx(weibull.mean())
+
+    integration = weibull.ls_integrate(lambda t: t, np.full((m,n), 0.), np.inf)
+    assert integration == approx(np.full((m,n), weibull.mean()))
+
 
 
 def test_gompertz_ls_integrate(gompertz, a, b):

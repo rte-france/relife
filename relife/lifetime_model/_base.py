@@ -281,16 +281,12 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
-        ls = self.ls_integrate(
+        return self.ls_integrate(
             lambda x: x**n,
-            np.array(0.0),
-            np.array(np.inf),
+            0.,
+            np.inf,
             *args,
         )
-        ndim = max(map(np.ndim, *args), default=0)
-        if ndim < 2:  # 2d to 1d or 0d
-            ls = np.squeeze(ls)
-        return ls
 
     def mean(self, *args: *Args) -> NDArray[np.float64]:
         return self.moment(1, *args)
