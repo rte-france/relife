@@ -5,10 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
-    from relife.lifetime_model import (
-        ParametricLifetimeModel,
-        FrozenParametricLifetimeModel,
-    )
+    from relife.lifetime_model import ParametricLifetimeModel
 
 
 def _reshape_and_broadcast_bounds(
@@ -204,38 +201,42 @@ def ls_integrate(
 
     frozen_model = model.freeze(*args)
 
+    # IMPORTANT: the nb of assets returned by the integrand is suppposed to be equal the nb assets returned by model.pdf
+    # could be check in a future version where ls_integrate would be constructed by an object that carries io shape test
+    # on func at the initialization of the constructor
     def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return func(x) * frozen_model.pdf(x)
 
     match model:
         case AgeReplacementModel():
-            ar = frozen_model.args[0].copy()
-            arr_a, arr_b, arr_ar = _reshape_and_broadcast(a, b, ar)
+            nb_assets = frozen_model.nb_assets
+            # nb_assets == m
+            arr_a, arr_b = _reshape_and_broadcast_bounds(
+                a, b, integrand_nb_assets=nb_assets
+            )  # (m,n)
             if np.any(arr_a >= arr_b):
-                raise ValueError
-            nb_assets = model.nb_assets
-            if nb_assets > 1:  # control shape coherence
-                if arr_a.shape[0] != nb_assets and arr_b.shape[0] != nb_assets:
-                    raise ValueError
-            bound_shape = arr_a.shape
-            m = max(nb_assets, bound_shape[0])
+                raise ValueError("Bound values a must be strictly lower than values of b")
 
+            arr_ar = frozen_model.args[0].copy()
+            arr_ar, arr_a = np.broadcast_arrays(arr_a, arr_ar)
+
+            bound_shape = arr_a.shape
             arr_b = np.minimum(arr_b, arr_ar)
             is_ar = arr_b == arr_ar
 
-            integration = legendre_quadrature(integrand, arr_a, arr_b, deg=deg)
+            integration = legendre_quadrature(integrand, arr_a, arr_b, integrand_nb_assets=nb_assets, deg=deg)
+
             if np.any(is_ar):
                 integration[is_ar] += (
                     func(arr_ar[is_ar].copy()) * model.sf(arr_ar[is_ar].copy())
-                ).reshape(m, -1)
+                )
 
-            if max(bound_shape) == 1:
+            if nb_assets == 1:
                 return np.squeeze(integration)
-            return np.squeeze(integration.reshape(bound_shape))
+            return integration.reshape(bound_shape)
 
         case _:
             nb_assets = frozen_model.nb_assets
-            # the nb of assets returned by the integrand is suppposed to be equal the nb assets returned by model.pdf
             # nb_assets == m
             arr_a, arr_b = _reshape_and_broadcast_bounds(
                 a, b, integrand_nb_assets=nb_assets

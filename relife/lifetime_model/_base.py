@@ -237,7 +237,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
         *args: *Args,
-        deg: int = 100,
+        deg: int = 10,
     ) -> NDArray[np.float64]:
         r"""
         Lebesgue-Stieltjes integration.
