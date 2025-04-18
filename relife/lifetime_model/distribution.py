@@ -344,11 +344,11 @@ class Gamma(LifetimeDistribution):
 
     @override
     def mean(self) -> np.float64:
-        return np.array(self.shape / self.rate)
+        return np.asarray(self.shape / self.rate, dtype=np.float64)
 
     @override
     def var(self) -> np.float64:
-        return self.shape / (self.rate**2)
+        return np.asarray(self.shape / (self.rate**2), dtype=np.float64)
 
     @override
     def ichf(

@@ -183,17 +183,17 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     def rvs(
         self,
+        shape: int | tuple[int, int],
         *args: *Args,
-        size: int = 1,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
         """Random variable sample.
 
         Parameters
         ----------
+        shape : int or (int, int), default 1
+            Shape of the generated sample.
         *args : variadic arguments required by the function
-        size : int, default 1
-            Sized of the generated sample.
         seed : int, default None
             Random seed.
 
@@ -202,8 +202,26 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         ndarray of shape (size, )
             Sample of random lifetimes.
         """
-        generator = np.random.RandomState(seed=seed)
-        probability = generator.uniform(size=size)
+        shape = (shape,) if isinstance(shape, int) else shape # (n,) or (m, n)
+        if len(shape) > 2:
+            raise ValueError(f"Incorrect shape. Expected shape with 2 or less dimensions. Got shape {shape}")
+        nb_assets = 1
+        args = tuple((np.asarray(arg, dtype=np.float64) for arg in args))
+        out_shape =  np.broadcast_shapes(*map(np.shape, args))
+        if bool(out_shape):
+            nb_assets = out_shape[0]
+        if len(shape) == 2 and nb_assets != 1:
+            if shape[0] != 1 and shape[0] != nb_assets:
+                raise ValueError(f"Invalid shape. Got {nb_assets} nb_assets for args but {shape[0]} nb_assets from shape")
+        if len(shape) == 2:
+            nb_assets = max(nb_assets, shape[0])
+        if shape[0] == 1 or len(shape) == 1:
+            shape = (nb_assets, shape[-1]) # (1, n) or (m, n)
+
+        rs = np.random.RandomState(seed=seed)
+        probability = rs.uniform(size=shape)
+        if nb_assets == 1:
+            return np.squeeze(self.isf(probability, *args))
         return self.isf(probability, *args)
 
     def ppf(
@@ -373,13 +391,13 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return super().ppf(probability)
 
     @override
-    def rvs(self, *, size: int = 1, seed: Optional[int] = None):
+    def rvs(self, shape: int|tuple[int,int] = 1, seed: Optional[int] = None):
         """Random variable sampling.
 
         Parameters
         ----------
-        size : int, default 1
-            Size of the sample.
+        shape : int or (int, int), default 1
+            Shape of the sample.
         seed : int, default None
             Random seed.
 
@@ -389,7 +407,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             Sample of random lifetimes.
         """
 
-        return super().rvs(size=size, seed=seed)
+        return super().rvs(shape, seed=seed)
 
     @override
     def moment(self, n: int) -> np.float64:
@@ -656,9 +674,9 @@ class LifetimeRegression(
     @override
     def rvs(
         self,
+        shape : int|tuple[int, int],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        size: Optional[int] = 1,
         seed: Optional[int] = None,
     ):
         """
@@ -666,13 +684,14 @@ class LifetimeRegression(
 
         Parameters
         ----------
+        shape : int or (int, int)
+            Shape of the sample.
         covar : np.ndarray
             Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
         *args : variable number of np.ndarray
             Any variables needed to compute the function. Those variables must be
             broadcastable with ``covar``. They may exist and result from method chaining due to nested class instantiation.
-        size : int, default 1
-            Size of the sample.
+
         seed : int, default None
             Random seed.
 
@@ -681,7 +700,7 @@ class LifetimeRegression(
         np.ndarray
             Sample of random lifetimes.
         """
-        return super().rvs(covar, *args, size=size, seed=seed)
+        return super().rvs(shape, *(covar, *args), seed=seed)
 
     @override
     def mean(

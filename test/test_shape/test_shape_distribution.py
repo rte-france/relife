@@ -9,11 +9,19 @@ IN (time)		| OUT
 """
 
 import pytest
+from pytest import approx
+import numpy as np
 
 
 @pytest.mark.parametrize("fixture_name", ["weibull", "gompertz", "gamma", "loglogistic"])
 def test_distribution(distribution_map, fixture_name, time, probability):
     distribution = distribution_map[fixture_name]
+
+    assert distribution.moment(1).shape == ()
+    assert distribution.moment(2).shape == ()
+    assert distribution.mean().shape == ()
+    assert distribution.var().shape == ()
+    assert distribution.median().shape == ()
 
     assert distribution.sf(time()).shape == ()
     assert distribution.hf(time()).shape == ()
@@ -21,7 +29,10 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     assert distribution.cdf(time()).shape == ()
     assert distribution.pdf(time()).shape == ()
     assert distribution.ppf(probability()).shape == ()
+    assert distribution.rvs(1, seed=21).shape == ()
     assert distribution.ichf(probability()).shape == ()
+    assert distribution.isf(probability()).shape == ()
+    assert distribution.isf(0.5) == approx(distribution.median())
     assert distribution.dhf(time()).shape == ()
     assert distribution.jac_sf(time()).shape == (1, 2)
     assert distribution.jac_hf(time()).shape == (1, 2)
@@ -41,11 +52,18 @@ def test_distribution(distribution_map, fixture_name, time, probability):
             n,
         )
     ).shape == (n,)
+    assert distribution.rvs((n,), seed=21).shape == (n,)
     assert distribution.ichf(
         probability(
             n,
         )
     ).shape == (n,)
+    assert distribution.isf(
+        probability(
+            n,
+        )
+    ).shape == (n,)
+    assert distribution.isf(np.full((n,), 0.5)) == approx(np.full((n,), distribution.median()))
     assert distribution.dhf(
         time(
             n,
@@ -85,7 +103,10 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     assert distribution.cdf(time(m, 1)).shape == (m, 1)
     assert distribution.pdf(time(m, 1)).shape == (m, 1)
     assert distribution.ppf(probability(m, 1)).shape == (m, 1)
+    assert distribution.rvs((m, 1), seed=21).shape == (m, 1)
     assert distribution.ichf(probability(m, 1)).shape == (m, 1)
+    assert distribution.isf(probability(m, 1)).shape == (m, 1)
+    assert distribution.isf(np.full((m, 1), 0.5)) == approx(np.full((m, 1), distribution.median()))
     assert distribution.dhf(time(m, 1)).shape == (m, 1)
     assert distribution.jac_sf(time(m, 1)).shape == (m, 2)
     assert distribution.jac_hf(time(m, 1)).shape == (m, 2)
@@ -99,7 +120,10 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     assert distribution.cdf(time(m, n)).shape == (m, n)
     assert distribution.pdf(time(m, n)).shape == (m, n)
     assert distribution.ppf(probability(m, n)).shape == (m, n)
+    assert distribution.rvs((m, n), seed=21).shape == (m, n)
     assert distribution.ichf(probability(m, n)).shape == (m, n)
+    assert distribution.isf(probability(m, n)).shape == (m, n)
+    assert distribution.isf(np.full((m, n), 0.5)) == approx(np.full((m, n), distribution.median()))
     assert distribution.dhf(time(m, n)).shape == (m, n)
     with pytest.raises(ValueError) as err:
         distribution.jac_sf(time(m, n))
