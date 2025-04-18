@@ -17,7 +17,7 @@ from typing_extensions import override
 from ._base import LifetimeRegression
 
 if TYPE_CHECKING:
-    from ._fittable_type import FittableParametricLifetimeModel
+    from ._structural_type import FittableParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 

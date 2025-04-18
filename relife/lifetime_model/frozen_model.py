@@ -7,8 +7,9 @@ from numpy.typing import NDArray
 
 from relife import FrozenParametricModel
 
+
 if TYPE_CHECKING:
-    from relife.lifetime_model._base import ParametricLifetimeModel
+    from relife.lifetime_model import ParametricLifetimeModel, LifetimeDistribution, LifetimeRegression
 
 Args = TypeVarTuple("Args")
 P = ParamSpec("P")
@@ -82,8 +83,8 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
     def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.cdf(time, *self.args)
 
-    def rvs(self, size: int = 1, seed: Optional[int] = None) -> NDArray[np.float64]:
-        return self.baseline.rvs(*self.args, size=size, seed=seed)
+    def rvs(self, shape: int|tuple[int,int], seed: Optional[int] = None) -> NDArray[np.float64]:
+        return self.baseline.rvs(shape,*self.args, seed=seed)
 
     # @_isbroadcastable("probability")
     def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -101,3 +102,37 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
     ) -> NDArray[np.float64]:
 
         return self.baseline.ls_integrate(self, func, a, b, deg=deg)
+
+
+class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):
+    baseline : LifetimeDistribution
+
+    def jac_hf(self,time: float | NDArray[np.float64],) -> NDArray[np.float64]:
+        return self.baseline.jac_hf(time)
+    def jac_chf(self, time: float | NDArray[np.float64],) -> NDArray[np.float64]:
+        return self.baseline.jac_chf(time)
+    def dhf(self, time: float | NDArray[np.float64],) -> NDArray[np.float64]:
+        return self.baseline.dhf(time)
+    def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.baseline.jac_sf(time)
+    def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.baseline.jac_cdf(time)
+    def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.baseline.jac_pdf(time)
+
+
+class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
+    baseline : LifetimeRegression
+
+    def jac_hf(self,time: float | NDArray[np.float64],) -> NDArray[np.float64]:
+        return self.baseline.jac_hf(time, self.args[0], *self.args[1:])
+    def jac_chf(self, time: float | NDArray[np.float64],) -> NDArray[np.float64]:
+        return self.baseline.jac_chf(time, self.args[0], *self.args[1:])
+    def dhf(self, time: float | NDArray[np.float64],) -> NDArray[np.float64]:
+        return self.baseline.dhf(time, self.args[0], *self.args[1:])
+    def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.baseline.jac_sf(time, self.args[0], *self.args[1:])
+    def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.baseline.jac_cdf(time, self.args[0], *self.args[1:])
+    def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.baseline.jac_pdf(time, self.args[0], *self.args[1:])

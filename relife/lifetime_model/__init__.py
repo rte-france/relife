@@ -4,7 +4,7 @@ from ._base import (
     NonParametricLifetimeModel,
     ParametricLifetimeModel,
 )
-from ._fittable_type import FittableParametricLifetimeModel
+from ._structural_type import FittableParametricLifetimeModel
 from .conditional_model import AgeReplacementModel, LeftTruncatedModel
 from .distribution import (
     EquilibriumDistribution,
@@ -14,6 +14,6 @@ from .distribution import (
     LogLogistic,
     Weibull,
 )
-from .frozen_model import FrozenParametricLifetimeModel
+from .frozen_model import FrozenParametricLifetimeModel, FrozenLifetimeDistribution, FrozenLifetimeRegression
 from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
 from .regression import AFT, ProportionalHazard

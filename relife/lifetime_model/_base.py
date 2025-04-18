@@ -24,10 +24,10 @@ from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
 from relife.quadrature import ls_integrate
 
-from .frozen_model import FrozenParametricLifetimeModel
 
 if TYPE_CHECKING:
-    from ._fittable_type import FittableParametricLifetimeModel
+    from ._structural_type import FittableParametricLifetimeModel
+    from relife.lifetime_model import FrozenParametricLifetimeModel, FrozenLifetimeDistribution, FrozenLifetimeRegression
 
 Args = TypeVarTuple("Args")
 
@@ -474,8 +474,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return jac
 
     @override
-    def freeze(self) -> FrozenParametricLifetimeModel:
-        return FrozenParametricLifetimeModel(self)
+    def freeze(self) -> FrozenLifetimeDistribution:
+        from relife.lifetime_model import FrozenLifetimeDistribution
+        return FrozenLifetimeDistribution(self)
 
     @override
     def ls_integrate(
@@ -780,8 +781,10 @@ class LifetimeRegression(
     @override
     def freeze(
         self, covar: float | NDArray[np.float64], *args: *Args
-    ) -> FrozenParametricLifetimeModel:
-        return FrozenParametricLifetimeModel(self, *(covar, *args))
+    ) -> FrozenLifetimeRegression:
+        from relife.lifetime_model import FrozenLifetimeRegression
+
+        return FrozenLifetimeRegression(self, *(covar, *args))
 
     def ls_integrate(
         self,
