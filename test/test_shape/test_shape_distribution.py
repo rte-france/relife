@@ -13,7 +13,7 @@ from pytest import approx
 import numpy as np
 
 
-@pytest.mark.parametrize("fixture_name", ["weibull", "gompertz", "gamma", "loglogistic"])
+@pytest.mark.parametrize("fixture_name", ["exponential", "weibull", "gompertz", "gamma", "loglogistic"])
 def test_distribution(distribution_map, fixture_name, time, probability):
     distribution = distribution_map[fixture_name]
 
@@ -34,11 +34,19 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     assert distribution.isf(probability()).shape == ()
     assert distribution.isf(0.5) == approx(distribution.median())
     assert distribution.dhf(time()).shape == ()
-    assert distribution.jac_sf(time()).shape == (1, 2)
-    assert distribution.jac_hf(time()).shape == (1, 2)
-    assert distribution.jac_chf(time()).shape == (1, 2)
-    assert distribution.jac_cdf(time()).shape == (1, 2)
-    assert distribution.jac_pdf(time()).shape == (1, 2)
+
+    if fixture_name != "exponential":
+        assert distribution.jac_sf(time()).shape == (2,)
+        assert distribution.jac_hf(time()).shape == (2,)
+        assert distribution.jac_chf(time()).shape == (2,)
+        assert distribution.jac_cdf(time()).shape == (2,)
+        assert distribution.jac_pdf(time()).shape == (2,)
+    else:
+        assert distribution.jac_sf(time()).shape == ()
+        assert distribution.jac_hf(time()).shape == ()
+        assert distribution.jac_chf(time()).shape == ()
+        assert distribution.jac_cdf(time()).shape == ()
+        assert distribution.jac_pdf(time()).shape == ()
 
     n = 10
 
@@ -69,31 +77,59 @@ def test_distribution(distribution_map, fixture_name, time, probability):
             n,
         )
     ).shape == (n,)
-    assert distribution.jac_sf(
-        time(
-            n,
-        )
-    ).shape == (n, 2)
-    assert distribution.jac_hf(
-        time(
-            n,
-        )
-    ).shape == (n, 2)
-    assert distribution.jac_chf(
-        time(
-            n,
-        )
-    ).shape == (n, 2)
-    assert distribution.jac_cdf(
-        time(
-            n,
-        )
-    ).shape == (n, 2)
-    assert distribution.jac_pdf(
-        time(
-            n,
-        )
-    ).shape == (n, 2)
+
+    if fixture_name != "exponential":
+        assert distribution.jac_sf(
+            time(
+                n,
+            )
+        ).shape == (n, 2)
+        assert distribution.jac_hf(
+            time(
+                n,
+            )
+        ).shape == (n, 2)
+        assert distribution.jac_chf(
+            time(
+                n,
+            )
+        ).shape == (n, 2)
+        assert distribution.jac_cdf(
+            time(
+                n,
+            )
+        ).shape == (n, 2)
+        assert distribution.jac_pdf(
+            time(
+                n,
+            )
+        ).shape == (n, 2)
+    else:
+        assert distribution.jac_sf(
+            time(
+                n,
+            )
+        ).shape == (n, 1)
+        assert distribution.jac_hf(
+            time(
+                n,
+            )
+        ).shape == (n, 1)
+        assert distribution.jac_chf(
+            time(
+                n,
+            )
+        ).shape == (n, 1)
+        assert distribution.jac_cdf(
+            time(
+                n,
+            )
+        ).shape == (n, 1)
+        assert distribution.jac_pdf(
+            time(
+                n,
+            )
+        ).shape == (n, 1)
 
     m = 3
 
@@ -108,11 +144,19 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     assert distribution.isf(probability(m, 1)).shape == (m, 1)
     assert distribution.isf(np.full((m, 1), 0.5)) == approx(np.full((m, 1), distribution.median()))
     assert distribution.dhf(time(m, 1)).shape == (m, 1)
-    assert distribution.jac_sf(time(m, 1)).shape == (m, 2)
-    assert distribution.jac_hf(time(m, 1)).shape == (m, 2)
-    assert distribution.jac_chf(time(m, 1)).shape == (m, 2)
-    assert distribution.jac_cdf(time(m, 1)).shape == (m, 2)
-    assert distribution.jac_pdf(time(m, 1)).shape == (m, 2)
+
+    if fixture_name != "exponential":
+        assert distribution.jac_sf(time(m, 1)).shape == (m, 2)
+        assert distribution.jac_hf(time(m, 1)).shape == (m, 2)
+        assert distribution.jac_chf(time(m, 1)).shape == (m, 2)
+        assert distribution.jac_cdf(time(m, 1)).shape == (m, 2)
+        assert distribution.jac_pdf(time(m, 1)).shape == (m, 2)
+    else:
+        assert distribution.jac_sf(time(m, 1)).shape == (m, 1)
+        assert distribution.jac_hf(time(m, 1)).shape == (m, 1)
+        assert distribution.jac_chf(time(m, 1)).shape == (m, 1)
+        assert distribution.jac_cdf(time(m, 1)).shape == (m, 1)
+        assert distribution.jac_pdf(time(m, 1)).shape == (m, 1)
 
     assert distribution.sf(time(m, n)).shape == (m, n)
     assert distribution.hf(time(m, n)).shape == (m, n)

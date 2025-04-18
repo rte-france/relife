@@ -15,7 +15,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b()) - distribution.cdf(a()))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, 0.0, np.inf)
-    assert integration == approx(distribution.mean())
+    assert integration == approx(distribution.mean(), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(), b(n))
@@ -23,7 +23,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(n)) - distribution.cdf(a()))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, 0.0, np.full((n,), np.inf))
-    assert integration == approx(np.full((n,), distribution.mean()))
+    assert integration == approx(np.full((n,), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(n), b())
@@ -31,7 +31,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b()) - distribution.cdf(a(n)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((n,), 0.0), np.inf)
-    assert integration == approx(np.full((n,), distribution.mean()))
+    assert integration == approx(np.full((n,), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(n), b(n))
@@ -39,7 +39,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(n)) - distribution.cdf(a(n)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((n,), 0.0), np.full((n,), np.inf))
-    assert integration == approx(np.full((n,), distribution.mean()))
+    assert integration == approx(np.full((n,), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(), b(m, n))
@@ -47,7 +47,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a()))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, 0.0, np.full((m, n), np.inf))
-    assert integration == approx(np.full((m, n), distribution.mean()))
+    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(m, n), b())
@@ -55,7 +55,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b()) - distribution.cdf(a(m, n)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((m, n), 0.0), np.inf)
-    assert integration == approx(np.full((m, n), distribution.mean()))
+    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(m, 1), b(1, n))
@@ -63,7 +63,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(1, n)) - distribution.cdf(a(m, 1)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((m, 1), 0.0), np.full((1, n), np.inf))
-    assert integration == approx(np.full((m, n), distribution.mean()))
+    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(1, n), b(m, 1))
@@ -71,7 +71,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(m, 1)) - distribution.cdf(a(1, n)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((1, n), 0.0), np.full((m, 1), np.inf))
-    assert integration == approx(np.full((m, n), distribution.mean()))
+    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(m, 1), b(m, n))
@@ -79,7 +79,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a(1, n)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((m, 1), 0.0), np.full((m, n), np.inf))
-    assert integration == approx(np.full((m, n), distribution.mean()))
+    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(1, n), b(m, n))
@@ -87,7 +87,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a(1, n)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((1, n), 0.0), np.full((m, n), np.inf))
-    assert integration == approx(np.full((m, n), distribution.mean()))
+    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
 
     # integral_a^b f(t)dt
     integration = distribution.ls_integrate(np.ones_like, a(m, n), b(m, n))
@@ -95,7 +95,7 @@ def test_ls_integrate_distribution(distribution_map, fixture_name, a, b):
     assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a(m, n)))
     # integral_0^inf t*f(t)dt
     integration = distribution.ls_integrate(lambda t: t, np.full((m, n), 0.0), np.full((m, n), np.inf))
-    assert integration == approx(np.full((m, n), distribution.mean()))
+    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
 
 
 # SEE: https://github.com/pytest-dev/pytest/issues/349

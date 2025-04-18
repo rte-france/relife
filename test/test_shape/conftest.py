@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from relife.lifetime_model import (
+    Exponential,
     Weibull,
     LogLogistic,
     Gamma,
@@ -9,6 +10,10 @@ from relife.lifetime_model import (
     ProportionalHazard,
     AFT,
 )
+
+@pytest.fixture(scope="module")
+def exponential():
+    return Exponential(0.05)
 
 
 @pytest.fixture(scope="module")
@@ -32,8 +37,9 @@ def loglogistic():
 
 
 @pytest.fixture
-def distribution_map(weibull, gompertz, gamma, loglogistic):
+def distribution_map(exponential, weibull, gompertz, gamma, loglogistic):
     return {
+        "exponential" : exponential,
         "weibull": weibull,
         "gompertz": gompertz,
         "gamma": gamma,
@@ -49,12 +55,13 @@ def nb_coef():
 @pytest.fixture(
     scope="module",
     params=[
+        Exponential(0.05),
         Weibull(2, 0.05),
         Gompertz(0.01, 0.1),
         Gamma(2, 0.05),
         LogLogistic(3, 0.05),
     ],
-    ids=["pph(weibull)", "pph(gompertz)", "pph(gamma)", "pph(loglogistic)"],
+    ids=["pph(exponential)", "pph(weibull)", "pph(gompertz)", "pph(gamma)", "pph(loglogistic)"],
 )
 def proportional_hazard(request, nb_coef):
     yield ProportionalHazard(request.param, coef=(0.1,) * nb_coef)
@@ -63,12 +70,13 @@ def proportional_hazard(request, nb_coef):
 @pytest.fixture(
     scope="module",
     params=[
+        Exponential(0.05),
         Weibull(2, 0.05),
         Gompertz(0.01, 0.1),
         Gamma(2, 0.05),
         LogLogistic(3, 0.05),
     ],
-    ids=["aft(weibull)", "aft(gompertz)", "aft(gamma)", "aft(loglogistic)"],
+    ids=["aft(exponential)", "aft(weibull)", "aft(gompertz)", "aft(gamma)", "aft(loglogistic)"],
 )
 def aft(request):
     yield AFT(request.param, coef=(0.1, 0.2, 0.3))

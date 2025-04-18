@@ -304,7 +304,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
             0.,
             np.inf,
             *args,
-        )
+            deg=10,
+        ) # high degree of polynome to ensure high precision
 
     def mean(self, *args: *Args) -> NDArray[np.float64]:
         return self.moment(1, *args)
@@ -454,7 +455,10 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         if time.ndim == 2:
             if time.shape[-1] > 1:
                 raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        return -self.jac_chf(time) * self.sf(time).reshape(-1, 1)
+        jac = -self.jac_chf(time) * self.sf(time).reshape(-1, 1)
+        if time.size == 1:
+            return np.squeeze(jac)
+        return jac
 
     def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return -self.jac_sf(time)
@@ -464,7 +468,10 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         if time.ndim == 2:
             if time.shape[-1] > 1:
                 raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        return self.jac_hf(time) * self.sf(time).reshape(-1, 1) + self.jac_sf(time) * self.hf(time).reshape(-1, 1)
+        jac = self.jac_hf(time) * self.sf(time).reshape(-1, 1) + self.jac_sf(time) * self.hf(time).reshape(-1, 1)
+        if time.size == 1:
+            return np.squeeze(jac)
+        return jac
 
     @override
     def freeze(self) -> FrozenParametricLifetimeModel:
@@ -476,7 +483,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
-        deg: int = 100,
+        deg: int = 10,
     ) -> NDArray[np.float64]:
         return super().ls_integrate(func, a, b, deg=deg)
 
@@ -783,7 +790,7 @@ class LifetimeRegression(
         b: float | NDArray[np.float64],
         covar : float | NDArray[np.float64],
         *args: *Args,
-        deg: int = 100,
+        deg: int = 10,
     ) -> NDArray[np.float64]:
         return super().ls_integrate(func, a, b, *(covar, *args), deg=deg)
 
