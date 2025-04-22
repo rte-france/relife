@@ -2,10 +2,11 @@ import pytest
 from pytest import approx
 import numpy as np
 
-@pytest.mark.parametrize("fixture_name", ["exponential", "weibull", "gompertz", "gamma", "loglogistic"])
-def test_frozen_distribution(distribution_map, fixture_name, time, probability):
+from relife.lifetime_model import Exponential
 
-    distribution = distribution_map[fixture_name]
+
+def test_frozen_distribution(distribution, time, probability):
+
     frozen_distribution = distribution.freeze()
     assert frozen_distribution.nb_assets == 1
     assert frozen_distribution.args == ()
@@ -28,7 +29,7 @@ def test_frozen_distribution(distribution_map, fixture_name, time, probability):
     assert frozen_distribution.isf(0.5) == approx(frozen_distribution.median())
     assert frozen_distribution.dhf(time()).shape == ()
 
-    if fixture_name != "exponential":
+    if not isinstance(distribution, Exponential):
         assert frozen_distribution.jac_sf(time()).shape == (2,)
         assert frozen_distribution.jac_hf(time()).shape == (2,)
         assert frozen_distribution.jac_chf(time()).shape == (2,)
@@ -71,7 +72,7 @@ def test_frozen_distribution(distribution_map, fixture_name, time, probability):
         )
     ).shape == (n,)
 
-    if fixture_name != "exponential":
+    if not isinstance(distribution, Exponential):
         assert frozen_distribution.jac_sf(
             time(
                 n,
@@ -138,7 +139,7 @@ def test_frozen_distribution(distribution_map, fixture_name, time, probability):
     assert frozen_distribution.isf(np.full((m, 1), 0.5)) == approx(np.full((m, 1), frozen_distribution.median()))
     assert frozen_distribution.dhf(time(m, 1)).shape == (m, 1)
 
-    if fixture_name != "exponential":
+    if not isinstance(distribution, Exponential):
         assert frozen_distribution.jac_sf(time(m, 1)).shape == (m, 2)
         assert frozen_distribution.jac_hf(time(m, 1)).shape == (m, 2)
         assert frozen_distribution.jac_chf(time(m, 1)).shape == (m, 2)
@@ -180,129 +181,66 @@ def test_frozen_distribution(distribution_map, fixture_name, time, probability):
 
 
 
-def test_frozen_proportional_hazard(proportional_hazard, time, covar, probability):
+def test_frozen_proportional_hazard(regression, time, covar, probability):
 
     n = 10
     m = 3
-    frozen_pph = proportional_hazard.freeze(covar(m))
+    frozen_regression = regression.freeze(covar(m))
 
 
-    assert frozen_pph.moment(1).shape == (m, 1)
-    assert frozen_pph.moment(2).shape == (m, 1)
-    assert frozen_pph.mean().shape == (m, 1)
-    assert frozen_pph.var().shape == (m, 1)
-    assert frozen_pph.median().shape == (m, 1)
+    assert frozen_regression.moment(1).shape == (m, 1)
+    assert frozen_regression.moment(2).shape == (m, 1)
+    assert frozen_regression.mean().shape == (m, 1)
+    assert frozen_regression.var().shape == (m, 1)
+    assert frozen_regression.median().shape == (m, 1)
 
-    assert frozen_pph.sf(time()).shape == (m, 1)
-    assert frozen_pph.hf(time()).shape == (m, 1)
-    assert frozen_pph.chf(time()).shape == (m, 1)
-    assert frozen_pph.cdf(time()).shape == (m, 1)
-    assert frozen_pph.pdf(time()).shape == (m, 1)
-    assert frozen_pph.ppf(probability()).shape == (m, 1)
-    assert frozen_pph.rvs(1, seed=21).shape == (m, 1)
-    assert frozen_pph.ichf(probability()).shape == (m, 1)
-    assert frozen_pph.isf(probability()).shape == (m, 1)
-    assert frozen_pph.isf(0.5) == approx(frozen_pph.median())
+    assert frozen_regression.sf(time()).shape == (m, 1)
+    assert frozen_regression.hf(time()).shape == (m, 1)
+    assert frozen_regression.chf(time()).shape == (m, 1)
+    assert frozen_regression.cdf(time()).shape == (m, 1)
+    assert frozen_regression.pdf(time()).shape == (m, 1)
+    assert frozen_regression.ppf(probability()).shape == (m, 1)
+    assert frozen_regression.rvs(1, seed=21).shape == (m, 1)
+    assert frozen_regression.ichf(probability()).shape == (m, 1)
+    assert frozen_regression.isf(probability()).shape == (m, 1)
+    assert frozen_regression.isf(0.5) == approx(frozen_regression.median())
 
-    assert frozen_pph.sf(time(n)).shape == (m, n)
-    assert frozen_pph.hf(time(n)).shape == (m, n)
-    assert frozen_pph.chf(time(n)).shape == (m, n)
-    assert frozen_pph.cdf(time(n)).shape == (m, n)
-    assert frozen_pph.pdf(time(n)).shape == (m, n)
-    assert frozen_pph.ppf(
+    assert frozen_regression.sf(time(n)).shape == (m, n)
+    assert frozen_regression.hf(time(n)).shape == (m, n)
+    assert frozen_regression.chf(time(n)).shape == (m, n)
+    assert frozen_regression.cdf(time(n)).shape == (m, n)
+    assert frozen_regression.pdf(time(n)).shape == (m, n)
+    assert frozen_regression.ppf(
         probability(
             n,
         ),
     ).shape == (m, n)
-    assert frozen_pph.ichf(
-        probability(
-            n,
-        ),
-    ).shape == (m, n)
-
-    assert frozen_pph.sf(time(m, 1)).shape == (m, 1)
-    assert frozen_pph.hf(time(m, 1)).shape == (m, 1)
-    assert frozen_pph.chf(time(m, 1)).shape == (m, 1)
-    assert frozen_pph.cdf(time(m, 1)).shape == (m, 1)
-    assert frozen_pph.pdf(time(m, 1)).shape == (m, 1)
-    assert frozen_pph.ppf(probability(m, 1)).shape == (m, 1)
-    assert frozen_pph.rvs((m, 1), seed=21).shape == (m, 1)
-    assert frozen_pph.ichf(probability(m, 1)).shape == (m, 1)
-    assert frozen_pph.isf(probability(m, 1)).shape == (m, 1)
-    assert frozen_pph.isf(np.full((m, 1), 0.5)) == approx(frozen_pph.median())
-
-    assert frozen_pph.sf(time(m, n)).shape == (m, n)
-    assert frozen_pph.hf(time(m, n)).shape == (m, n)
-    assert frozen_pph.chf(time(m, n)).shape == (m, n)
-    assert frozen_pph.cdf(time(m, n)).shape == (m, n)
-    assert frozen_pph.pdf(time(m, n)).shape == (m, n)
-    assert frozen_pph.ppf(probability(m, n)).shape == (m, n)
-    assert frozen_pph.rvs((m, n), seed=21).shape == (m, n)
-    assert frozen_pph.ichf(probability(m, n)).shape == (m, n)
-    assert frozen_pph.isf(probability(m, n)).shape == (m, n)
-    assert frozen_pph.isf(np.full((m, n), 0.5)) == approx(np.broadcast_to(frozen_pph.median(), (m, n)))
-
-
-
-def test_frozen_aft(aft, time, covar, probability):
-
-    n = 10
-    m = 3
-    frozen_aft = aft.freeze(covar(m))
-
-
-    assert frozen_aft.moment(1).shape == (m, 1)
-    assert frozen_aft.moment(2).shape == (m, 1)
-    assert frozen_aft.mean().shape == (m, 1)
-    assert frozen_aft.var().shape == (m, 1)
-    assert frozen_aft.median().shape == (m, 1)
-
-    assert frozen_aft.sf(time()).shape == (m, 1)
-    assert frozen_aft.hf(time()).shape == (m, 1)
-    assert frozen_aft.chf(time()).shape == (m, 1)
-    assert frozen_aft.cdf(time()).shape == (m, 1)
-    assert frozen_aft.pdf(time()).shape == (m, 1)
-    assert frozen_aft.ppf(probability()).shape == (m, 1)
-    assert frozen_aft.rvs(1, seed=21).shape == (m, 1)
-    assert frozen_aft.ichf(probability()).shape == (m, 1)
-    assert frozen_aft.isf(probability()).shape == (m, 1)
-    assert frozen_aft.isf(0.5) == approx(frozen_aft.median())
-
-    assert frozen_aft.sf(time(n)).shape == (m, n)
-    assert frozen_aft.hf(time(n)).shape == (m, n)
-    assert frozen_aft.chf(time(n)).shape == (m, n)
-    assert frozen_aft.cdf(time(n)).shape == (m, n)
-    assert frozen_aft.pdf(time(n)).shape == (m, n)
-    assert frozen_aft.ppf(
-        probability(
-            n,
-        ),
-    ).shape == (m, n)
-    assert frozen_aft.ichf(
+    assert frozen_regression.ichf(
         probability(
             n,
         ),
     ).shape == (m, n)
 
-    assert frozen_aft.sf(time(m, 1)).shape == (m, 1)
-    assert frozen_aft.hf(time(m, 1)).shape == (m, 1)
-    assert frozen_aft.chf(time(m, 1)).shape == (m, 1)
-    assert frozen_aft.cdf(time(m, 1)).shape == (m, 1)
-    assert frozen_aft.pdf(time(m, 1)).shape == (m, 1)
-    assert frozen_aft.ppf(probability(m, 1)).shape == (m, 1)
-    assert frozen_aft.rvs((m, 1), seed=21).shape == (m, 1)
-    assert frozen_aft.ichf(probability(m, 1)).shape == (m, 1)
-    assert frozen_aft.isf(probability(m, 1)).shape == (m, 1)
-    assert frozen_aft.isf(np.full((m, 1), 0.5)) == approx(frozen_aft.median())
+    assert frozen_regression.sf(time(m, 1)).shape == (m, 1)
+    assert frozen_regression.hf(time(m, 1)).shape == (m, 1)
+    assert frozen_regression.chf(time(m, 1)).shape == (m, 1)
+    assert frozen_regression.cdf(time(m, 1)).shape == (m, 1)
+    assert frozen_regression.pdf(time(m, 1)).shape == (m, 1)
+    assert frozen_regression.ppf(probability(m, 1)).shape == (m, 1)
+    assert frozen_regression.rvs((m, 1), seed=21).shape == (m, 1)
+    assert frozen_regression.ichf(probability(m, 1)).shape == (m, 1)
+    assert frozen_regression.isf(probability(m, 1)).shape == (m, 1)
+    assert frozen_regression.isf(np.full((m, 1), 0.5)) == approx(frozen_regression.median())
 
-    assert frozen_aft.sf(time(m, n)).shape == (m, n)
-    assert frozen_aft.hf(time(m, n)).shape == (m, n)
-    assert frozen_aft.chf(time(m, n)).shape == (m, n)
-    assert frozen_aft.cdf(time(m, n)).shape == (m, n)
-    assert frozen_aft.pdf(time(m, n)).shape == (m, n)
-    assert frozen_aft.ppf(probability(m, n)).shape == (m, n)
-    assert frozen_aft.rvs((m, n), seed=21).shape == (m, n)
-    assert frozen_aft.ichf(probability(m, n)).shape == (m, n)
-    assert frozen_aft.isf(probability(m, n)).shape == (m, n)
-    assert frozen_aft.isf(np.full((m, n), 0.5)) == approx(np.broadcast_to(frozen_aft.median(), (m, n)))
+    assert frozen_regression.sf(time(m, n)).shape == (m, n)
+    assert frozen_regression.hf(time(m, n)).shape == (m, n)
+    assert frozen_regression.chf(time(m, n)).shape == (m, n)
+    assert frozen_regression.cdf(time(m, n)).shape == (m, n)
+    assert frozen_regression.pdf(time(m, n)).shape == (m, n)
+    assert frozen_regression.ppf(probability(m, n)).shape == (m, n)
+    assert frozen_regression.rvs((m, n), seed=21).shape == (m, n)
+    assert frozen_regression.ichf(probability(m, n)).shape == (m, n)
+    assert frozen_regression.isf(probability(m, n)).shape == (m, n)
+    assert frozen_regression.isf(np.full((m, n), 0.5)) == approx(np.broadcast_to(frozen_regression.median(), (m, n)))
+
 

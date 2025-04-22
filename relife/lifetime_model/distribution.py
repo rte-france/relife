@@ -585,9 +585,8 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
         self, time: float | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
         frozen_model = self.baseline.freeze(*args)
-        time = np.asarray(time).reshape(-1, 1)
         res = (
-            legendre_quadrature(frozen_model.sf, 0, time, ndim=frozen_model.ndim)
+            legendre_quadrature(frozen_model.sf, 0, time)
             / frozen_model.mean()
         )
         return res
@@ -598,11 +597,6 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
         # self.baseline.mean can squeeze -> broadcast error (origin : ls_integrate output shape)
         mean = self.baseline.mean(*args)
         sf = self.baseline.sf(time, *args)
-        if mean.ndim < sf.ndim:  # if args is empty, sf can have more dim than mean
-            if sf.ndim == 1:
-                mean = np.reshape(mean, (-1,))
-            if sf.ndim == 2:
-                mean = np.broadcast_to(mean, (sf.shape[0], -1))
         return sf / mean
 
     def hf(

@@ -12,10 +12,10 @@ import pytest
 from pytest import approx
 import numpy as np
 
+from relife.lifetime_model import Exponential
 
-@pytest.mark.parametrize("fixture_name", ["exponential", "weibull", "gompertz", "gamma", "loglogistic"])
-def test_shape_and_values(distribution_map, fixture_name, time, probability):
-    distribution = distribution_map[fixture_name]
+
+def test_shape_and_values(distribution, time, probability):
 
     assert distribution.moment(1).shape == ()
     assert distribution.moment(2).shape == ()
@@ -36,7 +36,7 @@ def test_shape_and_values(distribution_map, fixture_name, time, probability):
     assert distribution.isf(0.5) == approx(distribution.median())
     assert distribution.dhf(time()).shape == ()
 
-    if fixture_name != "exponential":
+    if not isinstance(distribution, Exponential):
         assert distribution.jac_sf(time()).shape == (2,)
         assert distribution.jac_hf(time()).shape == (2,)
         assert distribution.jac_chf(time()).shape == (2,)
@@ -80,7 +80,7 @@ def test_shape_and_values(distribution_map, fixture_name, time, probability):
         )
     ).shape == (n,)
 
-    if fixture_name != "exponential":
+    if not isinstance(distribution, Exponential):
         assert distribution.jac_sf(
             time(
                 n,
@@ -148,7 +148,7 @@ def test_shape_and_values(distribution_map, fixture_name, time, probability):
     assert distribution.isf(np.full((m, 1), 0.5)) == approx(np.full((m, 1), distribution.median()))
     assert distribution.dhf(time(m, 1)).shape == (m, 1)
 
-    if fixture_name != "exponential":
+    if not isinstance(distribution, Exponential):
         assert distribution.jac_sf(time(m, 1)).shape == (m, 2)
         assert distribution.jac_hf(time(m, 1)).shape == (m, 2)
         assert distribution.jac_chf(time(m, 1)).shape == (m, 2)
@@ -190,9 +190,7 @@ def test_shape_and_values(distribution_map, fixture_name, time, probability):
     assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
 
 
-@pytest.mark.parametrize("fixture_name", ["exponential", "weibull", "gompertz", "gamma", "loglogistic"])
-def test_fit(distribution_map, fixture_name, power_transformer_data):
-    distribution = distribution_map[fixture_name]
+def test_fit(distribution, power_transformer_data):
     expected_params = distribution.params.copy()
     distribution = distribution.fit(
         power_transformer_data[0, :],

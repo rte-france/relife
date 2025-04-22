@@ -12,75 +12,33 @@ from relife.lifetime_model import (
     AFT,
 )
 
-@pytest.fixture
-def exponential():
-    return Exponential(0.00795203)
 
-
-@pytest.fixture
-def weibull():
-    return Weibull(3.46597395, 0.01227849)
-
-
-@pytest.fixture
-def gompertz():
-    return Gompertz(0.00865741, 0.06062632)
-
-
-@pytest.fixture
-def gamma():
-    return Gamma(5.3571091, 0.06622822)
-
-
-@pytest.fixture
-def loglogistic():
-    return LogLogistic(3.92614064, 0.0133325)
-
-
-@pytest.fixture
-def distribution_map(exponential, weibull, gompertz, gamma, loglogistic):
-    return {
-        "exponential" : exponential,
-        "weibull": weibull,
-        "gompertz": gompertz,
-        "gamma": gamma,
-        "loglogistic": loglogistic,
-    }
-
+@pytest.fixture(
+    params=[
+        Exponential(0.00795203),
+        Weibull(3.46597395, 0.01227849),
+        Gompertz(0.00865741, 0.06062632),
+        Gamma(5.3571091, 0.06622822),
+        LogLogistic(3.92614064, 0.0133325),
+    ],
+    ids=["exponential", "weibull", "gompertz", "gamma", "loglogistic"]
+)
+def distribution(request):
+    return request.param
 
 @pytest.fixture
 def nb_coef():
     return 3
 
-
-
-
 @pytest.fixture(
     params=[
-        Exponential(0.00795203),
-        Weibull(3.46597395, 0.01227849),
-        Gompertz(0.00865741, 0.06062632),
-        Gamma(5.3571091, 0.06622822),
-        LogLogistic(3.92614064, 0.0133325),
+        ProportionalHazard,
+        AFT,
     ],
-    ids=["pph(exponential)", "pph(weibull)", "pph(gompertz)", "pph(gamma)", "pph(loglogistic)"],
 )
-def proportional_hazard(request, nb_coef):
-    yield ProportionalHazard(request.param, coef=(0.1,) * nb_coef)
+def regression(request, distribution, nb_coef):
+    return request.param(distribution, coef=(0.1,) * nb_coef)
 
-
-@pytest.fixture(
-    params=[
-        Exponential(0.00795203),
-        Weibull(3.46597395, 0.01227849),
-        Gompertz(0.00865741, 0.06062632),
-        Gamma(5.3571091, 0.06622822),
-        LogLogistic(3.92614064, 0.0133325),
-    ],
-    ids=["aft(exponential)", "aft(weibull)", "aft(gompertz)", "aft(gamma)", "aft(loglogistic)"],
-)
-def aft(request):
-    yield AFT(request.param, coef=(0.1, 0.2, 0.3))
 
 
 @pytest.fixture
