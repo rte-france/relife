@@ -3,7 +3,6 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._args import broadcast_args
 
 
 class CostStructure(dict):
@@ -20,8 +19,8 @@ class CostStructure(dict):
         mapping.update(kwargs)
         if not set(mapping.keys()).issubset(self._allowed_keys):
             raise ValueError(f"Only {self._allowed_keys} parameters are allowed")
+        mapping = {k : np.asarray(v, dtype=np.float64).reshape(-1, 1) for k, v in mapping.items()}
         super().__init__(mapping)
-        super().update(**broadcast_args(self, **mapping))
 
     def __setitem__(self, key, val):
         raise AttributeError("Can't set item")

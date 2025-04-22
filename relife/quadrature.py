@@ -218,7 +218,10 @@ def ls_integrate(
                 raise ValueError("Bound values a must be strictly lower than values of b")
 
             arr_ar = frozen_model.args[0].copy()
-            arr_ar, arr_a = np.broadcast_arrays(arr_a, arr_ar)
+            try:
+                arr_ar, arr_a = np.broadcast_arrays(arr_a, arr_ar)
+            except ValueError as err:
+                raise ValueError("Incompatible ar shape with given bounds") from err
 
             bound_shape = arr_a.shape
             arr_b = np.minimum(arr_b, arr_ar)

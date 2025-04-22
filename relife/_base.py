@@ -1,10 +1,9 @@
 from itertools import chain
-from typing import Any, Generator, Iterator, Optional, Self
+from typing import Any, Iterator, Optional, Self
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._args import broadcast_args
 
 
 class ParametricModel:
@@ -297,6 +296,76 @@ class ParamsTree:
         self.update_parents()
 
 
+def args_names_generator(
+    model: ParametricModel,
+) -> Iterator[str]:
+    from relife.lifetime_model import (
+        AFT,
+        AgeReplacementModel,
+        LeftTruncatedModel,
+        ProportionalHazard,
+        FrozenLifetimeDistribution,
+        FrozenLifetimeRegression,
+    )
+
+    match model:
+        case ProportionalHazard() | AFT():
+            yield "covar"
+            yield from args_names_generator(model.baseline)
+        case AgeReplacementModel():
+            yield "ar"
+            yield from args_names_generator(model.baseline)
+        case LeftTruncatedModel():
+            yield "a0"
+            yield from args_names_generator(model.baseline)
+        case FrozenLifetimeRegression() | FrozenLifetimeRegression():
+            yield from args_names_generator(model.baseline)
+        case _:  # in other case, stop generator and yield nothing
+            return
+
+
+def reshape_args(
+    name: str, value: float | NDArray[np.float64]
+) -> float | NDArray[np.float64]:
+    value = np.asarray(value)
+    ndim = value.ndim
+    if ndim > 2:
+        raise ValueError(
+            f"Number of dimension can't be higher than 2. Got {ndim} for {name}"
+        )
+    match name:
+        case "covar":
+            if ndim <= 1:
+                return value.reshape(1, -1)
+            return value
+        case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
+            if ndim == 2:
+                if value.shape[-1] > 1:
+                    raise ValueError
+            return value.reshape(-1, 1)
+
+
+def broadcast_args(
+    obj: ParametricModel,
+    *args: float | NDArray[np.float64],
+) -> dict[str, NDArray[np.float64]]:
+
+    args_names = tuple(args_names_generator(obj))
+    if len(args_names) != len(args):
+        raise TypeError(
+            f"{obj.__class__.__name__} requires {args_names} positional argument but got {len(args)} argument.s only"
+        )
+    reshaped_args = [reshape_args(k, v) for k,v in zip(args_names, args)]
+    try :
+        np.broadcast_shapes(*tuple((arg.shape for arg in reshaped_args)))
+    except ValueError as err:
+        raise ValueError("Unbroadcastable args") from err
+
+
+    return {k : v for k, v in zip(args_names, reshaped_args)}
+
+
+
 class FrozenParametricModel(ParametricModel):
 
     frozen: bool = True
@@ -308,7 +377,7 @@ class FrozenParametricModel(ParametricModel):
     ):
         super().__init__()
         self.compose_with(baseline=model)
-        self.kwargs = broadcast_args(model, *args)
+        self.kwargs = broadcast_args(model, *args) # all values are 2d
 
     @property
     def args(self) -> tuple[float | NDArray[np.float64], ...]:

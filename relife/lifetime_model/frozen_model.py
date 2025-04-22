@@ -63,7 +63,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         return self.baseline.mrl(time, *self.args)
 
     def moment(self, n: int) -> NDArray[np.float64]:
-        return self.baseline.moment(n)
+        return self.baseline.moment(n, *self.args)
 
     def mean(self) -> NDArray[np.float64]:
         return self.baseline.moment(1, *self.args)
@@ -101,7 +101,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         deg: int = 100,
     ) -> NDArray[np.float64]:
 
-        return self.baseline.ls_integrate(self, func, a, b, deg=deg)
+        return self.baseline.ls_integrate(func, a, b, *self.args, deg=deg)
 
 
 class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):

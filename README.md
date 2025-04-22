@@ -58,6 +58,12 @@ Some explanations might be missing until we finish it properly, so do not hesita
 }
 ```
 
+## Pytest
+
+```
+pytest -k "not test_ls_integrate_distribution[loglogistic]"
+```
+
 ## Credits
 
 The documentation uses [pydata-sphinx-theme](https://github.com/pydata/pydata-sphinx-theme) project. Original license

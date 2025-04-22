@@ -356,7 +356,7 @@ class Gamma(LifetimeDistribution):
     def _jac_uppergamma_shape(
         self, x: float | NDArray[np.float64]
     ) -> NDArray[np.float64]:
-        return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x)
+        return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x, deg=100)
 
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * time
@@ -392,7 +392,7 @@ class Gamma(LifetimeDistribution):
                 (
                     (self.rate * np.log(x) * self._uppergamma(x)).reshape(-1, 1)
                     - self.rate * self._jac_uppergamma_shape(x).reshape(-1,1),
-                    (self.shape - x * self._uppergamma(x) + x**self.shape * np.exp(-x)).reshape(-1,1),
+                    ((self.shape - x) * self._uppergamma(x) + x**self.shape * np.exp(-x)).reshape(-1,1),
                 )
             )
         )

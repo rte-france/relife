@@ -14,7 +14,7 @@ import numpy as np
 
 
 @pytest.mark.parametrize("fixture_name", ["exponential", "weibull", "gompertz", "gamma", "loglogistic"])
-def test_distribution(distribution_map, fixture_name, time, probability):
+def test_shape_and_values(distribution_map, fixture_name, time, probability):
     distribution = distribution_map[fixture_name]
 
     assert distribution.moment(1).shape == ()
@@ -24,6 +24,7 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     assert distribution.median().shape == ()
 
     assert distribution.sf(time()).shape == ()
+    assert distribution.sf(distribution.median()) == pytest.approx(0.5, rel=1e-3)
     assert distribution.hf(time()).shape == ()
     assert distribution.chf(time()).shape == ()
     assert distribution.cdf(time()).shape == ()
@@ -51,6 +52,7 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     n = 10
 
     assert distribution.sf(time(n)).shape == (n,)
+    assert distribution.sf(np.full((n,), distribution.median())) == pytest.approx(np.full((n,), 0.5), rel=1e-3)
     assert distribution.hf(time(n)).shape == (n,)
     assert distribution.chf(time(n)).shape == (n,)
     assert distribution.cdf(time(n)).shape == (n,)
@@ -134,6 +136,7 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     m = 3
 
     assert distribution.sf(time(m, 1)).shape == (m, 1)
+    assert distribution.sf(np.full((m, 1), distribution.median())) == pytest.approx(np.full((m, 1), 0.5), rel=1e-3)
     assert distribution.hf(time(m, 1)).shape == (m, 1)
     assert distribution.chf(time(m, 1)).shape == (m, 1)
     assert distribution.cdf(time(m, 1)).shape == (m, 1)
@@ -159,6 +162,7 @@ def test_distribution(distribution_map, fixture_name, time, probability):
         assert distribution.jac_pdf(time(m, 1)).shape == (m, 1)
 
     assert distribution.sf(time(m, n)).shape == (m, n)
+    assert distribution.sf(np.full((m, n), distribution.median())) == pytest.approx(np.full((m, n), 0.5), rel=1e-3)
     assert distribution.hf(time(m, n)).shape == (m, n)
     assert distribution.chf(time(m, n)).shape == (m, n)
     assert distribution.cdf(time(m, n)).shape == (m, n)
@@ -184,3 +188,15 @@ def test_distribution(distribution_map, fixture_name, time, probability):
     with pytest.raises(ValueError) as err:
         distribution.jac_cdf(time(m, n))
     assert "Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here" in str(err.value)
+
+
+@pytest.mark.parametrize("fixture_name", ["exponential", "weibull", "gompertz", "gamma", "loglogistic"])
+def test_fit(distribution_map, fixture_name, power_transformer_data):
+    distribution = distribution_map[fixture_name]
+    expected_params = distribution.params.copy()
+    distribution = distribution.fit(
+        power_transformer_data[0, :],
+        event=power_transformer_data[1, :] == 1,
+        entry=power_transformer_data[2, :],
+    )
+    assert distribution.params == pytest.approx(expected_params, rel=1e-3)

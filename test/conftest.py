@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from relife.data import load_power_transformer
 from relife.lifetime_model import (
     Exponential,
     Weibull,
@@ -11,29 +12,29 @@ from relife.lifetime_model import (
     AFT,
 )
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def exponential():
-    return Exponential(0.05)
+    return Exponential(0.00795203)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def weibull():
-    return Weibull(2, 0.05)
+    return Weibull(3.46597395, 0.01227849)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def gompertz():
-    return Gompertz(0.01, 0.1)
+    return Gompertz(0.00865741, 0.06062632)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def gamma():
-    return Gamma(2, 0.05)
+    return Gamma(5.3571091, 0.06622822)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def loglogistic():
-    return LogLogistic(3, 0.05)
+    return LogLogistic(3.92614064, 0.0133325)
 
 
 @pytest.fixture
@@ -47,19 +48,20 @@ def distribution_map(exponential, weibull, gompertz, gamma, loglogistic):
     }
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def nb_coef():
     return 3
 
 
+
+
 @pytest.fixture(
-    scope="module",
     params=[
-        Exponential(0.05),
-        Weibull(2, 0.05),
-        Gompertz(0.01, 0.1),
-        Gamma(2, 0.05),
-        LogLogistic(3, 0.05),
+        Exponential(0.00795203),
+        Weibull(3.46597395, 0.01227849),
+        Gompertz(0.00865741, 0.06062632),
+        Gamma(5.3571091, 0.06622822),
+        LogLogistic(3.92614064, 0.0133325),
     ],
     ids=["pph(exponential)", "pph(weibull)", "pph(gompertz)", "pph(gamma)", "pph(loglogistic)"],
 )
@@ -68,13 +70,12 @@ def proportional_hazard(request, nb_coef):
 
 
 @pytest.fixture(
-    scope="module",
     params=[
-        Exponential(0.05),
-        Weibull(2, 0.05),
-        Gompertz(0.01, 0.1),
-        Gamma(2, 0.05),
-        LogLogistic(3, 0.05),
+        Exponential(0.00795203),
+        Weibull(3.46597395, 0.01227849),
+        Gompertz(0.00865741, 0.06062632),
+        Gamma(5.3571091, 0.06622822),
+        LogLogistic(3.92614064, 0.0133325),
     ],
     ids=["aft(exponential)", "aft(weibull)", "aft(gompertz)", "aft(gamma)", "aft(loglogistic)"],
 )
@@ -82,7 +83,7 @@ def aft(request):
     yield AFT(request.param, coef=(0.1, 0.2, 0.3))
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def time():
     def _time(*d: int):
         if not bool(d):
@@ -92,7 +93,7 @@ def time():
     return _time
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def probability():
     def _probability(*d: int):
         if not bool(d):
@@ -102,7 +103,7 @@ def probability():
     return _probability
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def covar(nb_coef):
     def _covar(m):
         return np.ones((m, nb_coef), dtype=np.float64)
@@ -128,3 +129,9 @@ def b():
         return 8.0 * np.ones(d, dtype=np.float64)
 
     return _b
+
+
+
+@pytest.fixture
+def power_transformer_data():
+    return load_power_transformer()
