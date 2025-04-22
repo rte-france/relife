@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from relife.data import load_power_transformer
+from relife.data import load_power_transformer, load_insulator_string
 from relife.lifetime_model import (
     Exponential,
     Weibull,
@@ -135,3 +135,7 @@ def b():
 @pytest.fixture
 def power_transformer_data():
     return load_power_transformer()
+
+@pytest.fixture
+def insulator_string_data():
+    return load_insulator_string()

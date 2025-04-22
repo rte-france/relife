@@ -131,7 +131,6 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
         if hasattr(self.model, "jac_chf"):
             if lifetime_data.left_censoring is None:
                 return None
-            print("ok")
             return -np.sum(
                 self.model.jac_chf(
                     lifetime_data.left_censoring.values,
@@ -151,7 +150,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
         self, lifetime_data: LifetimeData
     ) -> Optional[NDArray[np.float64]]:
         if hasattr(self.model, "jac_chf"):
-            if lifetime_data is None:
+            if lifetime_data.left_truncation is None:
                 return None
             return -np.sum(
                 self.model.jac_chf(

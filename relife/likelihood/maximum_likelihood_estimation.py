@@ -139,7 +139,6 @@ def init_params_from_lifetimes(
             model: LifetimeDistribution
             param0 = np.ones(model.nb_params, dtype=np.float64)
             param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.values)
-            print("params0 :", param0)
             return param0
 
         case Gompertz():
@@ -193,7 +192,7 @@ def maximum_likelihood_estimation(
                 "method": kwargs.get("method", "L-BFGS-B"),
                 "constraints": kwargs.get("constraints", ()),
                 "tol": kwargs.get("tol", None),
-                # "callback": kwargs.get("callback", None),
+                "callback": kwargs.get("callback", None),
                 "options": kwargs.get("options", None),
                 "bounds": kwargs.get("bounds", bounds),
                 "x0": kwargs.get("x0", model.params),
@@ -202,11 +201,10 @@ def maximum_likelihood_estimation(
                 likelihood.negative_log,
                 minimize_kwargs.pop("x0"),
                 jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-                callback = lambda x: print(likelihood.jac_negative_log(x)),
                 **minimize_kwargs,
             )
 
-            # Step 4: Compute parameters variance (Hessian inverse)
+            # Step 4: Compute parameters variance (Hessian inverse)
             hessian_inverse = np.linalg.inv(likelihood.hessian())
             model.fitting_results = FittingResults(
                 len(data), optimizer, var=hessian_inverse
