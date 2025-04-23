@@ -50,7 +50,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def sf(
         self,
         time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -59,7 +59,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def hf(
         self,
         time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -68,7 +68,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def chf(
         self,
         time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -78,7 +78,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def isf(
         self,
         probability: NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -88,7 +88,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def ichf(
         self,
         cumulative_hazard_rate: NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -97,7 +97,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def pdf(
         self,
         time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -105,7 +105,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
 
     @override
     def moment(
-        self, n: int, ar: float | NDArray[np.float64], *args: *Args
+        self, n: int, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         return self.ls_integrate(
@@ -119,37 +119,37 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
 
     @override
     def mean(
-        self, ar: float | NDArray[np.float64], *args: *Args
+        self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         return self.moment(1, ar, *args)
 
     @override
-    def var(self, ar: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def var(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     def rvs(
         self,
         shape : int|tuple[int, int],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
-        return np.minimum(self.baseline.rvs(shape, *(ar, *args), seed=seed), ar)
+        return np.minimum(self.baseline.rvs(shape, *args, seed=seed), ar)
 
     def ppf(
         self,
         probability: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         return self.isf(1 - probability, ar, *args)
 
     def median(
-        self, ar: float | NDArray[np.float64], *args: *Args
+        self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
@@ -157,7 +157,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def cdf(
         self,
         time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -167,7 +167,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def mrl(
         self,
         time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
@@ -190,7 +190,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
+        ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         deg: int = 10,
     ) -> NDArray[np.float64]:
@@ -225,7 +225,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def sf(
         self,
         time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
+        a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         a0 = _reshape_ar_or_a0("a0", a0)
@@ -234,7 +234,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def pdf(
         self,
         time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
+        a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         a0 = _reshape_ar_or_a0("a0", a0)
@@ -243,7 +243,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def isf(
         self,
         probability: NDArray[np.float64],
-        a0: float | NDArray[np.float64],
+        a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability)
@@ -253,7 +253,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def chf(
         self,
         time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
+        a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         a0 = _reshape_ar_or_a0("a0", a0)
@@ -262,7 +262,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def hf(
         self,
         time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
+        a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         a0 = _reshape_ar_or_a0("a0", a0)
@@ -271,7 +271,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def ichf(
         self,
         cumulative_hazard_rate: NDArray[np.float64],
-        a0: float | NDArray[np.float64],
+        a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
         a0 = _reshape_ar_or_a0("a0", a0)
@@ -286,7 +286,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def rvs(
         self,
         shape : int|tuple[int, int],
-        a0: float | NDArray[np.float64],
+        a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
@@ -295,7 +295,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
 
     @override
     def freeze(
-        self, a0: float | NDArray[np.float64], *args: *Args
+        self, a0: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> FrozenParametricLifetimeModel:
         a0 = _reshape_ar_or_a0("a0", a0)
         return super().freeze(*(a0, *args))

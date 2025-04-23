@@ -70,6 +70,15 @@ def covar(nb_coef):
 
 
 @pytest.fixture
+def ar():
+    def _ar(n):
+        return np.ones(n, dtype=np.float64)
+
+    return _ar
+
+
+
+@pytest.fixture
 def a():
     def _a(*d: int):
         if not bool(d):
