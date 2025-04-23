@@ -59,7 +59,7 @@ def test_renewal_process_distribution(distribution):
     ar = distribution.isf(0.75)
 
     renewal_process = RenewalProcess(ar_distribution.freeze(ar), model1=EquilibriumDistribution(ar_distribution).freeze(ar))
-    assert renewal_process.renewal_density(timeline)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
+    assert renewal_process.renewal_density(timeline)[..., -1:] == approx(1 / ar_distribution.mean(ar), rel=1e-4)
 
 
 def test_renewal_process_regression(regression):

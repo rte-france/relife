@@ -15,6 +15,13 @@ from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model import Weibull, AFT, ProportionalHazard
 
+
+def test_args_names(regression):
+    assert regression.args_names == ("covar",)
+    assert ProportionalHazard(regression).args_names == ("covar", "covar",)
+    assert AFT(regression).args_names == ("covar", "covar",)
+
+
 def test_shape_and_values(regression, time, covar, probability):
 
     n = 10

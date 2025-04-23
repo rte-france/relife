@@ -12,7 +12,12 @@ import pytest
 from pytest import approx
 import numpy as np
 
-from relife.lifetime_model import Exponential
+from relife.lifetime_model import Exponential, EquilibriumDistribution
+
+
+def test_args_names(distribution):
+    assert distribution.args_names == ()
+    assert EquilibriumDistribution(distribution).args_names == ()
 
 
 def test_shape_and_values(distribution, time, probability):
