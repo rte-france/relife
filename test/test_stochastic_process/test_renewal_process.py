@@ -1,89 +1,55 @@
 import numpy as np
+import pytest
 from pytest import approx
 
-from relife.lifetime_model import EquilibriumDistribution, AgeReplacementModel
+from relife.lifetime_model import EquilibriumDistribution, AgeReplacementModel, Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
 from relife.stochastic_process import RenewalProcess
 
 
-# @pytest.fixture(
-#     scope="module",
-#     params=[
-#         Weibull(2, 0.05),
-#         Gompertz(0.01, 0.1),
-#         Gamma(2, 0.05),
-#         LogLogistic(3, 0.05),
-#     ],
-# )
-# def distribution(request):
-#     return request.param
-#
-#
-# @pytest.fixture(scope="module", params=[None, AFT, ProportionalHazard])
-# def regression(request):
-#     return request.param
-#
-#
-# @pytest.fixture(
-#     scope="module",
-#     params=[
-#         None,
-#         AgeReplacementModel,
-#     ],
-# )
-# def age_replacement_model(request):
-#     return request.param
-#
-#
-# @pytest.fixture(scope="module")
-# def frozen_model(distribution, regression, age_replacement_model):
-#     model = distribution
-#     args = ()
-#     if regression is not None:
-#         covar = np.arange(0.0, 0.6, 0.1).reshape(-1, 2)
-#         model = regression(model, coef=(np.log(2), np.log(2)))
-#         args = (covar,) + args
-#     if age_replacement_model is not None:
-#         tmax = model.isf(0.75, *args)
-#         model = age_replacement_model(model)
-#         args = (tmax,) + args
-#     return model.freeze(*args)
-#
+@pytest.fixture(
+    params=[
+        Weibull(2, 0.05),
+        Gompertz(0.01, 0.1),
+        Gamma(2, 0.05),
+        LogLogistic(3, 0.05),
+    ],
+)
+def distribution(request):
+    return request.param
 
-# test functions
+
+@pytest.fixture(params=[AFT, ProportionalHazard])
+def regression(request, distribution):
+    return request.param(distribution, coef=(np.log(2), np.log(2)))
+
+
 def test_renewal_process_distribution(distribution):
-    timeline = np.arange(0, 100, 0.5)
     renewal_process = RenewalProcess(distribution, model1=EquilibriumDistribution(distribution))
-    assert renewal_process.renewal_density(timeline)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
+    assert renewal_process.renewal_density(100, 200).shape == (200,)
+    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
 
-    ar_distribution = AgeReplacementModel(distribution)
     ar = distribution.isf(0.75)
-
-    renewal_process = RenewalProcess(ar_distribution.freeze(ar), model1=EquilibriumDistribution(ar_distribution).freeze(ar))
-    assert renewal_process.renewal_density(timeline)[..., -1:] == approx(1 / ar_distribution.mean(ar), rel=1e-4)
+    ar_distribution = AgeReplacementModel(distribution).freeze(ar)
+    renewal_process = RenewalProcess(ar_distribution, model1=EquilibriumDistribution(ar_distribution))
+    assert renewal_process.renewal_density(100, 200).shape == (200,)
+    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / ar_distribution.mean(), rel=1e-4)
 
 
 def test_renewal_process_regression(regression):
-    pass
+    covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
+    regression = regression.freeze(covar)
+
+    renewal_process = RenewalProcess(regression, model1=EquilibriumDistribution(regression))
+    assert renewal_process.renewal_density(100, 200).shape == (3, 200)
+    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / regression.mean(), rel=1e-4)
+
+    ar = regression.isf(0.75)
+    ar_regression = AgeReplacementModel(regression).freeze(ar)
+    renewal_process = RenewalProcess(ar_regression, model1=EquilibriumDistribution(ar_regression))
+    assert renewal_process.renewal_density(100, 200).shape == (3,200)
+    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / ar_regression.mean(), rel=1e-4)
 
 
-
-#
-#
-#
-#
-#
-#     model1 =
-#     rp = RenewalProcess(
-#         frozen_model,
-#         model1=EquilibriumDistribution(frozen_model.baseline),
-#         model_args=model_args,
-#         model1_args=model_args,
-#         nb_assets=nb_assets,
-#     )
-#     y0 =
-#     y = rp.renewal_density(t)
-#     assert y[..., -1:] == pytest.approx(y0, rel=1e-4)
-#
 # @pytest.mark.skip(reason="no way of currently testing this")
 # def test_renewal_reward_process(model_args_nb_assets):
 #     t = np.arange(0, 100, 0.5)

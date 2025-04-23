@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife import ParametricModel
+from relife import ParametricModel, FrozenMixin
 from relife._plots import PlotSurvivalFunc
 from relife.data import lifetime_data_factory
 from relife.likelihood import maximum_likelihood_estimation
@@ -79,6 +79,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
                     args_names += ("ar",)
                 case LeftTruncatedModel():
                     args_names += ("a0",)
+                #  break because other args are frozen in frozen instance
+                case FrozenMixin():
+                    break
                 case _:
                     continue
         return args_names

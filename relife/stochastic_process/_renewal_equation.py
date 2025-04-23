@@ -7,21 +7,25 @@ from numpy.typing import NDArray
 
 if TYPE_CHECKING:
     from relife.economic.discounting import Discounting
-    from relife.lifetime_model import FrozenParametricLifetimeModel
+    from relife.lifetime_model import ParametricLifetimeModel
 
 
 def renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    model: FrozenParametricLifetimeModel,
+    timeline: NDArray[np.float64], # (nb_steps,)
+    model: ParametricLifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
-    tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f = model.cdf(timeline)
-    fm = model.cdf(tm)
+    tm = 0.5 * (timeline[1:] + timeline[:-1]) # (nb_steps - 1,)
+    f = model.cdf(timeline) # (nb_steps,)
+    fm = model.cdf(tm) # (nb_steps - 1,)
     y = evaluated_func(timeline)
+
+    if y.shape != f.shape:
+        raise ValueError("Invalid shape between model and evaluated_func")
+
     if discounting is not None:
         d = discounting.factor(timeline)
     else:
@@ -44,7 +48,7 @@ def renewal_equation_solver(
 def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
-    model1: FrozenParametricLifetimeModel,
+    model1: ParametricLifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:

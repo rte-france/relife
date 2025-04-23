@@ -208,35 +208,35 @@ def ls_integrate(
         return func(x) * frozen_model.pdf(x)
 
     match model:
-        case AgeReplacementModel():
-            nb_assets = frozen_model.nb_assets
-            # nb_assets == m
-            arr_a, arr_b = _reshape_and_broadcast_bounds(
-                a, b, integrand_nb_assets=nb_assets
-            )  # (m,n)
-            if np.any(arr_a >= arr_b):
-                raise ValueError("Bound values a must be strictly lower than values of b")
-
-            arr_ar = frozen_model.args[0].copy()
-            try:
-                arr_ar, arr_a = np.broadcast_arrays(arr_a, arr_ar)
-            except ValueError as err:
-                raise ValueError("Incompatible ar shape with given bounds") from err
-
-            bound_shape = arr_a.shape
-            arr_b = np.minimum(arr_b, arr_ar)
-            is_ar = arr_b == arr_ar
-
-            integration = legendre_quadrature(integrand, arr_a, arr_b, integrand_nb_assets=nb_assets, deg=deg)
-
-            if np.any(is_ar):
-                integration[is_ar] += (
-                    func(arr_ar[is_ar].copy()) * model.sf(arr_ar[is_ar].copy())
-                )
-
-            if nb_assets == 1:
-                return np.squeeze(integration)
-            return integration.reshape(bound_shape)
+        # case AgeReplacementModel():
+        #     nb_assets = frozen_model.nb_assets
+        #     # nb_assets == m
+        #     arr_a, arr_b = _reshape_and_broadcast_bounds(
+        #         a, b, integrand_nb_assets=nb_assets
+        #     )  # (m,n)
+        #     if np.any(arr_a >= arr_b):
+        #         raise ValueError("Bound values a must be strictly lower than values of b")
+        #
+        #     arr_ar = frozen_model.args[0].copy()
+        #     try:
+        #         arr_a, arr_ar = np.broadcast_arrays(arr_a, arr_ar)
+        #     except ValueError as err:
+        #         raise ValueError("Incompatible ar shape with given bounds") from err
+        #
+        #     bound_shape = arr_a.shape
+        #     arr_b = np.minimum(arr_b, arr_ar)
+        #     is_ar = arr_b == arr_ar
+        #
+        #     integration = legendre_quadrature(integrand, arr_a, arr_b, integrand_nb_assets=nb_assets, deg=deg)
+        #
+        #     if np.any(is_ar):
+        #         integration[is_ar] += (
+        #             func(arr_ar[[is_ar]]) * frozen_model.sf(arr_ar[[is_ar]])
+        #         )
+        #
+        #     if nb_assets == 1:
+        #         return np.squeeze(integration)
+        #     return integration.reshape(bound_shape)
 
         case _:
             nb_assets = frozen_model.nb_assets

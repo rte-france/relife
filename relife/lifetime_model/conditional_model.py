@@ -23,7 +23,7 @@ def _reshape_ar_or_a0(name : str, value : float|NDArray[np.float64])-> NDArray[n
     if value.ndim == 2 and value.shape[-1] != 1:
         raise ValueError(f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}")
     if value.ndim == 1:
-        value.reshape(-1, 1)
+        value = value.reshape(-1, 1)
     return value
 
 class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
@@ -110,8 +110,8 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar = _reshape_ar_or_a0("ar", ar)
         return self.ls_integrate(
             lambda x: x**n,
-            np.array(0.0),
-            np.array(np.inf),
+            0,
+            np.inf,
             ar,
             *args,
             deg=100,
@@ -195,7 +195,9 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         deg: int = 10,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
-        return ls_integrate(self.freeze(ar, *args), func, a, b, deg=deg)
+        b = np.minimum(ar, b)
+        return ls_integrate(self, func, a, b, *(ar, *args), deg=deg) + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+
 
     @override
     def freeze(

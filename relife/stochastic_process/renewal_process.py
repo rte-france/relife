@@ -21,11 +21,6 @@ if TYPE_CHECKING:
     from relife.sample import CountData
 
 
-def _nb_assets(obj : ParametricModel):
-    if isinstance(obj, FrozenMixin):
-        return obj.nb_assets
-    return 1
-
 
 class RenewalProcess(ParametricModel):
     def __init__(
@@ -37,16 +32,13 @@ class RenewalProcess(ParametricModel):
 
         if len(model.args_names) > 0:
             raise ValueError(
-                "Invalid type of model. Model must be ParametricLifetimeModel[()] object type. You may call freeze first"
+                "Invalid type of model. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
             )
         if model1 is not None:
             if len(model1.args_names) > 0:
                 raise ValueError(
-                    "Invalid type of model1. Model must be ParametricLifetimeModel[()] object type. You may call freeze first"
+                    "Invalid type of model1. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
                 )
-
-            if _nb_assets(model)!= _nb_assets(model1):
-                raise ValueError
 
         self.compose_with(_model=model)
         self.compose_with(_model1=model1)
@@ -59,18 +51,21 @@ class RenewalProcess(ParametricModel):
     def model1(self) -> Optional[FrozenParametricLifetimeModel]:
         return getattr(self, "_model1", None)
 
-    def renewal_function(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+
+    def renewal_function(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
+        timeline = np.linspace(0., tf, nb_steps) # (nb_steps,)
         return renewal_equation_solver(
             timeline,
             self.model,
-            self.model.cdf if not self.model1 else self.model1.cdf,
+            self.model.cdf if self.model1 is None else self.model1.cdf,
         )
 
-    def renewal_density(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+    def renewal_density(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
+        timeline = np.linspace(0., tf, nb_steps) # (nb_steps,)
         return renewal_equation_solver(
             timeline,
             self.model,
-            self.model.pdf if not self.model1 else self.model1.pdf,
+            self.model.pdf if self.model1 is None else self.model1.pdf,
         )
 
     def sample(
