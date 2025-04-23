@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Optional, ParamSpec, TypeVarTuple
+from typing_extensions import override
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife import FrozenParametricModel
-
+from relife._base import FrozenMixin
+from ._base import ParametricLifetimeModel
 
 if TYPE_CHECKING:
     from relife.lifetime_model import ParametricLifetimeModel, LifetimeDistribution, LifetimeRegression
 
 Args = TypeVarTuple("Args")
 P = ParamSpec("P")
-
 
 # def _isbroadcastable(
 #     arg_name: str,
@@ -39,60 +39,77 @@ P = ParamSpec("P")
 #     return decorator
 
 
-class FrozenParametricLifetimeModel(FrozenParametricModel):
+# using Mixin class allows to preserve same type : FrozenLifetimeDistribtuion := ParametricLifetimeModel[()]
+class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
+
     baseline: ParametricLifetimeModel[*tuple[float | NDArray, ...]]
 
-    # @_isbroadcastable("time")
+    def __init__(self, model : ParametricLifetimeModel[*tuple[float | NDArray, ...]]):
+        super().__init__()
+        self.compose_with(baseline = model)
+
+    @override
+    @property
+    def args_names(self) -> tuple[()]:
+        return ()
+
+
     def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.hf(time, *self.args)
 
-    # @_isbroadcastable("time")
+
     def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.chf(time, *self.args)
 
-    # @_isbroadcastable("time")
+
     def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.sf(time, *self.args)
 
-    # @_isbroadcastable("time")
+
     def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.pdf(time, *self.args)
 
-    # @_isbroadcastable("time")
+    @override
     def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.mrl(time, *self.args)
 
+    @override
     def moment(self, n: int) -> NDArray[np.float64]:
         return self.baseline.moment(n, *self.args)
 
+    @override
     def mean(self) -> NDArray[np.float64]:
         return self.baseline.moment(1, *self.args)
 
+    @override
     def var(self) -> NDArray[np.float64]:
         return self.baseline.moment(2, *self.args) - self.baseline.moment(1, *self.args) ** 2
 
-    # @_isbroadcastable("probability")
+    @override
     def isf(self, probability: float | NDArray[np.float64]):
         return self.baseline.isf(probability, *self.args)
 
-    # @_isbroadcastable("cumulative_hazard_rate")
+    @override
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
         return self.baseline.ichf(cumulative_hazard_rate, *self.args)
 
-    # @_isbroadcastable("time")
+    @override
     def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.cdf(time, *self.args)
 
+    @override
     def rvs(self, shape: int|tuple[int,int], seed: Optional[int] = None) -> NDArray[np.float64]:
         return self.baseline.rvs(shape,*self.args, seed=seed)
 
-    # @_isbroadcastable("probability")
+    @override
     def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.ppf(probability, *self.args)
 
+    @override
     def median(self) -> NDArray[np.float64]:
         return self.baseline.median(*self.args)
 
+    @override
     def ls_integrate(
         self,
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
@@ -102,6 +119,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
     ) -> NDArray[np.float64]:
 
         return self.baseline.ls_integrate(func, a, b, *self.args, deg=deg)
+
 
 
 class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):

@@ -134,6 +134,16 @@ class ParametricModel:
                 raise ValueError(f"{name} already exists as function name")
         self.params_tree.data = kwparams
 
+
+    def items_walk(self) -> Iterator:
+        """parallel walk through key value pairs"""
+        yield list(self.leaves_of_models.items())
+        for leaf in self.leaves_of_models.values():
+            yield list(chain.from_iterable(leaf.items_walk()))
+
+    def all_components(self) -> Iterator:
+        return chain.from_iterable(self.items_walk())
+
     # def __getattribute__(self, item):
     #     if not item.startswith("_") and not item.startswith("__"):
     #         return super().__getattribute__(item)
@@ -296,95 +306,36 @@ class ParamsTree:
         self.update_parents()
 
 
-def args_names_generator(
-    model: ParametricModel,
-) -> Iterator[str]:
-    from relife.lifetime_model import (
-        AFT,
-        AgeReplacementModel,
-        LeftTruncatedModel,
-        ProportionalHazard,
-        FrozenLifetimeDistribution,
-        FrozenLifetimeRegression,
-    )
-
-    match model:
-        case ProportionalHazard() | AFT():
-            yield "covar"
-            yield from args_names_generator(model.baseline)
-        case AgeReplacementModel():
-            yield "ar"
-            yield from args_names_generator(model.baseline)
-        case LeftTruncatedModel():
-            yield "a0"
-            yield from args_names_generator(model.baseline)
-        case FrozenLifetimeRegression() | FrozenLifetimeRegression():
-            yield from args_names_generator(model.baseline)
-        case _:  # in other case, stop generator and yield nothing
-            return
-
-
-def reshape_args(
-    name: str, value: float | NDArray[np.float64]
-) -> float | NDArray[np.float64]:
-    value = np.asarray(value)
-    ndim = value.ndim
-    if ndim > 2:
-        raise ValueError(
-            f"Number of dimension can't be higher than 2. Got {ndim} for {name}"
-        )
-    match name:
-        case "covar":
-            if ndim <= 1:
-                return value.reshape(1, -1)
-            return value
-        case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
-            if ndim == 2:
-                if value.shape[-1] > 1:
-                    raise ValueError
-            return value.reshape(-1, 1)
-
-
-def broadcast_args(
-    obj: ParametricModel,
-    *args: float | NDArray[np.float64],
-) -> dict[str, NDArray[np.float64]]:
-
-    args_names = tuple(args_names_generator(obj))
-    if len(args_names) != len(args):
-        raise TypeError(
-            f"{obj.__class__.__name__} requires {args_names} positional argument but got {len(args)} argument.s only"
-        )
-    reshaped_args = [reshape_args(k, v) for k,v in zip(args_names, args)]
-    try :
-        np.broadcast_shapes(*tuple((arg.shape for arg in reshaped_args)))
-    except ValueError as err:
-        raise ValueError("Unbroadcastable args") from err
-
-
-    return {k : v for k, v in zip(args_names, reshaped_args)}
-
-
-
-class FrozenParametricModel(ParametricModel):
-
-    frozen: bool = True
-
-    def __init__(
-        self,
-        model: ParametricModel,
-        *args: float | NDArray[np.float64],
-    ):
-        super().__init__()
-        self.compose_with(baseline=model)
-        self.kwargs = broadcast_args(model, *args) # all values are 2d
+# Use Mixin to preserve type frozen instance. Ex : FrozenParametricLifetimeModel := ParametricLifetimeModel[()]
+class FrozenMixin:
 
     @property
     def args(self) -> tuple[float | NDArray[np.float64], ...]:
-        return tuple(self.kwargs.values())
+        return getattr(self, "_args", ())
+
+    def freeze_args(self, **kwargs: float | NDArray[np.float64]):
+        for name, value in kwargs.items():
+            value = np.asarray(value)
+            ndim = value.ndim
+            if ndim > 2:
+                raise ValueError(
+                    f"Number of dimension can't be higher than 2. Got {ndim} for {name}"
+                )
+            match name:
+                case "covar":
+                    if ndim <= 1:
+                        value = value.reshape(1, -1)
+                case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
+                    if ndim == 2:
+                        if value.shape[-1] > 1:
+                            raise ValueError
+                    value = value.reshape(-1, 1)
+            if self.nb_assets != 1 and value.shape[0] not in (1, self.nb_assets):
+                raise ValueError(f"Frozen args have already {self.nb_assets} nb_assets values but given value has {value.shape[0]}")
+            setattr(self, "_args", self.args + (value,))
 
     @property
     def nb_assets(self) -> int:
-        if bool(self.kwargs):
-            return np.broadcast_shapes(*map(np.shape, self.kwargs.values()))[0]
+        if bool(self.args):
+            return np.broadcast_shapes(*map(np.shape, self.args))[0]
         return 1

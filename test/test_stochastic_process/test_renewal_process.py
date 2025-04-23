@@ -1,22 +1,10 @@
-# import numpy as np
-# import pytest
-#
-# from relife.economic.rewards import run_to_failure_rewards
-# from relife.model import (
-#     AFT,
-#     Gamma,
-#     Gompertz,
-#     LogLogistic,
-#     ProportionalHazard,
-#     Weibull,
-# )
-# from relife.parametric_model import EquilibriumDistribution
-# from relife.parametric_model.conditional_model import (
-#     AgeReplacementModel,
-# )
-# from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
-#
-#
+import numpy as np
+from pytest import approx
+
+from relife.lifetime_model import EquilibriumDistribution, AgeReplacementModel
+from relife.stochastic_process import RenewalProcess
+
+
 # @pytest.fixture(
 #     scope="module",
 #     params=[
@@ -60,33 +48,39 @@
 #         args = (tmax,) + args
 #     return model.freeze(*args)
 #
+
+# test functions
+def test_renewal_process_distribution(distribution):
+    timeline = np.arange(0, 100, 0.5)
+    renewal_process = RenewalProcess(distribution, model1=EquilibriumDistribution(distribution))
+    assert renewal_process.renewal_density(timeline)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
+
+    ar_distribution = AgeReplacementModel(distribution)
+    ar = distribution.isf(0.75)
+
+    renewal_process = RenewalProcess(ar_distribution.freeze(ar), model1=EquilibriumDistribution(ar_distribution).freeze(ar))
+    assert renewal_process.renewal_density(timeline)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
+
+
+def test_renewal_process_regression(regression):
+    pass
+
+
+
 #
-# # test functions
-#
-# def test_renewal_process(
-#     exponential,
-#     weibull,
-#     gompertz,
-#     gamma,
-#     loglogistic,
-#     proportional_hazard,
-#     aft,
-# ):
-#     timeline = np.arange(0, 100, 0.5)
 #
 #
 #
 #
-#     model, model_args, nb_assets = model_args_nb_assets
-#     model1 = EquilibriumDistribution(model)
+#     model1 =
 #     rp = RenewalProcess(
-#         model,
-#         model1=model1,
+#         frozen_model,
+#         model1=EquilibriumDistribution(frozen_model.baseline),
 #         model_args=model_args,
 #         model1_args=model_args,
 #         nb_assets=nb_assets,
 #     )
-#     y0 = 1 / model.mean(*rp.model_args)
+#     y0 =
 #     y = rp.renewal_density(t)
 #     assert y[..., -1:] == pytest.approx(y0, rel=1e-4)
 #

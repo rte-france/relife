@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, TypeVarTuple
+from typing import Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray

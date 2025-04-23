@@ -1,5 +1,5 @@
 import functools
-from typing import Callable, Optional, TypeVarTuple, Any, ParamSpec
+from typing import Callable, Optional, TypeVarTuple, ParamSpec
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,6 +14,8 @@ Args = TypeVarTuple("Args")
 P = ParamSpec("P")
 
 
+
+# necessary to allow user passing 1d ar and a0
 def _reshape_ar_or_a0(
     method: Callable[P, NDArray[np.float64]],
 ) -> Callable[[P], NDArray[np.float64]]:
@@ -140,6 +142,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
             np.array(np.inf),
             ar,
             *args,
+            deg=100,
         )
 
     @override
@@ -226,7 +229,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def freeze(
         self, ar: float | NDArray[np.float64], *args: *Args
     ) -> FrozenParametricLifetimeModel:
-        return FrozenParametricLifetimeModel(self, *(ar, *args))
+        return super().freeze(*(ar, *args))
 
 
 class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
@@ -320,4 +323,4 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     def freeze(
         self, a0: float | NDArray[np.float64], *args: *Args
     ) -> FrozenParametricLifetimeModel:
-        return FrozenParametricLifetimeModel(self, *(a0, *args))
+        return super().freeze(*(a0, *args))

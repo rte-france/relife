@@ -52,10 +52,37 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         class has not been implemented in a derived class.
     """
 
-    frozen: bool = False
 
-    def __init__(self):
-        super().__init__()
+    @property
+    def args_names(self) -> tuple[str, ...]:
+        from relife.lifetime_model import (
+            AFT,
+            AgeReplacementModel,
+            LeftTruncatedModel,
+            ProportionalHazard,
+        )
+
+        args_names = ()
+
+        try:
+            next(self.all_components())
+            _, components = zip(*self.all_components())
+        except StopIteration:
+            return args_names
+
+        # iterate on self instance and every components
+        for model in (self, *components):
+            match model:
+                case ProportionalHazard() | AFT():
+                    args_names += ("covar",)
+                case AgeReplacementModel():
+                    args_names += ("ar",)
+                case LeftTruncatedModel():
+                    args_names += ("a0",)
+                case _:
+                    continue
+        return args_names
+
 
     @abstractmethod
     def hf(
@@ -320,7 +347,14 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         *args: *Args,
     ) -> FrozenParametricLifetimeModel:
-        return FrozenParametricLifetimeModel(self, *args)
+        from .frozen_model import FrozenParametricLifetimeModel
+
+        args_names = self.args_names
+        if len(args) != len(args_names):
+            raise ValueError(f"Expected {args_names} positional arguments but got only {len(args)} arguments")
+        frozen_model = FrozenParametricLifetimeModel(self)
+        frozen_model.freeze_args(**{k : v for (k, v) in zip(args_names, args)})
+        return frozen_model
 
     @property
     def plot(self) -> PlotSurvivalFunc:
@@ -332,8 +366,6 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
-
-    frozen: bool = True
 
     @property
     def fitting_results(self) -> Optional[FittingResults]:
@@ -784,7 +816,12 @@ class LifetimeRegression(
     ) -> FrozenLifetimeRegression:
         from relife.lifetime_model import FrozenLifetimeRegression
 
-        return FrozenLifetimeRegression(self, *(covar, *args))
+        args_names = self.args_names
+        if len((covar, *args)) != len(args_names):
+            raise ValueError(f"Expected {args_names} positional arguments but got only {len((covar, *args))} arguments")
+        frozen_model = FrozenLifetimeRegression(self)
+        frozen_model.freeze_args(**{k : v for (k, v) in zip(args_names, (covar, *args))})
+        return frozen_model
 
     def ls_integrate(
         self,

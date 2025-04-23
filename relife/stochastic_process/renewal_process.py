@@ -7,8 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife import ParametricModel
-from relife._args import get_nb_assets
+from relife import ParametricModel, FrozenMixin
 from relife.economic import exponential_discounting, reward_partial_expectation
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
@@ -22,6 +21,12 @@ if TYPE_CHECKING:
     from relife.sample import CountData
 
 
+def _nb_assets(obj : ParametricModel):
+    if isinstance(obj, FrozenMixin):
+        return obj.nb_assets
+    return 1
+
+
 class RenewalProcess(ParametricModel):
     def __init__(
         self,
@@ -30,26 +35,21 @@ class RenewalProcess(ParametricModel):
     ):
         super().__init__()
 
-        from relife.lifetime_model import LifetimeDistribution
-
-        if not model.frozen:
+        if len(model.args_names) > 0:
             raise ValueError(
-                "Invalid model : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
+                "Invalid type of model. Model must be ParametricLifetimeModel[()] object type. You may call freeze first"
             )
-        if isinstance(model, LifetimeDistribution):
-            model = model.freeze()
-        self.compose_with(_model=model)
         if model1 is not None:
-            if not model1.frozen:
+            if len(model1.args_names) > 0:
                 raise ValueError(
-                    "Invalid model1 : must be Lifetimemodel[()] object. You may call freeze_zvariables first"
+                    "Invalid type of model1. Model must be ParametricLifetimeModel[()] object type. You may call freeze first"
                 )
-            if not isinstance(model1, LifetimeDistribution):
-                model1 = model1.freeze()
-            if get_nb_assets(model.args) != get_nb_assets(model1.args):
+
+            if _nb_assets(model)!= _nb_assets(model1):
                 raise ValueError
 
-            self.compose_with(_model1=model1)
+        self.compose_with(_model=model)
+        self.compose_with(_model1=model1)
 
     @property
     def model(self) -> FrozenParametricLifetimeModel:
