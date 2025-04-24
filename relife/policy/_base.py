@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife._args import get_nb_assets
-from relife.economic import CostStructure, exponential_discounting
+from relife.economic import Cost, exponential_discounting
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 # RenewalPolicy
 class RenewalPolicy:
 
-    cost_structure: CostStructure
+    cost_structure: Cost
     model: FrozenParametricLifetimeModel
     model1: Optional[FrozenParametricLifetimeModel]
     nb_assets: int
@@ -57,7 +57,7 @@ class RenewalPolicy:
         self.model = model
         self.model1 = model1
         self.discounting = exponential_discounting(discounting_rate)
-        self.cost_structure = CostStructure(**kwcosts)
+        self.cost_structure = Cost(**kwcosts)
 
         if self.nb_assets != 1:
             if self.cost_structure.nb_assets != self.nb_assets:
@@ -101,7 +101,7 @@ class RenewalPolicy:
 
 def age_replacement_policy(
     model: ParametricLifetimeModel[()],
-    cost_structure: CostStructure,
+    cost_structure: Cost,
     one_cycle: bool = False,
     discounting_rate: Optional[float] = None,
     model1: Optional[ParametricLifetimeModel[()]] = None,
@@ -152,7 +152,7 @@ def age_replacement_policy(
 
 def run_to_failure_policy(
     model: ParametricLifetimeModel[()],
-    cost_structure: CostStructure,
+    cost_structure: Cost,
     one_cycle: bool = False,
     discounting_rate: Optional[float] = None,
     model1: Optional[ParametricLifetimeModel[()]] = None,
@@ -187,7 +187,7 @@ def run_to_failure_policy(
 
 def make_renewal_policy(
     model: ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess,
-    cost_structure: CostStructure,
+    cost_structure: Cost,
     one_cycle: bool = False,
     run_to_failure: bool = False,
     discounting_rate: Optional[float] = None,

@@ -6,28 +6,30 @@ import numpy as np
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
-    from relife.economic.discounting import Discounting
+    from relife.economic import Discounting
     from relife.lifetime_model import ParametricLifetimeModel
 
 
 def renewal_equation_solver(
-    timeline: NDArray[np.float64], # (nb_steps,)
+    tf : float,
+    nb_steps : int,
     model: ParametricLifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
-    tm = 0.5 * (timeline[1:] + timeline[:-1]) # (nb_steps - 1,)
-    f = model.cdf(timeline) # (nb_steps,)
-    fm = model.cdf(tm) # (nb_steps - 1,)
-    y = evaluated_func(timeline)
+    t = np.linspace(0, tf, nb_steps, dtype=np.float64) # (nb_steps,)
+    tm = 0.5 * (t[1:] + t[:-1]) # (nb_steps - 1,)
+    f = model.cdf(t) # (nb_steps,) or (m, nb_steps)
+    fm = model.cdf(tm) # (nb_steps - 1,) or (m, nb_steps - 1)
+    y = evaluated_func(t) # (nb_steps,)
 
     if y.shape != f.shape:
         raise ValueError("Invalid shape between model and evaluated_func")
 
     if discounting is not None:
-        d = discounting.factor(timeline)
+        d = discounting.factor(t)
     else:
         d = np.ones_like(f)
     z = np.empty(y.shape)
@@ -46,20 +48,22 @@ def renewal_equation_solver(
 
 
 def delayed_renewal_equation_solver(
-    timeline: NDArray[np.float64],
+    tf : float,
+    nb_steps : int,
     z: NDArray[np.float64],
     model1: ParametricLifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
-    tm = 0.5 * (timeline[1:] + timeline[:-1])
-    f1 = model1.cdf(timeline)
-    f1m = model1.cdf(tm)
-    y1 = evaluated_func(timeline)
+    t = np.linspace(0, tf, nb_steps, dtype=np.float64) # (nb_steps,)
+    tm = 0.5 * (t[1:] + t[:-1]) # (nb_steps - 1,)
+    f1 = model1.cdf(t) # (nb_steps,) or (m, nb_steps)
+    f1m = model1.cdf(tm) # (nb_steps - 1,) or (m, nb_steps - 1)
+    y1 = evaluated_func(t) # (nb_steps,)
 
     if discounting is not None:
-        d = discounting.factor(timeline)
+        d = discounting.factor(t)
     else:
         d = np.ones_like(f1)
     z1 = np.empty(y1.shape)

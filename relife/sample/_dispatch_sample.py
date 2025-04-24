@@ -4,7 +4,7 @@ from typing import Iterator, Optional, Union
 
 import numpy as np
 
-from relife.economic.rewards import (
+from relife.economic import (
     age_replacement_rewards,
     run_to_failure_rewards,
 )
@@ -76,7 +76,7 @@ def _(
     iterator = LifetimeIterator(size, tf, t0, seed=seed)
 
     if isinstance(obj, RenewalRewardProcess):
-        iterator.rewards = obj.rewards1
+        iterator.rewards = obj.reward1
         iterator.discounting = obj.discounting
 
     stack = None
@@ -86,7 +86,7 @@ def _(
 
     iterator.set_model(obj.model)
     if isinstance(obj, RenewalRewardProcess):
-        iterator.rewards = obj.rewards
+        iterator.rewards = obj.reward
 
     stack = stack1d(iterator, keys, maxsample=maxsample, stack=stack)
 

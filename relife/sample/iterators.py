@@ -10,8 +10,7 @@ from numpy.typing import NDArray
 from relife.lifetime_model import Exponential
 
 if TYPE_CHECKING:
-    from relife.economic.discounting import Discounting
-    from relife.economic.rewards import Rewards
+    from relife.economic import Reward, Discounting
     from relife.lifetime_model import FrozenParametricLifetimeModel
 
 AnyNDArray = NewType(
@@ -105,7 +104,7 @@ class SampleIterator(Iterator):
 
 class LifetimeIterator(SampleIterator):
 
-    rewards: Optional[Rewards]
+    rewards: Optional[Reward]
     discounting: Optional[Discounting]
     a0: Optional[NDArray[np.float64]]
     ar: Optional[NDArray[np.float64]]
@@ -207,7 +206,7 @@ class LifetimeIterator(SampleIterator):
 
 class NonHomogeneousPoissonIterator(SampleIterator):
 
-    rewards: Optional[Rewards]
+    rewards: Optional[Reward]
     discounting: Optional[Discounting]
     hpp_timeline: Optional[NDArray[np.float64]]
     failure_times: Optional[NDArray[np.float64]]

@@ -16,7 +16,7 @@ P = ParamSpec("P")
 
 
 # necessary to allow user passing 1d ar and a0
-def _reshape_ar_or_a0(name : str, value : float|NDArray[np.float64])-> NDArray[np.float64]:
+def _reshape_ar_or_a0(name : str, value : float|NDArray[np.float64])-> NDArray[np.float64]: # ndim is 2 (m,n) or (m,1)
     value = np.squeeze(np.asarray(value))
     if value.ndim > 2:
         raise ValueError(f"Incorrect {name} dim. Can't be more than 2. Got {value.ndim}")

@@ -2,8 +2,9 @@ import numpy as np
 import pytest
 from pytest import approx
 
+from relife.economic import Cost, reward
 from relife.lifetime_model import EquilibriumDistribution, AgeReplacementModel, Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
-from relife.stochastic_process import RenewalProcess
+from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 
 @pytest.fixture(
@@ -23,7 +24,7 @@ def regression(request, distribution):
     return request.param(distribution, coef=(np.log(2), np.log(2)))
 
 
-def test_renewal_process_distribution(distribution):
+def test_renewal_process(distribution, regression):
     renewal_process = RenewalProcess(distribution, model1=EquilibriumDistribution(distribution))
     assert renewal_process.renewal_density(100, 200).shape == (200,)
     assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
@@ -34,8 +35,6 @@ def test_renewal_process_distribution(distribution):
     assert renewal_process.renewal_density(100, 200).shape == (200,)
     assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / ar_distribution.mean(), rel=1e-4)
 
-
-def test_renewal_process_regression(regression):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
     regression = regression.freeze(covar)
 
@@ -48,6 +47,11 @@ def test_renewal_process_regression(regression):
     renewal_process = RenewalProcess(ar_regression, model1=EquilibriumDistribution(ar_regression))
     assert renewal_process.renewal_density(100, 200).shape == (3,200)
     assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / ar_regression.mean(), rel=1e-4)
+
+
+def test_renewal_reward_process(distribution, regression):
+    cost = Cost(cf=1)
+    renewal_reward_process = RenewalRewardProcess(distribution, reward(cost))
 
 
 # @pytest.mark.skip(reason="no way of currently testing this")

@@ -167,7 +167,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
             run_to_failure_rewards(self.cf),
             discounting_rate=self.discounting_rate,
             model1=self.model1,
-            rewards1=run_to_failure_rewards(self.cf) if self.model1 else None,
+            reward1=run_to_failure_rewards(self.cf) if self.model1 else None,
         )
 
     def expected_nb_replacements(
@@ -187,12 +187,12 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         self, tf: float, nb_steps: int
     ) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process.expected_equivalent_annual_cost(
+        return timeline, self.underlying_process.expected_equivalent_annual_worth(
             timeline
         )
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        return self.underlying_process.asymptotic_expected_equivalent_annual_cost()
+        return self.underlying_process.asymptotic_expected_equivalent_annual_worth()
 
 
 from ._docstring import (

@@ -296,7 +296,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
                 if self.model1 is not None
                 else None
             ),
-            rewards1=age_replacement_rewards(ar1, self.cf, self.cp) if ar1 else None,
+            reward1=age_replacement_rewards(ar1, self.cf, self.cp) if ar1 else None,
         )
 
     @get_if_none("ar", "ar1")
@@ -323,7 +323,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         timeline = np.linspace(0, tf, nb_steps)
         return timeline, self.underlying_process(
             ar, ar1
-        ).expected_equivalent_annual_cost(timeline)
+        ).expected_equivalent_annual_worth(timeline)
 
     @get_if_none("ar", "ar1")
     def asymptotic_expected_total_cost(
@@ -342,7 +342,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
 
         return self.underlying_process(
             ar, ar1
-        ).asymptotic_expected_equivalent_annual_cost()
+        ).asymptotic_expected_equivalent_annual_worth()
 
     def optimize(
         self,
