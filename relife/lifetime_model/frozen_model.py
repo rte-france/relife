@@ -15,29 +15,6 @@ if TYPE_CHECKING:
 Args = TypeVarTuple("Args")
 P = ParamSpec("P")
 
-# def _isbroadcastable(
-#     arg_name: str,
-# ) -> Callable[[Callable[[P], NDArray[np.float64]]], Callable[[P], NDArray[np.float64]]]:
-#     def decorator(
-#         method: Callable[P, NDArray[np.float64]],
-#     ) -> Callable[[P], NDArray[np.float64]]:
-#         @functools.wraps(method)
-#         def wrapper(self, *args: P.args, **kwargs: P.kwargs) -> NDArray[np.float64]:
-#             x: NDArray[np.float64] = np.asarray(args[0])
-#             if x.size == 1:
-#                 x = x.item()
-#             elif x.ndim == 2:
-#                 if self.nb_assets != 1:
-#                     if x.shape[0] != 1 and x.shape[0] != self.nb_assets:
-#                         raise ValueError(
-#                             f"Inconsistent {arg_name} shape. Got {self.nb_assets} nb of assets but got {x.shape} {arg_name} shape"
-#                         )
-#             return method(self, x, **kwargs)
-#
-#         return wrapper
-#
-#     return decorator
-
 
 # using Mixin class allows to preserve same type : FrozenLifetimeDistribtuion := ParametricLifetimeModel[()]
 class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
@@ -154,3 +131,6 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
         return self.baseline.jac_cdf(time, self.args[0], *self.args[1:])
     def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.jac_pdf(time, self.args[0], *self.args[1:])
+
+
+

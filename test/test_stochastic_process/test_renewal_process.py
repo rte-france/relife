@@ -24,12 +24,13 @@ def regression(request, distribution):
     return request.param(distribution, coef=(np.log(2), np.log(2)))
 
 
-def test_renewal_process(distribution, regression):
+def test_renewal_process(distribution, regression, ar):
     renewal_process = RenewalProcess(distribution, model1=EquilibriumDistribution(distribution))
     assert renewal_process.renewal_density(100, 200).shape == (200,)
     assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
 
     ar = distribution.isf(0.75)
+
     ar_distribution = AgeReplacementModel(distribution).freeze(ar)
     renewal_process = RenewalProcess(ar_distribution, model1=EquilibriumDistribution(ar_distribution))
     assert renewal_process.renewal_density(100, 200).shape == (200,)
@@ -49,9 +50,18 @@ def test_renewal_process(distribution, regression):
     assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / ar_regression.mean(), rel=1e-4)
 
 
-def test_renewal_reward_process(distribution, regression):
-    cost = Cost(cf=1)
-    renewal_reward_process = RenewalRewardProcess(distribution, reward(cost))
+
+def proportional_hazard(..., covar : Optional[] = None):
+    model = ProportionalHazard(...)
+    if covar is not None:
+        return model.freeze(covar)
+    return model
+
+
+
+
+# def test_renewal_reward_process(distribution, regression):
+#     renewal_reward_process = RenewalRewardProcess(distribution, reward(cf=1))
 
 
 # @pytest.mark.skip(reason="no way of currently testing this")

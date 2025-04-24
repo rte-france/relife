@@ -5,7 +5,6 @@ from functools import partial
 from typing import TYPE_CHECKING, Callable, NewType, Optional, Protocol
 
 import numpy as np
-from numpy._typing import NDArray
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
@@ -62,6 +61,22 @@ class Cost(dict):
     def update(self, *args, **kwargs):
         raise AttributeError("Can't update items")
 
+# class Reward(ABC):
+#     @abstractmethod
+#     def conditional_expectation(self, time : NDArray[np.float64]):
+#         ...
+#
+#     @abstractmethod
+#     def sample(self, time : NDArray[np.float64]):
+#         ...
+#
+#
+# class FailureCost(Reward):
+#     ...
+#
+#
+# class AgeReplacementCost(Reward):
+#     ...
 
 def _age_replacement_rewards(
     time: NDArray[np.float64], # duration

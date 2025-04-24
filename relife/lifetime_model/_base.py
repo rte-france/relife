@@ -349,7 +349,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     def freeze(
         self,
         *args: *Args,
-    ) -> FrozenParametricLifetimeModel:
+    ) -> ParametricLifetimeModel[()]:
         from .frozen_model import FrozenParametricLifetimeModel
 
         args_names = self.args_names

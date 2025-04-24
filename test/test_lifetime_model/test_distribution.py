@@ -41,18 +41,11 @@ def test_shape_and_values(distribution, time, probability):
     assert distribution.isf(0.5) == approx(distribution.median())
     assert distribution.dhf(time()).shape == ()
 
-    if not isinstance(distribution, Exponential):
-        assert distribution.jac_sf(time()).shape == (2,)
-        assert distribution.jac_hf(time()).shape == (2,)
-        assert distribution.jac_chf(time()).shape == (2,)
-        assert distribution.jac_cdf(time()).shape == (2,)
-        assert distribution.jac_pdf(time()).shape == (2,)
-    else:
-        assert distribution.jac_sf(time()).shape == ()
-        assert distribution.jac_hf(time()).shape == ()
-        assert distribution.jac_chf(time()).shape == ()
-        assert distribution.jac_cdf(time()).shape == ()
-        assert distribution.jac_pdf(time()).shape == ()
+    assert distribution.jac_sf(time()).shape == (distribution.nb_params,)
+    assert distribution.jac_hf(time()).shape == (distribution.nb_params,)
+    assert distribution.jac_chf(time()).shape == (distribution.nb_params,)
+    assert distribution.jac_cdf(time()).shape == (distribution.nb_params,)
+    assert distribution.jac_pdf(time()).shape == (distribution.nb_params,)
 
     n = 10
 
@@ -62,45 +55,17 @@ def test_shape_and_values(distribution, time, probability):
     assert distribution.chf(time(n)).shape == (n,)
     assert distribution.cdf(time(n)).shape == (n,)
     assert distribution.pdf(time(n)).shape == (n,)
-    assert distribution.ppf(
-        probability(
-            n,
-        )
-    ).shape == (n,)
+    assert distribution.ppf(probability(n,)).shape == (n,)
     assert distribution.rvs((n,), seed=21).shape == (n,)
-    assert distribution.ichf(
-        probability(
-            n,
-        )
-    ).shape == (n,)
-    assert distribution.isf(
-        probability(
-            n,
-        )
-    ).shape == (n,)
+    assert distribution.ichf(probability(n,)).shape == (n,)
+    assert distribution.isf(probability(n,)).shape == (n,)
     assert distribution.isf(np.full((n,), 0.5)) == approx(np.full((n,), distribution.median()))
-    assert distribution.dhf(
-        time(
-            n,
-        )
-    ).shape == (n,)
+    assert distribution.dhf(time(n,)).shape == (n,)
 
     if not isinstance(distribution, Exponential):
-        assert distribution.jac_sf(
-            time(
-                n,
-            )
-        ).shape == (n, 2)
-        assert distribution.jac_hf(
-            time(
-                n,
-            )
-        ).shape == (n, 2)
-        assert distribution.jac_chf(
-            time(
-                n,
-            )
-        ).shape == (n, 2)
+        assert distribution.jac_sf(time(n,)).shape == (n, 2)
+        assert distribution.jac_hf(time(n,)).shape == (n, 2)
+        assert distribution.jac_chf(time(n,)).shape == (n, 2)
         assert distribution.jac_cdf(
             time(
                 n,
