@@ -261,59 +261,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     ) -> NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        *args: *Args,
-        deg: int = 10,
-    ) -> NDArray[np.float64]:
-        r"""
-        Lebesgue-Stieltjes integration.
-
-        The Lebesgue-Stieljes intregration of a function with respect to the lifetime core
-        taking into account the probability density function and jumps
-
-        The Lebesgue-Stieltjes integral is:
-
-        .. math::
-
-            \int_a^b g(x) \mathrm{d}F(x) = \int_a^b g(x) f(x)\mathrm{d}x +
-            \sum_i g(a_i) w_i
-
-        where:
-
-        - :math:`F` is the cumulative distribution function,
-        - :math:`f` the probability density function of the lifetime core,
-        - :math:`a_i` and :math:`w_i` are the points and weights of the jumps.
-
-        Parameters
-        ----------
-        func : callable (in : 1 ndarray, out : 1 ndarray)
-            The callable must have only one ndarray object as argument and returns one ndarray object
-        a : ndarray (max dim of 2)
-            Lower bound(s) of integration.
-        b : ndarray (max dim of 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-        deg : int, default 100
-            Degree of the polynomials interpolation
-
-        Returns
-        -------
-        2d ndarray
-            Lebesgue-Stieltjes integral of func with respect to `cdf` from `a`
-            to `b`.
-
-        Notes
-        -----
-        `ls_integrate` operations rely on arguments number of dimensions passed in `a`, `b`, `*args` or
-        any other variable referenced in `func`. Because `func` callable is not easy to inspect, either one must specify
-        the maximum number of dimensions used (0, 1 or 2), or `ls_integrate` converts all these objects to 2d-array.
-        Currently, the second option is prefered. That's why, returns are always 2d-array.
-        """
-        return ls_integrate(self, func, a, b, *args, deg=deg)
-
     def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         """n-th order moment
 
@@ -329,7 +276,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
-        return self.ls_integrate(
+        return ls_integrate(
+            self,
             lambda x: x**n,
             0.,
             np.inf,
@@ -512,16 +460,6 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     def freeze(self) -> FrozenLifetimeDistribution:
         from relife.lifetime_model import FrozenLifetimeDistribution
         return FrozenLifetimeDistribution(self)
-
-    @override
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        deg: int = 10,
-    ) -> NDArray[np.float64]:
-        return super().ls_integrate(func, a, b, deg=deg)
 
     def fit(
         self,
@@ -826,16 +764,6 @@ class LifetimeRegression(
         frozen_model.freeze_args(**{k : v for (k, v) in zip(args_names, (covar, *args))})
         return frozen_model
 
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        covar : float | NDArray[np.float64],
-        *args: *Args,
-        deg: int = 10,
-    ) -> NDArray[np.float64]:
-        return super().ls_integrate(func, a, b, *(covar, *args), deg=deg)
 
     def fit(
         self,

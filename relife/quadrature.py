@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 def _check_and_broadcast_bounds(
     a: float | NDArray[np.float64],
     b: Optional[float | NDArray[np.float64]] = None,
-):
+) -> NDArray[np.float64]|tuple[NDArray[np.float64], NDArray[np.float64]]:
 
     def control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
         arr = np.asarray(bound, dtype=np.float64)
@@ -136,7 +136,8 @@ def laguerre_quadrature(
             """
         )
 
-    exp_a = np.where(np.exp(-arr_a) == 0, 1.0, np.exp(-arr_a))  # (deg,) or (n, deg) or (m, n, deg)
+    exp_a = np.where(np.exp(-arr_a) == 0, 1.0, np.exp(-arr_a))  # () or (n,) or (m, n)
+    exp_a = np.expand_dims(exp_a, axis=-1) # (1,) or (n, 1) or (m, n, 1)
     return np.sum(w * fvalues * exp_a, axis=-1) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
@@ -150,21 +151,42 @@ def ls_integrate(
     *args: *Args,
     deg: int = 10,
 ) -> NDArray[np.float64]:
-    """
+    r"""
+    Lebesgue-Stieltjes integration.
+
+    The Lebesgue-Stieljes intregration of a function with respect to the lifetime core
+    taking into account the probability density function and jumps
+
+    The Lebesgue-Stieltjes integral is:
+
+    .. math::
+
+        \int_a^b g(x) \mathrm{d}F(x) = \int_a^b g(x) f(x)\mathrm{d}x +
+        \sum_i g(a_i) w_i
+
+    where:
+
+    - :math:`F` is the cumulative distribution function,
+    - :math:`f` the probability density function of the lifetime core,
+    - :math:`a_i` and :math:`w_i` are the points and weights of the jumps.
 
     Parameters
     ----------
-    model
-    func
-        It must handle at least 2 dimensions.
-    a
-    b
-    args
-    deg
+    model : ParametricLifetimeModel
+        The ParametricLifetimeModel from which the pdf is taken.
+    func : callable (in : 1 ndarray , out : 1 ndarray)
+        The callable must have only one ndarray object as argument and returns one ndarray object
+    a : ndarray (max dim of 2)
+        Lower bound(s) of integration.
+    b : ndarray (max dim of 2)
+        Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+    deg : int, default 10
+        Degree of the polynomials interpolation
 
     Returns
     -------
-
+    np.ndarray
+        Lebesgue-Stieltjes integral of func from `a` to `b`.
     """
 
     frozen_model = model.freeze(*args)
@@ -172,14 +194,14 @@ def ls_integrate(
     def integrand(x: float|NDArray[np.float64]) -> NDArray[np.float64]:
         x = np.asarray(x, dtype=np.float64) # (deg,), (n, deg) or (m, n, deg)
         x_shape = x.shape
-        x = np.atleast_2d(x) # (n, deg) or (m, n, deg)
+        x = np.atleast_2d(x) # (1, deg), (n, deg) or (m, n, deg)
 
         # reshape because model.pdf expects input ndim <= 2
         if x.ndim > 2:
             x = x.reshape(x.shape[0], -1) # (m, n*deg)
-        # x.shape == (n, deg) or (m, n*deg)
+        # x.shape == (1, deg), (n, deg) or (m, n*deg)
         try:
-            fx = func(x) # (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n*deg)
+            fx = func(x) # (d_1, ..., d_i, 1, deg), (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n*deg)
         except ValueError:
             raise ValueError("func must accept input array of 2 dimensions")
 
@@ -192,34 +214,24 @@ def ls_integrate(
             )
 
         ushape = fx.shape[:-len(x.shape)]  #   == (d_1, ..., d_i)
-        pdf = frozen_model.pdf(x) # (n, deg) or (m, n*deg) because pdf always preserve 2 dim if x is 2 dim
-        return (fx * pdf).reshape(ushape + x_shape) # (d_1, ..., d_i, deg) or (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n , deg)
+        pdf = frozen_model.pdf(x) # (1, deg), (n, deg) or (m, n*deg) because pdf always preserves 2 dim shape if x has 2 dim
+        return (fx * pdf).reshape(ushape + x_shape) # (d_1, ..., d_i, deg) or (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n, deg)
 
-    arr_a, arr_b = _check_and_broadcast_bounds(a, b)  # (m,n)
+    arr_a, arr_b = _check_and_broadcast_bounds(a, b)  # (), (n,) or (m, n)
     if np.any(arr_a >= arr_b):
         raise ValueError("Bound values a must be strictly lower than values of b")
-    m, n = arr_a.shape
-    if m != 1 and m != frozen_model.nb_assets:
-        raise ValueError(f"Incompatible bounds with model. Model nb_assets is {frozen_model.nb_assets}")
+    if arr_a.ndim == 2:
+        if arr_a.shape[0] not in (1, frozen_model.nb_assets) and frozen_model.nb_assets not in (1, arr_a.shape[0]):
+            raise ValueError(f"Incompatible bounds with model. Model has {frozen_model.nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}")
 
-    is_inf = np.isinf(arr_b)
-    arr_b[is_inf] = np.broadcast_to(
-        frozen_model.isf(1e-4).reshape(-1, 1), arr_b.shape
-    )[
-        is_inf
-    ]  # frozen_model.isf(1e-4).shape == () or (m,1)
-
-
-    integration = np.where(
-        is_inf,
-        legendre_quadrature(
-            integrand, arr_a, arr_b, deg=deg
-        )
-        + unweighted_laguerre_quadrature(
-            integrand, arr_b, deg=deg
-        ),
-        legendre_quadrature(
-            integrand, arr_a, arr_b, deg=deg
-        ),
-    )
+    bound_b = frozen_model.isf(1e-4) # () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+    broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
+    arr_a = broadcasted_arrs[0].copy() # arr_a.shape == arr_b.shape == bound_b.shape
+    arr_b = broadcasted_arrs[1].copy() # arr_a.shape == arr_b.shape == bound_b.shape
+    bound_b = broadcasted_arrs[2].copy() # arr_a.shape == arr_b.shape == bound_b.shape
+    is_inf = np.isinf(arr_b) # () or (n,) or (m, n)
+    arr_b = np.where(is_inf, bound_b, arr_b)
+    integration = legendre_quadrature(integrand, arr_a, arr_b, deg=deg) # (d_1, ..., d_i), (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+    is_inf, _ = np.broadcast_arrays(is_inf, integration)
+    integration = np.where(is_inf, integration + unweighted_laguerre_quadrature(integrand, arr_b, deg=deg), integration)
     return integration
