@@ -74,7 +74,16 @@ def test_moment(distribution, time):
 def test_derivative(distribution, time):
     m, n = 3, 10
 
+    # TODO : jac -> ndarray | tuple[ndarray, ...] # as many parameters
+    # jac = jac_sf(time())
+    # assert len(jac) == distribution.nb_params
+    # assert all(grad.shape == () for grad in jac)
+
+
     assert distribution.dhf(time()).shape == ()
+
+
+
     assert distribution.jac_sf(time()).shape == (distribution.nb_params,)
     assert distribution.jac_hf(time()).shape == (distribution.nb_params,)
     assert distribution.jac_chf(time()).shape == (distribution.nb_params,)

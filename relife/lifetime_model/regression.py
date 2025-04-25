@@ -128,11 +128,11 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "jac_chf"):
-            return np.column_stack(
+            return np.stack(
                 (
-                    self.covar_effect.jac_g(covar) * self.baseline.chf(time, *args),
-                    self.covar_effect.g(covar) * self.baseline.jac_chf(time, *args),
-                )
+                    self.covar_effect.jac_g(covar) * self.baseline.chf(time, *args), # (k, m, 1) * (m, n)
+                    self.covar_effect.g(covar) * self.baseline.jac_chf(time, *args), # (m, 1) * (b2, m, n)
+                ), axis=0
             )
         raise AttributeError
 

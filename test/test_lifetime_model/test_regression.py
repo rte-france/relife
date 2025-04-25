@@ -68,7 +68,36 @@ def test_probability_functions(regression, time, covar, probability):
 
 
 def test_derivative(regression, time, covar):
-    pass
+    m, n = 3, 10
+
+    assert regression.dhf(time(), covar(m)).shape == (m, 1)
+    assert regression.jac_sf(time(), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_hf(time(), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_chf(time(), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_cdf(time(), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_pdf(time(), covar(m)).shape == (regression.nb_params, m, 1)
+
+    assert regression.dhf(time(n), covar(m)).shape == (m, n)
+    assert regression.jac_sf(time(n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_hf(time(n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_chf(time(n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_cdf(time(n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_pdf(time(n), covar(m)).shape == (regression.nb_params, m, n)
+
+    assert regression.dhf(time(m, 1), covar(m)).shape == (m, 1)
+    assert regression.jac_sf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_hf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_chf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_cdf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
+    assert regression.jac_pdf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
+
+    assert regression.dhf(time(m, n), covar(m)).shape == (m, n)
+    assert regression.jac_sf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_hf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_chf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_cdf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
+    assert regression.jac_pdf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
+
 
 
 

@@ -610,7 +610,7 @@ class CovarEffect(ParametricModel):
         """
         covar: NDArray[np.float64] = np.asarray(covar)
         if covar.ndim < 2:
-            covar = covar.reshape(-1, 1) # (m, k) m assets, k values
+            covar = covar.reshape(1, -1) # (m, k) 1 asset, k values
         if covar.ndim > 2:
             raise ValueError
         if covar.shape[-1] != self.nb_params: # params (k,) k coefficients
@@ -636,9 +636,11 @@ class CovarEffect(ParametricModel):
             The values of the Jacobian (eventually for m assets).
         """
         covar: NDArray[np.float64] = np.asarray(covar)
+        if covar.ndim < 2:
+            covar = covar.reshape(1, -1) # (m, k) 1 asset, k values
         if covar.ndim > 2:
             raise ValueError
-        return covar * self.g(covar) # (m, k) m assets, k values
+        return np.expand_dims(covar.T, axis=-1) * self.g(covar) # (k, m, 1) k params, m, assets, 1 value
 
 
 class LifetimeRegression(
