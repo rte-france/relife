@@ -1,18 +1,14 @@
-import functools
 from typing import Callable, Optional, TypeVarTuple, ParamSpec, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.quadrature import ls_integrate
-
 from ._base import ParametricLifetimeModel
 from .frozen_model import FrozenParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 P = ParamSpec("P")
-
 
 
 # necessary to allow user passing 1d ar and a0
@@ -196,7 +192,8 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
-        return ls_integrate(self, func, a, b, *(ar, *args), deg=deg) + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+        integration = super().ls_integrate(func, a, b, *(ar, *args), deg=deg)
+        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
 
 
     @override

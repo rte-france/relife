@@ -6,9 +6,8 @@ from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 from typing_extensions import override
 
-from relife.quadrature import laguerre_quadrature, legendre_quadrature
-
 from ._base import LifetimeDistribution, ParametricLifetimeModel
+from relife._quadrature import legendre_quadrature, laguerre_quadrature
 
 
 class Exponential(LifetimeDistribution):
@@ -73,21 +72,15 @@ class Exponential(LifetimeDistribution):
 
     def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time, dtype=np.float64)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
         if time.ndim == 0:
-            return np.ones_like(time)
-        return np.ones((time.size, 1), dtype=np.float64)
+            return np.ones((1,))
+        return np.ones(((1,) + time.shape), dtype=np.float64)
 
     def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time, dtype=np.float64)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
         if time.ndim == 0:
-            return time
-        return time.reshape(-1, 1)
+            return time.reshape((1,))
+        return np.expand_dims(time, axis=0)
 
     def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return np.zeros_like(time, dtype=np.float64)
@@ -165,35 +158,23 @@ class Weibull(LifetimeDistribution):
 
     def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        jac = np.column_stack(
+        return np.stack(
             (
                 self.rate
                 * (self.rate * time) ** (self.shape - 1)
                 * (1 + self.shape * np.log(self.rate * time)),
                 self.shape**2 * (self.rate * time) ** (self.shape - 1),
-            )
+            ), axis=0
         )
-        if time.ndim == 0:
-            return np.squeeze(jac)
-        return jac
 
     def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        jac =  np.column_stack(
+        return np.stack(
             (
                 np.log(self.rate * time) * (self.rate * time) ** self.shape,
                 self.shape * time * (self.rate * time) ** (self.shape - 1),
-            )
+            ), axis=0
         )
-        if time.ndim == 0:
-            return np.squeeze(jac)
-        return jac
 
     def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
@@ -275,36 +256,25 @@ class Gompertz(LifetimeDistribution):
 
     def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        jac = np.column_stack(
+        return np.stack(
             (
                 self.rate * np.exp(self.rate * time),
                 self.shape * np.exp(self.rate * time) * (1 + self.rate * time),
-            )
+            ), axis=0
         )
-        if time.ndim == 0:
-            return np.squeeze(jac)
-        return jac
 
     def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        jac = np.column_stack(
+        return np.stack(
             (
                 np.expm1(self.rate * time),
                 self.shape * time * np.exp(self.rate * time),
-            )
+            ), axis=0
         )
-        if time.ndim == 0:
-            return np.squeeze(jac)
-        return jac
 
     def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
+
 
 
 class Gamma(LifetimeDistribution):
@@ -382,43 +352,31 @@ class Gamma(LifetimeDistribution):
 
     def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
         x = self.rate * time
-        jac = (
-            (x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2).reshape(-1,1)
-            * np.column_stack(
+        return (
+            (x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2)
+            * np.stack(
                 (
-                    (self.rate * np.log(x) * self._uppergamma(x)).reshape(-1, 1)
-                    - self.rate * self._jac_uppergamma_shape(x).reshape(-1,1),
-                    ((self.shape - x) * self._uppergamma(x) + x**self.shape * np.exp(-x)).reshape(-1,1),
-                )
+                    (self.rate * np.log(x) * self._uppergamma(x)) - self.rate * self._jac_uppergamma_shape(x),
+                    (self.shape - x) * self._uppergamma(x) + x**self.shape * np.exp(-x),
+                ),
+                axis=0
             )
         )
-        if time.ndim == 0:
-            return np.squeeze(jac)
-        return jac
 
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
     ) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
         x = self.rate * time
-        jac =  np.column_stack(
+        return np.stack(
             (
-                digamma(self.shape)
-                - self._jac_uppergamma_shape(x).reshape(-1,1) / self._uppergamma(x).reshape(-1,1),
-                (x ** (self.shape - 1) * time * np.exp(-x) / self._uppergamma(x)).reshape(-1,1),
-            )
+                digamma(self.shape) - self._jac_uppergamma_shape(x) / self._uppergamma(x),
+                (x ** (self.shape - 1) * time * np.exp(-x) / self._uppergamma(x)),
+            ),
+            axis=0
         )
-        if time.ndim == 0:
-            return np.squeeze(jac)
-        return jac
 
     def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
@@ -505,17 +463,14 @@ class LogLogistic(LifetimeDistribution):
 
     def jac_hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
         x = self.rate * time
-        jac = np.column_stack(
+        jac = np.stack(
             (
                 (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
                 * (1 + x**self.shape + self.shape * np.log(self.rate * time)),
                 (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
                 * (self.shape**2 / self.rate),
-            )
+            ), axis=0,
         )
         if time.ndim == 0:
             return np.squeeze(jac)
@@ -523,19 +478,13 @@ class LogLogistic(LifetimeDistribution):
 
     def jac_chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
         x = self.rate * time
-        jac = np.column_stack(
+        return np.stack(
             (
                 (x**self.shape / (1 + x**self.shape)) * np.log(self.rate * time),
                 (x**self.shape / (1 + x**self.shape)) * (self.shape / self.rate),
-            )
+            ), axis=0
         )
-        if time.ndim == 0:
-            return np.squeeze(jac)
-        return jac
 
     def dhf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         x = self.rate * np.asarray(time)

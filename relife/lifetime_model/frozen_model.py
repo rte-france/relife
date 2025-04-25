@@ -92,7 +92,7 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
-        deg: int = 100,
+        deg: int = 10,
     ) -> NDArray[np.float64]:
 
         return self.baseline.ls_integrate(func, a, b, *self.args, deg=deg)

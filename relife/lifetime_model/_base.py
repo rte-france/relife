@@ -22,7 +22,6 @@ from relife._plots import PlotSurvivalFunc
 from relife.data import lifetime_data_factory
 from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
-from relife.quadrature import ls_integrate
 
 
 if TYPE_CHECKING:
@@ -261,6 +260,91 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     ) -> NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64] = 0.0,
+        b: float | NDArray[np.float64] = np.inf,
+        *args: *Args,
+        deg: int = 10,
+    ) -> NDArray[np.float64]:
+        r"""
+        Lebesgue-Stieltjes integration.
+
+        Parameters
+        ----------
+        func : callable (in : 1 ndarray , out : 1 ndarray)
+            The callable must have only one ndarray object as argument and returns one ndarray object
+        a : ndarray (max dim of 2)
+            Lower bound(s) of integration.
+        b : ndarray (max dim of 2)
+            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+        deg : int, default 10
+            Degree of the polynomials interpolation
+
+        Returns
+        -------
+        np.ndarray
+            Lebesgue-Stieltjes integral of func from `a` to `b`.
+        """
+        from relife._quadrature import check_and_broadcast_bounds, legendre_quadrature, unweighted_laguerre_quadrature
+
+        frozen_model = self.freeze(*args)
+
+        def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
+            x = np.asarray(x, dtype=np.float64)  #  (deg,), (n, deg) or (m, n, deg)
+            x_shape = x.shape
+            x = np.atleast_2d(x)  #  (1, deg), (n, deg) or (m, n, deg)
+
+            # reshape because model.pdf expects input ndim <= 2
+            if x.ndim > 2:
+                x = x.reshape(x.shape[0], -1)  #  (m, n*deg)
+            #  x.shape == (1, deg), (n, deg) or (m, n*deg)
+            try:
+                fx = func(x)  # (d_1, ..., d_i, 1, deg), (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n*deg)
+            except ValueError:
+                raise ValueError("func must accept input array of 2 dimensions")
+
+            if fx.shape[-len(x.shape):] != x.shape:
+                raise ValueError(
+                    f"""
+                    func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
+                    Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
+                    """
+                )
+
+            ushape = fx.shape[:-len(x.shape)]  #   == (d_1, ..., d_i)
+            pdf = frozen_model.pdf(
+                x)  #  (1, deg), (n, deg) or (m, n*deg) because pdf always preserves 2 dim shape if x has 2 dim
+            return (fx * pdf).reshape(
+                ushape + x_shape)  #  (d_1, ..., d_i, deg) or (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n, deg)
+
+        # if isinstance(model, AgeReplacementModel):
+        #     ar, args = frozen_model.args[0], frozen_model.args[1:]
+        #     b = np.minimum(ar, b)
+        #     w = np.where(b == ar, func(ar) * model.baseline.sf(ar, *args), 0.)
+
+        arr_a, arr_b = check_and_broadcast_bounds(a, b)  # (), (n,) or (m, n)
+        if np.any(arr_a >= arr_b):
+            raise ValueError("Bound values a must be strictly lower than values of b")
+        if arr_a.ndim == 2:
+            if arr_a.shape[0] not in (1, frozen_model.nb_assets) and frozen_model.nb_assets not in (1, arr_a.shape[0]):
+                raise ValueError(
+                    f"Incompatible bounds with model. Model has {frozen_model.nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}")
+
+        bound_b = frozen_model.isf(1e-4)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+        broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
+        arr_a = broadcasted_arrs[0].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_b = broadcasted_arrs[1].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        bound_b = broadcasted_arrs[2].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        is_inf = np.isinf(arr_b)  # () or (n,) or (m, n)
+        arr_b = np.where(is_inf, bound_b, arr_b)
+        integration = legendre_quadrature(integrand, arr_a, arr_b, deg=deg)  #  (d_1, ..., d_i), (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+        is_inf, _ = np.broadcast_arrays(is_inf, integration)
+        integration = np.where(is_inf, integration + unweighted_laguerre_quadrature(integrand, arr_b, deg=deg), integration)
+
+        return integration
+
     def moment(self, n: int, *args: *Args) -> NDArray[np.float64]:
         """n-th order moment
 
@@ -276,8 +360,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
-        return ls_integrate(
-            self,
+        return self.ls_integrate(
             lambda x: x**n,
             0.,
             np.inf,
@@ -435,26 +518,33 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
     def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time, dtype=np.float64)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        jac = -self.jac_chf(time) * self.sf(time).reshape(-1, 1)
-        if time.size == 1:
-            return np.squeeze(jac)
+        jac = -self.jac_chf(time) * self.sf(time)
+        if time.ndim == 0:
+            return jac.reshape((self.nb_params,))
         return jac
+
 
     def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return -self.jac_sf(time)
 
     def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         time = np.asarray(time, dtype=np.float64)
-        if time.ndim == 2:
-            if time.shape[-1] > 1:
-                raise ValueError("Unexpected time shape. Got (m, n) shape but only (), (n,) or (m, 1) are allowed here")
-        jac = self.jac_hf(time) * self.sf(time).reshape(-1, 1) + self.jac_sf(time) * self.hf(time).reshape(-1, 1)
-        if time.size == 1:
-            return np.squeeze(jac)
+        jac = self.jac_hf(time) * self.sf(time) + self.jac_sf(time) * self.hf(time)
+        if time.ndim == 0:
+            return jac.reshape((self.nb_params,))
         return jac
+
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        deg: int = 10,
+    ) -> NDArray[np.float64]:
+
+        return super().ls_integrate(func, a, b, deg=deg)
+
 
     @override
     def freeze(self) -> FrozenLifetimeDistribution:
@@ -682,6 +772,19 @@ class LifetimeRegression(
             Sample of random lifetimes.
         """
         return super().rvs(shape, *(covar, *args), seed=seed)
+
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        covar: float|NDArray[np.float64],
+        *args : *Args,
+        deg: int = 10,
+    ) -> NDArray[np.float64]:
+
+        return super().ls_integrate(func, a, b, *(covar, *args), deg=deg)
 
     @override
     def mean(
