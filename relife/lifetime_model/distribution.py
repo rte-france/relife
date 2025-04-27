@@ -39,7 +39,7 @@ class Exponential(LifetimeDistribution):
         self.new_params(rate=rate)
 
     @property
-    def rate(self) -> float: # optional but better for clarity
+    def rate(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
@@ -114,11 +114,11 @@ class Weibull(LifetimeDistribution):
         self.new_params(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float: # optional but better for clarity
+    def shape(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["shape"]
 
     @property
-    def rate(self) -> float: # optional but better for clarity
+    def rate(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
@@ -212,11 +212,11 @@ class Gompertz(LifetimeDistribution):
         self.new_params(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float: # optional but better for clarity
+    def shape(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["shape"]
 
     @property
-    def rate(self) -> float: # optional but better for clarity
+    def rate(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["rate"]
 
 
@@ -297,11 +297,11 @@ class Gamma(LifetimeDistribution):
         self.new_params(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float: # optional but better for clarity
+    def shape(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["shape"]
 
     @property
-    def rate(self) -> float: # optional but better for clarity
+    def rate(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["rate"]
 
     def _uppergamma(self, x: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -394,11 +394,11 @@ class LogLogistic(LifetimeDistribution):
         self.new_params(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float: # optional but better for clarity
+    def shape(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["shape"]
 
     @property
-    def rate(self) -> float: # optional but better for clarity
+    def rate(self) -> float: # optional but better for clarity and type checking
         return self._params_tree["rate"]
 
 

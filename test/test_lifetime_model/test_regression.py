@@ -2,6 +2,7 @@ import numpy as np
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
+from relife.lifetime_model._base import CovarEffect
 from relife.lifetime_model import Weibull, AFT, ProportionalHazard
 
 
@@ -9,6 +10,32 @@ def test_args_names(regression):
     assert regression.args_names == ("covar",)
     assert ProportionalHazard(regression).args_names == ("covar", "covar",)
     assert AFT(regression).args_names == ("covar", "covar",)
+
+
+def test_covar_effect():
+    covar_effect = CovarEffect(0.1)
+    assert isinstance(covar_effect.g(np.ones(covar_effect.nb_params)), float)
+    assert covar_effect.g(np.ones((10, covar_effect.nb_params))).shape == (10, 1)
+
+    jac_g = covar_effect.jac_g(np.ones(covar_effect.nb_params))
+    assert len(jac_g) == covar_effect.nb_params
+    assert all(isinstance(jac, float) for jac in jac_g)
+
+    jac_g = covar_effect.jac_g(np.ones((10, covar_effect.nb_params)))
+    assert len(jac_g) == covar_effect.nb_params
+    assert all(jac.shape == (10, covar_effect.nb_params) for jac in jac_g)
+
+    covar_effect = CovarEffect(0.1, 0.2, 0.3)
+    assert isinstance(covar_effect.g(np.ones(covar_effect.nb_params)), float)
+    assert covar_effect.g(np.ones((10, covar_effect.nb_params))).shape == (10, 1)
+
+    jac_g = covar_effect.jac_g(np.ones(covar_effect.nb_params))
+    assert len(jac_g) == covar_effect.nb_params
+    assert all(isinstance(jac, float) for jac in jac_g)
+
+    jac_g = covar_effect.jac_g(np.ones((10, covar_effect.nb_params)))
+    assert len(jac_g) == covar_effect.nb_params
+    assert all(jac.shape == (10, covar_effect.nb_params) for jac in jac_g)
 
 
 def test_rvs(regression, covar):
@@ -71,15 +98,22 @@ def test_derivative(regression, time, covar):
     m, n = 3, 10
 
     assert regression.dhf(time(), covar(m)).shape == (m, 1)
+    jac_sf = regression.jac_sf(time(), covar(m))
+    jac_hf = regression.jac_hf(time(), covar(m))
+    jac_chf = regression.jac_chf(time(), covar(m))
+    jac_cdf = regression.jac_cdf(time(), covar(m))
+    jac_pdf = regression.jac_pdf(time(), covar(m))
+    assert len(jac_sf) == regression.nb_params
+    assert len(jac_hf) == regression.nb_params
+    assert len(jac_chf) == regression.nb_params
+    assert len(jac_cdf) == regression.nb_params
+    assert len(jac_pdf) == regression.nb_params
+    assert all(jac.shape == (m,1) for jac in jac_sf)
+    assert all(jac.shape == (m,1) for jac in jac_hf)
+    assert all(jac.shape == (m,1) for jac in jac_chf)
+    assert all(jac.shape == (m,1) for jac in jac_cdf)
+    assert all(jac.shape == (m,1) for jac in jac_pdf)
 
-
-
-
-    assert regression.jac_sf(time(), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_hf(time(), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_chf(time(), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_cdf(time(), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_pdf(time(), covar(m)).shape == (regression.nb_params, m, 1)
 
     assert regression.dhf(time(n), covar(m)).shape == (m, n)
     assert regression.jac_sf(time(n), covar(m)).shape == (regression.nb_params, m, n)

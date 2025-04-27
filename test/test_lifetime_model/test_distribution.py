@@ -86,11 +86,11 @@ def test_derivative(distribution, time):
         assert len(jac_chf) == distribution.nb_params
         assert len(jac_cdf) == distribution.nb_params
         assert len(jac_pdf) == distribution.nb_params
-        assert all(jac.shape == () for jac in jac_sf)
-        assert all(jac.shape == () for jac in jac_hf)
-        assert all(jac.shape == () for jac in jac_chf)
-        assert all(jac.shape == () for jac in jac_cdf)
-        assert all(jac.shape == () for jac in jac_pdf)
+        assert all(isinstance(jac, float) for jac in jac_sf)
+        assert all(isinstance(jac, float) for jac in jac_hf)
+        assert all(isinstance(jac, float) for jac in jac_chf)
+        assert all(isinstance(jac, float) for jac in jac_cdf)
+        assert all(isinstance(jac, float) for jac in jac_pdf)
     else:
         assert isinstance(jac_sf, float)
         assert isinstance(jac_hf, float)

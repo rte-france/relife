@@ -604,15 +604,18 @@ class CovarEffect(ParametricModel):
 
     Parameters
     ----------
-    coef : tuple of float or tuple of None, optional
-        Coefficients of the covariates effect. Values can be None.
+    *coefficients : float
+        Coefficients of the covariates effect.
     """
 
-    def __init__(self, coef: tuple[float, ...] | tuple[None] = (None,)):
+    def __init__(self, *coefficients : float):
         super().__init__()
-        self.new_params(**{f"coef_{i}": v for i, v in enumerate(coef)})
+        if not bool(coefficients):
+            self.new_params(coef_1 = None)
+        else:
+            self.new_params(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
-    def g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def g(self, covar: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         """
         Compute the covariates effect.
 
@@ -641,10 +644,13 @@ class CovarEffect(ParametricModel):
             raise ValueError(
                 f"Invalid number of covar : expected {self.nb_params}, got {covar.shape[-1]}"
             )
-        return np.exp(np.sum(self.params * covar, axis=1, keepdims=True)) # (m,1)
+        wsum = np.sum(self.params * covar, axis=1, keepdims=True) # (m, 1)
+        if wsum.shape == (1, 1):
+            return np.exp(wsum.item()) # float
+        return np.exp(wsum) # (m, 1)
 
 
-    def jac_g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_g(self, covar: float | NDArray[np.float64]) -> NDArray[np.float64] | tuple[NDArray[np.float64], ...]:
         """
         Compute the Jacobian of the covariates effect.
 
@@ -695,6 +701,14 @@ class LifetimeRegression(
     @fitting_results.setter
     def fitting_results(self, value: FittingResults):
         self._fitting_results = value
+
+    @property # optional but better for clarity and type checking
+    def baseline(self) -> FittableParametricLifetimeModel[*Args]:
+        return self._leaves_of_models["baseline"]
+
+    @property # optional but better for clarity and type checking
+    def covar_effect(self) -> FittableParametricLifetimeModel[*Args]:
+        return self._leaves_of_models["covar_effect"]
 
     @override
     def sf(
