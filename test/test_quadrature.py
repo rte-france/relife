@@ -1,6 +1,6 @@
 import numpy as np
 from pytest import approx
-from relife.quadrature import legendre_quadrature, laguerre_quadrature
+from relife._quadrature import legendre_quadrature, laguerre_quadrature
 
 
 def test_laguerre_quadrature(a, b):
@@ -13,7 +13,7 @@ def test_laguerre_quadrature(a, b):
     expected_intg = lambda a: (a+1)*np.exp(-a)
 
     integration = laguerre_quadrature(f, a())
-    assert integration.shape == ()
+    assert isinstance(integration, float)
     assert integration == approx(expected_intg(a()))
     integration = laguerre_quadrature(f, a(n))
     assert integration.shape == (n,)

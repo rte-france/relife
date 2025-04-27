@@ -13,7 +13,7 @@ def test_args_names(regression):
 
 def test_rvs(regression, covar):
     m,n = 10, 3
-    assert regression.rvs(1, covar(m), seed=21).shape == (m, 1)
+    assert regression.rvs(covar(m), seed=21).shape == (m, 1)
     assert regression.rvs((m, 1), covar(m), seed=21).shape == (m, 1)
     assert regression.rvs((m, n), covar(m), seed=21).shape == (m, n)
 
@@ -71,6 +71,10 @@ def test_derivative(regression, time, covar):
     m, n = 3, 10
 
     assert regression.dhf(time(), covar(m)).shape == (m, 1)
+
+
+
+
     assert regression.jac_sf(time(), covar(m)).shape == (regression.nb_params, m, 1)
     assert regression.jac_hf(time(), covar(m)).shape == (regression.nb_params, m, 1)
     assert regression.jac_chf(time(), covar(m)).shape == (regression.nb_params, m, 1)

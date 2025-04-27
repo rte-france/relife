@@ -7,14 +7,14 @@ from relife import ParametricModel
 class ModelA(ParametricModel):
     def __init__(self, x, y):
         super().__init__()
-        self.set_params(x=x, y=y)
+        self.new_params(x=x, y=y)
 
 
 class ModelB(ParametricModel):
     def __init__(self, model : ModelA, coef : tuple[float, ...]):
         super().__init__()
         self.compose_with(baseline = model)
-        self.set_params(**{f"coef_{i}" : v for i, v in enumerate(coef)})
+        self.new_params(**{f"coef_{i}" : v for i, v in enumerate(coef)})
 
 
 def test_model_composition():

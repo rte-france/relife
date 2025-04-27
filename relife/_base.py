@@ -14,8 +14,8 @@ class ParametricModel:
     """
 
     def __init__(self):
-        self.params_tree = ParamsTree()
-        self.leaves_of_models = {}
+        self._params_tree = ParamsTree()
+        self._leaves_of_models = {}
         self._fitting_results = None
 
     @property
@@ -35,7 +35,7 @@ class ParametricModel:
         Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
         by specifying all parameters values when the core object is initialized.
         """
-        return np.array(self.params_tree.all_values)
+        return np.array(self._params_tree.all_values)
 
     @params.setter
     def params(self, values: NDArray[np.float64 | np.complex64]):
@@ -44,7 +44,7 @@ class ParametricModel:
         values: tuple[Optional[float], ...] = tuple(
             map(lambda x: x.item() if x != np.nan else None, values)
         )
-        self.params_tree.all_values = values
+        self._params_tree.all_values = values
 
     @property
     def params_names(self) -> tuple[str, ...]:
@@ -60,7 +60,7 @@ class ParametricModel:
         -----
         Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
-        return tuple(self.params_tree.all_keys)
+        return tuple(self._params_tree.all_keys)
 
     @property
     def nb_params(self):
@@ -73,7 +73,7 @@ class ParametricModel:
             Number of parameters.
 
         """
-        return len(self.params_tree)
+        return len(self._params_tree)
 
     def compose_with(self, **kwcomponents: Self):
         """Compose with new ``ParametricModel`` instance(s).
@@ -101,15 +101,15 @@ class ParametricModel:
         with `**` operator or you will get a nasty `TypeError`.
         """
         for name in kwcomponents.keys():
-            if name in self.params_tree.data:
+            if name in self._params_tree.data:
                 raise ValueError(f"{name} already exists as param name")
-            if name in self.leaves_of_models:
+            if name in self._leaves_of_models:
                 raise ValueError(f"{name} already exists as leaf function")
         for name, model in kwcomponents.items():
-            self.leaves_of_models[name] = model
-            self.params_tree.set_leaf(f"{name}.params", model.params_tree)
+            self._leaves_of_models[name] = model
+            self._params_tree.set_leaf(f"{name}.params", getattr(model, "_params_tree"))
 
-    def set_params(self, **kwparams: Optional[float]):
+    def new_params(self, **kwparams: Optional[float]):
         """Change local parameters structure.
 
         This method only affects **local** parameters. `ParametricModel` components are not
@@ -130,15 +130,15 @@ class ParametricModel:
         """
 
         for name in kwparams.keys():
-            if name in self.leaves_of_models.keys():
+            if name in self._leaves_of_models.keys():
                 raise ValueError(f"{name} already exists as function name")
-        self.params_tree.data = kwparams
+        self._params_tree.data = kwparams
 
 
     def items_walk(self) -> Iterator:
         """parallel walk through key value pairs"""
-        yield list(self.leaves_of_models.items())
-        for leaf in self.leaves_of_models.values():
+        yield list(self._leaves_of_models.items())
+        for leaf in self._leaves_of_models.values():
             yield list(chain.from_iterable(leaf.items_walk()))
 
     def all_components(self) -> Iterator:
@@ -163,18 +163,18 @@ class ParametricModel:
         class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
-        if name in super().__getattribute__("params_tree"):
-            return super().__getattribute__("params_tree")[name]
-        if name in super().__getattribute__("leaves_of_models"):
-            return super().__getattribute__("leaves_of_models")[name]
+        if name in super().__getattribute__("_params_tree"):
+            return super().__getattribute__("_params_tree")[name]
+        if name in super().__getattribute__("_leaves_of_models"):
+            return super().__getattribute__("_leaves_of_models")[name]
         raise AttributeError(f"{class_name} has no attribute named {name}")
 
     def __setattr__(self, name: str, value: Any):
-        if name in ("params_tree", "leaves_of_models"):
+        if name in ("_params_tree", "_leaves_of_models"):
             super().__setattr__(name, value)
-        elif name in self.params_tree:
-            self.params_tree[name] = value
-        elif name in self.leaves_of_models:
+        elif name in self._params_tree:
+            self._params_tree[name] = value
+        elif name in self._leaves_of_models:
             raise ValueError(
                 "Can't modify leaf ParametricComponent. Recreate ParametricComponent instance instead"
             )
