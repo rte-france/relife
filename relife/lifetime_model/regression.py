@@ -106,6 +106,29 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         *args: *Args,
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "jac_hf"):
+            # covar_effect.g : (m, 1) for all covar
+            # covar_effect.jac_g : (nb_coef, m, 1) for all covar
+            # hf : () or (n, ) or (m, n)
+            # jac_hf : (), (n, ), (m, n),
+
+            # TODO : jac_* return type to tuple[float | NDArray[np.float64, ...] even for Exponential!
+            baseline_hf = self.baseline.hf(time, *args) # () or (n, ) or (m, n)
+            baseline_jac_hf = self.baseline.jac_hf(time, *args) # tuple[(), ...], tuple[(n,), ...] or tuple[(m, n), ...]
+            baseline_jac_hf = np.stack(baseline_jac_hf, axis=0) # (baseline.nb_params,), (baseline.nb_params, n), (baseline.nb_params, m, n)
+
+            # if jac_hf.ndim == 1 => baseline_jac_hf (baseline.nb_params, 1, 1)
+            # if jac_hf.ndim == 2 => baseline_jac_hf (baseline.nb_params, 1, n)
+            # if jac_hf.ndim == 3 => baseline_jac_hf not reshaped
+
+            match baseline_jac_hf.ndim:
+                case 1:
+                    baseline_jac_hf = baseline_jac_hf.reshape(self.baseline.nb_params, 1, 1)
+                case 2:
+                    baseline_jac_hf = baseline_jac_hf.reshape(self.baseline.nb_params, 1, -1)
+
+
+
+
             return np.column_stack(
                 (
                     self.covar_effect.jac_g(covar) * self.baseline.hf(time, *args),
@@ -243,14 +266,13 @@ class AFT(LifetimeRegression[*Args]):
     ) -> NDArray[np.float64]:
         if hasattr(self.baseline, "jac_chf"):
             t0 = time / self.covar_effect.g(covar)
-            return np.column_stack(
-                (
-                    -self.covar_effect.jac_g(covar)
-                    / self.covar_effect.g(covar)
-                    * t0
-                    * self.baseline.hf(t0, *args),
-                    self.baseline.jac_chf(t0, *args),
-                )
+            jac_g = self.covar_effect.jac_g(covar)
+
+
+
+            (
+                -self.covar_effect.jac_g(covar) / self.covar_effect.g(covar) * t0 * self.baseline.hf(t0, *args),
+                self.baseline.jac_chf(t0, *args),
             )
         raise AttributeError
 

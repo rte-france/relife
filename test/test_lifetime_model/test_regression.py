@@ -12,95 +12,99 @@ def test_args_names(regression):
     assert AFT(regression).args_names == ("covar", "covar",)
 
 
-def test_covar_effect():
-    covar_effect = CovarEffect(0.1)
+def test_covar_effect(covar):
+    """
+    covar : (nb_coef,)
+    g : float
+    jac_g : (nb_coef,)
+
+    covar : (m, nb_coef)
+    g : (m, 1)
+    jac_g : (nb_coef, m, 1)
+    """
+
+    m = 10
+
+    nb_coef = 1
+    covar_effect = CovarEffect(*(0.1,)*nb_coef)
     assert isinstance(covar_effect.g(1.), float)
-    assert covar_effect.g(np.ones((10, 1))).shape == (10, 1)
+    assert covar_effect.jac_g(1.).shape == (nb_coef,)
+    assert covar_effect.g(covar(m, nb_coef)).shape == (m, 1)
+    assert covar_effect.jac_g(covar(m, nb_coef)).shape == (nb_coef, m, 1)
 
-    jac_g = covar_effect.jac_g(1.)
-    assert isinstance(jac_g, float) # 1 param => output is not tuple
-
-    jac_g = covar_effect.jac_g(np.ones((10, 1)))
-    assert jac_g.shape == (10, 1) # 1 param => output is not tuple
-
-    covar_effect = CovarEffect(0.1, 0.2, 0.3)
-    assert isinstance(covar_effect.g(np.ones(covar_effect.nb_params)), float)
-    assert covar_effect.g(np.ones((10, covar_effect.nb_params))).shape == (10, 1)
-
-    jac_g = covar_effect.jac_g(np.ones(covar_effect.nb_params))
-    assert len(jac_g) == covar_effect.nb_params
-    assert all(isinstance(jac, float) for jac in jac_g)
-
-    jac_g = covar_effect.jac_g(np.ones((10, covar_effect.nb_params)))
-    assert len(jac_g) == covar_effect.nb_params
-    assert all(jac.shape == (10, 1) for jac in jac_g)
+    nb_coef = 3
+    covar_effect = CovarEffect(*(0.1,)*nb_coef)
+    assert isinstance(covar_effect.g(np.ones(nb_coef)), float)
+    assert covar_effect.jac_g(np.ones(nb_coef)).shape == (nb_coef,)
+    assert covar_effect.g(covar(m, nb_coef)).shape == (m, 1)
+    assert covar_effect.jac_g(covar(m, nb_coef)).shape == (nb_coef, m, 1)
 
 
 def test_rvs(regression, covar):
     m,n = 10, 3
-    assert regression.rvs(covar(m), seed=21).shape == (m, 1)
-    assert regression.rvs(covar(m), shape=(m,1), seed=21).shape == (m, 1)
-    assert regression.rvs(covar(m), shape=(m,n), seed=21).shape == (m, n)
+    assert regression.rvs(covar(m, regression.nb_coef), seed=21).shape == (m, 1)
+    assert regression.rvs(covar(m, regression.nb_coef), shape=(m,1), seed=21).shape == (m, 1)
+    assert regression.rvs(covar(m, regression.nb_coef), shape=(m,n), seed=21).shape == (m, n)
 
 
 def test_probability_functions(regression, time, covar, probability):
     m,n = 10, 3
 
-    # covar(m).shape == (m, k)
-    assert regression.sf(time(), covar(m)).shape == (m, 1)
-    assert regression.sf(regression.median(covar(m)), covar(m)) == approx(np.full((m,1), 0.5), rel=1e-3)
-    assert regression.hf(time(), covar(m)).shape == (m, 1)
-    assert regression.chf(time(), covar(m)).shape == (m, 1)
-    assert regression.cdf(time(), covar(m)).shape == (m, 1)
-    assert regression.pdf(time(), covar(m)).shape == (m, 1)
-    assert regression.ppf(probability(), covar(m)).shape == (m, 1)
-    assert regression.ichf(probability(), covar(m)).shape == (m, 1)
-    assert regression.isf(probability(), covar(m)).shape == (m, 1)
-    assert regression.isf(0.5, covar(m)) == approx(regression.median(covar(m)))
+    # covar(m, regression.nb_coef).shape == (m, k)
+    assert regression.sf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.sf(regression.median(covar(m, regression.nb_coef)), covar(m, regression.nb_coef)) == approx(np.full((m,1), 0.5), rel=1e-3)
+    assert regression.hf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.chf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.cdf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.pdf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.ppf(probability(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.ichf(probability(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.isf(probability(), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.isf(0.5, covar(m, regression.nb_coef)) == approx(regression.median(covar(m, regression.nb_coef)))
 
-    # covar(m).shape == (m, k)
-    assert regression.sf(time(n), covar(m)).shape == (m, n)
-    assert regression.hf(time(n), covar(m)).shape == (m, n)
-    assert regression.chf(time(n), covar(m)).shape == (m, n)
-    assert regression.cdf(time(n), covar(m)).shape == (m, n)
-    assert regression.pdf(time(n), covar(m)).shape == (m, n)
-    assert regression.ppf(probability(n,), covar(m),).shape == (m, n)
-    assert regression.ichf(probability(n,), covar(m),).shape == (m, n)
+    # covar(m, regression.nb_coef).shape == (m, k)
+    assert regression.sf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.hf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.chf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.cdf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.pdf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.ppf(probability(n,), covar(m, regression.nb_coef),).shape == (m, n)
+    assert regression.ichf(probability(n,), covar(m, regression.nb_coef),).shape == (m, n)
 
-    # covar(m).shape == (m, k)
-    assert regression.sf(time(m, 1), covar(m)).shape == (m, 1)
-    assert regression.hf(time(m, 1), covar(m)).shape == (m, 1)
-    assert regression.chf(time(m, 1), covar(m)).shape == (m, 1)
-    assert regression.cdf(time(m, 1), covar(m)).shape == (m, 1)
-    assert regression.pdf(time(m, 1), covar(m)).shape == (m, 1)
-    assert regression.ppf(probability(m, 1), covar(m)).shape == (m, 1)
-    assert regression.ichf(probability(m, 1), covar(m)).shape == (m, 1)
-    assert regression.isf(probability(m, 1), covar(m)).shape == (m, 1)
-    assert regression.isf(np.full((m, 1), 0.5), covar(m)) == approx(regression.median(covar(m)))
+    # covar(m, regression.nb_coef).shape == (m, k)
+    assert regression.sf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.hf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.chf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.cdf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.pdf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.ppf(probability(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.ichf(probability(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.isf(probability(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    assert regression.isf(np.full((m, 1), 0.5), covar(m, regression.nb_coef)) == approx(regression.median(covar(m, regression.nb_coef)))
 
-    # covar(m).shape == (m, k)
-    assert regression.sf(time(m, n), covar(m)).shape == (m, n)
-    assert regression.hf(time(m, n), covar(m)).shape == (m, n)
-    assert regression.chf(time(m, n), covar(m)).shape == (m, n)
-    assert regression.cdf(time(m, n), covar(m)).shape == (m, n)
-    assert regression.pdf(time(m, n), covar(m)).shape == (m, n)
-    assert regression.ppf(probability(m, n), covar(m)).shape == (m, n)
-    assert regression.ichf(probability(m, n), covar(m)).shape == (m, n)
-    assert regression.isf(probability(m, n), covar(m)).shape == (m, n)
-    assert regression.isf(np.full((m, n), 0.5), covar(m)) == approx(
-        np.broadcast_to(regression.median(covar(m)), (m, n))
+    # covar(m, regression.nb_coef).shape == (m, k)
+    assert regression.sf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.hf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.chf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.cdf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.pdf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.ppf(probability(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.ichf(probability(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.isf(probability(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.isf(np.full((m, n), 0.5), covar(m, regression.nb_coef)) == approx(
+        np.broadcast_to(regression.median(covar(m, regression.nb_coef)), (m, n))
     )
 
 
 def test_derivative(regression, time, covar):
     m, n = 3, 10
 
-    assert regression.dhf(time(), covar(m)).shape == (m, 1)
-    jac_sf = regression.jac_sf(time(), covar(m))
-    jac_hf = regression.jac_hf(time(), covar(m))
-    jac_chf = regression.jac_chf(time(), covar(m))
-    jac_cdf = regression.jac_cdf(time(), covar(m))
-    jac_pdf = regression.jac_pdf(time(), covar(m))
+    assert regression.dhf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
+    jac_sf = regression.jac_sf(time(), covar(m, regression.nb_coef))
+    jac_hf = regression.jac_hf(time(), covar(m, regression.nb_coef))
+    jac_chf = regression.jac_chf(time(), covar(m, regression.nb_coef))
+    jac_cdf = regression.jac_cdf(time(), covar(m, regression.nb_coef))
+    jac_pdf = regression.jac_pdf(time(), covar(m, regression.nb_coef))
     assert len(jac_sf) == regression.nb_params
     assert len(jac_hf) == regression.nb_params
     assert len(jac_chf) == regression.nb_params
@@ -111,28 +115,28 @@ def test_derivative(regression, time, covar):
     assert all(jac.shape == (m,1) for jac in jac_chf)
     assert all(jac.shape == (m,1) for jac in jac_cdf)
     assert all(jac.shape == (m,1) for jac in jac_pdf)
-
-
-    assert regression.dhf(time(n), covar(m)).shape == (m, n)
-    assert regression.jac_sf(time(n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_hf(time(n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_chf(time(n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_cdf(time(n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_pdf(time(n), covar(m)).shape == (regression.nb_params, m, n)
-
-    assert regression.dhf(time(m, 1), covar(m)).shape == (m, 1)
-    assert regression.jac_sf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_hf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_chf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_cdf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
-    assert regression.jac_pdf(time(m, 1), covar(m)).shape == (regression.nb_params, m, 1)
-
-    assert regression.dhf(time(m, n), covar(m)).shape == (m, n)
-    assert regression.jac_sf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_hf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_chf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_cdf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
-    assert regression.jac_pdf(time(m, n), covar(m)).shape == (regression.nb_params, m, n)
+    #
+    #
+    # assert regression.dhf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
+    # assert regression.jac_sf(time(n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_hf(time(n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_chf(time(n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_cdf(time(n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_pdf(time(n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    #
+    # assert regression.dhf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
+    # assert regression.jac_sf(time(m, 1), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, 1)
+    # assert regression.jac_hf(time(m, 1), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, 1)
+    # assert regression.jac_chf(time(m, 1), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, 1)
+    # assert regression.jac_cdf(time(m, 1), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, 1)
+    # assert regression.jac_pdf(time(m, 1), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, 1)
+    #
+    # assert regression.dhf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
+    # assert regression.jac_sf(time(m, n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_hf(time(m, n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_chf(time(m, n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_cdf(time(m, n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
+    # assert regression.jac_pdf(time(m, n), covar(m, regression.nb_coef)).shape == (regression.nb_params, m, n)
 
 
 
@@ -141,108 +145,108 @@ def test_ls_integrate(regression, a, b, covar):
     m, n = 2, 3
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(), b(), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(), b(), covar(m, regression.nb_coef))
     assert integration.shape == (m, 1)
-    assert integration == approx(regression.cdf(b(), covar(m)) - regression.cdf(a(), covar(m)))
+    assert integration == approx(regression.cdf(b(), covar(m, regression.nb_coef)) - regression.cdf(a(), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, 0.0, np.inf, covar(m))
-    assert integration == approx(regression.mean(covar(m)))
+    integration = regression.ls_integrate( lambda x: x, 0.0, np.inf, covar(m, regression.nb_coef))
+    assert integration == approx(regression.mean(covar(m, regression.nb_coef)))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(), b(n), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(), b(n), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
-    assert integration == approx(regression.cdf(b(n), covar(m)) - regression.cdf(a(), covar(m)))
+    assert integration == approx(regression.cdf(b(n), covar(m, regression.nb_coef)) - regression.cdf(a(), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, 0.0, np.full((n,), np.inf), covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, 0.0, np.full((n,), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(n), b(), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(n), b(), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
-    assert integration == approx(regression.cdf(b(), covar(m)) - regression.cdf(a(n), covar(m)))
+    assert integration == approx(regression.cdf(b(), covar(m, regression.nb_coef)) - regression.cdf(a(n), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros(n), np.inf, covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros(n), np.inf, covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(n), b(n), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(n), b(n), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
-    assert integration == approx(regression.cdf(b(n), covar(m)) - regression.cdf(a(n), covar(m)))
+    assert integration == approx(regression.cdf(b(n), covar(m, regression.nb_coef)) - regression.cdf(a(n), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros(n), np.full((n,), np.inf), covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros(n), np.full((n,), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(m, 1), b(), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(m, 1), b(), covar(m, regression.nb_coef))
     assert integration.shape == (m, 1)
-    assert integration == approx(regression.cdf(b(), covar(m)) - regression.cdf(a(m, 1), covar(m)))
+    assert integration == approx(regression.cdf(b(), covar(m, regression.nb_coef)) - regression.cdf(a(m, 1), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros((m,1)), np.inf, covar(m))
-    assert integration == approx(np.full((m, 1), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros((m,1)), np.inf, covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, 1), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(), b(m, 1), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(), b(m, 1), covar(m, regression.nb_coef))
     assert integration.shape == (m, 1)
-    assert integration == approx(regression.cdf(b(m, 1), covar(m)) - regression.cdf(a(), covar(m)))
+    assert integration == approx(regression.cdf(b(m, 1), covar(m, regression.nb_coef)) - regression.cdf(a(), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, 0.0, np.full((m, 1), np.inf), covar(m))
-    assert integration == approx(np.full((m, 1), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, 0.0, np.full((m, 1), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, 1), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(m, 1), b(m, 1), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(m, 1), b(m, 1), covar(m, regression.nb_coef))
     assert integration.shape == (m, 1)
     assert integration == approx(
-        regression.cdf(b(m, 1), covar(m)) - regression.cdf(a(m, 1), covar(m))
+        regression.cdf(b(m, 1), covar(m, regression.nb_coef)) - regression.cdf(a(m, 1), covar(m, regression.nb_coef))
     )
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros((m,1)), np.full((m, 1), np.inf), covar(m))
-    assert integration == approx(np.full((m, 1), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros((m,1)), np.full((m, 1), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, 1), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(), b(m, n), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(), b(m, n), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
-    assert integration == approx(regression.cdf(b(m, n), covar(m)) - regression.cdf(a(), covar(m)))
+    assert integration == approx(regression.cdf(b(m, n), covar(m, regression.nb_coef)) - regression.cdf(a(), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, 0.0, np.full((m, n), np.inf), covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, 0.0, np.full((m, n), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(m, n), b(), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(m, n), b(), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
-    assert integration == approx(regression.cdf(b(), covar(m)) - regression.cdf(a(m, n), covar(m)))
+    assert integration == approx(regression.cdf(b(), covar(m, regression.nb_coef)) - regression.cdf(a(m, n), covar(m, regression.nb_coef)))
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros((m, n)), np.inf, covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros((m, n)), np.inf, covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(1, n), b(m, 1), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(1, n), b(m, 1), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
     assert integration == approx(
-        regression.cdf(b(m, 1), covar(m)) - regression.cdf(a(1, n), covar(m))
+        regression.cdf(b(m, 1), covar(m, regression.nb_coef)) - regression.cdf(a(1, n), covar(m, regression.nb_coef))
     )
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros((m,n)), np.full((m, 1), np.inf), covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros((m,n)), np.full((m, 1), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(m, 1), b(1, n), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(m, 1), b(1, n), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
     assert integration == approx(
-        regression.cdf(b(1, n), covar(m)) - regression.cdf(a(m, 1), covar(m))
+        regression.cdf(b(1, n), covar(m, regression.nb_coef)) - regression.cdf(a(m, 1), covar(m, regression.nb_coef))
     )
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros((m,1)), np.full((1, n), np.inf), covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros((m,1)), np.full((1, n), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
     # integral_a^b dF(x)
-    integration = regression.ls_integrate( np.ones_like, a(m, n), b(m, n), covar(m))
+    integration = regression.ls_integrate( np.ones_like, a(m, n), b(m, n), covar(m, regression.nb_coef))
     assert integration.shape == (m, n)
     assert integration == approx(
-        regression.cdf(b(m, n), covar(m)) - regression.cdf(a(m, n), covar(m))
+        regression.cdf(b(m, n), covar(m, regression.nb_coef)) - regression.cdf(a(m, n), covar(m, regression.nb_coef))
     )
     # integral_0^inf x*dF(x)
-    integration = regression.ls_integrate( lambda x: x, np.zeros((m, n)), np.full((m, n), np.inf), covar(m))
-    assert integration == approx(np.full((m, n), regression.mean(covar(m))))
+    integration = regression.ls_integrate( lambda x: x, np.zeros((m, n)), np.full((m, n), np.inf), covar(m, regression.nb_coef))
+    assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
 
 

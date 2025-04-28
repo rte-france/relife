@@ -32,18 +32,14 @@ def equilibrium_distribution(distribution):
     return EquilibriumDistribution(distribution)
 
 
-@pytest.fixture
-def nb_coef():
-    return 3
-
 @pytest.fixture(
     params=[
         ProportionalHazard,
         AFT,
     ],
 )
-def regression(request, distribution, nb_coef):
-    return request.param(distribution, *(0.1,) * nb_coef)
+def regression(request, distribution):
+    return request.param(distribution, *(0.1,) * 3)
 
 
 
@@ -68,8 +64,8 @@ def probability():
 
 
 @pytest.fixture
-def covar(nb_coef):
-    def _covar(m):
+def covar():
+    def _covar(m, nb_coef):
         return np.ones((m, nb_coef), dtype=np.float64)
 
     return _covar

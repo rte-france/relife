@@ -13,6 +13,7 @@ from typing import (
 )
 
 import numpy as np
+from ipykernel import kernel_protocol_version
 from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
@@ -739,21 +740,20 @@ class CovarEffect(ParametricModel):
         ValueError
             If the number of covariates does not match the number of parameters.
         """
-        covar: NDArray[np.float64] = np.atleast_2d(
-            np.asarray(covar)
-        )  # (1, nb_coef) or (m, nb_coef)
+        covar: NDArray[np.float64] = np.asarray(covar) # (nb_coef,) or (m, nb_coef)
         if covar.ndim > 2:
             raise ValueError(
                 f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {covar.shape}"
             )
-        if covar.shape[-1] != self.nb_coef:
+        covar_nb_coef = covar.size if covar.ndim <= 1 else covar.shape[-1]
+        if covar_nb_coef != self.nb_coef:
             raise ValueError(
                 f"Invalid covar. Number of covar does not match number of coefficients. Got {self.nb_coef} nb_coef but covar shape is {covar.shape}"
             )
-        wsum = np.sum(self.params * covar, axis=-1, keepdims=True)  # (1, 1) or (m, 1)
-        if wsum.size == 1:
-            return np.exp(wsum.item())  # float
-        return np.exp(wsum)  #  (m, 1)
+        expsum = np.exp(np.sum(self.params * covar, axis=-1))  # () or (m, 1)
+        if isinstance(expsum, float):
+            return expsum
+        return expsum.reshape(-1,1)
 
     def jac_g(
         self, covar: float | NDArray[np.float64]
@@ -777,20 +777,14 @@ class CovarEffect(ParametricModel):
         np.ndarray of shape (nb_params, ) or (m, nb_params)
             The values of the Jacobian (eventually for m assets).
         """
-        covar: NDArray[np.float64] = np.atleast_2d(
-            np.asarray(covar)
-        )  # (1, nb_coef) or (m, nb_coef)
+        covar: NDArray[np.float64] = np.asarray(covar) # (nb_coef,) or (m, nb_coef)
         if covar.ndim > 2:
             raise ValueError(
                 f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {covar.shape}"
             )
-        jac = covar * self.g(covar)
-        if self.nb_coef == 1:
-            if jac.size == 1:
-                return jac.item()
-            return jac
-        jac = np.unstack(jac, axis=-1)
-        jac = tuple((j.item() if j.size == 1 else j.reshape(-1, 1) for j in jac))
+        jac = (covar * self.g(covar)).reshape(self.nb_coef, -1, 1) # (nb_coef, m, 1)
+        if jac.shape[1] == 1:
+            return jac.reshape(self.nb_coef,)
         return jac
 
 
@@ -817,6 +811,10 @@ class LifetimeRegression(
     @fitting_results.setter
     def fitting_results(self, value: FittingResults):
         self._fitting_results = value
+
+    @property
+    def nb_coef(self) -> int:
+        return self.covar_effect.nb_coef
 
     @override
     def sf(

@@ -9,6 +9,8 @@ Args = TypeVarTuple("Args")
 
 
 class FittableParametricLifetimeModel(Protocol[*Args]):
+    nb_params : int
+    params : NDArray[np.float64 | np.complex64]
 
     def hf(
         self, time: float | NDArray[np.float64], *args: *Args
