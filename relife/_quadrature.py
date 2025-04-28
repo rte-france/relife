@@ -42,15 +42,17 @@ def legendre_quadrature(
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a,b]`
 
-    func must be continuous and expects one input only
+    `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     a can be zero
     b must not be inf
 
     a, b shapes can be either 0d (float like), 1d or 2d
     """
-
-    x, w = np.polynomial.legendre.leggauss(deg)  # (deg,)
     arr_a, arr_b = check_and_broadcast_bounds(a, b) # () or (n,) or (m, n)
+    x, w = np.polynomial.legendre.leggauss(deg)  # (deg,)
+    x = x.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
+    w = w.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
+
     if np.any(arr_b == np.inf):
         raise ValueError("Bound values of Legendre quadrature must be finite")
     if np.any(arr_a >= arr_b):
@@ -58,12 +60,9 @@ def legendre_quadrature(
 
     p = (arr_b - arr_a) / 2  # () or (n,) or (m, n)
     m = (arr_a + arr_b) / 2  # () or (n,) or (m, n)
-    u = np.expand_dims(p, -1) * x + np.expand_dims(m, -1)  # (deg,) or (n, deg) or (m, n, deg)
-    v = np.expand_dims(p, -1) * w  # (deg,) or (n, deg) or (m, n, deg)
-    try:
-        fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n, deg)
-    except ValueError:
-        raise ValueError("func must accept input array of 3 dimensions")
+    u = p * x + m  # (deg,) or (deg, n) or (deg, m, n)
+    v = p * w  # (deg,) or (deg, n) or (deg, m, n)
+    fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     if fvalues.shape[-len(u.shape):] != u.shape:
         raise ValueError(
             f"""
@@ -72,7 +71,7 @@ def legendre_quadrature(
             """
         )
 
-    return np.sum(v * fvalues, axis=-1) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+    return np.sum(v * fvalues, axis=-v.ndim) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
 
@@ -83,20 +82,17 @@ def laguerre_quadrature(
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func * exp(-x)` over the interval `[a, inf]`
 
-    `func` must be continuous and must expect only one input.
+    `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     It must handle at least 3 dimensions.
     a can be zero with ndim <= 2.
     """
-
-    x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
+    x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
+    x = x.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
+    w = w.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
 
-    shifted_x = x + np.expand_dims(arr_a, axis=-1)  # (deg,) or (n, deg) or (m, n, deg)
-
-    try:
-        fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n, deg)
-    except ValueError:
-        raise ValueError("func must accept input array of 3 dimensions")
+    shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
+    fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     if fvalues.shape[-len(shifted_x.shape):] != shifted_x.shape:
         # func est une fonction réel univariée et pas multivariée
         raise ValueError(
@@ -107,8 +103,7 @@ def laguerre_quadrature(
         )
 
     exp_a = np.where(np.exp(-arr_a) == 0, 1.0, np.exp(-arr_a))  # () or (n,) or (m, n)
-    exp_a = np.expand_dims(exp_a, axis=-1) # (1,) or (n, 1) or (m, n, 1)
-    return np.sum(w * fvalues * exp_a, axis=-1) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+    return np.sum(w * fvalues * exp_a, axis=-shifted_x.ndim) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
 
@@ -119,20 +114,18 @@ def unweighted_laguerre_quadrature(
 ) -> NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a, inf]`
 
-    `func` must be continuous and must expect only one input.
+    `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     It must handle at least 3 dimensions.
     a can be zero with ndim <= 2.
     """
 
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
+    x = x.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
+    w = w.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
 
-    shifted_x = x + np.expand_dims(arr_a, axis=-1)  # (deg,) or (n, deg) or (m, n, deg)
-
-    try:
-        fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n, deg)
-    except ValueError:
-        raise ValueError("func must accept input array of 3 dimensions")
+    shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
+    fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     if fvalues.shape[-len(shifted_x.shape):] != shifted_x.shape:
         raise ValueError(
             f"""
@@ -140,5 +133,5 @@ def unweighted_laguerre_quadrature(
             Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
             """
         )
-    return np.sum(w * fvalues * np.exp(x), axis=-1) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+    return np.sum(w * fvalues * np.exp(x), axis=-shifted_x.ndim) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 

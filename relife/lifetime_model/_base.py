@@ -272,20 +272,14 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
         frozen_model = self.freeze(*args)
 
-        def integrand(x: float | NDArray[np.float64]) -> NDArray[np.float64]:
-            x = np.asarray(x, dtype=np.float64)  #  (deg,), (n, deg) or (m, n, deg)
-            x_shape = x.shape
-            x = np.atleast_2d(x)  #  (1, deg), (n, deg) or (m, n, deg)
+        def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
+            x_shape = x.shape # (deg,), (deg, n) or (deg, m, n)
 
             # reshape because model.pdf expects input ndim <= 2
             if x.ndim > 2:
-                x = x.reshape(x.shape[0], -1)  #  (m, n*deg)
-            #  x.shape == (1, deg), (n, deg) or (m, n*deg)
-            try:
-                fx = func(x)  # (d_1, ..., d_i, 1, deg), (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n*deg)
-            except ValueError:
-                raise ValueError("func must accept input array of 2 dimensions")
-
+                x = x.reshape(-1, x.shape[-1])  #  (deg*m, n)
+            #  x.shape == (deg,), (deg, n) or (deg*m, n)
+            fx = func(x)  # (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg*m, n)
             if fx.shape[-len(x.shape):] != x.shape:
                 raise ValueError(
                     f"""
@@ -295,10 +289,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
                 )
 
             ushape = fx.shape[:-len(x.shape)]  #   == (d_1, ..., d_i)
-            pdf = frozen_model.pdf(
-                x)  #  (1, deg), (n, deg) or (m, n*deg) because pdf always preserves 2 dim shape if x has 2 dim
+            pdf = frozen_model.pdf(x)  #  (deg,), (deg, n) or (deg*m, n) because we tested io on pdf
             return (fx * pdf).reshape(
-                ushape + x_shape)  #  (d_1, ..., d_i, deg) or (d_1, ..., d_i, n, deg) or (d_1, ..., d_i, m, n, deg)
+                ushape + x_shape)  #  (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
 
         # if isinstance(model, AgeReplacementModel):
         #     ar, args = frozen_model.args[0], frozen_model.args[1:]
