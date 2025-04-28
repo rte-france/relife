@@ -4,9 +4,11 @@ import numpy as np
 
 from relife.lifetime_model import EquilibriumDistribution
 
-def test_args_names(distribution):
+def test_args_names(distribution, equilibrium_distribution):
     assert distribution.args_names == ()
-    assert EquilibriumDistribution(distribution).args_names == ()
+
+def test_args_names_equilibrium_distribution(equilibrium_distribution):
+    assert equilibrium_distribution.args_names == ()
 
 def test_rvs(distribution):
     m, n = 3, 10
@@ -14,6 +16,13 @@ def test_rvs(distribution):
     assert distribution.rvs((n,), seed=21).shape == (n,)
     assert distribution.rvs((m, 1), seed=21).shape == (m, 1)
     assert distribution.rvs((m, n), seed=21).shape == (m, n)
+
+def test_rvs_equilibrium_distribution(equilibrium_distribution):
+    m, n = 3, 10
+    assert isinstance(equilibrium_distribution.rvs(seed=21), float)
+    assert equilibrium_distribution.rvs((n,), seed=21).shape == (n,)
+    assert equilibrium_distribution.rvs((m, 1), seed=21).shape == (m, 1)
+    assert equilibrium_distribution.rvs((m, n), seed=21).shape == (m, n)
 
 def test_probility_functions(distribution, time, probability):
     m, n = 3, 10
@@ -63,12 +72,67 @@ def test_probility_functions(distribution, time, probability):
     assert distribution.isf(np.full((m, n), 0.5)) == approx(np.full((m, n), distribution.median()))
 
 
+def test_probility_functions_equilibrium_distribution(equilibrium_distribution, time, probability):
+    m, n = 3, 10
+
+    assert isinstance(equilibrium_distribution.sf(time()), float)
+    assert equilibrium_distribution.sf(equilibrium_distribution.median()) == approx(0.5, rel=1e-3)
+    assert isinstance(equilibrium_distribution.hf(time()), float)
+    assert isinstance(equilibrium_distribution.chf(time()), float)
+    assert isinstance(equilibrium_distribution.cdf(time()), float)
+    assert isinstance(equilibrium_distribution.pdf(time()), float)
+    assert isinstance(equilibrium_distribution.ppf(probability()), float)
+    assert isinstance(equilibrium_distribution.ichf(probability()), float)
+    assert isinstance(equilibrium_distribution.isf(probability()), float)
+    assert equilibrium_distribution.isf(0.5) == approx(equilibrium_distribution.median())
+
+    assert equilibrium_distribution.sf(time(n)).shape == (n,)
+    assert equilibrium_distribution.sf(np.full((n,), equilibrium_distribution.median())) == approx(np.full((n,), 0.5), rel=1e-3)
+    assert equilibrium_distribution.hf(time(n)).shape == (n,)
+    assert equilibrium_distribution.chf(time(n)).shape == (n,)
+    assert equilibrium_distribution.cdf(time(n)).shape == (n,)
+    assert equilibrium_distribution.pdf(time(n)).shape == (n,)
+    assert equilibrium_distribution.ppf(probability(n,)).shape == (n,)
+    assert equilibrium_distribution.ichf(probability(n,)).shape == (n,)
+    assert equilibrium_distribution.isf(probability(n,)).shape == (n,)
+    assert equilibrium_distribution.isf(np.full((n,), 0.5)) == approx(np.full((n,), equilibrium_distribution.median()))
+
+    assert equilibrium_distribution.sf(time(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.sf(np.full((m, 1), equilibrium_distribution.median())) == approx(np.full((m, 1), 0.5), rel=1e-3)
+    assert equilibrium_distribution.hf(time(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.chf(time(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.cdf(time(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.pdf(time(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.ppf(probability(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.ichf(probability(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.isf(probability(m, 1)).shape == (m, 1)
+    assert equilibrium_distribution.isf(np.full((m, 1), 0.5)) == approx(np.full((m, 1), equilibrium_distribution.median()))
+
+    assert equilibrium_distribution.sf(time(m, n)).shape == (m, n)
+    assert equilibrium_distribution.sf(np.full((m, n), equilibrium_distribution.median())) == approx(np.full((m, n), 0.5), rel=1e-3)
+    assert equilibrium_distribution.hf(time(m, n)).shape == (m, n)
+    assert equilibrium_distribution.chf(time(m, n)).shape == (m, n)
+    assert equilibrium_distribution.cdf(time(m, n)).shape == (m, n)
+    assert equilibrium_distribution.pdf(time(m, n)).shape == (m, n)
+    assert equilibrium_distribution.ppf(probability(m, n)).shape == (m, n)
+    assert equilibrium_distribution.ichf(probability(m, n)).shape == (m, n)
+    assert equilibrium_distribution.isf(probability(m, n)).shape == (m, n)
+    assert equilibrium_distribution.isf(np.full((m, n), 0.5)) == approx(np.full((m, n), equilibrium_distribution.median()))
+
 def test_moment(distribution, time):
     assert isinstance(distribution.moment(1), float)
     assert isinstance(distribution.moment(2), float)
     assert isinstance(distribution.mean(), float)
     assert isinstance(distribution.var(), float)
     assert isinstance(distribution.median(), float)
+
+
+def test_moment_equilibrium_distribution(equilibrium_distribution, time):
+    assert isinstance(equilibrium_distribution.moment(1), float)
+    assert isinstance(equilibrium_distribution.moment(2), float)
+    assert isinstance(equilibrium_distribution.mean(), float)
+    assert isinstance(equilibrium_distribution.var(), float)
+    assert isinstance(equilibrium_distribution.median(), float)
 
 
 def test_derivative(distribution, time):

@@ -6,15 +6,13 @@ from relife import ParametricModel
 
 class ModelA(ParametricModel):
     def __init__(self, x, y):
-        super().__init__()
-        self.new_params(x=x, y=y)
+        super().__init__(x=x, y=y)
 
 
 class ModelB(ParametricModel):
     def __init__(self, model : ModelA, coef : tuple[float, ...]):
-        super().__init__()
-        self.compose_with(baseline = model)
-        self.new_params(**{f"coef_{i}" : v for i, v in enumerate(coef)})
+        super().__init__(**{f"coef_{i+1}" : v for i, v in enumerate(coef)})
+        self.baseline = model
 
 
 def test_model_composition():
@@ -24,7 +22,7 @@ def test_model_composition():
 
     model_b = ModelB(model_a, (3,4,5))
     assert_array_equal(model_b.params, np.array([3,4,5,1,2], dtype=np.float64))
-    assert model_b.params_names == ("coef_0", "coef_1", "coef_2", "x", "y")
+    assert model_b.params_names == ("coef_1", "coef_2", "coef_3", "x", "y")
 
     model_a.params = np.array([2,3])
     assert_array_equal(model_a.params, np.array([2,3], dtype=np.float64))

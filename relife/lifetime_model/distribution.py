@@ -35,12 +35,11 @@ class Exponential(LifetimeDistribution):
     """
 
     def __init__(self, rate: Optional[float] = None):
-        super().__init__()
-        self.new_params(rate=rate)
+        super().__init__(rate=rate)
 
     @property
     def rate(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["rate"]
+        return self._params["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         return self.rate * np.ones_like(time)
@@ -66,19 +65,16 @@ class Exponential(LifetimeDistribution):
     ) -> float | NDArray[np.float64]:
         return cumulative_hazard_rate / self.rate
 
-    @override
     def jac_hf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         if isinstance(time, np.ndarray):
             return np.ones_like(time)
         return np.float64(1)
 
-    @override
     def jac_chf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         if isinstance(time, np.ndarray):
             return time.copy()
         return copy.copy(time)
 
-    @override
     def dhf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         if isinstance(time, np.ndarray):
             return np.zeros_like(time)
@@ -110,16 +106,15 @@ class Weibull(LifetimeDistribution):
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        super().__init__(shape=shape, rate=rate)
 
     @property
     def shape(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["shape"]
+        return self._params["shape"]
 
     @property
     def rate(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["rate"]
+        return self._params["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         return self.shape * self.rate * (self.rate * time) ** (self.shape - 1)
@@ -208,17 +203,15 @@ class Gompertz(LifetimeDistribution):
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        super().__init__(shape=shape, rate=rate)
 
     @property
     def shape(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["shape"]
+        return self._params["shape"]
 
     @property
     def rate(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["rate"]
-
+        return self._params["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
@@ -293,16 +286,15 @@ class Gamma(LifetimeDistribution):
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        super().__init__(shape=shape, rate=rate)
 
     @property
     def shape(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["shape"]
+        return self._params["shape"]
 
     @property
     def rate(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["rate"]
+        return self._params["rate"]
 
     def _uppergamma(self, x: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return gammaincc(self.shape, x) * gamma(self.shape)
@@ -390,16 +382,15 @@ class LogLogistic(LifetimeDistribution):
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
-        super().__init__()
-        self.new_params(shape=shape, rate=rate)
+        super().__init__(shape=shape, rate=rate)
 
     @property
     def shape(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["shape"]
+        return self._params["shape"]
 
     @property
     def rate(self) -> float: # optional but better for clarity and type checking
-        return self._params_tree["rate"]
+        return self._params["rate"]
 
 
     def hf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
@@ -489,7 +480,7 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
 
     def __init__(self, baseline: ParametricLifetimeModel[*Args]):
         super().__init__()
-        self.compose_with(baseline=baseline)
+        self.baseline = baseline
 
     def sf(
         self, time: float | NDArray[np.float64], *args: *Args

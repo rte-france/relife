@@ -13,10 +13,12 @@ class ParametricModel:
     Any parametric_model core must inherit from `ParametricModel`.
     """
 
-    def __init__(self):
-        self._params_tree = ParamsTree()
-        self._leaves_of_models = {}
+    def __init__(self, **kwparams : Optional[float]):
+        self._params = Parameters()
+        self._nested_models = {}
         self._fitting_results = None
+        if bool(kwparams):
+            self.new_params(**kwparams)
 
     @property
     def params(self) -> NDArray[np.float64 | np.complex64]:
@@ -35,7 +37,7 @@ class ParametricModel:
         Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
         by specifying all parameters values when the core object is initialized.
         """
-        return np.array(self._params_tree.all_values)
+        return np.array(self._params.all_values)
 
     @params.setter
     def params(self, values: NDArray[np.float64 | np.complex64]):
@@ -44,7 +46,7 @@ class ParametricModel:
         values: tuple[Optional[float], ...] = tuple(
             map(lambda x: x.item() if x != np.nan else None, values)
         )
-        self._params_tree.all_values = values
+        self._params.all_values = values
 
     @property
     def params_names(self) -> tuple[str, ...]:
@@ -60,7 +62,7 @@ class ParametricModel:
         -----
         Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
-        return tuple(self._params_tree.all_keys)
+        return tuple(self._params.all_keys)
 
     @property
     def nb_params(self):
@@ -73,7 +75,7 @@ class ParametricModel:
             Number of parameters.
 
         """
-        return len(self._params_tree)
+        return len(self._params)
 
     def compose_with(self, **kwcomponents: Self):
         """Compose with new ``ParametricModel`` instance(s).
@@ -101,13 +103,13 @@ class ParametricModel:
         with `**` operator or you will get a nasty `TypeError`.
         """
         for name in kwcomponents.keys():
-            if name in self._params_tree.data:
+            if name in self._params.data:
                 raise ValueError(f"{name} already exists as param name")
-            if name in self._leaves_of_models:
+            if name in self._nested_models:
                 raise ValueError(f"{name} already exists as leaf function")
         for name, model in kwcomponents.items():
-            self._leaves_of_models[name] = model
-            self._params_tree.set_leaf(f"{name}.params", getattr(model, "_params_tree"))
+            self._nested_models[name] = model
+            self._params.set_leaf(f"{name}.params", getattr(model, "_params"))
 
     def new_params(self, **kwparams: Optional[float]):
         """Change local parameters structure.
@@ -130,59 +132,47 @@ class ParametricModel:
         """
 
         for name in kwparams.keys():
-            if name in self._leaves_of_models.keys():
+            if name in self._nested_models.keys():
                 raise ValueError(f"{name} already exists as function name")
-        self._params_tree.data = kwparams
+        self._params.data = kwparams
 
 
-    def items_walk(self) -> Iterator:
+    def nested_models(self) -> Iterator:
         """parallel walk through key value pairs"""
-        yield list(self._leaves_of_models.items())
-        for leaf in self._leaves_of_models.values():
-            yield list(chain.from_iterable(leaf.items_walk()))
 
-    def all_components(self) -> Iterator:
-        return chain.from_iterable(self.items_walk())
+        def items_walk(model : Self) -> Iterator:
+            yield list(model._nested_models.items())
+            for leaf in model._nested_models.values():
+                yield list(chain.from_iterable(items_walk(leaf)))
 
-    # def __getattribute__(self, item):
-    #     if not item.startswith("_") and not item.startswith("__"):
-    #         return super().__getattribute__(item)
-    #     if item in (
-    #         "new_params",
-    #         "compose_with",
-    #         "params",
-    #         "params_names",
-    #         "nb_params",
-    #     ):
-    #         return super().__getattribute__(item)
-    #     if not self._all_params_set:
-    #         raise ValueError(f"Can't call {item} if one parameter value is not set")
-    #     return super().__getattribute__(item)
+        return chain.from_iterable(items_walk(self))
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
-        if name in super().__getattribute__("_params_tree"):
-            return super().__getattribute__("_params_tree")[name]
-        if name in super().__getattribute__("_leaves_of_models"):
-            return super().__getattribute__("_leaves_of_models")[name]
+        if name in super().__getattribute__("_params"):
+            return super().__getattribute__("_params")[name]
+        if name in super().__getattribute__("_nested_models"):
+            return super().__getattribute__("_nested_models")[name]
         raise AttributeError(f"{class_name} has no attribute named {name}")
 
     def __setattr__(self, name: str, value: Any):
-        if name in ("_params_tree", "_leaves_of_models"):
+        if name in ("_params", "_nested_models"):
             super().__setattr__(name, value)
-        elif name in self._params_tree:
-            self._params_tree[name] = value
-        elif name in self._leaves_of_models:
+        elif name in self._params:
+            self._params[name] = value
+        elif name in self._nested_models:
             raise ValueError(
-                "Can't modify leaf ParametricComponent. Recreate ParametricComponent instance instead"
+                "ParametricModel named {name} is already set. If you want to change it, recreate a ParametricModel"
             )
+        elif isinstance(value, ParametricModel):
+            self.compose_with(**{name : value})
         else:
             super().__setattr__(name, value)
 
 
-class ParamsTree:
+class Parameters:
     """
     Tree-structured parameters.
 
@@ -203,7 +193,7 @@ class ParamsTree:
 
     @data.setter
     def data(self, mapping: dict[str, Optional[float | complex]]):
-        self._data = mapping
+        self._data = {k : np.nan if v is None else v for k, v in mapping.items()}
         self.update()
 
     @property
@@ -229,7 +219,7 @@ class ParamsTree:
     def set_all_values(self, *values: Optional[float | complex]):
         if len(values) != len(self):
             raise ValueError(f"values expects {len(self)} items but got {len(values)}")
-        self._all_values = values
+        self._all_values = tuple((np.nan if v is None else v for v in values))
         pos = len(self._data)
         self._data.update(zip(self._data, values[:pos]))
         for leaf in self.leaves.values():

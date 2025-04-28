@@ -9,7 +9,7 @@ from relife.lifetime_model import (
     Gamma,
     Gompertz,
     ProportionalHazard,
-    AFT,
+    AFT, EquilibriumDistribution,
 )
 
 
@@ -25,6 +25,12 @@ from relife.lifetime_model import (
 )
 def distribution(request):
     return request.param
+
+
+@pytest.fixture
+def equilibrium_distribution(distribution):
+    return EquilibriumDistribution(distribution)
+
 
 @pytest.fixture
 def nb_coef():
