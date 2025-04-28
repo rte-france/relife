@@ -275,11 +275,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
             x_shape = x.shape # (deg,), (deg, n) or (deg, m, n)
 
-            # reshape because model.pdf expects input ndim <= 2
-            if x.ndim > 2:
-                x = x.reshape(-1, x.shape[-1])  #  (deg*m, n)
-            #  x.shape == (deg,), (deg, n) or (deg*m, n)
-            fx = func(x)  # (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg*m, n)
+            #  x.shape == (deg,), (deg, n) or (deg, m, n)
+            fx = func(x)  # (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             if fx.shape[-len(x.shape):] != x.shape:
                 raise ValueError(
                     f"""
@@ -288,10 +285,16 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
                     """
                 )
 
-            ushape = fx.shape[:-len(x.shape)]  #   == (d_1, ..., d_i)
-            pdf = frozen_model.pdf(x)  #  (deg,), (deg, n) or (deg*m, n) because we tested io on pdf
-            return (fx * pdf).reshape(
-                ushape + x_shape)  #  (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+            # reshape because model.pdf is tested only for input ndim <= 2
+            if x.ndim > 2:
+                # x : (deg, m, n) -> x.reshape(-1, x.shape[-1]) : (deg*m, n)
+                pdf = frozen_model.pdf(x.reshape(-1, x.shape[-1]))  # (deg*m, n)
+                pdf = pdf.reshape(x.shape) #  (deg, m, n)
+            else:
+                pdf = frozen_model.pdf(x)  #  (deg,), (deg, n)
+
+            return fx * pdf #  (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+
 
         # if isinstance(model, AgeReplacementModel):
         #     ar, args = frozen_model.args[0], frozen_model.args[1:]
