@@ -71,13 +71,6 @@ class ProportionalHazard(LifetimeRegression[*Args]):
 
     """
 
-    def __init__(
-        self,
-        baseline: FittableParametricLifetimeModel[*Args],
-        coef: tuple[float, ...] | tuple[None] = (None,),
-    ):
-        super().__init__(baseline, coef)
-
     def hf(
         self,
         time: float | NDArray[np.float64],
@@ -92,7 +85,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        # (m,)
+        # (m,)
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
     @override
@@ -130,9 +123,12 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         if hasattr(self.baseline, "jac_chf"):
             return np.stack(
                 (
-                    self.covar_effect.jac_g(covar) * self.baseline.chf(time, *args), # (k, m, 1) * (m, n)
-                    self.covar_effect.g(covar) * self.baseline.jac_chf(time, *args), # (m, 1) * (b2, m, n)
-                ), axis=0
+                    self.covar_effect.jac_g(covar)
+                    * self.baseline.chf(time, *args),  # (k, m, 1) * (m, n)
+                    self.covar_effect.g(covar)
+                    * self.baseline.jac_chf(time, *args),  # (m, 1) * (b2, m, n)
+                ),
+                axis=0,
             )
         raise AttributeError
 
@@ -192,14 +188,6 @@ class AFT(LifetimeRegression[*Args]):
     --------
     regression.ProportionalHazard : proportional hazard regression
     """
-
-    def __init__(
-        self,
-        baseline: FittableParametricLifetimeModel[*Args],
-        coef: tuple[float, ...] | tuple[None] = (None,),
-    ):
-        super().__init__(baseline, coef)
-
     def hf(
         self,
         time: float | NDArray[np.float64],

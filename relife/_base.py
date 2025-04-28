@@ -5,7 +5,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-
 class ParametricModel:
     """
     Base class to create a parametric_model core.
@@ -13,7 +12,7 @@ class ParametricModel:
     Any parametric_model core must inherit from `ParametricModel`.
     """
 
-    def __init__(self, **kwparams : Optional[float]):
+    def __init__(self, **kwparams: Optional[float]):
         self._params = Parameters()
         self._nested_models = {}
         self._fitting_results = None
@@ -136,11 +135,10 @@ class ParametricModel:
                 raise ValueError(f"{name} already exists as function name")
         self._params.data = kwparams
 
-
     def nested_models(self) -> Iterator:
         """parallel walk through key value pairs"""
 
-        def items_walk(model : Self) -> Iterator:
+        def items_walk(model: Self) -> Iterator:
             yield list(model._nested_models.items())
             for leaf in model._nested_models.values():
                 yield list(chain.from_iterable(items_walk(leaf)))
@@ -167,7 +165,7 @@ class ParametricModel:
                 "ParametricModel named {name} is already set. If you want to change it, recreate a ParametricModel"
             )
         elif isinstance(value, ParametricModel):
-            self.compose_with(**{name : value})
+            self.compose_with(**{name: value})
         else:
             super().__setattr__(name, value)
 
@@ -193,7 +191,7 @@ class Parameters:
 
     @data.setter
     def data(self, mapping: dict[str, Optional[float | complex]]):
-        self._data = {k : np.nan if v is None else v for k, v in mapping.items()}
+        self._data = {k: np.nan if v is None else v for k, v in mapping.items()}
         self.update()
 
     @property
@@ -296,7 +294,7 @@ class Parameters:
         self.update_parents()
 
 
-# Use Mixin to preserve type frozen instance. Ex : FrozenParametricLifetimeModel := ParametricLifetimeModel[()]
+# Use Mixin to preserve type frozen instance. Ex : FrozenParametricLifetimeModel := ParametricLifetimeModel[()]
 class FrozenMixin:
 
     @property
@@ -321,7 +319,9 @@ class FrozenMixin:
                             raise ValueError
                     value = value.reshape(-1, 1)
             if self.nb_assets != 1 and value.shape[0] not in (1, self.nb_assets):
-                raise ValueError(f"Frozen args have already {self.nb_assets} nb_assets values but given value has {value.shape[0]}")
+                raise ValueError(
+                    f"Frozen args have already {self.nb_assets} nb_assets values but given value has {value.shape[0]}"
+                )
             setattr(self, "_args", self.args + (value,))
 
     @property

@@ -11,19 +11,19 @@ if TYPE_CHECKING:
 
 
 def renewal_equation_solver(
-    tf : float,
-    nb_steps : int,
+    tf: float,
+    nb_steps: int,
     model: ParametricLifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
-    t = np.linspace(0, tf, nb_steps, dtype=np.float64) # (nb_steps,)
-    tm = 0.5 * (t[1:] + t[:-1]) # (nb_steps - 1,)
-    f = model.cdf(t) # (nb_steps,) or (m, nb_steps)
-    fm = model.cdf(tm) # (nb_steps - 1,) or (m, nb_steps - 1)
-    y = evaluated_func(t) # (nb_steps,)
+    t = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    tm = 0.5 * (t[1:] + t[:-1])  # (nb_steps - 1,)
+    f = model.cdf(t)  # (nb_steps,) or (m, nb_steps)
+    fm = model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
+    y = evaluated_func(t)  # (nb_steps,)
 
     if y.shape != f.shape:
         raise ValueError("Invalid shape between model and evaluated_func")
@@ -48,19 +48,19 @@ def renewal_equation_solver(
 
 
 def delayed_renewal_equation_solver(
-    tf : float,
-    nb_steps : int,
+    tf: float,
+    nb_steps: int,
     z: NDArray[np.float64],
     model1: ParametricLifetimeModel[()],
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
-    t = np.linspace(0, tf, nb_steps, dtype=np.float64) # (nb_steps,)
-    tm = 0.5 * (t[1:] + t[:-1]) # (nb_steps - 1,)
-    f1 = model1.cdf(t) # (nb_steps,) or (m, nb_steps)
-    f1m = model1.cdf(tm) # (nb_steps - 1,) or (m, nb_steps - 1)
-    y1 = evaluated_func(t) # (nb_steps,)
+    t = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    tm = 0.5 * (t[1:] + t[:-1])  # (nb_steps - 1,)
+    f1 = model1.cdf(t)  # (nb_steps,) or (m, nb_steps)
+    f1m = model1.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
+    y1 = evaluated_func(t)  # (nb_steps,)
 
     if discounting is not None:
         d = discounting.factor(t)

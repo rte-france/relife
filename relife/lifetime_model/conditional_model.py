@@ -1,4 +1,4 @@
-from typing import Callable, Optional, TypeVarTuple, ParamSpec, Sequence
+from typing import Callable, Optional, ParamSpec, Sequence, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,16 +11,23 @@ Args = TypeVarTuple("Args")
 P = ParamSpec("P")
 
 
-# necessary to allow user passing 1d ar and a0
-def _reshape_ar_or_a0(name : str, value : float|NDArray[np.float64])-> NDArray[np.float64]: # ndim is 2 (m,n) or (m,1)
+# necessary to allow user passing 1d ar and a0
+def _reshape_ar_or_a0(
+    name: str, value: float | NDArray[np.float64]
+) -> NDArray[np.float64]:  # ndim is 2 (m,n) or (m,1)
     value = np.squeeze(np.asarray(value))
     if value.ndim > 2:
-        raise ValueError(f"Incorrect {name} dim. Can't be more than 2. Got {value.ndim}")
+        raise ValueError(
+            f"Incorrect {name} dim. Can't be more than 2. Got {value.ndim}"
+        )
     if value.ndim == 2 and value.shape[-1] != 1:
-        raise ValueError(f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}")
+        raise ValueError(
+            f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}"
+        )
     if value.ndim == 1:
         value = value.reshape(-1, 1)
     return value
+
 
 class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
     r"""
@@ -121,13 +128,15 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         return self.moment(1, ar, *args)
 
     @override
-    def var(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+    def var(
+        self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     def rvs(
         self,
-        shape : int|tuple[int, int],
+        shape: int | tuple[int, int],
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         seed: Optional[int] = None,
@@ -168,15 +177,17 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
         ub = np.array(np.inf)
-        # ar.shape == (m, 1)
-        mask = time >= ar # (m, 1) or (m, n)
+        # ar.shape == (m, 1)
+        mask = time >= ar  # (m, 1) or (m, n)
         if np.any(mask):
             time, ub = np.broadcast_arrays(time, ub)
-            time = np.ma.MaskedArray(time, mask) # (m, 1) or (m, n)
-            ub = np.ma.MaskedArray(ub, mask) # (m, 1) or (m, n)
-        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
+            time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
+            ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
+        mu = self.ls_integrate(
+            lambda x: x - time, time, ub, ar, *args, deg=10
+        ) / self.sf(
             time, ar, *args
-        ) # () or (n,) or (m, n)
+        )  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
@@ -193,8 +204,9 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar = _reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
         integration = super().ls_integrate(func, a, b, *(ar, *args), deg=deg)
-        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
-
+        return integration + np.where(
+            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
+        )
 
     @override
     def freeze(
@@ -282,7 +294,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     @override
     def rvs(
         self,
-        shape : int|tuple[int, int],
+        shape: int | tuple[int, int],
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         seed: Optional[int] = None,
@@ -296,4 +308,3 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     ) -> FrozenParametricLifetimeModel:
         a0 = _reshape_ar_or_a0("a0", a0)
         return super().freeze(*(a0, *args))
-

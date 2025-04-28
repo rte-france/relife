@@ -14,16 +14,14 @@ def test_args_names(regression):
 
 def test_covar_effect():
     covar_effect = CovarEffect(0.1)
-    assert isinstance(covar_effect.g(np.ones(covar_effect.nb_params)), float)
-    assert covar_effect.g(np.ones((10, covar_effect.nb_params))).shape == (10, 1)
+    assert isinstance(covar_effect.g(1.), float)
+    assert covar_effect.g(np.ones((10, 1))).shape == (10, 1)
 
-    jac_g = covar_effect.jac_g(np.ones(covar_effect.nb_params))
-    assert len(jac_g) == covar_effect.nb_params
-    assert all(isinstance(jac, float) for jac in jac_g)
+    jac_g = covar_effect.jac_g(1.)
+    assert isinstance(jac_g, float) # 1 param => output is not tuple
 
-    jac_g = covar_effect.jac_g(np.ones((10, covar_effect.nb_params)))
-    assert len(jac_g) == covar_effect.nb_params
-    assert all(jac.shape == (10, covar_effect.nb_params) for jac in jac_g)
+    jac_g = covar_effect.jac_g(np.ones((10, 1)))
+    assert jac_g.shape == (10, 1) # 1 param => output is not tuple
 
     covar_effect = CovarEffect(0.1, 0.2, 0.3)
     assert isinstance(covar_effect.g(np.ones(covar_effect.nb_params)), float)
@@ -35,14 +33,14 @@ def test_covar_effect():
 
     jac_g = covar_effect.jac_g(np.ones((10, covar_effect.nb_params)))
     assert len(jac_g) == covar_effect.nb_params
-    assert all(jac.shape == (10, covar_effect.nb_params) for jac in jac_g)
+    assert all(jac.shape == (10, 1) for jac in jac_g)
 
 
 def test_rvs(regression, covar):
     m,n = 10, 3
     assert regression.rvs(covar(m), seed=21).shape == (m, 1)
-    assert regression.rvs((m, 1), covar(m), seed=21).shape == (m, 1)
-    assert regression.rvs((m, n), covar(m), seed=21).shape == (m, n)
+    assert regression.rvs(covar(m), shape=(m,1), seed=21).shape == (m, 1)
+    assert regression.rvs(covar(m), shape=(m,n), seed=21).shape == (m, n)
 
 
 def test_probability_functions(regression, time, covar, probability):

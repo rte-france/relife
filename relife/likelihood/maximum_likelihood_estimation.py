@@ -204,7 +204,7 @@ def maximum_likelihood_estimation(
                 **minimize_kwargs,
             )
 
-            # Step 4: Compute parameters variance (Hessian inverse)
+            # Step 4: Compute parameters variance (Hessian inverse)
             hessian_inverse = np.linalg.inv(likelihood.hessian())
             model.fitting_results = FittingResults(
                 len(data), optimizer, var=hessian_inverse

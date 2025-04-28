@@ -42,12 +42,15 @@ class Cost(dict):
                 )
             if value.ndim == 2 and value.shape[-1] != 1:
                 raise ValueError(
-                    f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}")
+                    f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}"
+                )
             if value.ndim <= 1:
                 value = value.reshape(-1, 1)
             # check if nb_assets is no more compatible
             if nb_assets != 1 and value.shape[0] not in (1, nb_assets):
-                raise ValueError(f"Incompatible nb_assets. Got {nb_assets} and {value.shape[0]}")
+                raise ValueError(
+                    f"Incompatible nb_assets. Got {nb_assets} and {value.shape[0]}"
+                )
             # update nb_assets
             if value.shape[0] != 1:
                 nb_assets = value.shape[0]
@@ -60,6 +63,7 @@ class Cost(dict):
 
     def update(self, *args, **kwargs):
         raise AttributeError("Can't update items")
+
 
 # class Reward(ABC):
 #     @abstractmethod
@@ -78,8 +82,9 @@ class Cost(dict):
 # class AgeReplacementCost(Reward):
 #     ...
 
+
 def _age_replacement_rewards(
-    time: NDArray[np.float64], # duration
+    time: NDArray[np.float64],  # duration
     ar: float | NDArray[np.float64],
     cf: float | NDArray[np.float64],
     cp: float | NDArray[np.float64],
@@ -96,7 +101,7 @@ def age_replacement_rewards(
 
 
 def _run_to_failure_rewards(
-    time: NDArray[np.float64], # duration
+    time: NDArray[np.float64],  # duration
     cf: float | NDArray[np.float64],
 ) -> NDArray[np.float64]:
     return np.ones_like(time) * cf
@@ -106,7 +111,11 @@ def run_to_failure_rewards(cf: float | NDArray[np.float64]) -> Reward:
     return partial(_run_to_failure_rewards, cf=cf)
 
 
-def reward(ar : Optional[float | NDArray[np.float64]] = None, /, **kwargs : float | NDArray[np.float64]) -> Reward:
+def reward(
+    ar: Optional[float | NDArray[np.float64]] = None,
+    /,
+    **kwargs: float | NDArray[np.float64],
+) -> Reward:
     cost = Cost(**kwargs)
     if ar is None:
         if sorted(cost.keys()) != ["cf"]:
@@ -116,11 +125,12 @@ def reward(ar : Optional[float | NDArray[np.float64]] = None, /, **kwargs : floa
         if sorted(cost.keys()) != ["cf", "cp"]:
             raise ValueError
         ar = np.squeeze(np.asarray(ar))
-        if ar .ndim > 2:
+        if ar.ndim > 2:
             raise ValueError(f"Incorrect ar dim. Can't be more than 2. Got {ar.ndim}")
         if ar.ndim == 2 and ar.shape[-1] != 1:
             raise ValueError(
-                f"Incorrect ar shape. If ar has 2 dim, the shape must be (m, 1) only. Got {ar.shape}")
+                f"Incorrect ar shape. If ar has 2 dim, the shape must be (m, 1) only. Got {ar.shape}"
+            )
         if ar.ndim == 1:
             ar = ar.reshape(-1, 1)
         if ar.shape[0] != 1 and ar.shape[0] != cost.nb_assets:
@@ -147,26 +157,26 @@ def reward_partial_expectation(
 
 
 class Discounting(Protocol):
-    rate : float
+    rate: float
 
     @abstractmethod
-    def factor(self, timeline : NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]: ...
 
     @abstractmethod
-    def annuity_factor(self, timeline : NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def annuity_factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]: ...
 
 
 class ExponentialDiscounting:
-    rate : float
+    rate: float
 
     def __init__(self, rate: Optional[float] = None):
-        if rate < 0.:
+        if rate < 0.0:
             raise ValueError
-        self.rate = rate if rate is not None else 0.
+        self.rate = rate if rate is not None else 0.0
 
     def factor(
         self,
-        timeline : NDArray[np.float64],
+        timeline: NDArray[np.float64],
     ) -> NDArray[np.float64]:
         if self.rate != 0.0:
             return np.exp(-self.rate * timeline)
@@ -175,7 +185,7 @@ class ExponentialDiscounting:
 
     def annuity_factor(
         self,
-        timeline : NDArray[np.float64],
+        timeline: NDArray[np.float64],
     ) -> NDArray[np.float64]:
         if self.rate != 0.0:
             return (1 - np.exp(-self.rate * timeline)) / self.rate

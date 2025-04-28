@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Callable
+
+from typing import TYPE_CHECKING, Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
 def check_and_broadcast_bounds(
     a: float | NDArray[np.float64],
     b: Optional[float | NDArray[np.float64]] = None,
-) -> NDArray[np.float64]|tuple[NDArray[np.float64], NDArray[np.float64]]:
+) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
 
     def control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
         arr = np.asarray(bound, dtype=np.float64)
@@ -48,10 +49,10 @@ def legendre_quadrature(
 
     a, b shapes can be either 0d (float like), 1d or 2d
     """
-    arr_a, arr_b = check_and_broadcast_bounds(a, b) # () or (n,) or (m, n)
+    arr_a, arr_b = check_and_broadcast_bounds(a, b)  # () or (n,) or (m, n)
     x, w = np.polynomial.legendre.leggauss(deg)  # (deg,)
-    x = x.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
-    w = w.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
+    x = x.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
+    w = w.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 
     if np.any(arr_b == np.inf):
         raise ValueError("Bound values of Legendre quadrature must be finite")
@@ -62,8 +63,10 @@ def legendre_quadrature(
     m = (arr_a + arr_b) / 2  # () or (n,) or (m, n)
     u = p * x + m  # (deg,) or (deg, n) or (deg, m, n)
     v = p * w  # (deg,) or (deg, n) or (deg, m, n)
-    fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(u.shape):] != u.shape:
+    fvalues = func(
+        u
+    )  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+    if fvalues.shape[-len(u.shape) :] != u.shape:
         raise ValueError(
             f"""
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
@@ -71,12 +74,13 @@ def legendre_quadrature(
             """
         )
 
-    return np.sum(v * fvalues, axis=-v.ndim) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
-
+    return np.sum(
+        v * fvalues, axis=-v.ndim
+    )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
 def laguerre_quadrature(
-    func: Callable[[float|NDArray[np.float64]], NDArray[np.float64]],
+    func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> NDArray[np.float64]:
@@ -88,13 +92,15 @@ def laguerre_quadrature(
     """
     arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    x = x.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
-    w = w.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
+    x = x.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
+    w = w.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
-    fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(shifted_x.shape):] != shifted_x.shape:
-        # func est une fonction réel univariée et pas multivariée
+    fvalues = func(
+        shifted_x
+    )  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+    if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
+        # func est une fonction réel univariée et pas multivariée
         raise ValueError(
             f"""
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
@@ -103,12 +109,13 @@ def laguerre_quadrature(
         )
 
     exp_a = np.where(np.exp(-arr_a) == 0, 1.0, np.exp(-arr_a))  # () or (n,) or (m, n)
-    return np.sum(w * fvalues * exp_a, axis=-shifted_x.ndim) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
-
+    return np.sum(
+        w * fvalues * exp_a, axis=-shifted_x.ndim
+    )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
 def unweighted_laguerre_quadrature(
-    func: Callable[[float|NDArray[np.float64]], NDArray[np.float64]],
+    func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> NDArray[np.float64]:
@@ -121,17 +128,20 @@ def unweighted_laguerre_quadrature(
 
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
-    x = x.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
-    w = w.reshape((-1,) + (1,) * arr_a.ndim) # (deg,), (deg, 1) or (deg, 1, 1)
+    x = x.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
+    w = w.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
-    fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(shifted_x.shape):] != shifted_x.shape:
+    fvalues = func(
+        shifted_x
+    )  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+    if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
         raise ValueError(
             f"""
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
             Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
             """
         )
-    return np.sum(w * fvalues * np.exp(x), axis=-shifted_x.ndim) # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
-
+    return np.sum(
+        w * fvalues * np.exp(x), axis=-shifted_x.ndim
+    )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)

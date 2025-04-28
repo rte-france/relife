@@ -8,10 +8,10 @@ from scipy.optimize import newton
 
 from relife.economic import age_replacement_rewards, reward_partial_expectation
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
-from ..lifetime_model._base import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
 
 from .._args import broadcast_args
+from ..lifetime_model._base import legendre_quadrature
 from ..stochastic_process.frozen_process import FrozenNonHomogeneousPoissonProcess
 from ._base import RenewalPolicy
 from ._decorator import get_if_none

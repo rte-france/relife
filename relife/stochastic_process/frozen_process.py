@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._plots import PlotConstructor, PlotNHPP
 from relife import ParametricModel
 from relife._base import FrozenMixin
+from relife._plots import PlotConstructor, PlotNHPP
 
 if TYPE_CHECKING:
     from relife.sample import CountData
@@ -16,10 +16,11 @@ if TYPE_CHECKING:
 
 
 class FrozenNonHomogeneousPoissonProcess(ParametricModel, FrozenMixin):
-    def __init__(self, model : NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]):
+    def __init__(
+        self, model: NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]
+    ):
         super().__init__()
-        self.compose_with(model = model)
-
+        self.compose_with(model=model)
 
     def intensity(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.intensity(time, *self.args)

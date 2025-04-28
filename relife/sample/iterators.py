@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from relife.lifetime_model import Exponential
 
 if TYPE_CHECKING:
-    from relife.economic import Reward, Discounting
+    from relife.economic import Discounting, Reward
     from relife.lifetime_model import FrozenParametricLifetimeModel
 
 AnyNDArray = NewType(

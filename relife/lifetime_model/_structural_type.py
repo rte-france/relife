@@ -49,7 +49,7 @@ class FittableParametricLifetimeModel(Protocol[*Args]):
     ) -> float | NDArray[np.float64]: ...
 
     def rvs(
-        self, shape : int | tuple[int, int], *args: *Args, seed: Optional[int] = None
+        self, shape: int | tuple[int, int], *args: *Args, seed: Optional[int] = None
     ) -> float | NDArray[np.float64]: ...
 
     def ppf(
@@ -82,7 +82,6 @@ class FittableParametricLifetimeModel(Protocol[*Args]):
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self: ...
-
 
 
 class DifferentiableParametricLifetimeModel(Protocol[*Args]):
@@ -126,7 +125,7 @@ class DifferentiableParametricLifetimeModel(Protocol[*Args]):
     ) -> float | NDArray[np.float64]: ...
 
     def rvs(
-        self, shape : int | tuple[int, int], *args: *Args, seed: Optional[int] = None
+        self, shape: int | tuple[int, int], *args: *Args, seed: Optional[int] = None
     ) -> float | NDArray[np.float64]: ...
 
     def ppf(
@@ -149,14 +148,32 @@ class DifferentiableParametricLifetimeModel(Protocol[*Args]):
         *args: *Args,
     ) -> FrozenParametricLifetimeModel: ...
 
-    def dhf(self, time: float | NDArray[np.float64], *args: *Args,) -> NDArray[np.float64]: ...
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]: ...
 
-    def jac_hf(self, time: float | NDArray[np.float64], *args: *Args,) -> NDArray[np.float64]: ...
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]: ...
 
-    def jac_chf(self, time: float | NDArray[np.float64], *args: *Args,) -> NDArray[np.float64]: ...
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> NDArray[np.float64]: ...
 
-    def jac_sf(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:...
+    def jac_sf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]: ...
 
-    def jac_cdf(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:...
+    def jac_cdf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]: ...
 
-    def jac_pdf(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:...
+    def jac_pdf(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> NDArray[np.float64]: ...

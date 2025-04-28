@@ -43,7 +43,7 @@ def nb_coef():
     ],
 )
 def regression(request, distribution, nb_coef):
-    return request.param(distribution, coef=(0.1,) * nb_coef)
+    return request.param(distribution, *(0.1,) * nb_coef)
 
 
 

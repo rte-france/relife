@@ -14,6 +14,10 @@ from .distribution import (
     LogLogistic,
     Weibull,
 )
-from .frozen_model import FrozenParametricLifetimeModel, FrozenLifetimeDistribution, FrozenLifetimeRegression
+from .frozen_model import (
+    FrozenLifetimeDistribution,
+    FrozenLifetimeRegression,
+    FrozenParametricLifetimeModel,
+)
 from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
 from .regression import AFT, ProportionalHazard
