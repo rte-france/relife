@@ -113,11 +113,11 @@ def test_derivative(regression, time, covar):
     assert regression.jac_pdf(time(n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
 
     assert regression.dhf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-    assert regression.jac_sf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-    assert regression.jac_hf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-    assert regression.jac_chf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-    assert regression.jac_cdf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-    assert regression.jac_pdf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
+    assert regression.jac_sf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
+    assert regression.jac_hf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
+    assert regression.jac_chf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
+    assert regression.jac_cdf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
+    assert regression.jac_pdf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
 
     assert regression.dhf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
     assert regression.jac_sf(time(m, n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
