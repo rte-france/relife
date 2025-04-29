@@ -99,74 +99,69 @@ class ProportionalHazard(LifetimeRegression[*Args]):
             cumulative_hazard_rate / self.covar_effect.g(covar), *args
         )
 
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> float | NDArray[np.float64]:
+        return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
+
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
-        if hasattr(self.baseline, "jac_hf"):
-            # covar_effect.g : (m, 1) for all covar
-            # covar_effect.jac_g : (nb_coef, m, 1) for all covar
-            # hf : () or (n, ) or (m, n)
-            # jac_hf : (), (n, ), (m, n),
+        asarray : bool = False,
+    )  -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
 
-            # TODO : jac_* return type to tuple[float | NDArray[np.float64, ...] even for Exponential!
-            baseline_hf = self.baseline.hf(time, *args) # () or (n, ) or (m, n)
-            baseline_jac_hf = self.baseline.jac_hf(time, *args) # tuple[(), ...], tuple[(n,), ...] or tuple[(m, n), ...]
-            baseline_jac_hf = np.stack(baseline_jac_hf, axis=0) # (baseline.nb_params,), (baseline.nb_params, n), (baseline.nb_params, m, n)
+        g = self.covar_effect.g(covar) # () or (m, 1)
+        # p == baseline.nb_params
+        baseline_jac_hf = self.baseline.jac_hf(time, *args, asarray=True) # (p,), (p, n) or (p, m, n)
+        baseline_jac_hf = baseline_jac_hf.reshape(self.baseline.nb_params, 1, -1)  #  (p, m, n)
 
-            # if jac_hf.ndim == 1 => baseline_jac_hf (baseline.nb_params, 1, 1)
-            # if jac_hf.ndim == 2 => baseline_jac_hf (baseline.nb_params, 1, n)
-            # if jac_hf.ndim == 3 => baseline_jac_hf not reshaped
+        baseline_hf = self.baseline.hf(time, *args) # (), (n,) or (m, n)
+        # c == self.nb_coef
+        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (c,) or (c, m, 1)
+        jac_g = jac_g.reshape(self.nb_coef, -1, 1) # (c, m, 1)
 
-            match baseline_jac_hf.ndim:
-                case 1:
-                    baseline_jac_hf = baseline_jac_hf.reshape(self.baseline.nb_params, 1, 1)
-                case 2:
-                    baseline_jac_hf = baseline_jac_hf.reshape(self.baseline.nb_params, 1, -1)
+        jac = np.concatenate((
+            g * baseline_jac_hf, # (p, m, n)
+            baseline_hf * jac_g, # (c, m, n)
+        ), axis=0) # (p + c, m, n)
 
-
-
-
-            return np.column_stack(
-                (
-                    self.covar_effect.jac_g(covar) * self.baseline.hf(time, *args),
-                    self.covar_effect.g(covar) * self.baseline.jac_hf(time, *args),
-                )
-            )
-        raise AttributeError
+        jac = np.squeeze(jac) # (p + c,), (p + c, n), (p + c, m, n)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
-        if hasattr(self.baseline, "jac_chf"):
-            return np.stack(
-                (
-                    self.covar_effect.jac_g(covar)
-                    * self.baseline.chf(time, *args),  # (k, m, 1) * (m, n)
-                    self.covar_effect.g(covar)
-                    * self.baseline.jac_chf(time, *args),  # (m, 1) * (b2, m, n)
-                ),
-                axis=0,
-            )
-        raise AttributeError
+        asarray : bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
 
-    def dhf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: *Args,
-    ) -> NDArray[np.float64]:
-        if hasattr(self.baseline, "dhf"):
-            return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
-        raise AttributeError
+        baseline_chf = self.baseline.chf(time, *args) # (), (n,) or (m, n)
+        # c == self.nb_coef
+        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (c,) or (c, m, 1)
+        jac_g = jac_g.reshape(self.nb_coef, -1, 1) # (c, m, 1)
+        g = self.covar_effect.g(covar) # () or (m, 1)
+        #  p == baseline.nb_params
+        baseline_jac_chf = self.baseline.jac_chf(time, *args, asarray=True) # (p,), (p, n) or (p, m, n)
+        baseline_jac_chf = baseline_jac_chf.reshape(self.baseline.nb_params, 1, -1)  #  (p, m, n)
+        jac = np.concatenate((
+            g * baseline_jac_chf, # (p, m, n)
+            baseline_chf * jac_g, # (c, m, n)
+        ), axis = 0) # (p + c, m, n)
+        jac = np.squeeze(jac) # (p + c,), (p + c, n), (p + c, m, n)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
 
-class AFT(LifetimeRegression[*Args]):
+class AcceleratedFailureTime(LifetimeRegression[*Args]):
     r"""
     Accelerated failure time regression.
 
@@ -211,6 +206,7 @@ class AFT(LifetimeRegression[*Args]):
     --------
     regression.ProportionalHazard : proportional hazard regression
     """
+
     def hf(
         self,
         time: float | NDArray[np.float64],
@@ -240,52 +236,68 @@ class AFT(LifetimeRegression[*Args]):
             cumulative_hazard_rate, *args
         )
 
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> float | NDArray[np.float64]:
+        t0 = time / self.covar_effect.g(covar)
+        return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
+
+
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
-        if hasattr(self.baseline, "jac_hf") and hasattr(self.baseline, "dhf"):
-            t0 = time / self.covar_effect.g(covar)
-            return np.column_stack(
-                (
-                    -self.covar_effect.jac_g(covar)
-                    / self.covar_effect.g(covar) ** 2
-                    * (self.baseline.hf(t0, *args) + t0 * self.baseline.dhf(t0, *args)),
-                    self.baseline.jac_hf(t0, *args) / self.covar_effect.g(covar),
-                )
-            )
-        raise AttributeError
+        asarray : bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+
+        g = self.covar_effect.g(covar) # () or (m, 1)
+        t0 = time / g # (), (m, n)
+        # p == baseline.nb_params
+        baseline_jac_hf_t0 = self.baseline.jac_hf(t0, *args, asarray=True) # (p,) or (p, m, n)
+        baseline_jac_hf_t0 = baseline_jac_hf_t0.reshape(self.baseline.nb_params, 1, -1)  #  (p, m, n)
+        baseline_hf_t0 = self.baseline.hf(t0, *args) # (), (m, n)
+        baseline_dhf_t0 = self.baseline.dhf(t0, *args) # (), (m, n)
+        # c == self.nb_coef
+        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (c,) or (c, m, 1)
+        jac_g = jac_g.reshape(self.nb_coef, -1, 1)  #  (c, m, 1)
+        jac = np.concatenate((
+            baseline_jac_hf_t0 / g, # (p, m, n)
+            -jac_g/g**2*(baseline_hf_t0 + t0*baseline_dhf_t0), # (c, m, n)
+        ), axis=0) # (p + c, m, n)
+        jac = np.squeeze(jac) # (p + c,), (p + c, n), (p + c, m, n)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
+
 
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
-        if hasattr(self.baseline, "jac_chf"):
-            t0 = time / self.covar_effect.g(covar)
-            jac_g = self.covar_effect.jac_g(covar)
+        asarray: bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
 
-
-
-            (
-                -self.covar_effect.jac_g(covar) / self.covar_effect.g(covar) * t0 * self.baseline.hf(t0, *args),
-                self.baseline.jac_chf(t0, *args),
-            )
-        raise AttributeError
-
-    def dhf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: *Args,
-    ) -> NDArray[np.float64]:
-        if hasattr(self.baseline, "dhf"):
-            t0 = time / self.covar_effect.g(covar)
-            return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
-        raise AttributeError
+        g = self.covar_effect.g(covar)  # () or (m, 1)
+        t0 = time / g  #  (), (m, n)
+        # p == baseline.nb_params
+        baseline_jac_chf_t0 = self.baseline.jac_chf(t0, *args, asarray=True) # (p,) or (p, m, n)
+        baseline_jac_chf_t0 = baseline_jac_chf_t0.reshape(self.baseline.nb_params, 1, -1)  #  (p, m, n)
+        baseline_hf_t0 = self.baseline.hf(t0, *args)  #  (), (m, n)
+        # c == self.nb_coef
+        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (c,) or (c, m, 1)
+        jac_g = jac_g.reshape(self.nb_coef, -1, 1)  #  (c, m, 1)
+        jac = np.concatenate((
+            baseline_jac_chf_t0, # (p, m, n)
+            -jac_g/g * t0 * baseline_hf_t0, # (c, m, n)
+        ),axis=0) # (p + c, m, n)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
 
 TIME_BASE_DOCSTRING = """
@@ -346,7 +358,7 @@ np.ndarray
 """
 
 
-for class_obj in (AFT, ProportionalHazard):
+for class_obj in (AcceleratedFailureTime, ProportionalHazard):
     class_obj.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The survival function")
     class_obj.hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The hazard function")
     class_obj.chf.__doc__ = TIME_BASE_DOCSTRING.format(

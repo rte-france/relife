@@ -9,7 +9,7 @@ from relife.lifetime_model import (
     Gamma,
     Gompertz,
     ProportionalHazard,
-    AFT, EquilibriumDistribution,
+    AcceleratedFailureTime, EquilibriumDistribution,
 )
 
 
@@ -35,7 +35,7 @@ def equilibrium_distribution(distribution):
 @pytest.fixture(
     params=[
         ProportionalHazard,
-        AFT,
+        AcceleratedFailureTime,
     ],
 )
 def regression(request, distribution):

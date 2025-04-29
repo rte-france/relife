@@ -3,7 +3,7 @@ import pytest
 from pytest import approx
 
 from relife.economic import Cost, reward
-from relife.lifetime_model import EquilibriumDistribution, AgeReplacementModel, Weibull, Gompertz, Gamma, LogLogistic, AFT, ProportionalHazard
+from relife.lifetime_model import EquilibriumDistribution, AgeReplacementModel, Weibull, Gompertz, Gamma, LogLogistic, AcceleratedFailureTime, ProportionalHazard
 from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 
@@ -19,7 +19,7 @@ def distribution(request):
     return request.param
 
 
-@pytest.fixture(params=[AFT, ProportionalHazard])
+@pytest.fixture(params=[AcceleratedFailureTime, ProportionalHazard])
 def regression(request, distribution):
     return request.param(distribution, coef=(np.log(2), np.log(2)))
 

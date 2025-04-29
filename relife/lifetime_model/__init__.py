@@ -20,4 +20,4 @@ from .frozen_model import (
     FrozenParametricLifetimeModel,
 )
 from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
-from .regression import AFT, ProportionalHazard
+from .regression import AcceleratedFailureTime, ProportionalHazard

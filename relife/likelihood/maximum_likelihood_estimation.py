@@ -122,7 +122,7 @@ def init_params_from_lifetimes(
     lifetime_data: LifetimeData,
 ) -> NDArray[np.float64]:
     from relife.lifetime_model import (
-        AFT,
+        AcceleratedFailureTime,
         Exponential,
         Gamma,
         Gompertz,
@@ -154,7 +154,7 @@ def init_params_from_lifetimes(
             param0[1] = rate
             return param0
 
-        case ProportionalHazard() | AFT():
+        case ProportionalHazard() | AcceleratedFailureTime():
             model: LifetimeRegression
             baseline_param0 = init_params_from_lifetimes(model.baseline, lifetime_data)
             param0 = np.zeros_like(model.params, dtype=np.float64)

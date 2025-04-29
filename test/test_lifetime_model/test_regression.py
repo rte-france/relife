@@ -3,13 +3,13 @@ from pytest import approx
 from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model._base import CovarEffect
-from relife.lifetime_model import Weibull, AFT, ProportionalHazard
+from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard
 
 
 def test_args_names(regression):
     assert regression.args_names == ("covar",)
     assert ProportionalHazard(regression).args_names == ("covar", "covar",)
-    assert AFT(regression).args_names == ("covar", "covar",)
+    assert AcceleratedFailureTime(regression).args_names == ("covar", "covar",)
 
 
 def test_covar_effect(covar):
@@ -25,19 +25,17 @@ def test_covar_effect(covar):
 
     m = 10
 
-    nb_coef = 1
-    covar_effect = CovarEffect(*(0.1,)*nb_coef)
+    covar_effect = CovarEffect(0.1)
     assert isinstance(covar_effect.g(1.), float)
-    assert covar_effect.jac_g(1.).shape == (nb_coef,)
-    assert covar_effect.g(covar(m, nb_coef)).shape == (m, 1)
-    assert covar_effect.jac_g(covar(m, nb_coef)).shape == (nb_coef, m, 1)
+    assert covar_effect.g(covar(m, covar_effect.nb_coef)).shape == (m, 1)
+    assert covar_effect.jac_g(1., asarray=True).shape == (covar_effect.nb_coef,)
+    assert covar_effect.jac_g(covar(m, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, m, 1)
 
-    nb_coef = 3
-    covar_effect = CovarEffect(*(0.1,)*nb_coef)
-    assert isinstance(covar_effect.g(np.ones(nb_coef)), float)
-    assert covar_effect.jac_g(np.ones(nb_coef)).shape == (nb_coef,)
-    assert covar_effect.g(covar(m, nb_coef)).shape == (m, 1)
-    assert covar_effect.jac_g(covar(m, nb_coef)).shape == (nb_coef, m, 1)
+    covar_effect = CovarEffect(0.1, 0.1, 0.1)
+    assert isinstance(covar_effect.g(np.ones(covar_effect.nb_coef)), float)
+    assert covar_effect.g(covar(m, covar_effect.nb_coef)).shape == (m, 1)
+    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef,)
+    assert covar_effect.jac_g(covar(m, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, m, 1)
 
 
 def test_rvs(regression, covar):
@@ -251,7 +249,7 @@ def test_ls_integrate(regression, a, b, covar):
 
 
 def test_aft_pph_weibull_eq(insulator_string_data):
-    weibull_aft = AFT(Weibull()).fit(
+    weibull_aft = AcceleratedFailureTime(Weibull()).fit(
         insulator_string_data[0],
         zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
         event=insulator_string_data[1] == 1,

@@ -409,7 +409,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @property
     def args_names(self) -> tuple[str, ...]:
         from relife.lifetime_model import (
-            AFT,
+            AcceleratedFailureTime,
             AgeReplacementModel,
             LeftTruncatedModel,
             ProportionalHazard,
@@ -424,7 +424,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         #  iterate on self instance and every components
         for model in (self, *nested_models):
             match model:
-                case ProportionalHazard() | AFT():
+                case ProportionalHazard() | AcceleratedFailureTime():
                     args_names += ("covar",)
                 case AgeReplacementModel():
                     args_names += ("ar",)
@@ -585,6 +585,8 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
+        *,
+        asarray : bool = False,
     ) -> (
         float
         | NDArray[np.float64]
@@ -596,6 +598,8 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
+        *,
+        asarray: bool = False,
     ) -> (
         float
         | NDArray[np.float64]
@@ -604,49 +608,52 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     ): ...
 
     def jac_sf(
-        self, time: float | NDArray[np.float64]
+        self, time: float | NDArray[np.float64],
+        *,
+        asarray: bool = False,
     ) -> (
         float
         | NDArray[np.float64]
         | tuple[float, ...]
         | tuple[NDArray[np.float64], ...]
     ):
-        jac_chf, sf = self.jac_chf(time), self.sf(time)
-        if isinstance(jac_chf, tuple):
-            return tuple((-jac * sf for jac in jac_chf))
-        return -jac_chf * sf
+        jac_chf, sf = self.jac_chf(time, asarray=True), self.sf(time)
+        jac = -jac_chf * sf
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
     def jac_cdf(
-        self, time: float | NDArray[np.float64]
+        self, time: float | NDArray[np.float64],
+        *,
+        asarray: bool = False,
     ) -> (
         float
         | NDArray[np.float64]
         | tuple[float, ...]
         | tuple[NDArray[np.float64], ...]
     ):
-        jac_sf = self.jac_sf(time)
-        if isinstance(jac_sf, tuple):
-            return tuple((-_jac_sf for _jac_sf in jac_sf))
-        return -jac_sf
+        jac = -self.jac_sf(time, asarray=True)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
     def jac_pdf(
-        self, time: float | NDArray[np.float64]
+        self, time: float | NDArray[np.float64],
+        *,
+        asarray: bool = False,
     ) -> (
         float
         | NDArray[np.float64]
         | tuple[float, ...]
         | tuple[NDArray[np.float64], ...]
     ):
-        jac_hf, hf = self.jac_hf(time), self.hf(time)
-        jac_sf, sf = self.jac_sf(time), self.sf(time)
-        if isinstance(jac_hf, tuple):  #  jac_sf is tuple too
-            return tuple(
-                (
-                    _jac_hf * sf + _jac_sf * hf
-                    for _jac_hf, _jac_sf in zip(jac_hf, jac_sf)
-                )
-            )
-        return jac_hf * sf + jac_sf * hf
+        jac_hf, hf = self.jac_hf(time, asarray=True), self.hf(time)
+        jac_sf, sf = self.jac_sf(time, asarray=True), self.sf(time)
+        jac = jac_hf * sf + jac_sf * hf
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
     @override
     def ls_integrate(
@@ -723,24 +730,10 @@ class CovarEffect(ParametricModel):
     def g(self, covar: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
         """
         Compute the covariates effect.
-
-        Parameters
-        ----------
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values. Should have shape (k, ) or (m, k) where m is
-            the number of assets and k is the number of covariates.
-
-        Returns
-        -------
-        np.ndarray
-            The covariate effect values, with shape (1,) or (m, 1).
-
-        Raises
-        ------
-        ValueError
-            If the number of covariates does not match the number of parameters.
+        If covar.shape : () or (nb_coef,) => out.shape : (), float
+        If covar.shape : (m, nb_coef) => out.shape : (m, 1)
         """
-        covar: NDArray[np.float64] = np.asarray(covar) # (nb_coef,) or (m, nb_coef)
+        covar: NDArray[np.float64] = np.atleast_1d(np.asarray(covar)) # (nb_coef,) or (m, nb_coef)
         if covar.ndim > 2:
             raise ValueError(
                 f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {covar.shape}"
@@ -756,7 +749,7 @@ class CovarEffect(ParametricModel):
         return expsum.reshape(-1,1)
 
     def jac_g(
-        self, covar: float | NDArray[np.float64]
+        self, covar: float | NDArray[np.float64], *, asarray : bool = False
     ) -> (
         float
         | NDArray[np.float64]
@@ -765,27 +758,15 @@ class CovarEffect(ParametricModel):
     ):
         """
         Compute the Jacobian of the covariates effect.
-
-        Parameters
-        ----------
-        covar : np.ndarray of shape (k, ) or (m, k)
-            Covariate values. Should have shape (k, ) or (m, k) where m is
-            the number of assets and k is the number of covariates.
-
-        Returns
-        -------
-        np.ndarray of shape (nb_params, ) or (m, nb_params)
-            The values of the Jacobian (eventually for m assets).
+        If covar.shape : () or (nb_coef,) => out.shape : (nb_coef,)
+        If covar.shape : (m, nb_coef) => out.shape : (nb_coef, m, 1)
         """
-        covar: NDArray[np.float64] = np.asarray(covar) # (nb_coef,) or (m, nb_coef)
-        if covar.ndim > 2:
-            raise ValueError(
-                f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {covar.shape}"
-            )
         jac = (covar * self.g(covar)).reshape(self.nb_coef, -1, 1) # (nb_coef, m, 1)
         if jac.shape[1] == 1:
-            return jac.reshape(self.nb_coef,)
-        return jac
+            jac = jac.reshape(self.nb_coef,) # (nb_coef,)
+        if not asarray:
+            return np.unstack(jac, axis=0) # tuple
+        return jac # (nb_coef, m, 1)
 
 
 class LifetimeRegression(
@@ -801,8 +782,8 @@ class LifetimeRegression(
         *coefficients: Optional[float],
     ):
         super().__init__()
-        self.covar_effect = CovarEffect(*coefficients)
         self.baseline = baseline
+        self.covar_effect = CovarEffect(*coefficients)
 
     @property
     def fitting_results(self) -> Optional[FittingResults]:
@@ -951,22 +932,6 @@ class LifetimeRegression(
         return super().median(*(covar, *args))
 
     @abstractmethod
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: *Args,
-    ) -> NDArray[np.float64]: ...
-
-    @abstractmethod
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: *Args,
-    ) -> NDArray[np.float64]: ...
-
-    @abstractmethod
     def dhf(
         self,
         time: float | NDArray[np.float64],
@@ -974,31 +939,62 @@ class LifetimeRegression(
         *args: *Args,
     ) -> NDArray[np.float64]: ...
 
+
+    @abstractmethod
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+        asarray : bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]: ...
+
+    @abstractmethod
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+        asarray: bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]: ...
+
     def jac_sf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
-        return -self.jac_chf(time, covar, *args) * self.sf(time, covar, *args)
+        asarray: bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+        jac = -self.jac_chf(time, covar, *args, asarray=True) * self.sf(time, covar, *args)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
     def jac_cdf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
-        return -self.jac_sf(time, covar, *args)
+        asarray: bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+        jac = -self.jac_sf(time, covar, *args, asarray=True)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
     def jac_pdf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
-        return self.jac_hf(time, covar, *args) * self.sf(
+        asarray: bool = False,
+    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+        jac = self.jac_hf(time, covar, *args, asarray=True) * self.sf(
             time, covar, *args
-        ) + self.jac_sf(time, covar, *args) * self.hf(time, covar, *args)
+        ) + self.jac_sf(time, covar, *args, asarray=True) * self.hf(time, covar, *args)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
 
     @override
     def freeze(
