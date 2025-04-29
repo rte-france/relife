@@ -10,30 +10,30 @@ def test_args_names_equilibrium_distribution(equilibrium_distribution):
 
 def test_rvs(distribution):
     m, n = 3, 10
-    assert isinstance(distribution.rvs(seed=21), float)
+    assert distribution.rvs(seed=21).shape == ()
     assert distribution.rvs((n,), seed=21).shape == (n,)
     assert distribution.rvs((m, 1), seed=21).shape == (m, 1)
     assert distribution.rvs((m, n), seed=21).shape == (m, n)
 
 def test_rvs_equilibrium_distribution(equilibrium_distribution):
     m, n = 3, 10
-    assert isinstance(equilibrium_distribution.rvs(seed=21), float)
-    assert equilibrium_distribution.rvs((n,), seed=21).shape == (n,)
-    assert equilibrium_distribution.rvs((m, 1), seed=21).shape == (m, 1)
-    assert equilibrium_distribution.rvs((m, n), seed=21).shape == (m, n)
+    assert equilibrium_distribution.rvs(seed=21).shape == ()
+    assert equilibrium_distribution.rvs(shape=(n,), seed=21).shape == (n,)
+    assert equilibrium_distribution.rvs(shape=(m, 1), seed=21).shape == (m, 1)
+    assert equilibrium_distribution.rvs(shape=(m, n), seed=21).shape == (m, n)
 
-def test_probabiility_functions(distribution, time, probability):
+def test_probability_functions(distribution, time, probability):
     m, n = 3, 10
 
-    assert isinstance(distribution.sf(time()), float)
+    assert distribution.sf(time()).shape == ()
     assert distribution.sf(distribution.median()) == approx(0.5, rel=1e-3)
-    assert isinstance(distribution.hf(time()), float)
-    assert isinstance(distribution.chf(time()), float)
-    assert isinstance(distribution.cdf(time()), float)
-    assert isinstance(distribution.pdf(time()), float)
-    assert isinstance(distribution.ppf(probability()), float)
-    assert isinstance(distribution.ichf(probability()), float)
-    assert isinstance(distribution.isf(probability()), float)
+    assert distribution.hf(time()).shape == ()
+    assert distribution.chf(time()).shape == ()
+    assert distribution.cdf(time()).shape == ()
+    assert distribution.pdf(time()).shape == ()
+    assert distribution.ppf(probability()).shape == ()
+    assert distribution.ichf(probability()).shape == ()
+    assert distribution.isf(probability()).shape == ()
     assert distribution.isf(0.5) == approx(distribution.median())
 
     assert distribution.sf(time(n)).shape == (n,)
@@ -73,15 +73,15 @@ def test_probabiility_functions(distribution, time, probability):
 def test_probability_functions_equilibrium_distribution(equilibrium_distribution, time, probability):
     m, n = 3, 10
 
-    assert isinstance(equilibrium_distribution.sf(time()), float)
+    assert equilibrium_distribution.sf(time()).shape == ()
     assert equilibrium_distribution.sf(equilibrium_distribution.median()) == approx(0.5, rel=1e-3)
-    assert isinstance(equilibrium_distribution.hf(time()), float)
-    assert isinstance(equilibrium_distribution.chf(time()), float)
-    assert isinstance(equilibrium_distribution.cdf(time()), float)
-    assert isinstance(equilibrium_distribution.pdf(time()), float)
-    assert isinstance(equilibrium_distribution.ppf(probability()), float)
-    assert isinstance(equilibrium_distribution.ichf(probability()), float)
-    assert isinstance(equilibrium_distribution.isf(probability()), float)
+    assert equilibrium_distribution.hf(time()).shape == ()
+    assert equilibrium_distribution.chf(time()).shape == ()
+    assert equilibrium_distribution.cdf(time()).shape == ()
+    assert equilibrium_distribution.pdf(time()).shape == ()
+    assert equilibrium_distribution.ppf(probability()).shape == ()
+    assert equilibrium_distribution.ichf(probability()).shape == ()
+    assert equilibrium_distribution.isf(probability()).shape == ()
     assert equilibrium_distribution.isf(0.5) == approx(equilibrium_distribution.median())
 
     assert equilibrium_distribution.sf(time(n)).shape == (n,)
@@ -118,25 +118,25 @@ def test_probability_functions_equilibrium_distribution(equilibrium_distribution
     assert equilibrium_distribution.isf(np.full((m, n), 0.5)) == approx(np.full((m, n), equilibrium_distribution.median()))
 
 def test_moment(distribution, time):
-    assert isinstance(distribution.moment(1), float)
-    assert isinstance(distribution.moment(2), float)
-    assert isinstance(distribution.mean(), float)
-    assert isinstance(distribution.var(), float)
-    assert isinstance(distribution.median(), float)
+    assert distribution.moment(1).shape == ()
+    assert distribution.moment(2).shape == ()
+    assert distribution.mean().shape == ()
+    assert distribution.var().shape == ()
+    assert distribution.median().shape == ()
 
 @pytest.mark.xfail
 def test_moment_equilibrium_distribution(equilibrium_distribution, time):
-    assert isinstance(equilibrium_distribution.moment(1), float)
-    assert isinstance(equilibrium_distribution.moment(2), float)
-    assert isinstance(equilibrium_distribution.mean(), float)
-    assert isinstance(equilibrium_distribution.var(), float)
-    assert isinstance(equilibrium_distribution.median(), float)
+    assert equilibrium_distribution.moment(1).shape == ()
+    assert equilibrium_distribution.moment(2).shape == ()
+    assert equilibrium_distribution.mean().shape == ()
+    assert equilibrium_distribution.var().shape == ()
+    assert equilibrium_distribution.median().shape == ()
 
 
 def test_derivative(distribution, time):
     m, n = 3, 10
 
-    assert isinstance(distribution.dhf(time()), float)
+    assert distribution.dhf(time()).shape == ()
     assert distribution.jac_sf(time(), asarray=True).shape == (distribution.nb_params,)
     assert distribution.jac_hf(time(), asarray=True).shape == (distribution.nb_params,)
     assert distribution.jac_chf(time(), asarray=True).shape == (distribution.nb_params,)
@@ -171,7 +171,7 @@ def test_ls_integrate(distribution, a, b):
 
     # integral_a^b dF(x)
     integration = distribution.ls_integrate(np.ones_like, a(), b())
-    assert isinstance(integration, float)
+    assert integration.shape == ()
     assert integration == approx(distribution.cdf(b()) - distribution.cdf(a()))
     # integral_0^inf x*dF(x)
     integration = distribution.ls_integrate( lambda x: x, 0.0, np.inf, deg=100)

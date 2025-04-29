@@ -35,61 +35,61 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
     def args_names(self) -> tuple[()]:
         return ()
 
-    def hf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.hf(time, *self.args)
 
-    def chf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.chf(time, *self.args)
 
-    def sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.sf(time, *self.args)
 
-    def pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.pdf(time, *self.args)
 
     @override
-    def mrl(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.mrl(time, *self.args)
 
     @override
-    def moment(self, n: int) -> NDArray[np.float64]:
+    def moment(self, n: int) -> np.float64 | NDArray[np.float64]:
         return self.baseline.moment(n, *self.args)
 
     @override
-    def mean(self) -> NDArray[np.float64]:
+    def mean(self) -> np.float64 | NDArray[np.float64]:
         return self.baseline.moment(1, *self.args)
 
     @override
-    def var(self) -> NDArray[np.float64]:
+    def var(self) -> np.float64 | NDArray[np.float64]:
         return (
             self.baseline.moment(2, *self.args)
             - self.baseline.moment(1, *self.args) ** 2
         )
 
     @override
-    def isf(self, probability: float | NDArray[np.float64]):
+    def isf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.isf(probability, *self.args)
 
     @override
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]):
+    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.ichf(cumulative_hazard_rate, *self.args)
 
     @override
-    def cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.cdf(time, *self.args)
 
     @override
     def rvs(
         self, shape: int | tuple[int, int], seed: Optional[int] = None
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return self.baseline.rvs(shape, *self.args, seed=seed)
 
     @override
-    def ppf(self, probability: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def ppf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.baseline.ppf(probability, *self.args)
 
     @override
-    def median(self) -> NDArray[np.float64]:
+    def median(self) -> np.float64 | NDArray[np.float64]:
         return self.baseline.median(*self.args)
 
     @override
@@ -99,7 +99,7 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
         deg: int = 10,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
 
         return self.baseline.ls_integrate(func, a, b, *self.args, deg=deg)
 
@@ -107,60 +107,61 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
 class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):
     baseline: LifetimeDistribution
 
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+    ) -> np.float64 | NDArray[np.float64]:
+        return self.baseline.dhf(time)
+
+
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_hf(time)
 
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_chf(time)
 
-    def dhf(
-        self,
-        time: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
-        return self.baseline.dhf(time)
-
-    def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_sf(time)
 
-    def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_cdf(time)
 
-    def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_pdf(time)
 
 
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
     baseline: LifetimeRegression
 
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+    ) -> np.float64 | NDArray[np.float64]:
+        return self.baseline.dhf(time, self.args[0], *self.args[1:])
+
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_hf(time, self.args[0], *self.args[1:])
 
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_chf(time, self.args[0], *self.args[1:])
 
-    def dhf(
-        self,
-        time: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
-        return self.baseline.dhf(time, self.args[0], *self.args[1:])
-
-    def jac_sf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_sf(time, self.args[0], *self.args[1:])
 
-    def jac_cdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_cdf(time, self.args[0], *self.args[1:])
 
-    def jac_pdf(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def jac_pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.baseline.jac_pdf(time, self.args[0], *self.args[1:])

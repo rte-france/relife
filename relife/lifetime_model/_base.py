@@ -13,7 +13,6 @@ from typing import (
 )
 
 import numpy as np
-from ipykernel import kernel_protocol_version
 from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
@@ -59,7 +58,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @abstractmethod
     def hf(
         self, time: float | NDArray[np.float64], *args: *Args
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         match self:
             case ParametricLifetimeModel(pdf=_, sf=_):
                 return self.pdf(time, *args) / self.sf(time, *args)
@@ -82,7 +81,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @abstractmethod
     def sf(
         self, time: float | NDArray[np.float64], *args: *Args
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         match self:
             case ParametricLifetimeModel(chf=_):
                 return np.exp(
@@ -104,7 +103,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @abstractmethod
     def chf(
         self, time: float | NDArray[np.float64], *args: *Args
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         match self:
             case ParametricLifetimeModel(sf=_):
                 return -np.log(self.sf(time, *args))
@@ -127,7 +126,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @abstractmethod
     def pdf(
         self, time: float | NDArray[np.float64], *args: *Args
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         try:
             return self.sf(time, *args) * self.hf(time, *args)
         except NotImplementedError as err:
@@ -140,7 +139,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     def mrl(
         self, time: float | NDArray[np.float64], *args: *Args
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
         if sf.ndim < 2:  # 2d to 1d or 0d
@@ -151,7 +150,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         probability: float | NDArray[np.float64],
         *args: *Args,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         """Inverse survival function.
 
         Parameters
@@ -174,7 +173,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
         *args: *Args,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return newton(
             lambda x: self.chf(x, *args) - cumulative_hazard_rate,
             x0=np.zeros_like(cumulative_hazard_rate),
@@ -182,7 +181,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     def cdf(
         self, time: float | NDArray[np.float64], *args: *Args
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return 1 - self.sf(time, *args)
 
     def rvs(
@@ -191,7 +190,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         *args: *Args,
         shape: int | tuple[int, int] = 1,
         seed: Optional[int] = None,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         """Random variable sample.
 
         Parameters
@@ -247,7 +246,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         probability: float | NDArray[np.float64],
         *args: *Args,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
     def ls_integrate(
@@ -257,7 +256,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         b: float | NDArray[np.float64] = np.inf,
         *args: *Args,
         deg: int = 10,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         r"""
         Lebesgue-Stieltjes integration.
 
@@ -344,17 +343,13 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
             integrand, arr_a, arr_b, deg=deg
         )  #  (d_1, ..., d_i), (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
         is_inf, _ = np.broadcast_arrays(is_inf, integration)
-        integration = np.where(
+        return np.where(
             is_inf,
             integration + unweighted_laguerre_quadrature(integrand, arr_b, deg=deg),
             integration,
         )
 
-        if integration.shape == ():
-            return integration.item()
-        return integration
-
-    def moment(self, n: int, *args: *Args) -> float | NDArray[np.float64]:
+    def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
         """n-th order moment
 
         Parameters
@@ -377,13 +372,13 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
             deg=100,
         )  #  high degree of polynome to ensure high precision
 
-    def mean(self, *args: *Args) -> float | NDArray[np.float64]:
+    def mean(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.moment(1, *args)
 
-    def var(self, *args: *Args) -> float | NDArray[np.float64]:
+    def var(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
-    def median(self, *args: *Args) -> float | NDArray[np.float64]:
+    def median(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.ppf(np.array(0.5), *args)
 
     def freeze(
@@ -481,13 +476,13 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         self._fitting_results = value
 
     @override
-    def sf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
+    def sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return super().sf(time)
 
     @override
     def isf(
         self, probability: float | NDArray[np.float64]
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         """Inverse survival function.
 
         Parameters
@@ -505,16 +500,16 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return self.ichf(cumulative_hazard_rate)
 
     @override
-    def cdf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
+    def cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return super().cdf(time)
 
-    def pdf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
+    def pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return super().pdf(time)
 
     @override
     def ppf(
         self, probability: float | NDArray[np.float64]
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         """Percent point function.
 
         The percent point corresponds to the inverse of the cumulative distribution function.
@@ -535,7 +530,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @override
     def rvs(
         self, /, shape: int | tuple[int, int] = 1, seed: Optional[int] = None
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         """Random variable sampling.
 
         Parameters
@@ -554,7 +549,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return super().rvs(shape=shape, seed=seed)
 
     @override
-    def moment(self, n: int) -> float:
+    def moment(self, n: int) -> np.float64:
         """
         n-th order moment of the distribution.
 
@@ -572,14 +567,14 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return super().moment(n)
 
     @override
-    def median(self) -> float:
+    def median(self) -> np.float64:
         return super().median()
 
     @abstractmethod
     def dhf(
         self,
         time: float | NDArray[np.float64],
-    ) -> float | NDArray[np.float64]: ...
+    ) -> np.float64 | NDArray[np.float64]: ...
 
     @abstractmethod
     def jac_hf(
@@ -588,9 +583,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         *,
         asarray : bool = False,
     ) -> (
-        float
+        np.float64
         | NDArray[np.float64]
-        | tuple[float, ...]
+        | tuple[np.float64, ...]
         | tuple[NDArray[np.float64], ...]
     ): ...
 
@@ -601,9 +596,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         *,
         asarray: bool = False,
     ) -> (
-        float
+        np.float64
         | NDArray[np.float64]
-        | tuple[float, ...]
+        | tuple[np.float64, ...]
         | tuple[NDArray[np.float64], ...]
     ): ...
 
@@ -612,9 +607,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         *,
         asarray: bool = False,
     ) -> (
-        float
+        np.float64
         | NDArray[np.float64]
-        | tuple[float, ...]
+        | tuple[np.float64, ...]
         | tuple[NDArray[np.float64], ...]
     ):
         jac_chf, sf = self.jac_chf(time, asarray=True), self.sf(time)
@@ -628,9 +623,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         *,
         asarray: bool = False,
     ) -> (
-        float
+        np.float64
         | NDArray[np.float64]
-        | tuple[float, ...]
+        | tuple[np.float64, ...]
         | tuple[NDArray[np.float64], ...]
     ):
         jac = -self.jac_sf(time, asarray=True)
@@ -643,9 +638,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         *,
         asarray: bool = False,
     ) -> (
-        float
+        np.float64
         | NDArray[np.float64]
-        | tuple[float, ...]
+        | tuple[np.float64, ...]
         | tuple[NDArray[np.float64], ...]
     ):
         jac_hf, hf = self.jac_hf(time, asarray=True), self.hf(time)
@@ -727,7 +722,7 @@ class CovarEffect(ParametricModel):
     def nb_coef(self) -> int:
         return self.nb_params
 
-    def g(self, covar: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
+    def g(self, covar: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         """
         Compute the covariates effect.
         If covar.shape : () or (nb_coef,) => out.shape : (), float
@@ -744,16 +739,16 @@ class CovarEffect(ParametricModel):
                 f"Invalid covar. Number of covar does not match number of coefficients. Got {self.nb_coef} nb_coef but covar shape is {covar.shape}"
             )
         expsum = np.exp(np.sum(self.params * covar, axis=-1))  # () or (m, 1)
-        if isinstance(expsum, float):
+        if isinstance(expsum, np.float64):
             return expsum
         return expsum.reshape(-1,1)
 
     def jac_g(
         self, covar: float | NDArray[np.float64], *, asarray : bool = False
     ) -> (
-        float
+        np.float64
         | NDArray[np.float64]
-        | tuple[float, ...]
+        | tuple[np.float64, ...]
         | tuple[NDArray[np.float64], ...]
     ):
         """
@@ -803,7 +798,7 @@ class LifetimeRegression(
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().sf(time, covar, *args)
 
     @override
@@ -812,7 +807,7 @@ class LifetimeRegression(
         probability: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         """Inverse survival function.
 
         Parameters
@@ -840,7 +835,7 @@ class LifetimeRegression(
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().cdf(time, *(covar, *args))
 
     def pdf(
@@ -848,7 +843,7 @@ class LifetimeRegression(
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().pdf(time, *(covar, *args))
 
     @override
@@ -857,7 +852,7 @@ class LifetimeRegression(
         probability: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().ppf(probability, *(covar, *args))
 
     @override
@@ -866,7 +861,7 @@ class LifetimeRegression(
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().mrl(time, *(covar, *args))
 
     @override
@@ -877,7 +872,7 @@ class LifetimeRegression(
         *args: *Args,
         shape: int | tuple[int, int] = 1,
         seed: Optional[int] = None,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         """
         Random variable sampling.
 
@@ -910,25 +905,25 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: *Args,
         deg: int = 10,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().ls_integrate(func, a, b, *(covar, *args), deg=deg)
 
     @override
     def mean(
         self, covar: float | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().mean(*(covar, *args))
 
     @override
     def var(
         self, covar: float | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().var(*(covar, *args))
 
     @override
     def median(
         self, covar: float | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return super().median(*(covar, *args))
 
     @abstractmethod
@@ -937,7 +932,7 @@ class LifetimeRegression(
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]: ...
+    ) -> np.float64 | NDArray[np.float64]: ...
 
 
     @abstractmethod
@@ -947,7 +942,7 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray : bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]: ...
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]: ...
 
     @abstractmethod
     def jac_chf(
@@ -956,7 +951,7 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]: ...
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]: ...
 
     def jac_sf(
         self,
@@ -964,7 +959,7 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         jac = -self.jac_chf(time, covar, *args, asarray=True) * self.sf(time, covar, *args)
         if not asarray:
             return np.unstack(jac)
@@ -976,7 +971,7 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         jac = -self.jac_sf(time, covar, *args, asarray=True)
         if not asarray:
             return np.unstack(jac)
@@ -988,7 +983,7 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         jac = self.jac_hf(time, covar, *args, asarray=True) * self.sf(
             time, covar, *args
         ) + self.jac_sf(time, covar, *args, asarray=True) * self.hf(time, covar, *args)

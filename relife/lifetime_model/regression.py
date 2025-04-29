@@ -76,7 +76,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
     def chf(
@@ -84,7 +84,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         # (m,)
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
@@ -94,7 +94,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         cumulative_hazard_rate: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return self.baseline.ichf(
             cumulative_hazard_rate / self.covar_effect.g(covar), *args
         )
@@ -104,7 +104,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
 
     def jac_hf(
@@ -113,7 +113,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray : bool = False,
-    )  -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+    )  -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
         g = self.covar_effect.g(covar) # () or (m, 1)
         # p == baseline.nb_params
@@ -130,7 +130,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
             baseline_hf * jac_g, # (c, m, n)
         ), axis=0) # (p + c, m, n)
 
-        jac = np.squeeze(jac) # (p + c,), (p + c, n), (p + c, m, n)
+        jac = jac.reshape(self.nb_params, *np.broadcast_shapes(g.shape, baseline_hf.shape)) # (p + c,), (p + c, n), (p + c, m, n)
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -141,7 +141,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray : bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
         baseline_chf = self.baseline.chf(time, *args) # (), (n,) or (m, n)
         # c == self.nb_coef
@@ -155,7 +155,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
             g * baseline_jac_chf, # (p, m, n)
             baseline_chf * jac_g, # (c, m, n)
         ), axis = 0) # (p + c, m, n)
-        jac = np.squeeze(jac) # (p + c,), (p + c, n), (p + c, m, n)
+        jac = jac.reshape(self.nb_params, *np.broadcast_shapes(g.shape, baseline_chf.shape)) # (p + c,), (p + c, n), (p + c, m, n)
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -212,7 +212,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
 
@@ -221,7 +221,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
 
@@ -231,7 +231,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         cumulative_hazard_rate: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.ichf(
             cumulative_hazard_rate, *args
         )
@@ -241,7 +241,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-    ) -> float | NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
 
@@ -252,7 +252,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray : bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
         g = self.covar_effect.g(covar) # () or (m, 1)
         t0 = time / g # (), (m, n)
@@ -268,7 +268,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
             baseline_jac_hf_t0 / g, # (p, m, n)
             -jac_g/g**2*(baseline_hf_t0 + t0*baseline_dhf_t0), # (c, m, n)
         ), axis=0) # (p + c, m, n)
-        jac = np.squeeze(jac) # (p + c,), (p + c, n), (p + c, m, n)
+        jac = jac.reshape(self.nb_params, np.broadcast_shapes(g.shape, t0.shape)) # (p + c,), (p + c, n), (p + c, m, n)
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -280,7 +280,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> float | NDArray[np.float64] | tuple[float, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
         g = self.covar_effect.g(covar)  # () or (m, 1)
         t0 = time / g  #  (), (m, n)
@@ -295,6 +295,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
             baseline_jac_chf_t0, # (p, m, n)
             -jac_g/g * t0 * baseline_hf_t0, # (c, m, n)
         ),axis=0) # (p + c, m, n)
+        jac = jac.reshape(self.nb_params, np.broadcast_shapes(g.shape, t0.shape)) # (p + c,), (p + c, n), (p + c, m, n)
         if not asarray:
             return np.unstack(jac)
         return jac
