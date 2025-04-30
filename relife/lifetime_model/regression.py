@@ -22,6 +22,36 @@ if TYPE_CHECKING:
 Args = TypeVarTuple("Args")
 
 
+def _broadcast_time_covar(
+    time : float| NDArray[np.float64],
+    covar:  float| NDArray[np.float64],
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    time = np.atleast_2d(np.asarray(time))  #  (m, n)
+    covar = np.atleast_2d(np.asarray(covar))  #  (m, nb_coef)
+    match [time.shape[0], covar.shape[0]]:
+        case [1, _]:
+            time = np.repeat(time, covar.shape[0], axis=0)
+        case [_, 1]:
+            covar = np.repeat(covar, time.shape[0], axis=0)
+        case [m1, m2] if m1 != m2:
+            raise ValueError(f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets")
+    return time, covar
+
+
+def _broadcast_time_covar_shapes(
+    time : float| NDArray[np.float64],
+    covar:  float| NDArray[np.float64],
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    time = np.asarray(time)  #  (), (n,) or (m, n)
+    covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
+    m_time_shape = () if time.ndim <= 1 else (time.shape[0],) # () or (m,)
+    m_covar_shape = () if covar.ndim <= 1 else (covar.shape[0],) # () or (m,)
+    n_shape = ()
+    n_shape += (time.shape[0],) if time.ndim >= 1 else ()
+    m_shape = max(m_time_shape, m_covar_shape)
+    return m_shape + n_shape
+
+
 # type ParametricLifetimeModel[float|NDArray[np.float64], *Ts]
 class ProportionalHazard(LifetimeRegression[*Args]):
     r"""
@@ -115,18 +145,8 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         asarray : bool = False,
     )  -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.atleast_2d(np.asarray(time)) # (m, n)
-        covar = np.atleast_2d(np.asarray(covar)) # (m, nb_coef)
-
-        match [time.shape[0], covar.shape[0]]:
-            case [1, _]:
-                time = np.repeat(time,covar.shape[0], axis=0)
-            case [_, 1]:
-                covar = np.repeat(covar, time.shape[0], axis=0)
-            case [m1, m2] if m1 != m2:
-                raise ValueError(f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets")
-        m, n = time.shape
-        # covar : (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time, covar)
+        time, covar = _broadcast_time_covar(time, covar)
 
         g = self.covar_effect.g(covar) # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
@@ -134,19 +154,14 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         baseline_hf = self.baseline.hf(time, *args) # (m, n)
         # p == baseline.nb_params
         baseline_jac_hf = self.baseline.jac_hf(time, *args, asarray=True) # (p, m, n)
-        jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
+        jac_g = np.repeat(jac_g, baseline_hf.shape[-1], axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
             baseline_hf * jac_g,  #  (nb_coef, m, n)
             g * baseline_jac_hf, # (p, m, n)
         ), axis=0) # (p + nb_coef, m, n)
 
-        match [m, n]:
-            case [1, 1]:
-                jac = jac.reshape(self.nb_params) # (p + nb_coef,)
-            case [1, _]:
-                jac = jac.reshape(self.nb_params, n)  #  (p + nb_coef, n)
-
+        jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -159,37 +174,22 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         asarray : bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.atleast_2d(np.asarray(time)) # (m, n)
-        covar = np.atleast_2d(np.asarray(covar)) # (m, nb_coef)
-
-        match [time.shape[0], covar.shape[0]]:
-            case [1, _]:
-                time = np.repeat(time,covar.shape[0], axis=0)
-            case [_, 1]:
-                covar = np.repeat(covar, time.shape[0], axis=0)
-            case [m1, m2] if m1 != m2:
-                raise ValueError(f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets")
-        m, n = time.shape
-        # covar : (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time, covar)
+        time, covar = _broadcast_time_covar(time, covar)
 
         g = self.covar_effect.g(covar) # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
         baseline_chf = self.baseline.chf(time, *args) # (m, n)
         #  p == baseline.nb_params
         baseline_jac_chf = self.baseline.jac_chf(time, *args, asarray=True) # (p, m, n)
-        jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
+        jac_g = np.repeat(jac_g, baseline_chf.shape[-1], axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
             baseline_chf * jac_g,  #  (nb_coef, m, n)
             g * baseline_jac_chf, # (p, m, n)
         ), axis = 0) # (p + c, m, n)
 
-        match [m, n]:
-            case [1, 1]:
-                jac = jac.reshape(self.nb_params) # (p + nb_coef,)
-            case [1, _]:
-                jac = jac.reshape(self.nb_params, n)  #  (p + nb_coef, n)
-
+        jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -288,18 +288,8 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         asarray : bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.atleast_2d(np.asarray(time)) # (m, n)
-        covar = np.atleast_2d(np.asarray(covar)) # (m, nb_coef)
-
-        match [time.shape[0], covar.shape[0]]:
-            case [1, _]:
-                time = np.repeat(time,covar.shape[0], axis=0)
-            case [_, 1]:
-                covar = np.repeat(covar, time.shape[0], axis=0)
-            case [m1, m2] if m1 != m2:
-                raise ValueError(f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets")
-        m, n = time.shape
-        # covar : (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time, covar)
+        time, covar = _broadcast_time_covar(time, covar)
 
         g = self.covar_effect.g(covar) # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
@@ -308,19 +298,14 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         baseline_jac_hf_t0 = self.baseline.jac_hf(t0, *args, asarray=True) # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0, *args) # (m, n)
         baseline_dhf_t0 = self.baseline.dhf(t0, *args) # (m, n)
-        jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
+        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
             -jac_g / g ** 2 * (baseline_hf_t0 + t0 * baseline_dhf_t0),  #  (nb_coef, m, n)
             baseline_jac_hf_t0 / g, # (p, m, n)
         ), axis=0) # (p + c, m, n)
 
-        match [m, n]:
-            case [1, 1]:
-                jac = jac.reshape(self.nb_params) # (p + nb_coef,)
-            case [1, _]:
-                jac = jac.reshape(self.nb_params, n)  #  (p + nb_coef, n)
-
+        jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -334,18 +319,8 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.atleast_2d(np.asarray(time)) # (m, n)
-        covar = np.atleast_2d(np.asarray(covar)) # (m, nb_coef)
-
-        match [time.shape[0], covar.shape[0]]:
-            case [1, _]:
-                time = np.repeat(time,covar.shape[0], axis=0)
-            case [_, 1]:
-                covar = np.repeat(covar, time.shape[0], axis=0)
-            case [m1, m2] if m1 != m2:
-                raise ValueError(f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets")
-        m, n = time.shape
-        # covar : (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time, covar)
+        time, covar = _broadcast_time_covar(time, covar)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
@@ -353,19 +328,14 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         # p == baseline.nb_params
         baseline_jac_chf_t0 = self.baseline.jac_chf(t0, *args, asarray=True) # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0, *args)  #  (m, n)
-        jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
+        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
             -jac_g / g * t0 * baseline_hf_t0,  #  (nb_coef, m, n)
             baseline_jac_chf_t0, # (p, m, n)
         ),axis=0) # (p + nb_coef, m, n)
 
-        match [m, n]:
-            case [1, 1]:
-                jac = jac.reshape(self.nb_params) # (p + nb_coef,)
-            case [1, _]:
-                jac = jac.reshape(self.nb_params, n)  #  (p + nb_coef, n)
-
+        jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
             return np.unstack(jac)
         return jac

@@ -724,6 +724,16 @@ class CovarEffect(ParametricModel):
         return self.nb_params
 
     def _reshape_covar(self, covar : NDArray[np.float64]) -> NDArray[np.float64]:
+
+        return
+
+    def g(self, covar: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        """
+        Compute the covariates effect.
+        If covar.shape : () or (nb_coef,) => out.shape : (), float
+        If covar.shape : (m, nb_coef) => out.shape : (m, 1)
+        """
+        covar: NDArray[np.float64] = np.asarray(covar) # (nb_coef,) or (m, nb_coef)
         if covar.ndim > 2:
             raise ValueError(
                 f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {covar.shape}"
@@ -733,19 +743,10 @@ class CovarEffect(ParametricModel):
             raise ValueError(
                 f"Invalid covar. Number of covar does not match number of coefficients. Got {self.nb_coef} nb_coef but covar shape is {covar.shape}"
             )
-        return covar.reshape(self.nb_coef, -1, 1) # (nb_coef, m, 1)
-
-    def g(self, covar: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
-        """
-        Compute the covariates effect.
-        If covar.shape : () or (nb_coef,) => out.shape : (), float
-        If covar.shape : (m, nb_coef) => out.shape : (m, 1)
-        """
-        covar: NDArray[np.float64] = np.asarray(covar) # (), (nb_coef,) or (m, nb_coef)
-        expsum = np.exp(np.sum(self.params * self._reshape_covar(covar), axis=0))  # (m, 1)
+        g = np.exp(np.sum(self.params * covar, axis=-1, keepdims=True))  # (m, 1)
         if covar.ndim <= 1:
-            return np.float64(expsum.item())  #  ()
-        return expsum # (m, 1)
+            return np.float64(g.item())
+        return g
 
     def jac_g(
         self, covar: float | NDArray[np.float64], *, asarray : bool = False
@@ -761,9 +762,10 @@ class CovarEffect(ParametricModel):
         If covar.shape : (m, nb_coef) => out.shape : (nb_coef, m, 1)
         """
         covar: NDArray[np.float64] = np.asarray(covar) # (), (nb_coef,) or (m, nb_coef)
-        expsum = np.exp(np.sum(self.params * self._reshape_covar(covar), axis=0))  # (m, 1)
-        jac = covar * expsum  # (nb_coef, m, 1)
-        jac = jac.reshape((self.nb_coef,) + covar.shape) # (nb_coef,) or (nb_coef, m, 1)
+        g = self.g(covar) # () or (m, 1)
+        jac = covar.reshape(self.nb_coef, -1, 1) * g # (nb_coef, m, 1)
+        if covar.ndim <= 1:
+            jac = jac.reshape(self.nb_coef) # (nb_coef,) or (nb_coef, m, 1)
         if not asarray:
             return np.unstack(jac, axis=0) # tuple
         return jac # (nb_coef, m, 1)

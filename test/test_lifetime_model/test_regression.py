@@ -7,128 +7,136 @@ from relife.lifetime_model._base import CovarEffect
 from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard
 
 
-# def test_args_names(regression):
-#     assert regression.args_names == ("covar",)
-#     assert ProportionalHazard(regression).args_names == ("covar", "covar",)
-#     assert AcceleratedFailureTime(regression).args_names == ("covar", "covar",)
-#
-#
+def test_args_names(regression):
+    assert regression.args_names == ("covar",)
+    assert ProportionalHazard(regression).args_names == ("covar", "covar",)
+    assert AcceleratedFailureTime(regression).args_names == ("covar", "covar",)
+
+
 
 def test_covar_effect(covar):
     """
-    covar : (nb_coef,)
-    g : float
-    jac_g : (nb_coef,)
+    covar : () or (nb_coef,)
+    => g : ()
+    => jac_g : (nb_coef,)
 
     covar : (m, nb_coef)
-    g : (m, 1)
-    jac_g : (nb_coef, m, 1)
+    => g : (m, 1)
+    => jac_g : (nb_coef, m, 1)
     """
 
-    m = 10
+    covar_effect = CovarEffect(0.1, 0.1)
 
-    covar_effect = CovarEffect(0.1)
-    assert isinstance(covar_effect.g(1.), float)
-    assert covar_effect.g(covar(m, covar_effect.nb_coef)).shape == (m, 1)
-    assert covar_effect.jac_g(1., asarray=True).shape == (covar_effect.nb_coef,)
-    assert covar_effect.jac_g(covar(m, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, m, 1)
+    assert covar_effect.g(np.ones(covar_effect.nb_coef)).shape == ()
+    assert covar_effect.g(covar(1, covar_effect.nb_coef)).shape == (1, 1)
+    assert covar_effect.g(covar(10, covar_effect.nb_coef)).shape == (10, 1)
 
-    covar_effect = CovarEffect(0.1, 0.1, 0.1)
-    assert isinstance(covar_effect.g(np.ones(covar_effect.nb_coef)), float)
-    assert covar_effect.g(covar(m, covar_effect.nb_coef)).shape == (m, 1)
     assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef,)
-    assert covar_effect.jac_g(covar(m, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, m, 1)
-#
-#
-# def test_rvs(regression, covar):
-#     m,n = 10, 3
-#     assert regression.rvs(covar(m, regression.nb_coef), seed=21).shape == (m, 1)
-#     assert regression.rvs(covar(m, regression.nb_coef), shape=(m,1), seed=21).shape == (m, 1)
-#     assert regression.rvs(covar(m, regression.nb_coef), shape=(m,n), seed=21).shape == (m, n)
-#
-#
-# def test_probability_functions(regression, time, covar, probability):
-#     m,n = 10, 3
-#
-#     # covar(m, regression.nb_coef).shape == (m, k)
-#     assert regression.sf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.sf(regression.median(covar(m, regression.nb_coef)), covar(m, regression.nb_coef)) == approx(np.full((m,1), 0.5), rel=1e-3)
-#     assert regression.hf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.chf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.cdf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.pdf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.ppf(probability(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.ichf(probability(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.isf(probability(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.isf(0.5, covar(m, regression.nb_coef)) == approx(regression.median(covar(m, regression.nb_coef)))
-#
-#     # covar(m, regression.nb_coef).shape == (m, k)
-#     assert regression.sf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.hf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.chf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.cdf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.pdf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.ppf(probability(n,), covar(m, regression.nb_coef),).shape == (m, n)
-#     assert regression.ichf(probability(n,), covar(m, regression.nb_coef),).shape == (m, n)
-#
-#     # covar(m, regression.nb_coef).shape == (m, k)
-#     assert regression.sf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.hf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.chf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.cdf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.pdf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.ppf(probability(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.ichf(probability(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.isf(probability(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.isf(np.full((m, 1), 0.5), covar(m, regression.nb_coef)) == approx(regression.median(covar(m, regression.nb_coef)))
-#
-#     # covar(m, regression.nb_coef).shape == (m, k)
-#     assert regression.sf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.hf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.chf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.cdf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.pdf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.ppf(probability(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.ichf(probability(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.isf(probability(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.isf(np.full((m, n), 0.5), covar(m, regression.nb_coef)) == approx(
-#         np.broadcast_to(regression.median(covar(m, regression.nb_coef)), (m, n))
-#     )
-#
-#
-# def test_derivative(regression, time, covar):
-#     m, n = 5, 10
-#
-#     assert regression.dhf(time(), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.jac_sf(time(), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_hf(time(), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_chf(time(), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_cdf(time(), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_pdf(time(), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#
-#
-#     assert regression.dhf(time(n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.jac_sf(time(n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_hf(time(n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_chf(time(n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_cdf(time(n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_pdf(time(n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#
-#     assert regression.dhf(time(m, 1), covar(m, regression.nb_coef)).shape == (m, 1)
-#     assert regression.jac_sf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_hf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_chf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_cdf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#     assert regression.jac_pdf(time(m, 1), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, 1)
-#
-#     assert regression.dhf(time(m, n), covar(m, regression.nb_coef)).shape == (m, n)
-#     assert regression.jac_sf(time(m, n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_hf(time(m, n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_chf(time(m, n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_cdf(time(m, n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#     assert regression.jac_pdf(time(m, n), covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
-#
-#
+    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef,)
+    assert covar_effect.jac_g(covar(1, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, 1, 1)
+    assert covar_effect.jac_g(covar(10, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, 10, 1)
+
+
+def test_rvs(regression, covar):
+    m,n = 10, 3
+    assert regression.rvs(covar(m, regression.nb_coef), seed=21).shape == (m, 1)
+    assert regression.rvs(covar(m, regression.nb_coef), shape=(m,1), seed=21).shape == (m, 1)
+    assert regression.rvs(covar(m, regression.nb_coef), shape=(m,n), seed=21).shape == (m, n)
+
+def test_sf(regression, time, covar):
+    assert regression.sf(time, covar(regression.nb_coef,)).shape == time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.sf(time, covar(m, regression.nb_coef)).shape == (m, n)
+
+def test_hf(regression, time, covar):
+    assert regression.hf(time, covar(regression.nb_coef,)).shape == time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.hf(time, covar(m, regression.nb_coef)).shape == (m, n)
+
+def test_chf(regression, time, covar):
+    assert regression.chf(time, covar(regression.nb_coef,)).shape == time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.chf(time, covar(m, regression.nb_coef)).shape == (m, n)
+
+def test_cdf(regression, time, covar):
+    assert regression.cdf(time, covar(regression.nb_coef,)).shape == time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.cdf(time, covar(m, regression.nb_coef)).shape == (m, n)
+
+def test_pdf(regression, time, covar):
+    assert regression.pdf(time, covar(regression.nb_coef,)).shape == time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.pdf(time, covar(m, regression.nb_coef)).shape == (m, n)
+
+def test_ppf(regression, probability, covar):
+    assert regression.ppf(probability, covar(regression.nb_coef,)).shape == probability.shape
+    m = 1 if probability.ndim <=1 else probability.shape[0]
+    n = probability.size if probability.ndim <=1 else probability.shape[1]
+    assert regression.ppf(probability, covar(m, regression.nb_coef)).shape == (m, n)
+
+def test_ichf(regression, probability, covar):
+    assert regression.ichf(probability, covar(regression.nb_coef,)).shape == probability.shape
+    m = 1 if probability.ndim <=1 else probability.shape[0]
+    n = probability.size if probability.ndim <=1 else probability.shape[1]
+    assert regression.ichf(probability, covar(m, regression.nb_coef)).shape == (m, n)
+
+def test_isf(regression, probability, covar):
+    assert regression.isf(probability, covar(regression.nb_coef,)).shape == probability.shape
+    assert regression.isf(np.full(probability.shape, 0.5), covar(regression.nb_coef,)) == approx(
+        np.broadcast_to(regression.median(covar(regression.nb_coef,)), probability.shape)
+    )
+    m = 1 if probability.ndim <=1 else probability.shape[0]
+    n = probability.size if probability.ndim <=1 else probability.shape[1]
+    assert regression.isf(probability, covar(m, regression.nb_coef)).shape == (m, n)
+    assert regression.isf(np.full(probability.shape, 0.5), covar(m, regression.nb_coef)) == approx(
+        np.broadcast_to(regression.median(covar(m, regression.nb_coef)), (m, n))
+    )
+
+
+def dhf(regression, time, covar):
+    assert regression.dhf(time, covar(regression.nb_coef,)).shape == time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.dhf(time, covar(m, regression.nb_coef)).shape == (m, n)
+
+def jac_sf(regression, time, covar):
+    assert regression.jac_sf(time, covar(regression.nb_coef,), asarray=True).shape == (regression.nb_params,) + time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.jac_sf(time, covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
+
+def jac_hf(regression, time, covar):
+    assert regression.jac_hf(time, covar(regression.nb_coef,), asarray=True).shape == (regression.nb_params,) + time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.jac_hf(time, covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
+
+def jac_chf(regression, time, covar):
+    assert regression.jac_chf(time, covar(regression.nb_coef,), asarray=True).shape == (regression.nb_params,) + time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.jac_chf(time, covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
+
+def jac_cdf(regression, time, covar):
+    assert regression.jac_cdf(time, covar(regression.nb_coef,), asarray=True).shape == (regression.nb_params,) + time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.jac_cdf(time, covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
+
+
+def jac_pdf(regression, time, covar):
+    assert regression.jac_pdf(time, covar(regression.nb_coef,), asarray=True).shape == (regression.nb_params,) + time.shape
+    m = 10 if time.ndim <=1 else time.shape[0]
+    n = time.size if time.ndim <=1 else time.shape[1]
+    assert regression.jac_pdf(time, covar(m, regression.nb_coef), asarray=True).shape == (regression.nb_params, m, n)
+
+
+
 # def test_ls_integrate(regression, a, b, covar):
 #     m, n = 2, 3
 #

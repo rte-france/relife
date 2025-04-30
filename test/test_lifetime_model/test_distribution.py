@@ -22,31 +22,31 @@ def test_rvs_equilibrium_distribution(equilibrium_distribution):
     assert equilibrium_distribution.rvs(shape=(m, 1), seed=21).shape == (m, 1)
     assert equilibrium_distribution.rvs(shape=(m, n), seed=21).shape == (m, n)
 
-def test_probability_functions(distribution, time, probability):
-
+def test_sf(distribution, time):
     assert distribution.sf(time).shape == time.shape
     assert distribution.sf(np.full(time.shape, distribution.median())) == approx(np.full(time.shape, 0.5), rel=1e-3)
+
+def test_hf(distribution, time):
     assert distribution.hf(time).shape == time.shape
+
+def test_chf(distribution, time):
     assert distribution.chf(time).shape == time.shape
+
+def test_cdf(distribution, time):
     assert distribution.cdf(time).shape == time.shape
+
+def test_pdf(distribution, time):
     assert distribution.pdf(time).shape == time.shape
+
+def test_ppf(distribution, probability):
     assert distribution.ppf(probability).shape == probability.shape
+
+def test_ichf(distribution, probability):
     assert distribution.ichf(probability).shape == probability.shape
+
+def test_isf(distribution, probability):
     assert distribution.isf(probability).shape == probability.shape
     assert distribution.isf(np.full(probability.shape, 0.5)) == approx(np.full(probability.shape, distribution.median()))
-
-
-def test_probability_functions_equilibrium_distribution(equilibrium_distribution, time, probability):
-    assert equilibrium_distribution.sf(time).shape == time.shape
-    assert equilibrium_distribution.sf(np.full(time.shape, equilibrium_distribution.median())) == approx(np.full(time.shape, 0.5), rel=1e-3)
-    assert equilibrium_distribution.hf(time).shape == time.shape
-    assert equilibrium_distribution.chf(time).shape == time.shape
-    assert equilibrium_distribution.cdf(time).shape == time.shape
-    assert equilibrium_distribution.pdf(time).shape == time.shape
-    assert equilibrium_distribution.ppf(probability).shape == probability.shape
-    assert equilibrium_distribution.ichf(probability).shape == probability.shape
-    assert equilibrium_distribution.isf(probability).shape == probability.shape
-    assert equilibrium_distribution.isf(np.full(probability.shape, 0.5)) == approx(np.full(probability.shape, equilibrium_distribution.median()))
 
 def test_moment(distribution, time):
     assert distribution.moment(1).shape == ()
@@ -63,14 +63,22 @@ def test_moment_equilibrium_distribution(equilibrium_distribution, time):
     assert equilibrium_distribution.var().shape == ()
     assert equilibrium_distribution.median().shape == ()
 
-
-def test_derivative(distribution, time):
-
+def test_dhf(distribution, time):
     assert distribution.dhf(time).shape == time.shape
+
+def test_jac_sf(distribution, time):
     assert distribution.jac_sf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+
+def test_jac_hf(distribution, time):
     assert distribution.jac_hf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+
+def test_jac_chf(distribution, time):
     assert distribution.jac_chf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+
+def test_jac_cdf(distribution, time):
     assert distribution.jac_cdf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+
+def test_jac_pdf(distribution, time):
     assert distribution.jac_pdf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
 
 

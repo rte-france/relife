@@ -76,8 +76,8 @@ def probability(request):
 
 @pytest.fixture
 def covar():
-    def _covar(m, nb_coef):
-        return np.ones((m, nb_coef), dtype=np.float64)
+    def _covar(*d):
+        return np.ones(d, dtype=np.float64)
 
     return _covar
 
