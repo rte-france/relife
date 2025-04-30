@@ -295,14 +295,15 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
                     Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
                     """
                 )
-
-            # reshape because model.pdf is tested only for input ndim <= 2
-            if x.ndim > 2:
-                # x : (deg, m, n) -> x.reshape(-1, x.shape[-1]) : (deg*m, n)
-                pdf = frozen_model.pdf(x.reshape(-1, x.shape[-1]))  # (deg*m, n)
-                pdf = pdf.reshape(x.shape)  #  (deg, m, n)
-            else:
-                pdf = frozen_model.pdf(x)  #  (deg,), (deg, n)
+            if x.ndim == 3: # reshape because model.pdf is tested only for input ndim <= 2
+                deg, m, n = x.shape
+                x = np.rollaxis(x, 1).reshape(m, -1) # (m, deg*n), roll on m because axis 0 must align with m of args
+                pdf = frozen_model.pdf(x)  # (m, deg*n)
+                pdf = np.rollaxis(pdf.reshape(m, deg, n), 1, 0)  #  (deg, m, n)
+            else: # ndim == 1 | 2
+                # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args
+                pdf = frozen_model.pdf(x.reshape(1, -1)) # (1, deg*n) or (1, deg)
+                pdf = pdf.reshape(x.shape) # (deg, n) or (deg,)
 
             # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             return fx * pdf

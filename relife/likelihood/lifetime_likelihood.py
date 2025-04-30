@@ -41,7 +41,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
     def hasjac(self) -> bool:
         return hasattr(self.model, "jac_hf") and hasattr(self.model, "jac_chf")
 
-    def _complete_contribs(self, lifetime_data: LifetimeData) -> Optional[float]:
+    def _complete_contribs(self, lifetime_data: LifetimeData) -> Optional[np.float64]:
         if lifetime_data.complete is None:
             return None
         return -np.sum(
@@ -50,10 +50,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                     lifetime_data.complete.values,
                     *lifetime_data.complete.args,
                 )
-            )
-        )
+            ) # (m, 1)
+        ) # ()
 
-    def _right_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[float]:
+    def _right_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[np.float64]:
         if lifetime_data.complete_or_right_censored is None:
             return None
         return np.sum(
@@ -61,10 +61,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 lifetime_data.complete_or_right_censored.values,
                 *lifetime_data.complete_or_right_censored.args,
             ),
-            dtype=np.float64,
-        )
+            dtype=np.float64, # (m, 1)
+        ) # ()
 
-    def _left_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[float]:
+    def _left_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[np.float64]:
         if lifetime_data.left_censoring is None:
             return None
         return -np.sum(
@@ -75,96 +75,92 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                         *lifetime_data.left_censoring.args,
                     )
                 )
-            )
-        )
+            ) # (m, 1)
+        ) # ()
 
     def _left_truncations_contribs(
         self, lifetime_data: LifetimeData
-    ) -> Optional[float]:
+    ) -> Optional[np.float64]:
         if lifetime_data.left_truncation is None:
             return None
         return -np.sum(
             self.model.chf(
                 lifetime_data.left_truncation.values,
                 *lifetime_data.left_truncation.args,
-            ),
+            ), # (m, 1)
             dtype=np.float64,
-        )
+        ) # ()
 
     def _jac_complete_contribs(
         self, lifetime_data: LifetimeData
     ) -> Optional[NDArray[np.float64]]:
-        if hasattr(self.model, "jac_hf"):
-            if lifetime_data.complete is None:
-                return None
-            return -np.sum(
-                self.model.jac_hf(
-                    lifetime_data.complete.values,
-                    *lifetime_data.complete.args,
-                )
-                / self.model.hf(
-                    lifetime_data.complete.values,
-                    *lifetime_data.complete.args,
-                ),
-                axis=0,
-            )
-        raise AttributeError
+        if lifetime_data.complete is None:
+            return None
+        return -np.sum(
+            self.model.jac_hf(
+                lifetime_data.complete.values,
+                *lifetime_data.complete.args,
+                asarray=True,
+            ) # (p, m, 1)
+            / self.model.hf(
+                lifetime_data.complete.values,
+                *lifetime_data.complete.args,
+            ), # (m, 1)
+            axis=(1,2),
+        ) # (p,)
 
     def _jac_right_censored_contribs(
         self, lifetime_data: LifetimeData
     ) -> Optional[NDArray[np.float64]]:
-        if hasattr(self.model, "jac_chf"):
-            if lifetime_data.complete_or_right_censored is None:
-                return None
-            return np.sum(
-                self.model.jac_chf(
-                    lifetime_data.complete_or_right_censored.values,
-                    *lifetime_data.complete_or_right_censored.args,
-                ),
-                axis=0,
-            )
-        raise AttributeError
+        if lifetime_data.complete_or_right_censored is None:
+            return None
+        return np.sum(
+            self.model.jac_chf(
+                lifetime_data.complete_or_right_censored.values,
+                *lifetime_data.complete_or_right_censored.args,
+                asarray=True,
+            ), # (p, m, 1)
+            axis=(1,2),
+        ) # (p,)
 
     def _jac_left_censored_contribs(
         self, lifetime_data: LifetimeData
     ) -> Optional[NDArray[np.float64]]:
-        if hasattr(self.model, "jac_chf"):
-            if lifetime_data.left_censoring is None:
-                return None
-            return -np.sum(
-                self.model.jac_chf(
+        if lifetime_data.left_censoring is None:
+            return None
+        return -np.sum(
+            self.model.jac_chf(
+                lifetime_data.left_censoring.values,
+                *lifetime_data.left_censoring.args,
+                asarray=True,
+            ) # (p, m, 1)
+            / np.expm1(
+                self.model.chf(
                     lifetime_data.left_censoring.values,
                     *lifetime_data.left_censoring.args,
                 )
-                / np.expm1(
-                    self.model.chf(
-                        lifetime_data.left_censoring.values,
-                        *lifetime_data.left_censoring.args,
-                    )
-                ),
-                axis=0,
-            )
-        return AttributeError
+            ), # (m, 1)
+            axis=(1,2),
+        ) # (p,)
 
     def _jac_left_truncations_contribs(
         self, lifetime_data: LifetimeData
     ) -> Optional[NDArray[np.float64]]:
-        if hasattr(self.model, "jac_chf"):
-            if lifetime_data.left_truncation is None:
-                return None
-            return -np.sum(
-                self.model.jac_chf(
-                    lifetime_data.left_truncation.values,
-                    *lifetime_data.left_truncation.args,
-                ),
-                axis=0,
-            )
-        raise AttributeError
+        if lifetime_data.left_truncation is None:
+            return None
+        return -np.sum(
+            self.model.jac_chf(
+                lifetime_data.left_truncation.values,
+                *lifetime_data.left_truncation.args,
+                asarray=True,
+            ), # (p, m, 1)
+            axis=(1,2),
+        ) # (p,)
 
     def negative_log(
         self,
-        params: NDArray[np.float64],
-    ) -> float:
+        params: NDArray[np.float64], # (p,)
+    ) -> np.float64:
         self.model.params = params
         contributions = (
             self._complete_contribs(self.data),
@@ -172,12 +168,12 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             self._left_censored_contribs(self.data),
             self._left_truncations_contribs(self.data),
         )
-        return sum(x for x in contributions if x is not None)
+        return sum(x for x in contributions if x is not None) # ()
 
     @override
     def jac_negative_log(
         self,
-        params: NDArray[np.float64],
+        params: NDArray[np.float64], # (p,)
     ) -> NDArray[np.float64]:
         if not self.hasjac:
             raise AttributeError(
@@ -190,4 +186,4 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             self._jac_left_censored_contribs(self.data),
             self._jac_left_truncations_contribs(self.data),
         )
-        return sum(x for x in jac_contributions if x is not None)
+        return sum(x for x in jac_contributions if x is not None) # (p,)

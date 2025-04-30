@@ -31,7 +31,7 @@ class Likelihood(Generic[*Args], ABC):
         return _hessian_scheme(self.model)(self, eps=eps)
 
     @abstractmethod
-    def negative_log(self, params: NDArray[np.float64]) -> float:
+    def negative_log(self, params: NDArray[np.float64]) -> np.float64:
         """
         Negative log likelihood.
 

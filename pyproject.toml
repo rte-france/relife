@@ -65,7 +65,8 @@ ignore_missing_imports = true
 # pytest
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-rxXs -k 'not test_ls_integrate[loglogistic]'"
+addopts = "-rxXs"
+# addopts = "-rxXs -k 'not test_ls_integrate[loglogistic]'"
 testpaths = [
     "test/test_lifetime_model/test_distribution.py",
     "test/test_parametric_model.py",

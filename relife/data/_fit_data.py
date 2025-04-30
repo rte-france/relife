@@ -14,8 +14,8 @@ class IndexedLifetimeData:
     Object that encapsulates lifetime data values and corresponding units index
     """
 
-    values: NDArray[np.float64]
-    index: NDArray[np.int64]
+    values: NDArray[np.float64] # (m, 1)
+    index: NDArray[np.int64] # (m, 1)
     args: Optional[tuple[float | NDArray[np.float64], ...]] = field(
         repr=False, default_factory=tuple
     )

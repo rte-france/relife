@@ -359,8 +359,8 @@ class Gamma(LifetimeDistribution):
         x = self.rate * time
         y = x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2
         jac = (
-            y * (self.rate * np.log(x) * self._uppergamma(x)) - self.rate * self._jac_uppergamma_shape(x),
-            y * (self.shape - x) * self._uppergamma(x) + x**self.shape * np.exp(-x),
+            y * ((self.rate * np.log(x) * self._uppergamma(x)) - self.rate * self._jac_uppergamma_shape(x)),
+            y * ((self.shape - x) * self._uppergamma(x) + x**self.shape * np.exp(-x)),
         )
         if asarray:
             return np.stack(jac)
