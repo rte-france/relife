@@ -43,25 +43,36 @@ def regression(request, distribution):
 
 
 
-@pytest.fixture
-def time():
-    def _time(*d: int):
-        if not bool(d):
-            return 1.0
-        return np.ones(d, dtype=np.float64)
+@pytest.fixture(
+    params=[
+        np.float64(1),
+        np.ones((1,), dtype=np.float64),
+        np.ones((3,), dtype=np.float64),
+        np.ones((1, 1), dtype=np.float64),
+        np.ones((3, 1), dtype=np.float64),
+        np.ones((1, 3), dtype=np.float64),
+        np.ones((10, 3), dtype=np.float64),
+    ],
+    ids=["time()", "time(1,)", "time(3,)", "time(1,1)", "time(3,1)", "time(1,3)", "time(10, 3)"]
+)
+def time(request):
+    return request.param
 
-    return _time
 
-
-@pytest.fixture
-def probability():
-    def _probability(*d: int):
-        if not bool(d):
-            return 0.5
-        return np.ones(d, dtype=np.float64) * 0.5
-
-    return _probability
-
+@pytest.fixture(
+    params=[
+        np.float64(0.5),
+        np.ones((1,), dtype=np.float64)*0.5,
+        np.ones((3,), dtype=np.float64)*0.5,
+        np.ones((1, 1), dtype=np.float64)*0.5,
+        np.ones((3, 1), dtype=np.float64)*0.5,
+        np.ones((1, 3), dtype=np.float64)*0.5,
+        np.ones((10, 3), dtype=np.float64)*0.5,
+    ],
+    ids=["probability()", "probability(1,)", "probability(3,)", "probability(1,1)", "probability(3,1)", "probability(1,3)", "probability(10, 3)"]
+)
+def probability(request):
+    return request.param
 
 @pytest.fixture
 def covar():

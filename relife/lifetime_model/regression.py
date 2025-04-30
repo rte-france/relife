@@ -134,12 +134,11 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         baseline_hf = self.baseline.hf(time, *args) # (m, n)
         # p == baseline.nb_params
         baseline_jac_hf = self.baseline.jac_hf(time, *args, asarray=True) # (p, m, n)
-        baseline_jac_hf = baseline_jac_hf.reshape(self.baseline.nb_params, jac_g.shape[1], -1)  #  (p, m, n)
         jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
+            baseline_hf * jac_g,  #  (nb_coef, m, n)
             g * baseline_jac_hf, # (p, m, n)
-            baseline_hf * jac_g, # (nb_coef, m, n)
         ), axis=0) # (p + nb_coef, m, n)
 
         match [m, n]:
@@ -181,8 +180,8 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
+            baseline_chf * jac_g,  #  (nb_coef, m, n)
             g * baseline_jac_chf, # (p, m, n)
-            baseline_chf * jac_g, # (nb_coef, m, n)
         ), axis = 0) # (p + c, m, n)
 
         match [m, n]:
@@ -312,8 +311,8 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
+            -jac_g / g ** 2 * (baseline_hf_t0 + t0 * baseline_dhf_t0),  #  (nb_coef, m, n)
             baseline_jac_hf_t0 / g, # (p, m, n)
-            -jac_g/g**2*(baseline_hf_t0 + t0*baseline_dhf_t0), # (nb_coef, m, n)
         ), axis=0) # (p + c, m, n)
 
         match [m, n]:
@@ -357,8 +356,8 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         jac_g = np.repeat(jac_g, n, axis=-1) # (nb_coef, m, n)
 
         jac = np.concatenate((
+            -jac_g / g * t0 * baseline_hf_t0,  #  (nb_coef, m, n)
             baseline_jac_chf_t0, # (p, m, n)
-            -jac_g/g * t0 * baseline_hf_t0, # (nb_coef, m, n)
         ),axis=0) # (p + nb_coef, m, n)
 
         match [m, n]:

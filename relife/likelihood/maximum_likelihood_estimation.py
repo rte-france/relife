@@ -85,11 +85,10 @@ class FittingResults:
         return asdict(self)
 
 
-def params_bounds(model: ParametricModel) -> Bounds:
+def get_params_bounds(model: ParametricModel) -> Bounds:
     from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
     match model:
-
         case LifetimeDistribution():
             model: LifetimeDistribution
             return Bounds(
@@ -102,13 +101,13 @@ def params_bounds(model: ParametricModel) -> Bounds:
             lb = np.concatenate(
                 (
                     np.full(model.covar_effect.nb_params, -np.inf),
-                    params_bounds(model.baseline).lb,
+                    get_params_bounds(model.baseline).lb,
                 )
             )
             ub = np.concatenate(
                 (
                     np.full(model.covar_effect.nb_params, np.inf),
-                    params_bounds(model.baseline).ub,
+                    get_params_bounds(model.baseline).ub,
                 )
             )
             return Bounds(lb, ub)
@@ -180,10 +179,11 @@ def maximum_likelihood_estimation(
 
             # Step 2: Initialize the model and likelihood
             model.params = init_params_from_lifetimes(model, data)
+            print(model.params, model.params_names)
             likelihood = LikelihoodFromLifetimes(model, data)
 
             try:
-                bounds = params_bounds(model)
+                bounds = get_params_bounds(model)
             except NotImplemented:
                 bounds = None
 
@@ -191,16 +191,15 @@ def maximum_likelihood_estimation(
             minimize_kwargs = {
                 "method": kwargs.get("method", "L-BFGS-B"),
                 "constraints": kwargs.get("constraints", ()),
-                "tol": kwargs.get("tol", None),
-                "callback": kwargs.get("callback", None),
-                "options": kwargs.get("options", None),
                 "bounds": kwargs.get("bounds", bounds),
                 "x0": kwargs.get("x0", model.params),
             }
+            print("first_jac", likelihood.jac_negative_log(model.params))
             optimizer = minimize(
                 likelihood.negative_log,
                 minimize_kwargs.pop("x0"),
                 jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
+                callback= lambda x : print(likelihood.jac_negative_log(x)),
                 **minimize_kwargs,
             )
 
