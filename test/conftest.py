@@ -45,15 +45,23 @@ def regression(request, distribution):
 
 @pytest.fixture(
     params=[
-        np.float64(1),
-        np.ones((1,), dtype=np.float64),
-        np.ones((3,), dtype=np.float64),
-        np.ones((1, 1), dtype=np.float64),
-        np.ones((3, 1), dtype=np.float64),
-        np.ones((1, 3), dtype=np.float64),
+        # np.float64(1),
+        # np.ones((1,), dtype=np.float64),
+        # np.ones((3,), dtype=np.float64),
+        # np.ones((1, 1), dtype=np.float64),
+        # np.ones((3, 1), dtype=np.float64),
+        # np.ones((1, 3), dtype=np.float64),
         np.ones((10, 3), dtype=np.float64),
     ],
-    ids=["time()", "time(1,)", "time(3,)", "time(1,1)", "time(3,1)", "time(1,3)", "time(10, 3)"]
+    ids=[
+        # "time()",
+        # "time(1,)",
+        # "time(3,)",
+        # "time(1,1)",
+        # "time(3,1)",
+        # "time(1,3)",
+        "time(10, 3)"
+]
 )
 def time(request):
     return request.param

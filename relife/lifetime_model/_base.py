@@ -763,7 +763,7 @@ class CovarEffect(ParametricModel):
         """
         covar: NDArray[np.float64] = np.asarray(covar) # (), (nb_coef,) or (m, nb_coef)
         g = self.g(covar) # () or (m, 1)
-        jac = covar.reshape(self.nb_coef, -1, 1) * g # (nb_coef, m, 1)
+        jac = covar.T.reshape(self.nb_coef, -1, 1) * g # (nb_coef, m, 1)
         if covar.ndim <= 1:
             jac = jac.reshape(self.nb_coef) # (nb_coef,) or (nb_coef, m, 1)
         if not asarray:

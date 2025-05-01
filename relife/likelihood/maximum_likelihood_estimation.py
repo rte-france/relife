@@ -199,7 +199,7 @@ def maximum_likelihood_estimation(
                 likelihood.negative_log,
                 minimize_kwargs.pop("x0"),
                 jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-                callback= lambda x : print(likelihood.jac_negative_log(x)),
+                callback= lambda x : print(x),
                 **minimize_kwargs,
             )
 
