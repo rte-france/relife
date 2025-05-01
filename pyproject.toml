@@ -42,6 +42,9 @@ dev = [
 [tool.isort]
 profile = 'black'
 
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin"
+
 [tool.pylint.format]
 max-line-length = "88"
 max-args = 10

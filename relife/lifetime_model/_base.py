@@ -712,20 +712,12 @@ class CovarEffect(ParametricModel):
         Coefficients of the covariates effect.
     """
 
-    def __init__(self, *coefficients: float):
-        super().__init__()
-        if not bool(coefficients):
-            self.new_params(coef_1=None)
-        else:
-            self.new_params(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
+    def __init__(self, coefficients: tuple[Optional[float], ...] = (None,)):
+        super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
     @property
     def nb_coef(self) -> int:
         return self.nb_params
-
-    def _reshape_covar(self, covar : NDArray[np.float64]) -> NDArray[np.float64]:
-
-        return
 
     def g(self, covar: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         """
@@ -1033,9 +1025,7 @@ class LifetimeRegression(
             departure=departure,
         )
         covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
-        self.covar_effect.new_params(
-            **{f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
-        )
+        self.covar_effect._parameters.nodedata = {f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
         maximum_likelihood_estimation(
             self,
             lifetime_data,

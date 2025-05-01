@@ -1,7 +1,9 @@
+from collections import UserDict
 from itertools import chain
 from typing import Any, Iterator, Optional, Self
 
 import numpy as np
+from numpy.typing import ArrayLike
 from numpy.typing import NDArray
 
 
@@ -13,14 +15,12 @@ class ParametricModel:
     """
 
     def __init__(self, **kwparams: Optional[float]):
-        self._params = Parameters()
+        self._parameters = Parameters(**kwparams)
         self._nested_models = {}
         self._fitting_results = None
-        if bool(kwparams):
-            self.new_params(**kwparams)
 
     @property
-    def params(self) -> NDArray[np.float64 | np.complex64]:
+    def params(self) -> NDArray[np.float64] | NDArray[np.complex128]:
         """
         Parameters values.
 
@@ -36,16 +36,14 @@ class ParametricModel:
         Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
         by specifying all parameters values when the core object is initialized.
         """
-        return np.array(self._params.all_values)
+        return np.array(tuple(self._parameters.allvalues()))
 
     @params.setter
-    def params(self, values: NDArray[np.float64 | np.complex64]):
+    def params(self, values: NDArray[np.float64] | NDArray[np.complex128] | ArrayLike):
+        values = np.asarray(values)
         if values.ndim > 1:
-            raise ValueError
-        values: tuple[Optional[float], ...] = tuple(
-            map(lambda x: x.item() if x != np.nan else None, values)
-        )
-        self._params.all_values = values
+            raise ValueError(f"Expected params values to be 1d array. Got {values.ndim} ndim")
+        self._parameters.set_allvalues(*values)
 
     @property
     def params_names(self) -> tuple[str, ...]:
@@ -61,10 +59,10 @@ class ParametricModel:
         -----
         Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
-        return tuple(self._params.all_keys)
+        return tuple(self._parameters.allkeys())
 
     @property
-    def nb_params(self):
+    def nb_params(self) -> int:
         """
         Number of parameters.
 
@@ -74,7 +72,7 @@ class ParametricModel:
             Number of parameters.
 
         """
-        return len(self._params)
+        return len(self._parameters)
 
     def compose_with(self, **kwcomponents: Self):
         """Compose with new ``ParametricModel`` instance(s).
@@ -102,13 +100,13 @@ class ParametricModel:
         with `**` operator or you will get a nasty `TypeError`.
         """
         for name in kwcomponents.keys():
-            if name in self._params.data:
+            if name in self._parameters.nodedata:
                 raise ValueError(f"{name} already exists as param name")
             if name in self._nested_models:
                 raise ValueError(f"{name} already exists as leaf function")
         for name, model in kwcomponents.items():
             self._nested_models[name] = model
-            self._params.set_leaf(f"{name}.params", getattr(model, "_params"))
+            self._parameters.set_leaf(f"{name}.params", getattr(model, "_params"))
 
     def new_params(self, **kwparams: Optional[float]):
         """Change local parameters structure.
@@ -133,7 +131,7 @@ class ParametricModel:
         for name in kwparams.keys():
             if name in self._nested_models.keys():
                 raise ValueError(f"{name} already exists as function name")
-        self._params.data = kwparams
+        self._parameters.nodedata = kwparams
 
     def nested_models(self) -> Iterator:
         """parallel walk through key value pairs"""
@@ -158,8 +156,8 @@ class ParametricModel:
     def __setattr__(self, name: str, value: Any):
         if name in ("_params", "_nested_models"):
             super().__setattr__(name, value)
-        elif name in self._params:
-            self._params[name] = value
+        elif name in self._parameters:
+            self._parameters[name] = value
         elif name in self._nested_models:
             raise ValueError(
                 "ParametricModel named {name} is already set. If you want to change it, recreate a ParametricModel"
@@ -172,126 +170,115 @@ class ParametricModel:
 
 class Parameters:
     """
-    Tree-structured parameters.
+    Dict-like tree structured parameters.
 
-    Every ``Parametric`` are composed of ``Parameters`` instance.
+    Every ``ParametricModel`` are composed of a ``Parameters`` instance.
     """
+    parent : Optional[Self]
 
-    def __init__(self):
+    def __init__(
+        self,
+        mapping: Optional[dict[str, float | complex | np.float64 | np.complex128]] = None,
+        /,
+        **kwargs: float | complex | np.float64 | np.complex128
+    ):
+        self._nodedata = {}
+        if mapping is not None:
+            self._nodedata = {k: np.asarray(v) if v is not None else np.nan for k, v in mapping.items()}
+        if kwargs:
+            self._nodedata.update(**{k: np.asarray(v) if v is not None else np.nan for k, v in kwargs.items()})
+
         self.parent = None
-        self._data = {}
-        self.leaves = {}
-        self._all_keys, self._all_values = (), ()
-        self.dtype = float
+        self._leaves = {}
+        self._allkeys, self._allvalues = (), ()
+
+    def get_leaf(self, item : str):
+        return self._leaves[item]
+
+    def set_leaf(self, key : str, value : Self):
+        if key not in self._leaves:
+            value.parent = self
+        self._leaves[key] = value
+        self._update()
+
+    def del_leaf(self, key : str):
+        del self._leaves[key]
+        self._update()
 
     @property
-    def data(self) -> dict[str, Optional[float | complex]]:
+    def nodedata(self) -> dict[str, NDArray[np.float64] | NDArray[np.complex128]]:
         """data of current node as dict"""
-        return self._data
+        return self._nodedata
 
-    @data.setter
-    def data(self, mapping: dict[str, Optional[float | complex]]):
-        self._data = {k: np.nan if v is None else v for k, v in mapping.items()}
-        self.update()
+    @nodedata.setter
+    def nodedata(self, mapping: dict[str, Optional[float | complex | np.float64 | np.complex128]]):
+        if set(mapping.keys()).issubset(self._leaves.keys()):
+            raise ValueError("Parameters names can't have the same names as leaves")
+        self._nodedata = {k: np.asarray(v) if v is not None else np.nan for k, v in mapping.items()}
+        self._update()
 
-    @property
-    def all_keys(self) -> tuple[str, ...]:
-        """keys of current and leaf nodes as list"""
-        return self._all_keys
+    def allkeys(self) -> Iterator[str]:
+        return iter(self._allkeys)
 
-    @all_keys.setter
-    def all_keys(self, keys: tuple[str, ...]):
-        self.set_all_keys(*keys)
-        self.update_parents()
+    def allvalues(self) -> Iterator[np.float64 | np.complex128]:
+        return iter(self._allvalues)
 
-    @property
-    def all_values(self) -> tuple[Optional[float | complex], ...]:
-        """values of current and leaf nodes as list"""
-        return self._all_values
+    def allitems(self) -> Iterator[tuple[str, np.float64 | np.complex128]]:
+        return zip(self._allkeys, self._allvalues)
 
-    @all_values.setter
-    def all_values(self, values: tuple[Optional[float | complex], ...]):
-        self.set_all_values(*values)
-        self.update_parents()
-
-    def set_all_values(self, *values: Optional[float | complex]):
+    def set_allvalues(self, *values: Optional[float | complex | np.float64 | np.complex128]):
         if len(values) != len(self):
             raise ValueError(f"values expects {len(self)} items but got {len(values)}")
-        self._all_values = tuple((np.nan if v is None else v for v in values))
-        pos = len(self._data)
-        self._data.update(zip(self._data, values[:pos]))
-        for leaf in self.leaves.values():
-            leaf.set_all_values(*values[pos : pos + len(leaf)])
+        self._allvalues = tuple((np.nan if v is None else np.asarray(v) for v in values))
+        pos = len(self._nodedata)
+        self._nodedata.update(zip(self._nodedata, values[:pos]))
+        for leaf in self._leaves.values():
+            leaf.set_allvalues(*values[pos : pos + len(leaf)])
             pos += len(leaf)
+        if self.parent is not None:
+            self.parent._update()
 
-    def set_all_keys(self, *keys: str):
+    def set_allkeys(self, *keys: str):
         if len(keys) != len(self):
             raise ValueError(f"names expects {len(self)} items but got {len(keys)}")
-        self._all_keys = keys
-        pos = len(self._data)
-        self._data = {keys[:pos][i]: v for i, v in self._data.values()}
-        for leaf in self.leaves.values():
-            leaf.set_all_keys(*keys[pos : pos + len(leaf)])
+        self._allkeys = keys
+        pos = len(self._nodedata)
+        self._nodedata = {keys[:pos][i]: v for i, v in self._nodedata.values()}
+        for leaf in self._leaves.values():
+            leaf.set_allkeys(*keys[pos : pos + len(leaf)])
             pos += len(leaf)
+        if self.parent is not None:
+            self.parent._update()
 
     def __len__(self):
-        return len(self._all_keys)
+        return len(self._allkeys)
 
-    def __contains__(self, item):
+    def __contains__(self, item : str):
         """contains only applies on current node"""
-        return item in self._data
+        return item in self._nodedata
 
-    def __getitem__(self, item):
-        return self._data[item]
+    def __getitem__(self, item : str):
+        return self._nodedata[item]
 
-    def __setitem__(self, key, value):
-        self._data[key] = value
-        self.update()
+    def __setitem__(self, key : str, value : Optional[float | complex | np.number]):
+        self._nodedata[key] = value
+        self._update()
 
-    def __delitem__(self, key):
-        del self._data[key]
-        self.update()
+    def __delitem__(self, key : str):
+        del self._nodedata[key]
+        self._update()
 
-    def get_leaf(self, item):
-        return self.leaves[item]
-
-    def set_leaf(self, key, value):
-        if key not in self.leaves:
-            value.parent = self
-        self.leaves[key] = value
-        self.update()
-
-    def del_leaf(self, key):
-        del self.leaves[key]
-        self.update()
-
-    def items_walk(self) -> Iterator:
-        """parallel walk through key value pairs"""
-        yield list(self._data.items())
-        for leaf in self.leaves.values():
-            yield list(chain.from_iterable(leaf.items_walk()))
-
-    def all_items(self) -> Iterator:
-        return chain.from_iterable(self.items_walk())
-
-    def update_items(self):
-        """parallel iterations : faster than update_value followed by update_keys"""
+    def _update(self):
+        """update names and values of current and parent nodes"""
         try:
-            next(self.all_items())
-            _k, _v = zip(*self.all_items())
-            self._all_keys = list(_k)
-            self._all_values = list(_v)
+            next(self.allitems())
+            _k, _v = zip(*self.allitems())
+            self._allkeys = list(_k)
+            self._allvalues = list(_v)
         except StopIteration:
             pass
-
-    def update_parents(self):
         if self.parent is not None:
-            self.parent.update()
-
-    def update(self):
-        """update names and values of current and parent nodes"""
-        self.update_items()
-        self.update_parents()
+            self.parent._update()
 
 
 # Use Mixin to preserve type frozen instance. Ex : FrozenParametricLifetimeModel := ParametricLifetimeModel[()]

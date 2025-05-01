@@ -39,7 +39,7 @@ class Exponential(LifetimeDistribution):
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._params["rate"]
+        return self._parameters["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.rate * np.ones_like(time)
@@ -118,11 +118,11 @@ class Weibull(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        return self._params["shape"]
+        return self._parameters["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._params["rate"]
+        return self._parameters["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.shape * self.rate * (self.rate * np.asarray(time)) ** (self.shape - 1)
@@ -222,11 +222,11 @@ class Gompertz(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        return self._params["shape"]
+        return self._parameters["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._params["rate"]
+        return self._parameters["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
@@ -314,11 +314,11 @@ class Gamma(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        return self._params["shape"]
+        return self._parameters["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._params["rate"]
+        return self._parameters["rate"]
 
     def _uppergamma(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return gammaincc(self.shape, x) * gamma(self.shape)
@@ -421,11 +421,11 @@ class LogLogistic(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        return self._params["shape"]
+        return self._parameters["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._params["rate"]
+        return self._parameters["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         x = self.rate * np.asarray(time)
