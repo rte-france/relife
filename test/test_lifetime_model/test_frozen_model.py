@@ -82,7 +82,6 @@ class TestRegression:
         frozen_regression = regression.freeze(covar(10, regression.nb_coef))
         assert frozen_regression.args_nb_assets == 10
 
-
     def test_rvs(self, regression, covar):
         m, n = 10, 3
         frozen_regression = regression.freeze(covar(regression.nb_coef,))

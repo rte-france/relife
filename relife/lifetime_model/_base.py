@@ -285,8 +285,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         if arr_a.ndim == 2:
             if arr_a.shape[0] not in (
                 1,
-                frozen_model.nb_assets,
-            ) and frozen_model.nb_assets not in (1, arr_a.shape[0]):
+                frozen_model.args_nb_assets,
+            ) and frozen_model.args_nb_assets not in (1, arr_a.shape[0]):
                 raise ValueError(
                     f"Incompatible bounds with model. Model has {frozen_model.nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
                 )
