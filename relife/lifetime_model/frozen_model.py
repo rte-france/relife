@@ -152,27 +152,45 @@ class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
+        asarray : bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_hf(time)
+        return self.baseline.jac_hf(time, asarray=asarray)
 
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
+        asarray : bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_chf(time)
+        return self.baseline.jac_chf(time, asarray=asarray)
 
-    def jac_sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_sf(time)
+    def jac_sf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray : bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.baseline.jac_sf(time, asarray=asarray)
 
-    def jac_cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_cdf(time)
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray : bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.baseline.jac_cdf(time, asarray=asarray)
 
-    def jac_pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_pdf(time)
+    def jac_pdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray : bool = False
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.baseline.jac_pdf(time, asarray=asarray)
 
 
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
     baseline: LifetimeRegression
+
+    @property
+    def nb_coef(self) -> int:
+        return self.baseline.nb_coef
 
     def dhf(
         self,
@@ -184,25 +202,39 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
+        asarray : bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
-        return self.baseline.jac_hf(time, self.args[0], *self.args[1:])
+        return self.baseline.jac_hf(time, self.args[0], *self.args[1:], asarray=asarray)
 
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
+        asarray : bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
-        return self.baseline.jac_chf(time, self.args[0], *self.args[1:])
+        return self.baseline.jac_chf(time, self.args[0], *self.args[1:], asarray=asarray)
 
-    def jac_sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    def jac_sf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray : bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
-        return self.baseline.jac_sf(time, self.args[0], *self.args[1:])
+        return self.baseline.jac_sf(time, self.args[0], *self.args[1:], asarray=asarray)
 
-    def jac_cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
-        return self.baseline.jac_cdf(time, self.args[0], *self.args[1:])
+        return self.baseline.jac_cdf(time, self.args[0], *self.args[1:], asarray=asarray)
 
-    def jac_pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    def jac_pdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
-        return self.baseline.jac_pdf(time, self.args[0], *self.args[1:])
+        return self.baseline.jac_pdf(time, self.args[0], *self.args[1:], asarray=asarray)

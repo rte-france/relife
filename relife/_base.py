@@ -304,11 +304,11 @@ class FrozenMixin:
                 )
             match name:
                 case "covar": # (), (nb_coef,) or (m, nb_coef)
-                    if self.args_nb_assets != 1:
-                        if value.ndim == 2: # otherwise, when 1, broadcasting
+                    if value.ndim == 2: # otherwise, when 1, broadcasting
+                        if self.args_nb_assets != 1:
                             if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:
                                 raise ValueError(f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets")
-                            setattr(self, "_args_nb_assets", value.shape[0]) # update nb_assets
+                        setattr(self, "_args_nb_assets", value.shape[0]) # update nb_assets
                 case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
                     if value.ndim >= 1:
                         if self.args_nb_assets != 1:
