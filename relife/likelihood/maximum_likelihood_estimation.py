@@ -179,7 +179,8 @@ def maximum_likelihood_estimation(
 
             # Step 2: Initialize the model and likelihood
             model.params = init_params_from_lifetimes(model, data)
-            print(model.params, model.params_names)
+            print("params names", model.params_names)
+            print("params0", model.params)
             likelihood = LikelihoodFromLifetimes(model, data)
 
             try:
@@ -202,7 +203,7 @@ def maximum_likelihood_estimation(
                 callback= lambda x : print(x),
                 **minimize_kwargs,
             )
-
+            print("fitted params", optimizer.x)
             # Step 4: Compute parameters variance (Hessian inverse)
             hessian_inverse = np.linalg.inv(likelihood.hessian())
             model.fitting_results = FittingResults(

@@ -294,30 +294,33 @@ class FrozenMixin:
         return getattr(self, "_args", ())
 
     def freeze_args(self, **kwargs: float | NDArray[np.float64]):
+        setattr(self, "_args_nb_assets", 1) # default value of nb_assets
         for name, value in kwargs.items():
             value = np.asarray(value)
             ndim = value.ndim
             if ndim > 2:
                 raise ValueError(
-                    f"Number of dimension can't be higher than 2. Got {ndim} for {name}"
+                    f"Uncorrect number of dimensions for {name}. It can't be higher than 2. Got {ndim}"
                 )
             match name:
-                case "covar":
-                    if ndim <= 1:
-                        value = value.reshape(1, -1)
+                case "covar": # (), (nb_coef,) or (m, nb_coef)
+                    if self.args_nb_assets != 1:
+                        if value.ndim == 2: # otherwise, when 1, broadcasting
+                            if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:
+                                raise ValueError(f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets")
+                            setattr(self, "_args_nb_assets", value.shape[0]) # update nb_assets
                 case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
-                    if ndim == 2:
-                        if value.shape[-1] > 1:
-                            raise ValueError
-                    value = value.reshape(-1, 1)
-            if self.nb_assets != 1 and value.shape[0] not in (1, self.nb_assets):
-                raise ValueError(
-                    f"Frozen args have already {self.nb_assets} nb_assets values but given value has {value.shape[0]}"
-                )
+                    if value.ndim >= 1:
+                        if self.args_nb_assets != 1:
+                            if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:
+                                raise ValueError(f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets")
+                        setattr(self, "_args_nb_assets", value.shape[0]) # update nb_assets
+                case _:
+                    raise ValueError(f"Unknown arg {name}")
             setattr(self, "_args", self.args + (value,))
 
     @property
-    def nb_assets(self) -> int:
-        if bool(self.args):
-            return np.broadcast_shapes(*map(np.shape, self.args))[0]
-        return 1
+    def args_nb_assets(self) -> int:
+        if not hasattr(self, "_args_nb_assets"):
+            return 1
+        return getattr(self, "_args_nb_assets")

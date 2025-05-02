@@ -11,6 +11,7 @@ def test_args_names_equilibrium_distribution(equilibrium_distribution):
 def test_rvs(distribution):
     m, n = 3, 10
     assert distribution.rvs(seed=21).shape == ()
+    assert distribution.rvs(n, seed=21).shape == (n,)
     assert distribution.rvs((n,), seed=21).shape == (n,)
     assert distribution.rvs((m, 1), seed=21).shape == (m, 1)
     assert distribution.rvs((m, n), seed=21).shape == (m, n)
@@ -18,9 +19,9 @@ def test_rvs(distribution):
 def test_rvs_equilibrium_distribution(equilibrium_distribution):
     m, n = 3, 10
     assert equilibrium_distribution.rvs(seed=21).shape == ()
-    assert equilibrium_distribution.rvs(shape=(n,), seed=21).shape == (n,)
-    assert equilibrium_distribution.rvs(shape=(m, 1), seed=21).shape == (m, 1)
-    assert equilibrium_distribution.rvs(shape=(m, n), seed=21).shape == (m, n)
+    assert equilibrium_distribution.rvs(size=(n,), seed=21).shape == (n,)
+    assert equilibrium_distribution.rvs(size=(m, 1), seed=21).shape == (m, 1)
+    assert equilibrium_distribution.rvs(size=(m, n), seed=21).shape == (m, n)
 
 def test_sf(distribution, time):
     assert distribution.sf(time).shape == time.shape

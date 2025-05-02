@@ -1,10 +1,8 @@
 import numpy as np
-import pytest
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
-from relife.lifetime_model._base import CovarEffect
-from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard
+from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard, CovarEffect
 
 
 def test_args_names(regression):
@@ -44,9 +42,15 @@ def test_covar_effect(covar):
 
 def test_rvs(regression, covar):
     m,n = 10, 3
-    assert regression.rvs(covar(m, regression.nb_coef), seed=21).shape == (m, 1)
-    assert regression.rvs(covar(m, regression.nb_coef), shape=(m,1), seed=21).shape == (m, 1)
-    assert regression.rvs(covar(m, regression.nb_coef), shape=(m,n), seed=21).shape == (m, n)
+    assert regression.rvs(covar(regression.nb_coef,), seed=21).shape == ()
+    assert regression.rvs(covar(regression.nb_coef,), size=n, seed=21).shape == (n,)
+    assert regression.rvs(covar(regression.nb_coef, ), size=(n,), seed=21).shape == (n,)
+    assert regression.rvs(covar(regression.nb_coef, ), size=(m, n), seed=21).shape == (m,n)
+
+    assert regression.rvs(covar(m, regression.nb_coef,), seed=21).shape == (m, 1)
+    assert regression.rvs(covar(m, regression.nb_coef), size=n, seed=21).shape == (m, n)
+    assert regression.rvs(covar(m, regression.nb_coef), size=(n,), seed=21).shape == (m, n)
+    assert regression.rvs(covar(m, regression.nb_coef), size=(m, n), seed=21).shape == (m, n)
 
 def test_sf(regression, time, covar):
     assert regression.sf(time, covar(regression.nb_coef,)).shape == time.shape
@@ -249,13 +253,26 @@ def test_jac_pdf(regression, time, covar):
 #     assert integration == approx(np.full((m, n), regression.mean(covar(m, regression.nb_coef))))
 
 
-# # @pytest.mark.xfail
 def test_fit(regression, insulator_string_data):
+    # vanilla_covar = np.hstack((np.ones(5000), np.zeros(5000))).reshape(-1, 1)
+    # pph = ProportionalHazard(distribution, coefficients=(1,))
+    # sampled_time = pph.rvs(vanilla_covar, seed=10).reshape(-1)
+    # print(sampled_time.shape)
+    # expected_params = np.hstack((np.ones(1), distribution.params))
+    # print("expected_params", expected_params)
+    # pph.fit(sampled_time, vanilla_covar)
+    # assert pph.params == approx(expected_params, abs=1e-2)
     regression.fit(
         insulator_string_data[0],
         zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
         event=insulator_string_data[1] == 1,
     )
+
+
+
+
+# # @pytest.mark.xfail
+def test_aft_pph_weibull_eq(regression, insulator_string_data):
 
     weibull_aft = AcceleratedFailureTime(Weibull()).fit(
         insulator_string_data[0],

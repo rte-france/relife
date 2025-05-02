@@ -130,9 +130,9 @@ class LifetimeIterator(SampleIterator):
     ) -> None:
 
         if self.model is None:
-            self.timeline = np.zeros((model.nb_assets, self.size))
-            self.stop_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
-            self.start_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
+            self.timeline = np.zeros((model.args_nb_assets, self.size))
+            self.stop_counter = np.zeros((model.args_nb_assets, self.size), dtype=np.int64)
+            self.start_counter = np.zeros((model.args_nb_assets, self.size), dtype=np.int64)
 
         self.model = model
         self.ar = model.kwargs.get("ar", None)
@@ -154,9 +154,9 @@ class LifetimeIterator(SampleIterator):
             size=self.size,
             seed=self.seed,
         ).reshape((-1, self.size))
-        if durations.shape != (self.model.nb_assets, self.size):
+        if durations.shape != (self.model.args_nb_assets, self.size):
             # sometimes, model1 has n assets but not model
-            durations = np.tile(durations, (self.model.nb_assets, 1))
+            durations = np.tile(durations, (self.model.args_nb_assets, 1))
 
         # create events_indicators and entries
         events_indicators = np.ones_like(self.timeline, dtype=np.bool_)
@@ -258,17 +258,17 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
         if self.model is None:
             # self._nb_assets = get_nb_assets(model_args)
-            self.timeline = np.zeros((model.nb_assets, self.size))
+            self.timeline = np.zeros((model.args_nb_assets, self.size))
             # counting arrays to catch values crossing t0 and tf bounds
-            self.stop_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
-            self.start_counter = np.zeros((model.nb_assets, self.size), dtype=np.int64)
+            self.stop_counter = np.zeros((model.args_nb_assets, self.size), dtype=np.int64)
+            self.start_counter = np.zeros((model.args_nb_assets, self.size), dtype=np.int64)
 
-            self.hpp_timeline = np.zeros((model.nb_assets, self.size))
-            self.failure_times = np.zeros((model.nb_assets, self.size))
-            self.ages = np.zeros((model.nb_assets, self.size))
-            self.entries = np.zeros((model.nb_assets, self.size))
-            self.is_new_asset = np.zeros((model.nb_assets, self.size), dtype=np.bool_)
-            self.renewals_ids = np.zeros((model.nb_assets, self.size), dtype=np.int64)
+            self.hpp_timeline = np.zeros((model.args_nb_assets, self.size))
+            self.failure_times = np.zeros((model.args_nb_assets, self.size))
+            self.ages = np.zeros((model.args_nb_assets, self.size))
+            self.entries = np.zeros((model.args_nb_assets, self.size))
+            self.is_new_asset = np.zeros((model.args_nb_assets, self.size), dtype=np.bool_)
+            self.renewals_ids = np.zeros((model.args_nb_assets, self.size), dtype=np.int64)
 
         self.model = model
         self.ar = (
@@ -288,8 +288,8 @@ class NonHomogeneousPoissonIterator(SampleIterator):
 
         # generate new values
         self.hpp_timeline += self.exponential_dist.rvs(
-            size=self.size * self.model.nb_assets, seed=self.seed
-        ).reshape((self.model.nb_assets, self.size))
+            size=self.size * self.model.args_nb_assets, seed=self.seed
+        ).reshape((self.model.args_nb_assets, self.size))
 
         failure_times = self.model.ichf(self.hpp_timeline)
         durations = failure_times - self.failure_times  # t_i+1 - t_i

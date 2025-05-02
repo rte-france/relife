@@ -186,9 +186,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     def rvs(
         self,
-        /,
         *args: *Args,
-        shape: int | tuple[int, int] = 1,
+        size: int | tuple[int, int] = 1,
         seed: Optional[int] = None,
     ) -> np.float64 | NDArray[np.float64]:
         """Random variable sample.
@@ -196,7 +195,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         Parameters
         ----------
         *args : variadic arguments required by the function
-        shape : int or (int, int), default 1
+        size : int or (int, int), default 1
             Output shape of the generated sample.
         seed : int, default None
             Random seed.
@@ -206,41 +205,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         ndarray of shape (size, )
             Sample of random lifetimes.
         """
-        if isinstance(shape, int):
-            if shape < 1:
-                raise ValueError(
-                    f"Incorrect shape value, must be at least 1. Got {shape}"
-                )
-            shape = (shape,)
-
-        # shape : (n,) or (m, n)
-        if len(shape) > 2:
-            raise ValueError(
-                f"Incorrect shape. Expected shape with 2 or less dimensions. Got shape {shape}"
-            )
-        nb_assets = 1
-        args = tuple((np.asarray(arg, dtype=np.float64) for arg in args))
-        args_shape = np.broadcast_shapes(*map(np.shape, args))
-        if bool(args_shape):
-            nb_assets = args_shape[0]
-        if len(shape) == 2 and nb_assets != 1:
-            if shape[0] != 1 and shape[0] != nb_assets:
-                raise ValueError(
-                    f"Invalid shape. Got {nb_assets} nb_assets for args but {shape[0]} nb_assets from shape"
-                )
-        if len(shape) == 2:
-            nb_assets = max(nb_assets, shape[0])
-        if shape[0] == 1 or len(shape) == 1:
-            shape = (nb_assets, shape[-1])  #  (1, n) or (m, n)
-
-        rs = np.random.RandomState(seed=seed)
-        if shape == (1, 1):
-            probability = rs.uniform()
-        else:
-            probability = rs.uniform(size=shape)
-        if nb_assets == 1:
-            return np.squeeze(self.isf(probability, *args))
-        return self.isf(probability, *args)
+        frozen_model = self.freeze(*args)
+        return frozen_model.rvs(size=size, seed=seed)
 
     def ppf(
         self,
@@ -530,13 +496,13 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
     @override
     def rvs(
-        self, /, shape: int | tuple[int, int] = 1, seed: Optional[int] = None
+        self, size: int | tuple[int, int] = 1, seed: Optional[int] = None
     ) -> np.float64 | NDArray[np.float64]:
         """Random variable sampling.
 
         Parameters
         ----------
-        shape : int or (int, int), default 1
+        size : int or (int, int), default 1
             Shape of the sample.
         seed : int, default None
             Random seed.
@@ -547,7 +513,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             Sample of random lifetimes.
         """
 
-        return super().rvs(shape=shape, seed=seed)
+        return super().rvs(size=size, seed=seed)
 
     @override
     def moment(self, n: int) -> np.float64:
@@ -866,10 +832,9 @@ class LifetimeRegression(
     @override
     def rvs(
         self,
-        /,
         covar: float | NDArray[np.float64],
         *args: *Args,
-        shape: int | tuple[int, int] = 1,
+        size: int | tuple[int, int] = 1,
         seed: Optional[int] = None,
     ) -> np.float64 | NDArray[np.float64]:
         """
@@ -877,7 +842,7 @@ class LifetimeRegression(
 
         Parameters
         ----------
-        shape : int or (int, int)
+        size : int or (int, int)
             Shape of the sample.
         covar : np.ndarray
             Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
@@ -893,7 +858,7 @@ class LifetimeRegression(
         np.ndarray
             Sample of random lifetimes.
         """
-        return super().rvs(*(covar, *args), shape=shape, seed=seed)
+        return super().rvs(*(covar, *args), size=size, seed=seed)
 
     @override
     def ls_integrate(

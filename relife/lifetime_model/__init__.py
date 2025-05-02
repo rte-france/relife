@@ -3,6 +3,7 @@ from ._base import (
     LifetimeRegression,
     NonParametricLifetimeModel,
     ParametricLifetimeModel,
+    CovarEffect,
 )
 from ._structural_type import FittableParametricLifetimeModel
 from .conditional_model import AgeReplacementModel, LeftTruncatedModel

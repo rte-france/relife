@@ -13,19 +13,20 @@ P = ParamSpec("P")
 
 # necessary to allow user passing 1d ar and a0
 def _reshape_ar_or_a0(
-    name: str, value: float | NDArray[np.float64]
+    name: str, value: float | Sequence[float] | NDArray[np.float64]
 ) -> NDArray[np.float64]:  # ndim is 2 (m,n) or (m,1)
     value = np.squeeze(np.asarray(value))
-    if value.ndim > 2:
-        raise ValueError(
-            f"Incorrect {name} dim. Can't be more than 2. Got {value.ndim}"
-        )
-    if value.ndim == 2 and value.shape[-1] != 1:
-        raise ValueError(
-            f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}"
-        )
-    if value.ndim == 1:
-        value = value.reshape(-1, 1)
+    match value.ndim:
+        case 2 if value.shape[1] != 1:
+            raise ValueError(
+                f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}"
+            )
+        case 1:
+            value = value.reshape(-1, 1)
+        case _:
+            raise ValueError(
+                f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)"
+            )
     return value
 
 
@@ -136,13 +137,13 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
 
     def rvs(
         self,
-        shape: int | tuple[int, int],
+        size: int | tuple[int, int],
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
-        return np.minimum(self.baseline.rvs(shape, *args, seed=seed), ar)
+        return np.minimum(self.baseline.rvs(size, *args, seed=seed), ar)
 
     def ppf(
         self,
@@ -294,13 +295,13 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     @override
     def rvs(
         self,
-        shape: int | tuple[int, int],
+        size: int | tuple[int, int],
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
         a0 = _reshape_ar_or_a0("a0", a0)
-        return super().rvs(shape, *(a0, *args), seed=seed)
+        return super().rvs(size, *(a0, *args), seed=seed)
 
     @override
     def freeze(
