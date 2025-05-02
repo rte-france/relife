@@ -45,15 +45,15 @@ class Exponential(LifetimeDistribution):
         return self.rate * np.ones_like(time)
 
     def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
-        return np.float64(self.rate) * time
+        return np.asarray(self.rate) * time
 
     @override
     def mean(self) -> np.float64:
-        return 1 / np.float64(self.rate)
+        return 1 / np.asarray(self.rate)
 
     @override
     def var(self) -> np.float64:
-        return 1 / np.float64(self.rate)**2
+        return 1 / np.asarray(self.rate)**2
 
     @override
     def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -63,7 +63,7 @@ class Exponential(LifetimeDistribution):
     def ichf(
         self, cumulative_hazard_rate: float | NDArray[np.float64]
     ) -> np.float64 | NDArray[np.float64]:
-        return cumulative_hazard_rate / np.float64(self.rate)
+        return cumulative_hazard_rate / np.asarray(self.rate)
 
     def jac_hf(self, time: float | NDArray[np.float64], *, asarray : bool = False) -> np.float64 | NDArray[np.float64]:
         if isinstance(time, np.ndarray):
@@ -86,7 +86,7 @@ class Exponential(LifetimeDistribution):
     def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         if isinstance(time, np.ndarray):
             return np.zeros_like(time)
-        return np.float64(0)
+        return np.asarray(0.)
 
 
 class Weibull(LifetimeDistribution):
@@ -340,11 +340,11 @@ class Gamma(LifetimeDistribution):
 
     @override
     def mean(self) -> np.float64:
-        return np.float64(self.shape / self.rate)
+        return np.asarray(self.shape / self.rate)
 
     @override
     def var(self) -> np.float64:
-        return np.float64(self.shape / (self.rate**2))
+        return np.asarray(self.shape / (self.rate**2))
 
     @override
     def ichf(

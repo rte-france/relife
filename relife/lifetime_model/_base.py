@@ -773,10 +773,10 @@ class LifetimeRegression(
     def __init__(
         self,
         baseline: FittableParametricLifetimeModel[*Args],
-        *coefficients: Optional[float],
+        coefficients: tuple[Optional[float], ...] = (None,),
     ):
         super().__init__()
-        self.covar_effect = CovarEffect(*coefficients)
+        self.covar_effect = CovarEffect(coefficients)
         self.baseline = baseline
 
     @property

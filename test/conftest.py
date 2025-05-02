@@ -39,7 +39,7 @@ def equilibrium_distribution(distribution):
     ],
 )
 def regression(request, distribution):
-    return request.param(distribution, *(0.1,) * 3)
+    return request.param(distribution, (0.1,) * 3)
 
 
 
