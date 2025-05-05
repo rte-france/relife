@@ -54,8 +54,8 @@ def _broadcast_time_covar_shapes(
         case [(n,), (m,_)] | [(m,n), ()] | [(m,n), (_,)]:
             return m, n
         case [(mt, n), (mc,_)] if mt != mc:
-            if mt != 1 or mc != 1:
-                raise ValueError("Invalid time and covar : time got {mt} nbassets but covar got {mc} nb assets")
+            if mt != 1 and mc != 1:
+                raise ValueError(f"Invalid time and covar : time got {mt} nb assets but covar got {mc} nb assets")
             return max(mt, mc), n
         case [(mt, n), (mc, _)] if mt == mc:
             return mt, n
