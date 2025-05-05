@@ -83,97 +83,16 @@ def test_jac_pdf(distribution, time):
     assert distribution.jac_pdf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
 
 
-def test_ls_integrate(distribution, a, b):
-    m = 2
-    n = 3
-
+def test_ls_integrate(distribution, integration_bounds):
     # integral_a^b dF(x)
-    integration = distribution.ls_integrate(np.ones_like, a(), b(), deg=100)
-    assert integration.shape == ()
-    assert integration == approx(distribution.cdf(b()) - distribution.cdf(a()))
+    a, b = integration_bounds
+    shape = np.broadcast_shapes(a.shape, b.shape)
+    integration = distribution.ls_integrate(np.ones_like, a, b ,deg=100)
+    assert integration.shape == shape
+    assert integration == approx(distribution.cdf(b) - distribution.cdf(a))
     # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, 0.0, np.inf, deg=100)
-    assert integration == approx(distribution.mean(), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(), b(n), deg=100)
-    assert integration.shape == (n,)
-    assert integration == approx(distribution.cdf(b(n)) - distribution.cdf(a()))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, 0.0, np.full((n,), np.inf), deg=100)
-    assert integration == approx(np.full((n,), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(n), b(), deg=100)
-    assert integration.shape == (n,)
-    assert integration == approx(distribution.cdf(b()) - distribution.cdf(a(n)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros(n), np.inf, deg=100)
-    assert integration == approx(np.full((n,), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(n), b(n), deg=100)
-    assert integration.shape == (n,)
-    assert integration == approx(distribution.cdf(b(n)) - distribution.cdf(a(n)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros(n), np.full((n,), np.inf), deg=100)
-    assert integration == approx(np.full((n,), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(), b(m, n), deg=100)
-    assert integration.shape == (m, n)
-    assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a()))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, 0.0, np.full((m, n), np.inf), deg=100)
-    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(m, n), b(), deg=100)
-    assert integration.shape == (m, n)
-    assert integration == approx(distribution.cdf(b()) - distribution.cdf(a(m, n)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros((m, n)), np.inf, deg=100)
-    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(m, 1), b(1, n), deg=100)
-    assert integration.shape == (m, n)
-    assert integration == approx(distribution.cdf(b(1, n)) - distribution.cdf(a(m, 1)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros((m,1)), np.full((1, n), np.inf), deg=100)
-    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(1, n), b(m, 1), deg=100)
-    assert integration.shape == (m, n)
-    assert integration == approx(distribution.cdf(b(m, 1)) - distribution.cdf(a(1, n)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros((m,n)), np.full((m, 1), np.inf), deg=100)
-    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(m, 1), b(m, n), deg=100)
-    assert integration.shape == (m, n)
-    assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a(1, n)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros((m,1)), np.full((m, n), np.inf), deg=100)
-    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(1, n), b(m, n), deg=100)
-    assert integration.shape == (m, n)
-    assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a(1, n)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros((m,n)), np.full((m, n), np.inf), deg=100)
-    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
-
-    # integral_a^b dF(x)
-    integration = distribution.ls_integrate( np.ones_like, a(m, n), b(m, n), deg=100)
-    assert integration.shape == (m, n)
-    assert integration == approx(distribution.cdf(b(m, n)) - distribution.cdf(a(m, n)))
-    # integral_0^inf x*dF(x)
-    integration = distribution.ls_integrate( lambda x: x, np.zeros((m, n)), np.full((m, n), np.inf), deg=100)
-    assert integration == approx(np.full((m, n), distribution.mean()), rel=1e-3)
+    integration = distribution.ls_integrate( lambda x: x, np.zeros_like(a), np.full_like(b, np.inf), deg=100)
+    assert integration == approx(np.full(shape, distribution.mean()), rel=1e-3)
 
 # @pytest.mark.xfail
 def test_fit(distribution, power_transformer_data):

@@ -45,21 +45,21 @@ def regression(request, distribution):
 
 @pytest.fixture(
     params=[
-        # np.float64(1),
-        # np.ones((1,), dtype=np.float64),
-        # np.ones((3,), dtype=np.float64),
-        # np.ones((1, 1), dtype=np.float64),
-        # np.ones((3, 1), dtype=np.float64),
-        # np.ones((1, 3), dtype=np.float64),
+        np.float64(1),
+        np.ones((1,), dtype=np.float64),
+        np.ones((3,), dtype=np.float64),
+        np.ones((1, 1), dtype=np.float64),
+        np.ones((3, 1), dtype=np.float64),
+        np.ones((1, 3), dtype=np.float64),
         np.ones((10, 3), dtype=np.float64),
     ],
     ids=[
-        # "time()",
-        # "time(1,)",
-        # "time(3,)",
-        # "time(1,1)",
-        # "time(3,1)",
-        # "time(1,3)",
+        "time()",
+        "time(1,)",
+        "time(3,)",
+        "time(1,1)",
+        "time(3,1)",
+        "time(1,3)",
         "time(10, 3)"
 ]
 )
@@ -90,34 +90,45 @@ def covar():
     return _covar
 
 
+@pytest.fixture(
+    params=[
+        (2.0 * np.ones((), dtype=np.float64), 8.0 * np.ones((), dtype=np.float64)),
+        (2.0 * np.ones((), dtype=np.float64), 8.0 * np.ones((3,), dtype=np.float64)),
+        (2.0 * np.ones((3,), dtype=np.float64), 8.0 * np.ones((), dtype=np.float64)),
+        (2.0 * np.ones((3,), dtype=np.float64), 8.0 * np.ones((3,), dtype=np.float64)),
+        (2.0 * np.ones((), dtype=np.float64), 8.0 * np.ones((2,3), dtype=np.float64)),
+        (2.0 * np.ones((2,3), dtype=np.float64), 8.0 * np.ones((), dtype=np.float64)),
+        (2.0 * np.ones((2, 1), dtype=np.float64), 8.0 * np.ones((1, 3), dtype=np.float64)),
+        (2.0 * np.ones((1, 3), dtype=np.float64), 8.0 * np.ones((2, 1), dtype=np.float64)),
+        (2.0 * np.ones((2, 1), dtype=np.float64), 8.0 * np.ones((2, 3), dtype=np.float64)),
+        (2.0 * np.ones((1, 3), dtype=np.float64), 8.0 * np.ones((2, 3), dtype=np.float64)),
+        (2.0 * np.ones((2, 3), dtype=np.float64), 8.0 * np.ones((2, 3), dtype=np.float64)),
+
+    ],
+    ids = [
+        "a()-b()",
+        "a()-b(n)",
+        "a(n)-b()",
+        "a(n)-b(n)",
+        "a()-b(m,n)",
+        "a(m,n)-b()",
+        "a(m,1)-b(1,n)",
+        "a(1,n)-b(m,1)",
+        "a(m,1)-b(m,n)",
+        "a(1,n)-b(m,n)",
+        "a(m,n)-b(m,n)",
+    ]
+)
+def integration_bounds(request):
+    return request.param
+
+
 @pytest.fixture
 def ar():
     def _ar(n):
         return np.ones(n, dtype=np.float64)
 
     return _ar
-
-
-
-@pytest.fixture
-def a():
-    def _a(*d: int):
-        if not bool(d):
-            return 2.0
-        return 2.0 * np.ones(d, dtype=np.float64)
-
-    return _a
-
-
-@pytest.fixture
-def b():
-    def _b(*d: int):
-        if not bool(d):
-            return 8.0
-        return 8.0 * np.ones(d, dtype=np.float64)
-
-    return _b
-
 
 
 @pytest.fixture

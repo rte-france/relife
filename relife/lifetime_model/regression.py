@@ -44,7 +44,23 @@ def _broadcast_time_covar_shapes(
 ) -> tuple[()] |tuple[int] | tuple[int, int]:
     # time_shape : (), (n,) or (m, n)
     # covar_shape : (), (nb_coef,) or (m, nb_coef)
-    return (max(time_shape[:-1] + covar_shape[:-1]),) + time_shape[-1:]
+    match [time_shape, covar_shape]:
+        case [(), ()] | [(), (_,)]:
+            return ()
+        case [(), (m,_)]:
+            return m, 1
+        case [(n,), ()] | [(n,), (_,)]:
+            return (n,)
+        case [(n,), (m,_)] | [(m,n), ()] | [(m,n), (_,)]:
+            return m, n
+        case [(mt, n), (mc,_)] if mt != mc:
+            if mt != 1 or mc != 1:
+                raise ValueError("Invalid time and covar : time got {mt} nbassets but covar got {mc} nb assets")
+            return max(mt, mc), n
+        case [(mt, n), (mc, _)] if mt == mc:
+            return mt, n
+        case _:
+            raise ValueError(f"Invalid time or covar shape. Got {time_shape} and {covar_shape}")
 
 
 # type ParametricLifetimeModel[float|NDArray[np.float64], *Ts]
