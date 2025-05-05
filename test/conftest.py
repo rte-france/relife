@@ -9,7 +9,7 @@ from relife.lifetime_model import (
     Gamma,
     Gompertz,
     ProportionalHazard,
-    AcceleratedFailureTime, EquilibriumDistribution,
+    AcceleratedFailureTime, EquilibriumDistribution, AgeReplacementModel,
 )
 
 
@@ -26,12 +26,6 @@ from relife.lifetime_model import (
 def distribution(request):
     return request.param
 
-
-@pytest.fixture
-def equilibrium_distribution(distribution):
-    return EquilibriumDistribution(distribution)
-
-
 @pytest.fixture(
     params=[
         ProportionalHazard,
@@ -41,6 +35,19 @@ def equilibrium_distribution(distribution):
 def regression(request, distribution):
     return request.param(distribution, (0.1,) * 3)
 
+
+@pytest.fixture
+def equilibrium_distribution(distribution):
+    return EquilibriumDistribution(distribution)
+
+
+@pytest.fixture
+def age_replacement_distribution(distribution):
+    return AgeReplacementModel(distribution)
+
+@pytest.fixture
+def age_replacement_regression(regression):
+    return AgeReplacementModel(regression)
 
 
 @pytest.fixture(
@@ -81,6 +88,7 @@ def time(request):
 )
 def probability(request):
     return request.param
+
 
 @pytest.fixture
 def covar():

@@ -52,7 +52,7 @@ class DifferentiableParametricLifetimeModel(Protocol[*Args]):
     ) -> np.float64 | NDArray[np.float64]: ...
 
     def rvs(
-        self, shape: int | tuple[int, int], *args: *Args, seed: Optional[int] = None
+        self, *args: *Args, size: int | tuple[int, int], seed: Optional[int] = None
     ) -> np.float64 | NDArray[np.float64]: ...
 
     def ppf(

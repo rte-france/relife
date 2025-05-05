@@ -1,6 +1,14 @@
 from relife.lifetime_model import AgeReplacementModel
 import numpy as np
 
+
+class TestDistribution:
+    def test_args_nb_assets(self, distribution):
+        frozen_distribution = distribution.freeze()
+        assert frozen_distribution.args_nb_assets == 1
+
+
+
 def test_shape_and_values_distribution(distribution, time, probability, ar):
     ar_model = AgeReplacementModel(distribution)
 
