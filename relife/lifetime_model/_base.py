@@ -463,7 +463,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        cumulative_hazard_rate = -np.log(probability)
+        cumulative_hazard_rate = -np.log(probability + 1e-6) # avoid division by zero
         return self.ichf(cumulative_hazard_rate)
 
     @override
@@ -791,7 +791,7 @@ class LifetimeRegression(
         ndarray of shape (), (n, ) or (m, n)
             Time values corresponding to the given survival probabilities.
         """
-        cumulative_hazard_rate = -np.log(probability)
+        cumulative_hazard_rate = -np.log(probability + 1e-6) # avoid division by zero
         return self.ichf(cumulative_hazard_rate, covar, *args)
 
     @override

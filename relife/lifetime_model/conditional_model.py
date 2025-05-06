@@ -21,7 +21,7 @@ def _reshape_ar_or_a0(
             raise ValueError(
                 f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}"
             )
-        case 1:
+        case 1 | 0:
             value = value.reshape(-1, 1)
         case _:
             raise ValueError(
@@ -256,7 +256,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        cumulative_hazard_rate = -np.log(probability)
+        cumulative_hazard_rate = -np.log(probability + 1e-6) # avoid division by zero
         a0 = _reshape_ar_or_a0("a0", a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 

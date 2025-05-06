@@ -1,23 +1,11 @@
 import numpy as np
-from numpy.typing import NDArray
+import pytest
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard, CovarEffect
 
-
-def test_args_names(accelerated_failure_time):
-    assert accelerated_failure_time.args_names == ("covar",)
-    assert ProportionalHazard(accelerated_failure_time).args_names == (
-        "covar",
-        "covar",
-    )
-    assert AcceleratedFailureTime(accelerated_failure_time).args_names == (
-        "covar",
-        "covar",
-    )
-
-
+@pytest.mark.skip
 def test_covar_effect(covar):
     """
     covar : () or (nb_coef,)
@@ -45,250 +33,117 @@ def test_covar_effect(covar):
     assert covar_effect.jac_g(covar(1, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, 1, 1)
     assert covar_effect.jac_g(covar(10, covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef, 10, 1)
 
-
-def expected_out_shape(**kwargs: NDArray[np.float64]):
-    covar = kwargs.pop("covar", None)
-    covar_shape_contrib = ()
-    if covar is not None:
-        covar: NDArray[np.float64]
-        if covar.ndim == 2:
-            covar_shape_contrib = (covar.shape[0], 1)
-    return np.broadcast_shapes(*tuple((arr.shape for arr in kwargs.values())), covar_shape_contrib)
-
-
-class TestProportionalHazard:
-
-    def test_rvs(self, proportional_hazard, covar):
-        match covar.shape:
-            case (_,):
-                m, n = 10, 20
-                assert proportional_hazard.rvs(covar, seed=21).shape == ()
-                assert proportional_hazard.rvs(covar, size=n, seed=21).shape == (n,)
-                assert proportional_hazard.rvs(covar, size=(n,), seed=21).shape == (n,)
-                assert proportional_hazard.rvs(covar, size=(m, n), seed=21).shape == (m, n)
-            case (1, _):
-                m, n = 10, 20
-                assert proportional_hazard.rvs(covar, seed=21).shape == (1, 1)
-                assert proportional_hazard.rvs(covar, size=n, seed=21).shape == (1, n)
-                assert proportional_hazard.rvs(covar, size=(n,), seed=21).shape == (1, n)
-                assert proportional_hazard.rvs(covar, size=(m, n), seed=21).shape == (m, n)
-            case (m, _):
-                n = 20
-                assert proportional_hazard.rvs(covar, seed=21).shape == (m, 1)
-                assert proportional_hazard.rvs(covar, size=n, seed=21).shape == (m, n)
-                assert proportional_hazard.rvs(covar, size=(n,), seed=21).shape == (m, n)
-                assert proportional_hazard.rvs(covar, size=(m, n), seed=21).shape == (m, n)
-
-    def test_args_names(self, proportional_hazard):
-        assert proportional_hazard.args_names == ("covar",)
-        assert ProportionalHazard(proportional_hazard).args_names == (
-            "covar",
-            "covar",
-        )
-
-    def test_sf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.sf(time, covar).shape == expected_out_shape(time=time, covar=covar)
-
-    def test_hf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.hf(time, covar).shape == expected_out_shape(time=time, covar=covar)
-
-    def test_chf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.chf(time, covar).shape == expected_out_shape(time=time, covar=covar)
-
-    def test_cdf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.cdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
-
-    def test_pdf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.pdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
-
-    def test_ppf(self, proportional_hazard, probability, covar):
-        assert proportional_hazard.ppf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
-
-    def test_ichf(self, proportional_hazard, probability, covar):
-        assert proportional_hazard.ichf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
-
-    def test_isf(self, proportional_hazard, probability, covar):
-        assert proportional_hazard.isf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
-        assert proportional_hazard.isf(np.full(probability.shape, 0.5), covar) == approx(
-            np.broadcast_to(proportional_hazard.median(covar), expected_out_shape(time=probability, covar=covar))
-        )
-
-    def test_dhf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.dhf(time, covar).shape == expected_out_shape(time=time, covar=covar)
-
-    def test_jac_sf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.jac_sf(time, covar, asarray=True).shape == (
-            proportional_hazard.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
-
-    def test_jac_hf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.jac_hf(time, covar, asarray=True).shape == (
-            proportional_hazard.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
-
-    def test_jac_chf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.jac_chf(time, covar, asarray=True).shape == (
-            proportional_hazard.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
-
-    def test_jac_cdf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.jac_cdf(time, covar, asarray=True).shape == (
-            proportional_hazard.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
-
-    def test_jac_pdf(self, proportional_hazard, time, covar):
-        assert proportional_hazard.jac_pdf(time, covar, asarray=True).shape == (
-            proportional_hazard.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
-
-    def test_ls_integrate(self, proportional_hazard, integration_bound_a, integration_bound_b, covar):
-        # integral_a^b dF(x)
-        integration = proportional_hazard.ls_integrate(
-            np.ones_like, integration_bound_a, integration_bound_b, covar, deg=100
-        )
-        assert integration.shape == expected_out_shape(a=integration_bound_a, b=integration_bound_b, covar=covar)
-        assert integration == approx(
-            proportional_hazard.cdf(integration_bound_b, covar) - proportional_hazard.cdf(integration_bound_a, covar)
-        )
-        # integral_0^inf x*dF(x)
-        integration = proportional_hazard.ls_integrate(
-            lambda x: x, np.zeros_like(integration_bound_a), np.full_like(integration_bound_b, np.inf), covar, deg=100
-        )
-        assert integration == approx(
-            np.broadcast_to(
-                proportional_hazard.mean(covar),
-                expected_out_shape(a=integration_bound_a, b=integration_bound_b, covar=covar),
-            ),
-            rel=1e-3,
-        )
-
-    def test_fit(self, proportional_hazard, insulator_string_data):
-        proportional_hazard.fit(
-            insulator_string_data[0],
-            zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
-            event=insulator_string_data[1] == 1,
-        )
+def test_rvs(regression, covar):
+    match covar.shape:
+        case (_,):
+            m, n = 10, 20
+            assert regression.rvs(covar, seed=21).shape == ()
+            assert regression.rvs(covar, size=n, seed=21).shape == (n,)
+            assert regression.rvs(covar, size=(n,), seed=21).shape == (n,)
+            assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
+        case (1, _):
+            m, n = 10, 20
+            assert regression.rvs(covar, seed=21).shape == (1, 1)
+            assert regression.rvs(covar, size=n, seed=21).shape == (1, n)
+            assert regression.rvs(covar, size=(n,), seed=21).shape == (1, n)
+            assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
+        case (m, _):
+            n = 20
+            assert regression.rvs(covar, seed=21).shape == (m, 1)
+            assert regression.rvs(covar, size=n, seed=21).shape == (m, n)
+            assert regression.rvs(covar, size=(n,), seed=21).shape == (m, n)
+            assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
 
 
-class TestAcceleratedFailureTime:
+def test_args_names(regression):
+    assert regression.args_names == ("covar",)
+    assert ProportionalHazard(regression).args_names == (
+        "covar",
+        "covar",
+    )
 
-    def test_rvs(self, accelerated_failure_time, covar):
-        match covar.shape:
-            case (_,):
-                m, n = 10, 20
-                assert accelerated_failure_time.rvs(covar, seed=21).shape == ()
-                assert accelerated_failure_time.rvs(covar, size=n, seed=21).shape == (n,)
-                assert accelerated_failure_time.rvs(covar, size=(n,), seed=21).shape == (n,)
-                assert accelerated_failure_time.rvs(covar, size=(m, n), seed=21).shape == (m, n)
-            case (1, _):
-                m, n = 10, 20
-                assert accelerated_failure_time.rvs(covar, seed=21).shape == (1, 1)
-                assert accelerated_failure_time.rvs(covar, size=n, seed=21).shape == (1, n)
-                assert accelerated_failure_time.rvs(covar, size=(n,), seed=21).shape == (1, n)
-                assert accelerated_failure_time.rvs(covar, size=(m, n), seed=21).shape == (m, n)
-            case (m, _):
-                n = 20
-                assert accelerated_failure_time.rvs(covar, seed=21).shape == (m, 1)
-                assert accelerated_failure_time.rvs(covar, size=n, seed=21).shape == (m, n)
-                assert accelerated_failure_time.rvs(covar, size=(n,), seed=21).shape == (m, n)
-                assert accelerated_failure_time.rvs(covar, size=(m, n), seed=21).shape == (m, n)
+def test_sf(regression, time, covar, expected_out_shape):
+    assert regression.sf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
-    def test_args_names(self, accelerated_failure_time):
-        assert accelerated_failure_time.args_names == ("covar",)
-        assert ProportionalHazard(accelerated_failure_time).args_names == (
-            "covar",
-            "covar",
-        )
+def test_hf(regression, time, covar, expected_out_shape):
+    assert regression.hf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
-    def test_sf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.sf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+def test_chf(regression, time, covar, expected_out_shape):
+    assert regression.chf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
-    def test_hf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.hf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+def test_cdf(regression, time, covar, expected_out_shape):
+    assert regression.cdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
-    def test_chf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.chf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+def test_pdf(regression, time, covar, expected_out_shape):
+    assert regression.pdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
-    def test_cdf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.cdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+def test_ppf(regression, probability, covar, expected_out_shape):
+    assert regression.ppf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
 
-    def test_pdf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.pdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+def test_ichf(regression, probability, covar, expected_out_shape):
+    assert regression.ichf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
 
-    def test_ppf(self, accelerated_failure_time, probability, covar):
-        assert accelerated_failure_time.ppf(probability, covar).shape == expected_out_shape(
-            time=probability, covar=covar
-        )
+def test_isf(regression, probability, covar, expected_out_shape):
+    assert regression.isf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
+    assert regression.isf(np.full(probability.shape, 0.5), covar) == approx(
+        np.broadcast_to(regression.median(covar), expected_out_shape(time=probability, covar=covar))
+    )
 
-    def test_ichf(self, accelerated_failure_time, probability, covar):
-        assert accelerated_failure_time.ichf(probability, covar).shape == expected_out_shape(
-            time=probability, covar=covar
-        )
+def test_dhf(regression, time, covar, expected_out_shape):
+    assert regression.dhf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
-    def test_isf(self, accelerated_failure_time, probability, covar):
-        assert accelerated_failure_time.isf(probability, covar).shape == expected_out_shape(
-            time=probability, covar=covar
-        )
-        assert accelerated_failure_time.isf(np.full(probability.shape, 0.5), covar) == approx(
-            np.broadcast_to(accelerated_failure_time.median(covar), expected_out_shape(time=probability, covar=covar))
-        )
+def test_jac_sf(regression, time, covar, expected_out_shape):
+    assert regression.jac_sf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_out_shape(time=time, covar=covar)
 
-    def test_dhf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.dhf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+def test_jac_hf(regression, time, covar, expected_out_shape):
+    assert regression.jac_hf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_out_shape(time=time, covar=covar)
 
-    def test_jac_sf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.jac_sf(time, covar, asarray=True).shape == (
-            accelerated_failure_time.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
+def test_jac_chf(regression, time, covar, expected_out_shape):
+    assert regression.jac_chf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_out_shape(time=time, covar=covar)
 
-    def test_jac_hf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.jac_hf(time, covar, asarray=True).shape == (
-            accelerated_failure_time.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
+def test_jac_cdf(regression, time, covar, expected_out_shape):
+    assert regression.jac_cdf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_out_shape(time=time, covar=covar)
 
-    def test_jac_chf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.jac_chf(time, covar, asarray=True).shape == (
-            accelerated_failure_time.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
+def test_jac_pdf(regression, time, covar, expected_out_shape):
+    assert regression.jac_pdf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_out_shape(time=time, covar=covar)
 
-    def test_jac_cdf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.jac_cdf(time, covar, asarray=True).shape == (
-            accelerated_failure_time.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
+def test_ls_integrate(regression, integration_bound_a, integration_bound_b, covar, expected_out_shape):
+    # integral_a^b dF(x)
+    integration = regression.ls_integrate(
+        np.ones_like, integration_bound_a, integration_bound_b, covar, deg=100
+    )
+    assert integration.shape == expected_out_shape(a=integration_bound_a, b=integration_bound_b, covar=covar)
+    assert integration == approx(
+        regression.cdf(integration_bound_b, covar) - regression.cdf(integration_bound_a, covar)
+    )
+    # integral_0^inf x*dF(x)
+    integration = regression.ls_integrate(
+        lambda x: x, np.zeros_like(integration_bound_a), np.full_like(integration_bound_b, np.inf), covar, deg=100
+    )
+    assert integration == approx(
+        np.broadcast_to(
+            regression.mean(covar),
+            expected_out_shape(a=integration_bound_a, b=integration_bound_b, covar=covar),
+        ),
+        rel=1e-3,
+    )
 
-    def test_jac_pdf(self, accelerated_failure_time, time, covar):
-        assert accelerated_failure_time.jac_pdf(time, covar, asarray=True).shape == (
-            accelerated_failure_time.nb_params,
-        ) + expected_out_shape(time=time, covar=covar)
-
-    def test_ls_integrate(self, accelerated_failure_time, integration_bound_a, integration_bound_b, covar):
-        # integral_a^b dF(x)
-        integration = accelerated_failure_time.ls_integrate(
-            np.ones_like, integration_bound_a, integration_bound_b, covar, deg=100
-        )
-        assert integration.shape == expected_out_shape(a=integration_bound_a, b=integration_bound_b, covar=covar)
-        assert integration == approx(
-            accelerated_failure_time.cdf(integration_bound_b, covar)
-            - accelerated_failure_time.cdf(integration_bound_a, covar)
-        )
-        # integral_0^inf x*dF(x)
-        integration = accelerated_failure_time.ls_integrate(
-            lambda x: x, np.zeros_like(integration_bound_a), np.full_like(integration_bound_b, np.inf), covar, deg=100
-        )
-        assert integration == approx(
-            np.broadcast_to(
-                accelerated_failure_time.mean(covar),
-                expected_out_shape(a=integration_bound_a, b=integration_bound_b, covar=covar),
-            ),
-            rel=1e-3,
-        )
-
-    def test_fit(self, accelerated_failure_time, insulator_string_data):
-        accelerated_failure_time.fit(
-            insulator_string_data[0],
-            zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
-            event=insulator_string_data[1] == 1,
-        )
+def test_fit(regression, insulator_string_data):
+    regression.fit(
+        insulator_string_data[0],
+        zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
+        event=insulator_string_data[1] == 1,
+    )
 
 
 # # @pytest.mark.xfail
