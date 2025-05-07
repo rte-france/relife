@@ -137,13 +137,13 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
 
     def rvs(
         self,
-        size: int | tuple[int, int],
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
+        size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
         ar = _reshape_ar_or_a0("ar", ar)
-        return np.minimum(self.baseline.rvs(size, *args, seed=seed), ar)
+        return np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
 
     def ppf(
         self,
@@ -295,13 +295,13 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
     @override
     def rvs(
         self,
-        size: int | tuple[int, int],
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
+        size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
     ) -> NDArray[np.float64]:
         a0 = _reshape_ar_or_a0("a0", a0)
-        return super().rvs(size, *(a0, *args), seed=seed)
+        return super().rvs(*(a0, *args), size=size, seed=seed)
 
     @override
     def freeze(

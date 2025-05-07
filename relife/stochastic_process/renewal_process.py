@@ -13,19 +13,18 @@ from relife.economic import (
     ExponentialDiscounting,
     reward_partial_expectation,
 )
+from relife.sample import SampleMixin, FailureDataSampleMixin
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
 
 if TYPE_CHECKING:
     from relife.economic import Reward
     from relife.lifetime_model import (
-        FrozenParametricLifetimeModel,
         ParametricLifetimeModel,
     )
-    from relife.sample import CountData
 
 
-class RenewalProcess(ParametricModel):
+class RenewalProcess(ParametricModel, SampleMixin, FailureDataSampleMixin):
     def __init__(
         self,
         model: ParametricLifetimeModel[()],
@@ -43,16 +42,9 @@ class RenewalProcess(ParametricModel):
                     "Invalid type of model1. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
                 )
 
-        self.compose_with(_model=model)
-        self.compose_with(_model1=model1)
+        self.model = model
+        self.model1 = model1
 
-    @property
-    def model(self) -> FrozenParametricLifetimeModel:
-        return self._model
-
-    @property
-    def model1(self) -> Optional[FrozenParametricLifetimeModel]:
-        return getattr(self, "_model1", None)
 
     def renewal_function(
         self, tf: float, nb_steps: int
@@ -72,32 +64,6 @@ class RenewalProcess(ParametricModel):
             nb_steps,
             self.model,
             self.model.pdf if self.model1 is None else self.model1.pdf,
-        )
-
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> CountData:
-        from relife.sample import sample_count_data
-
-        return sample_count_data(self, size, tf, t0=t0, maxsample=maxsample, seed=seed)
-
-    def failure_data_sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sample import failure_data_sample
-
-        return failure_data_sample(
-            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use="model"
         )
 
 
@@ -205,19 +171,3 @@ class RenewalRewardProcess(RenewalProcess):
             )
         else:
             return self.discounting.rate * self.asymptotic_expected_total_reward()
-
-    @override
-    def failure_data_sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-        use: str = "model",
-    ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sample import failure_data_sample
-
-        return failure_data_sample(
-            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use
-        )

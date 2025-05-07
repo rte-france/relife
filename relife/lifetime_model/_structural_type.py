@@ -8,8 +8,10 @@ from .frozen_model import FrozenParametricLifetimeModel
 Args = TypeVarTuple("Args")
 
 
+# := ParametricLifetimeModel[*Args]
 class DifferentiableParametricLifetimeModel(Protocol[*Args]):
     nb_params : int
+    args_names : tuple[str, ...]
     params : NDArray[np.float64 | np.complex64]
 
 

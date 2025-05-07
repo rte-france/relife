@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,19 +8,18 @@ from numpy.typing import NDArray
 from relife import ParametricModel
 from relife._base import FrozenMixin
 from relife._plots import PlotConstructor, PlotNHPP
+from relife.sample import SampleMixin, FailureDataSampleMixin
 
 if TYPE_CHECKING:
-    from relife.sample import CountData
-
     from .non_homogeneous_poisson_process import NonHomogeneousPoissonProcess
 
 
-class FrozenNonHomogeneousPoissonProcess(ParametricModel, FrozenMixin):
+class FrozenNonHomogeneousPoissonProcess(ParametricModel, FrozenMixin, SampleMixin, FailureDataSampleMixin):
     def __init__(
-        self, model: NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]
+        self, baseline: NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]
     ):
         super().__init__()
-        self.compose_with(model=model)
+        self.baseline = baseline
 
     def intensity(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.intensity(time, *self.args)
@@ -29,45 +28,6 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel, FrozenMixin):
         self, time: float | NDArray[np.float64]
     ) -> NDArray[np.float64]:
         return self.model.cumulative_intensity(time, *self.args)
-
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> CountData:
-        from relife.sample import sample_count_data
-
-        return sample_count_data(
-            self.model,
-            size,
-            tf,
-            t0=t0,
-            maxsample=maxsample,
-            seed=seed,
-        )
-
-    def failure_data_sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sample import failure_data_sample
-
-        return failure_data_sample(
-            self.model,
-            size,
-            tf,
-            t0,
-            maxsample=maxsample,
-            seed=seed,
-            use="model",
-        )
 
     @property
     def plot(self) -> PlotConstructor:

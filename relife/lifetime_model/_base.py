@@ -188,7 +188,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         *args: *Args,
         size: int | tuple[int, int] = 1,
-        seed: Optional[int] = None,
+        seed: Optional[int | tuple[int] | tuple[int, int]] = None,
     ) -> np.float64 | NDArray[np.float64]:
         """Random variable sample.
 

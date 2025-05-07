@@ -15,6 +15,8 @@ from relife._plots import (
 
 Ids = NewType("Ids", Union[list[int, ...], tuple[int, ...], int])
 
+# TODO : CountData init with SampleIterator
+# __post_init__ with operations in _dispatch sample
 
 @dataclass
 class CountData:

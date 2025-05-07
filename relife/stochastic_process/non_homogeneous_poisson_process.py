@@ -34,7 +34,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
         baseline: FittableParametricLifetimeModel[*Args],
     ):
         super().__init__()
-        self.compose_with(baseline=baseline)
+        self.baseline = baseline
 
     @property
     def fitting_results(self) -> Optional[FittingResults]:
@@ -64,16 +64,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> CountData:
-        from relife.sample import sample_count_data
-
-        return sample_count_data(
-            self.baseline.freeze(*args),
-            size,
-            tf,
-            t0=t0,
-            maxsample=maxsample,
-            seed=seed,
-        )
+        return self.freeze(*args).sample(size, tf, t0=t0, maxsample=maxsample, seed=seed)
 
     def failure_data_sample(
         self,
@@ -85,20 +76,19 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> tuple[NDArray[np.float64], ...]:
-        from relife.sample import failure_data_sample
-
-        return failure_data_sample(
-            self.baseline.freeze(*args),
-            size,
-            tf,
-            t0,
-            maxsample=maxsample,
-            seed=seed,
-            use="model",
-        )
+        return self.freeze(*args).failure_data_sample(size, tf, t0=t0, maxsample=maxsample, seed=seed)
 
     def freeze(self, *args: *Args) -> FrozenNonHomogeneousPoissonProcess:
-        return FrozenNonHomogeneousPoissonProcess(self, *args)
+        from .frozen_process import FrozenNonHomogeneousPoissonProcess
+
+        args_names = self.baseline.args_names
+        if len(args) != len(args_names):
+            raise ValueError(
+                f"Expected {args_names} positional arguments but got only {len(args)} arguments"
+            )
+        frozen_model = FrozenNonHomogeneousPoissonProcess(self)
+        frozen_model.freeze_args(**{k: v for (k, v) in zip(args_names, args)})
+        return frozen_model
 
     @property
     def plot(self) -> PlotNHPP:

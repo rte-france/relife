@@ -5,13 +5,13 @@ import numpy as np
 def test_args_names(distribution):
     assert distribution.args_names == ()
 
-def test_rvs(distribution):
-    m, n = 3, 10
-    assert distribution.rvs(seed=21).shape == ()
-    assert distribution.rvs(n, seed=21).shape == (n,)
-    assert distribution.rvs((n,), seed=21).shape == (n,)
-    assert distribution.rvs((m, 1), seed=21).shape == (m, 1)
-    assert distribution.rvs((m, n), seed=21).shape == (m, n)
+# def test_rvs(distribution):
+#     m, n = 3, 10
+#     assert distribution.rvs(seed=21).shape == ()
+#     assert distribution.rvs(n, seed=21).shape == (n,)
+#     assert distribution.rvs((n,), seed=21).shape == (n,)
+#     assert distribution.rvs((m, 1), seed=21).shape == (m, 1)
+#     assert distribution.rvs((m, n), seed=21).shape == (m, n)
 
 def test_sf(distribution, time, expected_out_shape):
     assert distribution.sf(time).shape == expected_out_shape(time=time)

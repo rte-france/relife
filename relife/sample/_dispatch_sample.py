@@ -4,6 +4,7 @@ from typing import Iterator, Optional, Union
 
 import numpy as np
 
+from relife import ParametricModel
 from relife.economic import (
     age_replacement_rewards,
     run_to_failure_rewards,
@@ -13,7 +14,7 @@ from relife.policy import (
     DefaultRunToFailurePolicy,
     NonHomogeneousPoissonAgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,
-    OneCycleRunToFailurePolicy,
+    OneCycleRunToFailurePolicy, RenewalPolicy,
 )
 from relife.stochastic_process import (
     NonHomogeneousPoissonProcess,
@@ -22,7 +23,7 @@ from relife.stochastic_process import (
 )
 
 from .counting_data import NHPPCountData, RenewalData
-from .iterators import LifetimeIterator, NonHomogeneousPoissonIterator
+from .iterators import RenewalProcessIterator, NonHomogeneousPoissonProcessIterator
 
 
 def stack1d(
@@ -53,7 +54,7 @@ def stack1d(
 # noinspection PyUnusedLocal
 @singledispatch
 def sample_count_data(
-    obj,
+    obj : ParametricModel | RenewalPolicy,
     size: int,
     tf: float,
     t0: float = 0.0,
@@ -65,7 +66,7 @@ def sample_count_data(
 
 @sample_count_data.register
 def _(
-    obj: Union[RenewalProcess, RenewalRewardProcess],
+    obj: RenewalProcess | RenewalRewardProcess,
     size: int,
     tf: float,
     t0: float = 0.0,
@@ -73,7 +74,7 @@ def _(
     seed: Optional[int] = None,
 ):
     keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = RenewalProcessIterator(size, tf, t0, seed=seed)
 
     if isinstance(obj, RenewalRewardProcess):
         iterator.rewards = obj.reward1
@@ -107,7 +108,7 @@ def _(
     seed: Optional[int] = None,
 ):
     keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = RenewalProcessIterator(size, tf, t0, seed=seed)
     iterator.rewards = run_to_failure_rewards(obj.cf)
     iterator.discounting = obj.discounting
     iterator.set_model(obj.model)
@@ -131,7 +132,7 @@ def _(
     seed: Optional[int] = None,
 ):
     keys = ("durations", "timeline", "samples_ids", "assets_ids", "rewards")
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = RenewalProcessIterator(size, tf, t0, seed=seed)
     iterator.rewards = age_replacement_rewards(obj.ar, obj.cf, obj.cp)
     iterator.discounting = obj.discounting
     iterator.set_model(obj.model)
@@ -177,7 +178,7 @@ def _(
         "assets_ids",
         "rewards",
     )
-    iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed)
+    iterator = NonHomogeneousPoissonProcessIterator(size, tf, t0=t0, seed=seed)
     iterator.set_model(obj.model, ar=getattr(obj, "ar", None))
     if isinstance(
         obj,
@@ -238,7 +239,7 @@ def failure_data_sample(
     seed : int
     use : str
     """
-    ValueError(f"No sample for {type(obj)}")
+    ValueError(f"{type(obj)} has no failure_data_sample")
 
 
 @failure_data_sample.register
@@ -256,7 +257,7 @@ def _(
 
     model, model_args = get_model_model1(obj.model, obj.model1, use)
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = RenewalProcessIterator(size, tf, t0, seed=seed)
     iterator.set_model(obj.model)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)
@@ -282,7 +283,7 @@ def _(
             "Invalid 'use' argument for OneCycleRunToFailurePolicy. 'use' can only be 'model'"
         )
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = RenewalProcessIterator(size, tf, t0, seed=seed)
     iterator.set_model(obj.model)
 
     stack = stack1d(islice(iterator, 1), keys, maxsample=maxsample)
@@ -305,7 +306,7 @@ def _(
 
     model = get_model_model1(obj.model, obj.model1, use)
 
-    iterator = LifetimeIterator(size, tf, t0, seed=seed)
+    iterator = RenewalProcessIterator(size, tf, t0, seed=seed)
     iterator.set_model(model)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)
@@ -340,7 +341,7 @@ def _(
     if use != "model":
         raise ValueError("Invalid 'use' value. Only 'model' can be set")
 
-    iterator = NonHomogeneousPoissonIterator(size, tf, t0=t0, seed=seed, keep_last=True)
+    iterator = NonHomogeneousPoissonProcessIterator(size, tf, t0=t0, seed=seed, keep_last=True)
     iterator.set_model(obj.model, ar=obj.ar if hasattr(obj, "ar") else None)
 
     stack = stack1d(iterator, keys, maxsample=maxsample)

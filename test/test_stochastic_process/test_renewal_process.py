@@ -1,63 +1,32 @@
-import numpy as np
-import pytest
 from pytest import approx
 
-from relife.economic import Cost, reward
-from relife.lifetime_model import EquilibriumDistribution, AgeReplacementModel, Weibull, Gompertz, Gamma, LogLogistic, AcceleratedFailureTime, ProportionalHazard
-from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
+from relife.lifetime_model import EquilibriumDistribution
+from relife.stochastic_process import RenewalProcess
 
 
-@pytest.fixture(
-    params=[
-        Weibull(2, 0.05),
-        Gompertz(0.01, 0.1),
-        Gamma(2, 0.05),
-        LogLogistic(3, 0.05),
-    ],
-)
-def distribution(request):
-    return request.param
+class TestDistribution:
+    def test_renewal_density(self, distribution):
+        renewal_process = RenewalProcess(distribution, model1=EquilibriumDistribution(distribution))
+        assert renewal_process.renewal_density(100, 200).shape == (200,)
+        assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
 
+class TestRegression:
+    def test_renewal_density(self, frozen_regression):
+        renewal_process = RenewalProcess(frozen_regression, model1=EquilibriumDistribution(frozen_regression))
+        assert renewal_process.renewal_density(100, 200).shape == (3, 200)
+        assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / frozen_regression.mean(), rel=1e-4)
 
-@pytest.fixture(params=[AcceleratedFailureTime, ProportionalHazard])
-def regression(request, distribution):
-    return request.param(distribution, coef=(np.log(2), np.log(2)))
+class TestAgeReplacementDistribution:
+    def test_renewal_density(self, frozen_ar_distribution):
+        renewal_process = RenewalProcess(frozen_ar_distribution, model1=EquilibriumDistribution(frozen_ar_distribution))
+        assert renewal_process.renewal_density(100, 200).shape == (3, 200)
+        assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / frozen_ar_distribution.mean(), rel=1e-4)
 
-
-def test_renewal_process(distribution, regression, ar):
-    renewal_process = RenewalProcess(distribution, model1=EquilibriumDistribution(distribution))
-    assert renewal_process.renewal_density(100, 200).shape == (200,)
-    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
-
-    ar = distribution.isf(0.75)
-
-    ar_distribution = AgeReplacementModel(distribution).freeze(ar)
-    renewal_process = RenewalProcess(ar_distribution, model1=EquilibriumDistribution(ar_distribution))
-    assert renewal_process.renewal_density(100, 200).shape == (200,)
-    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / ar_distribution.mean(), rel=1e-4)
-
-    covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    regression = regression.freeze(covar)
-
-    renewal_process = RenewalProcess(regression, model1=EquilibriumDistribution(regression))
-    assert renewal_process.renewal_density(100, 200).shape == (3, 200)
-    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / regression.mean(), rel=1e-4)
-
-    ar = regression.isf(0.75)
-    ar_regression = AgeReplacementModel(regression).freeze(ar)
-    renewal_process = RenewalProcess(ar_regression, model1=EquilibriumDistribution(ar_regression))
-    assert renewal_process.renewal_density(100, 200).shape == (3,200)
-    assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / ar_regression.mean(), rel=1e-4)
-
-
-
-def proportional_hazard(..., covar : Optional[] = None):
-    model = ProportionalHazard(...)
-    if covar is not None:
-        return model.freeze(covar)
-    return model
-
-
+class TestAgeReplacementRegression:
+    def test_renewal_density(self, frozen_ar_regression):
+        renewal_process = RenewalProcess(frozen_ar_regression, model1=EquilibriumDistribution(frozen_ar_regression))
+        assert renewal_process.renewal_density(100, 200).shape == (3, 200)
+        assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / frozen_ar_regression.mean(), rel=1e-4)
 
 
 # def test_renewal_reward_process(distribution, regression):

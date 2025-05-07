@@ -2,25 +2,34 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, NewType, Optional
+from typing import TYPE_CHECKING, NewType, Optional, TypedDict, NotRequired
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.lifetime_model import Exponential
+from relife.lifetime_model import Exponential, ParametricLifetimeModel
 
 if TYPE_CHECKING:
+    from relife import ParametricModel
     from relife.economic import Discounting, Reward
     from relife.lifetime_model import FrozenParametricLifetimeModel
 
 AnyNDArray = NewType(
-    "AnyNDArray", NDArray[np.floating] | NDArray[np.integer] | NDArray[np.bool_]
+    "AnyNDArray", NDArray[np.float64] | NDArray[np.int64] | NDArray[np.bool_]
 )
+
+
+# Return DICT with samples_ids and assets_ids to np char
+# Return obj with ids : dict of np char
+# Return values : dict of AnyNDArray
+
+
+
 
 
 class SampleIterator(Iterator):
 
-    model: Optional[FrozenParametricLifetimeModel]
+    model: Optional[ParametricModel]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]
 
@@ -102,10 +111,9 @@ class SampleIterator(Iterator):
 #         return 1
 
 
-class LifetimeIterator(SampleIterator):
+class RenewalProcessIterator(SampleIterator):
 
-    rewards: Optional[Reward]
-    discounting: Optional[Discounting]
+    model: Optional[ParametricLifetimeModel[()]]
     a0: Optional[NDArray[np.float64]]
     ar: Optional[NDArray[np.float64]]
 
@@ -126,7 +134,7 @@ class LifetimeIterator(SampleIterator):
 
     def set_model(
         self,
-        model: FrozenParametricLifetimeModel,
+        model: ParametricLifetimeModel[()],
     ) -> None:
 
         if self.model is None:
@@ -137,16 +145,6 @@ class LifetimeIterator(SampleIterator):
         self.model = model
         self.ar = model.kwargs.get("ar", None)
         self.a0 = model.kwargs.get("a0", None)
-
-    def compute_rewards(
-        self, timeline: NDArray[np.float64], durations: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
-        rewards = np.zeros_like(durations)
-        if self.rewards and self.discounting:
-            rewards = self.rewards(durations) * self.discounting.factor(timeline)
-        if self.rewards and not self.discounting:
-            rewards = self.rewards(durations)
-        return rewards
 
     def step(self) -> dict[str, AnyNDArray]:
 
@@ -204,7 +202,23 @@ class LifetimeIterator(SampleIterator):
         )
 
 
-class NonHomogeneousPoissonIterator(SampleIterator):
+
+class RenewalRewardProcessIterator(RenewalProcessIterator):
+    rewards: Optional[Reward]
+    discounting: Optional[Discounting]
+
+    def compute_rewards(
+        self, timeline: NDArray[np.float64], durations: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        rewards = np.zeros_like(durations)
+        if self.rewards and self.discounting:
+            rewards = self.rewards(durations) * self.discounting.factor(timeline)
+        if self.rewards and not self.discounting:
+            rewards = self.rewards(durations)
+        return rewards
+
+
+class NonHomogeneousPoissonProcessIterator(SampleIterator):
 
     rewards: Optional[Reward]
     discounting: Optional[Discounting]
