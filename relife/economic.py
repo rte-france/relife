@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from functools import partial
-from typing import TYPE_CHECKING, Callable, NewType, Optional, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,14 +10,10 @@ if TYPE_CHECKING:
     from relife.lifetime_model import ParametricLifetimeModel
 
 
-Reward = NewType(
-    "Reward",
-    Callable[[NDArray[np.float64]], NDArray[np.float64]],
-)
-
 
 class Cost(dict):
     _allowed_keys = ("cp", "cf", "cr")
+    nb_assets : int
 
     def __init__(
         self,
@@ -65,63 +60,34 @@ class Cost(dict):
         raise AttributeError("Can't update items")
 
 
-# class Reward(ABC):
-#     @abstractmethod
-#     def conditional_expectation(self, time : NDArray[np.float64]):
-#         ...
-#
-#     @abstractmethod
-#     def sample(self, time : NDArray[np.float64]):
-#         ...
-#
-#
-# class FailureCost(Reward):
-#     ...
-#
-#
-# class AgeReplacementCost(Reward):
-#     ...
+class Reward(ABC):
+    @abstractmethod
+    def conditional_expectation(
+        self, time: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
+        """Conditional expected reward"""
+        pass
+
+    @abstractmethod
+    def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Reward conditional sampling."""
 
 
-def _age_replacement_rewards(
-    time: NDArray[np.float64],  # duration
-    ar: float | NDArray[np.float64],
-    cf: float | NDArray[np.float64],
-    cp: float | NDArray[np.float64],
-) -> NDArray[np.float64]:
-    return np.where(time < ar, cf, cp)
-
-
-def age_replacement_rewards(
-    ar: float | NDArray[np.float64],
-    cf: float | NDArray[np.float64],
-    cp: float | NDArray[np.float64],
-) -> Reward:
-    return partial(_age_replacement_rewards, ar=ar, cf=cf, cp=cp)
-
-
-def _run_to_failure_rewards(
-    time: NDArray[np.float64],  # duration
-    cf: float | NDArray[np.float64],
-) -> NDArray[np.float64]:
-    return np.ones_like(time) * cf
-
-
-def run_to_failure_rewards(cf: float | NDArray[np.float64]) -> Reward:
-    return partial(_run_to_failure_rewards, cf=cf)
-
-
-def reward(
-    ar: Optional[float | NDArray[np.float64]] = None,
-    /,
-    **kwargs: float | NDArray[np.float64],
-) -> Reward:
-    cost = Cost(**kwargs)
-    if ar is None:
+class RunToFailureReward(Reward):
+    def __init__(self, cost : Cost):
         if sorted(cost.keys()) != ["cf"]:
             raise ValueError
-        return run_to_failure_rewards(cost["cf"])
-    else:
+        self.cost = cost
+
+    def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return np.ones_like(time) * self.cost["cf"]
+
+    def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.conditional_expectation(time)
+
+
+class AgeReplacementReward(Reward):
+    def __init__(self, cost : Cost, ar : tuple[float, ...] | NDArray[np.float64]):
         if sorted(cost.keys()) != ["cf", "cp"]:
             raise ValueError
         ar = np.squeeze(np.asarray(ar))
@@ -135,18 +101,53 @@ def reward(
             ar = ar.reshape(-1, 1)
         if ar.shape[0] != 1 and ar.shape[0] != cost.nb_assets:
             raise ValueError
-        return age_replacement_rewards(ar, cost["cf"], cost["cp"])
+        self.cost = cost
+        self.ar = ar
+
+    def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return np.where(time < self.ar, self.cost["cf"], self.cost["cp"])
+
+    def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+        return self.conditional_expectation(time)
+
+
+# def _age_replacement_rewards(
+#     time: NDArray[np.float64],  # duration
+#     ar: float | NDArray[np.float64],
+#     cf: float | NDArray[np.float64],
+#     cp: float | NDArray[np.float64],
+# ) -> NDArray[np.float64]:
+#     return np.where(time < ar, cf, cp)
+#
+#
+# def age_replacement_rewards(
+#     ar: float | NDArray[np.float64],
+#     cf: float | NDArray[np.float64],
+#     cp: float | NDArray[np.float64],
+# ) -> Reward:
+#     return partial(_age_replacement_rewards, ar=ar, cf=cf, cp=cp)
+#
+#
+# def _run_to_failure_rewards(
+#     time: NDArray[np.float64],  # duration
+#     cf: float | NDArray[np.float64],
+# ) -> NDArray[np.float64]:
+#     return np.ones_like(time) * cf
+#
+#
+# def run_to_failure_rewards(cf: float | NDArray[np.float64]) -> Reward:
+#     return partial(_run_to_failure_rewards, cf=cf)
 
 
 def reward_partial_expectation(
     timeline: NDArray[np.float64],
     model: ParametricLifetimeModel[()],
-    rewards_func: Reward,
+    reward: Reward,
     *,
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
     def func(x):
-        return rewards_func(x) * discounting.factor(x)
+        return reward.sample(x) * discounting.factor(x)
 
     ls = model.ls_integrate(func, np.zeros_like(timeline), timeline)
     # reshape 2d -> final_dim

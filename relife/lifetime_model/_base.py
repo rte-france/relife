@@ -13,15 +13,18 @@ from typing import (
 )
 
 import numpy as np
+from numpy._typing import DTypeLike
 from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife import FrozenMixin, ParametricModel
+from relife import ParametricModel
 from relife._plots import PlotSurvivalFunc
 from relife.data import lifetime_data_factory
 from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
+from relife.sample import RandomTimeSamplerMixin
+from relife.quadrature import LebesgueStieltjesMixin
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -35,7 +38,13 @@ if TYPE_CHECKING:
 Args = TypeVarTuple("Args")
 
 
-class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
+class ParametricLifetimeModel(
+    ParametricModel,
+    RandomTimeSamplerMixin[*Args],
+    LebesgueStieltjesMixin[*Args],
+    Generic[*Args],
+    ABC
+):
     r"""Base class for lifetime model.
 
     This class defines the structure for creating lifetime model. It is s a blueprint
@@ -184,30 +193,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     ) -> np.float64 | NDArray[np.float64]:
         return 1 - self.sf(time, *args)
 
-    def rvs(
-        self,
-        *args: *Args,
-        size: int | tuple[int, int] = 1,
-        seed: Optional[int | tuple[int] | tuple[int, int]] = None,
-    ) -> np.float64 | NDArray[np.float64]:
-        """Random variable sample.
-
-        Parameters
-        ----------
-        *args : variadic arguments required by the function
-        size : int or (int, int), default 1
-            Output shape of the generated sample.
-        seed : int, default None
-            Random seed.
-
-        Returns
-        -------
-        ndarray of shape (size, )
-            Sample of random lifetimes.
-        """
-        frozen_model = self.freeze(*args)
-        return frozen_model.rvs(size=size, seed=seed)
-
     def ppf(
         self,
         probability: float | NDArray[np.float64],
@@ -215,189 +200,16 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     ) -> np.float64 | NDArray[np.float64]:
         return self.isf(1 - probability, *args)
 
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64] = 0.0,
-        b: float | NDArray[np.float64] = np.inf,
-        *args: *Args,
-        deg: int = 10,
-    ) -> np.float64 | NDArray[np.float64]:
-        r"""
-        Lebesgue-Stieltjes integration.
-
-        Parameters
-        ----------
-        func : callable (in : 1 ndarray , out : 1 ndarray)
-            The callable must have only one ndarray object as argument and returns one ndarray object
-        a : ndarray (max dim of 2)
-            Lower bound(s) of integration.
-        b : ndarray (max dim of 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-        deg : int, default 10
-            Degree of the polynomials interpolation
-
-        Returns
-        -------
-        np.ndarray
-            Lebesgue-Stieltjes integral of func from `a` to `b`.
-        """
-        from relife._quadrature import (
-            check_and_broadcast_bounds,
-            legendre_quadrature,
-            unweighted_laguerre_quadrature,
-        )
-
-        frozen_model = self.freeze(*args)
-
-        def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
-            #  x.shape == (deg,), (deg, n) or (deg, m, n)
-            # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-            fx = func(x)
-            if fx.shape[-len(x.shape):] != x.shape:
-                raise ValueError(
-                    f"""
-                    func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
-                    Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
-                    """
-                )
-            if x.ndim == 3: # reshape because model.pdf is tested only for input ndim <= 2
-                deg, m, n = x.shape
-                x = np.rollaxis(x, 1).reshape(m, -1) # (m, deg*n), roll on m because axis 0 must align with m of args
-                pdf = frozen_model.pdf(x)  # (m, deg*n)
-                pdf = np.rollaxis(pdf.reshape(m, deg, n), 1, 0)  #  (deg, m, n)
-            else: # ndim == 1 | 2
-                # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args
-                pdf = frozen_model.pdf(x.reshape(1, -1)) # (1, deg*n) or (1, deg)
-                pdf = pdf.reshape(x.shape) # (deg, n) or (deg,)
-
-            # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-            return fx * pdf
-
-        # if isinstance(model, AgeReplacementModel):
-        #     ar, args = frozen_model.args[0], frozen_model.args[1:]
-        #     b = np.minimum(ar, b)
-        #     w = np.where(b == ar, func(ar) * model.baseline.sf(ar, *args), 0.)
-
-        arr_a, arr_b = check_and_broadcast_bounds(a, b)  # (), (n,) or (m, n)
-        if np.any(arr_a >= arr_b):
-            raise ValueError("Bound values a must be strictly lower than values of b")
-        if arr_a.ndim == 2:
-            if arr_a.shape[0] not in (
-                1,
-                frozen_model.args_nb_assets,
-            ) and frozen_model.args_nb_assets not in (1, arr_a.shape[0]):
-                raise ValueError(
-                    f"Incompatible bounds with model. Model has {frozen_model.nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
-                )
-
-        bound_b = frozen_model.isf(
-            1e-4
-        )  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
-        broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
-        arr_a = broadcasted_arrs[
-            0
-        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        arr_b = broadcasted_arrs[
-            1
-        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        bound_b = broadcasted_arrs[
-            2
-        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        is_inf = np.isinf(arr_b)  # () or (n,) or (m, n)
-        arr_b = np.where(is_inf, bound_b, arr_b)
-        integration = legendre_quadrature(
-            integrand, arr_a, arr_b, deg=deg
-        )  #  (d_1, ..., d_i), (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
-        is_inf, _ = np.broadcast_arrays(is_inf, integration)
-        return np.where(
-            is_inf,
-            integration + unweighted_laguerre_quadrature(integrand, arr_b, deg=deg),
-            integration,
-        )
-
-    def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
-        """n-th order moment
-
-        Parameters
-        ----------
-        n : order of the moment, at least 1.
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (0, )
-            n-th order moment.
-        """
-        if n < 1:
-            raise ValueError("order of the moment must be at least 1")
-        return self.ls_integrate(
-            lambda x: x**n,
-            0.0,
-            np.inf,
-            *args,
-            deg=100,
-        )  #  high degree of polynome to ensure high precision
-
-    def mean(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
-        return self.moment(1, *args)
-
-    def var(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
-        return self.moment(2, *args) - self.moment(1, *args) ** 2
-
     def median(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.ppf(np.array(0.5), *args)
 
-    def freeze(
-        self,
-        *args: *Args,
-    ) -> ParametricLifetimeModel[()]:
-        from .frozen_model import FrozenParametricLifetimeModel
-
-        args_names = self.args_names
-        if len(args) != len(args_names):
-            raise ValueError(
-                f"Expected {args_names} positional arguments but got only {len(args)} arguments"
-            )
-        frozen_model = FrozenParametricLifetimeModel(self)
-        frozen_model.freeze_args(**{k: v for (k, v) in zip(args_names, args)})
-        return frozen_model
+    def rvs(self, *args: *Args, size: int | tuple[int, int] = 1, seed: Optional[int] = None) -> NDArray[DTypeLike]:
+        return self.freeze(*args).rvs(siz=size, seed=seed)
 
     @property
     def plot(self) -> PlotSurvivalFunc:
         """Plot"""
         return PlotSurvivalFunc(self)
-
-    @property
-    def args_names(self) -> tuple[str, ...]:
-        from relife.lifetime_model import (
-            AcceleratedFailureTime,
-            AgeReplacementModel,
-            LeftTruncatedModel,
-            ProportionalHazard,
-        )
-
-        try:
-            next(self.nested_models())
-            _, nested_models = zip(*self.nested_models())
-        except StopIteration:
-            return ()
-        args_names = ()
-        #  iterate on self instance and every components
-        for model in (self, *nested_models):
-            match model:
-                case ProportionalHazard() | AcceleratedFailureTime():
-                    args_names += ("covar",)
-                case AgeReplacementModel():
-                    args_names += ("ar",)
-                case LeftTruncatedModel():
-                    args_names += ("a0",)
-                #  break because other args are frozen in frozen instance
-                case FrozenMixin():
-                    break
-                case _:
-                    continue
-        return args_names
 
     def __getattribute__(self, item):
         match item:
@@ -628,11 +440,11 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
         return super().ls_integrate(func, a, b, deg=deg)
 
-    @override
-    def freeze(self) -> FrozenLifetimeDistribution:
-        from relife.lifetime_model import FrozenLifetimeDistribution
-
-        return FrozenLifetimeDistribution(self)
+    # @override
+    # def freeze(self) -> FrozenLifetimeDistribution:
+    #     from relife.lifetime_model import FrozenLifetimeDistribution
+    #
+    #     return FrozenLifetimeDistribution(self)
 
     def fit(
         self,
@@ -955,20 +767,11 @@ class LifetimeRegression(
             return np.unstack(jac)
         return jac
 
-    @override
     def freeze(
         self, covar: float | NDArray[np.float64], *args: *Args
     ) -> FrozenLifetimeRegression:
-        from relife.lifetime_model import FrozenLifetimeRegression
-
-        args_names = self.args_names
-        if len((covar, *args)) != len(args_names):
-            raise ValueError(
-                f"Expected {args_names} positional arguments but got only {len((covar, *args))} arguments"
-            )
-        frozen_model = FrozenLifetimeRegression(self)
-        frozen_model.freeze_args(**{k: v for (k, v) in zip(args_names, (covar, *args))})
-        return frozen_model
+        from .frozen import FrozenLifetimeRegression
+        return  FrozenLifetimeRegression(self).collect_args(covar, *args)
 
     def fit(
         self,

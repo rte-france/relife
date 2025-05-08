@@ -1,6 +1,6 @@
 import numpy as np
 from pytest import approx
-from relife._quadrature import legendre_quadrature, laguerre_quadrature
+from relife.quadrature import legendre_quadrature, laguerre_quadrature
 
 
 def test_laguerre_quadrature(a, b):

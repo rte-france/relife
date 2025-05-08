@@ -1,1 +1,2 @@
-from ._base import FrozenMixin, ParametricModel
+from ._base import ParametricModel
+from .frozen_model.mixin import FreezeMixin

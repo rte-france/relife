@@ -6,7 +6,7 @@ from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 from typing_extensions import override
 
-from relife._quadrature import laguerre_quadrature, legendre_quadrature
+from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 

@@ -13,7 +13,7 @@ from relife.economic import (
     ExponentialDiscounting,
     reward_partial_expectation,
 )
-from relife.sample import SampleMixin, FailureDataSampleMixin
+from relife.sample import CountDataSampleMixin, FailureDataSampleMixin
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     )
 
 
-class RenewalProcess(ParametricModel, SampleMixin, FailureDataSampleMixin):
+class RenewalProcess(ParametricModel, CountDataSampleMixin, FailureDataSampleMixin):
     def __init__(
         self,
         model: ParametricLifetimeModel[()],

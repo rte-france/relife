@@ -1,22 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import Optional, Callable, Generic, TypeVarTuple
+
+from typing_extensions import override
 
 import numpy as np
 from numpy.typing import NDArray
-from typing_extensions import override
 
-from relife._base import FrozenMixin
-
-from ._base import ParametricLifetimeModel
-
-if TYPE_CHECKING:
-    from relife.lifetime_model import (
-        LifetimeDistribution,
-        LifetimeRegression,
-        ParametricLifetimeModel,
-    )
-
+from relife.lifetime_model import ParametricLifetimeModel
 
 
 def _check_in_shape(name : str, value : float | NDArray[np.float64], nb_assets : int):
@@ -30,20 +21,90 @@ def _check_in_shape(name : str, value : float | NDArray[np.float64], nb_assets :
                 raise ValueError(f"Incorrect {name} shape. Got {value.shape}, meaning {value_nb_assets} nb_assets but args have {nb_assets} nb assets")
     return value
 
+Args = TypeVarTuple("Args")
+
+
+def _get_args_names(model : ParametricLifetimeModel[*Args]) -> tuple[str, ...]:
+    from relife.lifetime_model import (
+        AcceleratedFailureTime,
+        AgeReplacementModel,
+        LeftTruncatedModel,
+        ProportionalHazard,
+    )
+
+    try:
+        next(model.nested_models())
+        _, nested_models = zip(*model.nested_models())
+    except StopIteration:
+        return ()
+    args_names = ()
+    #  iterate on self instance and every components
+    for nested_model in (model, *nested_models):
+        match nested_model:
+            case ProportionalHazard() | AcceleratedFailureTime():
+                args_names += ("covar",)
+            case AgeReplacementModel():
+                args_names += ("ar",)
+            case LeftTruncatedModel():
+                args_names += ("a0",)
+            #  break because other args are frozen in frozen instance
+            case FrozenParametricLifetimeModel():
+                break
+            case _:
+                continue
+    return args_names
+
 
 # using Mixin class allows to preserve same type : FrozenLifetimeDistribtuion := ParametricLifetimeModel[()]
-class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
+class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args]):
 
-    baseline: ParametricLifetimeModel[*tuple[float | NDArray, ...]]
-
-    def __init__(self, model: ParametricLifetimeModel[*tuple[float | NDArray, ...]]):
+    def __init__(self, model: ParametricLifetimeModel[*Args]):
         super().__init__()
         self.baseline = model
+        self._args = ()
+        self._nb_assets = 1
 
-    @override
     @property
-    def args_names(self) -> tuple[()]:
-        return ()
+    def args(self) -> tuple[*Args]:
+        return self._args
+
+    @property
+    def nb_assets(self) -> int:
+        return self._nb_assets
+
+    def collect_args(self, *args: *Args):
+        args_names = _get_args_names(self.baseline)
+        if len(args) != len(args_names):
+            raise ValueError(
+                f"Expected {args_names} positional arguments but got only {len(args)} arguments"
+            )
+        for name, value in zip(args_names, args):
+            value = np.asarray(value)
+            value: NDArray[np.float64]
+            ndim = value.ndim
+            if ndim > 2:
+                raise ValueError(
+                    f"Uncorrect number of dimensions for {name}. It can't be higher than 2. Got {ndim}"
+                )
+            match name:
+                case "covar":  #  (), (nb_coef,) or (m, nb_coef)
+                    if value.ndim == 2:  #  otherwise, when 1, broadcasting
+                        if self.nb_assets != 1:
+                            if value.shape[0] != self.nb_assets and value.shape[0] != 1:
+                                raise ValueError(
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets")
+                        self._nb_assets = value.shape[0]  #  update nb_assets
+                case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
+                    if value.ndim >= 1:
+                        if self.nb_assets != 1:
+                            if value.shape[0] != self.nb_assets and value.shape[0] != 1:
+                                raise ValueError(
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets")
+                        self._nb_assets = value.shape[0]  #  update nb_assets
+                case _:
+                    raise ValueError(f"Unknown arg {name}")
+            self._args = self.args + (value,)
+
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         time = _check_in_shape("time", time, self.args_nb_assets)
@@ -110,12 +171,19 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
                 probability = rs.uniform(size=(n,))
             case (m, n):
                 if self.args_nb_assets != 1:
-                    if m != 1 and m != self.args_nb_assets:
-                        raise ValueError(f"Incorrect size. Given args have {self.args_nb_assets} nb assets but size is {size}")
+                    if m != 1 and m != self.nb_assets:
+                        raise ValueError(f"Incorrect size. Given args have {self.nb_assets} nb assets but size is {size}")
                 probability = rs.uniform(size=(m,n))
             case _:
                 raise ValueError(f"Incorrect size. Must be int or tuple with no more than 2 elements. Got {size}" )
-        return self.isf(probability)
+        time = self.isf(probability)
+        dtype = np.dtype([
+            ("time", np.float64, time.shape),
+            ("entry", np.float64, time.shape),
+            ("event", np.bool_, time.shape),
+        ])
+        struct_array = np.array([time, np.zeros_like(time), np.ones_like(time, dtype=np.bool_)], dtype=dtype)
+        return struct_array
 
     @override
     def ppf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -138,55 +206,58 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], FrozenMixin):
         b = _check_in_shape("b", b, self.args_nb_assets)
         return self.baseline.ls_integrate(func, a, b, *self.args, deg=deg)
 
+#
+# class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):
+#     baseline: LifetimeDistribution
+#
+#     def dhf(
+#         self,
+#         time: float | NDArray[np.float64],
+#     ) -> np.float64 | NDArray[np.float64]:
+#         return self.baseline.dhf(time)
+#
+#
+#     def jac_hf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray : bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         return self.baseline.jac_hf(time, asarray=asarray)
+#
+#     def jac_chf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray : bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         return self.baseline.jac_chf(time, asarray=asarray)
+#
+#     def jac_sf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray : bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         return self.baseline.jac_sf(time, asarray=asarray)
+#
+#     def jac_cdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray : bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         return self.baseline.jac_cdf(time, asarray=asarray)
+#
+#     def jac_pdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray : bool = False
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         return self.baseline.jac_pdf(time, asarray=asarray)
 
-class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):
-    baseline: LifetimeDistribution
 
-    def dhf(
-        self,
-        time: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
-        return self.baseline.dhf(time)
+class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.float64], *Args]):
 
-
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray : bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_hf(time, asarray=asarray)
-
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray : bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_chf(time, asarray=asarray)
-
-    def jac_sf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray : bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_sf(time, asarray=asarray)
-
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray : bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_cdf(time, asarray=asarray)
-
-    def jac_pdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray : bool = False
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
-        return self.baseline.jac_pdf(time, asarray=asarray)
-
-
-class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
-    baseline: LifetimeRegression
+    @override
+    def collect_args(self, covar : float | NDArray[np.float64], *args: *Args):
+        super().collect_args(*(covar, *args))
 
     @property
     def nb_coef(self) -> int:

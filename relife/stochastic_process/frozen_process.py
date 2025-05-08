@@ -5,16 +5,15 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import NDArray
 
-from relife import ParametricModel
-from relife._base import FrozenMixin
+from relife import ParametricModel, FreezeMixin
 from relife._plots import PlotConstructor, PlotNHPP
-from relife.sample import SampleMixin, FailureDataSampleMixin
+from relife.sample import CountDataSampleMixin, FailureDataSampleMixin
 
 if TYPE_CHECKING:
     from .non_homogeneous_poisson_process import NonHomogeneousPoissonProcess
 
 
-class FrozenNonHomogeneousPoissonProcess(ParametricModel, FrozenMixin, SampleMixin, FailureDataSampleMixin):
+class FrozenNonHomogeneousPoissonProcess(ParametricModel, FreezeMixin, CountDataSampleMixin, FailureDataSampleMixin):
     def __init__(
         self, baseline: NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]
     ):

@@ -3,7 +3,7 @@ from typing import Any, Callable, Optional, Protocol, Self, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 
-from .frozen_model import FrozenParametricLifetimeModel
+from relife.frozen_model import FrozenParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 

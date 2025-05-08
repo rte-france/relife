@@ -1,11 +1,11 @@
 from typing import Callable, Optional, ParamSpec, Sequence, TypeVarTuple
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import NDArray, DTypeLike
 from typing_extensions import override
 
 from ._base import ParametricLifetimeModel
-from .frozen_model import FrozenParametricLifetimeModel
+from relife.frozen_model import FrozenParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 P = ParamSpec("P")
@@ -135,15 +135,20 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar = _reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
+    @override
     def rvs(
         self,
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
-    ) -> NDArray[np.float64]:
+    ) -> NDArray[DTypeLike]:
         ar = _reshape_ar_or_a0("ar", ar)
-        return np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
+        struct_array = super().rvs(*(ar, *args), size=size, seed=seed)
+        ar = np.broadcast_to(ar, struct_array["time"].shape).copy()
+        struct_array["time"] = np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
+        struct_array["event"] = struct_array["event"] != ar
+        return struct_array
 
     def ppf(
         self,
@@ -230,7 +235,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
 
     def __init__(self, baseline: ParametricLifetimeModel[*Args]):
         super().__init__()
-        self.compose_with(baseline=baseline)
+        self.baseline = baseline
 
     def sf(
         self,
@@ -299,9 +304,11 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         *args: *Args,
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
-    ) -> NDArray[np.float64]:
-        a0 = _reshape_ar_or_a0("a0", a0)
-        return super().rvs(*(a0, *args), size=size, seed=seed)
+    ) -> NDArray[DTypeLike]:
+        a0 = _reshape_ar_or_a0("a0", a0) # isf is overriden so rvs is conditional to a0
+        struct_array = super().rvs(*(a0, *args), size=size, seed=seed)
+        struct_array["entry"] = np.broadcast_to(a0, struct_array["time"].shape).copy()
+        return struct_array
 
     @override
     def freeze(
