@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Optional, TypeVarTuple, Protocol
+from typing import TYPE_CHECKING, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import DTypeLike
@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.lifetime_model import ParametricLifetimeModel
+from relife.sample import sample_lifetime_data
 
 if TYPE_CHECKING:
     from relife.economic import Discounting, Reward, ExponentialDiscounting
@@ -26,40 +27,38 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
 
     def __init__(
         self,
-        nb_sample: int,
+        size: int | tuple[int]| tuple[int, int],
         tf: float,  # calendar end time
         t0: float = 0.0,  # calendar beginning time
         seed: Optional[int] = None,
         maxsample : 1e5 = int,
     ):
-        self.nb_sample = nb_sample
+        self.size = size
         self.tf = tf
         self.t0 = t0
         self.seed = seed
         self.nb_assets = 1
-        self.timeline = None
-        self.start_counter = None
-        self.stop_counter = None
+        self.timeline = np.zeros(size)
+        self.stop_counter = np.zeros(size, dtype=np.int64)
+        self.start_counter = np.zeros(size, dtype=np.int64)
         self.maxsample = maxsample
+        self.n = 0
         self.nb_sampled = 0
 
     @property
     def stop(self) -> Optional[bool]:
-        if self.stop_counter is not None:
-            return np.all(self.stop_counter > 0)
+        return np.all(self.stop_counter > 0)
 
     @property
-    def just_crossed_t0(self) -> Optional[NDArray[np.bool_]]:
-        if self.start_counter is not None:
-            return self.start_counter == 1
+    def just_crossed_t0(self) -> NDArray[np.bool_]:
+        return self.start_counter == 1
 
     @property
-    def just_crossed_tf(self) -> Optional[NDArray[np.bool_]]:
-        if self.stop_counter is not None:
-            return self.stop_counter == 1
+    def just_crossed_tf(self) -> NDArray[np.bool_]:
+        return self.stop_counter == 1
 
     @property
-    def selection(self):
+    def selection(self) -> NDArray[np.bool_]:
         return np.logical_and(self.start_counter >= 1, self.stop_counter <= 1)
 
     def base_structarray(self) -> NDArray[DTypeLike]:
@@ -79,7 +78,7 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
         return struct_array
 
 
-class RenewalProcessIterator(SampleIterator):
+class RenewalProcessIterator(CountDataIterator):
 
     model: ParametricLifetimeModel[()]
     model1: Optional[ParametricLifetimeModel[()]]
@@ -88,33 +87,16 @@ class RenewalProcessIterator(SampleIterator):
 
     def __init__(
         self,
-        nb_sample: int,
+        size: int|tuple[int]|tuple[int,int],
         tf: float,  # calendar end time
         model : ParametricLifetimeModel[()],
         t0: float = 0.0,  # calendar start time
         model1 : Optional[ParametricLifetimeModel[()]] = None,
-        a0 : Optional[NDArray[np.float64]] = None,
-        ar : Optional[NDArray[np.float64]] = None,
         maxsample : int = 1e5,
         seed: Optional[int] = None,
     ):
-        super().__init__(nb_sample, tf, t0, maxsample=maxsample, seed=seed)
-
-        nb_assets = getattr(model, "args_nb_assets", 1)
-        self.nb_assets = nb_assets
-        if model1 is not None:
-            nb_assets = getattr(model1, "args_nb_assets", 1)
-            if nb_assets != self.nb_assets and self.nb_assets != 1:
-                raise ValueError(
-                    f"Can't append a model with different number of assets. Already got {self.nb_assets} nb_assets but model has {nb_assets} nb_assets")
+        super().__init__(size, tf, t0, maxsample=maxsample, seed=seed)
         self._model_queue = [model, model1]
-
-        self.timeline = np.zeros((self.nb_assets, self.nb_sample))
-        self.stop_counter = np.zeros((self.nb_assets, self.nb_sample), dtype=np.int64)
-        self.start_counter = np.zeros((self.nb_assets, self.nb_sample), dtype=np.int64)
-
-        self.ar = ar
-        self.a0 = a0
 
     @property
     def model(self) -> ParametricLifetimeModel[()]:
@@ -124,28 +106,15 @@ class RenewalProcessIterator(SampleIterator):
             self._model_queue.pop()
         return self._model_queue[0]
 
-    def __next__(self) -> np.recarray:
-        while not self.stop:
-            time = self.model.rvs(
-                size=self.nb_sample,
-                seed=self.seed,
-            ).reshape((-1, self.nb_sample))
-            if time.shape != (self.model.args_nb_assets, self.nb_sample):
-                # sometimes, model1 has m assets but not model
-                time = np.tile(time, (self.model.args_nb_assets, 1))
-
-            # create events_indicators and entries
-            event = np.ones_like(self.timeline, dtype=np.bool_)
-            entry = np.zeros_like(self.timeline)
-
-            # ar right censorings
-            if self.ar is not None:
-                is_replaced = time == self.ar
-                event[is_replaced] = False
-
-            # a0 left truncations
-            if self.a0 is not None:
-                entry = np.maximum(entry, self.a0)
+    def __next__(self) -> NDArray[DTypeLike]:
+        if not self.stop:
+            time, event, entry = sample_lifetime_data(self.model, size=self.size, seed=self.seed)
+            if self.n == 0:
+                self.timeline = np.zeros_like(time) # ensure broadcasting
+                self.stop_counter = np.zeros_like(self.timeline, dtype=np.int64)
+                self.start_counter = np.zeros_like(self.timeline, dtype=np.int64)
+            else:
+                entry = np.zeros_like(entry)
 
             # update timeline
             self.timeline += time
@@ -161,21 +130,20 @@ class RenewalProcessIterator(SampleIterator):
             self.timeline[self.just_crossed_tf] = self.tf
             event[self.just_crossed_tf] = False
 
-            # t0 left truncations
+            # t0 left truncations, only applied on time not being truncated by model
             entry = np.where(
-                self.just_crossed_t0, self.t0 - (self.timeline - time), entry
+                self.just_crossed_t0, self.t0 + entry - (self.timeline - time), entry
             )
-            time = np.where(self.just_crossed_t0, time - entry, time)
 
             # update seed to avoid having the same rvs result
             if self.seed is not None:
                 self.seed += 1
+            self.n += 1
 
-            selection = self.selection.copy()
             struct_arr = rfn.append_fields( # works on structured_array too
                 self.base_structarray(),
                 ("time", "event", "entry"),
-                (time[selection], event[selection], entry[selection]),
+                (time[self.selection], event[self.selection], entry[self.selection]),
                 (np.float64, np.bool_, np.float64),
                 usemask=False,
                 asrecarray=False,

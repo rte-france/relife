@@ -1,9 +1,7 @@
-from typing import Any, Callable, Optional, Protocol, Self, TypeVarTuple
+from typing import Any, Callable, Optional, Protocol, Self, TypeVarTuple, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
-
-from relife.frozen_model import FrozenParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -13,7 +11,6 @@ class DifferentiableParametricLifetimeModel(Protocol[*Args]):
     nb_params : int
     args_names : tuple[str, ...]
     params : NDArray[np.float64 | np.complex64]
-
 
     def hf(
         self, time: float | NDArray[np.float64], *args: *Args
@@ -35,12 +32,6 @@ class DifferentiableParametricLifetimeModel(Protocol[*Args]):
         self, time: float | NDArray[np.float64], *args: *Args
     ) -> np.float64 | NDArray[np.float64]: ...
 
-    def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-
-    def mean(self, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-
-    def var(self, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-
     def isf(
         self, probability: float | NDArray[np.float64], *args: *Args
     ) -> np.float64 | NDArray[np.float64]: ...
@@ -53,29 +44,9 @@ class DifferentiableParametricLifetimeModel(Protocol[*Args]):
         self, time: float | NDArray[np.float64], *args: *Args
     ) -> np.float64 | NDArray[np.float64]: ...
 
-    def rvs(
-        self, *args: *Args, size: int | tuple[int, int], seed: Optional[int] = None
-    ) -> np.float64 | NDArray[np.float64]: ...
-
     def ppf(
         self, probability: float | NDArray[np.float64], *args: *Args
     ) -> np.float64 | NDArray[np.float64]: ...
-
-    def median(self, *args: *Args) -> NDArray[np.float64]: ...
-
-    def ls_integrate(
-        self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        *args: *Args,
-        deg: int = 100,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def freeze(
-        self,
-        *args: *Args,
-    ) -> FrozenParametricLifetimeModel: ...
 
     def dhf(
         self,
@@ -108,7 +79,6 @@ class DifferentiableParametricLifetimeModel(Protocol[*Args]):
     def jac_pdf(
         self, time: float | NDArray[np.float64], *args: *Args, asarray : bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]: ...
-
 
 class FittableParametricLifetimeModel(DifferentiableParametricLifetimeModel[*Args]):
 

@@ -9,11 +9,10 @@ from typing import (
     NewType,
     Optional,
     Self,
-    TypeVarTuple,
+    TypeVarTuple, overload,
 )
 
 import numpy as np
-from numpy._typing import DTypeLike
 from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
@@ -23,12 +22,10 @@ from relife._plots import PlotSurvivalFunc
 from relife.data import lifetime_data_factory
 from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
-from relife.sample import RandomTimeSamplerMixin
 from relife.quadrature import LebesgueStieltjesMixin
 
 if TYPE_CHECKING:
-    from relife.lifetime_model import (
-        FrozenLifetimeDistribution,
+    from .frozen_model import (
         FrozenLifetimeRegression,
         FrozenParametricLifetimeModel,
     )
@@ -40,7 +37,6 @@ Args = TypeVarTuple("Args")
 
 class ParametricLifetimeModel(
     ParametricModel,
-    RandomTimeSamplerMixin[*Args],
     LebesgueStieltjesMixin[*Args],
     Generic[*Args],
     ABC
@@ -146,14 +142,20 @@ class ParametricLifetimeModel(
             """
             ) from err
 
-    def mrl(
+    def cdf(
         self, time: float | NDArray[np.float64], *args: *Args
     ) -> np.float64 | NDArray[np.float64]:
-        sf = self.sf(time, *args)
-        ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
-        if sf.ndim < 2:  # 2d to 1d or 0d
-            ls = np.squeeze(ls)
-        return ls / sf
+        return 1 - self.sf(time, *args)
+
+    def ppf(
+        self,
+        probability: float | NDArray[np.float64],
+        *args: *Args,
+    ) -> np.float64 | NDArray[np.float64]:
+        return self.isf(1 - probability, *args)
+
+    def median(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
+        return self.ppf(np.array(0.5), *args)
 
     def isf(
         self,
@@ -188,57 +190,55 @@ class ParametricLifetimeModel(
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    def cdf(
-        self, time: float | NDArray[np.float64], *args: *Args
-    ) -> np.float64 | NDArray[np.float64]:
-        return 1 - self.sf(time, *args)
-
-    def ppf(
-        self,
-        probability: float | NDArray[np.float64],
-        *args: *Args,
-    ) -> np.float64 | NDArray[np.float64]:
-        return self.isf(1 - probability, *args)
-
-    def median(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
-        return self.ppf(np.array(0.5), *args)
-
-    def rvs(self, *args: *Args, size: int | tuple[int, int] = 1, seed: Optional[int] = None) -> NDArray[DTypeLike]:
-        return self.freeze(*args).rvs(siz=size, seed=seed)
+    def rvs(self, *args: *Args, size: int | tuple[int, int] = 1, seed: Optional[int] = None) -> np.float64|NDArray[np.float64]:
+        from relife.sample import sample_lifetime_data
+        return sample_lifetime_data(self, *args, size=size, seed=seed)[0]
 
     @property
     def plot(self) -> PlotSurvivalFunc:
         """Plot"""
         return PlotSurvivalFunc(self)
 
+    @property
+    def args_names(self) -> tuple[str, ...]:
+        from relife.lifetime_model import (
+            AcceleratedFailureTime,
+            AgeReplacementModel,
+            LeftTruncatedModel,
+            ProportionalHazard,
+        )
+
+        try:
+            next(self.nested_models())
+            _, nested_models = zip(*self.nested_models())
+        except StopIteration:
+            return ()
+        args_names = ()
+        #  iterate on self instance and every components
+        for nested_model in (self, *nested_models):
+            match nested_model:
+                case ProportionalHazard() | AcceleratedFailureTime():
+                    args_names += ("covar",)
+                case AgeReplacementModel():
+                    args_names += ("ar",)
+                case LeftTruncatedModel():
+                    args_names += ("a0",)
+                #  break because other args are frozen in frozen instance
+                case FrozenParametricLifetimeModel():
+                    break
+                case _:
+                    continue
+        return args_names
+
     def __getattribute__(self, item):
-        match item:
-            case (
-                "sf"
-                | "hf"
-                | "chf"
-                | "pdf"
-                | "mrl"
-                | "isf"
-                | "ichf"
-                | "cdf"
-                | "rvs"
-                | "ppf"
-                | "ls_integrate"
-                | "moment"
-                | "mean"
-                | "var"
-                | "median"
-                | "freeze"
-                | "plot"
-            ):
-                if np.any(np.isnan(self.params)):
-                    raise ValueError(
-                        f"Can't call {item} if params are not set. Got {self.params} params"
-                    )
-                return super().__getattribute__(item)
-            case _:
-                return super().__getattribute__(item)
+        allowed_methods = ("compose_with", "nb_params", "nested_models", "params", "params_names", "fit", "args_names")
+        if item not in allowed_methods and not item.startswith("_"):
+            params = np.array(tuple(self._parameters.allvalues()))
+            if np.any(params):
+                raise ValueError(
+                    f"Can't call {item} if params are not set. Got {params} params"
+                )
+        return super().__getattribute__(item)
 
 
 class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
@@ -355,6 +355,12 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         time: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]: ...
 
+    @overload
+    def jac_hf(self, time : float|NDArray[np.float64], *, asarray=True) -> np.float64|NDArray[np.float64]:...
+
+    @overload
+    def jac_hf(self, time: float | NDArray[np.float64], *, asarray=False) -> tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:...
+
     @abstractmethod
     def jac_hf(
         self,
@@ -440,12 +446,6 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
         return super().ls_integrate(func, a, b, deg=deg)
 
-    # @override
-    # def freeze(self) -> FrozenLifetimeDistribution:
-    #     from relife.lifetime_model import FrozenLifetimeDistribution
-    #
-    #     return FrozenLifetimeDistribution(self)
-
     def fit(
         self,
         time: NDArray[np.float64],
@@ -467,17 +467,6 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             **kwargs,
         )
         return self
-
-    def __getattribute__(self, item):
-        match item:
-            case "dhf" | "jac_hf" | "jac_chf" | "jac_pdf" | "jac_sf" | "jac_cdf":
-                if np.any(np.isnan(self.params)):
-                    raise ValueError(
-                        f"Can't call {item} if params are not set. Got {self.params} params"
-                    )
-                return super().__getattribute__(item)
-            case _:
-                return super().__getattribute__(item)
 
 
 class CovarEffect(ParametricModel):
@@ -770,7 +759,7 @@ class LifetimeRegression(
     def freeze(
         self, covar: float | NDArray[np.float64], *args: *Args
     ) -> FrozenLifetimeRegression:
-        from .frozen import FrozenLifetimeRegression
+        from .frozen_model import FrozenLifetimeRegression
         return  FrozenLifetimeRegression(self).collect_args(covar, *args)
 
     def fit(
@@ -800,17 +789,6 @@ class LifetimeRegression(
             **kwargs,
         )
         return self
-
-    def __getattribute__(self, item):
-        match item:
-            case "dhf" | "jac_hf" | "jac_chf" | "jac_pdf" | "jac_sf" | "jac_cdf":
-                if np.any(np.isnan(self.params)):
-                    raise ValueError(
-                        f"Can't call {item} if params are not set. Got {self.params} params"
-                    )
-                return super().__getattribute__(item)
-            case _:
-                return super().__getattribute__(item)
 
 
 NonParametricEstimation = NewType(

@@ -5,10 +5,8 @@ from typing import TYPE_CHECKING, Callable, Optional, Generic, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.lifetime_model import ParametricLifetimeModel
-
 if TYPE_CHECKING:
-    pass
+    from relife.lifetime_model import ParametricLifetimeModel
 
 
 def check_and_broadcast_bounds(
@@ -248,7 +246,7 @@ class LebesgueStieltjesMixin(Generic[*Args]):
             integration,
         )
 
-    def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def moment(self : ParametricLifetimeModel[*Args], n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
         """n-th order moment
 
         Parameters
@@ -271,8 +269,17 @@ class LebesgueStieltjesMixin(Generic[*Args]):
             deg=100,
         )  #  high degree of polynome to ensure high precision
 
-    def mean(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def mean(self : ParametricLifetimeModel[*Args], *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.moment(1, *args)
 
-    def var(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def var(self : ParametricLifetimeModel[*Args], *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.moment(2, *args) - self.moment(1, *args) ** 2
+
+    def mrl(
+        self : ParametricLifetimeModel[*Args], time: float | NDArray[np.float64], *args: *Args
+    ) -> np.float64 | NDArray[np.float64]:
+        sf = self.sf(time, *args)
+        ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
+        if sf.ndim < 2:  # 2d to 1d or 0d
+            ls = np.squeeze(ls)
+        return ls / sf

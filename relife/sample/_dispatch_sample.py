@@ -1,65 +1,65 @@
-from functools import singledispatch
-from itertools import islice
-from typing import Iterator, Optional, Union
-
-import numpy as np
-
-from relife import ParametricModel
-from relife.economic import (
-    age_replacement_rewards,
-    run_to_failure_rewards,
-)
-from relife.policy import (
-    DefaultAgeReplacementPolicy,
-    DefaultRunToFailurePolicy,
-    NonHomogeneousPoissonAgeReplacementPolicy,
-    OneCycleAgeReplacementPolicy,
-    OneCycleRunToFailurePolicy, RenewalPolicy,
-)
-from relife.stochastic_process import (
-    RenewalProcess,
-    RenewalRewardProcess,
-)
-
-from .counting_data import NHPPCountData, RenewalData
-from .iterators import RenewalProcessIterator, RenewalRewardProcessIterator
-
-
-# noinspection PyUnusedLocal
-@singledispatch
-def sample_count_data(
-    obj : ParametricModel | RenewalPolicy,
-    size: int,
-    tf: float,
-    t0: float = 0.0,
-    maxsample: int = 1e5,
-    seed: Optional[int] = None,
-):
-    raise ValueError(f"No sample for {type(obj)}")
-
-
-@sample_count_data.register
-def _(
-    obj: RenewalProcess | RenewalRewardProcess,
-    size: int,
-    tf: float,
-    t0: float = 0.0,
-    maxsample: int = 1e5,
-    seed: Optional[int] = None,
-):
-
-    if isinstance(obj, RenewalProcess):
-        iterator = RenewalProcessIterator(size, tf, obj.model, t0=t0, model1=obj.model1, maxsample=maxsample, seed=seed)
-    else:
-        iterator = RenewalRewardProcessIterator(size, tf, obj.model, obj.reward, t0=t0, model1=obj.model1, maxsample=maxsample, seed=seed)
-
-    struct_array = np.concatenate(tuple((arr for arr in iterator)))
-
-    return RenewalData(
-        t0,
-        tf,
-        **stack,
-    )
+# from functools import singledispatch
+# from itertools import islice
+# from typing import Iterator, Optional, Union
+#
+# import numpy as np
+#
+# from relife import ParametricModel
+# from relife.economic import (
+#     age_replacement_rewards,
+#     run_to_failure_rewards,
+# )
+# from relife.policy import (
+#     DefaultAgeReplacementPolicy,
+#     DefaultRunToFailurePolicy,
+#     NonHomogeneousPoissonAgeReplacementPolicy,
+#     OneCycleAgeReplacementPolicy,
+#     OneCycleRunToFailurePolicy, RenewalPolicy,
+# )
+# from relife.stochastic_process import (
+#     RenewalProcess,
+#     RenewalRewardProcess,
+# )
+#
+# from .counting_data import NHPPCountData, RenewalData
+# from .iterators import RenewalProcessIterator, RenewalRewardProcessIterator
+#
+#
+# # noinspection PyUnusedLocal
+# @singledispatch
+# def sample_count_data(
+#     obj : ParametricModel | RenewalPolicy,
+#     size: int,
+#     tf: float,
+#     t0: float = 0.0,
+#     maxsample: int = 1e5,
+#     seed: Optional[int] = None,
+# ):
+#     raise ValueError(f"No sample for {type(obj)}")
+#
+#
+# @sample_count_data.register
+# def _(
+#     obj: RenewalProcess | RenewalRewardProcess,
+#     size: int,
+#     tf: float,
+#     t0: float = 0.0,
+#     maxsample: int = 1e5,
+#     seed: Optional[int] = None,
+# ):
+#
+#     if isinstance(obj, RenewalProcess):
+#         iterator = RenewalProcessIterator(size, tf, obj.model, t0=t0, model1=obj.model1, maxsample=maxsample, seed=seed)
+#     else:
+#         iterator = RenewalRewardProcessIterator(size, tf, obj.model, obj.reward, t0=t0, model1=obj.model1, maxsample=maxsample, seed=seed)
+#
+#     struct_array = np.concatenate(tuple((arr for arr in iterator)))
+#
+#     return RenewalData(
+#         t0,
+#         tf,
+#         **stack,
+#     )
 
 #
 # @sample_count_data.register

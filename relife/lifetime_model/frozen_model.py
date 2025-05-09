@@ -5,7 +5,7 @@ from typing import Optional, Callable, Generic, TypeVarTuple
 from typing_extensions import override
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import NDArray, DTypeLike
 
 from relife.lifetime_model import ParametricLifetimeModel
 
@@ -24,35 +24,6 @@ def _check_in_shape(name : str, value : float | NDArray[np.float64], nb_assets :
 Args = TypeVarTuple("Args")
 
 
-def _get_args_names(model : ParametricLifetimeModel[*Args]) -> tuple[str, ...]:
-    from relife.lifetime_model import (
-        AcceleratedFailureTime,
-        AgeReplacementModel,
-        LeftTruncatedModel,
-        ProportionalHazard,
-    )
-
-    try:
-        next(model.nested_models())
-        _, nested_models = zip(*model.nested_models())
-    except StopIteration:
-        return ()
-    args_names = ()
-    #  iterate on self instance and every components
-    for nested_model in (model, *nested_models):
-        match nested_model:
-            case ProportionalHazard() | AcceleratedFailureTime():
-                args_names += ("covar",)
-            case AgeReplacementModel():
-                args_names += ("ar",)
-            case LeftTruncatedModel():
-                args_names += ("a0",)
-            #  break because other args are frozen in frozen instance
-            case FrozenParametricLifetimeModel():
-                break
-            case _:
-                continue
-    return args_names
 
 
 # using Mixin class allows to preserve same type : FrozenLifetimeDistribtuion := ParametricLifetimeModel[()]
@@ -73,7 +44,7 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
         return self._nb_assets
 
     def collect_args(self, *args: *Args):
-        args_names = _get_args_names(self.baseline)
+        args_names = self.baseline.args_names
         if len(args) != len(args_names):
             raise ValueError(
                 f"Expected {args_names} positional arguments but got only {len(args)} arguments"
@@ -160,30 +131,8 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
     @override
     def rvs(
         self, size: int | tuple[int, int] = 1, seed: Optional[int] = None
-    ) -> np.float64 | NDArray[np.float64]:
-        rs = np.random.RandomState(seed=seed)
-        match size:
-            case int() if size == 1:
-                probability = rs.uniform()
-            case int() if size > 1:
-                probability = rs.uniform(size=(size,))
-            case (n,):
-                probability = rs.uniform(size=(n,))
-            case (m, n):
-                if self.args_nb_assets != 1:
-                    if m != 1 and m != self.nb_assets:
-                        raise ValueError(f"Incorrect size. Given args have {self.nb_assets} nb assets but size is {size}")
-                probability = rs.uniform(size=(m,n))
-            case _:
-                raise ValueError(f"Incorrect size. Must be int or tuple with no more than 2 elements. Got {size}" )
-        time = self.isf(probability)
-        dtype = np.dtype([
-            ("time", np.float64, time.shape),
-            ("entry", np.float64, time.shape),
-            ("event", np.bool_, time.shape),
-        ])
-        struct_array = np.array([time, np.zeros_like(time), np.ones_like(time, dtype=np.bool_)], dtype=dtype)
-        return struct_array
+    ) -> NDArray[DTypeLike]:
+        return self.baseline.rvs(size=size, seed=seed)
 
     @override
     def ppf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:

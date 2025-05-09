@@ -5,30 +5,22 @@ from numpy.typing import NDArray, DTypeLike
 from typing_extensions import override
 
 from ._base import ParametricLifetimeModel
-from relife.frozen_model import FrozenParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 P = ParamSpec("P")
 
-
 # necessary to allow user passing 1d ar and a0
-def _reshape_ar_or_a0(
+def reshape_ar_or_a0(
     name: str, value: float | Sequence[float] | NDArray[np.float64]
-) -> NDArray[np.float64]:  # ndim is 2 (m,n) or (m,1)
-    value = np.squeeze(np.asarray(value))
-    match value.ndim:
-        case 2 if value.shape[1] != 1:
-            raise ValueError(
-                f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}"
-            )
-        case 1 | 0:
-            value = value.reshape(-1, 1)
-        case _:
-            raise ValueError(
-                f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)"
-            )
-    return value
-
+) -> NDArray[np.float64]:
+    value = np.asarray(value) # in shape : (), (m,) or (m, 1)
+    if value.ndim > 2 or (value.ndim == 2 and value.shape[-1] != 1):
+        raise ValueError(
+            f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)"
+        )
+    if value.ndim == 1:
+        value = value.reshape(-1, 1)
+    return value  # out shape: () or (m, 1)
 
 class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
     r"""
@@ -57,7 +49,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
     def hf(
@@ -66,7 +58,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
     def chf(
@@ -75,7 +67,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     @override
@@ -85,7 +77,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
@@ -95,7 +87,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
     def pdf(
@@ -104,14 +96,14 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     @override
     def moment(
         self, n: int, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return self.ls_integrate(
             lambda x: x**n,
             0,
@@ -125,14 +117,14 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
     def mean(
         self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return self.moment(1, ar, *args)
 
     @override
     def var(
         self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     @override
@@ -143,12 +135,8 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
-        ar = _reshape_ar_or_a0("ar", ar)
-        struct_array = super().rvs(*(ar, *args), size=size, seed=seed)
-        ar = np.broadcast_to(ar, struct_array["time"].shape).copy()
-        struct_array["time"] = np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
-        struct_array["event"] = struct_array["event"] != ar
-        return struct_array
+        ar = reshape_ar_or_a0("ar", ar)
+        return super().rvs(*(ar, *args), size=size, seed=seed)
 
     def ppf(
         self,
@@ -156,13 +144,13 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return self.isf(1 - probability, ar, *args)
 
     def median(
         self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
 
     def cdf(
@@ -171,7 +159,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
 
     @override
@@ -181,7 +169,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         ub = np.array(np.inf)
         # ar.shape == (m, 1)
         mask = time >= ar  # (m, 1) or (m, n)
@@ -207,19 +195,19 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         *args: *Args,
         deg: int = 10,
     ) -> NDArray[np.float64]:
-        ar = _reshape_ar_or_a0("ar", ar)
+        ar = reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
         integration = super().ls_integrate(func, a, b, *(ar, *args), deg=deg)
         return integration + np.where(
             b == ar, func(ar) * self.baseline.sf(ar, *args), 0
         )
 
-    @override
     def freeze(
         self, ar: float | NDArray[np.float64], *args: *Args
-    ) -> FrozenParametricLifetimeModel:
-        ar = _reshape_ar_or_a0("ar", ar)
-        return super().freeze(*(ar, *args))
+    ) -> ParametricLifetimeModel[()]:
+        from .frozen_model import FrozenParametricLifetimeModel
+        ar = reshape_ar_or_a0("ar", ar)
+        return  FrozenParametricLifetimeModel(self).collect_args(*(ar, *args))
 
 
 class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
@@ -243,7 +231,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        a0 = _reshape_ar_or_a0("a0", a0)
+        a0 = reshape_ar_or_a0("a0", a0)
         return super().sf(time, a0, *args)
 
     def pdf(
@@ -252,7 +240,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        a0 = _reshape_ar_or_a0("a0", a0)
+        a0 = reshape_ar_or_a0("a0", a0)
         return super().pdf(time, a0, *args)
 
     def isf(
@@ -262,7 +250,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         *args: *Args,
     ) -> NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability + 1e-6) # avoid division by zero
-        a0 = _reshape_ar_or_a0("a0", a0)
+        a0 = reshape_ar_or_a0("a0", a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
     def chf(
@@ -271,7 +259,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        a0 = _reshape_ar_or_a0("a0", a0)
+        a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
     def hf(
@@ -280,7 +268,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        a0 = _reshape_ar_or_a0("a0", a0)
+        a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.hf(a0 + time, *args)
 
     def ichf(
@@ -289,7 +277,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        a0 = _reshape_ar_or_a0("a0", a0)
+        a0 = reshape_ar_or_a0("a0", a0)
         return (
             self.baseline.ichf(
                 cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
@@ -305,14 +293,14 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
-        a0 = _reshape_ar_or_a0("a0", a0) # isf is overriden so rvs is conditional to a0
-        struct_array = super().rvs(*(a0, *args), size=size, seed=seed)
-        struct_array["entry"] = np.broadcast_to(a0, struct_array["time"].shape).copy()
-        return struct_array
+        from relife.sample import sample_lifetime_data
+        a0 = reshape_ar_or_a0("a0", a0) # isf is overriden so rvs is conditional to a0
+        age = sample_lifetime_data(self, *(a0, *args), size=size, seed=seed)[0]
+        return age - a0 # residual lifetime here
 
-    @override
     def freeze(
         self, a0: float | Sequence[float] | NDArray[np.float64], *args: *Args
-    ) -> FrozenParametricLifetimeModel:
-        a0 = _reshape_ar_or_a0("a0", a0)
-        return super().freeze(*(a0, *args))
+    ) -> ParametricLifetimeModel[()]:
+        from .frozen_model import FrozenParametricLifetimeModel
+        a0 = reshape_ar_or_a0("a0", a0)
+        return  FrozenParametricLifetimeModel(self).collect_args(*(a0, *args))
