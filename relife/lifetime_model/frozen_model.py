@@ -7,7 +7,7 @@ from typing_extensions import override
 import numpy as np
 from numpy.typing import NDArray, DTypeLike
 
-from relife.lifetime_model import ParametricLifetimeModel
+from relife.lifetime_model import ParametricLifetimeModel, LifetimeRegression
 
 
 def _check_in_shape(name : str, value : float | NDArray[np.float64], nb_assets : int):
@@ -22,8 +22,6 @@ def _check_in_shape(name : str, value : float | NDArray[np.float64], nb_assets :
     return value
 
 Args = TypeVarTuple("Args")
-
-
 
 
 # using Mixin class allows to preserve same type : FrozenLifetimeDistribtuion := ParametricLifetimeModel[()]
@@ -42,6 +40,9 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
     @property
     def nb_assets(self) -> int:
         return self._nb_assets
+
+    def unfreeze(self) -> ParametricLifetimeModel[*Args]:
+        return self.baseline
 
     def collect_args(self, *args: *Args):
         args_names = self.baseline.args_names
@@ -203,6 +204,8 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
 
 
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.float64], *Args]):
+
+    baseline: LifetimeRegression[*Args]
 
     @override
     def collect_args(self, covar : float | NDArray[np.float64], *args: *Args):

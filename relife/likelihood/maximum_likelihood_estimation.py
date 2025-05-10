@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import InitVar, asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -8,11 +7,11 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, OptimizeResult, minimize
 
-from .lifetime_likelihood import LikelihoodFromLifetimes
+from .lifetime_likelihood import LikelihoodFromLifetimes, StructuredLifetimeData
 
 if TYPE_CHECKING:
     from relife import ParametricModel
-    from relife.data import FailureData, LifetimeData
+    from relife.data import FailureData
     from relife.lifetime_model import ParametricLifetimeModel
 
 
@@ -118,7 +117,7 @@ def get_params_bounds(model: ParametricModel) -> Bounds:
 
 def init_params_from_lifetimes(
     model: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
-    lifetime_data: LifetimeData,
+    lifetime_data: StructuredLifetimeData,
 ) -> NDArray[np.float64]:
     from relife.lifetime_model import (
         AcceleratedFailureTime,

@@ -1,9 +1,7 @@
-from ._fit_data import (
+from .failure_data import (
     FailureData,
-    LifetimeData,
     NHPPData,
-    lifetime_data_factory,
-    nhpp_data_factory,
+    LifetimeData,
 )
 from .dataset import (
     load_circuit_breaker,

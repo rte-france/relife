@@ -1,151 +1,183 @@
-from typing import TypeVarTuple, Optional, overload, Self
+from typing import TypeVarTuple, Optional
 
 import numpy as np
-from numpy.typing import ArrayLike
-from numpy.typing import NDArray
+from numpy.typing import NDArray, DTypeLike
 
+from relife.data import LifetimeData, NHPPData
 from relife.lifetime_model import ParametricLifetimeModel
-from relife.sample.counting_data import RenewalProcessSample
 from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 Args = TypeVarTuple("Args")
 
 
-def sample_lifetime_data(
+# rvs like with time, event, entry
+def _sample_time_event_entry(
     model : ParametricLifetimeModel[*Args],
     *args : *Args,
-    size: int | tuple[int] | tuple[int, int] = 1,
-    seed:Optional[int]=None
-) -> tuple[np.float64, np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] :
-    """
-    Note that in case of LefTruncatedModel, returned time is not residual. Use LeftTruncated.rvs instead
-    Parameters
-    ----------
-    model
-    args
-    size
-    seed
-
-    Returns
-    -------
-
-    """
+    size : int,
+    nb_assets : int = 1,
+    seed: Optional[int] = None
+): # time, event, entry are returned in 2D (m, n)
     from relife.lifetime_model import LeftTruncatedModel, AgeReplacementModel
-
-    rs = np.random.RandomState(seed=seed)
-    probability = rs.uniform(size=size)
-    time = model.isf(probability, *args)
-    event = np.ones_like(time, dtype=np.bool_)
-    entry = np.zeros_like(time)
 
     match model:
         case LeftTruncatedModel():
-            from relife.lifetime_model.conditional_model import reshape_ar_or_a0
-            a0 = reshape_ar_or_a0("a0", args[0])
-            time = time + a0 # change time to real time, not residual
-            entry = a0
+            a0 = args[0]
+            rs = np.random.RandomState(seed=seed)
+            probability = rs.uniform(size=(nb_assets, size))
+            # not residual time (isf is overriden by LeftTruncated so rvs is conditional to a0)
+            time = model.isf(probability, *args) + a0
+            event = np.ones_like(time, dtype=np.bool_)
+            entry = np.broadcast_to(a0, time.shape).copy()
+            return time, event, entry
         case AgeReplacementModel():
-            from relife.lifetime_model.conditional_model import reshape_ar_or_a0
-            ar = reshape_ar_or_a0("ar", args[0])
-            ar = np.broadcast_to(ar, time.shape).copy()
-            time = np.minimum(model.baseline.rvs(*args, size=size, seed=seed), ar)
+            ar = args[0]
+            time, event, entry = _sample_time_event_entry(model.baseline, *args[1:], size=size, nb_assets=nb_assets, seed=seed)
+            time = np.minimum(time, ar)
             event = event != ar
-
-    return time, event, entry
-
-
-
-class CountDataSample:
-    def __init__(self, struct_array, t0, tf):
-        self.t0 = t0
-        self.tf = tf
-        self._struct_array = struct_array
-        self.nb_samples = len(np.unique(self._struct_array["sample_id"]))
-        self.nb_assets = len(np.unique(self._struct_array["asset_id"]))
-
-    def select(self, sample_id: Optional[ArrayLike] = None, asset_id: Optional[ArrayLike] = None) -> Self:
-        mask = np.ones(len(self._struct_array), dtype=np.bool_)
-        if sample_id is not None:
-            mask = mask & np.isin(self._struct_array['sample_id'], sample_id)
-        if asset_id is not None:
-            mask = mask & np.isin(self._struct_array['asset_id'], asset_id)
-        substruct_array = self._struct_array[mask].copy()
-        return CountDataSample(iter((substruct_array,)), self.t0, self.tf) # iterator that returns one struct_array
-
-    @property
-    def timeline(self) -> NDArray[np.float64]:
-        return self._struct_array["timeline"]
-
-    @property
-    def fields(self) -> tuple[str, ...]:
-        return self._struct_array.dtype.names
-
-    def __len__(self) -> int:
-        return len(self._struct_array)
+            return time, event, entry
+        case _:
+            rs = np.random.RandomState(seed=seed)
+            probability = rs.uniform(size=(nb_assets, size))
+            time = model.isf(probability, *args)
+            event = np.ones_like(time, dtype=np.bool_)
+            entry = np.zeros_like(time, dtype=np.float64)
+            return time, event, entry
 
 
-def sample_count_data(
-    obj: RenewalProcess|RenewalRewardProcess,
-    size: int,
-    tf: float,
-    t0: float = 0.0,
+def sample_failure_data(
+    model: ParametricLifetimeModel[()] | RenewalProcess | RenewalRewardProcess,
+    size : int,
+    window : tuple[float, float],
+    nb_assets : Optional[int] = None,
+    astuple : bool = False,
     maxsample: int = 1e5,
     seed: Optional[int] = None,
-) -> CountDataSample:
+) -> LifetimeData | NHPPData | tuple[NDArray[DTypeLike]|tuple[NDArray[np.float64], ...], ...]:
 
-    from .iterator import RenewalProcessIterator
+    size = (nb_assets, size) if nb_assets is not None else size
+    t0, tf = window
+    if tf <= t0:
+        raise ValueError
 
-    match obj:
-        case RenewalProcess():
-            iterator = RenewalProcessIterator(size, tf, obj.model, t0=t0, model1=obj.model1, maxsample=maxsample, seed=seed)
-            struct_array = np.concatenate(tuple((arr for arr in iterator)))
-            struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
-            return RenewalProcessSample(struct_array, t0, tf)
+    match model:
+        case ParametricLifetimeModel():
+            from relife.lifetime_model import FrozenParametricLifetimeModel
+            if isinstance(model, FrozenParametricLifetimeModel):
+                time, event, entry = _sample_time_event_entry(model.unfreeze(), *model.args, size=size, seed=seed)
+            else:
+                time, event, entry = _sample_time_event_entry(model, size=size, seed=seed)
+            # time, event, entry shape : (m, size)
+            entry = np.where(time > t0, np.full_like(time, t0), entry)
+            time = np.where(time > tf, np.full_like(time, tf), time)
+            event[time > tf] = False
+            selection = t0 <= time <= tf
+            asset_id, sample_id = np.where(selection)
+            args = ()
+            if isinstance(model, FrozenParametricLifetimeModel):
+                args = model.args
+                args = tuple((np.take(arg, asset_id) for arg in args))
+            if astuple:
+                return time[selection].copy(), event[selection].copy(), entry[selection].copy(), args
+            return LifetimeData(time[selection].copy(), event=event[selection].copy(), entry=entry[selection].copy(), args=args)
+
+        case RenewalProcess() as process:
+            from relife.lifetime_model import LeftTruncatedModel
+            from relife.sample.iterator import RenewalProcessIterator
+
+            model1 = getattr(process, "model1", None)
+            if model1 is not None and model1 != process.model:
+                if isinstance(model1, LeftTruncatedModel) and model1.baseline == process.model:
+                    pass
+                else:
+                    raise ValueError(
+                        f"Calling sample_failure_data on {type(process)} having different model and model1 is ambiguous. Instantiate {type(process)} with only one model"
+                    )
+
+            iterator = RenewalProcessIterator(size, tf, process.model, t0, model1=process.model1, maxsample=maxsample, seed=seed)
+            struct_array = np.concatenate((arr for arr in iterator))
+            args = ()
+            if hasattr(process.model, "args"):  #  may be FrozenParametricLifetimeModel
+                args = tuple((np.take(arg, struct_array["asset_id"]) for arg in process.model.args))
+            if astuple:
+                return struct_array["time"].copy(), struct_array["event"].copy(), struct_array["entry"].copy(), args
+            return LifetimeData(struct_array["time"].copy(), event=struct_array["event"].copy(), entry=struct_array["entry"].copy(), args=args)
 
 
-# @overload
+# class CountDataSample:
+#     def __init__(self, struct_array, t0, tf):
+#         self.t0 = t0
+#         self.tf = tf
+#         self._struct_array = struct_array
+#         self.nb_samples = len(np.unique(self._struct_array["sample_id"]))
+#         self.nb_assets = len(np.unique(self._struct_array["asset_id"]))
+#
+#     def select(self, sample_id: Optional[ArrayLike] = None, asset_id: Optional[ArrayLike] = None) -> Self:
+#         mask = np.ones(len(self._struct_array), dtype=np.bool_)
+#         if sample_id is not None:
+#             mask = mask & np.isin(self._struct_array['sample_id'], sample_id)
+#         if asset_id is not None:
+#             mask = mask & np.isin(self._struct_array['asset_id'], asset_id)
+#         substruct_array = self._struct_array[mask].copy()
+#         return CountDataSample(iter((substruct_array,)), self.t0, self.tf) # iterator that returns one struct_array
+#
+#     @property
+#     def timeline(self) -> NDArray[np.float64]:
+#         return self._struct_array["timeline"]
+#
+#     @property
+#     def fields(self) -> tuple[str, ...]:
+#         return self._struct_array.dtype.names
+#
+#     def __len__(self) -> int:
+#         return len(self._struct_array)
+#
+#
 # def sample_count_data(
-#     obj: RenewalRewardProcess,
+#     obj: RenewalProcess|RenewalRewardProcess,
 #     size: int,
 #     tf: float,
 #     t0: float = 0.0,
 #     maxsample: int = 1e5,
 #     seed: Optional[int] = None,
-# ) -> RenewalRewardProcessSample: ...
+# ) -> CountDataSample:
+#
+#     from .iterator import RenewalProcessIterator
+#
+#     match obj:
+#         case RenewalProcess():
+#             iterator = RenewalProcessIterator(size, tf, obj.model, t0=t0, model1=obj.model1, maxsample=maxsample, seed=seed)
+#             struct_array = np.concatenate(tuple((arr for arr in iterator)))
+#             struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
+#             return RenewalProcessSample(struct_array, t0, tf)
+#
+#
+#
+# def nb_events(count_data : CountDataSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+#     sort = np.argsort(self.timeline)
+#     timeline = self.timeline[sort]
+#     counts = np.ones_like(timeline)
+#     timeline = np.insert(timeline, 0, self.t0)
+#     counts = np.insert(counts, 0, 0)
+#     counts[timeline == self.tf] = 0
+#     return timeline, np.cumsum(counts)
+#
+# def mean_nb_events(count_data : CountDataSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+#     timeline, counts = self.nb_events()
+#     return timeline, counts / len(self)
+#
+#
+# def total_rewards(count_data : CountDataSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+#     sort = np.argsort(self.timeline)
+#     timeline = self.timeline[sort]
+#     rewards = self.rewards[sort]
+#     timeline = np.insert(timeline, 0, self.t0)
+#     rewards = np.insert(rewards, 0, 0)
+#     rewards[timeline == self.tf] = 0
+#     return timeline, rewards.cumsum()
+#
+#
+# def mean_total_rewards(count_data : CountDataSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+#     timeline, rewards = self.total_rewards()
+#     return timeline, rewards / len(self)
 
-# actual implementation
-
-# TODO : merge this sample_failure_data with sample_lifetime_data above to 1 sample_failure_data
-# apply tf and t0 truncation and censoring on time, event, entry returned.
-# if NHPP ?
-
-
-
-
-def sample_failure_data(
-    obj: RenewalProcess | RenewalRewardProcess,
-    size: int,
-    tf: float,
-    t0: float = 0.0,
-    maxsample: int = 1e5,
-    seed: Optional[int] = None,
-) -> :
-    from relife.lifetime_model import LeftTruncatedModel
-    from relife.sample.iterator import RenewalProcessIterator
-
-    model1 = getattr(obj, "model1", None)
-    if model1 is not None and model1 != obj.model:
-        if isinstance(model1, LeftTruncatedModel) and model1.baseline == obj.model:
-            pass
-        else:
-            raise ValueError(
-                f"Calling sample_failure_data on {type(obj)} having different model and model1 is ambiguous. Instantiate {type(obj)} with only one model"
-            )
-
-    iterator = RenewalProcessIterator(size, tf, obj.model, t0, model1=obj.model1, maxsample=maxsample, seed=seed)
-    struct_array = np.concatenate((arr for arr in iterator))
-    args = ()
-    if hasattr(obj.model, "args"): # may be FrozenParametricLifetimeModel
-        args = tuple((np.take(arg, struct_array["asset_id"]) for arg in obj.model.args))
-
-    return struct_array["time"], struct_array["event"], struct_array["entry"], args

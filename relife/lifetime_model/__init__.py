@@ -5,6 +5,7 @@ from ._base import (
     ParametricLifetimeModel,
     CovarEffect,
 )
+from .frozen_model import FrozenParametricLifetimeModel
 from ._structural_type import FittableParametricLifetimeModel
 from .conditional_model import AgeReplacementModel, LeftTruncatedModel
 from .distribution import (

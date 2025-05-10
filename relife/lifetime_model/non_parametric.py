@@ -10,7 +10,7 @@ from relife.data import lifetime_data_factory
 from ._base import NonParametricLifetimeModel
 
 if TYPE_CHECKING:
-    from relife.data import LifetimeData
+    from ..likelihood.lifetime_likelihood import StructuredLifetimeData
 
 
 class Estimation(NamedTuple):
@@ -440,7 +440,7 @@ class Turnbull(NonParametricLifetimeModel):
 
     def _estimate_with_low_memory(
         self,
-        lifetime_data: LifetimeData,
+        lifetime_data: StructuredLifetimeData,
         timeline_temp,
         timeline_len,
         event_occurence,
@@ -496,7 +496,7 @@ class Turnbull(NonParametricLifetimeModel):
 
     def _estimate_with_high_memory(
         self,
-        lifetime_data: LifetimeData,
+        lifetime_data: StructuredLifetimeData,
         timeline_len,
         event_occurence,
         timeline_temp,

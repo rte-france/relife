@@ -293,10 +293,18 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
-        from relife.sample import sample_lifetime_data
-        a0 = reshape_ar_or_a0("a0", a0) # isf is overriden so rvs is conditional to a0
-        age = sample_lifetime_data(self, *(a0, *args), size=size, seed=seed)[0]
-        return age - a0 # residual lifetime here
+        from relife.sample import sample_failure_data
+        a0 = reshape_ar_or_a0("a0", a0)
+        nb_assets = None
+        if isinstance(size, tuple):
+            nb_sample = size[0]
+            if len(size) == 2:
+                nb_assets = size[-1]
+        else:
+            nb_sample = size
+        time, _, entry, _ = sample_failure_data(self.freeze(a0, *args), nb_sample, (0., np.inf), nb_assets=nb_assets, astuple=True, seed=seed)
+        time = time - entry # return residual time
+        return time.reshape(size, copy=True)
 
     def freeze(
         self, a0: float | Sequence[float] | NDArray[np.float64], *args: *Args

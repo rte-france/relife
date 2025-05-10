@@ -1,1 +1,1 @@
-from .sample_function import sample_lifetime_data, sample_count_data
+from .sample_function import sample_failure_data

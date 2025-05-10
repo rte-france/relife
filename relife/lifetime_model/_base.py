@@ -19,7 +19,7 @@ from typing_extensions import override
 
 from relife import ParametricModel
 from relife._plots import PlotSurvivalFunc
-from relife.data import lifetime_data_factory
+from relife.data import LifetimeData, FailureData
 from relife.likelihood import maximum_likelihood_estimation
 from relife.likelihood.maximum_likelihood_estimation import FittingResults
 from relife.quadrature import LebesgueStieltjesMixin
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from .frozen_model import (
         FrozenLifetimeRegression,
         FrozenParametricLifetimeModel,
-    )
+)
 
     from ._structural_type import FittableParametricLifetimeModel
 
@@ -190,9 +190,17 @@ class ParametricLifetimeModel(
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    def rvs(self, *args: *Args, size: int | tuple[int, int] = 1, seed: Optional[int] = None) -> np.float64|NDArray[np.float64]:
-        from relife.sample import sample_lifetime_data
-        return sample_lifetime_data(self, *args, size=size, seed=seed)[0]
+    def rvs(self, *args: *Args, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None) -> np.float64|NDArray[np.float64]:
+        from relife.sample import sample_failure_data
+        nb_assets = None
+        if isinstance(size, tuple):
+            nb_sample = size[0]
+            if len(size) == 2:
+                nb_assets = size[-1]
+        else:
+            nb_sample = size
+        time = sample_failure_data(self.freeze(*args), nb_sample, (0., np.inf), nb_assets=nb_assets, astuple=True, seed=seed)[0]
+        return time.reshape(size, copy=True)
 
     @property
     def plot(self) -> PlotSurvivalFunc:
@@ -455,18 +463,22 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self:
-        lifetime_data = lifetime_data_factory(
+        lifetime_data = LifetimeData(
             time,
             event=event,
             entry=entry,
             departure=departure,
         )
+        return self.fit_from_failure_data(lifetime_data, **kwargs)
+
+    def fit_from_failure_data(self, failure_data : FailureData, **kwargs) -> Self:
         maximum_likelihood_estimation(
             self,
-            lifetime_data,
+            failure_data,
             **kwargs,
         )
         return self
+
 
 
 class CovarEffect(ParametricModel):
@@ -773,19 +785,21 @@ class LifetimeRegression(
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self:
-        lifetime_data = lifetime_data_factory(
+        covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
+        self.covar_effect._parameters.nodedata = {f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
+        lifetime_data = LifetimeData(
             time,
-            covar,
-            *args,
             event=event,
             entry=entry,
             departure=departure,
+            args = (covar, *args),
         )
-        covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
-        self.covar_effect._parameters.nodedata = {f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
+        return self.fit_from_failure_data(lifetime_data, **kwargs)
+
+    def fit_from_failure_data(self, failure_data : FailureData, **kwargs) -> Self:
         maximum_likelihood_estimation(
             self,
-            lifetime_data,
+            failure_data,
             **kwargs,
         )
         return self
