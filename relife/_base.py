@@ -1,8 +1,12 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, InitVar, field, asdict
 from itertools import chain
-from typing import Any, Iterator, Optional, Self
+from typing import Any, Iterator, Optional, Self, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.optimize import OptimizeResult
 
 
 class ParametricModel:
@@ -12,10 +16,12 @@ class ParametricModel:
     Any parametric_model core must inherit from `ParametricModel`.
     """
 
+    fitting_results: Optional[FittingResults]
+
     def __init__(self, **kwparams: Optional[float]):
         self._parameters = Parameters(**kwparams)
         self._nested_models = {}
-        self._fitting_results = None
+        self.fitting_results = None
 
     @property
     def params(self) -> NDArray[np.float64]:
@@ -167,20 +173,17 @@ class ParametricModel:
     #     self._parameters.nodedata = kwparams
 
 
+# TODO : MAYBE, recarrays (extended numpy structured arrays) can replace this huge Parameters class
 class Parameters:
     """
     Dict-like tree structured parameters.
 
     Every ``ParametricModel`` are composed of a ``Parameters`` instance.
     """
-    parent : Optional[Self]
 
-    def __init__(
-        self,
-        mapping: Optional[dict[str, Optional[float]]] = None,
-        /,
-        **kwargs: Optional[float]
-    ):
+    parent: Optional[Self]
+
+    def __init__(self, mapping: Optional[dict[str, Optional[float]]] = None, /, **kwargs: Optional[float]):
         self._nodedata = {}
         if mapping is not None:
             # not that np.nan is an instance of float
@@ -211,10 +214,11 @@ class Parameters:
         return iter(self._allvalues)
 
     def allitems(self) -> Iterator[tuple[str, float]]:
-        def items_walk(parameters : Self):
+        def items_walk(parameters: Self):
             yield tuple(parameters._nodedata.items())
             for leaf in parameters.leaves.values():
                 yield tuple(chain.from_iterable(items_walk(leaf)))
+
         return chain.from_iterable(items_walk(self))
 
     def set_allvalues(self, *values: Optional[float | complex]):
@@ -224,7 +228,7 @@ class Parameters:
         pos = len(self._nodedata)
         self._nodedata.update(zip(self._nodedata, values[:pos]))
         for leaf in self.leaves.values():
-            leaf.set_allvalues(*values[pos: pos + len(leaf)])
+            leaf.set_allvalues(*values[pos : pos + len(leaf)])
             pos += len(leaf)
         if self.parent is not None:
             self.parent._update()
@@ -236,7 +240,7 @@ class Parameters:
         pos = len(self._nodedata)
         self._nodedata = {keys[:pos][i]: v for i, v in self._nodedata.values()}
         for leaf in self.leaves.values():
-            leaf.set_allkeys(*keys[pos: pos + len(leaf)])
+            leaf.set_allkeys(*keys[pos : pos + len(leaf)])
             pos += len(leaf)
         if self.parent is not None:
             self.parent._update()
@@ -244,18 +248,18 @@ class Parameters:
     def __len__(self) -> int:
         return len(self._allkeys)
 
-    def __contains__(self, item :str):
+    def __contains__(self, item: str):
         """contains only applies on current node"""
         return item in self._nodedata
 
-    def __getitem__(self, item : str):
+    def __getitem__(self, item: str):
         return self._nodedata[item]
 
-    def __setitem__(self, key : str, value : Optional[float]):
+    def __setitem__(self, key: str, value: Optional[float]):
         self._nodedata[key] = value if value is not None else np.nan
         self._update()
 
-    def __delitem__(self, key : str):
+    def __delitem__(self, key: str):
         del self._nodedata[key]
         self._update()
 
@@ -284,3 +288,66 @@ class Parameters:
 
         if self.parent is not None:
             self.parent._update()
+
+
+@dataclass
+class FittingResults:
+    """Fitting results of the parametric_model core."""
+
+    nb_samples: InitVar[int]  #: Number of observations (samples).
+
+    opt: InitVar[OptimizeResult] = field(repr=False)  #: Optimization result (see scipy.optimize.OptimizeResult doc).
+    var: Optional[NDArray[np.float64]] = field(
+        repr=False, default=None
+    )  #: Covariance matrix (computed as the inverse of the Hessian matrix)
+    se: NDArray[np.float64] = field(
+        init=False, repr=False
+    )  #: Standard error, square root of the diagonal of the covariance matrix.
+
+    params: NDArray[np.float64] = field(init=False)  #: Optimal parameters values
+    nb_params: int = field(init=False)  #: Number of parameters.
+    AIC: float = field(init=False)  #: Akaike Information Criterion.
+    AICc: float = field(init=False)  #: Akaike Information Criterion with a correction for small sample sizes.
+    BIC: float = field(init=False)  #: Bayesian Information Criterion.
+
+    def __post_init__(self, nb_samples, opt):
+        self.params = opt.x
+        self.nb_params = opt.x.size
+        self.AIC = 2 * self.nb_params + 2 * opt.fun
+        self.AICc = self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (nb_samples - self.nb_params - 1)
+        self.BIC = np.log(nb_samples) * self.nb_params + 2 * opt.fun
+
+        self.se = None
+        if self.var is not None:
+            self.se = np.sqrt(np.diag(self.var))
+
+    def standard_error(self, jac_f: np.ndarray) -> np.ndarray:
+        """Standard error estimation function.
+
+        Parameters
+        ----------
+        jac_f : 1D array
+            The Jacobian of a function f with respect to params.
+
+        Returns
+        -------
+        1D array
+            Standard error for f(params).
+
+        References
+        ----------
+        .. [1] Meeker, W. Q., Escobar, L. A., & Pascual, F. G. (2022).
+            Statistical methods for reliability data. John Wiley & Sons.
+        """
+        # [1] equation B.10 in Appendix
+        return np.sqrt(np.einsum("ni,ij,nj->n", jac_f, self.var, jac_f))
+
+    def asdict(self) -> dict:
+        """converts FittingResult into a dictionary.
+
+        Returns
+        -------
+        dict
+            Returns the fitting result as a dictionary.
+        """
+        return asdict(self)

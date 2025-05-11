@@ -11,11 +11,11 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.lifetime_model import ParametricLifetimeModel
-from relife.sample import sample_lifetime_data
+
 
 if TYPE_CHECKING:
     from relife.economic import Discounting, Reward, ExponentialDiscounting
-
+    from .renewal_process import RenewalProcess
 
 Args = TypeVarTuple("Args")
 
@@ -28,22 +28,16 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
     def __init__(
         self,
         size: int | tuple[int]| tuple[int, int],
-        tf: float,  # calendar end time
-        t0: float = 0.0,  # calendar beginning time
+        window : tuple[float, float],
         seed: Optional[int] = None,
-        maxsample : 1e5 = int,
     ):
         self.size = size
-        self.tf = tf
-        self.t0 = t0
+        self.t0, self.tf = window
         self.seed = seed
-        self.nb_assets = 1
         self.timeline = np.zeros(size)
         self.stop_counter = np.zeros(size, dtype=np.int64)
         self.start_counter = np.zeros(size, dtype=np.int64)
-        self.maxsample = maxsample
         self.n = 0
-        self.nb_sampled = 0
 
     @property
     def stop(self) -> Optional[bool]:
@@ -80,78 +74,72 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
 
 class RenewalProcessIterator(CountDataIterator):
 
-    model: ParametricLifetimeModel[()]
-    model1: Optional[ParametricLifetimeModel[()]]
-    a0: Optional[NDArray[np.float64]]
-    ar: Optional[NDArray[np.float64]]
-
     def __init__(
         self,
+        process : RenewalProcess,
         size: int|tuple[int]|tuple[int,int],
-        tf: float,  # calendar end time
-        model : ParametricLifetimeModel[()],
-        t0: float = 0.0,  # calendar start time
-        model1 : Optional[ParametricLifetimeModel[()]] = None,
-        maxsample : int = 1e5,
+        window : tuple[float, float],
         seed: Optional[int] = None,
     ):
-        super().__init__(size, tf, t0, maxsample=maxsample, seed=seed)
-        self._model_queue = [model, model1]
+        super().__init__(size, window, seed=seed)
+        self.process = process
 
     @property
     def model(self) -> ParametricLifetimeModel[()]:
-        if len(self._model_queue) == 2:
-            if self._model_queue[1] is not None:
-                return self._model_queue.pop()
-            self._model_queue.pop()
-        return self._model_queue[0]
+        if self.n == 0 and self.process.model1 is not None:
+            return self.process.model1
+        return self.process.model
+
+    def step(self):
+        time, event, entry = self.model.sample_time_event_entry(size=self.size, seed=self.seed)
+        if self.n == 0:
+            self.timeline = np.zeros_like(time)  #  ensure broadcasting
+            self.stop_counter = np.zeros_like(self.timeline, dtype=np.int64)
+            self.start_counter = np.zeros_like(self.timeline, dtype=np.int64)
+        else:
+            entry = np.zeros_like(entry)
+
+        # update timeline
+        self.timeline += time
+
+        # update start and stop counter
+        self.start_counter[self.timeline > self.t0] += 1
+        self.stop_counter[self.timeline > self.tf] += 1
+
+        # tf right censorings
+        time = np.where(
+            self.just_crossed_tf, time - (self.timeline - self.tf), time
+        )
+        self.timeline[self.just_crossed_tf] = self.tf
+        event[self.just_crossed_tf] = False
+
+        # t0 left truncations, only applied on time not being truncated by model
+        entry = np.where(
+            self.just_crossed_t0, self.t0 + entry - (self.timeline - time), entry
+        )
+
+        # update seed to avoid having the same rvs result
+        if self.seed is not None:
+            self.seed += 1
+        self.n += 1
+
+        struct_arr = rfn.append_fields(  #  works on structured_array too
+            self.base_structarray(),
+            ("time", "event", "entry"),
+            (time[self.selection], event[self.selection], entry[self.selection]),
+            (np.float64, np.bool_, np.float64),
+            usemask=False,
+            asrecarray=False,
+        )
+        return struct_arr
 
     def __next__(self) -> NDArray[DTypeLike]:
-        if not self.stop:
-            time, event, entry = sample_lifetime_data(self.model, size=self.size, seed=self.seed)
-            if self.n == 0:
-                self.timeline = np.zeros_like(time) # ensure broadcasting
-                self.stop_counter = np.zeros_like(self.timeline, dtype=np.int64)
-                self.start_counter = np.zeros_like(self.timeline, dtype=np.int64)
-            else:
-                entry = np.zeros_like(entry)
-
-            # update timeline
-            self.timeline += time
-
-            # update start and stop counter
-            self.start_counter[self.timeline > self.t0] += 1
-            self.stop_counter[self.timeline > self.tf] += 1
-
-            # tf right censorings
-            time = np.where(
-                self.just_crossed_tf, time - (self.timeline - self.tf), time
-            )
-            self.timeline[self.just_crossed_tf] = self.tf
-            event[self.just_crossed_tf] = False
-
-            # t0 left truncations, only applied on time not being truncated by model
-            entry = np.where(
-                self.just_crossed_t0, self.t0 + entry - (self.timeline - time), entry
-            )
-
-            # update seed to avoid having the same rvs result
-            if self.seed is not None:
-                self.seed += 1
-            self.n += 1
-
-            struct_arr = rfn.append_fields( # works on structured_array too
-                self.base_structarray(),
-                ("time", "event", "entry"),
-                (time[self.selection], event[self.selection], entry[self.selection]),
-                (np.float64, np.bool_, np.float64),
-                usemask=False,
-                asrecarray=False,
-            )
-            self.nb_sampled += len(struct_arr)
-            if self.nb_sampled > self.maxsample:
-                raise RuntimeError("Max number of sample reached")
-            return struct_arr
+        struct_arr = self.step()
+        while struct_arr.size == 0 and not self.stop: # avoid returning empty array
+            struct_arr = self.step()
+        if self.stop:
+            raise StopIteration
+        return struct_arr
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):
     reward: Reward

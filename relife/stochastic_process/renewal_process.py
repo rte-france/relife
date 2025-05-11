@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, TypeVar, TypedDict
 
 import numpy as np
-from numpy.typing import NDArray
-from typing_extensions import override
+from numpy.typing import NDArray, DTypeLike
 
 from relife import ParametricModel
 from relife.economic import (
@@ -13,18 +12,21 @@ from relife.economic import (
     ExponentialDiscounting,
     reward_partial_expectation,
 )
-from relife.sample import CountDataSampleMixin, FailureDataSampleMixin
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
+from relife.data import LifetimeData
 
 if TYPE_CHECKING:
     from relife.economic import Reward
+    from .iterator import CountDataIterator
     from relife.lifetime_model import (
         ParametricLifetimeModel,
     )
 
+CountData = TypedDict("CountData", {"t0": float, "tf" : float, "data": NDArray[DTypeLike]})
 
-class RenewalProcess(ParametricModel, CountDataSampleMixin, FailureDataSampleMixin):
+class RenewalProcess(ParametricModel):
+
     def __init__(
         self,
         model: ParametricLifetimeModel[()],
@@ -44,7 +46,11 @@ class RenewalProcess(ParametricModel, CountDataSampleMixin, FailureDataSampleMix
 
         self.model = model
         self.model1 = model1
+        self._count_data = None
 
+    def count_data(self) -> Optional[NDArray[DTypeLike]]:
+        if self._count_data is not None:
+            return self._count_data["data"]
 
     def renewal_function(
         self, tf: float, nb_steps: int
@@ -65,6 +71,70 @@ class RenewalProcess(ParametricModel, CountDataSampleMixin, FailureDataSampleMix
             self.model,
             self.model.pdf if self.model1 is None else self.model1.pdf,
         )
+
+    def nb_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        if self._count_data is None:
+            raise ValueError("Object has no count_data yet. Call sample_count_data first")
+        sort = np.argsort(self.count_data["timeline"])
+        timeline = self.count_data["timeline"][sort]
+        counts = np.ones_like(timeline)
+        timeline = np.insert(timeline, 0, self._count_data["t0"])
+        counts = np.insert(counts, 0, 0)
+        counts[timeline == self._count_data["tf"]] = 0
+        return timeline, np.cumsum(counts)
+
+    def mean_nb_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        timeline, counts = self.nb_events()
+        return timeline, counts / len(self.count_data)
+
+    def __concatenate_count_data(
+        self,
+        tf: float,
+        t0: float = 0.,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> CountData:
+        from .iterator import RenewalProcessIterator
+        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
+        count_data = next(iterator)
+        for arr in iterator:
+            if len(arr) > maxsample:
+                raise RuntimeError("Max number of sample reached")
+            count_data = np.concatenate((count_data, arr))
+        count_data = np.sort(count_data, order=("sample_id", "asset_id", "timeline"))
+        return {"t0" : t0, "tf" : tf, "data" : count_data}
+
+    def sample_count_data(
+        self,
+        tf : float,
+        t0 : float = 0.,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ):
+        self._count_data = self.__concatenate_count_data(tf, t0, size, maxsample, seed)
+
+    def sample_lifetime_data(
+        self,
+        tf : float,
+        t0 : float = 0.,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> LifetimeData:
+        from relife.lifetime_model import LeftTruncatedModel
+        if self.model1 is not None and self.model1 != self.model:
+            if isinstance(self.model1, LeftTruncatedModel) and self.model1.baseline == self.model:
+                pass
+            else:
+                raise ValueError(
+                    f"Calling sample_failure_data on RenewalProcess having different model and model1 is ambiguous. Instantiate RenewalProcess with only one model"
+                )
+        count_data = self.__concatenate_count_data(tf, t0, size, maxsample, seed)
+        args = getattr(self.model, "args", ())
+        args = tuple((np.take(arg, count_data["data"]["asset_id"]) for arg in args))
+        return LifetimeData(count_data["data"]["time"].copy(), event=count_data["data"]["event"].copy(), entry=count_data["data"]["entry"].copy(), args=args)
 
 
 class RenewalRewardProcess(RenewalProcess):
@@ -171,3 +241,22 @@ class RenewalRewardProcess(RenewalProcess):
             )
         else:
             return self.discounting.rate * self.asymptotic_expected_total_reward()
+
+
+
+
+
+
+# def total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+#     sort = np.argsort(self.timeline)
+#     timeline = self.timeline[sort]
+#     rewards = self.rewards[sort]
+#     timeline = np.insert(timeline, 0, self.t0)
+#     rewards = np.insert(rewards, 0, 0)
+#     rewards[timeline == self.tf] = 0
+#     return timeline, rewards.cumsum()
+#
+#
+# def mean_total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+#     timeline, rewards = self.total_rewards()
+#     return timeline, rewards / len(self)

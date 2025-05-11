@@ -1,1 +1,1 @@
-from ._base import ParametricModel
+from ._base import ParametricModel, FittedParametricModel, FittingResults

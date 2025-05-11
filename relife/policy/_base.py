@@ -10,9 +10,9 @@ from relife.economic import Cost, exponential_discounting
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
-        FrozenParametricLifetimeModel,
         ParametricLifetimeModel,
     )
+    from ..frozen_model.frozen_lifetime_model import FrozenParametricLifetimeModel
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 

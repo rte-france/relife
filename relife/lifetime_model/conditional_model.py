@@ -136,7 +136,15 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
         ar = reshape_ar_or_a0("ar", ar)
-        return super().rvs(*(ar, *args), size=size, seed=seed)
+        return np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
+
+    @override
+    def sample_time_event_entry(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None) -> tuple[np.float64|NDArray[np.float64], bool|NDArray[np.bool_], np.float64|NDArray[np.float64]]:
+        # rvs like method but with time, event, entry
+        time, event, entry = self.baseline.sample_time_event_entry(*args, size=size, seed=seed)
+        time = np.minimum(time, ar)
+        event = event != ar
+        return time, event, entry
 
     def ppf(
         self,
@@ -202,12 +210,6 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
             b == ar, func(ar) * self.baseline.sf(ar, *args), 0
         )
 
-    def freeze(
-        self, ar: float | NDArray[np.float64], *args: *Args
-    ) -> ParametricLifetimeModel[()]:
-        from .frozen_model import FrozenParametricLifetimeModel
-        ar = reshape_ar_or_a0("ar", ar)
-        return  FrozenParametricLifetimeModel(self).collect_args(*(ar, *args))
 
 
 class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
@@ -293,22 +295,14 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
-        from relife.sample import sample_failure_data
         a0 = reshape_ar_or_a0("a0", a0)
-        nb_assets = None
-        if isinstance(size, tuple):
-            nb_sample = size[0]
-            if len(size) == 2:
-                nb_assets = size[-1]
-        else:
-            nb_sample = size
-        time, _, entry, _ = sample_failure_data(self.freeze(a0, *args), nb_sample, (0., np.inf), nb_assets=nb_assets, astuple=True, seed=seed)
-        time = time - entry # return residual time
-        return time.reshape(size, copy=True)
+        return super().rvs(*(a0, *args), size=size, seed=seed) # residual age as isf is overridden
 
-    def freeze(
-        self, a0: float | Sequence[float] | NDArray[np.float64], *args: *Args
-    ) -> ParametricLifetimeModel[()]:
-        from .frozen_model import FrozenParametricLifetimeModel
-        a0 = reshape_ar_or_a0("a0", a0)
-        return  FrozenParametricLifetimeModel(self).collect_args(*(a0, *args))
+    @override
+    def sample_time_event_entry(self, a0: float | Sequence[float] | NDArray[np.float64], *args: *Args, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None) -> tuple[np.float64|NDArray[np.float64], bool|NDArray[np.bool_], np.float64|NDArray[np.float64]]:
+        # rvs like method but with time, event, entry
+        time, event, entry = super().sample_time_event_entry(*(a0, *args), size=size, seed=seed)
+        entry = np.broadcast_to(a0, entry.shape).copy()
+        time = time + a0 # not residual age
+        return time, event, entry
+

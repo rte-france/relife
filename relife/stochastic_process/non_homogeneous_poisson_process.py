@@ -14,14 +14,13 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._base import ParametricModel
+from relife._base import ParametricModel, FittingResults
 from relife._plots import PlotNHPP
 
 from .frozen_process import FrozenNonHomogeneousPoissonProcess
 
 if TYPE_CHECKING:
     from relife.lifetime_model import FittableParametricLifetimeModel
-    from relife.likelihood.maximum_likelihood_estimation import FittingResults
     from relife.sample import CountData
 
 Args = TypeVarTuple("Args")

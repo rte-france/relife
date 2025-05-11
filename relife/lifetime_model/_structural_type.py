@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Protocol, Self, TypeVarTuple, TYPE_CHECKING
+from typing import Any, Optional, Protocol, Self, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray

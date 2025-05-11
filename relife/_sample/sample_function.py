@@ -4,45 +4,13 @@ import numpy as np
 from numpy.typing import NDArray, DTypeLike
 
 from relife.data import LifetimeData, NHPPData
+from relife.frozen_model import FrozenParametricLifetimeModel
 from relife.lifetime_model import ParametricLifetimeModel
 from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 Args = TypeVarTuple("Args")
 
 
-# rvs like with time, event, entry
-def _sample_time_event_entry(
-    model : ParametricLifetimeModel[*Args],
-    *args : *Args,
-    size : int,
-    nb_assets : int = 1,
-    seed: Optional[int] = None
-): # time, event, entry are returned in 2D (m, n)
-    from relife.lifetime_model import LeftTruncatedModel, AgeReplacementModel
-
-    match model:
-        case LeftTruncatedModel():
-            a0 = args[0]
-            rs = np.random.RandomState(seed=seed)
-            probability = rs.uniform(size=(nb_assets, size))
-            # not residual time (isf is overriden by LeftTruncated so rvs is conditional to a0)
-            time = model.isf(probability, *args) + a0
-            event = np.ones_like(time, dtype=np.bool_)
-            entry = np.broadcast_to(a0, time.shape).copy()
-            return time, event, entry
-        case AgeReplacementModel():
-            ar = args[0]
-            time, event, entry = _sample_time_event_entry(model.baseline, *args[1:], size=size, nb_assets=nb_assets, seed=seed)
-            time = np.minimum(time, ar)
-            event = event != ar
-            return time, event, entry
-        case _:
-            rs = np.random.RandomState(seed=seed)
-            probability = rs.uniform(size=(nb_assets, size))
-            time = model.isf(probability, *args)
-            event = np.ones_like(time, dtype=np.bool_)
-            entry = np.zeros_like(time, dtype=np.float64)
-            return time, event, entry
 
 
 def sample_failure_data(
@@ -62,18 +30,14 @@ def sample_failure_data(
 
     match model:
         case ParametricLifetimeModel():
-            from relife.lifetime_model import FrozenParametricLifetimeModel
-            if isinstance(model, FrozenParametricLifetimeModel):
-                time, event, entry = _sample_time_event_entry(model.unfreeze(), *model.args, size=size, seed=seed)
-            else:
-                time, event, entry = _sample_time_event_entry(model, size=size, seed=seed)
+            time, event, entry = model.sample_time_event_entry(size=size, seed=seed)
             # time, event, entry shape : (m, size)
             entry = np.where(time > t0, np.full_like(time, t0), entry)
             time = np.where(time > tf, np.full_like(time, tf), time)
             event[time > tf] = False
             selection = t0 <= time <= tf
             asset_id, sample_id = np.where(selection)
-            args = ()
+            args =
             if isinstance(model, FrozenParametricLifetimeModel):
                 args = model.args
                 args = tuple((np.take(arg, asset_id) for arg in args))
@@ -83,7 +47,7 @@ def sample_failure_data(
 
         case RenewalProcess() as process:
             from relife.lifetime_model import LeftTruncatedModel
-            from relife.sample.iterator import RenewalProcessIterator
+            from relife.stochastic_process.iterator import RenewalProcessIterator
 
             model1 = getattr(process, "model1", None)
             if model1 is not None and model1 != process.model:
