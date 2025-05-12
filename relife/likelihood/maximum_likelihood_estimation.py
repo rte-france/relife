@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,7 +10,7 @@ from .lifetime_likelihood import LikelihoodFromLifetimes, StructuredLifetimeData
 
 if TYPE_CHECKING:
     from relife import ParametricModel
-    from relife.data import FailureData
+    from relife.data import NHPPData, LifetimeData
     from relife.lifetime_model import ParametricLifetimeModel
 
 
@@ -93,6 +93,9 @@ def init_params_from_lifetimes(
             raise NotImplemented
 
 
+FailureData = TypeVar("FailureData", bound=LifetimeData)
+
+
 def maximum_likelihood_estimation(
     model: ParametricModel, data: FailureData, **kwargs: Any
 ) -> ParametricModel:
@@ -146,7 +149,6 @@ def maximum_likelihood_estimation(
             model: NonHomogeneousPoissonProcess[
                 *tuple[float | NDArray[np.float64], ...]
             ]
-            from relife.data import NHPPData
 
             if not isinstance(data, NHPPData):
                 raise ValueError

@@ -146,6 +146,11 @@ def a0(request):
     return request.param
 
 
+@pytest.fixture(params = [1, N, (N,), (M, 1), (M, N)], ids=lambda size : f"size = {size}")
+def rvs_size(request):
+    return request.params
+
+
 @pytest.fixture
 def expected_out_shape():
     def _expected_out_shape(**kwargs: NDArray[np.float64]):
@@ -161,6 +166,12 @@ def expected_out_shape():
                         yield v.shape
                     case "ar"|"a0" if v.ndim < 2:
                         yield v.size, 1
+                    case "size":
+                        if isinstance(v, int):
+                            if v == 1:
+                                return ()
+                            return (v,)
+                        return v
                     case _:
                         yield v.shape
         return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))

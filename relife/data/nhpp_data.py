@@ -1,54 +1,10 @@
 from dataclasses import dataclass, field
-from typing import NewType, Optional, Sequence, Union
+from typing import Union, Sequence, Optional
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy._typing import NDArray
 
-
-@dataclass
-class LifetimeData:
-    time : NDArray[np.float64]
-    event: Optional[NDArray[np.bool_]] = field(default=None)
-    entry: Optional[NDArray[np.float64]] = field(default=None)
-    departure: Optional[NDArray[np.float64]] = field(default=None)
-    args: tuple[float | NDArray[np.float64], ...] = field(default_factory=tuple())
-
-    def __post_init__(self):
-        # Check time shape
-        if self.time.ndim > 2 or (self.time.ndim == 2 and self.time.shape[-1] not in (1, 2)):
-            raise ValueError(f"Invalid time shape, got {self.time.shape} be time must be (m,), (m, 1) or (m,2)")
-        if self.time.ndim < 2:
-            self.time = self.time.reshape(-1, 1)  # time is (m, 1) or (m, 2)
-
-        # Check event, entry, and departure shapes
-        for attr, name in [(self.event, "event"), (self.entry, "entry"), (self.departure, "departure")]:
-            if attr is None:
-                if name == "entry":
-                    self.entry = np.zeros((len(self.time), 1))
-                elif name == "departure":
-                    self.departure = np.ones((len(self.time), 1)) * np.inf
-                elif name == "event":
-                    self.event = np.ones((len(self.time), 1)).astype(np.bool_)
-
-            else:
-                if attr.ndim > 2 or (attr.ndim == 2 and attr.shape[-1] != 1):
-                    raise ValueError(f"Invalid {name} shape, got {attr.shape} be time must be (m,) or (m, 1)")
-                if attr.ndim < 2:
-                    setattr(self, name, attr.reshape(-1, 1))
-
-        # Check args shapes
-        self.args : list[NDArray[np.float64]] = [np.asarray(arg) for arg in self.args]
-        for i, arg in enumerate(self.args):
-            if arg.ndim > 2:
-                raise ValueError(f"Invalid arg shape, got {arg.shape} shape at position {i}")
-            if arg.ndim < 2:
-                self.args[i] = arg.reshape(-1, 1)
-
-        # Check sizes
-        sizes = [len(x) for x in (self.time, self.event, self.entry, self.departure, *self.args) if x is not None]
-        if len(set(sizes)) != 1:
-            raise ValueError(
-                f"All lifetime data must have the same number of values. Fields length are different. Got {set(sizes)}")
+from relife.data import LifetimeData
 
 
 @dataclass
@@ -222,6 +178,3 @@ class NHPPData:
         model_args = tuple((np.take(arg, _ids) for arg in self.args))
 
         return LifetimeData(time, event=event, entry=entry, args=model_args)
-
-
-FailureData = NewType("FailureData", Union[LifetimeData, NHPPData])

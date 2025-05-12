@@ -5,6 +5,12 @@ import numpy as np
 def test_args_names(distribution):
     assert distribution.args_names == ()
 
+def test_rvs(distribution, rvs_size, expected_out_shape):
+    assert distribution.rvs(size=rvs_size).shape == expected_out_shape(size=rvs_size)
+    assert all(arr.shape == expected_out_shape(size=rvs_size) for arr in distribution.rvs(size=rvs_size, return_event=True))
+    assert all(arr.shape == expected_out_shape(size=rvs_size) for arr in distribution.rvs(size=rvs_size, return_entry=True))
+    assert all(arr.shape == expected_out_shape(size=rvs_size) for arr in distribution.rvs(size=rvs_size, return_event=True, return_entry=True))
+
 def test_sf(distribution, time, expected_out_shape):
     assert distribution.sf(time).shape == expected_out_shape(time=time)
     assert distribution.sf(np.full(expected_out_shape(time=time), distribution.median())) == approx(np.full(expected_out_shape(time=time), 0.5), rel=1e-3)
@@ -80,6 +86,15 @@ def test_fit(distribution, power_transformer_data):
         entry=power_transformer_data[2, :],
     )
     assert distribution.params == pytest.approx(expected_params, rel=1e-3)
+
+
+def test_sample_lifetime_data(distribution):
+    t0, tf = distribution.ppf(0.75).item(), distribution.ppf(0.25).item()
+    lifetime_data = distribution.sample_lifetime_data(size=1e4, window=(t0, tf), seed=10)
+    expected_params = distribution.params.copy()
+    fitted_distribution = type(distribution)().fit_from_lifetime_data(lifetime_data)
+    assert fitted_distribution.params == approx(expected_params, rel=1e-3)
+
 
 class TestEquilibriumDistribution:
 

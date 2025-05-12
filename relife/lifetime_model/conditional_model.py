@@ -133,18 +133,27 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
         ar = reshape_ar_or_a0("ar", ar)
-        return np.minimum(self.baseline.rvs(*args, size=size, seed=seed), ar)
-
-    @override
-    def sample_time_event_entry(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None) -> tuple[np.float64|NDArray[np.float64], bool|NDArray[np.bool_], np.float64|NDArray[np.float64]]:
-        # rvs like method but with time, event, entry
-        time, event, entry = self.baseline.sample_time_event_entry(*args, size=size, seed=seed)
+        super_rvs = self.baseline.rvs(*args, size=size, return_event=return_event, return_entry=return_entry, seed=seed)
+        time = super_rvs[0] if isinstance(super_rvs, tuple) else super_rvs
         time = np.minimum(time, ar)
-        event = event != ar
-        return time, event, entry
+        if not return_event and not return_entry:
+            return time
+        elif return_event and not return_entry:
+            event = super_rvs[1]
+            event = event != ar
+            return time, event
+        elif not return_event and return_entry:
+            entry = super_rvs[1]
+            return time, entry
+        else:
+            event, entry = super_rvs[1:]
+            event = event != ar
+            return time, event, entry
 
     def ppf(
         self,
@@ -293,16 +302,21 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
         size: Optional[int | tuple[int] | tuple[int, int]] = None,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
         a0 = reshape_ar_or_a0("a0", a0)
-        return super().rvs(*(a0, *args), size=size, seed=seed) # residual age as isf is overridden
-
-    @override
-    def sample_time_event_entry(self, a0: float | Sequence[float] | NDArray[np.float64], *args: *Args, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None) -> tuple[np.float64|NDArray[np.float64], bool|NDArray[np.bool_], np.float64|NDArray[np.float64]]:
-        # rvs like method but with time, event, entry
-        time, event, entry = super().sample_time_event_entry(*(a0, *args), size=size, seed=seed)
-        entry = np.broadcast_to(a0, entry.shape).copy()
-        time = time + a0 # not residual age
-        return time, event, entry
-
+        super_rvs = super().rvs(*(a0, *args), size=size, return_event=return_event, return_entry=return_entry, seed=seed)
+        if not return_event and return_entry:
+            time, entry = super_rvs
+            entry = np.broadcast_to(a0, entry.shape).copy()
+            time = time + a0  #  not residual age
+            return time, entry
+        elif return_event and return_entry:
+            time, event, entry = super_rvs
+            entry = np.broadcast_to(a0, entry.shape).copy()
+            time = time + a0  #  not residual age
+            return time, event, entry
+        else:
+            return super_rvs

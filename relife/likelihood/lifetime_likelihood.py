@@ -244,6 +244,106 @@ class IndexedLifetimeData:
         )
 
 
+def get_complete(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
+    if lifetime_data.time.shape[-1] == 1: # 1D time
+        index = np.where(lifetime_data.event)[0]
+        if index.size > 0:
+            values = lifetime_data.time[index]
+            args = tuple((arg[index].copy() for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+    else: # 2D time
+        index = np.where(lifetime_data.time[:, 0] == lifetime_data.time[:, 1])[0]
+        if index.size > 0:
+            values = lifetime_data.time[index, 0]
+            args = tuple((arg[index] for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+
+def get_left_censoring(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
+    if lifetime_data.time.shape[-1] == 1: # 1D time
+        return None
+    else: # 2D time
+        index = np.where(lifetime_data.time[:, 0] == 0)[0]
+        if index.size > 0:
+            values = lifetime_data.time[index, 1]
+            args = tuple((arg[index] for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+
+def get_right_censoring(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
+    if lifetime_data.time.shape[-1] == 1: # 1D time
+        index = np.where(~lifetime_data.event)[0]
+        if index.size > 0:
+            values = lifetime_data.time[index]
+            args = tuple((arg[index].copy() for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+    else: # 2D time
+        index = np.where(lifetime_data.time[:, 1] == np.inf)[0]
+        if index.size > 0:
+            values = lifetime_data.time[index, 0]
+            args = tuple((arg[index] for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+
+def get_interval_censoring(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
+    if lifetime_data.time.shape[-1] == 1: # 1D time
+        rc_index = np.where(~lifetime_data.event)[0]
+        if rc_index.size > 0:
+            rc_values = np.c_[
+                lifetime_data.time[rc_index], np.ones(len(rc_index)) * np.inf
+            ]  # add a column of inf
+            args = tuple((arg[rc_index].copy() for arg in lifetime_data.args))
+            return IndexedLifetimeData(rc_values, rc_index, args)
+        return None
+    else: # 2D time
+        index = np.where(
+            np.not_equal(lifetime_data.time[:, 0], lifetime_data.time[:, 1]),
+        )[0]
+        if index.size > 0:
+            values = lifetime_data.time[index]
+            if values.size != 0:
+                if np.any(values[:, 0] >= values[:, 1]):
+                    raise ValueError(
+                        "Interval censorships lower bounds can't be higher or equal to its upper bounds"
+                    )
+            args = tuple((arg[index] for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+
+def get_left_truncation(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
+    if lifetime_data.time.shape[-1] == 1: # 1D time
+        index = np.where(lifetime_data.entry > 0)[0]
+        if index.size > 0:
+            values = lifetime_data.entry[index]
+            args = tuple((arg[index].copy() for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+    else: # 2D time
+        index = np.where(lifetime_data.entry > 0)[0]
+        if index.size > 0:
+            values = lifetime_data.entry[index]
+            args = tuple((arg[index] for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+
+def get_right_truncation(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
+    if lifetime_data.time.shape[-1] == 1: # 1D time
+        index = np.where(lifetime_data.departure < np.inf)[0]
+        if index.size > 0:
+            values = lifetime_data.departure[index]
+            args = tuple((arg[index] for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+    else: # 2D time
+        index = np.where(lifetime_data.departure < np.inf)[0]
+        if index.size > 0:
+            values = lifetime_data.departure[index]
+            args = tuple((arg[index] for arg in lifetime_data.args))
+            return IndexedLifetimeData(values, index, args)
+        return None
+
 
 @dataclass
 class StructuredLifetimeData:
@@ -279,12 +379,12 @@ class StructuredLifetimeData:
     def __post_init__(self, lifetime_data : LifetimeData):
 
         self.nb_samples = len(lifetime_data)
-        self.complete = StructuredLifetimeData.get_complete(lifetime_data)
-        self.right_censoring = StructuredLifetimeData.get_right_censoring(lifetime_data),
-        self.left_censoring = StructuredLifetimeData.get_left_censoring(lifetime_data),
-        self.interval_censoring = StructuredLifetimeData.get_interval_censoring(lifetime_data),
-        self.left_truncation = StructuredLifetimeData.get_left_truncation(lifetime_data),
-        self.right_truncation = StructuredLifetimeData.get_right_truncation(lifetime_data),
+        self.complete = get_complete(lifetime_data)
+        self.right_censoring = get_right_censoring(lifetime_data),
+        self.left_censoring = get_left_censoring(lifetime_data),
+        self.interval_censoring = get_interval_censoring(lifetime_data),
+        self.left_truncation = get_left_truncation(lifetime_data),
+        self.right_truncation = get_right_truncation(lifetime_data),
 
         # sanity checks that observed lifetimes are inside truncation bounds
         for field_name in [
@@ -380,108 +480,3 @@ class StructuredLifetimeData:
         elif self.right_censoring is not None:
             self.complete_or_right_censored = copy.deepcopy(self.right_censoring)
 
-    @staticmethod
-    def get_complete(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
-        if lifetime_data.time.shape[-1] == 1: # 1D time
-            index = np.where(lifetime_data.event)[0]
-            if index.size > 0:
-                values = lifetime_data.time[index]
-                args = tuple((arg[index].copy() for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-        else: # 2D time
-            index = np.where(lifetime_data.time[:, 0] == lifetime_data.time[:, 1])[0]
-            if index.size > 0:
-                values = lifetime_data.time[index, 0]
-                args = tuple((arg[index] for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-
-    @staticmethod
-    def get_left_censoring(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
-        if lifetime_data.time.shape[-1] == 1: # 1D time
-            return None
-        else: # 2D time
-            index = np.where(lifetime_data.time[:, 0] == 0)[0]
-            if index.size > 0:
-                values = lifetime_data.time[index, 1]
-                args = tuple((arg[index] for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-
-    @staticmethod
-    def get_right_censoring(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
-        if lifetime_data.time.shape[-1] == 1: # 1D time
-            index = np.where(~lifetime_data.event)[0]
-            if index.size > 0:
-                values = lifetime_data.time[index]
-                args = tuple((arg[index].copy() for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-        else: # 2D time
-            index = np.where(lifetime_data.time[:, 1] == np.inf)[0]
-            if index.size > 0:
-                values = lifetime_data.time[index, 0]
-                args = tuple((arg[index] for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-
-    @staticmethod
-    def get_interval_censoring(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
-        if lifetime_data.time.shape[-1] == 1: # 1D time
-            rc_index = np.where(~lifetime_data.event)[0]
-            if rc_index.size > 0:
-                rc_values = np.c_[
-                    lifetime_data.time[rc_index], np.ones(len(rc_index)) * np.inf
-                ]  # add a column of inf
-                args = tuple((arg[rc_index].copy() for arg in lifetime_data.args))
-                return IndexedLifetimeData(rc_values, rc_index, args)
-            return None
-        else: # 2D time
-            index = np.where(
-                np.not_equal(lifetime_data.time[:, 0], lifetime_data.time[:, 1]),
-            )[0]
-            if index.size > 0:
-                values = lifetime_data.time[index]
-                if values.size != 0:
-                    if np.any(values[:, 0] >= values[:, 1]):
-                        raise ValueError(
-                            "Interval censorships lower bounds can't be higher or equal to its upper bounds"
-                        )
-                args = tuple((arg[index] for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-
-    @staticmethod
-    def get_left_truncation(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
-        if lifetime_data.time.shape[-1] == 1: # 1D time
-            index = np.where(lifetime_data.entry > 0)[0]
-            if index.size > 0:
-                values = lifetime_data.entry[index]
-                args = tuple((arg[index].copy() for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-        else: # 2D time
-            index = np.where(lifetime_data.entry > 0)[0]
-            if index.size > 0:
-                values = lifetime_data.entry[index]
-                args = tuple((arg[index] for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-
-    @staticmethod
-    def get_right_truncation(lifetime_data : LifetimeData) -> Optional[IndexedLifetimeData]:
-        if lifetime_data.time.shape[-1] == 1: # 1D time
-            index = np.where(lifetime_data.departure < np.inf)[0]
-            if index.size > 0:
-                values = lifetime_data.departure[index]
-                args = tuple((arg[index] for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None
-        else: # 2D time
-            index = np.where(lifetime_data.departure < np.inf)[0]
-            if index.size > 0:
-                values = lifetime_data.departure[index]
-                args = tuple((arg[index] for arg in lifetime_data.args))
-                return IndexedLifetimeData(values, index, args)
-            return None

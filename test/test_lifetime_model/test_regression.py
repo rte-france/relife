@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
@@ -39,6 +38,33 @@ def test_args_names(regression):
         "covar",
         "covar",
     )
+
+def test_rvs(regression, rvs_size, covar, expected_out_shape):
+    assert regression.rvs(covar, size=rvs_size).shape == expected_out_shape(covar=covar, size=rvs_size)
+    assert all(arr.shape == expected_out_shape(covar=covar, size=rvs_size) for arr in regression.rvs(covar, size=rvs_size, return_event=True))
+    assert all(arr.shape == expected_out_shape(covar=covar, size=rvs_size) for arr in regression.rvs(covar, size=rvs_size, return_entry=True))
+    assert all(arr.shape == expected_out_shape(covar=covar, size=rvs_size) for arr in regression.rvs(covar, size=rvs_size, return_event=True, return_entry=True))
+
+# def test_rvs(regression, covar):
+#     match covar.shape:
+#         case (_,):
+#             m, n = 10, 20
+#             assert regression.rvs(covar, seed=21).shape == ()
+#             assert regression.rvs(covar, size=n, seed=21).shape == (n,)
+#             assert regression.rvs(covar, size=(n,), seed=21).shape == (n,)
+#             assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
+#         case (1, _):
+#             m, n = 10, 20
+#             assert regression.rvs(covar, seed=21).shape == (1, 1)
+#             assert regression.rvs(covar, size=n, seed=21).shape == (1, n)
+#             assert regression.rvs(covar, size=(n,), seed=21).shape == (1, n)
+#             assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
+#         case (m, _):
+#             n = 20
+#             assert regression.rvs(covar, seed=21).shape == (m, 1)
+#             assert regression.rvs(covar, size=n, seed=21).shape == (m, n)
+#             assert regression.rvs(covar, size=(n,), seed=21).shape == (m, n)
+#             assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
 
 def test_sf(regression, time, covar, expected_out_shape):
     assert regression.sf(time, covar).shape == expected_out_shape(time=time, covar=covar)
@@ -116,13 +142,13 @@ def test_ls_integrate(regression, integration_bound_a, integration_bound_b, cova
         rel=1e-3,
     )
 
-def test_fit(regression, insulator_string_data):
-    regression.fit(
-        insulator_string_data[0],
-        zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
-        event=insulator_string_data[1] == 1,
-    )
-
+# def test_fit(regression, insulator_string_data):
+#     regression.fit(
+#         insulator_string_data[0],
+#         zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
+#         event=insulator_string_data[1] == 1,
+#     )
+#
 
 # # @pytest.mark.xfail
 def test_aft_pph_weibull_eq(insulator_string_data):

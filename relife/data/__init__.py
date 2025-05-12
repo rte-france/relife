@@ -1,8 +1,7 @@
-from .failure_data import (
-    FailureData,
-    NHPPData,
+from .lifetime_data import (
     LifetimeData,
 )
+from .nhpp_data import NHPPData
 from .dataset import (
     load_circuit_breaker,
     load_input_turnbull,

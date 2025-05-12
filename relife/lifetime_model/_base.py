@@ -20,7 +20,7 @@ from typing_extensions import override
 
 from relife import ParametricModel
 from relife._plots import PlotSurvivalFunc
-from relife.data import LifetimeData, FailureData
+from relife.data import LifetimeData
 from relife.likelihood import maximum_likelihood_estimation
 from .._base import FittingResults
 from relife.quadrature import LebesgueStieltjesMixin
@@ -171,22 +171,32 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    # TODO : rvs won't be used, delete rvs and replace it by sample_time_event_entry ?
     def rvs(
-        self, *args: *Args, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None
-    ) -> np.float64 | NDArray[np.float64]:
+        self,
+        *args: *Args,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Optional[int] = None,
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ):
         rs = np.random.RandomState(seed=seed)
         probability = rs.uniform(size=size)
-        return self.isf(probability, *args)
-
-    def sample_time_event_entry(
-        self, *args: *Args, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None
-    ) -> tuple[np.float64 | NDArray[np.float64], bool | NDArray[np.bool_], np.float64 | NDArray[np.float64]]:
-        # rvs like method but with time, event, entry
-        time = self.rvs(*args, size=size, seed=seed)
+        time = self.isf(probability, *args)
         event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else True
         entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
-        return time, event, entry
+        if not return_event and not return_entry:
+            return time
+        elif return_event and not return_entry:
+            return time, event
+        elif not return_event and return_entry:
+            return time, entry
+        else:
+            return time, event, entry
 
     def sample_lifetime_data(
         self,
@@ -195,7 +205,7 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
         window: tuple[float, float] = (0.0, np.inf),
         seed: Optional[int] = None,
     ) -> LifetimeData:
-        time, event, entry = self.sample_time_event_entry(*args, size=size, seed=seed)
+        time, event, entry = self.rvs(*args, size=size, return_event=True, return_entry=True, seed=seed)
         t0, tf = window
         entry = np.where(time > t0, np.full_like(time, t0), entry)
         time = np.where(time > tf, np.full_like(time, tf), time)
@@ -245,7 +255,7 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
         return args_names
 
     def __getattribute__(self, item):
-        allowed_methods = ("compose_with", "nb_params", "nested_models", "params", "params_names", "fit", "args_names")
+        allowed_methods = ("compose_with", "nb_params", "nested_models", "params", "params_names", "fit", "fit_from_lifetime_data", "args_names")
         if item not in allowed_methods and not item.startswith("_"):
             params = np.array(tuple(self._parameters.allvalues()))
             if np.any(params):
@@ -315,11 +325,25 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return super().ppf(probability)
 
     @override
-    def rvs(self, size: int | tuple[int, int] = 1, seed: Optional[int] = None) -> np.float64 | NDArray[np.float64]:
+    def rvs(
+        self,
+        *args: *Args,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Optional[int] = None,
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ):
         """Random variable sampling.
 
         Parameters
         ----------
+        return_entry
+        return_event
         size : int or (int, int), default 1
             Shape of the sample.
         seed : int, default None
@@ -331,13 +355,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             Sample of random lifetimes.
         """
 
-        return super().rvs(size=size, seed=seed)
-
-    @override
-    def sample_time_event_entry(
-        self, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None
-    ) -> tuple[np.float64 | NDArray[np.float64], bool | NDArray[np.bool_], np.float64 | NDArray[np.float64]]:
-        return super().sample_time_event_entry(size=size, seed=seed)
+        return super().rvs(size=size, return_event=return_event, return_entry=return_entry, seed=seed)
 
     @override
     def sample_lifetime_data(
@@ -464,10 +482,10 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         )
         return self.fit_from_failure_data(lifetime_data, **kwargs)
 
-    def fit_from_failure_data(self, failure_data: FailureData, **kwargs) -> Self:
+    def fit_from_lifetime_data(self, lifetime_data: LifetimeData, **kwargs) -> Self:
         maximum_likelihood_estimation(
             self,
-            failure_data,
+            lifetime_data,
             **kwargs,
         )
         return self
@@ -630,14 +648,23 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         self,
         covar: float | NDArray[np.float64],
         *args: *Args,
+        return_event : bool = False,
+        return_entry : bool = False,
         size: int | tuple[int, int] = 1,
         seed: Optional[int] = None,
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ):
         """
         Random variable sampling.
 
         Parameters
         ----------
+        return_entry
+        return_event
         size : int or (int, int)
             Shape of the sample.
         covar : np.ndarray
@@ -654,17 +681,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         np.ndarray
             Sample of random lifetimes.
         """
-        return super().rvs(*(covar, *args), size=size, seed=seed)
-
-    @override
-    def sample_time_event_entry(
-        self,
-        covar: float | NDArray[np.float64],
-        *args: *Args,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        seed: Optional[int] = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], bool | NDArray[np.bool_], np.float64 | NDArray[np.float64]]:
-        return super().sample_time_event_entry(*(covar, *args), size=size, seed=seed)
+        return super().rvs(*(covar, *args), size=size, return_event=return_event, return_entry=return_entry, seed=seed)
 
     @override
     def sample_lifetime_data(
@@ -787,10 +804,10 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         )
         return self.fit_from_failure_data(lifetime_data, **kwargs)
 
-    def fit_from_failure_data(self, failure_data: FailureData, **kwargs) -> Self:
+    def fit_from_failure_data(self, lifetime_data: LifetimeData, **kwargs) -> Self:
         maximum_likelihood_estimation(
             self,
-            failure_data,
+            lifetime_data,
             **kwargs,
         )
         return self

@@ -91,7 +91,7 @@ class RenewalProcessIterator(CountDataIterator):
         return self.process.model
 
     def step(self):
-        time, event, entry = self.model.sample_time_event_entry(size=self.size, seed=self.seed)
+        time, event, entry = self.model.rvs(size=self.size, return_event=True, return_entry=True, seed=self.seed)
         if self.n == 0:
             self.timeline = np.zeros_like(time)  #  ensure broadcasting
             self.stop_counter = np.zeros_like(self.timeline, dtype=np.int64)

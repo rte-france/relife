@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, Optional, TypeVar, TypedDict
+from typing import TYPE_CHECKING, Optional, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray, DTypeLike
@@ -18,12 +18,15 @@ from relife.data import LifetimeData
 
 if TYPE_CHECKING:
     from relife.economic import Reward
-    from .iterator import CountDataIterator
     from relife.lifetime_model import (
         ParametricLifetimeModel,
     )
+    from .sample_function import SampleFunction
 
-CountData = TypedDict("CountData", {"t0": float, "tf" : float, "data": NDArray[DTypeLike]})
+class CountData(TypedDict):
+    t0 : float
+    tf : float
+    data : NDArray[DTypeLike]
 
 class RenewalProcess(ParametricModel):
 
@@ -46,11 +49,12 @@ class RenewalProcess(ParametricModel):
 
         self.model = model
         self.model1 = model1
-        self._count_data = None
+        self.sample_data = None
 
-    def count_data(self) -> Optional[NDArray[DTypeLike]]:
-        if self._count_data is not None:
-            return self._count_data["data"]
+    @property
+    def sample(self) -> SampleFunction:
+        from .sample_function import SampleFunction
+        return SampleFunction(type(self), self.sample_data)
 
     def renewal_function(
         self, tf: float, nb_steps: int
@@ -71,21 +75,6 @@ class RenewalProcess(ParametricModel):
             self.model,
             self.model.pdf if self.model1 is None else self.model1.pdf,
         )
-
-    def nb_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        if self._count_data is None:
-            raise ValueError("Object has no count_data yet. Call sample_count_data first")
-        sort = np.argsort(self.count_data["timeline"])
-        timeline = self.count_data["timeline"][sort]
-        counts = np.ones_like(timeline)
-        timeline = np.insert(timeline, 0, self._count_data["t0"])
-        counts = np.insert(counts, 0, 0)
-        counts[timeline == self._count_data["tf"]] = 0
-        return timeline, np.cumsum(counts)
-
-    def mean_nb_events(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline, counts = self.nb_events()
-        return timeline, counts / len(self.count_data)
 
     def __concatenate_count_data(
         self,
@@ -113,7 +102,7 @@ class RenewalProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ):
-        self._count_data = self.__concatenate_count_data(tf, t0, size, maxsample, seed)
+        self.sample_data = self.__concatenate_count_data(tf, t0, size, maxsample, seed)
 
     def sample_lifetime_data(
         self,
