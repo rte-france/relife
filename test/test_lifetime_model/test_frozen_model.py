@@ -105,12 +105,21 @@ class TestFrozenRegression:
     #     frozen_regression = regression.freeze(covar(10, regression.nb_coef))
     #     assert frozen_regression.args_nb_assets == 10
 
-    # def test_rvs(self, regression, covar):
-    #     m, n = 10, 3
-    #     frozen_regression = regression.freeze(covar)
-    #     assert frozen_regression.rvs(seed=21).shape == ()
-    #     assert frozen_regression.rvs(size=(m, 1), seed=21).shape == (m, 1)
-    #     assert frozen_regression.rvs(size=(m, n), seed=21).shape == (m, n)
+    def test_rvs(self, regression, rvs_size, covar, expected_out_shape):
+        frozen_regression = freeze(regression, covar)
+        assert frozen_regression.rvs(size=rvs_size).shape == expected_out_shape(covar=covar, size=rvs_size)
+        assert all(
+            arr.shape == expected_out_shape(covar=covar, size=rvs_size)
+            for arr in frozen_regression.rvs(size=rvs_size, return_event=True)
+        )
+        assert all(
+            arr.shape == expected_out_shape(covar=covar, size=rvs_size)
+            for arr in frozen_regression.rvs(size=rvs_size, return_entry=True)
+        )
+        assert all(
+            arr.shape == expected_out_shape(covar=covar, size=rvs_size)
+            for arr in frozen_regression.rvs(size=rvs_size, return_event=True, return_entry=True)
+        )
 
     def test_sf(self, regression, time, covar, expected_out_shape):
         frozen_regression = freeze(regression, covar)

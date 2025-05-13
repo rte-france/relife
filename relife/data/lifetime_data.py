@@ -63,6 +63,9 @@ class LifetimeData:
     departure: Optional[NDArray[np.float64]] = field(default=None)
     args: tuple[float | NDArray[np.float64], ...] = field(default_factory=tuple)
 
+    def __len__(self):
+        return len(self.time)
+
     def __post_init__(self):
         self.time = _time_reshape(self.time)
         if self.time.shape[1] == 2 and self.event is not None:
@@ -252,7 +255,7 @@ class StructuredLifetimeData:
     interval_censoring: Optional[IndexedLifetimeData] = field(repr=False, init=False)  # values shape (m, 2)
     left_truncation: Optional[IndexedLifetimeData] = field(repr=False, init=False)  # values shape (m, 1)
     right_truncation: Optional[IndexedLifetimeData] = field(repr=False, init=False)  # values shape (m, 1)
-    complete_or_right_censored: Optional[IndexedLifetimeData] = field(repr=False, init=False)
+    complete_or_right_censored: Optional[IndexedLifetimeData] = field(repr=False, init=False) # values shape (m, 1)
 
     def __len__(self):
         return self.nb_samples
@@ -261,11 +264,11 @@ class StructuredLifetimeData:
 
         self.nb_samples = len(lifetime_data)
         self.complete = get_complete(lifetime_data)
-        self.right_censoring = (get_right_censoring(lifetime_data),)
-        self.left_censoring = (get_left_censoring(lifetime_data),)
-        self.interval_censoring = (get_interval_censoring(lifetime_data),)
-        self.left_truncation = (get_left_truncation(lifetime_data),)
-        self.right_truncation = (get_right_truncation(lifetime_data),)
+        self.right_censoring = get_right_censoring(lifetime_data)
+        self.left_censoring = get_left_censoring(lifetime_data)
+        self.interval_censoring = get_interval_censoring(lifetime_data)
+        self.left_truncation = get_left_truncation(lifetime_data)
+        self.right_truncation = get_right_truncation(lifetime_data)
 
         # sanity checks that observed lifetimes are inside truncation bounds
         for field_name in [
@@ -276,7 +279,7 @@ class StructuredLifetimeData:
         ]:
             data = getattr(self, field_name)
             if data is not None and self.left_truncation is not None:
-                inter_ids = (np.intersect1d(data.index, self.left_truncation.index),)
+                inter_ids = np.intersect1d(data.index, self.left_truncation.index)
                 intersection_values = np.concatenate(
                     (
                         data.values[np.isin(data.index, inter_ids)],
