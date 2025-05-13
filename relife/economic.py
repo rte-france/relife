@@ -10,10 +10,9 @@ if TYPE_CHECKING:
     from relife.lifetime_model import ParametricLifetimeModel
 
 
-
 class Cost(dict):
     _allowed_keys = ("cp", "cf", "cr")
-    nb_assets : int
+    nb_assets: int
 
     def __init__(
         self,
@@ -32,9 +31,7 @@ class Cost(dict):
             value = np.asarray(value)
             ndim = value.ndim
             if ndim > 2:
-                raise ValueError(
-                    f"Number of dimension can't be higher than 2. Got {ndim} for {name}"
-                )
+                raise ValueError(f"Number of dimension can't be higher than 2. Got {ndim} for {name}")
             if value.ndim == 2 and value.shape[-1] != 1:
                 raise ValueError(
                     f"Incorrect {name} shape. If ar has 2 dim, the shape must be (m, 1) only. Got {value.shape}"
@@ -43,9 +40,7 @@ class Cost(dict):
                 value = value.reshape(-1, 1)
             # check if nb_assets is no more compatible
             if nb_assets != 1 and value.shape[0] not in (1, nb_assets):
-                raise ValueError(
-                    f"Incompatible nb_assets. Got {nb_assets} and {value.shape[0]}"
-                )
+                raise ValueError(f"Incompatible nb_assets. Got {nb_assets} and {value.shape[0]}")
             # update nb_assets
             if value.shape[0] != 1:
                 nb_assets = value.shape[0]
@@ -62,9 +57,7 @@ class Cost(dict):
 
 class Reward(ABC):
     @abstractmethod
-    def conditional_expectation(
-        self, time: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         """Conditional expected reward"""
         pass
 
@@ -74,7 +67,7 @@ class Reward(ABC):
 
 
 class RunToFailureReward(Reward):
-    def __init__(self, cost : Cost):
+    def __init__(self, cost: Cost):
         if sorted(cost.keys()) != ["cf"]:
             raise ValueError
         self.cost = cost
@@ -87,16 +80,14 @@ class RunToFailureReward(Reward):
 
 
 class AgeReplacementReward(Reward):
-    def __init__(self, cost : Cost, ar : tuple[float, ...] | NDArray[np.float64]):
+    def __init__(self, cost: Cost, ar: tuple[float, ...] | NDArray[np.float64]):
         if sorted(cost.keys()) != ["cf", "cp"]:
             raise ValueError
         ar = np.squeeze(np.asarray(ar))
         if ar.ndim > 2:
             raise ValueError(f"Incorrect ar dim. Can't be more than 2. Got {ar.ndim}")
         if ar.ndim == 2 and ar.shape[-1] != 1:
-            raise ValueError(
-                f"Incorrect ar shape. If ar has 2 dim, the shape must be (m, 1) only. Got {ar.shape}"
-            )
+            raise ValueError(f"Incorrect ar shape. If ar has 2 dim, the shape must be (m, 1) only. Got {ar.shape}")
         if ar.ndim == 1:
             ar = ar.reshape(-1, 1)
         if ar.shape[0] != 1 and ar.shape[0] != cost.nb_assets:

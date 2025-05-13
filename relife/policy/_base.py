@@ -94,9 +94,7 @@ class RenewalPolicy:
     ) -> tuple[NDArray[np.float64], ...]:
         from relife.sample import failure_data_sample
 
-        return failure_data_sample(
-            self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use
-        )
+        return failure_data_sample(self, size, tf, t0=t0, maxsample=maxsample, seed=seed, use=use)
 
 
 def age_replacement_policy(

@@ -1,3 +1,3 @@
-from .non_homogeneous_poisson_process import NonHomogeneousPoissonProcess
 from .frozen_process import FrozenNonHomogeneousPoissonProcess
+from .non_homogeneous_poisson_process import NonHomogeneousPoissonProcess
 from .renewal_process import RenewalProcess, RenewalRewardProcess

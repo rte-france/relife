@@ -32,9 +32,7 @@ def hessian_cs(
         params = np.copy(likelihood.params).astype(np.complex64)
         for i in range(size):
             for j in range(i, size):
-                hess[i, j] = (
-                    np.imag(likelihood.jac_negative_log(params + u[i])[j]) / eps
-                )
+                hess[i, j] = np.imag(likelihood.jac_negative_log(params + u[i])[j]) / eps
                 if i != j:
                     hess[j, i] = hess[i, j]
         return hess

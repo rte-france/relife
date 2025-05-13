@@ -5,15 +5,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def _reshape_like(
-    arg_value: float | NDArray[np.float64], arg_name: str, nb_assets: int
-):
+def _reshape_like(arg_value: float | NDArray[np.float64], arg_name: str, nb_assets: int):
     arg_value = np.asarray(arg_value)
     ndim = arg_value.ndim
     if ndim > 2:
-        raise ValueError(
-            f"Number of dimension can't be higher than 2. Got {ndim} for {arg_name}"
-        )
+        raise ValueError(f"Number of dimension can't be higher than 2. Got {ndim} for {arg_name}")
     match arg_name:
         case "ar" | "ar1":
             if arg_value.ndim <= 1:
@@ -59,22 +55,14 @@ def get_if_none(*args_names: str):
                         )
                 elif attr_value is not None and arg_value is not None:
                     # priority on arg
-                    new_kwargs[name] = _reshape_like(
-                        arg_value, name, self.model_instances.args_nb_assets
-                    )
+                    new_kwargs[name] = _reshape_like(arg_value, name, self.model_instances.args_nb_assets)
                 elif attr_value is None and arg_value is not None:
                     # priority on argue)
-                    new_kwargs[name] = _reshape_like(
-                        arg_value, name, self.model_instances.args_nb_assets
-                    )
+                    new_kwargs[name] = _reshape_like(arg_value, name, self.model_instances.args_nb_assets)
                 elif attr_value is not None and arg_value is None:
-                    new_kwargs[name] = _reshape_like(
-                        attr_value, name, self.model_instances.args_nb_assets
-                    )
+                    new_kwargs[name] = _reshape_like(attr_value, name, self.model_instances.args_nb_assets)
                 else:
-                    new_kwargs[name] = _reshape_like(
-                        arg_value, name, self.model_instances.args_nb_assets
-                    )
+                    new_kwargs[name] = _reshape_like(arg_value, name, self.model_instances.args_nb_assets)
             return method(self, *args, **new_kwargs)
 
         return wrapper

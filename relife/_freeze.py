@@ -1,28 +1,35 @@
-from typing import overload, TypeVarTuple
+from typing import TypeVarTuple, overload
 
-from relife.stochastic_process import NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess
-from relife.lifetime_model import ParametricLifetimeModel, FrozenParametricLifetimeModel
+from relife.lifetime_model import FrozenParametricLifetimeModel, ParametricLifetimeModel
+from relife.stochastic_process import (
+    FrozenNonHomogeneousPoissonProcess,
+    NonHomogeneousPoissonProcess,
+)
 
 Args = TypeVarTuple("Args")
 
-@overload
-def freeze(model : ParametricLifetimeModel[*Args], *args  : *Args) -> FrozenParametricLifetimeModel[*Args]:
-    ...
 
 @overload
-def freeze(model : NonHomogeneousPoissonProcess[*Args], *args  : *Args) -> FrozenNonHomogeneousPoissonProcess[*Args]:
-    ...
+def freeze(model: ParametricLifetimeModel[*Args], *args: *Args) -> FrozenParametricLifetimeModel[*Args]: ...
 
 
-def freeze(model: ParametricLifetimeModel[*Args]|NonHomogeneousPoissonProcess[*Args], *args: *Args) -> FrozenParametricLifetimeModel[*Args]|FrozenNonHomogeneousPoissonProcess[*Args]:
-    from relife.lifetime_model import LifetimeRegression, LifetimeDistribution
+@overload
+def freeze(model: NonHomogeneousPoissonProcess[*Args], *args: *Args) -> FrozenNonHomogeneousPoissonProcess[*Args]: ...
+
+
+def freeze(
+    model: ParametricLifetimeModel[*Args] | NonHomogeneousPoissonProcess[*Args], *args: *Args
+) -> FrozenParametricLifetimeModel[*Args] | FrozenNonHomogeneousPoissonProcess[*Args]:
+    from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
     match model:
         case LifetimeDistribution():
             return model
         case LifetimeRegression():
             from relife.lifetime_model import FrozenLifetimeRegression
+
             return FrozenLifetimeRegression(model).freeze_args(*args)
-        case _ :
+        case _:
             from relife.lifetime_model import FrozenParametricLifetimeModel
+
             return FrozenParametricLifetimeModel(model).freeze_args(*args)

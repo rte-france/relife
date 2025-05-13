@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional, Generic, TypeVarTuple
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -29,9 +29,7 @@ def check_and_broadcast_bounds(
             a, b = np.broadcast_arrays(a, b)
             return a.copy(), b.copy()
         except ValueError as err:
-            raise ValueError(
-                f"Incompatible a, b shapes. Got a.shape, b.shape : {a.shape}, {b.shape}"
-            ) from err
+            raise ValueError(f"Incompatible a, b shapes. Got a.shape, b.shape : {a.shape}, {b.shape}") from err
     return a
 
 
@@ -40,7 +38,7 @@ def legendre_quadrature(
     a: float | NDArray[np.float64],
     b: float | NDArray[np.float64],
     deg: int = 10,
-) -> np.float64|NDArray[np.float64]:
+) -> np.float64 | NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a,b]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -63,9 +61,7 @@ def legendre_quadrature(
     m = (arr_a + arr_b) / 2  # () or (n,) or (m, n)
     u = p * x + m  # (deg,) or (deg, n) or (deg, m, n)
     v = p * w  # (deg,) or (deg, n) or (deg, m, n)
-    fvalues = func(
-        u
-    )  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+    fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     if fvalues.shape[-len(u.shape) :] != u.shape:
         raise ValueError(
             f"""
@@ -74,16 +70,14 @@ def legendre_quadrature(
             """
         )
 
-    return np.sum(
-        v * fvalues, axis=-v.ndim
-    )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+    return np.sum(v * fvalues, axis=-v.ndim)  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
 def laguerre_quadrature(
     func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
-) -> np.float64|NDArray[np.float64]:
+) -> np.float64 | NDArray[np.float64]:
     r"""Numerical integration of `func * exp(-x)` over the interval `[a, inf]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -96,9 +90,7 @@ def laguerre_quadrature(
     w = w.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
-    fvalues = func(
-        shifted_x
-    )  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+    fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
         # func est une fonction réel univariée et pas multivariée
         raise ValueError(
@@ -118,7 +110,7 @@ def unweighted_laguerre_quadrature(
     func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
-) -> np.float64|NDArray[np.float64]:
+) -> np.float64 | NDArray[np.float64]:
     r"""Numerical integration of `func` over the interval `[a, inf]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -132,9 +124,7 @@ def unweighted_laguerre_quadrature(
     w = w.reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
-    fvalues = func(
-        shifted_x
-    )  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+    fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
         raise ValueError(
             f"""
@@ -149,9 +139,10 @@ def unweighted_laguerre_quadrature(
 
 Args = TypeVarTuple("Args")
 
+
 class LebesgueStieltjesMixin(Generic[*Args]):
     def ls_integrate(
-        self : ParametricLifetimeModel[*Args],
+        self: ParametricLifetimeModel[*Args],
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
         a: float | NDArray[np.float64] = 0.0,
         b: float | NDArray[np.float64] = np.inf,
@@ -184,22 +175,22 @@ class LebesgueStieltjesMixin(Generic[*Args]):
             #  x.shape == (deg,), (deg, n) or (deg, m, n)
             # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             fx = func(x)
-            if fx.shape[-len(x.shape):] != x.shape:
+            if fx.shape[-len(x.shape) :] != x.shape:
                 raise ValueError(
                     f"""
                     func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
                     Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
                     """
                 )
-            if x.ndim == 3: # reshape because model.pdf is tested only for input ndim <= 2
+            if x.ndim == 3:  # reshape because model.pdf is tested only for input ndim <= 2
                 deg, m, n = x.shape
-                x = np.rollaxis(x, 1).reshape(m, -1) # (m, deg*n), roll on m because axis 0 must align with m of args
+                x = np.rollaxis(x, 1).reshape(m, -1)  # (m, deg*n), roll on m because axis 0 must align with m of args
                 pdf = frozen_model.pdf(x)  # (m, deg*n)
                 pdf = np.rollaxis(pdf.reshape(m, deg, n), 1, 0)  #  (deg, m, n)
-            else: # ndim == 1 | 2
+            else:  # ndim == 1 | 2
                 # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args
-                pdf = frozen_model.pdf(x.reshape(1, -1)) # (1, deg*n) or (1, deg)
-                pdf = pdf.reshape(x.shape) # (deg, n) or (deg,)
+                pdf = frozen_model.pdf(x.reshape(1, -1))  # (1, deg*n) or (1, deg)
+                pdf = pdf.reshape(x.shape)  # (deg, n) or (deg,)
 
             # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             return fx * pdf
@@ -221,19 +212,11 @@ class LebesgueStieltjesMixin(Generic[*Args]):
                     f"Incompatible bounds with model. Model has {frozen_model.nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
                 )
 
-        bound_b = frozen_model.isf(
-            1e-4
-        )  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+        bound_b = frozen_model.isf(1e-4)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
         broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
-        arr_a = broadcasted_arrs[
-            0
-        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        arr_b = broadcasted_arrs[
-            1
-        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        bound_b = broadcasted_arrs[
-            2
-        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_a = broadcasted_arrs[0].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_b = broadcasted_arrs[1].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        bound_b = broadcasted_arrs[2].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
         is_inf = np.isinf(arr_b)  # () or (n,) or (m, n)
         arr_b = np.where(is_inf, bound_b, arr_b)
         integration = legendre_quadrature(
@@ -246,7 +229,7 @@ class LebesgueStieltjesMixin(Generic[*Args]):
             integration,
         )
 
-    def moment(self : ParametricLifetimeModel[*Args], n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def moment(self: ParametricLifetimeModel[*Args], n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
         """n-th order moment
 
         Parameters
@@ -269,14 +252,14 @@ class LebesgueStieltjesMixin(Generic[*Args]):
             deg=100,
         )  #  high degree of polynome to ensure high precision
 
-    def mean(self : ParametricLifetimeModel[*Args], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def mean(self: ParametricLifetimeModel[*Args], *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.moment(1, *args)
 
-    def var(self : ParametricLifetimeModel[*Args], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def var(self: ParametricLifetimeModel[*Args], *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
     def mrl(
-        self : ParametricLifetimeModel[*Args], time: float | NDArray[np.float64], *args: *Args
+        self: ParametricLifetimeModel[*Args], time: float | NDArray[np.float64], *args: *Args
     ) -> np.float64 | NDArray[np.float64]:
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)

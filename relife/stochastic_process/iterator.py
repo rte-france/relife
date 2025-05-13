@@ -21,14 +21,14 @@ Args = TypeVarTuple("Args")
 
 
 class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
-    timeline : Optional[NDArray[np.float64]]
+    timeline: Optional[NDArray[np.float64]]
     start_counter: Optional[NDArray[np.int64]]
     end_counter: Optional[NDArray[np.int64]]
 
     def __init__(
         self,
-        size: int | tuple[int]| tuple[int, int],
-        window : tuple[float, float],
+        size: int | tuple[int] | tuple[int, int],
+        window: tuple[float, float],
         seed: Optional[int] = None,
     ):
         self.size = size
@@ -60,11 +60,13 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
         asset_id, sample_id = np.where(selection)
         struct_array = np.zeros(
             sample_id.size,
-            dtype=np.dtype([
-                ("timeline", np.float64),
-                ("sample_id", np.uint32),  #  unsigned 32bit integer
-                ("asset_id", np.uint32),  #  unsigned 32bit integer
-            ])
+            dtype=np.dtype(
+                [
+                    ("timeline", np.float64),
+                    ("sample_id", np.uint32),  #  unsigned 32bit integer
+                    ("asset_id", np.uint32),  #  unsigned 32bit integer
+                ]
+            ),
         )
         struct_array["sample_id"] = sample_id.astype(np.uint32)
         struct_array["asset_id"] = asset_id.astype(np.uint32)
@@ -76,9 +78,9 @@ class RenewalProcessIterator(CountDataIterator):
 
     def __init__(
         self,
-        process : RenewalProcess,
-        size: int|tuple[int]|tuple[int,int],
-        window : tuple[float, float],
+        process: RenewalProcess,
+        size: int | tuple[int] | tuple[int, int],
+        window: tuple[float, float],
         seed: Optional[int] = None,
     ):
         super().__init__(size, window, seed=seed)
@@ -107,16 +109,12 @@ class RenewalProcessIterator(CountDataIterator):
         self.stop_counter[self.timeline > self.tf] += 1
 
         # tf right censorings
-        time = np.where(
-            self.just_crossed_tf, time - (self.timeline - self.tf), time
-        )
+        time = np.where(self.just_crossed_tf, time - (self.timeline - self.tf), time)
         self.timeline[self.just_crossed_tf] = self.tf
         event[self.just_crossed_tf] = False
 
         # t0 left truncations, only applied on time not being truncated by model
-        entry = np.where(
-            self.just_crossed_t0, self.t0 + entry - (self.timeline - time), entry
-        )
+        entry = np.where(self.just_crossed_t0, self.t0 + entry - (self.timeline - time), entry)
 
         # update seed to avoid having the same rvs result
         if self.seed is not None:
@@ -135,11 +133,12 @@ class RenewalProcessIterator(CountDataIterator):
 
     def __next__(self) -> NDArray[DTypeLike]:
         struct_arr = self.step()
-        while struct_arr.size == 0 and not self.stop: # avoid returning empty array
+        while struct_arr.size == 0 and not self.stop:  # avoid returning empty array
             struct_arr = self.step()
         if self.stop:
             raise StopIteration
         return struct_arr
+
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):
     reward: Reward
@@ -149,12 +148,12 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
         self,
         nb_sample: int,
         tf: float,  # calendar end time
-        model : ParametricLifetimeModel[()],
-        reward : Reward,
+        model: ParametricLifetimeModel[()],
+        reward: Reward,
         t0: float = 0.0,  # calendar start time
-        model1 : Optional[ParametricLifetimeModel[()]] = None,
-        discounting_rate : Optional[float] = None,
-        maxsample : int = 1e5,
+        model1: Optional[ParametricLifetimeModel[()]] = None,
+        discounting_rate: Optional[float] = None,
+        maxsample: int = 1e5,
         seed: Optional[int] = None,
     ):
         super().__init__(nb_sample, tf, model, t0=t0, model1=model1, maxsample=maxsample, seed=seed)
@@ -172,6 +171,8 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
                 usemask=False,
                 asrecarray=False,
             )
+
+
 #
 #
 # class NonHomogeneousPoissonProcessIterator(SampleIterator):

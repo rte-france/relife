@@ -9,18 +9,16 @@ from ._base import ParametricLifetimeModel
 Args = TypeVarTuple("Args")
 P = ParamSpec("P")
 
+
 # necessary to allow user passing 1d ar and a0
-def reshape_ar_or_a0(
-    name: str, value: float | Sequence[float] | NDArray[np.float64]
-) -> NDArray[np.float64]:
-    value = np.asarray(value) # in shape : (), (m,) or (m, 1)
+def reshape_ar_or_a0(name: str, value: float | Sequence[float] | NDArray[np.float64]) -> NDArray[np.float64]:
+    value = np.asarray(value)  # in shape : (), (m,) or (m, 1)
     if value.ndim > 2 or (value.ndim == 2 and value.shape[-1] != 1):
-        raise ValueError(
-            f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)"
-        )
+        raise ValueError(f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)")
     if value.ndim == 1:
         value = value.reshape(-1, 1)
     return value  # out shape: () or (m, 1)
+
 
 class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
     r"""
@@ -100,9 +98,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     @override
-    def moment(
-        self, n: int, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    def moment(self, n: int, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         ar = reshape_ar_or_a0("ar", ar)
         return self.ls_integrate(
             lambda x: x**n,
@@ -114,16 +110,12 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         )
 
     @override
-    def mean(
-        self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    def mean(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(1, ar, *args)
 
     @override
-    def var(
-        self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    def var(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
@@ -138,9 +130,11 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
         ar = reshape_ar_or_a0("ar", ar)
-        baseline_rvs = self.baseline.rvs(*args, size=size, return_event=return_event, return_entry=return_entry, seed=seed)
+        baseline_rvs = self.baseline.rvs(
+            *args, size=size, return_event=return_event, return_entry=return_entry, seed=seed
+        )
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
-        time = np.minimum(time, ar) # it may change time shape by broadcasting
+        time = np.minimum(time, ar)  # it may change time shape by broadcasting
         if not return_event and not return_entry:
             return time
         elif return_event and not return_entry:
@@ -166,9 +160,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar = reshape_ar_or_a0("ar", ar)
         return self.isf(1 - probability, ar, *args)
 
-    def median(
-        self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    def median(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         ar = reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
 
@@ -196,9 +188,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
             ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
-        mu = self.ls_integrate(
-            lambda x: x - time, time, ub, ar, *args, deg=10
-        ) / self.sf(
+        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
             time, ar, *args
         )  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
@@ -217,10 +207,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar = reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
         integration = super().ls_integrate(func, a, b, *(ar, *args), deg=deg)
-        return integration + np.where(
-            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
-        )
-
+        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
 
 
 class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):
@@ -262,7 +249,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         a0: float | Sequence[float] | NDArray[np.float64],
         *args: *Args,
     ) -> NDArray[np.float64]:
-        cumulative_hazard_rate = -np.log(probability + 1e-6) # avoid division by zero
+        cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
         a0 = reshape_ar_or_a0("a0", a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
@@ -291,12 +278,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         *args: *Args,
     ) -> NDArray[np.float64]:
         a0 = reshape_ar_or_a0("a0", a0)
-        return (
-            self.baseline.ichf(
-                cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
-            )
-            - a0
-        )
+        return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
     @override
     def rvs(
@@ -309,7 +291,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *A
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
         a0 = reshape_ar_or_a0("a0", a0)
-        super_rvs = super().rvs(*(a0, *args), size=size, return_event=return_event, return_entry=return_entry, seed=seed)
+        super_rvs = super().rvs(
+            *(a0, *args), size=size, return_event=return_event, return_entry=return_entry, seed=seed
+        )
         if not return_event and return_entry:
             time, entry = super_rvs
             entry = np.broadcast_to(a0, entry.shape).copy()

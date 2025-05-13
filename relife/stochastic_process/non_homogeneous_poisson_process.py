@@ -43,14 +43,10 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
     def fitting_results(self, value: FittingResults):
         self._fitting_results = value
 
-    def intensity(
-        self, time: float | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    def intensity(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         return self.baseline.hf(time, *args)
 
-    def cumulative_intensity(
-        self, time: float | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    def cumulative_intensity(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         return self.baseline.chf(time, *args)
 
     def sample(
@@ -82,9 +78,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
 
         args_names = self.baseline.args_names
         if len(args) != len(args_names):
-            raise ValueError(
-                f"Expected {args_names} positional arguments but got only {len(args)} arguments"
-            )
+            raise ValueError(f"Expected {args_names} positional arguments but got only {len(args)} arguments")
         frozen_model = FrozenNonHomogeneousPoissonProcess(self)
         frozen_model.freeze_args(**{k: v for (k, v) in zip(args_names, args)})
         return frozen_model

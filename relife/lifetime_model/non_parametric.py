@@ -7,6 +7,7 @@ from relife.data import LifetimeData, StructuredLifetimeData
 
 from ._base import NonParametricLifetimeModel
 
+
 class Estimation(NamedTuple):
     timeline: NDArray[np.float64]
     values: NDArray[np.float64]
@@ -48,18 +49,12 @@ class ECDF(NonParametricLifetimeModel):
         )
         structured_lifetime_data = StructuredLifetimeData(lifetime_data)
 
-        timeline, counts = np.unique(
-            structured_lifetime_data.complete_or_right_censored.values, return_counts=True
-        )
+        timeline, counts = np.unique(structured_lifetime_data.complete_or_right_censored.values, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         sf = 1 - cdf
-        se = np.sqrt(
-            cdf * (1 - cdf) / len(structured_lifetime_data.complete_or_right_censored.values)
-        )
-        self.estimations = dict(
-            sf=Estimation(timeline, sf, se), cdf=Estimation(time, cdf, se)
-        )
+        se = np.sqrt(cdf * (1 - cdf) / len(structured_lifetime_data.complete_or_right_censored.values))
+        self.estimations = dict(sf=Estimation(timeline, sf, se), cdf=Estimation(time, cdf, se))
         return self
 
     @property
@@ -146,7 +141,6 @@ class KaplanMeier(NonParametricLifetimeModel):
             departure=departure,
         )
         structured_lifetime_data = StructuredLifetimeData(lifetime_data)
-
 
         if structured_lifetime_data.left_censoring is not None:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
@@ -273,20 +267,15 @@ class NelsonAalen(NonParametricLifetimeModel):
         )
         structured_lifetime_data = StructuredLifetimeData(lifetime_data)
 
-
         if len(structured_lifetime_data.left_censoring) > 0:
-            raise ValueError(
-                "NelsonAalen does not accept left censored or interval censored lifetimes"
-            )
+            raise ValueError("NelsonAalen does not accept left censored or interval censored lifetimes")
 
         timeline, unique_indices, counts = np.unique(
             structured_lifetime_data.complete_or_right_censored.values,
             return_inverse=True,
             return_counts=True,
         )
-        death_set = np.zeros_like(
-            timeline, dtype=np.int64
-        )  # death at each timeline step
+        death_set = np.zeros_like(timeline, dtype=np.int64)  # death at each timeline step
 
         complete_observation_indic = np.zeros_like(
             structured_lifetime_data.complete_or_right_censored.values
@@ -375,10 +364,7 @@ class Turnbull(NonParametricLifetimeModel):
         )
         structured_lifetime_data = StructuredLifetimeData(lifetime_data)
 
-
-        timeline_temp = np.unique(
-            np.insert(structured_lifetime_data.interval_censoring.values.flatten(), 0, 0)
-        )
+        timeline_temp = np.unique(np.insert(structured_lifetime_data.interval_censoring.values.flatten(), 0, 0))
         timeline_len = len(timeline_temp)
         if not self.lowmem:
             event_occurence = (
@@ -407,14 +393,8 @@ class Turnbull(NonParametricLifetimeModel):
             for i in range(len_censored_data):
                 event_occurence.append(
                     np.where(
-                        (
-                            structured_lifetime_data.interval_censoring.values[:, 0][i]
-                            <= timeline_temp[:-1]
-                        )
-                        & (
-                            timeline_temp[1:]
-                            <= structured_lifetime_data.interval_censoring.values[:, 1][i]
-                        )
+                        (structured_lifetime_data.interval_censoring.values[:, 0][i] <= timeline_temp[:-1])
+                        & (timeline_temp[1:] <= structured_lifetime_data.interval_censoring.values[:, 1][i])
                     )[0][[0, -1]]
                 )
             event_occurence = np.array(event_occurence)
@@ -455,9 +435,7 @@ class Turnbull(NonParametricLifetimeModel):
         res = 1
         count = 1
         while res > self.tol:
-            p = -np.diff(
-                s
-            )  # écart entre les points de S (survival function) => proba of an event occuring at
+            p = -np.diff(s)  # écart entre les points de S (survival function) => proba of an event occuring at
             if np.sum(p == 0) > 0:
                 p = np.where(
                     p == 0,
@@ -465,18 +443,13 @@ class Turnbull(NonParametricLifetimeModel):
                     p - 1e-5 / ((timeline_len - 1) - np.sum(p == 0)),
                 )  # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)
 
-            x = [
-                p[event_occurence[i, 0] : (event_occurence[i, 1] + 1)]
-                for i in range(event_occurence.shape[0])
-            ]
+            x = [p[event_occurence[i, 0] : (event_occurence[i, 1] + 1)] for i in range(event_occurence.shape[0])]
             d = np.repeat(0, timeline_len - 1)
             for i in range(len_censored_data):
                 d = np.add(
                     d,
                     np.append(
-                        np.insert(
-                            x[i] / x[i].sum(), 0, np.repeat(0, event_occurence[i][0])
-                        ),
+                        np.insert(x[i] / x[i].sum(), 0, np.repeat(0, event_occurence[i][0])),
                         np.repeat(0, timeline_len - event_occurence[i][1] - 2),
                     ),
                 )
@@ -484,9 +457,7 @@ class Turnbull(NonParametricLifetimeModel):
             y = np.cumsum(d[::-1])[::-1]
             _unsorted_entry = structured_lifetime_data.left_truncation.values.flatten()
 
-            y -= len(_unsorted_entry) - np.searchsorted(
-                np.sort(_unsorted_entry), timeline_temp[1:]
-            )
+            y -= len(_unsorted_entry) - np.searchsorted(np.sort(_unsorted_entry), timeline_temp[1:])
             s_updated = np.array(np.cumprod(1 - d / y))
             s_updated = np.insert(s_updated, 0, 1)
             res = max(abs(s - s_updated))
@@ -511,9 +482,7 @@ class Turnbull(NonParametricLifetimeModel):
         count = 1
 
         while res > self.tol:
-            p = -np.diff(
-                s
-            )  # écart entre les points de S (survival function) => proba of an event occuring at
+            p = -np.diff(s)  # écart entre les points de S (survival function) => proba of an event occuring at
             if np.sum(p == 0) > 0:
                 p = np.where(
                     p == 0,
@@ -523,17 +492,13 @@ class Turnbull(NonParametricLifetimeModel):
 
             if np.any(event_occurence):
                 event_occurence_proba = event_occurence * p.T
-                d = (event_occurence_proba.T / event_occurence_proba.sum(axis=1)).T.sum(
-                    axis=0
-                )
+                d = (event_occurence_proba.T / event_occurence_proba.sum(axis=1)).T.sum(axis=0)
                 d += d_tilde
             else:
                 d = d_tilde
             y = np.cumsum(d[::-1])[::-1]
             _unsorted_entry = structured_lifetime_data.left_truncation.values.flatten()
-            y -= len(_unsorted_entry) - np.searchsorted(
-                np.sort(_unsorted_entry), timeline_temp[1:]
-            )
+            y -= len(_unsorted_entry) - np.searchsorted(np.sort(_unsorted_entry), timeline_temp[1:])
             s_updated = np.array(np.cumprod(1 - d / y))
             s_updated = np.insert(s_updated, 0, 1)
             res = max(abs(s - s_updated))

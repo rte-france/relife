@@ -79,9 +79,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
 
         self.ar = self._reshape_ar(ar)
 
-    def _reshape_ar(
-        self, ar: Optional[float | NDArray[np.float64]]
-    ) -> Optional[float | NDArray[np.float64]]:
+    def _reshape_ar(self, ar: Optional[float | NDArray[np.float64]]) -> Optional[float | NDArray[np.float64]]:
         if ar is not None:
             ar = np.asarray(ar)
             if ar.size != 1:
@@ -118,9 +116,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         )
 
     @get_if_none("ar")
-    def asymptotic_expected_total_cost(
-        self, ar: Optional[float | NDArray[np.float64]] = None
-    ) -> NDArray[np.float64]:
+    def asymptotic_expected_total_cost(self, ar: Optional[float | NDArray[np.float64]] = None) -> NDArray[np.float64]:
         return self.expected_total_cost(np.array(np.inf), ar=ar)
 
     @get_if_none("ar")
@@ -135,9 +131,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
             / self.discounting.annuity_factor(x)
         )
         mask = timeline < self.period_before_discounting
-        q0 = self.model.cdf(self.period_before_discounting) * f(
-            self.period_before_discounting
-        )
+        q0 = self.model.cdf(self.period_before_discounting) * f(self.period_before_discounting)
         model = AgeReplacementModel(self.model).freeze(ar)
         return np.squeeze(
             q0
@@ -179,10 +173,7 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
             return np.sum(
                 self.discounting.factor(a)
                 / self.discounting.annuity_factor(a)
-                * (
-                    (cf_3d - cp_3d) * self.model.hf(a)
-                    - cp_3d / self.discounting.annuity_factor(a)
-                ),
+                * ((cf_3d - cp_3d) * self.model.hf(a) - cp_3d / self.discounting.annuity_factor(a)),
                 axis=0,
             )
 
@@ -259,9 +250,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         self.ar = self._reshape_ar(ar)
         self.ar1 = self._reshape_ar(ar1)
 
-    def _reshape_ar(
-        self, ar: Optional[float | NDArray[np.float64]]
-    ) -> Optional[float | NDArray[np.float64]]:
+    def _reshape_ar(self, ar: Optional[float | NDArray[np.float64]]) -> Optional[float | NDArray[np.float64]]:
         if ar is not None:
             ar = np.asarray(ar)
             if ar.size != 1:
@@ -291,11 +280,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
             AgeReplacementModel(self.model).freeze(ar),
             age_replacement_rewards(ar, self.cf, self.cp),
             discounting_rate=self.discounting_rate,
-            model1=(
-                AgeReplacementModel(self.model1).freeze(ar1)
-                if self.model1 is not None
-                else None
-            ),
+            model1=(AgeReplacementModel(self.model1).freeze(ar1) if self.model1 is not None else None),
             reward1=age_replacement_rewards(ar1, self.cf, self.cp) if ar1 else None,
         )
 
@@ -308,9 +293,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process(ar, ar1).expected_total_reward(
-            timeline
-        )
+        return timeline, self.underlying_process(ar, ar1).expected_total_reward(timeline)
 
     @get_if_none("ar", "ar1")
     def expected_equivalent_annual_cost(
@@ -321,9 +304,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process(
-            ar, ar1
-        ).expected_equivalent_annual_worth(timeline)
+        return timeline, self.underlying_process(ar, ar1).expected_equivalent_annual_worth(timeline)
 
     @get_if_none("ar", "ar1")
     def asymptotic_expected_total_cost(
@@ -340,9 +321,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
         ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]:
 
-        return self.underlying_process(
-            ar, ar1
-        ).asymptotic_expected_equivalent_annual_worth()
+        return self.underlying_process(ar, ar1).asymptotic_expected_equivalent_annual_worth()
 
     def optimize(
         self,
@@ -380,9 +359,7 @@ class DefaultAgeReplacementPolicy(RenewalPolicy):
                 ndim=ndim,
             )
             return np.sum(
-                self.discounting.factor(a)
-                * ((cf_3d - cp_3d) * (self.model.hf(a) * f - g) - cp_3d)
-                / f**2,
+                self.discounting.factor(a) * ((cf_3d - cp_3d) * (self.model.hf(a) * f - g) - cp_3d) / f**2,
                 axis=0,
             )
 
@@ -450,9 +427,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
         pass
 
     @get_if_none("ar")
-    def asymptotic_expected_total_cost(
-        self, ar: Optional[float | NDArray[np.float64]] = None
-    ) -> NDArray[np.float64]:
+    def asymptotic_expected_total_cost(self, ar: Optional[float | NDArray[np.float64]] = None) -> NDArray[np.float64]:
         pass
 
     @get_if_none("ar")
@@ -463,14 +438,10 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
     ) -> NDArray[np.float64]:
         pass
 
-    def number_of_replacements(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def number_of_replacements(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         pass
 
-    def expected_number_of_repairs(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def expected_number_of_repairs(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
         pass
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
@@ -487,12 +458,9 @@ class NonHomogeneousPoissonAgeReplacementPolicy(RenewalPolicy):
             def dcost(a):
                 a = np.atleast_2d(a)
                 return (
-                    (1 - self.discounting.factor(a))
-                    / self.discounting.rate
-                    * self.underlying_process.intensity(a)
+                    (1 - self.discounting.factor(a)) / self.discounting.rate * self.underlying_process.intensity(a)
                     - legendre_quadrature(
-                        lambda t: self.discounting.factor(t)
-                        * self.underlying_process.intensity(t),
+                        lambda t: self.discounting.factor(t) * self.underlying_process.intensity(t),
                         np.array(0.0),
                         a,
                         ndim=2,
@@ -531,24 +499,12 @@ WARNING = r"""
 """
 
 OneCycleAgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
-OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = (
-    EEAC_DOCSTRING + WARNING
-)
-OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = (
-    ASYMPTOTIC_ETC_DOCSTRING + WARNING
-)
-OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
-    ASYMPTOTIC_EEAC_DOCSTRING + WARNING
-)
+OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING + WARNING
+OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING + WARNING
+OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING + WARNING
 
 DefaultAgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
-DefaultAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = (
-    EEAC_DOCSTRING + WARNING
-)
-DefaultAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = (
-    ASYMPTOTIC_ETC_DOCSTRING + WARNING
-)
+DefaultAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING + WARNING
+DefaultAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING + WARNING
 
-DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
-    ASYMPTOTIC_EEAC_DOCSTRING + WARNING
-)
+DefaultAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING + WARNING

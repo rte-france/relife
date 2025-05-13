@@ -118,13 +118,7 @@ def param_probfunc_plot(
     jac_f = getattr(obj, "jac_" + fname)
 
     if asset is not None:
-        model_args = tuple(
-            (
-                np.take(v, asset, axis=0)
-                for v in np.atleast_2d(*model_args)
-                if bool(model_args)
-            )
-        )
+        model_args = tuple((np.take(v, asset, axis=0) for v in np.atleast_2d(*model_args) if bool(model_args)))
         label += f" (asset {asset})"
 
     y = f(timeline, *model_args)
@@ -137,15 +131,11 @@ def param_probfunc_plot(
                 if timeline[0] == 0:
                     i0 = 1
                     se[0] = 0
-                se[i0:] = obj.fitting_results.standard_error(
-                    jac_f(timeline[i0:].reshape(-1, 1), *model_args)
-                )
+                se[i0:] = obj.fitting_results.standard_error(jac_f(timeline[i0:].reshape(-1, 1), *model_args))
 
     bounds = (0, 1) if fname in ["sf", "cdf"] else (0, np.inf)
 
-    return plot(
-        timeline, y, se=se, alpha_ci=alpha_ci, bounds=bounds, label=label, **kwargs
-    )
+    return plot(timeline, y, se=se, alpha_ci=alpha_ci, bounds=bounds, label=label, **kwargs)
 
 
 def nonparam_probfunc_plot(
@@ -198,9 +188,7 @@ def nhpp_count_data_plot(
         ax = kwargs.pop("ax", plt.gca())
         alpha = kwargs.pop("alpha", 0.2)
         ax.plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
-        ax.fill_between(
-            timeline, values, where=values >= 0, step="post", alpha=alpha, **kwargs
-        )
+        ax.fill_between(timeline, values, where=values >= 0, step="post", alpha=alpha, **kwargs)
         if label is not None:
             ax.legend()
         return ax
@@ -220,9 +208,7 @@ def renewal_data_plot(
         ax = kwargs.pop("ax", plt.gca())
         alpha = kwargs.pop("alpha", 0.2)
         ax.plot(timeline, values, drawstyle="steps-post", label=label, **kwargs)
-        ax.fill_between(
-            timeline, values, where=values >= 0, step="post", alpha=alpha, **kwargs
-        )
+        ax.fill_between(timeline, values, where=values >= 0, step="post", alpha=alpha, **kwargs)
         if label is not None:
             ax.legend()
         return ax

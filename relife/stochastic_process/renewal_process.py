@@ -4,9 +4,10 @@ from functools import partial
 from typing import TYPE_CHECKING, Optional, TypedDict
 
 import numpy as np
-from numpy.typing import NDArray, DTypeLike
+from numpy.typing import DTypeLike, NDArray
 
 from relife import ParametricModel
+from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
     ExponentialDiscounting,
@@ -14,19 +15,21 @@ from relife.economic import (
 )
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
-from relife.data import LifetimeData
 
 if TYPE_CHECKING:
     from relife.economic import Reward
     from relife.lifetime_model import (
         ParametricLifetimeModel,
     )
+
     from .sample_function import SampleFunction
 
+
 class CountData(TypedDict):
-    t0 : float
-    tf : float
-    data : NDArray[DTypeLike]
+    t0: float
+    tf: float
+    data: NDArray[DTypeLike]
+
 
 class RenewalProcess(ParametricModel):
 
@@ -54,11 +57,10 @@ class RenewalProcess(ParametricModel):
     @property
     def sample(self) -> SampleFunction:
         from .sample_function import SampleFunction
+
         return SampleFunction(type(self), self.sample_data)
 
-    def renewal_function(
-        self, tf: float, nb_steps: int
-    ) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
+    def renewal_function(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
         return renewal_equation_solver(
             tf,
             nb_steps,
@@ -66,9 +68,7 @@ class RenewalProcess(ParametricModel):
             self.model.cdf if self.model1 is None else self.model1.cdf,
         )
 
-    def renewal_density(
-        self, tf: float, nb_steps: int
-    ) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
+    def renewal_density(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
         return renewal_equation_solver(
             tf,
             nb_steps,
@@ -79,12 +79,13 @@ class RenewalProcess(ParametricModel):
     def __concatenate_count_data(
         self,
         tf: float,
-        t0: float = 0.,
+        t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> CountData:
         from .iterator import RenewalProcessIterator
+
         iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
         count_data = next(iterator)
         for arr in iterator:
@@ -92,12 +93,12 @@ class RenewalProcess(ParametricModel):
                 raise RuntimeError("Max number of sample reached")
             count_data = np.concatenate((count_data, arr))
         count_data = np.sort(count_data, order=("sample_id", "asset_id", "timeline"))
-        return {"t0" : t0, "tf" : tf, "data" : count_data}
+        return {"t0": t0, "tf": tf, "data": count_data}
 
     def sample_count_data(
         self,
-        tf : float,
-        t0 : float = 0.,
+        tf: float,
+        t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
@@ -106,13 +107,14 @@ class RenewalProcess(ParametricModel):
 
     def sample_lifetime_data(
         self,
-        tf : float,
-        t0 : float = 0.,
+        tf: float,
+        t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> LifetimeData:
         from relife.lifetime_model import LeftTruncatedModel
+
         if self.model1 is not None and self.model1 != self.model:
             if isinstance(self.model1, LeftTruncatedModel) and self.model1.baseline == self.model:
                 pass
@@ -123,7 +125,12 @@ class RenewalProcess(ParametricModel):
         count_data = self.__concatenate_count_data(tf, t0, size, maxsample, seed)
         args = getattr(self.model, "args", ())
         args = tuple((np.take(arg, count_data["data"]["asset_id"]) for arg in args))
-        return LifetimeData(count_data["data"]["time"].copy(), event=count_data["data"]["event"].copy(), entry=count_data["data"]["entry"].copy(), args=args)
+        return LifetimeData(
+            count_data["data"]["time"].copy(),
+            event=count_data["data"]["event"].copy(),
+            entry=count_data["data"]["entry"].copy(),
+            args=args,
+        )
 
 
 class RenewalRewardProcess(RenewalProcess):
@@ -144,9 +151,7 @@ class RenewalRewardProcess(RenewalProcess):
         self.reward1 = reward1 if reward1 is not None else reward
         self.discounting = ExponentialDiscounting(discounting_rate)
 
-    def expected_total_reward(
-        self, tf: float, nb_steps: int
-    ) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
+    def expected_total_reward(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
         z = renewal_equation_solver(
             tf,
             nb_steps,
@@ -201,13 +206,9 @@ class RenewalRewardProcess(RenewalProcess):
 
         return np.squeeze(z)
 
-    def expected_equivalent_annual_worth(
-        self, tf: float, nb_steps: int
-    ) -> NDArray[np.float64]:
+    def expected_equivalent_annual_worth(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         z = self.expected_total_reward(tf, nb_steps)
-        af = self.discounting.annuity_factor(
-            np.linspace(0, tf, nb_steps, dtype=np.float64)
-        )
+        af = self.discounting.annuity_factor(np.linspace(0, tf, nb_steps, dtype=np.float64))
         q = z / (af + 1e-5)  # avoid zero division
         res = np.full_like(af, q)
         if self.model1 is None:
@@ -230,10 +231,6 @@ class RenewalRewardProcess(RenewalProcess):
             )
         else:
             return self.discounting.rate * self.asymptotic_expected_total_reward()
-
-
-
-
 
 
 # def total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:

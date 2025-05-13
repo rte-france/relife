@@ -40,9 +40,7 @@ def test(session):
 
 
 @nox.session(tags=["parametrized_test"])
-@nox.parametrize(
-    "numpy", ["2.0.0", "2.0.1", "2.0.2", "2.1.0", "2.1.1", "2.1.2", "2.1.3", "2.2.0"]
-)
+@nox.parametrize("numpy", ["2.0.0", "2.0.1", "2.0.2", "2.1.0", "2.1.1", "2.1.2", "2.1.3", "2.2.0"])
 @nox.parametrize("scipy", ["1.13.0", "1.13.1", "1.14.0", "1.14.1", "1.15.0"])
 @nox.parametrize("matplotlib", ["3.9", "3.10"])
 def parametrized_test(session, numpy, scipy, matplotlib):

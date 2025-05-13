@@ -9,7 +9,7 @@ from numpy._typing import NDArray, DTypeLike
 from relife.lifetime_model import ParametricLifetimeModel, LifetimeRegression
 
 
-def _check_in_shape(name : str, value : float | NDArray[np.float64], nb_assets : int):
+def _check_in_shape(name: str, value: float | NDArray[np.float64], nb_assets: int):
     value = np.asarray(value)
     if value.ndim > 2:
         raise ValueError
@@ -17,7 +17,9 @@ def _check_in_shape(name : str, value : float | NDArray[np.float64], nb_assets :
         value_nb_assets = value.shape[0]
         if nb_assets != 1:
             if value_nb_assets != 1 and value_nb_assets != nb_assets:
-                raise ValueError(f"Incorrect {name} shape. Got {value.shape}, meaning {value_nb_assets} nb_assets but args have {nb_assets} nb assets")
+                raise ValueError(
+                    f"Incorrect {name} shape. Got {value.shape}, meaning {value_nb_assets} nb_assets but args have {nb_assets} nb assets"
+                )
     return value
 
 
@@ -46,36 +48,33 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
     def freeze_args(self, *args: *Args):
         args_names = self.baseline.args_names
         if len(args) != len(args_names):
-            raise ValueError(
-                f"Expected {args_names} positional arguments but got only {len(args)} arguments"
-            )
+            raise ValueError(f"Expected {args_names} positional arguments but got only {len(args)} arguments")
         for name, value in zip(args_names, args):
             value = np.asarray(value)
             value: NDArray[np.float64]
             ndim = value.ndim
             if ndim > 2:
-                raise ValueError(
-                    f"Uncorrect number of dimensions for {name}. It can't be higher than 2. Got {ndim}"
-                )
+                raise ValueError(f"Uncorrect number of dimensions for {name}. It can't be higher than 2. Got {ndim}")
             match name:
                 case "covar":  #  (), (nb_coef,) or (m, nb_coef)
                     if value.ndim == 2:  #  otherwise, when 1, broadcasting
                         if self.nb_assets != 1:
                             if value.shape[0] != self.nb_assets and value.shape[0] != 1:
                                 raise ValueError(
-                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets")
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets"
+                                )
                         self._nb_assets = value.shape[0]  #  update nb_assets
                 case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
                     if value.ndim >= 1:
                         if self.nb_assets != 1:
                             if value.shape[0] != self.nb_assets and value.shape[0] != 1:
                                 raise ValueError(
-                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets")
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets"
+                                )
                         self._nb_assets = value.shape[0]  #  update nb_assets
                 case _:
                     raise ValueError(f"Unknown arg {name}")
             self._args = self.args + (value,)
-
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         time = _check_in_shape("time", time, self.args_nb_assets)
@@ -108,10 +107,7 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
 
     @override
     def var(self) -> np.float64 | NDArray[np.float64]:
-        return (
-            self.baseline.moment(2, *self.args)
-            - self.baseline.moment(1, *self.args) ** 2
-        )
+        return self.baseline.moment(2, *self.args) - self.baseline.moment(1, *self.args) ** 2
 
     @override
     def isf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -129,14 +125,14 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
         return self.baseline.cdf(time, *self.args)
 
     @override
-    def rvs(
-        self, size: int | tuple[int, int] = 1, seed: Optional[int] = None
-    ) -> NDArray[DTypeLike]:
+    def rvs(self, size: int | tuple[int, int] = 1, seed: Optional[int] = None) -> NDArray[DTypeLike]:
         return self.baseline.rvs(*self.args, size=size, seed=seed)
 
     @override
-    def sample_time_event_entry(self, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None) -> tuple[np.float64|NDArray[np.float64], bool|NDArray[np.bool_], np.float64|NDArray[np.float64]]:
-        # rvs like method but with time, event, entry
+    def sample_time_event_entry(
+        self, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None
+    ) -> tuple[np.float64 | NDArray[np.float64], bool | NDArray[np.bool_], np.float64 | NDArray[np.float64]]:
+        # rvs like method but with time, event, entry
         return self.baseline.sample_time_event_entry(*self.args, size=size, seed=seed)
 
     @override
@@ -166,7 +162,7 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.
     baseline: LifetimeRegression[*Args]
 
     @override
-    def freeze_args(self, covar : float | NDArray[np.float64], *args: *Args):
+    def freeze_args(self, covar: float | NDArray[np.float64], *args: *Args):
         super().freeze_args(*(covar, *args))
 
     @property
@@ -183,7 +179,7 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
-        asarray : bool = False,
+        asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
         return self.baseline.jac_hf(time, self.args[0], *self.args[1:], asarray=asarray)
@@ -191,7 +187,7 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.
     def jac_chf(
         self,
         time: float | NDArray[np.float64],
-        asarray : bool = False,
+        asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
         return self.baseline.jac_chf(time, self.args[0], *self.args[1:], asarray=asarray)
@@ -199,7 +195,7 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.
     def jac_sf(
         self,
         time: float | NDArray[np.float64],
-        asarray : bool = False,
+        asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         time = _check_in_shape("time", time, self.args_nb_assets)
         return self.baseline.jac_sf(time, self.args[0], *self.args[1:], asarray=asarray)

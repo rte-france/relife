@@ -78,15 +78,9 @@ The asymptotic expected total cost is:
 where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_equivalent_annual_cost` for more details.
 """
 
-ETC_DOCSTRING = TIMELINE_DOCSTRING.format(
-    name="expected total cost", formula=ETC_FORMULA
-)
-EEAC_DOCSTRING = TIMELINE_DOCSTRING.format(
-    name="expected equivalent annual cost", formula=EEAC_FORMULA
-)
-ASYMPTOTIC_ETC_DOCSTRING = ASYMPTOTIC_DOCSTRING.format(
-    name="expected total cost", formula=ASYMPTOTIC_ETC_FORMULA
-)
+ETC_DOCSTRING = TIMELINE_DOCSTRING.format(name="expected total cost", formula=ETC_FORMULA)
+EEAC_DOCSTRING = TIMELINE_DOCSTRING.format(name="expected equivalent annual cost", formula=EEAC_FORMULA)
+ASYMPTOTIC_ETC_DOCSTRING = ASYMPTOTIC_DOCSTRING.format(name="expected total cost", formula=ASYMPTOTIC_ETC_FORMULA)
 ASYMPTOTIC_EEAC_DOCSTRING = ASYMPTOTIC_DOCSTRING.format(
     name="expected equivalent annual cost", formula=ASYMPTOTIC_EEAC_FORMULA
 )

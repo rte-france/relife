@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, InitVar, field, asdict
+from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain
-from typing import Any, Iterator, Optional, Self, Protocol
+from typing import Any, Iterator, Optional, Protocol, Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -173,7 +173,7 @@ class ParametricModel:
     #     self._parameters.nodedata = kwparams
 
 
-# TODO : MAYBE, recarrays (extended numpy structured arrays) can replace this huge Parameters class
+# TODO : MAYBE, recarrays (extended numpy structured arrays) can replace this huge Parameters class
 class Parameters:
     """
     Dict-like tree structured parameters.

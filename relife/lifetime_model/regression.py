@@ -23,8 +23,8 @@ Args = TypeVarTuple("Args")
 
 
 def _broadcast_time_covar(
-    time : float| NDArray[np.float64],
-    covar:  float| NDArray[np.float64],
+    time: float | NDArray[np.float64],
+    covar: float | NDArray[np.float64],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     time = np.atleast_2d(np.asarray(time))  #  (m, n)
     covar = np.atleast_2d(np.asarray(covar))  #  (m, nb_coef)
@@ -39,21 +39,21 @@ def _broadcast_time_covar(
 
 
 def _broadcast_time_covar_shapes(
-    time_shape : tuple[()] |tuple[int] | tuple[int, int],
-    covar_shape:  tuple[()] |tuple[int] | tuple[int, int],
-) -> tuple[()] |tuple[int] | tuple[int, int]:
+    time_shape: tuple[()] | tuple[int] | tuple[int, int],
+    covar_shape: tuple[()] | tuple[int] | tuple[int, int],
+) -> tuple[()] | tuple[int] | tuple[int, int]:
     # time_shape : (), (n,) or (m, n)
     # covar_shape : (), (nb_coef,) or (m, nb_coef)
     match [time_shape, covar_shape]:
         case [(), ()] | [(), (_,)]:
             return ()
-        case [(), (m,_)]:
+        case [(), (m, _)]:
             return m, 1
         case [(n,), ()] | [(n,), (_,)]:
             return (n,)
-        case [(n,), (m,_)] | [(m,n), ()] | [(m,n), (_,)]:
+        case [(n,), (m, _)] | [(m, n), ()] | [(m, n), (_,)]:
             return m, n
-        case [(mt, n), (mc,_)] if mt != mc:
+        case [(mt, n), (mc, _)] if mt != mc:
             if mt != 1 and mc != 1:
                 raise ValueError(f"Invalid time and covar : time got {mt} nb assets but covar got {mc} nb assets")
             return max(mt, mc), n
@@ -136,9 +136,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> np.float64 | NDArray[np.float64]:
-        return self.baseline.ichf(
-            cumulative_hazard_rate / self.covar_effect.g(covar), *args
-        )
+        return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(covar), *args)
 
     def dhf(
         self,
@@ -153,26 +151,29 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray : bool = False,
-    )  -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.asarray(time) # (), (n,) or (m, n)
-        covar = np.asarray(covar) # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape) # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar) # (m, n) and (m, nb_coef)
+        time = np.asarray(time)  # (), (n,) or (m, n)
+        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
-        g = self.covar_effect.g(covar) # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
+        g = self.covar_effect.g(covar)  # (m, 1)
+        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
 
-        baseline_hf = self.baseline.hf(time, *args) # (m, n)
+        baseline_hf = self.baseline.hf(time, *args)  # (m, n)
         # p == baseline.nb_params
-        baseline_jac_hf = self.baseline.jac_hf(time, *args, asarray=True) # (p, m, n)
-        jac_g = np.repeat(jac_g, baseline_hf.shape[-1], axis=-1) # (nb_coef, m, n) necessary to concatenate
+        baseline_jac_hf = self.baseline.jac_hf(time, *args, asarray=True)  # (p, m, n)
+        jac_g = np.repeat(jac_g, baseline_hf.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
 
-        jac = np.concatenate((
-            baseline_hf * jac_g,  #  (nb_coef, m, n)
-            g * baseline_jac_hf, # (p, m, n)
-        ), axis=0) # (p + nb_coef, m, n)
+        jac = np.concatenate(
+            (
+                baseline_hf * jac_g,  #  (nb_coef, m, n)
+                g * baseline_jac_hf,  # (p, m, n)
+            ),
+            axis=0,
+        )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
@@ -184,25 +185,28 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray : bool = False,
+        asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.asarray(time) # (), (n,) or (m, n)
-        covar = np.asarray(covar) # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape) # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar) # (m, n) and (m, nb_coef)
+        time = np.asarray(time)  # (), (n,) or (m, n)
+        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
-        g = self.covar_effect.g(covar) # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
-        baseline_chf = self.baseline.chf(time, *args) # (m, n)
+        g = self.covar_effect.g(covar)  # (m, 1)
+        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        baseline_chf = self.baseline.chf(time, *args)  # (m, n)
         #  p == baseline.nb_params
-        baseline_jac_chf = self.baseline.jac_chf(time, *args, asarray=True) # (p, m, n)
-        jac_g = np.repeat(jac_g, baseline_chf.shape[-1], axis=-1) # (nb_coef, m, n) necessary to concatenate
+        baseline_jac_chf = self.baseline.jac_chf(time, *args, asarray=True)  # (p, m, n)
+        jac_g = np.repeat(jac_g, baseline_chf.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
 
-        jac = np.concatenate((
-            baseline_chf * jac_g,  #  (nb_coef, m, n)
-            g * baseline_jac_chf, # (p, m, n)
-        ), axis = 0) # (p + nb_coef, m, n)
+        jac = np.concatenate(
+            (
+                baseline_chf * jac_g,  #  (nb_coef, m, n)
+                g * baseline_jac_chf,  # (p, m, n)
+            ),
+            axis=0,
+        )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
@@ -281,9 +285,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
     ) -> np.float64 | NDArray[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.ichf(
-            cumulative_hazard_rate, *args
-        )
+        return self.covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate, *args)
 
     def dhf(
         self,
@@ -294,39 +296,40 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
 
-
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray : bool = False,
+        asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.asarray(time) # (), (n,) or (m, n)
-        covar = np.asarray(covar) # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape) # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar) # (m, n) and (m, nb_coef)
+        time = np.asarray(time)  # (), (n,) or (m, n)
+        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
-        g = self.covar_effect.g(covar) # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
-        t0 = time / g # (m, n)
+        g = self.covar_effect.g(covar)  # (m, 1)
+        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        t0 = time / g  # (m, n)
         # p == baseline.nb_params
-        baseline_jac_hf_t0 = self.baseline.jac_hf(t0, *args, asarray=True) # (p, m, n)
-        baseline_hf_t0 = self.baseline.hf(t0, *args) # (m, n)
-        baseline_dhf_t0 = self.baseline.dhf(t0, *args) # (m, n)
-        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1) # (nb_coef, m, n)
+        baseline_jac_hf_t0 = self.baseline.jac_hf(t0, *args, asarray=True)  # (p, m, n)
+        baseline_hf_t0 = self.baseline.hf(t0, *args)  # (m, n)
+        baseline_dhf_t0 = self.baseline.dhf(t0, *args)  # (m, n)
+        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1)  # (nb_coef, m, n)
 
-        jac = np.concatenate((
-            -jac_g / g ** 2 * (baseline_hf_t0 + t0 * baseline_dhf_t0),  # (nb_coef, m, n) necessary to concatenate
-            baseline_jac_hf_t0 / g, # (p, m, n)
-        ), axis=0) # (p + nb_coef, m, n)
+        jac = np.concatenate(
+            (
+                -jac_g / g**2 * (baseline_hf_t0 + t0 * baseline_dhf_t0),  # (nb_coef, m, n) necessary to concatenate
+                baseline_jac_hf_t0 / g,  # (p, m, n)
+            ),
+            axis=0,
+        )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
             return np.unstack(jac)
         return jac
-
 
     def jac_chf(
         self,
@@ -336,29 +339,31 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
 
-        time = np.asarray(time) # (), (n,) or (m, n)
-        covar = np.asarray(covar) # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape) # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar) # (m, n) and (m, nb_coef)
+        time = np.asarray(time)  # (), (n,) or (m, n)
+        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True) # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
         t0 = time / g  #  (m, n)
         # p == baseline.nb_params
-        baseline_jac_chf_t0 = self.baseline.jac_chf(t0, *args, asarray=True) # (p, m, n)
+        baseline_jac_chf_t0 = self.baseline.jac_chf(t0, *args, asarray=True)  # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0, *args)  #  (m, n)
-        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1) # (nb_coef, m, n) necessary to concatenate
+        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
 
-        jac = np.concatenate((
-            -jac_g / g * t0 * baseline_hf_t0,  #  (nb_coef, m, n)
-            baseline_jac_chf_t0, # (p, m, n)
-        ),axis=0) # (p + nb_coef, m, n)
+        jac = np.concatenate(
+            (
+                -jac_g / g * t0 * baseline_hf_t0,  #  (nb_coef, m, n)
+                baseline_jac_chf_t0,  # (p, m, n)
+            ),
+            axis=0,
+        )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
         if not asarray:
             return np.unstack(jac)
         return jac
-
 
 
 TIME_BASE_DOCSTRING = """
@@ -422,36 +427,16 @@ np.ndarray
 for class_obj in (AcceleratedFailureTime, ProportionalHazard):
     class_obj.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The survival function")
     class_obj.hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The hazard function")
-    class_obj.chf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The cumulative hazard function"
-    )
-    class_obj.pdf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The probability density function"
-    )
-    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The mean residual life function"
-    )
-    class_obj.cdf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The cumulative distribution function"
-    )
-    class_obj.dhf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The derivative of the hazard function"
-    )
-    class_obj.jac_hf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The jacobian of the hazard function"
-    )
-    class_obj.jac_chf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The jacobian of the cumulative hazard function"
-    )
-    class_obj.jac_sf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The jacobian of the survival function"
-    )
-    class_obj.jac_pdf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The jacobian of the probability density function"
-    )
-    class_obj.jac_cdf.__doc__ = TIME_BASE_DOCSTRING.format(
-        name="The jacobian of the cumulative distribution function"
-    )
+    class_obj.chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative hazard function")
+    class_obj.pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The probability density function")
+    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(name="The mean residual life function")
+    class_obj.cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative distribution function")
+    class_obj.dhf.__doc__ = TIME_BASE_DOCSTRING.format(name="The derivative of the hazard function")
+    class_obj.jac_hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the hazard function")
+    class_obj.jac_chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the cumulative hazard function")
+    class_obj.jac_sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the survival function")
+    class_obj.jac_pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the probability density function")
+    class_obj.jac_cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the cumulative distribution function")
 
     class_obj.mean.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The mean")
     class_obj.var.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The variance")

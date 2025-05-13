@@ -51,8 +51,8 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                     structured_lifetime_data.complete.values,
                     *structured_lifetime_data.complete.args,
                 )
-            ) # (m, 1)
-        ) # ()
+            )  # (m, 1)
+        )  # ()
 
     def _right_censored_contribs(self, structured_lifetime_data: StructuredLifetimeData) -> Optional[np.float64]:
         if structured_lifetime_data.complete_or_right_censored is None:
@@ -62,8 +62,8 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 structured_lifetime_data.complete_or_right_censored.values,
                 *structured_lifetime_data.complete_or_right_censored.args,
             ),
-            dtype=np.float64, # (m, 1)
-        ) # ()
+            dtype=np.float64,  # (m, 1)
+        )  # ()
 
     def _left_censored_contribs(self, structured_lifetime_data: StructuredLifetimeData) -> Optional[np.float64]:
         if structured_lifetime_data.left_censoring is None:
@@ -76,25 +76,21 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                         *structured_lifetime_data.left_censoring.args,
                     )
                 )
-            ) # (m, 1)
-        ) # ()
+            )  # (m, 1)
+        )  # ()
 
-    def _left_truncations_contribs(
-        self, structured_lifetime_data: StructuredLifetimeData
-    ) -> Optional[np.float64]:
+    def _left_truncations_contribs(self, structured_lifetime_data: StructuredLifetimeData) -> Optional[np.float64]:
         if structured_lifetime_data.left_truncation is None:
             return None
         return -np.sum(
             self.model.chf(
                 structured_lifetime_data.left_truncation.values,
                 *structured_lifetime_data.left_truncation.args,
-            ), # (m, 1)
+            ),  # (m, 1)
             dtype=np.float64,
-        ) # ()
+        )  # ()
 
-    def _jac_complete_contribs(
-        self, structured_lifetime_data: StructuredLifetimeData
-    ) -> Optional[NDArray[np.float64]]:
+    def _jac_complete_contribs(self, structured_lifetime_data: StructuredLifetimeData) -> Optional[NDArray[np.float64]]:
         if structured_lifetime_data.complete is None:
             return None
         return -np.sum(
@@ -102,13 +98,13 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 structured_lifetime_data.complete.values,
                 *structured_lifetime_data.complete.args,
                 asarray=True,
-            ) # (p, m, 1)
+            )  # (p, m, 1)
             / self.model.hf(
                 structured_lifetime_data.complete.values,
                 *structured_lifetime_data.complete.args,
-            ), # (m, 1)
-            axis=(1,2),
-        ) # (p,)
+            ),  # (m, 1)
+            axis=(1, 2),
+        )  # (p,)
 
     def _jac_right_censored_contribs(
         self, structured_lifetime_data: StructuredLifetimeData
@@ -120,9 +116,9 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 structured_lifetime_data.complete_or_right_censored.values,
                 *structured_lifetime_data.complete_or_right_censored.args,
                 asarray=True,
-            ), # (p, m, 1)
-            axis=(1,2),
-        ) # (p,)
+            ),  # (p, m, 1)
+            axis=(1, 2),
+        )  # (p,)
 
     def _jac_left_censored_contribs(
         self, structured_lifetime_data: StructuredLifetimeData
@@ -134,15 +130,15 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 structured_lifetime_data.left_censoring.values,
                 *structured_lifetime_data.left_censoring.args,
                 asarray=True,
-            ) # (p, m, 1)
+            )  # (p, m, 1)
             / np.expm1(
                 self.model.chf(
                     structured_lifetime_data.left_censoring.values,
                     *structured_lifetime_data.left_censoring.args,
                 )
-            ), # (m, 1)
-            axis=(1,2),
-        ) # (p,)
+            ),  # (m, 1)
+            axis=(1, 2),
+        )  # (p,)
 
     def _jac_left_truncations_contribs(
         self, structured_lifetime_data: StructuredLifetimeData
@@ -154,13 +150,13 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
                 structured_lifetime_data.left_truncation.values,
                 *structured_lifetime_data.left_truncation.args,
                 asarray=True,
-            ), # (p, m, 1)
-            axis=(1,2),
-        ) # (p,)
+            ),  # (p, m, 1)
+            axis=(1, 2),
+        )  # (p,)
 
     def negative_log(
         self,
-        params: NDArray[np.float64], # (p,)
+        params: NDArray[np.float64],  # (p,)
     ) -> np.float64:
         self.model.params = params
         contributions = (
@@ -169,17 +165,15 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             self._left_censored_contribs(self.data),
             self._left_truncations_contribs(self.data),
         )
-        return sum(x for x in contributions if x is not None) # ()
+        return sum(x for x in contributions if x is not None)  # ()
 
     @override
     def jac_negative_log(
         self,
-        params: NDArray[np.float64], # (p,)
+        params: NDArray[np.float64],  # (p,)
     ) -> NDArray[np.float64]:
         if not self.hasjac:
-            raise AttributeError(
-                f"No support of jac negative likelihood for {self.model.__class__.__name__}"
-            )
+            raise AttributeError(f"No support of jac negative likelihood for {self.model.__class__.__name__}")
         self.model.params = params
         jac_contributions = (
             self._jac_complete_contribs(self.data),
@@ -187,6 +181,4 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             self._jac_left_censored_contribs(self.data),
             self._jac_left_truncations_contribs(self.data),
         )
-        return sum(x for x in jac_contributions if x is not None) # (p,)
-
-
+        return sum(x for x in jac_contributions if x is not None)  # (p,)

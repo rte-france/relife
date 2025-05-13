@@ -74,9 +74,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         return self.expected_total_cost(np.array(np.inf))
 
-    def expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
 
         f = (
             lambda x: run_to_failure_rewards(self.cf)(x)
@@ -84,9 +82,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
             / self.discounting.annuity_factor(x)
         )
         mask = timeline < self.period_before_discounting
-        q0 = self.model.cdf(self.period_before_discounting) * f(
-            self.period_before_discounting
-        )
+        q0 = self.model.cdf(self.period_before_discounting) * f(self.period_before_discounting)
         return np.squeeze(
             q0
             + np.where(
@@ -170,9 +166,7 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
             reward1=run_to_failure_rewards(self.cf) if self.model1 else None,
         )
 
-    def expected_nb_replacements(
-        self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps)
         return timeline, self.underlying_process.renewal_function(timeline)
 
@@ -183,13 +177,9 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         return self.underlying_process.asymptotic_expected_total_reward()
 
-    def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int
-    ) -> NDArray[np.float64]:
+    def expected_equivalent_annual_cost(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process.expected_equivalent_annual_worth(
-            timeline
-        )
+        return timeline, self.underlying_process.expected_equivalent_annual_worth(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.underlying_process.asymptotic_expected_equivalent_annual_worth()
@@ -204,18 +194,10 @@ from ._docstring import (
 
 OneCycleRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
 OneCycleRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
-OneCycleRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = (
-    ASYMPTOTIC_ETC_DOCSTRING
-)
-OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
-    ASYMPTOTIC_EEAC_DOCSTRING
-)
+OneCycleRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
+OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING
 
 DefaultRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
 DefaultRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
-DefaultRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = (
-    ASYMPTOTIC_ETC_DOCSTRING
-)
-DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = (
-    ASYMPTOTIC_EEAC_DOCSTRING
-)
+DefaultRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
+DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING
