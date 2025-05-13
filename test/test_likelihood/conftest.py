@@ -14,6 +14,7 @@ from relife.lifetime_model import (
 
 NB_COEF = 3
 
+
 @pytest.fixture(
     params=[
         Exponential(0.00795203),
@@ -22,7 +23,7 @@ NB_COEF = 3
         Gamma(5.3571091, 0.06622822),
         LogLogistic(3.92614064, 0.0133325),
     ],
-    ids=["Exponential", "Weibull", "Gompertz", "Gamma", "LogLogistic"]
+    ids=["Exponential", "Weibull", "Gompertz", "Gamma", "LogLogistic"],
 )
 def distribution(request):
     return request.param
@@ -41,7 +42,7 @@ def distribution(request):
         AcceleratedFailureTime(Gamma(5.3571091, 0.06622822), coefficients=(0.1,) * NB_COEF),
         AcceleratedFailureTime(LogLogistic(3.92614064, 0.0133325), coefficients=(0.1,) * NB_COEF),
     ],
-    ids=lambda reg : f"{reg.__class__.__name__}({reg.baseline.__class__.__name__})"
+    ids=lambda reg: f"{reg.__class__.__name__}({reg.baseline.__class__.__name__})",
 )
 def regression(request):
     return request.param
@@ -54,12 +55,10 @@ def lifetime_data_1d():
     entry = np.array([0, 0, 3, 5, 3, 1, 9], dtype=np.float64)
     return LifetimeData(time, event=event, entry=entry)
 
+
 @pytest.fixture
 def lifetime_data_2d():
-    time = np.array(
-        [[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]],
-        dtype=np.float64
-    )
+    time = np.array([[1, 2], [0, 4], [5, 5], [7, np.inf], [10, 10], [2, 10], [10, 11]], dtype=np.float64)
     entry = np.array([0, 0, 3, 5, 3, 1, 9], dtype=np.float64)
     departure = np.array([4, np.inf, 7, 10, np.inf, 12, np.inf], dtype=np.float64)
     return LifetimeData(time, entry=entry, departure=departure)
@@ -68,6 +67,7 @@ def lifetime_data_2d():
 @pytest.fixture
 def power_transformer_data():
     return load_power_transformer()
+
 
 @pytest.fixture
 def insulator_string_data():

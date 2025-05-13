@@ -6,11 +6,12 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize
 
-from .lifetime_likelihood import LikelihoodFromLifetimes, StructuredLifetimeData
+from .lifetime_likelihood import LikelihoodFromLifetimes
+from ..data.lifetime_data import StructuredLifetimeData
+from relife.data import NHPPData, LifetimeData
 
 if TYPE_CHECKING:
     from relife import ParametricModel
-    from relife.data import NHPPData, LifetimeData
     from relife.lifetime_model import ParametricLifetimeModel
 
 
@@ -93,7 +94,8 @@ def init_params_from_lifetimes(
             raise NotImplemented
 
 
-FailureData = TypeVar("FailureData", bound=LifetimeData)
+# FailureData can be any of the union LifetimeData | NHPPData
+FailureData = TypeVar("FailureData", bound=LifetimeData | NHPPData)
 
 
 def maximum_likelihood_estimation(

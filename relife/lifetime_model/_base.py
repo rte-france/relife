@@ -217,10 +217,10 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
             time[selection].copy(), event=event[selection].copy(), entry=entry[selection].copy(), args=args
         )
 
-    @property
-    def plot(self) -> PlotSurvivalFunc:
-        """Plot"""
-        return PlotSurvivalFunc(self)
+    # @property
+    # def plot(self) -> PlotSurvivalFunc:
+    #     """Plot"""
+    #     return PlotSurvivalFunc(self)
 
     @property
     def args_names(self) -> tuple[str, ...]:
@@ -230,7 +230,7 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
             LeftTruncatedModel,
             ProportionalHazard,
         )
-        from relife.frozen_model import FrozenParametricLifetimeModel
+        from .frozen_model import FrozenParametricLifetimeModel
 
         try:
             next(self.nested_models())
@@ -255,10 +255,12 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
         return args_names
 
     def __getattribute__(self, item):
-        allowed_methods = ("compose_with", "nb_params", "nested_models", "params", "params_names", "fit", "fit_from_lifetime_data", "args_names")
-        if item not in allowed_methods and not item.startswith("_"):
+        methods_without_fitted = ("compose_with", "nb_params", "nested_models", "params", "params_names", "fit", "fit_from_lifetime_data", "args_names")
+        if item in methods_without_fitted or item.startswith("_"):
+            pass
+        else:
             params = np.array(tuple(self._parameters.allvalues()))
-            if np.any(params):
+            if np.any(np.isnan(params)):
                 raise ValueError(f"Can't call {item} if params are not set. Got {params} params")
         return super().__getattribute__(item)
 

@@ -1,5 +1,5 @@
 from .lifetime_data import (
-    LifetimeData,
+    LifetimeData, StructuredLifetimeData
 )
 from .nhpp_data import NHPPData
 from .dataset import (

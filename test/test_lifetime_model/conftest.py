@@ -15,6 +15,7 @@ from relife.lifetime_model import (
 
 NB_COEF = 3
 
+
 @pytest.fixture(
     params=[
         Exponential(0.00795203),
@@ -23,7 +24,7 @@ NB_COEF = 3
         Gamma(5.3571091, 0.06622822),
         LogLogistic(3.92614064, 0.0133325),
     ],
-    ids=["Exponential", "Weibull", "Gompertz", "Gamma", "LogLogistic"]
+    ids=["Exponential", "Weibull", "Gompertz", "Gamma", "LogLogistic"],
 )
 def distribution(request):
     return request.param
@@ -42,7 +43,7 @@ def distribution(request):
         AcceleratedFailureTime(Gamma(5.3571091, 0.06622822), coefficients=(0.1,) * NB_COEF),
         AcceleratedFailureTime(LogLogistic(3.92614064, 0.0133325), coefficients=(0.1,) * NB_COEF),
     ],
-    ids=lambda reg : f"{reg.__class__.__name__}({reg.baseline.__class__.__name__})"
+    ids=lambda reg: f"{reg.__class__.__name__}({reg.baseline.__class__.__name__})",
 )
 def regression(request):
     return request.param
@@ -62,10 +63,11 @@ N = 3
         np.ones((1, N), dtype=np.float64),
         np.ones((M, 3), dtype=np.float64),
     ],
-    ids=lambda time : f"time{time.shape}"
+    ids=lambda time: f"time:{time.shape}",
 )
 def time(request):
     return request.param
+
 
 @pytest.fixture(
     params=[
@@ -77,110 +79,118 @@ def time(request):
         np.ones((1, N), dtype=np.float64) * 0.5,
         np.ones((M, N), dtype=np.float64) * 0.5,
     ],
-    ids=lambda probability : f"probability{probability.shape}"
+    ids=lambda probability: f"probability:{probability.shape}",
 )
 def probability(request):
     return request.param
+
 
 @pytest.fixture(
     params=[
         np.ones((NB_COEF,), dtype=np.float64),
         np.ones((1, NB_COEF), dtype=np.float64),
-        np.ones((M, NB_COEF), dtype=np.float64)
+        np.ones((M, NB_COEF), dtype=np.float64),
     ],
-    ids=lambda covar : f"covar{covar.shape}"
+    ids=lambda covar: f"covar:{covar.shape}",
 )
 def covar(request):
     return request.param
 
+
 @pytest.fixture(
-    params = [
+    params=[
         2.0 * np.ones((), dtype=np.float64),
         2.0 * np.ones((1,), dtype=np.float64),
         2.0 * np.ones((N,), dtype=np.float64),
-        2.0 * np.ones((1,N), dtype=np.float64),
-        2.0 * np.ones((M,1), dtype=np.float64),
-        2.0 * np.ones((M,N), dtype=np.float64),
+        2.0 * np.ones((1, N), dtype=np.float64),
+        2.0 * np.ones((M, 1), dtype=np.float64),
+        2.0 * np.ones((M, N), dtype=np.float64),
     ],
-    ids = lambda a : f"a{a.shape}"
+    ids=lambda a: f"a:{a.shape}",
 )
 def integration_bound_a(request):
     return request.param
 
+
 @pytest.fixture(
-    params = [
+    params=[
         8.0 * np.ones((), dtype=np.float64),
         8.0 * np.ones((1,), dtype=np.float64),
         8.0 * np.ones((N,), dtype=np.float64),
-        8.0 * np.ones((1,N), dtype=np.float64),
-        8.0 * np.ones((M,1), dtype=np.float64),
-        8.0 * np.ones((M,N), dtype=np.float64),
+        8.0 * np.ones((1, N), dtype=np.float64),
+        8.0 * np.ones((M, 1), dtype=np.float64),
+        8.0 * np.ones((M, N), dtype=np.float64),
     ],
-    ids = lambda b: f"b{b.shape}"
+    ids=lambda b: f"b:{b.shape}",
 )
 def integration_bound_b(request):
     return request.param
 
+
 @pytest.fixture(
-    params = [
+    params=[
         np.ones((), dtype=np.float64),
         np.ones((1,), dtype=np.float64),
         np.ones((M,), dtype=np.float64),
-        np.ones((M,1), dtype=np.float64),
+        np.ones((M, 1), dtype=np.float64),
     ],
-    ids = lambda ar : f"ar{ar.shape}"
+    ids=lambda ar: f"ar:{ar.shape}",
 )
 def ar(request):
     return request.param
 
+
 @pytest.fixture(
-    params = [
+    params=[
         np.ones((), dtype=np.float64),
         np.ones((1,), dtype=np.float64),
         np.ones((M,), dtype=np.float64),
-        np.ones((M,1), dtype=np.float64),
+        np.ones((M, 1), dtype=np.float64),
     ],
-    ids = lambda a0 : f"a0{a0.shape}"
+    ids=lambda a0: f"a0:{a0.shape}",
 )
 def a0(request):
     return request.param
 
 
-@pytest.fixture(params = [1, N, (N,), (M, 1), (M, N)], ids=lambda size : f"size = {size}")
+@pytest.fixture(params=[1, N, (N,), (M, 1), (M, N)], ids=lambda size: f"size:{size}")
 def rvs_size(request):
-    return request.params
+    return request.param
 
 
 @pytest.fixture
 def expected_out_shape():
     def _expected_out_shape(**kwargs: NDArray[np.float64]):
         def shape_contrib(**kwargs: NDArray[np.float64]):
-            yield () # yield at least (), in case kwargs is empty
+            yield ()  # yield at least (), in case kwargs is empty
             for k, v in kwargs.items():
                 match k:
                     case "covar" if v.ndim == 2:
                         yield v.shape[0], 1
                     case "covar" if v.ndim < 2:
                         yield ()
-                    case "ar"|"a0" if v.ndim ==2:
+                    case "ar" | "a0" if v.ndim == 2 or v.ndim == 0:
                         yield v.shape
-                    case "ar"|"a0" if v.ndim < 2:
+                    case "ar" | "a0" if v.ndim == 1:
                         yield v.size, 1
                     case "size":
                         if isinstance(v, int):
                             if v == 1:
-                                return ()
-                            return (v,)
-                        return v
+                                yield ()
+                            yield (v,)
+                        yield v  # it is tuple
                     case _:
                         yield v.shape
+
         return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
+
     return _expected_out_shape
 
 
 @pytest.fixture
 def power_transformer_data():
     return load_power_transformer()
+
 
 @pytest.fixture
 def insulator_string_data():

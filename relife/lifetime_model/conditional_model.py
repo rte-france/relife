@@ -41,7 +41,7 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
 
     def __init__(self, baseline: ParametricLifetimeModel[*Args]):
         super().__init__()
-        self.compose_with(baseline=baseline)
+        self.baseline = baseline
 
     def sf(
         self,
@@ -138,20 +138,22 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         seed: Optional[int] = None,
     ) -> NDArray[DTypeLike]:
         ar = reshape_ar_or_a0("ar", ar)
-        super_rvs = self.baseline.rvs(*args, size=size, return_event=return_event, return_entry=return_entry, seed=seed)
-        time = super_rvs[0] if isinstance(super_rvs, tuple) else super_rvs
-        time = np.minimum(time, ar)
+        baseline_rvs = self.baseline.rvs(*args, size=size, return_event=return_event, return_entry=return_entry, seed=seed)
+        time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
+        time = np.minimum(time, ar) # it may change time shape by broadcasting
         if not return_event and not return_entry:
             return time
         elif return_event and not return_entry:
-            event = super_rvs[1]
+            event = np.broadcast_to(baseline_rvs[1], time.shape).copy()
             event = event != ar
             return time, event
         elif not return_event and return_entry:
-            entry = super_rvs[1]
+            entry = np.broadcast_to(baseline_rvs[1], time.shape).copy()
             return time, entry
         else:
-            event, entry = super_rvs[1:]
+            event, entry = baseline_rvs[1:]
+            event = np.broadcast_to(event, time.shape).copy()
+            entry = np.broadcast_to(entry, time.shape).copy()
             event = event != ar
             return time, event, entry
 

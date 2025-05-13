@@ -1,8 +1,16 @@
 import pytest
 import numpy as np
 
-from relife.lifetime_model import Exponential, Weibull, Gompertz, Gamma, LogLogistic, ProportionalHazard, \
-    AcceleratedFailureTime, AgeReplacementModel
+from relife.lifetime_model import (
+    Exponential,
+    Weibull,
+    Gompertz,
+    Gamma,
+    LogLogistic,
+    ProportionalHazard,
+    AcceleratedFailureTime,
+    AgeReplacementModel,
+)
 
 
 @pytest.fixture(
@@ -12,7 +20,7 @@ from relife.lifetime_model import Exponential, Weibull, Gompertz, Gamma, LogLogi
         Gamma(5.3571091, 0.06622822),
         LogLogistic(3.92614064, 0.0133325),
     ],
-    ids=lambda distri: f"{distri.__class__.__name__}"
+    ids=lambda distri: f"{distri.__class__.__name__}",
 )
 def distribution(request):
     return request.param
@@ -31,7 +39,7 @@ def distribution(request):
         AcceleratedFailureTime(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
         AcceleratedFailureTime(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
     ],
-    ids=lambda reg : f"Frozen{reg.__class__.__name__}({reg.baseline.__class__.__name__})"
+    ids=lambda reg: f"Frozen{reg.__class__.__name__}({reg.baseline.__class__.__name__})",
 )
 def frozen_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
@@ -45,13 +53,12 @@ def frozen_regression(request):
         Gamma(5.3571091, 0.06622822),
         LogLogistic(3.92614064, 0.0133325),
     ],
-    ids=lambda distri: f"FrozenAgeReplacementModel({distri.__class__.__name__})"
+    ids=lambda distri: f"FrozenAgeReplacementModel({distri.__class__.__name__})",
 )
 def frozen_ar_distribution(request):
     _distribution = request.param
     ar = _distribution.isf(0.75)
     return AgeReplacementModel(_distribution).freeze(ar)
-
 
 
 @pytest.fixture(
@@ -67,11 +74,10 @@ def frozen_ar_distribution(request):
         AcceleratedFailureTime(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
         AcceleratedFailureTime(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
     ],
-    ids=lambda reg : f"FrozenAgeReplacementModel({reg.__class__.__name__}({reg.baseline.__class__.__name__}))"
+    ids=lambda reg: f"FrozenAgeReplacementModel({reg.__class__.__name__}({reg.baseline.__class__.__name__}))",
 )
 def frozen_ar_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
     _regression = request.param
     ar = _regression.isf(0.75, covar)
     return AgeReplacementModel(_regression).freeze(ar, covar)
-

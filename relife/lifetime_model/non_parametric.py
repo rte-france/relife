@@ -1,17 +1,11 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, NamedTuple, Optional, Self
+from typing import NamedTuple, Optional, Self
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.data import lifetime_data_factory
+from relife.data import LifetimeData, StructuredLifetimeData
 
 from ._base import NonParametricLifetimeModel
-
-if TYPE_CHECKING:
-    from ..likelihood.lifetime_likelihood import StructuredLifetimeData
-
 
 class Estimation(NamedTuple):
     timeline: NDArray[np.float64]
@@ -46,22 +40,22 @@ class ECDF(NonParametricLifetimeModel):
         departure : ndarray of float (1d), default is None
             Right truncations applied to lifetime values.
         """
-
-        lifetime_data = lifetime_data_factory(
+        lifetime_data = LifetimeData(
             time,
             event=event,
             entry=entry,
             departure=departure,
         )
+        structured_lifetime_data = StructuredLifetimeData(lifetime_data)
 
         timeline, counts = np.unique(
-            lifetime_data.complete_or_right_censored.values, return_counts=True
+            structured_lifetime_data.complete_or_right_censored.values, return_counts=True
         )
         timeline = np.insert(timeline, 0, 0)
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         sf = 1 - cdf
         se = np.sqrt(
-            cdf * (1 - cdf) / len(lifetime_data.complete_or_right_censored.values)
+            cdf * (1 - cdf) / len(structured_lifetime_data.complete_or_right_censored.values)
         )
         self.estimations = dict(
             sf=Estimation(timeline, sf, se), cdf=Estimation(time, cdf, se)
@@ -145,36 +139,38 @@ class KaplanMeier(NonParametricLifetimeModel):
             If true, estimations are stored in the object
         """
 
-        lifetime_data = lifetime_data_factory(
+        lifetime_data = LifetimeData(
             time,
             event=event,
             entry=entry,
             departure=departure,
         )
+        structured_lifetime_data = StructuredLifetimeData(lifetime_data)
 
-        if lifetime_data.left_censoring is not None:
+
+        if structured_lifetime_data.left_censoring is not None:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.complete_or_right_censored.values,
+            structured_lifetime_data.complete_or_right_censored.values,
             return_inverse=True,
             return_counts=True,
         )
         death_set = np.zeros_like(timeline, int)  # death at each timeline step
         complete_observation_indic = np.zeros_like(
-            lifetime_data.complete_or_right_censored.values
+            structured_lifetime_data.complete_or_right_censored.values
         )  # just creating an array to fill it next line
-        complete_observation_indic[lifetime_data.complete.index] = 1
+        complete_observation_indic[structured_lifetime_data.complete.index] = 1
         np.add.at(death_set, unique_indices, complete_observation_indic)
         x_in = np.histogram(
             np.concatenate(
                 (
-                    lifetime_data.left_truncation.values.flatten(),
+                    structured_lifetime_data.left_truncation.values.flatten(),
                     np.array(
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.complete_or_right_censored.values)
-                                - len(lifetime_data.left_truncation.values)
+                                len(structured_lifetime_data.complete_or_right_censored.values)
+                                - len(structured_lifetime_data.left_truncation.values)
                             )
                         ]
                     ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
@@ -269,20 +265,22 @@ class NelsonAalen(NonParametricLifetimeModel):
             Right truncations applied to lifetime values.
         """
 
-        lifetime_data = lifetime_data_factory(
+        lifetime_data = LifetimeData(
             time,
             event=event,
             entry=entry,
             departure=departure,
         )
+        structured_lifetime_data = StructuredLifetimeData(lifetime_data)
 
-        if len(lifetime_data.left_censoring) > 0:
+
+        if len(structured_lifetime_data.left_censoring) > 0:
             raise ValueError(
                 "NelsonAalen does not accept left censored or interval censored lifetimes"
             )
 
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.complete_or_right_censored.values,
+            structured_lifetime_data.complete_or_right_censored.values,
             return_inverse=True,
             return_counts=True,
         )
@@ -291,21 +289,21 @@ class NelsonAalen(NonParametricLifetimeModel):
         )  # death at each timeline step
 
         complete_observation_indic = np.zeros_like(
-            lifetime_data.complete_or_right_censored.values
+            structured_lifetime_data.complete_or_right_censored.values
         )  # just creating an array to fill it next line
-        complete_observation_indic[lifetime_data.complete.index] = 1
+        complete_observation_indic[structured_lifetime_data.complete.index] = 1
 
         np.add.at(death_set, unique_indices, complete_observation_indic)
         x_in = np.histogram(
             np.concatenate(
                 (
-                    lifetime_data.left_truncation.values.flatten(),
+                    structured_lifetime_data.left_truncation.values.flatten(),
                     np.array(
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.complete_or_right_censored.values)
-                                - len(lifetime_data.left_truncation.values)
+                                len(structured_lifetime_data.complete_or_right_censored.values)
+                                - len(structured_lifetime_data.left_truncation.values)
                             )
                         ]
                     ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
@@ -369,57 +367,59 @@ class Turnbull(NonParametricLifetimeModel):
             If true, estimations are stored in the object
         """
 
-        lifetime_data = lifetime_data_factory(
+        lifetime_data = LifetimeData(
             time,
             event=event,
             entry=entry,
             departure=departure,
         )
+        structured_lifetime_data = StructuredLifetimeData(lifetime_data)
+
 
         timeline_temp = np.unique(
-            np.insert(lifetime_data.interval_censoring.values.flatten(), 0, 0)
+            np.insert(structured_lifetime_data.interval_censoring.values.flatten(), 0, 0)
         )
         timeline_len = len(timeline_temp)
         if not self.lowmem:
             event_occurence = (
                 np.greater_equal.outer(
                     timeline_temp[:-1],
-                    lifetime_data.interval_censoring.values[
+                    structured_lifetime_data.interval_censoring.values[
                         :, 0
                     ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
                 )
                 * np.less_equal.outer(
                     timeline_temp[1:],
-                    lifetime_data.interval_censoring.values[:, 1],
+                    structured_lifetime_data.interval_censoring.values[:, 1],
                 )
             ).T
 
             s = self._estimate_with_high_memory(
-                lifetime_data,
+                structured_lifetime_data,
                 timeline_len,
                 event_occurence,
                 timeline_temp,
             )
 
         else:
-            len_censored_data = len(lifetime_data.interval_censoring.values)
+            len_censored_data = len(structured_lifetime_data.interval_censoring.values)
             event_occurence = []
             for i in range(len_censored_data):
                 event_occurence.append(
                     np.where(
                         (
-                            lifetime_data.interval_censoring.values[:, 0][i]
+                            structured_lifetime_data.interval_censoring.values[:, 0][i]
                             <= timeline_temp[:-1]
                         )
                         & (
                             timeline_temp[1:]
-                            <= lifetime_data.interval_censoring.values[:, 1][i]
+                            <= structured_lifetime_data.interval_censoring.values[:, 1][i]
                         )
                     )[0][[0, -1]]
                 )
             event_occurence = np.array(event_occurence)
             s = self._estimate_with_low_memory(
-                lifetime_data,
+                structured_lifetime_data,
                 timeline_temp,
                 timeline_len,
                 event_occurence,
@@ -440,7 +440,7 @@ class Turnbull(NonParametricLifetimeModel):
 
     def _estimate_with_low_memory(
         self,
-        lifetime_data: StructuredLifetimeData,
+        structured_lifetime_data: StructuredLifetimeData,
         timeline_temp,
         timeline_len,
         event_occurence,
@@ -448,7 +448,7 @@ class Turnbull(NonParametricLifetimeModel):
     ):
 
         d_tilde = np.histogram(
-            np.searchsorted(timeline_temp, lifetime_data.complete.values),
+            np.searchsorted(timeline_temp, structured_lifetime_data.complete.values),
             bins=range(timeline_len + 1),
         )[0][1:]
         s = np.linspace(1, 0, timeline_len)
@@ -482,7 +482,7 @@ class Turnbull(NonParametricLifetimeModel):
                 )
             d += d_tilde
             y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncation.values.flatten()
+            _unsorted_entry = structured_lifetime_data.left_truncation.values.flatten()
 
             y -= len(_unsorted_entry) - np.searchsorted(
                 np.sort(_unsorted_entry), timeline_temp[1:]
@@ -496,14 +496,14 @@ class Turnbull(NonParametricLifetimeModel):
 
     def _estimate_with_high_memory(
         self,
-        lifetime_data: StructuredLifetimeData,
+        structured_lifetime_data: StructuredLifetimeData,
         timeline_len,
         event_occurence,
         timeline_temp,
     ):
 
         d_tilde = np.histogram(
-            np.searchsorted(timeline_temp, lifetime_data.complete.values),
+            np.searchsorted(timeline_temp, structured_lifetime_data.complete.values),
             bins=range(timeline_len + 1),
         )[0][1:]
         s = np.linspace(1, 0, timeline_len)
@@ -530,7 +530,7 @@ class Turnbull(NonParametricLifetimeModel):
             else:
                 d = d_tilde
             y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncation.values.flatten()
+            _unsorted_entry = structured_lifetime_data.left_truncation.values.flatten()
             y -= len(_unsorted_entry) - np.searchsorted(
                 np.sort(_unsorted_entry), timeline_temp[1:]
             )

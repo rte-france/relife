@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
-
-from relife import ParametricModel, FreezeMixin
-from relife._plots import PlotConstructor, PlotNHPP
-from relife.sample import CountDataSampleMixin, FailureDataSampleMixin
+from relife import ParametricModel
 
 if TYPE_CHECKING:
     from .non_homogeneous_poisson_process import NonHomogeneousPoissonProcess
 
 
-class FrozenNonHomogeneousPoissonProcess(ParametricModel, FreezeMixin, CountDataSampleMixin, FailureDataSampleMixin):
+Args = TypeVarTuple("Args")
+
+class FrozenNonHomogeneousPoissonProcess(ParametricModel, Generic[*Args]):
     def __init__(
         self, baseline: NonHomogeneousPoissonProcess[*tuple[float | NDArray, ...]]
     ):
@@ -28,6 +27,12 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel, FreezeMixin, CountData
     ) -> NDArray[np.float64]:
         return self.model.cumulative_intensity(time, *self.args)
 
-    @property
-    def plot(self) -> PlotConstructor:
-        return PlotNHPP(self)
+    def sample_nhhp_data(self):
+        pass
+
+    def sample_count_data(self):
+        pass
+
+    # @property
+    # def plot(self) -> PlotConstructor:
+    #     return PlotNHPP(self)

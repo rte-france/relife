@@ -1,6 +1,7 @@
 from pytest import approx
 import numpy as np
 
+
 class TestFrozenDistribution:
     # def test_args_nb_assets(self, distribution):
     #     frozen_distribution = distribution.freeze()
@@ -9,7 +10,9 @@ class TestFrozenDistribution:
     def test_sf(self, distribution, time, expected_out_shape):
         frozen_distribution = distribution.freeze()
         assert frozen_distribution.sf(time).shape == time.shape
-        assert frozen_distribution.sf(np.full(time.shape, distribution.median())) == approx(np.full(time.shape, 0.5), rel=1e-3)
+        assert frozen_distribution.sf(np.full(time.shape, distribution.median())) == approx(
+            np.full(time.shape, 0.5), rel=1e-3
+        )
 
     def test_hf(self, distribution, time, expected_out_shape):
         frozen_distribution = distribution.freeze()
@@ -39,7 +42,8 @@ class TestFrozenDistribution:
         frozen_distribution = distribution.freeze()
         assert frozen_distribution.isf(probability).shape == expected_out_shape(probability=probability)
         assert frozen_distribution.isf(np.full(expected_out_shape(probability=probability), 0.5)) == approx(
-            np.full(expected_out_shape(probability=probability), distribution.median()))
+            np.full(expected_out_shape(probability=probability), distribution.median())
+        )
 
     def test_moment(self, distribution, expected_out_shape):
         frozen_distribution = distribution.freeze()
@@ -64,23 +68,33 @@ class TestFrozenDistribution:
 
     def test_jac_sf(self, distribution, time, expected_out_shape):
         frozen_distribution = distribution.freeze()
-        assert frozen_distribution.jac_sf(time, asarray=True).shape == (frozen_distribution.nb_params,) + expected_out_shape(time=time)
+        assert frozen_distribution.jac_sf(time, asarray=True).shape == (
+            frozen_distribution.nb_params,
+        ) + expected_out_shape(time=time)
 
     def test_jac_hf(self, distribution, time, expected_out_shape):
         frozen_distribution = distribution.freeze()
-        assert frozen_distribution.jac_hf(time, asarray=True).shape == (frozen_distribution.nb_params,) + expected_out_shape(time=time)
+        assert frozen_distribution.jac_hf(time, asarray=True).shape == (
+            frozen_distribution.nb_params,
+        ) + expected_out_shape(time=time)
 
     def test_jac_chf(self, distribution, time, expected_out_shape):
         frozen_distribution = distribution.freeze()
-        assert frozen_distribution.jac_chf(time, asarray=True).shape == (frozen_distribution.nb_params,) + expected_out_shape(time=time)
+        assert frozen_distribution.jac_chf(time, asarray=True).shape == (
+            frozen_distribution.nb_params,
+        ) + expected_out_shape(time=time)
 
     def test_jac_cdf(self, distribution, time, expected_out_shape):
         frozen_distribution = distribution.freeze()
-        assert frozen_distribution.jac_cdf(time, asarray=True).shape == (frozen_distribution.nb_params,) + expected_out_shape(time=time)
+        assert frozen_distribution.jac_cdf(time, asarray=True).shape == (
+            frozen_distribution.nb_params,
+        ) + expected_out_shape(time=time)
 
     def test_jac_pdf(self, distribution, time, expected_out_shape):
         frozen_distribution = distribution.freeze()
-        assert frozen_distribution.jac_pdf(time, asarray=True).shape == (frozen_distribution.nb_params,) + expected_out_shape(time=time)
+        assert frozen_distribution.jac_pdf(time, asarray=True).shape == (
+            frozen_distribution.nb_params,
+        ) + expected_out_shape(time=time)
 
 
 class TestFrozenRegression:
@@ -128,7 +142,9 @@ class TestFrozenRegression:
     def test_isf(self, regression, probability, covar, expected_out_shape):
         frozen_regression = regression.freeze(covar)
         assert frozen_regression.isf(probability).shape == expected_out_shape(probability=probability, covar=covar)
-        assert frozen_regression.isf(np.full(expected_out_shape(probability=probability, covar=covar), 0.5)) == approx(np.broadcast_to(frozen_regression.median(), expected_out_shape(probability=probability, covar=covar)))
+        assert frozen_regression.isf(np.full(expected_out_shape(probability=probability, covar=covar), 0.5)) == approx(
+            np.broadcast_to(frozen_regression.median(), expected_out_shape(probability=probability, covar=covar))
+        )
 
     def test_dhf(self, regression, time, covar, expected_out_shape):
         frozen_regression = regression.freeze(covar)
@@ -136,21 +152,30 @@ class TestFrozenRegression:
 
     def test_jac_sf(self, regression, time, covar, expected_out_shape):
         frozen_regression = regression.freeze(covar)
-        assert frozen_regression.jac_sf(time, asarray=True).shape == (frozen_regression.nb_params,) + expected_out_shape(time=time, covar=covar)
+        assert frozen_regression.jac_sf(time, asarray=True).shape == (
+            frozen_regression.nb_params,
+        ) + expected_out_shape(time=time, covar=covar)
 
     def test_jac_hf(self, regression, time, covar, expected_out_shape):
         frozen_regression = regression.freeze(covar)
-        assert frozen_regression.jac_hf(time, asarray=True).shape == (frozen_regression.nb_params,) + expected_out_shape(time=time, covar=covar)
+        assert frozen_regression.jac_hf(time, asarray=True).shape == (
+            frozen_regression.nb_params,
+        ) + expected_out_shape(time=time, covar=covar)
 
     def test_jac_chf(self, regression, time, covar, expected_out_shape):
         frozen_regression = regression.freeze(covar)
-        assert frozen_regression.jac_chf(time, asarray=True).shape == (frozen_regression.nb_params,) + expected_out_shape(time=time, covar=covar)
+        assert frozen_regression.jac_chf(time, asarray=True).shape == (
+            frozen_regression.nb_params,
+        ) + expected_out_shape(time=time, covar=covar)
 
     def test_jac_cdf(self, regression, time, covar, expected_out_shape):
         frozen_regression = regression.freeze(covar)
-        assert frozen_regression.jac_cdf(time, asarray=True).shape == (frozen_regression.nb_params,) + expected_out_shape(time=time, covar=covar)
+        assert frozen_regression.jac_cdf(time, asarray=True).shape == (
+            frozen_regression.nb_params,
+        ) + expected_out_shape(time=time, covar=covar)
 
     def test_jac_pdf(self, regression, time, covar, expected_out_shape):
         frozen_regression = regression.freeze(covar)
-        assert frozen_regression.jac_pdf(time, asarray=True).shape == (frozen_regression.nb_params,) + expected_out_shape(time=time, covar=covar)
-
+        assert frozen_regression.jac_pdf(time, asarray=True).shape == (
+            frozen_regression.nb_params,
+        ) + expected_out_shape(time=time, covar=covar)

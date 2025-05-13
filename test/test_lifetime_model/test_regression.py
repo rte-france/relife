@@ -4,6 +4,7 @@ from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard, CovarEffect
 
+
 def test_covar_effect():
     """
     covar : () or (nb_coef,)
@@ -39,53 +40,50 @@ def test_args_names(regression):
         "covar",
     )
 
+
 def test_rvs(regression, rvs_size, covar, expected_out_shape):
     assert regression.rvs(covar, size=rvs_size).shape == expected_out_shape(covar=covar, size=rvs_size)
-    assert all(arr.shape == expected_out_shape(covar=covar, size=rvs_size) for arr in regression.rvs(covar, size=rvs_size, return_event=True))
-    assert all(arr.shape == expected_out_shape(covar=covar, size=rvs_size) for arr in regression.rvs(covar, size=rvs_size, return_entry=True))
-    assert all(arr.shape == expected_out_shape(covar=covar, size=rvs_size) for arr in regression.rvs(covar, size=rvs_size, return_event=True, return_entry=True))
+    assert all(
+        arr.shape == expected_out_shape(covar=covar, size=rvs_size)
+        for arr in regression.rvs(covar, size=rvs_size, return_event=True)
+    )
+    assert all(
+        arr.shape == expected_out_shape(covar=covar, size=rvs_size)
+        for arr in regression.rvs(covar, size=rvs_size, return_entry=True)
+    )
+    assert all(
+        arr.shape == expected_out_shape(covar=covar, size=rvs_size)
+        for arr in regression.rvs(covar, size=rvs_size, return_event=True, return_entry=True)
+    )
 
-# def test_rvs(regression, covar):
-#     match covar.shape:
-#         case (_,):
-#             m, n = 10, 20
-#             assert regression.rvs(covar, seed=21).shape == ()
-#             assert regression.rvs(covar, size=n, seed=21).shape == (n,)
-#             assert regression.rvs(covar, size=(n,), seed=21).shape == (n,)
-#             assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
-#         case (1, _):
-#             m, n = 10, 20
-#             assert regression.rvs(covar, seed=21).shape == (1, 1)
-#             assert regression.rvs(covar, size=n, seed=21).shape == (1, n)
-#             assert regression.rvs(covar, size=(n,), seed=21).shape == (1, n)
-#             assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
-#         case (m, _):
-#             n = 20
-#             assert regression.rvs(covar, seed=21).shape == (m, 1)
-#             assert regression.rvs(covar, size=n, seed=21).shape == (m, n)
-#             assert regression.rvs(covar, size=(n,), seed=21).shape == (m, n)
-#             assert regression.rvs(covar, size=(m, n), seed=21).shape == (m, n)
 
 def test_sf(regression, time, covar, expected_out_shape):
     assert regression.sf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
+
 def test_hf(regression, time, covar, expected_out_shape):
     assert regression.hf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+
 
 def test_chf(regression, time, covar, expected_out_shape):
     assert regression.chf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
+
 def test_cdf(regression, time, covar, expected_out_shape):
     assert regression.cdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
+
 
 def test_pdf(regression, time, covar, expected_out_shape):
     assert regression.pdf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
+
 def test_ppf(regression, probability, covar, expected_out_shape):
     assert regression.ppf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
 
+
 def test_ichf(regression, probability, covar, expected_out_shape):
     assert regression.ichf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
+
 
 def test_isf(regression, probability, covar, expected_out_shape):
     assert regression.isf(probability, covar).shape == expected_out_shape(time=probability, covar=covar)
@@ -93,39 +91,44 @@ def test_isf(regression, probability, covar, expected_out_shape):
         np.broadcast_to(regression.median(covar), expected_out_shape(time=probability, covar=covar))
     )
 
+
 def test_dhf(regression, time, covar, expected_out_shape):
     assert regression.dhf(time, covar).shape == expected_out_shape(time=time, covar=covar)
 
+
 def test_jac_sf(regression, time, covar, expected_out_shape):
-    assert regression.jac_sf(time, covar, asarray=True).shape == (
-        regression.nb_params,
-    ) + expected_out_shape(time=time, covar=covar)
+    assert regression.jac_sf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_out_shape(
+        time=time, covar=covar
+    )
+
 
 def test_jac_hf(regression, time, covar, expected_out_shape):
-    assert regression.jac_hf(time, covar, asarray=True).shape == (
-        regression.nb_params,
-    ) + expected_out_shape(time=time, covar=covar)
+    assert regression.jac_hf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_out_shape(
+        time=time, covar=covar
+    )
+
 
 def test_jac_chf(regression, time, covar, expected_out_shape):
-    assert regression.jac_chf(time, covar, asarray=True).shape == (
-        regression.nb_params,
-    ) + expected_out_shape(time=time, covar=covar)
+    assert regression.jac_chf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_out_shape(
+        time=time, covar=covar
+    )
+
 
 def test_jac_cdf(regression, time, covar, expected_out_shape):
-    assert regression.jac_cdf(time, covar, asarray=True).shape == (
-        regression.nb_params,
-    ) + expected_out_shape(time=time, covar=covar)
+    assert regression.jac_cdf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_out_shape(
+        time=time, covar=covar
+    )
+
 
 def test_jac_pdf(regression, time, covar, expected_out_shape):
-    assert regression.jac_pdf(time, covar, asarray=True).shape == (
-        regression.nb_params,
-    ) + expected_out_shape(time=time, covar=covar)
+    assert regression.jac_pdf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_out_shape(
+        time=time, covar=covar
+    )
+
 
 def test_ls_integrate(regression, integration_bound_a, integration_bound_b, covar, expected_out_shape):
     # integral_a^b dF(x)
-    integration = regression.ls_integrate(
-        np.ones_like, integration_bound_a, integration_bound_b, covar, deg=100
-    )
+    integration = regression.ls_integrate(np.ones_like, integration_bound_a, integration_bound_b, covar, deg=100)
     assert integration.shape == expected_out_shape(a=integration_bound_a, b=integration_bound_b, covar=covar)
     assert integration == approx(
         regression.cdf(integration_bound_b, covar) - regression.cdf(integration_bound_a, covar)
@@ -142,6 +145,7 @@ def test_ls_integrate(regression, integration_bound_a, integration_bound_b, cova
         rel=1e-3,
     )
 
+
 # def test_fit(regression, insulator_string_data):
 #     regression.fit(
 #         insulator_string_data[0],
@@ -149,6 +153,7 @@ def test_ls_integrate(regression, integration_bound_a, integration_bound_b, cova
 #         event=insulator_string_data[1] == 1,
 #     )
 #
+
 
 # # @pytest.mark.xfail
 def test_aft_pph_weibull_eq(insulator_string_data):
