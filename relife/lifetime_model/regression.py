@@ -152,7 +152,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
@@ -186,7 +186,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
@@ -302,7 +302,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
@@ -337,7 +337,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         covar: float | NDArray[np.float64],
         *args: *Args,
         asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)

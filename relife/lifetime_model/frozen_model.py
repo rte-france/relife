@@ -4,7 +4,7 @@ from typing import TypeVarTuple, Generic, Optional, Callable
 from typing_extensions import override
 
 import numpy as np
-from numpy._typing import NDArray, DTypeLike
+from numpy.typing import NDArray
 
 from relife.lifetime_model import ParametricLifetimeModel, LifetimeRegression
 
@@ -125,15 +125,19 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
         return self.baseline.cdf(time, *self.args)
 
     @override
-    def rvs(self, size: int | tuple[int, int] = 1, seed: Optional[int] = None) -> NDArray[DTypeLike]:
-        return self.baseline.rvs(*self.args, size=size, seed=seed)
-
-    @override
-    def sample_time_event_entry(
-        self, size: int | tuple[int] | tuple[int, int] = 1, seed: Optional[int] = None
-    ) -> tuple[np.float64 | NDArray[np.float64], bool | NDArray[np.bool_], np.float64 | NDArray[np.float64]]:
-        # rvs like method but with time, event, entry
-        return self.baseline.sample_time_event_entry(*self.args, size=size, seed=seed)
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Optional[int] = None,
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ):
+        return self.baseline.rvs(*self.args, size=size, return_event=return_event, return_entry=return_entry, seed=seed)
 
     @override
     def ppf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:

@@ -97,60 +97,6 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
-    @override
-    def moment(self, n: int, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
-        ar = reshape_ar_or_a0("ar", ar)
-        return self.ls_integrate(
-            lambda x: x**n,
-            0,
-            np.inf,
-            ar,
-            *args,
-            deg=100,
-        )
-
-    @override
-    def mean(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
-        ar = reshape_ar_or_a0("ar", ar)
-        return self.moment(1, ar, *args)
-
-    @override
-    def var(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
-        ar = reshape_ar_or_a0("ar", ar)
-        return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
-
-    @override
-    def rvs(
-        self,
-        ar: float | Sequence[float] | NDArray[np.float64],
-        *args: *Args,
-        size: Optional[int | tuple[int] | tuple[int, int]] = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Optional[int] = None,
-    ) -> NDArray[DTypeLike]:
-        ar = reshape_ar_or_a0("ar", ar)
-        baseline_rvs = self.baseline.rvs(
-            *args, size=size, return_event=return_event, return_entry=return_entry, seed=seed
-        )
-        time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
-        time = np.minimum(time, ar)  # it may change time shape by broadcasting
-        if not return_event and not return_entry:
-            return time
-        elif return_event and not return_entry:
-            event = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            event = event != ar
-            return time, event
-        elif not return_event and return_entry:
-            entry = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            return time, entry
-        else:
-            event, entry = baseline_rvs[1:]
-            event = np.broadcast_to(event, time.shape).copy()
-            entry = np.broadcast_to(entry, time.shape).copy()
-            event = event != ar
-            return time, event, entry
-
     def ppf(
         self,
         probability: float | NDArray[np.float64],
@@ -195,6 +141,39 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         return np.ma.getdata(mu)
 
     @override
+    def rvs(
+        self,
+        ar: float | Sequence[float] | NDArray[np.float64],
+        *args: *Args,
+        size: Optional[int | tuple[int] | tuple[int, int]] = None,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Optional[int] = None,
+    ) -> NDArray[DTypeLike]:
+        ar = reshape_ar_or_a0("ar", ar)
+        baseline_rvs = self.baseline.rvs(
+            *args, size=size, return_event=return_event, return_entry=return_entry, seed=seed
+        )
+        time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
+        time = np.minimum(time, ar)  # it may change time shape by broadcasting
+        if not return_event and not return_entry:
+            return time
+        elif return_event and not return_entry:
+            event = np.broadcast_to(baseline_rvs[1], time.shape).copy()
+            event = event != ar
+            return time, event
+        elif not return_event and return_entry:
+            entry = np.broadcast_to(baseline_rvs[1], time.shape).copy()
+            return time, entry
+        else:
+            event, entry = baseline_rvs[1:]
+            event = np.broadcast_to(event, time.shape).copy()
+            entry = np.broadcast_to(entry, time.shape).copy()
+            event = event != ar
+            return time, event, entry
+
+
+    @override
     def ls_integrate(
         self,
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
@@ -208,6 +187,28 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
         b = np.minimum(ar, b)
         integration = super().ls_integrate(func, a, b, *(ar, *args), deg=deg)
         return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+
+    @override
+    def moment(self, n: int, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+        ar = reshape_ar_or_a0("ar", ar)
+        return self.ls_integrate(
+            lambda x: x**n,
+            0,
+            np.inf,
+            ar,
+            *args,
+            deg=100,
+        )
+
+    @override
+    def mean(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+        ar = reshape_ar_or_a0("ar", ar)
+        return self.moment(1, ar, *args)
+
+    @override
+    def var(self, ar: float | Sequence[float] | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+        ar = reshape_ar_or_a0("ar", ar)
+        return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
 
 class LeftTruncatedModel(ParametricLifetimeModel[float | NDArray[np.float64], *Args]):

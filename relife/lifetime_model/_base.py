@@ -53,6 +53,26 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
     """
 
     @abstractmethod
+    def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+        match self:
+            case ParametricLifetimeModel(chf=_):
+                return np.exp(
+                    -self.chf(
+                        time,
+                        *args,
+                    )
+                )
+            case ParametricLifetimeModel(pdf=_, hf=_):
+                return self.pdf(time, *args) / self.hf(time, *args)
+            case _:
+                class_name = type(self).__name__
+                raise NotImplementedError(
+                    f"""
+                    {class_name} must implement concrete sf function
+                    """
+                )
+
+    @abstractmethod
     def hf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
         match self:
             case ParametricLifetimeModel(pdf=_, sf=_):
@@ -71,26 +91,6 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
                     f"""
                         {class_name} must implement concrete hf function
                         """
-                )
-
-    @abstractmethod
-    def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        match self:
-            case ParametricLifetimeModel(chf=_):
-                return np.exp(
-                    -self.chf(
-                        time,
-                        *args,
-                    )
-                )
-            case ParametricLifetimeModel(pdf=_, hf=_):
-                return self.pdf(time, *args) / self.hf(time, *args)
-            case _:
-                class_name = type(self).__name__
-                raise NotImplementedError(
-                    f"""
-                    {class_name} must implement concrete sf function
-                    """
                 )
 
     @abstractmethod
@@ -322,14 +322,6 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     Base class for distribution model.
     """
 
-    @property
-    def fitting_results(self) -> Optional[FittingResults]:
-        return self._fitting_results
-
-    @fitting_results.setter
-    def fitting_results(self, value: FittingResults):
-        self._fitting_results = value
-
     @override
     def sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return super().sf(time)
@@ -377,66 +369,6 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             Function values at each given time(s).
         """
         return super().ppf(probability)
-
-    @override
-    def rvs(
-        self,
-        *args: *Args,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Optional[int] = None,
-    ) -> (
-        np.float64
-        | NDArray[np.float64]
-        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
-        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
-    ):
-        """Random variable sampling.
-
-        Parameters
-        ----------
-        return_entry
-        return_event
-        size : int or (int, int), default 1
-            Shape of the sample.
-        seed : int, default None
-            Random seed.
-
-        Returns
-        -------
-        np.ndarray
-            Sample of random lifetimes.
-        """
-
-        return super().rvs(size=size, return_event=return_event, return_entry=return_entry, seed=seed)
-
-    @override
-    def sample_lifetime_data(
-        self,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        window: tuple[float, float] = (0.0, np.inf),
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        return super().sample_lifetime_data(size=size, window=window, seed=seed)
-
-    @override
-    def moment(self, n: int) -> np.float64:
-        """
-        n-th order moment of the distribution.
-
-        Parameters
-        ----------
-        n : int
-            Order of the moment, at least 1.
-
-        Returns
-        -------
-        np.float64
-            n-th order moment of the distribution.
-        """
-
-        return super().moment(n)
 
     @override
     def median(self) -> np.float64:
@@ -581,6 +513,66 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         return jac
 
     @override
+    def moment(self, n: int) -> np.float64:
+        """
+        n-th order moment of the distribution.
+
+        Parameters
+        ----------
+        n : int
+            Order of the moment, at least 1.
+
+        Returns
+        -------
+        np.float64
+            n-th order moment of the distribution.
+        """
+
+        return super().moment(n)
+
+    @override
+    def rvs(
+        self,
+        *args: *Args,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Optional[int] = None,
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ):
+        """Random variable sampling.
+
+        Parameters
+        ----------
+        return_entry
+        return_event
+        size : int or (int, int), default 1
+            Shape of the sample.
+        seed : int, default None
+            Random seed.
+
+        Returns
+        -------
+        np.ndarray
+            Sample of random lifetimes.
+        """
+
+        return super().rvs(size=size, return_event=return_event, return_entry=return_entry, seed=seed)
+
+    @override
+    def sample_lifetime_data(
+        self,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        window: tuple[float, float] = (0.0, np.inf),
+        seed: Optional[int] = None,
+    ) -> LifetimeData:
+        return super().sample_lifetime_data(size=size, window=window, seed=seed)
+
+    @override
     def ls_integrate(
         self,
         func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
@@ -686,14 +678,6 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         self.baseline = baseline
 
     @property
-    def fitting_results(self) -> Optional[FittingResults]:
-        return self._fitting_results
-
-    @fitting_results.setter
-    def fitting_results(self, value: FittingResults):
-        self._fitting_results = value
-
-    @property
     def nb_coef(self) -> int:
         return self.covar_effect.nb_coef
 
@@ -768,57 +752,6 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         *args: *Args,
     ) -> np.float64 | NDArray[np.float64]:
         return super().mrl(time, *(covar, *args))
-
-    @override
-    def rvs(
-        self,
-        covar: float | NDArray[np.float64],
-        *args: *Args,
-        return_event: bool = False,
-        return_entry: bool = False,
-        size: int | tuple[int, int] = 1,
-        seed: Optional[int] = None,
-    ) -> (
-        np.float64
-        | NDArray[np.float64]
-        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
-        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
-    ):
-        """
-        Random variable sampling.
-
-        Parameters
-        ----------
-        return_entry
-        return_event
-        size : int or (int, int)
-            Shape of the sample.
-        covar : np.ndarray
-            Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
-        *args : variable number of np.ndarray
-            Any variables needed to compute the function. Those variables must be
-            broadcastable with ``covar``. They may exist and result from method chaining due to nested class instantiation.
-
-        seed : int, default None
-            Random seed.
-
-        Returns
-        -------
-        np.ndarray
-            Sample of random lifetimes.
-        """
-        return super().rvs(*(covar, *args), size=size, return_event=return_event, return_entry=return_entry, seed=seed)
-
-    @override
-    def sample_lifetime_data(
-        self,
-        covar: float | NDArray[np.float64],
-        *args: *Args,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        window: tuple[float, float] = (0.0, np.inf),
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        return super().sample_lifetime_data(*(covar, *args), size=size, window=window, seed=seed)
 
     @override
     def ls_integrate(
@@ -997,6 +930,57 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         if not asarray:
             return np.unstack(jac)
         return jac
+
+    @override
+    def rvs(
+        self,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+        return_event: bool = False,
+        return_entry: bool = False,
+        size: int | tuple[int, int] = 1,
+        seed: Optional[int] = None,
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ):
+        """
+        Random variable sampling.
+
+        Parameters
+        ----------
+        return_entry
+        return_event
+        size : int or (int, int)
+            Shape of the sample.
+        covar : np.ndarray
+            Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
+        *args : variable number of np.ndarray
+            Any variables needed to compute the function. Those variables must be
+            broadcastable with ``covar``. They may exist and result from method chaining due to nested class instantiation.
+
+        seed : int, default None
+            Random seed.
+
+        Returns
+        -------
+        np.ndarray
+            Sample of random lifetimes.
+        """
+        return super().rvs(*(covar, *args), size=size, return_event=return_event, return_entry=return_entry, seed=seed)
+
+    @override
+    def sample_lifetime_data(
+        self,
+        covar: float | NDArray[np.float64],
+        *args: *Args,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        window: tuple[float, float] = (0.0, np.inf),
+        seed: Optional[int] = None,
+    ) -> LifetimeData:
+        return super().sample_lifetime_data(*(covar, *args), size=size, window=window, seed=seed)
 
     def fit(
         self,

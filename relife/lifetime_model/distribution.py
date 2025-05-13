@@ -10,7 +10,6 @@ from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
-
 class Exponential(LifetimeDistribution):
     r"""
     Exponential lifetime distribution.
@@ -309,12 +308,6 @@ class Gamma(LifetimeDistribution):
     def rate(self) -> float:  # optional but better for clarity and type checking
         return self._parameters["rate"]
 
-    def _uppergamma(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
-        return gammaincc(self.shape, x) * gamma(self.shape)
-
-    def _jac_uppergamma_shape(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
-        return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x, deg=100)
-
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         x = self.rate * time
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
@@ -334,6 +327,12 @@ class Gamma(LifetimeDistribution):
     @override
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
+
+    def _uppergamma(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return gammaincc(self.shape, x) * gamma(self.shape)
+
+    def _jac_uppergamma_shape(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x, deg=100)
 
     @override
     def jac_hf(
