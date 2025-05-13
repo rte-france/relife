@@ -168,8 +168,9 @@ class LebesgueStieltjesMixin(Generic[*Args]):
         np.ndarray
             Lebesgue-Stieltjes integral of func from `a` to `b`.
         """
+        from relife import freeze
 
-        frozen_model = self.freeze(*args)
+        frozen_model = freeze(self, *args)
 
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
             #  x.shape == (deg,), (deg, n) or (deg, m, n)
@@ -203,13 +204,14 @@ class LebesgueStieltjesMixin(Generic[*Args]):
         arr_a, arr_b = check_and_broadcast_bounds(a, b)  # (), (n,) or (m, n)
         if np.any(arr_a >= arr_b):
             raise ValueError("Bound values a must be strictly lower than values of b")
+        model_args_nb_assets = getattr(frozen_model, "args_nb_assets", 1)
         if arr_a.ndim == 2:
             if arr_a.shape[0] not in (
                 1,
-                frozen_model.args_nb_assets,
-            ) and frozen_model.args_nb_assets not in (1, arr_a.shape[0]):
+                model_args_nb_assets,
+            ) and model_args_nb_assets not in (1, arr_a.shape[0]):
                 raise ValueError(
-                    f"Incompatible bounds with model. Model has {frozen_model.nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
+                    f"Incompatible bounds with model. Model has {model_args_nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
                 )
 
         bound_b = frozen_model.isf(1e-4)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)

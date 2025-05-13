@@ -23,7 +23,6 @@ from relife import ParametricModel
 from relife._plots import PlotSurvivalFunc
 from relife.data import LifetimeData
 from relife.likelihood import maximum_likelihood_estimation
-from .._base import FittingResults
 from relife.quadrature import LebesgueStieltjesMixin
 
 if TYPE_CHECKING:
@@ -598,7 +597,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
             entry=entry,
             departure=departure,
         )
-        return self.fit_from_failure_data(lifetime_data, **kwargs)
+        return self.fit_from_lifetime_data(lifetime_data, **kwargs)
 
     def fit_from_lifetime_data(self, lifetime_data: LifetimeData, **kwargs) -> Self:
         maximum_likelihood_estimation(

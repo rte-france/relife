@@ -20,16 +20,24 @@ def freeze(model: NonHomogeneousPoissonProcess[*Args], *args: *Args) -> FrozenNo
 def freeze(
     model: ParametricLifetimeModel[*Args] | NonHomogeneousPoissonProcess[*Args], *args: *Args
 ) -> FrozenParametricLifetimeModel[*Args] | FrozenNonHomogeneousPoissonProcess[*Args]:
-    from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
+    from relife.lifetime_model import LifetimeDistribution, LifetimeRegression, FrozenParametricLifetimeModel
 
     match model:
         case LifetimeDistribution():
             return model
         case LifetimeRegression():
             from relife.lifetime_model import FrozenLifetimeRegression
-
-            return FrozenLifetimeRegression(model).freeze_args(*args)
+            return FrozenLifetimeRegression(model, *args)
+        case FrozenParametricLifetimeModel():
+            return model
         case _:
             from relife.lifetime_model import FrozenParametricLifetimeModel
+            return FrozenParametricLifetimeModel(model, *args)
 
-            return FrozenParametricLifetimeModel(model).freeze_args(*args)
+
+def isfrozen(model: ParametricLifetimeModel[*Args] | NonHomogeneousPoissonProcess[*Args]) -> bool:
+    if isinstance(model, FrozenParametricLifetimeModel):
+        return True
+    if isinstance(model, FrozenNonHomogeneousPoissonProcess):
+        return True
+    return False

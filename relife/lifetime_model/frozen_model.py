@@ -6,7 +6,7 @@ from typing_extensions import override
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.lifetime_model import ParametricLifetimeModel, LifetimeRegression
+from relife.lifetime_model import ParametricLifetimeModel, LifetimeRegression, LifetimeDistribution
 
 
 def _check_in_shape(name: str, value: float | NDArray[np.float64], nb_assets: int):
@@ -28,24 +28,17 @@ Args = TypeVarTuple("Args")
 
 class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args]):
 
-    def __init__(self, model: ParametricLifetimeModel[*Args]):
+    def __init__(self, model: ParametricLifetimeModel[*Args], *args : *Args):
         super().__init__()
         self.baseline = model
-        self._args = ()
-        self._nb_assets = 1
-
-    @property
-    def args(self) -> tuple[*Args]:
-        return self._args
-
-    @property
-    def nb_assets(self) -> int:
-        return self._nb_assets
+        self.args = ()
+        self.args_nb_assets = 1
+        self._freeze_args(*args)
 
     def unfreeze(self) -> ParametricLifetimeModel[*Args]:
         return self.baseline
 
-    def freeze_args(self, *args: *Args):
+    def _freeze_args(self, *args: *Args):
         args_names = self.baseline.args_names
         if len(args) != len(args_names):
             raise ValueError(f"Expected {args_names} positional arguments but got only {len(args)} arguments")
@@ -58,23 +51,23 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
             match name:
                 case "covar":  #  (), (nb_coef,) or (m, nb_coef)
                     if value.ndim == 2:  #  otherwise, when 1, broadcasting
-                        if self.nb_assets != 1:
-                            if value.shape[0] != self.nb_assets and value.shape[0] != 1:
+                        if self.args_nb_assets != 1:
+                            if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:
                                 raise ValueError(
-                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets"
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets"
                                 )
-                        self._nb_assets = value.shape[0]  #  update nb_assets
+                        self.args_nb_assets = value.shape[0]  #  update args_nb_assets
                 case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
                     if value.ndim >= 1:
-                        if self.nb_assets != 1:
-                            if value.shape[0] != self.nb_assets and value.shape[0] != 1:
+                        if self.args_nb_assets != 1:
+                            if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:
                                 raise ValueError(
-                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.nb_assets} nb assets"
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets"
                                 )
-                        self._nb_assets = value.shape[0]  #  update nb_assets
+                        self.args_nb_assets = value.shape[0]  #  update args_nb_assets
                 case _:
                     raise ValueError(f"Unknown arg {name}")
-            self._args = self.args + (value,)
+            self.args = self.args + (value,)
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         time = _check_in_shape("time", time, self.args_nb_assets)
@@ -161,13 +154,68 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Args])
         return self.baseline.ls_integrate(func, a, b, *self.args, deg=deg)
 
 
+# class FrozenLifetimeDistribution(FrozenParametricLifetimeModel[()]):
+#
+#     baseline: LifetimeDistribution
+#
+#     @override
+#     def _freeze_args(self):
+#         super()._freeze_args()
+#
+#     def dhf(
+#         self,
+#         time: float | NDArray[np.float64],
+#     ) -> np.float64 | NDArray[np.float64]:
+#         return self.baseline.dhf(time)
+#
+#     def jac_hf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         time = _check_in_shape("time", time, self.args_nb_assets)
+#         return self.baseline.jac_hf(time, asarray=asarray)
+#
+#     def jac_chf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         time = _check_in_shape("time", time, self.args_nb_assets)
+#         return self.baseline.jac_chf(time,  asarray=asarray)
+#
+#     def jac_sf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         time = _check_in_shape("time", time, self.args_nb_assets)
+#         return self.baseline.jac_sf(time, asarray=asarray)
+#
+#     def jac_cdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         time = _check_in_shape("time", time, self.args_nb_assets)
+#         return self.baseline.jac_cdf(time, asarray=asarray)
+#
+#     def jac_pdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+#         time = _check_in_shape("time", time, self.args_nb_assets)
+#         return self.baseline.jac_pdf(time, asarray=asarray)
+
+
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.float64], *Args]):
 
     baseline: LifetimeRegression[*Args]
 
     @override
-    def freeze_args(self, covar: float | NDArray[np.float64], *args: *Args):
-        super().freeze_args(*(covar, *args))
+    def _freeze_args(self, covar: float | NDArray[np.float64], *args: *Args):
+        super()._freeze_args(*(covar, *args))
 
     @property
     def nb_coef(self) -> int:

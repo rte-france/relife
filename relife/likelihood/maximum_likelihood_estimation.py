@@ -106,11 +106,13 @@ def maximum_likelihood_estimation(model: ParametricModel, data: FailureData, **k
             if not isinstance(data, LifetimeData):
                 raise ValueError
 
+            structured_lifetime_data = StructuredLifetimeData(data)
+
             # Step 2: Initialize the model and likelihood
-            model.params = init_params_from_lifetimes(model, data)
+            model.params = init_params_from_lifetimes(model, structured_lifetime_data)
             print("params names", model.params_names)
             print("params0", model.params)
-            likelihood = LikelihoodFromLifetimes(model, data)
+            likelihood = LikelihoodFromLifetimes(model, structured_lifetime_data)
 
             try:
                 bounds = get_params_bounds(model)

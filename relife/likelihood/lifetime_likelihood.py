@@ -32,10 +32,10 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
     def __init__(
         self,
         model: FittableParametricLifetimeModel[*Args],
-        lifetime_data: LifetimeData,
+        structured_lifetime_data: StructuredLifetimeData,
     ):
         self.model = copy.deepcopy(model)
-        self.data = StructuredLifetimeData(lifetime_data)
+        self.data = structured_lifetime_data
 
     @override
     @property

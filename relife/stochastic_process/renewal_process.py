@@ -40,12 +40,14 @@ class RenewalProcess(ParametricModel):
     ):
         super().__init__()
 
-        if len(model.args_names) > 0:
+        from relife import isfrozen
+
+        if not isfrozen(model):
             raise ValueError(
                 "Invalid type of model. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
             )
         if model1 is not None:
-            if len(model1.args_names) > 0:
+            if not isfrozen(model1):
                 raise ValueError(
                     "Invalid type of model1. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
                 )
