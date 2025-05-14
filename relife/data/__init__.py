@@ -1,4 +1,4 @@
-from .lifetime_data import LifetimeData, StructuredLifetimeData
+from .lifetime_data import LifetimeData
 from .nhpp_data import NHPPData
 from .dataset import (
     load_circuit_breaker,

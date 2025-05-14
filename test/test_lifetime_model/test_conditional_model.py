@@ -6,10 +6,6 @@ from relife.lifetime_model import LeftTruncatedModel, AgeReplacementModel
 
 class TestAgeReplacementDistribution:
 
-    def test_args_nb_assets(self, distribution):
-        frozen_distribution = distribution.freeze()
-        assert frozen_distribution.args_nb_assets == 1
-
     def test_rvs(self, distribution, rvs_size, ar, expected_out_shape):
         assert AgeReplacementModel(distribution).rvs(ar, size=rvs_size).shape == expected_out_shape(ar=ar, size=rvs_size)
         assert all(
@@ -69,12 +65,12 @@ class TestAgeReplacementDistribution:
         assert AgeReplacementModel(distribution).median(ar).shape == expected_out_shape(ar=ar)
 
     def test_ls_integrate(self, distribution, integration_bound_a, integration_bound_b, ar, expected_out_shape):
+        np.random.seed(10)
+        ar = np.random.uniform(2.0, 8.0, size=ar.shape)
         # integral_a^b dF(x)
         out_shape = expected_out_shape(
             integration_bound_a=integration_bound_a, integration_bound_b=integration_bound_b, ar=ar
         )
-        np.random.seed(10)
-        ar = np.random.uniform(2.0, 8.0, size=ar.shape)
         integration = AgeReplacementModel(distribution).ls_integrate(
             np.ones_like, integration_bound_a, integration_bound_b, ar, deg=100
         )
@@ -91,10 +87,6 @@ class TestAgeReplacementDistribution:
 
 
 class TestAgeReplacementRegression:
-
-    # def test_args_nb_assets(self, regression):
-    #     frozen_distribution = regression.freeze()
-    #     assert frozen_distribution.args_nb_assets == 1
 
     def test_rvs(self, regression, rvs_size, ar, covar, expected_out_shape):
         assert AgeReplacementModel(regression).rvs(ar, covar, size=rvs_size).shape == expected_out_shape(ar=ar,  covar=covar, size=rvs_size)
@@ -167,12 +159,12 @@ class TestAgeReplacementRegression:
         assert AgeReplacementModel(regression).median(ar, covar).shape == expected_out_shape(ar=ar, covar=covar)
 
     def test_ls_integrate(self, regression, integration_bound_a, integration_bound_b, ar, covar, expected_out_shape):
+        np.random.seed(10)
+        ar = np.random.uniform(2.0, 8.0, size=ar.shape)
         # integral_a^b dF(x)
         out_shape = expected_out_shape(
             integration_bound_a=integration_bound_a, integration_bound_b=integration_bound_b, ar=ar, covar=covar
         )
-        np.random.seed(10)
-        ar = np.random.uniform(2.0, 8.0, size=ar.shape)
         integration = AgeReplacementModel(regression).ls_integrate(
             np.ones_like, integration_bound_a, integration_bound_b, ar, covar, deg=100
         )
@@ -196,10 +188,6 @@ class TestAgeReplacementRegression:
 
 
 class TestLeftTruncatedDistribution:
-
-    def test_args_nb_assets(self, distribution):
-        frozen_distribution = distribution.freeze()
-        assert frozen_distribution.args_nb_assets == 1
 
     def test_rvs(self, distribution, rvs_size, a0, expected_out_shape):
         assert LeftTruncatedModel(distribution).rvs(a0, size=rvs_size).shape == expected_out_shape(a0=a0, size=rvs_size)

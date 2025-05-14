@@ -296,25 +296,6 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
                     continue
         return args_names
 
-    def __getattribute__(self, item):
-        methods_without_fitted = (
-            "compose_with",
-            "nb_params",
-            "nested_models",
-            "params",
-            "params_names",
-            "fit",
-            "fit_from_lifetime_data",
-            "args_names",
-        )
-        if item in methods_without_fitted or item.startswith("_"):
-            pass
-        else:
-            params = np.array(tuple(self._parameters.allvalues()))
-            if np.any(np.isnan(params)):
-                raise ValueError(f"Can't call {item} if params are not set. Got {params} params")
-        return super().__getattribute__(item)
-
 
 class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     """

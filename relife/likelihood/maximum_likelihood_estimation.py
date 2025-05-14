@@ -1,33 +1,32 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize
 
 from .lifetime_likelihood import LikelihoodFromLifetimes
-from ..data.lifetime_data import StructuredLifetimeData
 from relife.data import NHPPData, LifetimeData
 
 if TYPE_CHECKING:
     from relife import ParametricModel
-    from relife.lifetime_model import ParametricLifetimeModel
+    from relife.lifetime_model import ParametricLifetimeModel, FittableParametricLifetimeModel
 
+Args = TypeVarTuple("Args")
 
-def get_params_bounds(model: ParametricModel) -> Bounds:
+def get_params_bounds(model: FittableParametricLifetimeModel[*Args]) -> Bounds:
     from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
     match model:
         case LifetimeDistribution():
-            model: LifetimeDistribution
             return Bounds(
                 np.full(model.nb_params, np.finfo(float).resolution),
                 np.full(model.nb_params, np.inf),
             )
 
         case LifetimeRegression():
-            model: LifetimeRegression
+            model : LifetimeRegression[*Args]
             lb = np.concatenate(
                 (
                     np.full(model.covar_effect.nb_params, -np.inf),
@@ -48,7 +47,7 @@ def get_params_bounds(model: ParametricModel) -> Bounds:
 
 def init_params_from_lifetimes(
     model: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
-    structured_lifetime_data: StructuredLifetimeData,
+    lifetime_data: LifetimeData,
 ) -> NDArray[np.float64]:
     from relife.lifetime_model import (
         AcceleratedFailureTime,
@@ -67,21 +66,21 @@ def init_params_from_lifetimes(
         case Exponential() | Weibull() | LogLogistic() | Gamma():
             model: LifetimeDistribution
             param0 = np.ones(model.nb_params, dtype=np.float64)
-            param0[-1] = 1 / np.median(structured_lifetime_data.complete_or_right_censored.values)
+            param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.values)
             return param0
 
         case Gompertz():
             model: LifetimeDistribution
             param0 = np.empty(model.nb_params, dtype=np.float64)
-            rate = np.pi / (np.sqrt(6) * np.std(structured_lifetime_data.complete_or_right_censored.values))
-            shape = np.exp(-rate * np.mean(structured_lifetime_data.complete_or_right_censored.values))
+            rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.values))
+            shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.values))
             param0[0] = shape
             param0[1] = rate
             return param0
 
         case ProportionalHazard() | AcceleratedFailureTime():
             model: LifetimeRegression
-            baseline_param0 = init_params_from_lifetimes(model.baseline, structured_lifetime_data)
+            baseline_param0 = init_params_from_lifetimes(model.baseline, lifetime_data)
             param0 = np.zeros_like(model.params, dtype=np.float64)
             param0[-baseline_param0.size :] = baseline_param0
             return param0
@@ -106,13 +105,11 @@ def maximum_likelihood_estimation(model: ParametricModel, data: FailureData, **k
             if not isinstance(data, LifetimeData):
                 raise ValueError
 
-            structured_lifetime_data = StructuredLifetimeData(data)
-
             # Step 2: Initialize the model and likelihood
-            model.params = init_params_from_lifetimes(model, structured_lifetime_data)
+            model.params = init_params_from_lifetimes(model, data)
             print("params names", model.params_names)
             print("params0", model.params)
-            likelihood = LikelihoodFromLifetimes(model, structured_lifetime_data)
+            likelihood = LikelihoodFromLifetimes(model, data)
 
             try:
                 bounds = get_params_bounds(model)
