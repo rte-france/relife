@@ -1,23 +1,21 @@
-from typing import NamedTuple, Optional, Self
+from typing import Literal, Optional, Self, overload
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import DTypeLike, NDArray
 
 from relife.data import LifetimeData
 
 from ._base import NonParametricLifetimeModel
 
 
-class Estimation(NamedTuple):
-    timeline: NDArray[np.float64]
-    values: NDArray[np.float64]
-    se: Optional[NDArray[np.float64]] = None
-
-
 class ECDF(NonParametricLifetimeModel):
     """
     Empirical Cumulative Distribution Function.
     """
+
+    def __init__(self):
+        self._sf: Optional[NDArray[DTypeLike]] = None
+        self._cdf: Optional[NDArray[DTypeLike]] = None
 
     def fit(
         self,
@@ -53,20 +51,51 @@ class ECDF(NonParametricLifetimeModel):
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         sf = 1 - cdf
         se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.complete_or_right_censored.values))
-        self.estimations = dict(sf=Estimation(timeline, sf, se), cdf=Estimation(time, cdf, se))
+
+        dtype = np.dtype([("timeline", np.float64), ("values", np.float64), ("se", np.float64)])
+        self._sf = np.array([timeline, sf, se], dtype=dtype)
+        self._cdf = np.array([timeline, cdf, se], dtype=dtype)
         return self
 
-    @property
-    def sf(self):
-        if self.estimations is None:
-            raise ValueError
-        return self.estimations["sf"]
+    @overload
+    def sf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
 
-    @property
-    def cdf(self):
-        if self.estimations is None:
-            raise ValueError
-        return self.estimations["cdf"]
+    @overload
+    def sf(
+        self, se: Literal[True] = True
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    def sf(
+        self, se: bool = False
+    ) -> (
+        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
+        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
+    ):
+        if self._sf is None:
+            return None
+        if se:
+            return self._sf["timeline"], self._sf["values"], self._sf["se"]
+        return self._sf["timeline"], self._sf["values"]
+
+    @overload
+    def cdf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    @overload
+    def cdf(
+        self, se: Literal[True] = True
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    def cdf(
+        self, se: bool = False
+    ) -> (
+        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
+        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
+    ):
+        if self._cdf is None:
+            return None
+        if se:
+            return self._cdf["timeline"], self._cdf["values"], self._cdf["se"]
+        return self._cdf["timeline"], self._cdf["values"]
 
 
 class KaplanMeier(NonParametricLifetimeModel):
@@ -106,6 +135,9 @@ class KaplanMeier(NonParametricLifetimeModel):
         association, 53(282), 457-481.
 
     """
+
+    def __init__(self):
+        self._sf: Optional[DTypeLike] = None
 
     def fit(
         self,
@@ -184,16 +216,30 @@ class KaplanMeier(NonParametricLifetimeModel):
                 )
             )
         se = np.sqrt(np.insert(var, 0, 0))
-
         timeline = np.insert(timeline, 0, 0)
-        self.estimations = dict(sf=Estimation(timeline, sf, se))
+        dtype = np.dtype([("timeline", np.float64), ("values", np.float64), ("se", np.float64)])
+        self._sf = np.array([timeline, sf, se], dtype=dtype)
         return self
 
-    @property
-    def sf(self):
-        if self.estimations is None:
-            raise ValueError
-        return self.estimations["sf"]
+    @overload
+    def sf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    @overload
+    def sf(
+        self, se: Literal[True] = True
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    def sf(
+        self, se: bool = False
+    ) -> (
+        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
+        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
+    ):
+        if self._sf is None:
+            return None
+        if se:
+            return self._sf["timeline"], self._sf["values"], self._sf["se"]
+        return self._sf["timeline"], self._sf["values"]
 
 
 class NelsonAalen(NonParametricLifetimeModel):
@@ -233,6 +279,9 @@ class NelsonAalen(NonParametricLifetimeModel):
     .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
         data. John Wiley & Sons.
     """
+
+    def __init__(self):
+        self._chf: Optional[NDArray[DTypeLike]] = None
 
     def fit(
         self,
@@ -305,14 +354,29 @@ class NelsonAalen(NonParametricLifetimeModel):
         se = np.sqrt(np.insert(var, 0, 0))
         timeline = np.insert(timeline, 0, 0)
 
-        self.estimations = dict(chf=Estimation(timeline, chf, se))
+        dtype = np.dtype([("timeline", np.float64), ("values", np.float64), ("se", np.float64)])
+        self._chf = np.array([timeline, chf, se], dtype=dtype)
         return self
 
-    @property
-    def chf(self):
-        if self.estimations is None:
-            raise ValueError
-        return self.estimations["chf"]
+    @overload
+    def chf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    @overload
+    def chf(
+        self, se: Literal[True] = True
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    def chf(
+        self, se: bool = False
+    ) -> (
+        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
+        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
+    ):
+        if self._chf is None:
+            return None
+        if se:
+            return self._chf["timeline"], self._chf["values"], self._chf["se"]
+        return self._chf["timeline"], self._chf["values"]
 
 
 class Turnbull(NonParametricLifetimeModel):
@@ -326,6 +390,7 @@ class Turnbull(NonParametricLifetimeModel):
         super().__init__()
         self.tol = tol
         self.lowmem = lowmem
+        self._sf: Optional[NDArray[DTypeLike]] = None
 
     def fit(
         self,
@@ -405,14 +470,14 @@ class Turnbull(NonParametricLifetimeModel):
         ind_del = np.where(timeline_temp == np.inf)
         sf = np.delete(s, ind_del)
         timeline = np.delete(timeline_temp, ind_del)
-        self.estimations = dict(sf=Estimation(timeline, sf, None))
+        dtype = np.dtype([("timeline", np.float64), ("values", np.float64)])
+        self._sf = np.array([timeline, sf], dtype=dtype)
         return self
 
-    @property
-    def sf(self):
-        if self.estimations is None:
-            raise ValueError
-        return self.estimations["sf"]
+    def sf(self) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]:
+        if self._sf is None:
+            return None
+        return self._sf["timeline"], self._sf["values"]
 
     def _estimate_with_low_memory(
         self,

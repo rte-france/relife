@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain
-from typing import Any, Iterator, Optional, Protocol, Self
+from typing import Any, Generic, Iterator, Optional, Self, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -351,3 +352,22 @@ class FittingResults:
             Returns the fitting result as a dictionary.
         """
         return asdict(self)
+
+
+Args = TypeVarTuple("Args")
+
+
+class FrozenParametricModel(ParametricModel, Generic[*Args], ABC):
+
+    def __init__(self, model: ParametricModel, *args: *Args):
+        super().__init__()
+        self.unfrozen_model = model
+        self.frozen_args = ()
+        self.args_nb_assets = 1
+        self.freeze_args(*args)
+
+    def unfreeze(self) -> ParametricModel:
+        return self.unfrozen_model
+
+    @abstractmethod
+    def freeze_args(self, *args: *Args): ...

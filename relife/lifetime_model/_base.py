@@ -2,16 +2,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Generic,
-    NewType,
+    Literal,
     Optional,
     Self,
     TypeVarTuple,
     overload,
-    Literal,
 )
 
 import numpy as np
@@ -19,14 +17,10 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife import ParametricModel
-from relife._plots import PlotSurvivalFunc
+from relife import FrozenParametricModel, ParametricModel
 from relife.data import LifetimeData
 from relife.likelihood import maximum_likelihood_estimation
 from relife.quadrature import LebesgueStieltjesMixin
-
-if TYPE_CHECKING:
-    from ._structural_type import FittableParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -176,8 +170,8 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[False],
-        return_entry: Literal[False],
+        return_event: Literal[False] = False,
+        return_entry: Literal[False] = False,
         seed: Optional[int] = None,
     ) -> np.float64 | NDArray[np.float64]: ...
 
@@ -186,8 +180,8 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[True],
-        return_entry: Literal[False],
+        return_event: Literal[True] = True,
+        return_entry: Literal[False] = False,
         seed: Optional[int] = None,
     ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
 
@@ -196,8 +190,8 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[False],
-        return_entry: Literal[True],
+        return_event: Literal[False] = False,
+        return_entry: Literal[True] = True,
         seed: Optional[int] = None,
     ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
 
@@ -206,8 +200,8 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[True],
-        return_entry: Literal[True],
+        return_event: Literal[True] = True,
+        return_entry: Literal[True] = True,
         seed: Optional[int] = None,
     ) -> tuple[
         np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]
@@ -272,7 +266,6 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
             LeftTruncatedModel,
             ProportionalHazard,
         )
-        from .frozen_model import FrozenParametricLifetimeModel
 
         try:
             next(self.nested_models())
@@ -441,7 +434,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         self,
         time: float | NDArray[np.float64],
         *,
-        asarray: Literal[False],
+        asarray: Literal[False] = False,
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -449,7 +442,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         self,
         time: float | NDArray[np.float64],
         *,
-        asarray: Literal[True],
+        asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
 
     def jac_cdf(
@@ -468,7 +461,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         self,
         time: float | NDArray[np.float64],
         *,
-        asarray: Literal[False],
+        asarray: Literal[False] = False,
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -476,7 +469,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         self,
         time: float | NDArray[np.float64],
         *,
-        asarray: Literal[True],
+        asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
 
     def jac_pdf(
@@ -650,7 +643,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
 
     def __init__(
         self,
-        baseline: FittableParametricLifetimeModel[*Args],
+        baseline: LifetimeDistribution | LifetimeRegression[*Args],
         coefficients: tuple[Optional[float], ...] = (None,),
     ):
         super().__init__()
@@ -771,7 +764,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[False],
+        asarray: Literal[False] = False,
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -780,7 +773,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[True],
+        asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
 
     @abstractmethod
@@ -798,7 +791,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[False],
+        asarray: Literal[False] = False,
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -807,7 +800,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[True],
+        asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
 
     @abstractmethod
@@ -825,7 +818,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[False],
+        asarray: Literal[False] = False,
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -834,7 +827,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[True],
+        asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
 
     def jac_sf(
@@ -855,7 +848,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[False],
+        asarray: Literal[False] = False,
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -864,7 +857,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[True],
+        asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
 
     def jac_cdf(
@@ -885,7 +878,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[False],
+        asarray: Literal[False] = False,
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -894,7 +887,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: *Args,
-        asarray: Literal[True],
+        asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
 
     def jac_pdf(
@@ -993,20 +986,7 @@ class LifetimeRegression(ParametricLifetimeModel[float | NDArray[np.float64], *A
         return self
 
 
-NonParametricEstimation = NewType(
-    "NonParametricEstimation",
-    dict[
-        str,
-        tuple[NDArray[np.float64], NDArray[np.float64], Optional[NDArray[np.float64]]],
-    ],
-)
-
-
 class NonParametricLifetimeModel(ABC):
-    estimations: Optional[NonParametricEstimation]
-
-    def __init__(self):
-        self.estimations = None
 
     @abstractmethod
     def fit(
@@ -1018,8 +998,273 @@ class NonParametricLifetimeModel(ABC):
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self: ...
 
-    @property
-    def plot(self) -> PlotSurvivalFunc:
-        if self.estimations is None:
-            raise ValueError
-        return PlotSurvivalFunc(self)
+    # @property
+    # def plot(self) -> PlotSurvivalFunc:
+    #     if self.estimations is None:
+    #         raise ValueError
+    #     return PlotSurvivalFunc(self)
+
+
+class FrozenParametricLifetimeModel(FrozenParametricModel[*Args]):
+
+    unfrozen_model: ParametricLifetimeModel[*Args]
+
+    @override
+    def unfreeze(self) -> ParametricLifetimeModel[*Args]:
+        return super().unfreeze()
+
+    def freeze_args(self, *args: *Args):
+        args_names = self.unfrozen_model.args_names
+        if len(args) != len(args_names):
+            raise ValueError(f"Expected {args_names} positional arguments but got only {len(args)} arguments")
+        for name, value in zip(args_names, args):
+            value = np.asarray(value)
+            value: NDArray[np.float64]
+            ndim = value.ndim
+            if ndim > 2:
+                raise ValueError(f"Uncorrect number of dimensions for {name}. It can't be higher than 2. Got {ndim}")
+            match name:
+                case "covar":  #  (), (nb_coef,) or (m, nb_coef)
+                    if value.ndim == 2:  #  otherwise, when 1, broadcasting
+                        if self.args_nb_assets != 1:
+                            if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:
+                                raise ValueError(
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets"
+                                )
+                        self.args_nb_assets = value.shape[0]  #  update args_nb_assets
+                case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
+                    if value.ndim >= 1:
+                        if self.args_nb_assets != 1:
+                            if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:
+                                raise ValueError(
+                                    f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets"
+                                )
+                        self.args_nb_assets = value.shape[0]  #  update args_nb_assets
+                case _:
+                    raise ValueError(f"Unknown arg {name}")
+            self.frozen_args = self.frozen_args + (value,)
+
+    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.hf(time, *self.frozen_args)
+
+    def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.chf(time, *self.frozen_args)
+
+    def sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.sf(time, *self.frozen_args)
+
+    def pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.pdf(time, *self.frozen_args)
+
+    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.mrl(time, *self.frozen_args)
+
+    def moment(self, n: int) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.moment(n, *self.frozen_args)
+
+    def mean(self) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.moment(1, *self.frozen_args)
+
+    def var(self) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.moment(2, *self.frozen_args) - self.unfrozen_model.moment(1, *self.frozen_args) ** 2
+
+    def isf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.isf(probability, *self.frozen_args)
+
+    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.ichf(cumulative_hazard_rate, *self.frozen_args)
+
+    def cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.cdf(time, *self.frozen_args)
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: Literal[False] = False,
+        return_entry: Literal[False] = False,
+        seed: Optional[int] = None,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: Literal[True] = True,
+        return_entry: Literal[False] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: Literal[False] = False,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: Literal[True] = True,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[
+        np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]
+    ]: ...
+
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Optional[int] = None,
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ):
+        return self.unfrozen_model.rvs(
+            *self.frozen_args, size=size, return_event=return_event, return_entry=return_entry, seed=seed
+        )
+
+    def ppf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.ppf(probability, *self.frozen_args)
+
+    def median(self) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.median(*self.frozen_args)
+
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        deg: int = 10,
+    ) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.ls_integrate(func, a, b, *self.frozen_args, deg=deg)
+
+
+class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float | NDArray[np.float64], *Args]):
+
+    unfrozen_model: LifetimeRegression[*Args]
+
+    @override
+    def unfreeze(self) -> LifetimeRegression[*Args]:
+        return super().unfreeze()
+
+    def nb_coef(self) -> int:
+        return self.unfrozen_model.nb_coef
+
+    def dhf(
+        self,
+        time: float | NDArray[np.float64],
+    ) -> np.float64 | NDArray[np.float64]:
+        return self.unfrozen_model.dhf(time, self.frozen_args[0], *self.frozen_args[1:])
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.unfrozen_model.jac_hf(time, self.frozen_args[0], *self.frozen_args[1:], asarray=asarray)
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.unfrozen_model.jac_chf(time, self.frozen_args[0], *self.frozen_args[1:], asarray=asarray)
+
+    @overload
+    def jac_sf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_sf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    def jac_sf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.unfrozen_model.jac_sf(time, self.frozen_args[0], *self.frozen_args[1:], asarray=asarray)
+
+    @overload
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.unfrozen_model.jac_cdf(time, self.frozen_args[0], *self.frozen_args[1:], asarray=asarray)
+
+    @overload
+    def jac_pdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_pdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    def jac_pdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+        return self.unfrozen_model.jac_pdf(time, self.frozen_args[0], *self.frozen_args[1:], asarray=asarray)

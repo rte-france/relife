@@ -1,2 +1,2 @@
-from ._base import FittingResults, ParametricModel
-from ._freeze import freeze, isfrozen
+from ._base import FittingResults, FrozenParametricModel, ParametricModel
+from ._freeze import freeze, get_frozen_args, isfrozen

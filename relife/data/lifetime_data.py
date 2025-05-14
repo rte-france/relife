@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass, field, InitVar
+from dataclasses import InitVar, dataclass, field
 from itertools import zip_longest
-from typing import Optional, NamedTuple
+from typing import NamedTuple, Optional
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -60,14 +61,14 @@ def get_complete(
     if time.shape[-1] == 1:  # 1D time
         index = np.where(event)[0]
         if index.size > 0:
-            values = time[index] # (m, 1)
+            values = time[index]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
     else:  # 2D time
         index = np.where(time[:, 0] == time[:, 1])[0]
         if index.size > 0:
-            values = time[index][:, [0]] # (m, 1)
+            values = time[index][:, [0]]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
@@ -81,7 +82,7 @@ def get_left_censoring(
     else:  # 2D time
         index = np.where(time[:, 0] == 0)[0]
         if index.size > 0:
-            values = time[index][:, [1]] # (m, 1)
+            values = time[index][:, [1]]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
@@ -93,14 +94,14 @@ def get_right_censoring(
     if time.shape[-1] == 1:  # 1D time
         index = np.where(~event)[0]
         if index.size > 0:
-            values = time[index] # (m, 1)
+            values = time[index]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
     else:  # 2D time
         index = np.where(time[:, 1] == np.inf)[0]
         if index.size > 0:
-            values = time[index][:, [0]] # (m, 1)
+            values = time[index][:, [0]]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
@@ -121,7 +122,7 @@ def get_interval_censoring(
             np.not_equal(time[:, 0], time[:, 1]),
         )[0]
         if index.size > 0:
-            values = time[index] # (m, 2)
+            values = time[index]  # (m, 2)
             if values.size != 0:
                 if np.any(values[:, 0] >= values[:, 1]):
                     raise ValueError("Interval censorships lower bounds can't be higher or equal to its upper bounds")
@@ -136,14 +137,14 @@ def get_left_truncation(
     if time.shape[-1] == 1:  # 1D time
         index = np.where(entry > 0)[0]
         if index.size > 0:
-            values = entry[index] # (m, 1)
+            values = entry[index]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
     else:  # 2D time
         index = np.where(entry > 0)[0]
         if index.size > 0:
-            values = entry[index] # (m, 1)
+            values = entry[index]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
@@ -155,14 +156,14 @@ def get_right_truncation(
     if time.shape[-1] == 1:  # 1D time
         index = np.where(departure < np.inf)[0]
         if index.size > 0:
-            values = departure[index] # (m, 1)
+            values = departure[index]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None
     else:  # 2D time
         index = np.where(departure < np.inf)[0]
         if index.size > 0:
-            values = departure[index] # (m, 1)
+            values = departure[index]  # (m, 1)
             args = tuple((arg[index] for arg in args))
             return IndexedLifetimeData(values, index, args)
         return None

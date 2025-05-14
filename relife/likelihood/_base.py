@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeVarTuple
+from typing import TYPE_CHECKING, Generic, TypeVar, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,9 +10,10 @@ from relife.likelihood.hessian_estimation import _hessian_scheme
 
 if TYPE_CHECKING:
     from relife._base import ParametricModel
-    from relife.data import FailureData
+    from relife.data import LifetimeData, NHPPData
 
 Args = TypeVarTuple("Args")
+FailureData = TypeVar("FailureData", bound=LifetimeData | NHPPData)
 
 
 class Likelihood(Generic[*Args], ABC):

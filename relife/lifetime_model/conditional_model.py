@@ -1,13 +1,12 @@
 from typing import Callable, Optional, ParamSpec, Sequence, TypeVarTuple
 
 import numpy as np
-from numpy.typing import NDArray, DTypeLike
+from numpy.typing import DTypeLike, NDArray
 from typing_extensions import override
 
 from ._base import ParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
-P = ParamSpec("P")
 
 
 # necessary to allow user passing 1d ar and a0
@@ -171,7 +170,6 @@ class AgeReplacementModel(ParametricLifetimeModel[float | NDArray[np.float64], *
             entry = np.broadcast_to(entry, time.shape).copy()
             event = event != ar
             return time, event, entry
-
 
     @override
     def ls_integrate(

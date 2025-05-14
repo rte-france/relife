@@ -12,10 +12,10 @@ if TYPE_CHECKING:
     from relife.lifetime_model import (
         ParametricLifetimeModel,
     )
-    from ..frozen_model.frozen_lifetime_model import FrozenParametricLifetimeModel
     from relife.sample import CountData
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
+    from ..frozen_model.frozen_lifetime_model import FrozenParametricLifetimeModel
     from .age_replacement import (
         DefaultAgeReplacementPolicy,
         OneCycleAgeReplacementPolicy,

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Union, Sequence, Optional
+from typing import Optional, Sequence, Union
 
 import numpy as np
 from numpy._typing import NDArray

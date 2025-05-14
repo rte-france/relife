@@ -1,11 +1,12 @@
 from ._base import (
+    CovarEffect,
+    FrozenLifetimeRegression,
+    FrozenParametricLifetimeModel,
     LifetimeDistribution,
     LifetimeRegression,
     NonParametricLifetimeModel,
     ParametricLifetimeModel,
-    CovarEffect,
 )
-from ._structural_type import FittableParametricLifetimeModel
 from .conditional_model import AgeReplacementModel, LeftTruncatedModel
 from .distribution import (
     EquilibriumDistribution,
@@ -17,7 +18,6 @@ from .distribution import (
 )
 from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
 from .regression import AcceleratedFailureTime, ProportionalHazard
-from .frozen_model import FrozenParametricLifetimeModel, FrozenLifetimeRegression
 
 # only those objects are imported when using from relife.lifetime_model import *
 __all__ = [
@@ -37,9 +37,7 @@ __all__ = [
     "EquilibriumDistribution",
     "LifetimeDistribution",
     "LifetimeRegression",
-    "FrozenParametricLifetimeModel",
-    "FrozenLifetimeRegression",
     "ParametricLifetimeModel",
     "CovarEffect",
-    "FittableParametricLifetimeModel",
+    "FrozenParametricLifetimeModel",
 ]

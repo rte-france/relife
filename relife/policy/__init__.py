@@ -1,4 +1,4 @@
-from ._base import age_replacement_policy, run_to_failure_policy, RenewalPolicy
+from ._base import RenewalPolicy, age_replacement_policy, run_to_failure_policy
 from .age_replacement import (
     DefaultAgeReplacementPolicy,
     NonHomogeneousPoissonAgeReplacementPolicy,

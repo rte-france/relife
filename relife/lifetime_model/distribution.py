@@ -10,6 +10,7 @@ from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
+
 class Exponential(LifetimeDistribution):
     r"""
     Exponential lifetime distribution.

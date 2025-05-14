@@ -5,16 +5,15 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, Optional, TypeVarTuple
 
 import numpy as np
-from numpy.typing import DTypeLike
 from numpy.lib import recfunctions as rfn
-from numpy.typing import NDArray
+from numpy.typing import DTypeLike, NDArray
 from typing_extensions import override
 
 from relife.lifetime_model import ParametricLifetimeModel
 
-
 if TYPE_CHECKING:
-    from relife.economic import Discounting, Reward, ExponentialDiscounting
+    from relife.economic import Discounting, ExponentialDiscounting, Reward
+
     from .renewal_process import RenewalProcess
 
 Args = TypeVarTuple("Args")

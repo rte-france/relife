@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, Optional, TypedDict
+from typing import TYPE_CHECKING, NamedTuple, Optional
 
 import numpy as np
 from numpy.typing import DTypeLike, NDArray
 
-from relife import ParametricModel
+from relife import ParametricModel, get_frozen_args, isfrozen
 from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
@@ -22,45 +22,61 @@ if TYPE_CHECKING:
         ParametricLifetimeModel,
     )
 
-    from .sample_function import SampleFunction
+    from ._sample_function import SampleFunction
 
 
-class CountData(TypedDict):
+class CountData(NamedTuple):
     t0: float
     tf: float
-    data: NDArray[DTypeLike]
+    struct: NDArray[DTypeLike]  # struct array
+
+
+def concatenate_count_data(
+    model: RenewalProcess,
+    tf: float,
+    t0: float = 0.0,
+    size: int | tuple[int] | tuple[int, int] = 1,
+    maxsample: int = 1e5,
+    seed: Optional[int] = None,
+) -> CountData:
+    from .iterator import RenewalProcessIterator
+
+    iterator = RenewalProcessIterator(model, size, (t0, tf), seed=seed)
+    struct_arr = next(iterator)
+    for arr in iterator:
+        if len(arr) > maxsample:
+            raise RuntimeError("Max number of sample reached")
+        struct_arr = np.concatenate((struct_arr, arr))
+    struct_arr = np.sort(struct_arr, order=("sample_id", "asset_id", "timeline"))
+    return CountData(t0, tf, struct_arr)
 
 
 class RenewalProcess(ParametricModel):
 
+    sample_data: Optional[CountData]
+
     def __init__(
         self,
-        model: ParametricLifetimeModel[()],
-        model1: Optional[ParametricLifetimeModel[()]] = None,
+        model: LifetimeDistribution | FrozenParametricLifetimeModel,
+        model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
     ):
         super().__init__()
 
-        from relife import isfrozen
-
-        if not isfrozen(model):
-            raise ValueError(
-                "Invalid type of model. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
-            )
-        if model1 is not None:
-            if not isfrozen(model1):
+        for model in (model, model1):
+            if model is not None and not isfrozen(model):
                 raise ValueError(
-                    "Invalid type of model1. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
+                    "Invalid type of model. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
                 )
-
         self.model = model
         self.model1 = model1
         self.sample_data = None
 
     @property
-    def sample(self) -> SampleFunction:
-        from .sample_function import SampleFunction
+    def sample(self) -> Optional[SampleFunction]:
+        if self.sample_data is not None:
+            from ._sample_function import SampleFunction
 
-        return SampleFunction(type(self), self.sample_data)
+            return SampleFunction(type(self), self.sample_data)
 
     def renewal_function(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
         return renewal_equation_solver(
@@ -78,25 +94,6 @@ class RenewalProcess(ParametricModel):
             self.model.pdf if self.model1 is None else self.model1.pdf,
         )
 
-    def __concatenate_count_data(
-        self,
-        tf: float,
-        t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> CountData:
-        from .iterator import RenewalProcessIterator
-
-        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
-        count_data = next(iterator)
-        for arr in iterator:
-            if len(arr) > maxsample:
-                raise RuntimeError("Max number of sample reached")
-            count_data = np.concatenate((count_data, arr))
-        count_data = np.sort(count_data, order=("sample_id", "asset_id", "timeline"))
-        return {"t0": t0, "tf": tf, "data": count_data}
-
     def sample_count_data(
         self,
         tf: float,
@@ -105,7 +102,7 @@ class RenewalProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ):
-        self.sample_data = self.__concatenate_count_data(tf, t0, size, maxsample, seed)
+        self.sample_data = concatenate_count_data(self, tf, t0, size, maxsample, seed)
 
     def sample_lifetime_data(
         self,
@@ -115,23 +112,22 @@ class RenewalProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> LifetimeData:
-        from relife.lifetime_model import LeftTruncatedModel
-
         if self.model1 is not None and self.model1 != self.model:
+            from relife.lifetime_model import LeftTruncatedModel
+
             if isinstance(self.model1, LeftTruncatedModel) and self.model1.baseline == self.model:
                 pass
             else:
                 raise ValueError(
                     f"Calling sample_failure_data on RenewalProcess having different model and model1 is ambiguous. Instantiate RenewalProcess with only one model"
                 )
-        count_data = self.__concatenate_count_data(tf, t0, size, maxsample, seed)
-        args = getattr(self.model, "args", ())
-        args = tuple((np.take(arg, count_data["data"]["asset_id"]) for arg in args))
+
+        count_data = concatenate_count_data(self, tf, t0, size, maxsample, seed)
         return LifetimeData(
             count_data["data"]["time"].copy(),
             event=count_data["data"]["event"].copy(),
             entry=count_data["data"]["entry"].copy(),
-            args=args,
+            args=tuple((np.take(arg, count_data.struct["asset_id"]) for arg in get_frozen_args(self.model))),
         )
 
 

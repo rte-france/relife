@@ -1,7 +1,7 @@
-from typing import TypeVarTuple, Optional
+from typing import Optional, TypeVarTuple
 
 import numpy as np
-from numpy.typing import NDArray, DTypeLike
+from numpy.typing import DTypeLike, NDArray
 
 from relife.data import LifetimeData, NHPPData
 from relife.frozen_model import FrozenParametricLifetimeModel

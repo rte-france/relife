@@ -16,9 +16,6 @@ from typing_extensions import override
 
 from ._base import LifetimeRegression
 
-if TYPE_CHECKING:
-    from ._structural_type import FittableParametricLifetimeModel
-
 Args = TypeVarTuple("Args")
 
 
@@ -63,7 +60,6 @@ def _broadcast_time_covar_shapes(
             raise ValueError(f"Invalid time or covar shape. Got {time_shape} and {covar_shape}")
 
 
-# type ParametricLifetimeModel[float|NDArray[np.float64], *Ts]
 class ProportionalHazard(LifetimeRegression[*Args]):
     r"""
     Proportional Hazard regression core.

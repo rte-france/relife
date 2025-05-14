@@ -1,17 +1,14 @@
-from __future__ import annotations
-
 import copy
-from typing import TYPE_CHECKING, Optional, TypeVarTuple
+from typing import Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from ._base import Likelihood
 from relife.data import LifetimeData
+from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
-if TYPE_CHECKING:
-    from relife.lifetime_model import FittableParametricLifetimeModel
+from ._base import Likelihood
 
 Args = TypeVarTuple("Args")
 
@@ -30,7 +27,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel[*Args],
+        model: LifetimeDistribution | LifetimeRegression[*Args],
         lifetime_data: LifetimeData,
     ):
         self.model = copy.deepcopy(model)
@@ -105,9 +102,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             axis=(1, 2),
         )  # (p,)
 
-    def _jac_right_censored_contribs(
-        self, lifetime_data: LifetimeData
-    ) -> Optional[NDArray[np.float64]]:
+    def _jac_right_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[NDArray[np.float64]]:
         if lifetime_data.complete_or_right_censored is None:
             return None
         return np.sum(
@@ -119,9 +114,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             axis=(1, 2),
         )  # (p,)
 
-    def _jac_left_censored_contribs(
-        self, lifetime_data: LifetimeData
-    ) -> Optional[NDArray[np.float64]]:
+    def _jac_left_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[NDArray[np.float64]]:
         if lifetime_data.left_censoring is None:
             return None
         return -np.sum(
@@ -139,9 +132,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
             axis=(1, 2),
         )  # (p,)
 
-    def _jac_left_truncations_contribs(
-        self, lifetime_data: LifetimeData
-    ) -> Optional[NDArray[np.float64]]:
+    def _jac_left_truncations_contribs(self, lifetime_data: LifetimeData) -> Optional[NDArray[np.float64]]:
         if lifetime_data.left_truncation is None:
             return None
         return -np.sum(
