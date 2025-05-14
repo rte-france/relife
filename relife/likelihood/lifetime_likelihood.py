@@ -1,5 +1,5 @@
 import copy
-from typing import Optional, TypeVarTuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,10 +10,8 @@ from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
 from ._base import Likelihood
 
-Args = TypeVarTuple("Args")
 
-
-class LikelihoodFromLifetimes(Likelihood[*Args]):
+class LikelihoodFromLifetimes(Likelihood):
     """
     Generic likelihood object for parametric_model lifetime model
 
@@ -27,7 +25,7 @@ class LikelihoodFromLifetimes(Likelihood[*Args]):
 
     def __init__(
         self,
-        model: LifetimeDistribution | LifetimeRegression[*Args],
+        model: LifetimeDistribution | LifetimeRegression,
         lifetime_data: LifetimeData,
     ):
         self.model = copy.deepcopy(model)

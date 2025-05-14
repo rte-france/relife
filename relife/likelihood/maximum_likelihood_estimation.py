@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar, TypeVarTuple, overload
+from typing import Any, TypeVarTuple, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize
 
-from relife import ParametricModel
 from relife.data import LifetimeData, NHPPData
 from relife.lifetime_model import (
     LifetimeDistribution,
     LifetimeRegression,
-    ParametricLifetimeModel,
 )
 from relife.stochastic_process import NonHomogeneousPoissonProcess
 
@@ -20,7 +18,7 @@ from .lifetime_likelihood import LikelihoodFromLifetimes
 Args = TypeVarTuple("Args")
 
 
-def get_params_bounds(model: LifetimeDistribution | LifetimeRegression[*Args]) -> Bounds:
+def get_params_bounds(model: LifetimeDistribution | LifetimeRegression) -> Bounds:
     from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
     match model:
@@ -31,7 +29,7 @@ def get_params_bounds(model: LifetimeDistribution | LifetimeRegression[*Args]) -
             )
 
         case LifetimeRegression():
-            model: LifetimeRegression[*Args]
+            model: LifetimeRegression
             lb = np.concatenate(
                 (
                     np.full(model.covar_effect.nb_params, -np.inf),
@@ -51,7 +49,7 @@ def get_params_bounds(model: LifetimeDistribution | LifetimeRegression[*Args]) -
 
 
 def init_params_from_lifetimes(
-    model: LifetimeDistribution | LifetimeRegression[*Args],
+    model: LifetimeDistribution | LifetimeRegression,
     lifetime_data: LifetimeData,
 ) -> NDArray[np.float64]:
     from relife.lifetime_model import (
@@ -94,10 +92,6 @@ def init_params_from_lifetimes(
             raise NotImplemented
 
 
-# FailureData can be any of the union LifetimeData | NHPPData
-FailureData = TypeVar("FailureData", bound=LifetimeData | NHPPData)
-
-
 @overload
 def maximum_likelihood_estimation(
     model: LifetimeDistribution, data: LifetimeData, **kwargs: Any
@@ -106,8 +100,8 @@ def maximum_likelihood_estimation(
 
 @overload
 def maximum_likelihood_estimation(
-    model: LifetimeRegression[*Args], data: LifetimeData, **kwargs: Any
-) -> LifetimeRegression[*Args]: ...
+    model: LifetimeRegression, data: LifetimeData, **kwargs: Any
+) -> LifetimeRegression: ...
 
 
 @overload
@@ -117,10 +111,10 @@ def maximum_likelihood_estimation(
 
 
 def maximum_likelihood_estimation(
-    model: LifetimeDistribution | LifetimeRegression[*Args] | NonHomogeneousPoissonProcess[*Args],
+    model: LifetimeDistribution | LifetimeRegression | NonHomogeneousPoissonProcess[*Args],
     data: LifetimeData | NHPPData,
     **kwargs: Any,
-) -> LifetimeDistribution | LifetimeRegression[*Args] | NonHomogeneousPoissonProcess[*Args]:
+) -> LifetimeDistribution | LifetimeRegression | NonHomogeneousPoissonProcess[*Args]:
     match model:
         case LifetimeDistribution() | LifetimeRegression():
             from relife import FittingResults

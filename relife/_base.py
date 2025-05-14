@@ -3,11 +3,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain
-from typing import Any, Generic, Iterator, Optional, Self, TypeVarTuple
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import OptimizeResult
+
+if TYPE_CHECKING:
+    from relife.lifetime_model import (
+        FrozenParametricLifetimeModel,
+        ParametricLifetimeModel,
+    )
 
 
 class ParametricModel:
@@ -354,12 +360,9 @@ class FittingResults:
         return asdict(self)
 
 
-Args = TypeVarTuple("Args")
+class FrozenParametricModel(ParametricModel, ABC):
 
-
-class FrozenParametricModel(ParametricModel, Generic[*Args], ABC):
-
-    def __init__(self, model: ParametricModel, *args: *Args):
+    def __init__(self, model: ParametricModel, *args: float | NDArray[np.float64]):
         super().__init__()
         self.unfrozen_model = model
         self.frozen_args = ()
@@ -370,4 +373,42 @@ class FrozenParametricModel(ParametricModel, Generic[*Args], ABC):
         return self.unfrozen_model
 
     @abstractmethod
-    def freeze_args(self, *args: *Args): ...
+    def freeze_args(self, *args: float | NDArray[np.float64]): ...
+
+
+@overload
+def freeze(model: ParametricModel, *args: float | NDArray[np.float64]) -> FrozenParametricModel: ...
+
+
+@overload
+def freeze(
+    model: ParametricLifetimeModel[*tuple[float | NDArray[np.float64]]], *args: float | NDArray[np.float64]
+) -> FrozenParametricLifetimeModel: ...
+
+
+def freeze(
+    model: ParametricModel | ParametricLifetimeModel[*tuple[float | NDArray[np.float64]]],
+    *args: float | NDArray[np.float64],
+) -> FrozenParametricModel | FrozenParametricLifetimeModel:
+    from relife.lifetime_model import (
+        FrozenLifetimeRegression,
+        FrozenParametricLifetimeModel,
+        LifetimeDistribution,
+        LifetimeRegression,
+        ParametricLifetimeModel,
+    )
+
+    match model:
+        case LifetimeRegression():
+            return FrozenLifetimeRegression(model, *args)
+        case ParametricLifetimeModel():
+            return FrozenParametricLifetimeModel(model, *args)
+        case LifetimeDistribution():
+            raise ValueError("LifetimeDistribution does not need to be frozen")
+        case _:
+            raise ValueError(f"{type(model)} can't be be frozen")
+
+
+# see sklearn/base.py : return unfitted ParametricModel
+def clone(model: ParametricModel) -> ParametricModel:
+    pass

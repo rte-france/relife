@@ -40,4 +40,5 @@ __all__ = [
     "ParametricLifetimeModel",
     "CovarEffect",
     "FrozenParametricLifetimeModel",
+    "FrozenLifetimeRegression",
 ]

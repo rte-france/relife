@@ -8,18 +8,14 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVarTuple
-
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
 from ._base import LifetimeRegression
 
-Args = TypeVarTuple("Args")
 
-
-def _broadcast_time_covar(
+def broadcast_time_covar(
     time: float | NDArray[np.float64],
     covar: float | NDArray[np.float64],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -35,7 +31,7 @@ def _broadcast_time_covar(
     return time, covar
 
 
-def _broadcast_time_covar_shapes(
+def broadcast_time_covar_shapes(
     time_shape: tuple[()] | tuple[int] | tuple[int, int],
     covar_shape: tuple[()] | tuple[int] | tuple[int, int],
 ) -> tuple[()] | tuple[int] | tuple[int, int]:
@@ -60,7 +56,7 @@ def _broadcast_time_covar_shapes(
             raise ValueError(f"Invalid time or covar shape. Got {time_shape} and {covar_shape}")
 
 
-class ProportionalHazard(LifetimeRegression[*Args]):
+class ProportionalHazard(LifetimeRegression):
     r"""
     Proportional Hazard regression core.
 
@@ -112,7 +108,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
@@ -120,7 +116,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         # (m,)
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
@@ -130,7 +126,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(covar), *args)
 
@@ -138,7 +134,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
 
@@ -146,14 +142,14 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
         asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
@@ -180,14 +176,14 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
         asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
@@ -210,7 +206,7 @@ class ProportionalHazard(LifetimeRegression[*Args]):
         return jac
 
 
-class AcceleratedFailureTime(LifetimeRegression[*Args]):
+class AcceleratedFailureTime(LifetimeRegression):
     r"""
     Accelerated failure time regression.
 
@@ -260,7 +256,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
@@ -269,7 +265,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
@@ -279,7 +275,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate, *args)
 
@@ -287,7 +283,7 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
@@ -296,14 +292,14 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
         asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
@@ -331,14 +327,14 @@ class AcceleratedFailureTime(LifetimeRegression[*Args]):
         self,
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
         asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)

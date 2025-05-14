@@ -6,23 +6,21 @@ from typing import TYPE_CHECKING, NamedTuple, Optional
 import numpy as np
 from numpy.typing import DTypeLike, NDArray
 
-from relife import ParametricModel, get_frozen_args, isfrozen
+from relife import ParametricModel
 from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
     ExponentialDiscounting,
     reward_partial_expectation,
 )
+from relife.lifetime_model import FrozenParametricLifetimeModel, LifetimeDistribution
 
 from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
 
 if TYPE_CHECKING:
     from relife.economic import Reward
-    from relife.lifetime_model import (
-        ParametricLifetimeModel,
-    )
 
-    from ._sample_function import SampleFunction
+    from .sample import SampleFunction
 
 
 class CountData(NamedTuple):
@@ -39,7 +37,7 @@ def concatenate_count_data(
     maxsample: int = 1e5,
     seed: Optional[int] = None,
 ) -> CountData:
-    from .iterator import RenewalProcessIterator
+    from .sample import RenewalProcessIterator
 
     iterator = RenewalProcessIterator(model, size, (t0, tf), seed=seed)
     struct_arr = next(iterator)
@@ -62,11 +60,6 @@ class RenewalProcess(ParametricModel):
     ):
         super().__init__()
 
-        for model in (model, model1):
-            if model is not None and not isfrozen(model):
-                raise ValueError(
-                    "Invalid type of model. It must be ParametricLifetimeModel[()] object type. You may call freeze first"
-                )
         self.model = model
         self.model1 = model1
         self.sample_data = None
@@ -127,7 +120,7 @@ class RenewalProcess(ParametricModel):
             count_data["data"]["time"].copy(),
             event=count_data["data"]["event"].copy(),
             entry=count_data["data"]["entry"].copy(),
-            args=tuple((np.take(arg, count_data.struct["asset_id"]) for arg in get_frozen_args(self.model))),
+            args=tuple((np.take(arg, count_data.struct["asset_id"]) for arg in getattr(self.model, "frozen_args", ()))),
         )
 
 
@@ -137,11 +130,10 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        model: ParametricLifetimeModel[()],
+        model: LifetimeDistribution | FrozenParametricLifetimeModel,
         reward: Reward,
         discounting_rate: Optional[float] = None,
-        *,
-        model1: Optional[ParametricLifetimeModel[()]] = None,
+        model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
         reward1: Optional[Reward] = None,
     ):
         super().__init__(model, model1)

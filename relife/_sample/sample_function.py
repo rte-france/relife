@@ -47,7 +47,7 @@ def sample_failure_data(
 
         case RenewalProcess() as process:
             from relife.lifetime_model import LeftTruncatedModel
-            from relife.stochastic_process.iterator import RenewalProcessIterator
+            from relife.stochastic_process.sample import RenewalProcessIterator
 
             model1 = getattr(process, "model1", None)
             if model1 is not None and model1 != process.model:

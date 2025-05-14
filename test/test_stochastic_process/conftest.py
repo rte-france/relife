@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 
+import relife._base
 from relife.lifetime_model import (
     Exponential,
     Weibull,
@@ -43,7 +44,7 @@ def distribution(request):
 )
 def frozen_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return request.param.freeze(covar)
+    return relife._base.freeze(covar)
 
 
 @pytest.fixture(
