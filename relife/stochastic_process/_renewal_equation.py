@@ -7,13 +7,13 @@ from numpy.typing import NDArray
 
 if TYPE_CHECKING:
     from relife.economic import Discounting
-    from relife.lifetime_model import ParametricLifetimeModel
+    from relife.lifetime_model import LifetimeDistribution, FrozenParametricLifetimeModel
 
 
 def renewal_equation_solver(
     tf: float,
     nb_steps: int,
-    model: ParametricLifetimeModel[()],
+    model: LifetimeDistribution | FrozenParametricLifetimeModel,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     *,
     discounting: Optional[Discounting] = None,
@@ -47,7 +47,7 @@ def delayed_renewal_equation_solver(
     tf: float,
     nb_steps: int,
     z: NDArray[np.float64],
-    model1: ParametricLifetimeModel[()],
+    model1: LifetimeDistribution | FrozenParametricLifetimeModel,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:

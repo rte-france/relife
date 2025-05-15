@@ -67,7 +67,7 @@ class RenewalProcess(ParametricModel):
     @property
     def sample(self) -> Optional[SampleFunction]:
         if self.sample_data is not None:
-            from ._sample_function import SampleFunction
+            from .sample import SampleFunction
 
             return SampleFunction(type(self), self.sample_data)
 

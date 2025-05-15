@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-import relife._base
+from relife import freeze
 from relife.lifetime_model import (
     Exponential,
     Weibull,
@@ -44,7 +44,7 @@ def distribution(request):
 )
 def frozen_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return relife._base.freeze(covar)
+    return freeze(request.param, covar)
 
 
 @pytest.fixture(
@@ -57,9 +57,8 @@ def frozen_regression(request):
     ids=lambda distri: f"FrozenAgeReplacementModel({distri.__class__.__name__})",
 )
 def frozen_ar_distribution(request):
-    _distribution = request.param
-    ar = _distribution.isf(0.75)
-    return AgeReplacementModel(_distribution).freeze(ar)
+    ar = request.param.isf(0.75)
+    return freeze(AgeReplacementModel(request.param), ar)
 
 
 @pytest.fixture(
@@ -79,6 +78,5 @@ def frozen_ar_distribution(request):
 )
 def frozen_ar_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    _regression = request.param
-    ar = _regression.isf(0.75, covar)
-    return AgeReplacementModel(_regression).freeze(ar, covar)
+    ar = request.param.isf(0.75, covar)
+    return freeze(AgeReplacementModel(request.param), ar, covar)

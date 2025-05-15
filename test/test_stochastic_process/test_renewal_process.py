@@ -10,21 +10,19 @@ class TestDistribution:
         assert renewal_process.renewal_density(100, 200).shape == (200,)
         assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
 
+class TestAgeReplacementDistribution:
+    def test_renewal_density(self, frozen_ar_distribution):
+        renewal_process = RenewalProcess(frozen_ar_distribution, model1=EquilibriumDistribution(frozen_ar_distribution))
+        assert renewal_process.renewal_density(100, 200).shape == (200,)
+        assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(
+            1 / frozen_ar_distribution.mean(), rel=1e-4
+        )
 
 class TestRegression:
     def test_renewal_density(self, frozen_regression):
         renewal_process = RenewalProcess(frozen_regression, model1=EquilibriumDistribution(frozen_regression))
         assert renewal_process.renewal_density(100, 200).shape == (3, 200)
         assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / frozen_regression.mean(), rel=1e-4)
-
-
-class TestAgeReplacementDistribution:
-    def test_renewal_density(self, frozen_ar_distribution):
-        renewal_process = RenewalProcess(frozen_ar_distribution, model1=EquilibriumDistribution(frozen_ar_distribution))
-        assert renewal_process.renewal_density(100, 200).shape == (3, 200)
-        assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(
-            1 / frozen_ar_distribution.mean(), rel=1e-4
-        )
 
 
 class TestAgeReplacementRegression:
