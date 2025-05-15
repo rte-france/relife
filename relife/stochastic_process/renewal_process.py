@@ -132,7 +132,7 @@ class RenewalRewardProcess(RenewalProcess):
         self,
         model: LifetimeDistribution | FrozenParametricLifetimeModel,
         reward: Reward,
-        discounting_rate: Optional[float] = None,
+        discounting_rate: float = 0.,
         model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
         reward1: Optional[Reward] = None,
     ):
@@ -175,26 +175,14 @@ class RenewalRewardProcess(RenewalProcess):
     def asymptotic_expected_total_reward(
         self,
     ) -> NDArray[np.float64]:
-        def f(x):
-            return self.discounting.factor(x)
-
-        def y(x):
-            return self.discounting.factor(x) * self.reward(x)
-
-        lf = self.model.ls_integrate(f, np.array(0.0), np.array(np.inf))
-        ly = self.model.ls_integrate(y, np.array(0.0), np.array(np.inf))
+        lf = self.model.ls_integrate(lambda x : self.discounting.factor(x), 0., np.inf, deg=10)
+        ly = self.model.ls_integrate(lambda x: self.discounting.factor(x) * self.reward.sample(x), 0., np.inf, deg=10)
         z = ly / (1 - lf)
-
         if self.model1 is not None:
-
-            def y1(x):
-                return self.discounting.factor(x) * self.reward1(x)
-
-            lf1 = self.model1.ls_integrate(f, np.array(0.0), np.array(np.inf))
-            ly1 = self.model1.ls_integrate(y1, np.array(0.0), np.array(np.inf))
+            lf1 = self.model1.ls_integrate(lambda x : self.discounting.factor(x), 0., np.inf, deg=10)
+            ly1 = self.model1.ls_integrate(lambda x : self.discounting.factor(x) * self.reward1.sample(x),0., np.inf, deg=10)
             z = ly1 + z * lf1
-
-        return np.squeeze(z)
+        return z
 
     def expected_equivalent_annual_worth(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         z = self.expected_total_reward(tf, nb_steps)
@@ -202,18 +190,17 @@ class RenewalRewardProcess(RenewalProcess):
         q = z / (af + 1e-5)  # avoid zero division
         res = np.full_like(af, q)
         if self.model1 is None:
-            q0 = self.reward(np.array(0.0)) * self.model.pdf(0.0)
+            q0 = self.reward.sample(0.) * self.model.pdf(0.)
         else:
-            q0 = self.reward1(np.array(0.0)) * self.model1.pdf(0.0)
+            q0 = self.reward1.sample(0.) * self.model1.pdf(0.)
         res[af == 0.0] = q0
-
         return res
 
     def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
         if self.discounting.rate == 0.0:
             return np.squeeze(
                 self.model.ls_integrate(
-                    lambda x: self.reward(x),
+                    lambda x: self.reward.sample(x),
                     np.array(0.0),
                     np.array(np.inf),
                 )

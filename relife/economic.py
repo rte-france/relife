@@ -98,10 +98,10 @@ class Discounting(Protocol):
 class ExponentialDiscounting:
     rate: float
 
-    def __init__(self, rate: Optional[float] = None):
-        if rate < 0.0:
-            raise ValueError
-        self.rate = rate if rate is not None else 0.0
+    def __init__(self, rate: float = 0.):
+        if rate < 0.:
+            raise ValueError(f"Invalid rate value. It must be positive. Got {rate}")
+        self.rate = rate
 
     def factor(
         self,
