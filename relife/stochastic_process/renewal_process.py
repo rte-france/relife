@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, NamedTuple, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 import numpy as np
-from numpy.typing import DTypeLike, NDArray
+from numpy.typing import NDArray
 
 from relife import ParametricModel
 from relife.data import LifetimeData
@@ -16,7 +16,7 @@ from relife.lifetime_model import FrozenParametricLifetimeModel, LifetimeDistrib
 if TYPE_CHECKING:
     from relife.economic import Reward
 
-    from .sample import SampleFunction
+    from .sample import CountData, SampleFunction
 
 
 class RenewalProcess(ParametricModel):
@@ -65,6 +65,8 @@ class RenewalProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> None:
+        from .sample import concatenate_count_data
+
         self.sample_data = concatenate_count_data(self, tf, t0, size, maxsample, seed)
 
     def sample_lifetime_data(
@@ -75,6 +77,8 @@ class RenewalProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> LifetimeData:
+        from .sample import concatenate_count_data
+
         if self.model1 is not None and self.model1 != self.model:
             from relife.lifetime_model import LeftTruncatedModel
 
@@ -87,9 +91,9 @@ class RenewalProcess(ParametricModel):
 
         count_data = concatenate_count_data(self, tf, t0, size, maxsample, seed)
         return LifetimeData(
-            count_data["data"]["time"].copy(),
-            event=count_data["data"]["event"].copy(),
-            entry=count_data["data"]["entry"].copy(),
+            count_data.struct["time"].copy(),
+            event=count_data.struct["event"].copy(),
+            entry=count_data.struct["entry"].copy(),
             args=tuple((np.take(arg, count_data.struct["asset_id"]) for arg in getattr(self.model, "frozen_args", ()))),
         )
 
@@ -244,29 +248,3 @@ def delayed_renewal_equation_solver(
             + np.sum(z[..., 1:n][..., ::-1] * v1[..., 1:n], axis=-1)
         )
     return z1
-
-
-class CountData(NamedTuple):
-    t0: float
-    tf: float
-    struct: NDArray[DTypeLike]  # struct array
-
-
-def concatenate_count_data(
-    model: RenewalProcess,
-    tf: float,
-    t0: float = 0.0,
-    size: int | tuple[int] | tuple[int, int] = 1,
-    maxsample: int = 1e5,
-    seed: Optional[int] = None,
-) -> CountData:
-    from .sample import RenewalProcessIterator
-
-    iterator = RenewalProcessIterator(model, size, (t0, tf), seed=seed)
-    struct_arr = next(iterator)
-    for arr in iterator:
-        if len(arr) > maxsample:
-            raise RuntimeError("Max number of sample reached")
-        struct_arr = np.concatenate((struct_arr, arr))
-    struct_arr = np.sort(struct_arr, order=("sample_id", "asset_id", "timeline"))
-    return CountData(t0, tf, struct_arr)

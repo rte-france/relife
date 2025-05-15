@@ -6,12 +6,14 @@ from numpy.typing import NDArray
 
 from relife.lifetime_model import FrozenParametricLifetimeModel, LifetimeDistribution
 
+Cost = TypeVar("Cost", NDArray[np.float64])
+
 
 def cost(
     cf: float | NDArray[np.float64] = 0.0,
     cp: float | NDArray[np.float64] = 0.0,
     cr: float | NDArray[np.float64] = 0.0,
-) -> Optional[NDArray[np.float64]]:
+) -> Optional[Cost]:
     dtype = np.dtype(
         [
             ("cf", np.float64),

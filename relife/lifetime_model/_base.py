@@ -505,7 +505,6 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @override
     def rvs(
         self,
-        *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
         return_event: bool = False,
         return_entry: bool = False,
@@ -1044,7 +1043,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
                                     f"Invalid {name} values. Given {name} have {value.shape[0]} nb assets but other args gave {self.args_nb_assets} nb assets"
                                 )
                         self.args_nb_assets = value.shape[0]  #  update args_nb_assets
-                case "a0" | "ar" | "ar1" | "cf" | "cp" | "cr":
+                case "a0" | "ar" | "ar1":
                     if value.ndim >= 1:
                         if self.args_nb_assets != 1:
                             if value.shape[0] != self.args_nb_assets and value.shape[0] != 1:

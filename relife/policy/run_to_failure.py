@@ -5,15 +5,16 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic import reward_partial_expectation, run_to_failure_rewards
-from relife.lifetime_model import LeftTruncatedModel
+from relife.economic import RunToFailureReward
 from relife.stochastic_process import RenewalRewardProcess
 
 from ._base import RenewalPolicy
 
 if TYPE_CHECKING:
-
-    from relife.lifetime_model import ParametricLifetimeModel
+    from relife.lifetime_model import (
+        FrozenParametricLifetimeModel,
+        LifetimeDistribution,
+    )
 
 
 class OneCycleRunToFailurePolicy(RenewalPolicy):
@@ -31,29 +32,22 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
         The discounting rate.
     period_before_discounting: float, default is 1.
         The length of the first period before discounting.
-    a0 : ndarray, optional
-        Current ages of the assets (default is None). Setting ``a0`` will add
-        left truncations.
     """
 
     model1 = None
 
     def __init__(
         self,
-        model: ParametricLifetimeModel[()],
+        model: LifetimeDistribution | FrozenParametricLifetimeModel,
         cf: float | NDArray[np.float64],
-        *,
-        discounting_rate: Optional[float] = None,
+        discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
-        a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         super().__init__(model, discounting_rate=discounting_rate, cf=cf)
-        if period_before_discounting == 0:
+        if period_before_discounting <= 0:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
-
-        if a0 is not None:
-            self.model = LeftTruncatedModel(self.model).freeze(a0)
+        self.reward = RunToFailureReward(cf)
 
     @property
     def discounting_rate(self):
@@ -61,41 +55,49 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
 
     @property
     def cf(self):
-        return self.cost_structure["cf"]
+        return self.cost["cf"]
 
-    def expected_total_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        return reward_partial_expectation(
-            timeline,
-            self.model,
-            run_to_failure_rewards(self.cf),
-            discounting=self.discounting,
+    def expected_total_cost(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
+        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)
+        # reward partial expectation
+        return self.model.ls_integrate(
+            lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=10
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
-        return self.expected_total_cost(np.array(np.inf))
-
-    def expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-
-        f = (
-            lambda x: run_to_failure_rewards(self.cf)(x)
-            * self.discounting.factor(x)
-            / self.discounting.annuity_factor(x)
+        # reward partial expectation
+        return self.model.ls_integrate(
+            lambda x: self.reward.sample(x) * self.discounting.factor(x), 0.0, np.inf, deg=10
         )
-        mask = timeline < self.period_before_discounting
-        q0 = self.model.cdf(self.period_before_discounting) * f(self.period_before_discounting)
-        return np.squeeze(
-            q0
-            + np.where(
-                mask,
-                0,
-                self.model.ls_integrate(f, self.period_before_discounting, timeline),
+
+    def _expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+        def f(x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+            return (
+                self.reward.conditional_expectation(x) * self.discounting.factor(x) / self.discounting.annuity_factor(x)
             )
-        )
+
+        q0 = self.model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)
+        a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,)
+        # change first value of lower bound to compute the integral
+        a = np.where(timeline < self.period_before_discounting, timeline, a)  # (nb_steps,)
+        integral = np.atleast_2d(
+            self.model.ls_integrate(f, a, timeline)
+        )  # (nb_steps,) if q0: (), or (m, nb_steps) if q0 : (m, 1)
+        mask = np.broadcast_to(
+            timeline < self.period_before_discounting, integral.shape
+        )  # (nb_steps,) or (m, nb_steps)
+        q0 = np.broadcast_to(q0, integral.shape)  # (nb_steps,) or (m, nb_steps)
+        integral = np.where(mask, q0, integral)
+        return integral
+
+    def expected_equivalent_annual_cost(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
+        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+        return self._expected_equivalent_annual_cost(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(
         self,
     ) -> NDArray[np.float64]:
-        return self.expected_equivalent_annual_cost(np.array(np.inf))
+        return self._expected_equivalent_annual_cost(np.array(np.inf))
 
 
 class DefaultRunToFailurePolicy(RenewalPolicy):
@@ -112,9 +114,6 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         The cost of failure for each asset.
     discounting_rate : float, default is 0.
         The discounting rate.
-    a0 : ndarray, optional
-        Current ages of the assets (default is None). Setting ``a0`` will add
-        left truncations.
     model1 : Lifetimemodel, optional
         The lifetime model used for the first cycle of replacements. When one adds
         `model1`, we assume that `model1` is different from `model` meaning
@@ -131,19 +130,21 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     def __init__(
         self,
-        model: ParametricLifetimeModel[()],
+        model: LifetimeDistribution | FrozenParametricLifetimeModel,
         cf: float | NDArray[np.float64],
         *,
-        discounting_rate: Optional[float] = None,
-        a0: Optional[float | NDArray[np.float64]] = None,
-        model1: Optional[ParametricLifetimeModel[()]] = None,
+        discounting_rate: float = 0.0,
+        model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
     ) -> None:
         super().__init__(model, model1, discounting_rate, cf=cf)
 
-        if a0 is not None:
-            if self.model1 is not None:
-                raise ValueError("model1 and a0 can't be set together")
-            self.model1 = LeftTruncatedModel(self.model).freeze(a0)
+        self.reward = RunToFailureReward(cf)
+        self.underlying_process = RenewalRewardProcess(
+            self.model,
+            self.reward,
+            discounting_rate=self.discounting_rate,
+            model1=self.model1,
+        )
 
     @property
     def discounting_rate(self):
@@ -151,35 +152,21 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
 
     @property
     def cf(self):
-        return self.cost_structure["cf"]
-
-    @property
-    def underlying_process(
-        self,
-    ) -> RenewalRewardProcess:
-
-        return RenewalRewardProcess(
-            self.model,
-            run_to_failure_rewards(self.cf),
-            discounting_rate=self.discounting_rate,
-            model1=self.model1,
-            reward1=run_to_failure_rewards(self.cf) if self.model1 else None,
-        )
+        return self.cost["cf"]
 
     def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process.renewal_function(timeline)
+        return self.underlying_process.renewal_function(tf, nb_steps)
 
-    def expected_total_cost(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
-        timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process.expected_total_reward(timeline)
+    def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        return self.underlying_process.expected_total_reward(tf, nb_steps)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         return self.underlying_process.asymptotic_expected_total_reward()
 
-    def expected_equivalent_annual_cost(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
-        timeline = np.linspace(0, tf, nb_steps)
-        return timeline, self.underlying_process.expected_equivalent_annual_worth(timeline)
+    def expected_equivalent_annual_cost(
+        self, tf: float, nb_steps: int
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        return self.underlying_process.expected_equivalent_annual_worth(tf, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         return self.underlying_process.asymptotic_expected_equivalent_annual_worth()
