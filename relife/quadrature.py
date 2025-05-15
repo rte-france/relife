@@ -54,8 +54,8 @@ def legendre_quadrature(
 
     if np.any(arr_b == np.inf):
         raise ValueError("Bound values of Legendre quadrature must be finite")
-    if np.any(arr_a >= arr_b):
-        raise ValueError("Bound values a must be strictly lower than values of b")
+    if np.any(arr_a > arr_b):
+        raise ValueError("Bound values a must be lower than values of b")
 
     p = (arr_b - arr_a) / 2  # () or (n,) or (m, n)
     m = (arr_a + arr_b) / 2  # () or (n,) or (m, n)
@@ -169,8 +169,14 @@ class LebesgueStieltjesMixin(Generic[*Args]):
             Lebesgue-Stieltjes integral of func from `a` to `b`.
         """
         from relife import freeze
+        from relife.lifetime_model import (
+            FrozenParametricLifetimeModel,
+            LifetimeDistribution,
+        )
 
-        frozen_model = freeze(self, *args)
+        model = self
+        if not isinstance(self, (FrozenParametricLifetimeModel, LifetimeDistribution)):
+            model = freeze(self, *args)
 
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
             #  x.shape == (deg,), (deg, n) or (deg, m, n)
@@ -186,11 +192,11 @@ class LebesgueStieltjesMixin(Generic[*Args]):
             if x.ndim == 3:  # reshape because model.pdf is tested only for input ndim <= 2
                 deg, m, n = x.shape
                 x = np.rollaxis(x, 1).reshape(m, -1)  # (m, deg*n), roll on m because axis 0 must align with m of args
-                pdf = frozen_model.pdf(x)  # (m, deg*n)
+                pdf = model.pdf(x)  # (m, deg*n)
                 pdf = np.rollaxis(pdf.reshape(m, deg, n), 1, 0)  #  (deg, m, n)
             else:  # ndim == 1 | 2
                 # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args
-                pdf = frozen_model.pdf(x.reshape(1, -1))  # (1, deg*n) or (1, deg)
+                pdf = model.pdf(x.reshape(1, -1))  # (1, deg*n) or (1, deg)
                 pdf = pdf.reshape(x.shape)  # (deg, n) or (deg,)
 
             # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
@@ -202,19 +208,20 @@ class LebesgueStieltjesMixin(Generic[*Args]):
         #     w = np.where(b == ar, func(ar) * model.baseline.sf(ar, *args), 0.)
 
         arr_a, arr_b = check_and_broadcast_bounds(a, b)  # (), (n,) or (m, n)
-        if np.any(arr_a >= arr_b):
-            raise ValueError("Bound values a must be strictly lower than values of b")
-        model_args_nb_assets = getattr(frozen_model, "args_nb_assets", 1)
-        if arr_a.ndim == 2:
-            if arr_a.shape[0] not in (
-                1,
-                model_args_nb_assets,
-            ) and model_args_nb_assets not in (1, arr_a.shape[0]):
-                raise ValueError(
-                    f"Incompatible bounds with model. Model has {model_args_nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
-                )
+        if np.any(arr_a > arr_b):
+            raise ValueError("Bound values a must be lower than values of b")
 
-        bound_b = frozen_model.isf(1e-4)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+        # model_args_nb_assets = getattr(frozen_model, "args_nb_assets", 1)
+        # if arr_a.ndim == 2:
+        #     if arr_a.shape[0] not in (
+        #         1,
+        #         model_args_nb_assets,
+        #     ) and model_args_nb_assets not in (1, arr_a.shape[0]):
+        #         raise ValueError(
+        #             f"Incompatible bounds with model. Model has {model_args_nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
+        #         )
+
+        bound_b = model.isf(1e-4)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
         broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
         arr_a = broadcasted_arrs[0].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
         arr_b = broadcasted_arrs[1].copy()  # arr_a.shape == arr_b.shape == bound_b.shape

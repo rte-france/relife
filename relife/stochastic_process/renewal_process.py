@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from functools import partial
-from typing import TYPE_CHECKING, NamedTuple, Optional
+from typing import TYPE_CHECKING, Callable, NamedTuple, Optional
 
 import numpy as np
 from numpy.typing import DTypeLike, NDArray
@@ -11,42 +10,13 @@ from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
     ExponentialDiscounting,
-    reward_partial_expectation,
 )
 from relife.lifetime_model import FrozenParametricLifetimeModel, LifetimeDistribution
-
-from ._renewal_equation import delayed_renewal_equation_solver, renewal_equation_solver
 
 if TYPE_CHECKING:
     from relife.economic import Reward
 
     from .sample import SampleFunction
-
-
-class CountData(NamedTuple):
-    t0: float
-    tf: float
-    struct: NDArray[DTypeLike]  # struct array
-
-
-def concatenate_count_data(
-    model: RenewalProcess,
-    tf: float,
-    t0: float = 0.0,
-    size: int | tuple[int] | tuple[int, int] = 1,
-    maxsample: int = 1e5,
-    seed: Optional[int] = None,
-) -> CountData:
-    from .sample import RenewalProcessIterator
-
-    iterator = RenewalProcessIterator(model, size, (t0, tf), seed=seed)
-    struct_arr = next(iterator)
-    for arr in iterator:
-        if len(arr) > maxsample:
-            raise RuntimeError("Max number of sample reached")
-        struct_arr = np.concatenate((struct_arr, arr))
-    struct_arr = np.sort(struct_arr, order=("sample_id", "asset_id", "timeline"))
-    return CountData(t0, tf, struct_arr)
 
 
 class RenewalProcess(ParametricModel):
@@ -94,7 +64,7 @@ class RenewalProcess(ParametricModel):
         size: int | tuple[int] | tuple[int, int] = 1,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
-    ):
+    ) -> None:
         self.sample_data = concatenate_count_data(self, tf, t0, size, maxsample, seed)
 
     def sample_lifetime_data(
@@ -132,7 +102,7 @@ class RenewalRewardProcess(RenewalProcess):
         self,
         model: LifetimeDistribution | FrozenParametricLifetimeModel,
         reward: Reward,
-        discounting_rate: float = 0.,
+        discounting_rate: float = 0.0,
         model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
         reward1: Optional[Reward] = None,
     ):
@@ -146,41 +116,35 @@ class RenewalRewardProcess(RenewalProcess):
             tf,
             nb_steps,
             self.model,
-            partial(
-                reward_partial_expectation,
-                model=self.model,
-                rewards=self.reward,
-                discounting=self.discounting,
-            ),
+            lambda timeline: self.model.ls_integrate(
+                lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline
+            ),  # reward partial expectation
             discounting=self.discounting,
         )
-
-        if self.model1 is None:
-            return z
-        else:
+        if self.model1 is not None:
             return delayed_renewal_equation_solver(
                 tf,
                 nb_steps,
                 z,
                 self.model1,
-                partial(
-                    reward_partial_expectation,
-                    model=self.model1,
-                    rewards=self.reward1,
-                    discounting=self.discounting,
-                ),
+                lambda timeline: self.model1.ls_integrate(
+                    lambda x: self.reward1.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline
+                ),  # reward partial expectation
                 discounting=self.discounting,
             )
+        return z
 
     def asymptotic_expected_total_reward(
         self,
     ) -> NDArray[np.float64]:
-        lf = self.model.ls_integrate(lambda x : self.discounting.factor(x), 0., np.inf, deg=10)
-        ly = self.model.ls_integrate(lambda x: self.discounting.factor(x) * self.reward.sample(x), 0., np.inf, deg=10)
+        lf = self.model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=10)
+        ly = self.model.ls_integrate(lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=10)
         z = ly / (1 - lf)
         if self.model1 is not None:
-            lf1 = self.model1.ls_integrate(lambda x : self.discounting.factor(x), 0., np.inf, deg=10)
-            ly1 = self.model1.ls_integrate(lambda x : self.discounting.factor(x) * self.reward1.sample(x),0., np.inf, deg=10)
+            lf1 = self.model1.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=10)
+            ly1 = self.model1.ls_integrate(
+                lambda x: self.discounting.factor(x) * self.reward1.sample(x), 0.0, np.inf, deg=10
+            )
             z = ly1 + z * lf1
         return z
 
@@ -190,24 +154,16 @@ class RenewalRewardProcess(RenewalProcess):
         q = z / (af + 1e-5)  # avoid zero division
         res = np.full_like(af, q)
         if self.model1 is None:
-            q0 = self.reward.sample(0.) * self.model.pdf(0.)
+            q0 = self.reward.sample(0.0) * self.model.pdf(0.0)
         else:
-            q0 = self.reward1.sample(0.) * self.model1.pdf(0.)
+            q0 = self.reward1.sample(0.0) * self.model1.pdf(0.0)
         res[af == 0.0] = q0
         return res
 
     def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
         if self.discounting.rate == 0.0:
-            return np.squeeze(
-                self.model.ls_integrate(
-                    lambda x: self.reward.sample(x),
-                    np.array(0.0),
-                    np.array(np.inf),
-                )
-                / self.model.mean()
-            )
-        else:
-            return self.discounting.rate * self.asymptotic_expected_total_reward()
+            return self.model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=10) / self.model.mean()
+        return self.discounting.rate * self.asymptotic_expected_total_reward()
 
 
 # def total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -223,3 +179,94 @@ class RenewalRewardProcess(RenewalProcess):
 # def mean_total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
 #     timeline, rewards = self.total_rewards()
 #     return timeline, rewards / len(self)
+
+
+def renewal_equation_solver(
+    tf: float,
+    nb_steps: int,
+    model: LifetimeDistribution | FrozenParametricLifetimeModel,
+    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    discounting: Optional[ExponentialDiscounting] = None,
+) -> NDArray[np.float64]:
+
+    t = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    tm = 0.5 * (t[1:] + t[:-1])  # (nb_steps - 1,)
+    f = model.cdf(t)  # (nb_steps,) or (m, nb_steps)
+    fm = model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
+    y = evaluated_func(t)  # (nb_steps,)
+
+    if y.shape != f.shape:
+        raise ValueError("Invalid shape between model and evaluated_func")
+
+    if discounting is not None:
+        d = discounting.factor(t)
+    else:
+        d = np.ones_like(f)
+    z = np.empty(y.shape)
+    u = d * np.insert(f[..., 1:] - fm, 0, 1, axis=-1)
+    v = d[..., :-1] * np.insert(np.diff(fm), 0, 1, axis=-1)
+    q0 = 1 / (1 - d[..., 0] * fm[..., 0])
+    z[..., 0] = y[..., 0]
+    z[..., 1] = q0 * (y[..., 1] + z[..., 0] * u[..., 1])
+    for n in range(2, f.shape[-1]):
+        z[..., n] = q0 * (y[..., n] + z[..., 0] * u[..., n] + np.sum(z[..., 1:n][..., ::-1] * v[..., 1:n], axis=-1))
+    return z
+
+
+def delayed_renewal_equation_solver(
+    tf: float,
+    nb_steps: int,
+    z: NDArray[np.float64],
+    model1: LifetimeDistribution | FrozenParametricLifetimeModel,
+    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    discounting: Optional[ExponentialDiscounting] = None,
+) -> NDArray[np.float64]:
+
+    t = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    tm = 0.5 * (t[1:] + t[:-1])  # (nb_steps - 1,)
+    f1 = model1.cdf(t)  # (nb_steps,) or (m, nb_steps)
+    f1m = model1.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
+    y1 = evaluated_func(t)  # (nb_steps,)
+    if discounting is not None:
+        d = discounting.factor(t)
+    else:
+        d = np.ones_like(f1)
+    z1 = np.empty(y1.shape)
+    u1 = d * np.insert(f1[..., 1:] - f1m, 0, 1, axis=-1)
+    v1 = d[..., :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)
+    z1[..., 0] = y1[..., 0]
+    z1[..., 1] = y1[..., 1] + z[..., 0] * u1[..., 1] + z[..., 1] * d[..., 0] * f1m[..., 0]
+    for n in range(2, f1.shape[-1]):
+        z1[..., n] = (
+            y1[..., n]
+            + z[..., 0] * u1[..., n]
+            + z[..., n] * d[..., 0] * f1m[..., 0]
+            + np.sum(z[..., 1:n][..., ::-1] * v1[..., 1:n], axis=-1)
+        )
+    return z1
+
+
+class CountData(NamedTuple):
+    t0: float
+    tf: float
+    struct: NDArray[DTypeLike]  # struct array
+
+
+def concatenate_count_data(
+    model: RenewalProcess,
+    tf: float,
+    t0: float = 0.0,
+    size: int | tuple[int] | tuple[int, int] = 1,
+    maxsample: int = 1e5,
+    seed: Optional[int] = None,
+) -> CountData:
+    from .sample import RenewalProcessIterator
+
+    iterator = RenewalProcessIterator(model, size, (t0, tf), seed=seed)
+    struct_arr = next(iterator)
+    for arr in iterator:
+        if len(arr) > maxsample:
+            raise RuntimeError("Max number of sample reached")
+        struct_arr = np.concatenate((struct_arr, arr))
+    struct_arr = np.sort(struct_arr, order=("sample_id", "asset_id", "timeline"))
+    return CountData(t0, tf, struct_arr)
