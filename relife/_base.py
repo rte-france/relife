@@ -181,6 +181,7 @@ class ParametricModel:
 
 
 # TODO : MAYBE, recarrays (extended numpy structured arrays) can replace this huge Parameters class
+# or see custom array containers : https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
 class Parameters:
     """
     Dict-like tree structured parameters.
