@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Protocol
+from typing import Optional, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.lifetime_model import FrozenParametricLifetimeModel, LifetimeDistribution
 
-Cost = TypeVar("Cost", NDArray[np.float64])
+Cost = NDArray[np.float64]
 
 
 def cost(

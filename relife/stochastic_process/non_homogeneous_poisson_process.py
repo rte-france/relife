@@ -11,19 +11,23 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
-from relife import FrozenParametricModel, ParametricModel, freeze
+from relife import ParametricModel
 from relife.data import NHPPData
-from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
+from relife.lifetime_model import FittableParametricLifetimeModel
 
 
 class NonHomogeneousPoissonProcess(ParametricModel):
 
     def __init__(
         self,
-        baseline: LifetimeDistribution | LifetimeRegression,
+        baseline: FittableParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
     ):
         super().__init__()
         self.baseline = baseline
+
+    @property
+    def fitting_results(self):
+        return self.baseline.fitting_results
 
     def intensity(self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.baseline.hf(time, *args)
@@ -71,8 +75,6 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         last_ages: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self:
-        from relife.likelihood import maximum_likelihood_estimation
-
         nhpp_data = NHPPData(
             events_assets_ids,
             events_ages,
@@ -81,17 +83,19 @@ class NonHomogeneousPoissonProcess(ParametricModel):
             first_ages=first_ages,
             last_ages=last_ages,
         )
-        fitted_model = maximum_likelihood_estimation(self, nhpp_data, **kwargs)
-        self.params = fitted_model.params
-        return fitted_model
+        lifetime_data = nhpp_data.to_lifetime_data()
+        self.baseline = self.baseline.fit_from_lifetime_data(lifetime_data)
+        return self
 
 
-class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel):
+class FrozenNonHomogeneousPoissonProcess(ParametricModel):
     def __init__(self, model: NonHomogeneousPoissonProcess, *args: float | NDArray[np.float64]):
-        super().__init__(model, *args)
+        super().__init__()
+        self.unfrozen_model = model
+        self.frozen_args = model.baseline.freeze_args(*args)
 
-    def freeze_args(self, *args: float | NDArray[np.float64]):
-        self.frozen_args = freeze(self.unfrozen_model, *args).frozen_args
+    def unfreeze(self) -> NonHomogeneousPoissonProcess:
+        return self.unfrozen_model
 
     def intensity(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
         return self.model.intensity(time, *self.frozen_args)

@@ -8,6 +8,7 @@ from typing_extensions import override
 
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
+from ..data import LifetimeData
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
 
@@ -210,6 +211,15 @@ class Gompertz(LifetimeDistribution):
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(shape=shape, rate=rate)
+
+    @override
+    def init_params_values(self, lifetime_data: LifetimeData) -> None:
+        param0 = np.empty(self.nb_params, dtype=np.float64)
+        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.values))
+        shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.values))
+        param0[0] = shape
+        param0[1] = rate
+        self.params = param0
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
@@ -480,7 +490,7 @@ class LogLogistic(LifetimeDistribution):
 Args = TypeVarTuple("Args")
 
 
-class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
+class EquilibriumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
@@ -496,28 +506,44 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
     .. [1] Ross, S. M. (1996). Stochastic stochastic_process. New York: Wiley.
     """
 
-    def __init__(self, baseline: ParametricLifetimeModel[*Args]):
+    # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
+    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
 
+    def freeze_args(self, *args: float | NDArray[np.float64]) -> tuple[float | NDArray[np.float64], ...]:
+        return self.baseline.freeze_args(*args)
+
     @override
-    def cdf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def cdf(
+        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         return legendre_quadrature(lambda x: self.baseline.sf(x, *args), 0, time) / self.baseline.mean(*args)
 
-    def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def sf(
+        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         return 1 - self.cdf(time, *args)
 
-    def pdf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def pdf(
+        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         return self.baseline.sf(time, *args) / self.baseline.mean(*args)
 
-    def hf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def hf(
+        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         return 1 / self.baseline.mrl(time, *args)
 
-    def chf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def chf(
+        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         return -np.log(self.sf(time, *args))
 
     @override
-    def isf(self, probability: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+    def isf(
+        self, probability: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         return newton(
             lambda x: self.sf(x, *args) - probability,
             self.baseline.isf(probability, *args),
@@ -528,7 +554,7 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Args]):
     def ichf(
         self,
         cumulative_hazard_rate: float | NDArray[np.float64],
-        *args: *Args,
+        *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
         return self.isf(np.exp(-cumulative_hazard_rate), *args)
 

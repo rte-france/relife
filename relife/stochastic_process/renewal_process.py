@@ -11,7 +11,12 @@ from relife.economic import (
     Discounting,
     ExponentialDiscounting,
 )
-from relife.lifetime_model import FrozenParametricLifetimeModel, LifetimeDistribution
+from relife.lifetime_model import (
+    FrozenAgeReplacementModel,
+    FrozenLeftTruncatedModel,
+    FrozenLifetimeRegression,
+    LifetimeDistribution,
+)
 
 if TYPE_CHECKING:
     from relife.economic import Reward
@@ -25,8 +30,10 @@ class RenewalProcess(ParametricModel):
 
     def __init__(
         self,
-        model: LifetimeDistribution | FrozenParametricLifetimeModel,
-        model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
+        model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
+        model1: Optional[
+            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
+        ] = None,
     ):
         super().__init__()
 
@@ -104,7 +111,7 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        model: LifetimeDistribution | FrozenParametricLifetimeModel,
+        model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
         reward: Reward,
         discounting_rate: float = 0.0,
         model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
@@ -188,7 +195,7 @@ class RenewalRewardProcess(RenewalProcess):
 def renewal_equation_solver(
     tf: float,
     nb_steps: int,
-    model: LifetimeDistribution | FrozenParametricLifetimeModel,
+    model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[ExponentialDiscounting] = None,
 ) -> NDArray[np.float64]:

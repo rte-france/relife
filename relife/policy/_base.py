@@ -76,7 +76,7 @@ def age_replacement_policy(
     cost: Cost,
     one_cycle: Literal[True] = True,
     discounting_rate: float = 0.0,
-    model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
+    model1: Literal[None] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,
@@ -111,24 +111,28 @@ def age_replacement_policy(
         OneCycleAgeReplacementPolicy,
     )
 
-    if not one_cycle:
-        return DefaultAgeReplacementPolicy(
+    if one_cycle:
+        if a0 is not None:
+            # model = getattr(model, "unfrozen_model", model)
+            # args = getattr(model, "frozen_args", ())
+            model = freeze(LeftTruncatedModel(model), a0)
+        return OneCycleAgeReplacementPolicy(
             model,
             cost["cf"],
             cost["cp"],
             discounting_rate=discounting_rate,
             ar=ar,
-            ar1=ar1,
             a0=a0,
-            model1=model1,
         )
-    return OneCycleAgeReplacementPolicy(
+    return DefaultAgeReplacementPolicy(
         model,
         cost["cf"],
         cost["cp"],
         discounting_rate=discounting_rate,
         ar=ar,
+        ar1=ar1,
         a0=a0,
+        model1=model1,
     )
 
 
@@ -149,7 +153,7 @@ def run_to_failure_policy(
     cost: Cost,
     one_cycle: Literal[True] = True,
     discounting_rate: Optional[float] = None,
-    model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
+    model1: Literal[None] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
 ) -> OneCycleRunToFailurePolicy: ...
 
@@ -167,9 +171,10 @@ def run_to_failure_policy(
     if not one_cycle:
         if a0 is not None:
             model1 = model1 if model1 is not None else model
-            model1 = getattr(model1, "unfrozen_model", model1)
-            args = getattr(model1, "frozen_args", ())
-            model1 = freeze(LeftTruncatedModel(model1), a0, *args)
+            # model1 = getattr(model1, "unfrozen_model", model1)
+            # args = getattr(model1, "frozen_args", ())
+            # model1 = freeze(LeftTruncatedModel(model1), a0, *args)
+            model1 = freeze(LeftTruncatedModel(model1), a0)
         return DefaultRunToFailurePolicy(
             model,
             cf=cost["cf"],
@@ -177,9 +182,10 @@ def run_to_failure_policy(
             model1=model1,
         )
     if a0 is not None:
-        model = getattr(model, "unfrozen_model", model)
-        args = getattr(model, "frozen_args", ())
-        model = freeze(LeftTruncatedModel(model), a0, *args)
+        # model = getattr(model, "unfrozen_model", model)
+        # args = getattr(model, "frozen_args", ())
+        # model = freeze(LeftTruncatedModel(model), a0, *args)
+        model = freeze(LeftTruncatedModel(model), a0)
     return OneCycleRunToFailurePolicy(
         model,
         cf=cost["cf"],

@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import DTypeLike, NDArray
 from typing_extensions import override
 
-from ._base import ParametricLifetimeModel
+from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
 
 
 def reshape_ar_or_a0(name: str, value: float | NDArray[np.float64]) -> NDArray[np.float64]:
@@ -36,6 +36,7 @@ class AgeReplacementModel(
     :math:`X` is a baseline lifetime and ar the age of replacement.
     """
 
+    # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
     def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
@@ -210,6 +211,12 @@ class AgeReplacementModel(
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
+    def freeze_args(
+        self, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]:
+        ar = reshape_ar_or_a0("ar", ar)
+        return (ar,) + getattr(self.baseline, "freeze_args", ())(*args)
+
 
 class LeftTruncatedModel(
     ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
@@ -224,6 +231,7 @@ class LeftTruncatedModel(
         Underlying lifetime core.
     """
 
+    # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
     def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
@@ -309,3 +317,39 @@ class LeftTruncatedModel(
             return time, event, entry
         else:
             return super_rvs
+
+    def freeze_args(
+        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return (a0,) + self.baseline.freeze_args(*args)
+
+
+class FrozenAgeReplacementModel(
+    FrozenParametricLifetimeModel[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
+):
+    unfrozen_model: AgeReplacementModel
+    frozen_args: tuple[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
+
+    @override
+    def unfreeze(self) -> AgeReplacementModel:
+        return super().unfreeze()
+
+    @property
+    def ar(self):
+        return self.frozen_args[0]
+
+
+class FrozenLeftTruncatedModel(
+    FrozenParametricLifetimeModel[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
+):
+    unfrozen_model: LeftTruncatedModel
+    frozen_args: tuple[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
+
+    @override
+    def unfreeze(self) -> LeftTruncatedModel:
+        return super().unfreeze()
+
+    @property
+    def a0(self):
+        return self.frozen_args[0]

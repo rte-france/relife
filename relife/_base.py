@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, overload
@@ -11,8 +10,16 @@ from scipy.optimize import OptimizeResult
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
-        FrozenParametricLifetimeModel,
-        ParametricLifetimeModel,
+        AgeReplacementModel,
+        FrozenAgeReplacementModel,
+        FrozenLeftTruncatedModel,
+        FrozenLifetimeRegression,
+        LeftTruncatedModel,
+        LifetimeRegression,
+    )
+    from relife.stochastic_process import (
+        FrozenNonHomogeneousPoissonProcess,
+        NonHomogeneousPoissonProcess,
     )
 
 
@@ -361,55 +368,42 @@ class FittingResults:
         return asdict(self)
 
 
-class FrozenParametricModel(ParametricModel, ABC):
-
-    def __init__(self, model: ParametricModel, *args: float | NDArray[np.float64]):
-        super().__init__()
-        self.unfrozen_model = model
-        self.frozen_args = ()
-        self.args_nb_assets = 1
-        self.freeze_args(*args)
-
-    def unfreeze(self) -> ParametricModel:
-        return self.unfrozen_model
-
-    @abstractmethod
-    def freeze_args(self, *args: float | NDArray[np.float64]): ...
+@overload
+def freeze(model: LifetimeRegression, *args: float | NDArray[np.float64]) -> FrozenLifetimeRegression: ...
 
 
 @overload
-def freeze(model: ParametricModel, *args: float | NDArray[np.float64]) -> FrozenParametricModel: ...
+def freeze(model: LeftTruncatedModel, *args: float | NDArray[np.float64]) -> FrozenLeftTruncatedModel: ...
+
+
+@overload
+def freeze(model: AgeReplacementModel, *args: float | NDArray[np.float64]) -> FrozenAgeReplacementModel: ...
 
 
 @overload
 def freeze(
-    model: ParametricLifetimeModel[*tuple[float | NDArray[np.float64]]], *args: float | NDArray[np.float64]
-) -> FrozenParametricLifetimeModel: ...
+    model: NonHomogeneousPoissonProcess, *args: float | NDArray[np.float64]
+) -> FrozenNonHomogeneousPoissonProcess: ...
 
 
 def freeze(
-    model: ParametricModel | ParametricLifetimeModel[*tuple[float | NDArray[np.float64]]],
+    model: LifetimeRegression | LeftTruncatedModel | AgeReplacementModel | NonHomogeneousPoissonProcess,
     *args: float | NDArray[np.float64],
-) -> FrozenParametricModel | FrozenParametricLifetimeModel:
-    from relife.lifetime_model import (
-        FrozenLifetimeRegression,
-        FrozenParametricLifetimeModel,
-        LifetimeDistribution,
-        LifetimeRegression,
-        ParametricLifetimeModel,
-    )
-
+) -> (
+    FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel | FrozenNonHomogeneousPoissonProcess
+):
     match model:
         case LifetimeRegression():
             return FrozenLifetimeRegression(model, *args)
-        case ParametricLifetimeModel():
-            return FrozenParametricLifetimeModel(model, *args)
-        case LifetimeDistribution():
-            raise ValueError("LifetimeDistribution does not need to be frozen")
+        case AgeReplacementModel():
+            return FrozenAgeReplacementModel(model, *args)
+        case LeftTruncatedModel():
+            return FrozenLeftTruncatedModel(model, *args)
+        case NonHomogeneousPoissonProcess():
+            return FrozenNonHomogeneousPoissonProcess(model, *args)
         case _:
             raise ValueError(f"{type(model)} can't be be frozen")
 
 
 # see sklearn/base.py : return unfitted ParametricModel
-def clone(model: ParametricModel) -> ParametricModel:
-    pass
+# def clone(model: ParametricModel) -> ParametricModel: ...

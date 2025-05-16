@@ -6,18 +6,21 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import newton
 
-from relife.economic import age_replacement_rewards, reward_partial_expectation
+from relife.economic import AgeReplacementReward, reward_partial_expectation
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 
-from .._args import broadcast_args
+from .. import freeze
 from ..lifetime_model._base import legendre_quadrature
 from ..stochastic_process.frozen_process import FrozenNonHomogeneousPoissonProcess
 from ._base import RenewalPolicy
 from ._decorator import get_if_none
 
 if TYPE_CHECKING:
-    from relife.lifetime_model import ParametricLifetimeModel
+    from relife.lifetime_model import (
+        FrozenParametricLifetimeModel,
+        LifetimeDistribution,
+    )
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
@@ -55,51 +58,48 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         220(1), 21-29
     """
 
+    model: FrozenParametricLifetimeModel  # AgeReplacementModel | FrozenAgeReplacementModel
+    reward: Optional[AgeReplacementReward]
     model1 = None
 
     def __init__(
         self,
-        model: ParametricLifetimeModel[()],
+        model: LifetimeDistribution | FrozenParametricLifetimeModel,
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
-        *,
-        discounting_rate: Optional[float] = None,
+        discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
         ar: Optional[float | NDArray[np.float64]] = None,
-        a0: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
         super().__init__(model, discounting_rate=discounting_rate, cf=cf, cp=cp)
 
         if period_before_discounting == 0:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
-
-        if a0 is not None:
-            self.model = LeftTruncatedModel(self.model).freeze(a0=a0)
-
-        self.ar = self._reshape_ar(ar)
-
-    def _reshape_ar(self, ar: Optional[float | NDArray[np.float64]]) -> Optional[float | NDArray[np.float64]]:
+        model = AgeReplacementModel(model)
+        reward = None
         if ar is not None:
-            ar = np.asarray(ar)
-            if ar.size != 1:
-                ar = ar.reshape(-1, 1)
-                if ar.shape[0] != self.nb_assets:
-                    raise ValueError
-            else:
-                ar = ar.item()
-        return ar
+            model = freeze(model, ar)
+            reward = AgeReplacementReward(self.cf, self.cp, self.ar)
+        self.model = model
+        self.reward = reward
 
     @property
-    def cp(self):
-        return self.cost_structure["cp"]
+    def ar(self) -> Optional[np.float64 | NDArray[np.float64]]:
+        args = getattr(self.model, "frozen_args", None)
+        if args is not None:
+            return args[0]
 
     @property
-    def cf(self):
-        return self.cost_structure["cf"]
+    def cp(self) -> NDArray[np.float64]:
+        return self.cost["cp"]
 
     @property
-    def discounting_rate(self):
+    def cf(self) -> NDArray[np.float64]:
+        return self.cost["cf"]
+
+    @property
+    def discounting_rate(self) -> float:
         return self.discounting.rate
 
     @get_if_none("ar")
@@ -107,7 +107,11 @@ class OneCycleAgeReplacementPolicy(RenewalPolicy):
         self,
         timeline: NDArray[np.float64],
         ar: Optional[float | NDArray[np.float64]] = None,
-    ) -> NDArray[np.float64]:
+    ) -> Optional[NDArray[np.float64]]:
+        ar = self.ar if ar is None else ar
+        if ar is None:
+            return None
+
         return reward_partial_expectation(
             timeline,
             AgeReplacementModel(self.model).freeze(ar),
