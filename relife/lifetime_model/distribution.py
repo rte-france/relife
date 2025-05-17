@@ -1,4 +1,4 @@
-from typing import Optional, TypeVarTuple
+from typing import Optional, TypeVarTuple, overload, Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -64,6 +64,24 @@ class Exponential(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return cumulative_hazard_rate / np.asarray(self.rate)
 
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+
     def jac_hf(self, time: float | NDArray[np.float64], *, asarray: bool = False) -> np.float64 | NDArray[np.float64]:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(np.ones_like(time), axis=0).copy()
@@ -73,7 +91,23 @@ class Exponential(LifetimeDistribution):
             return np.unstack(jac)
         return jac
 
-    def jac_chf(self, time: float | NDArray[np.float64], *, asarray: bool = False) -> np.float64 | NDArray[np.float64]:
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    def jac_chf(self, time: float | NDArray[np.float64], *, asarray: bool = False) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(time, axis=0).copy()
         else:
@@ -152,7 +186,23 @@ class Weibull(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return np.asarray(cumulative_hazard_rate) ** (1 / self.shape) / self.rate
 
-    @override
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+
     def jac_hf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -164,7 +214,22 @@ class Weibull(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @override
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
     def jac_chf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -176,7 +241,6 @@ class Weibull(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @override
     def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         time = np.asarray(time)
         return self.shape * (self.shape - 1) * self.rate**2 * (self.rate * time) ** (self.shape - 2)
@@ -252,7 +316,24 @@ class Gompertz(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
-    @override
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+
     def jac_hf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -264,7 +345,22 @@ class Gompertz(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @override
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
     def jac_chf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -276,7 +372,6 @@ class Gompertz(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @override
     def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
@@ -345,7 +440,22 @@ class Gamma(LifetimeDistribution):
     def _jac_uppergamma_shape(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x, deg=100)
 
-    @override
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
     def jac_hf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -359,7 +469,22 @@ class Gamma(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @override
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
     def jac_chf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -372,7 +497,6 @@ class Gamma(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @override
     def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
@@ -445,7 +569,22 @@ class LogLogistic(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
-    @override
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
     def jac_hf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -459,7 +598,22 @@ class LogLogistic(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @override
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[False],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        *,
+        asarray: Literal[True],
+    ) -> np.float64 | NDArray[np.float64]: ...
+
     def jac_chf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
     ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:

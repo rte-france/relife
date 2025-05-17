@@ -1200,18 +1200,18 @@ class NonParametricLifetimeModel(ABC):
     #     return PlotSurvivalFunc(self)
 
 
-class FrozenParametricLifetimeModel(ParametricModel):
+class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
 
-    frozen_args: tuple[float|np.float64, ...]
+    frozen_args: tuple[*Args]
 
-    def __init__(self, model: ParametricLifetimeModel[*tuple[float|np.float64, ...]], *args: float|np.float64):
+    def __init__(self, model: ParametricLifetimeModel[*tuple[float|np.float64, ...]], *args: *Args):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("You try to freeze a model with unsetted parameters. Set params first")
         self.unfrozen_model = model
         self.frozen_args = args
 
-    def unfreeze(self) -> ParametricLifetimeModel[*tuple[float|np.float64, ...]]:
+    def unfreeze(self) -> ParametricLifetimeModel[*Args]:
         return self.unfrozen_model
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -1316,132 +1316,140 @@ class FrozenParametricLifetimeModel(ParametricModel):
     ) -> np.float64 | NDArray[np.float64]:
         return self.unfrozen_model.ls_integrate(func, a, b, *self.frozen_args, deg=deg)
 
+#
+# class FrozenLifetimeDistribution(FrozenParametricLifetimeModel[()]):
+#
+#     unfrozen_model: LifetimeDistribution
+#     frozen_args: tuple[()]
+#
+#     @override
+#     def __init__(self, model : LifetimeDistribution):
+#         super().__init__(model)
+#
+#     @override
+#     def unfreeze(self) -> LifetimeDistribution:
+#         return super().unfreeze()
+#
+#     def dhf(
+#         self,
+#         time: float | NDArray[np.float64],
+#     ) -> np.float64 | NDArray[np.float64]:
+#         return self.unfrozen_model.dhf(time)
+#
+#     @overload
+#     def jac_hf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[False] = False,
+#     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+#
+#     @overload
+#     def jac_hf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[True] = True,
+#     ) -> np.float64 | NDArray[np.float64]: ...
+#
+#     def jac_hf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+#         return self.unfrozen_model.jac_hf(time, asarray=asarray)
+#
+#     @overload
+#     def jac_chf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[False] = False,
+#     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+#
+#     @overload
+#     def jac_chf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[True] = True,
+#     ) -> np.float64 | NDArray[np.float64]: ...
+#
+#     def jac_chf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+#         return self.unfrozen_model.jac_chf(time, asarray=asarray)
+#
+#     @overload
+#     def jac_sf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[False] = False,
+#     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+#
+#     @overload
+#     def jac_sf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[True] = True,
+#     ) -> np.float64 | NDArray[np.float64]: ...
+#
+#     def jac_sf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+#         return self.unfrozen_model.jac_sf(time, asarray=asarray)
+#
+#     @overload
+#     def jac_cdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[False] = False,
+#     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+#
+#     @overload
+#     def jac_cdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[True] = True,
+#     ) -> np.float64 | NDArray[np.float64]: ...
+#
+#     def jac_cdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+#         return self.unfrozen_model.jac_cdf(time, asarray=asarray)
+#
+#     @overload
+#     def jac_pdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[False] = False,
+#     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+#
+#     @overload
+#     def jac_pdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: Literal[True] = True,
+#     ) -> np.float64 | NDArray[np.float64]: ...
+#
+#     def jac_pdf(
+#         self,
+#         time: float | NDArray[np.float64],
+#         asarray: bool = False,
+#     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+#         return self.unfrozen_model.jac_pdf(time, asarray=asarray)
 
-class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):
 
-    unfrozen_model: LifetimeDistribution
-    frozen_args: tuple[()]
-
-    @override
-    def unfreeze(self) -> LifetimeDistribution:
-        return super().unfreeze()
-
-    def dhf(
-        self,
-        time: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
-        return self.unfrozen_model.dhf(time)
-
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
-        return self.unfrozen_model.jac_hf(time, asarray=asarray)
-
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
-        return self.unfrozen_model.jac_chf(time, asarray=asarray)
-
-    @overload
-    def jac_sf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_sf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_sf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
-        return self.unfrozen_model.jac_sf(time, asarray=asarray)
-
-    @overload
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
-        return self.unfrozen_model.jac_cdf(time, asarray=asarray)
-
-    @overload
-    def jac_pdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_pdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_pdf(
-        self,
-        time: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
-        return self.unfrozen_model.jac_pdf(time, asarray=asarray)
-
-
-class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
+class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float|NDArray[np.float64], *tuple[float|NDArray[np.float64], ...]]):
 
     unfrozen_model: LifetimeRegression
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
+
+    @override
+    def __init__(self, model : LifetimeRegression, covar : float|NDArray[np.float64], *args : float|NDArray[np.float64]):
+        super().__init__(model, *(covar, *args))
 
     @override
     def unfreeze(self) -> LifetimeRegression:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Callable, Optional
 
 import numpy as np
@@ -71,7 +73,7 @@ class AgeReplacementModel(
     @override
     def isf(
         self,
-        probability: NDArray[np.float64],
+        probability: float | NDArray[np.float64],
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
     ) -> NDArray[np.float64]:
@@ -314,9 +316,14 @@ class LeftTruncatedModel(
 
 
 
-class FrozenAgeReplacementModel(FrozenParametricLifetimeModel):
+class FrozenAgeReplacementModel(FrozenParametricLifetimeModel[float|NDArray[np.float64], *tuple[float|NDArray[np.float64], ...]]):
     unfrozen_model: AgeReplacementModel
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
+
+    @override
+    def __init__(self, model : AgeReplacementModel, ar : float|NDArray[np.float64], *args : float|NDArray[np.float64]):
+        super().__init__(model, *(ar, *args))
+
 
     @override
     def unfreeze(self) -> AgeReplacementModel:
@@ -327,9 +334,14 @@ class FrozenAgeReplacementModel(FrozenParametricLifetimeModel):
         return self.frozen_args[0]
 
 
-class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel):
+class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel[float|NDArray[np.float64], *tuple[float|NDArray[np.float64], ...]]):
     unfrozen_model: LeftTruncatedModel
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
+
+    @override
+    def __init__(self, model : LeftTruncatedModel, a0 : float|NDArray[np.float64], *args : float|NDArray[np.float64]):
+        super().__init__(model, *(a0, *args))
+
 
     @override
     def unfreeze(self) -> LeftTruncatedModel:

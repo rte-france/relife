@@ -8,6 +8,8 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from __future__ import annotations
 
+from typing import overload, Literal
+
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
@@ -138,6 +140,26 @@ class ProportionalHazard(LifetimeRegression):
     ) -> np.float64 | NDArray[np.float64]:
         return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
 
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+
+
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
@@ -171,6 +193,24 @@ class ProportionalHazard(LifetimeRegression):
         if not asarray:
             return np.unstack(jac)
         return jac
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
 
     def jac_chf(
         self,
@@ -288,6 +328,25 @@ class AcceleratedFailureTime(LifetimeRegression):
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
 
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+
     def jac_hf(
         self,
         time: float | NDArray[np.float64],
@@ -322,6 +381,24 @@ class AcceleratedFailureTime(LifetimeRegression):
         if not asarray:
             return np.unstack(jac)
         return jac
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[False] = False,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+
+    @overload
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[True] = True,
+    ) -> np.float64 | NDArray[np.float64]: ...
 
     def jac_chf(
         self,

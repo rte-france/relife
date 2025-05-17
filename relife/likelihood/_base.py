@@ -5,13 +5,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife import ParametricModel
-from relife.data import LifetimeData, NHPPData
 from relife.likelihood.hessian_estimation import _hessian_scheme
 
 
 class Likelihood(ABC):
     model: ParametricModel
-    data: LifetimeData | NHPPData
 
     @property
     def params(self) -> NDArray[np.float64]:

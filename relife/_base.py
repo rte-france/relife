@@ -15,7 +15,7 @@ if TYPE_CHECKING:
         FrozenLeftTruncatedModel,
         FrozenLifetimeRegression,
         LeftTruncatedModel,
-        LifetimeRegression, LifetimeDistribution,
+        LifetimeRegression, LifetimeDistribution, ParametricLifetimeModel, FrozenParametricLifetimeModel,
 )
     from relife.stochastic_process import (
         FrozenNonHomogeneousPoissonProcess,
@@ -368,20 +368,15 @@ class FittingResults:
         return asdict(self)
 
 
-@overload
-def freeze(model: LifetimeDistribution, *args: float | NDArray[np.float64]) -> LifetimeDistribution: ...
 
 @overload
 def freeze(model: LifetimeRegression, *args: float | NDArray[np.float64]) -> FrozenLifetimeRegression: ...
 
-
 @overload
 def freeze(model: LeftTruncatedModel, *args: float | NDArray[np.float64]) -> FrozenLeftTruncatedModel: ...
 
-
 @overload
 def freeze(model: AgeReplacementModel, *args: float | NDArray[np.float64]) -> FrozenAgeReplacementModel: ...
-
 
 @overload
 def freeze(
@@ -390,14 +385,12 @@ def freeze(
 
 
 def freeze(
-    model: LifetimeDistribution | LifetimeRegression | LeftTruncatedModel | AgeReplacementModel | NonHomogeneousPoissonProcess,
+    model: LifetimeRegression | LeftTruncatedModel | AgeReplacementModel | NonHomogeneousPoissonProcess,
     *args: float | NDArray[np.float64],
 ) -> (
-    LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel | FrozenNonHomogeneousPoissonProcess
+    FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel | FrozenNonHomogeneousPoissonProcess
 ):
     match model:
-        case LifetimeDistribution():
-            return model
         case LifetimeRegression():
             return FrozenLifetimeRegression(model, *args)
         case AgeReplacementModel():
