@@ -42,7 +42,7 @@ class LikelihoodFromLifetimes(Likelihood):
         return -np.sum(
             np.log(
                 self.model.hf(
-                    lifetime_data.complete.values,
+                    lifetime_data.complete.lifetime_values,
                     *lifetime_data.complete.args,
                 )
             )  # (m, 1)
@@ -53,7 +53,7 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         return np.sum(
             self.model.chf(
-                lifetime_data.complete_or_right_censored.values,
+                lifetime_data.complete_or_right_censored.lifetime_values,
                 *lifetime_data.complete_or_right_censored.args,
             ),
             dtype=np.float64,  # (m, 1)
@@ -66,7 +66,7 @@ class LikelihoodFromLifetimes(Likelihood):
             np.log(
                 -np.expm1(
                     -self.model.chf(
-                        lifetime_data.left_censoring.values,
+                        lifetime_data.left_censoring.lifetime_values,
                         *lifetime_data.left_censoring.args,
                     )
                 )
@@ -78,7 +78,7 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         return -np.sum(
             self.model.chf(
-                lifetime_data.left_truncation.values,
+                lifetime_data.left_truncation.lifetime_values,
                 *lifetime_data.left_truncation.args,
             ),  # (m, 1)
             dtype=np.float64,
@@ -89,12 +89,12 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         return -np.sum(
             self.model.jac_hf(
-                lifetime_data.complete.values,
+                lifetime_data.complete.lifetime_values,
                 *lifetime_data.complete.args,
                 asarray=True,
             )  # (p, m, 1)
             / self.model.hf(
-                lifetime_data.complete.values,
+                lifetime_data.complete.lifetime_values,
                 *lifetime_data.complete.args,
             ),  # (m, 1)
             axis=(1, 2),
@@ -105,7 +105,7 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         return np.sum(
             self.model.jac_chf(
-                lifetime_data.complete_or_right_censored.values,
+                lifetime_data.complete_or_right_censored.lifetime_values,
                 *lifetime_data.complete_or_right_censored.args,
                 asarray=True,
             ),  # (p, m, 1)
@@ -117,13 +117,13 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         return -np.sum(
             self.model.jac_chf(
-                lifetime_data.left_censoring.values,
+                lifetime_data.left_censoring.lifetime_values,
                 *lifetime_data.left_censoring.args,
                 asarray=True,
             )  # (p, m, 1)
             / np.expm1(
                 self.model.chf(
-                    lifetime_data.left_censoring.values,
+                    lifetime_data.left_censoring.lifetime_values,
                     *lifetime_data.left_censoring.args,
                 )
             ),  # (m, 1)
@@ -135,7 +135,7 @@ class LikelihoodFromLifetimes(Likelihood):
             return None
         return -np.sum(
             self.model.jac_chf(
-                lifetime_data.left_truncation.values,
+                lifetime_data.left_truncation.lifetime_values,
                 *lifetime_data.left_truncation.args,
                 asarray=True,
             ),  # (p, m, 1)

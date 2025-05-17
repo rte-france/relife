@@ -211,12 +211,6 @@ class AgeReplacementModel(
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
-    def freeze_args(
-        self, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]:
-        ar = reshape_ar_or_a0("ar", ar)
-        return (ar,) + getattr(self.baseline, "freeze_args", ())(*args)
-
 
 class LeftTruncatedModel(
     ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
@@ -318,18 +312,11 @@ class LeftTruncatedModel(
         else:
             return super_rvs
 
-    def freeze_args(
-        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]:
-        a0 = reshape_ar_or_a0("a0", a0)
-        return (a0,) + self.baseline.freeze_args(*args)
 
 
-class FrozenAgeReplacementModel(
-    FrozenParametricLifetimeModel[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
-):
+class FrozenAgeReplacementModel(FrozenParametricLifetimeModel):
     unfrozen_model: AgeReplacementModel
-    frozen_args: tuple[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
+    frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
     def unfreeze(self) -> AgeReplacementModel:
@@ -340,11 +327,9 @@ class FrozenAgeReplacementModel(
         return self.frozen_args[0]
 
 
-class FrozenLeftTruncatedModel(
-    FrozenParametricLifetimeModel[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
-):
+class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel):
     unfrozen_model: LeftTruncatedModel
-    frozen_args: tuple[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
+    frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
     def unfreeze(self) -> LeftTruncatedModel:

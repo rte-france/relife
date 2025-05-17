@@ -215,8 +215,8 @@ class Gompertz(LifetimeDistribution):
     @override
     def init_params_values(self, lifetime_data: LifetimeData) -> None:
         param0 = np.empty(self.nb_params, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.values))
-        shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.values))
+        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.lifetime_values))
+        shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.lifetime_values))
         param0[0] = shape
         param0[1] = rate
         self.params = param0
@@ -510,9 +510,6 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.
     def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
-
-    def freeze_args(self, *args: float | NDArray[np.float64]) -> tuple[float | NDArray[np.float64], ...]:
-        return self.baseline.freeze_args(*args)
 
     @override
     def cdf(

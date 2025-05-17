@@ -20,12 +20,11 @@ from typing_extensions import override
 from relife import FittingResults, ParametricModel
 from relife.data import LifetimeData
 from relife.likelihood import LikelihoodFromLifetimes
-from relife.quadrature import LebesgueStieltjesMixin
+from relife.quadrature import  check_and_broadcast_bounds, legendre_quadrature, unweighted_laguerre_quadrature
 
 Args = TypeVarTuple("Args")
 
-
-class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Generic[*Args], ABC):
+class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     r"""Base class for lifetime model.
 
     This class defines the structure for creating lifetime model. It is s a blueprint
@@ -253,9 +252,6 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
             time[selection].copy(), event=event[selection].copy(), entry=entry[selection].copy(), args=args
         )
 
-    @abstractmethod
-    def freeze_args(self, *args: *Args) -> tuple[*Args]: ...
-
     # @property
     # def plot(self) -> PlotSurvivalFunc:
     #     """Plot"""
@@ -291,6 +287,140 @@ class ParametricLifetimeModel(ParametricModel, LebesgueStieltjesMixin[*Args], Ge
                 case _:
                     continue
         return args_names
+
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        a: float | NDArray[np.float64] = 0.0,
+        b: float | NDArray[np.float64] = np.inf,
+        *args: *Args,
+        deg: int = 10,
+    ) -> np.float64 | NDArray[np.float64]:
+        r"""
+        Lebesgue-Stieltjes integration.
+
+        Parameters
+        ----------
+        func : callable (in : 1 ndarray , out : 1 ndarray)
+            The callable must have only one ndarray object as argument and returns one ndarray object
+        a : ndarray (max dim of 2)
+            Lower bound(s) of integration.
+        b : ndarray (max dim of 2)
+            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+        deg : int, default 10
+            Degree of the polynomials interpolation
+
+        Returns
+        -------
+        np.ndarray
+            Lebesgue-Stieltjes integral of func from `a` to `b`.
+        """
+        from relife import freeze
+        from relife.lifetime_model import (
+            FrozenParametricLifetimeModel,
+            LifetimeDistribution,
+        )
+
+        model = freeze(self, *args)
+        model : LifetimeDistribution | FrozenParametricLifetimeModel
+
+        def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
+            #  x.shape == (deg,), (deg, n) or (deg, m, n)
+            # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+            fx = func(x)
+            if fx.shape[-len(x.shape) :] != x.shape:
+                raise ValueError(
+                    f"""
+                    func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
+                    Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
+                    """
+                )
+            if x.ndim == 3:  # reshape because model.pdf is tested only for input ndim <= 2
+                deg, m, n = x.shape
+                x = np.rollaxis(x, 1).reshape(m, -1)  # (m, deg*n), roll on m because axis 0 must align with m of args
+                pdf = model.pdf(x)  # (m, deg*n)
+                pdf = np.rollaxis(pdf.reshape(m, deg, n), 1, 0)  #  (deg, m, n)
+            else:  # ndim == 1 | 2
+                # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args
+                pdf = model.pdf(x.reshape(1, -1))  # (1, deg*n) or (1, deg)
+                pdf = pdf.reshape(x.shape)  # (deg, n) or (deg,)
+
+            # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+            return fx * pdf
+
+        # if isinstance(model, AgeReplacementModel):
+        #     ar, args = frozen_model.args[0], frozen_model.args[1:]
+        #     b = np.minimum(ar, b)
+        #     w = np.where(b == ar, func(ar) * model.baseline.sf(ar, *args), 0.)
+
+        arr_a, arr_b = check_and_broadcast_bounds(a, b)  # (), (n,) or (m, n)
+        if np.any(arr_a > arr_b):
+            raise ValueError("Bound values a must be lower than values of b")
+
+        # model_args_nb_assets = getattr(frozen_model, "args_nb_assets", 1)
+        # if arr_a.ndim == 2:
+        #     if arr_a.shape[0] not in (
+        #         1,
+        #         model_args_nb_assets,
+        #     ) and model_args_nb_assets not in (1, arr_a.shape[0]):
+        #         raise ValueError(
+        #             f"Incompatible bounds with model. Model has {model_args_nb_assets} nb_assets but a and b have shape {a.shape}, {b.shape}"
+        #         )
+
+        bound_b = model.isf(1e-4)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+        broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
+        arr_a = broadcasted_arrs[0].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_b = broadcasted_arrs[1].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        bound_b = broadcasted_arrs[2].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        is_inf = np.isinf(arr_b)  # () or (n,) or (m, n)
+        arr_b = np.where(is_inf, bound_b, arr_b)
+        integration = legendre_quadrature(
+            integrand, arr_a, arr_b, deg=deg
+        )  #  (d_1, ..., d_i), (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+        is_inf, _ = np.broadcast_arrays(is_inf, integration)
+        return np.where(
+            is_inf,
+            integration + unweighted_laguerre_quadrature(integrand, arr_b, deg=deg),
+            integration,
+        )
+
+    def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
+        """n-th order moment
+
+        Parameters
+        ----------
+        n : order of the moment, at least 1.
+        *args : variadic arguments required by the function
+
+        Returns
+        -------
+        ndarray of shape (0, )
+            n-th order moment.
+        """
+        if n < 1:
+            raise ValueError("order of the moment must be at least 1")
+        return self.ls_integrate(
+            lambda x: x**n,
+            0.0,
+            np.inf,
+            *args,
+            deg=100,
+        )  #  high degree of polynome to ensure high precision
+
+    def mean(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
+        return self.moment(1, *args)
+
+    def var(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
+        return self.moment(2, *args) - self.moment(1, *args) ** 2
+
+    def mrl(
+        self, time: float | NDArray[np.float64], *args: *Args
+    ) -> np.float64 | NDArray[np.float64]:
+        sf = self.sf(time, *args)
+        ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
+        if sf.ndim < 2:  # 2d to 1d or 0d
+            ls = np.squeeze(ls)
+        return ls / sf
 
 
 class FittableParametricLifetimeModel(ParametricLifetimeModel[*Args], ABC):
@@ -366,7 +496,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
     def init_params_values(self, lifetime_data: LifetimeData) -> None:
         param0 = np.ones(self.nb_params, dtype=np.float64)
-        param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.values)
+        param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.lifetime_values)
         self.params = param0
 
     @property
@@ -636,8 +766,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
         return super().ls_integrate(func, a, b, deg=deg)
 
-    def freeze_args(self) -> tuple[()]:
-        return ()
 
 
 class CovarEffect(ParametricModel):
@@ -1051,11 +1179,6 @@ class LifetimeRegression(
     ) -> LifetimeData:
         return super().sample_lifetime_data(*(covar, *args), size=size, window=window, seed=seed)
 
-    def freeze_args(
-        self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]:
-        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        return (covar,) + self.baseline.freeze_args(*args)
 
 
 class NonParametricLifetimeModel(ABC):
@@ -1077,16 +1200,18 @@ class NonParametricLifetimeModel(ABC):
     #     return PlotSurvivalFunc(self)
 
 
-class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
+class FrozenParametricLifetimeModel(ParametricModel):
 
-    frozen_args: tuple[*Args]
+    frozen_args: tuple[float|np.float64, ...]
 
-    def __init__(self, model: ParametricLifetimeModel[*Args], *args: *Args):
+    def __init__(self, model: ParametricLifetimeModel[*tuple[float|np.float64, ...]], *args: float|np.float64):
         super().__init__()
+        if np.any(np.isnan(model.params)):
+            raise ValueError("You try to freeze a model with unsetted parameters. Set params first")
         self.unfrozen_model = model
-        self.frozen_args = model.freeze_args(*args)
+        self.frozen_args = args
 
-    def unfreeze(self) -> ParametricLifetimeModel[*Args]:
+    def unfreeze(self) -> ParametricLifetimeModel[*tuple[float|np.float64, ...]]:
         return self.unfrozen_model
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -1192,7 +1317,7 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
         return self.unfrozen_model.ls_integrate(func, a, b, *self.frozen_args, deg=deg)
 
 
-class FrozenLifetimeDistribution(FrozenParametricLifetimeModel[()]):
+class FrozenLifetimeDistribution(FrozenParametricLifetimeModel):
 
     unfrozen_model: LifetimeDistribution
     frozen_args: tuple[()]
@@ -1200,14 +1325,6 @@ class FrozenLifetimeDistribution(FrozenParametricLifetimeModel[()]):
     @override
     def unfreeze(self) -> LifetimeDistribution:
         return super().unfreeze()
-
-    @property
-    def nb_coef(self) -> int:
-        return self.unfrozen_model.nb_coef
-
-    @property
-    def covar(self) -> np.float64 | NDArray[np.float64]:
-        return self.frozen_args[0]
 
     def dhf(
         self,
@@ -1321,12 +1438,10 @@ class FrozenLifetimeDistribution(FrozenParametricLifetimeModel[()]):
         return self.unfrozen_model.jac_pdf(time, asarray=asarray)
 
 
-class FrozenLifetimeRegression(
-    FrozenParametricLifetimeModel[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
-):
+class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
 
     unfrozen_model: LifetimeRegression
-    frozen_args: tuple[np.float64 | NDArray[np.float64], *tuple[np.float64 | NDArray[np.float64], ...]]
+    frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
     def unfreeze(self) -> LifetimeRegression:
@@ -1337,7 +1452,7 @@ class FrozenLifetimeRegression(
         return self.unfrozen_model.nb_coef
 
     @property
-    def covar(self) -> np.float64 | NDArray[np.float64]:
+    def covar(self) -> float | NDArray[np.float64]:
         return self.frozen_args[0]
 
     def dhf(

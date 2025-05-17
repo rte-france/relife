@@ -46,11 +46,11 @@ class ECDF(NonParametricLifetimeModel):
             departure=departure,
         )
 
-        timeline, counts = np.unique(lifetime_data.complete_or_right_censored.values, return_counts=True)
+        timeline, counts = np.unique(lifetime_data.complete_or_right_censored.lifetime_values, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         sf = 1 - cdf
-        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.complete_or_right_censored.values))
+        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.complete_or_right_censored.lifetime_values))
 
         dtype = np.dtype([("timeline", np.float64), ("values", np.float64), ("se", np.float64)])
         self._sf = np.array([timeline, sf, se], dtype=dtype)
@@ -175,26 +175,26 @@ class KaplanMeier(NonParametricLifetimeModel):
         if lifetime_data.left_censoring is not None:
             raise ValueError("KaplanMeier does not take left censored lifetimes")
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.complete_or_right_censored.values,
+            lifetime_data.complete_or_right_censored.lifetime_values,
             return_inverse=True,
             return_counts=True,
         )
         death_set = np.zeros_like(timeline, int)  # death at each timeline step
         complete_observation_indic = np.zeros_like(
-            lifetime_data.complete_or_right_censored.values
+            lifetime_data.complete_or_right_censored.lifetime_values
         )  # just creating an array to fill it next line
-        complete_observation_indic[lifetime_data.complete.index] = 1
+        complete_observation_indic[lifetime_data.complete.lifetime_index] = 1
         np.add.at(death_set, unique_indices, complete_observation_indic)
         x_in = np.histogram(
             np.concatenate(
                 (
-                    lifetime_data.left_truncation.values.flatten(),
+                    lifetime_data.left_truncation.lifetime_values.flatten(),
                     np.array(
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.complete_or_right_censored.values)
-                                - len(lifetime_data.left_truncation.values)
+                                len(lifetime_data.complete_or_right_censored.lifetime_values)
+                                - len(lifetime_data.left_truncation.lifetime_values)
                             )
                         ]
                     ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
@@ -317,28 +317,28 @@ class NelsonAalen(NonParametricLifetimeModel):
             raise ValueError("NelsonAalen does not accept left censored or interval censored lifetimes")
 
         timeline, unique_indices, counts = np.unique(
-            lifetime_data.complete_or_right_censored.values,
+            lifetime_data.complete_or_right_censored.lifetime_values,
             return_inverse=True,
             return_counts=True,
         )
         death_set = np.zeros_like(timeline, dtype=np.int64)  # death at each timeline step
 
         complete_observation_indic = np.zeros_like(
-            lifetime_data.complete_or_right_censored.values
+            lifetime_data.complete_or_right_censored.lifetime_values
         )  # just creating an array to fill it next line
-        complete_observation_indic[lifetime_data.complete.index] = 1
+        complete_observation_indic[lifetime_data.complete.lifetime_index] = 1
 
         np.add.at(death_set, unique_indices, complete_observation_indic)
         x_in = np.histogram(
             np.concatenate(
                 (
-                    lifetime_data.left_truncation.values.flatten(),
+                    lifetime_data.left_truncation.lifetime_values.flatten(),
                     np.array(
                         [
                             0
                             for _ in range(
-                                len(lifetime_data.complete_or_right_censored.values)
-                                - len(lifetime_data.left_truncation.values)
+                                len(lifetime_data.complete_or_right_censored.lifetime_values)
+                                - len(lifetime_data.left_truncation.lifetime_values)
                             )
                         ]
                     ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
@@ -425,19 +425,19 @@ class Turnbull(NonParametricLifetimeModel):
             departure=departure,
         )
 
-        timeline_temp = np.unique(np.insert(lifetime_data.interval_censoring.values.flatten(), 0, 0))
+        timeline_temp = np.unique(np.insert(lifetime_data.interval_censoring.lifetime_values.flatten(), 0, 0))
         timeline_len = len(timeline_temp)
         if not self.lowmem:
             event_occurence = (
                 np.greater_equal.outer(
                     timeline_temp[:-1],
-                    lifetime_data.interval_censoring.values[
+                    lifetime_data.interval_censoring.lifetime_values[
                         :, 0
                     ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
                 )
                 * np.less_equal.outer(
                     timeline_temp[1:],
-                    lifetime_data.interval_censoring.values[:, 1],
+                lifetime_data.interval_censoring.lifetime_values[:, 1],
                 )
             ).T
 
@@ -449,13 +449,13 @@ class Turnbull(NonParametricLifetimeModel):
             )
 
         else:
-            len_censored_data = len(lifetime_data.interval_censoring.values)
+            len_censored_data = len(lifetime_data.interval_censoring.lifetime_values)
             event_occurence = []
             for i in range(len_censored_data):
                 event_occurence.append(
                     np.where(
-                        (lifetime_data.interval_censoring.values[:, 0][i] <= timeline_temp[:-1])
-                        & (timeline_temp[1:] <= lifetime_data.interval_censoring.values[:, 1][i])
+                        (lifetime_data.interval_censoring.lifetime_values[:, 0][i] <= timeline_temp[:-1])
+                        & (timeline_temp[1:] <= lifetime_data.interval_censoring.lifetime_values[:, 1][i])
                     )[0][[0, -1]]
                 )
             event_occurence = np.array(event_occurence)
@@ -489,7 +489,7 @@ class Turnbull(NonParametricLifetimeModel):
     ):
 
         d_tilde = np.histogram(
-            np.searchsorted(timeline_temp, lifetime_data.complete.values),
+            np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),
             bins=range(timeline_len + 1),
         )[0][1:]
         s = np.linspace(1, 0, timeline_len)
@@ -516,7 +516,7 @@ class Turnbull(NonParametricLifetimeModel):
                 )
             d += d_tilde
             y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncation.values.flatten()
+            _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()
 
             y -= len(_unsorted_entry) - np.searchsorted(np.sort(_unsorted_entry), timeline_temp[1:])
             s_updated = np.array(np.cumprod(1 - d / y))
@@ -535,7 +535,7 @@ class Turnbull(NonParametricLifetimeModel):
     ):
 
         d_tilde = np.histogram(
-            np.searchsorted(timeline_temp, lifetime_data.complete.values),
+            np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),
             bins=range(timeline_len + 1),
         )[0][1:]
         s = np.linspace(1, 0, timeline_len)
@@ -558,7 +558,7 @@ class Turnbull(NonParametricLifetimeModel):
             else:
                 d = d_tilde
             y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncation.values.flatten()
+            _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()
             y -= len(_unsorted_entry) - np.searchsorted(np.sort(_unsorted_entry), timeline_temp[1:])
             s_updated = np.array(np.cumprod(1 - d / y))
             s_updated = np.insert(s_updated, 0, 1)

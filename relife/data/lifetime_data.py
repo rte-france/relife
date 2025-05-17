@@ -25,7 +25,7 @@ def event_reshape(event: Optional[NDArray[np.bool_]] = None) -> Optional[NDArray
         if event.ndim < 2:
             event = event.reshape(-1, 1)
         return event
-
+    return None
 
 def entry_reshape(entry: Optional[NDArray[np.float64]] = None) -> Optional[NDArray[np.float64]]:
     if entry is not None:
@@ -34,7 +34,7 @@ def entry_reshape(entry: Optional[NDArray[np.float64]] = None) -> Optional[NDArr
         if entry.ndim < 2:
             entry = entry.reshape(-1, 1)
         return entry
-
+    return None
 
 def departure_reshape(departure: Optional[NDArray[np.float64]] = None) -> Optional[NDArray[np.float64]]:
     if departure is not None:
@@ -43,22 +43,24 @@ def departure_reshape(departure: Optional[NDArray[np.float64]] = None) -> Option
         if departure.ndim < 2:
             departure = departure.reshape(-1, 1)
         return departure
-
+    return None
 
 def args_reshape(args: tuple[float | NDArray[np.float64], ...] = ()) -> tuple[NDArray[np.float64], ...]:
-    args: list[NDArray[np.float64]] = [np.asarray(arg) for arg in args]
-    for i, arg in enumerate(args):
+    args_list: list[NDArray[np.float64]] = [np.asarray(arg) for arg in args]
+    for i, arg in enumerate(args_list):
         if arg.ndim > 2:
             raise ValueError(f"Invalid arg shape, got {arg.shape} shape at position {i}")
         if arg.ndim < 2:
-            args[i] = arg.reshape(-1, 1)
-    return tuple(args)
+            args_list[i] = arg.reshape(-1, 1)
+    return tuple(args_list)
 
 
 def get_complete(
     time: NDArray[np.float64], event: Optional[NDArray[np.bool_]] = None, args: tuple[NDArray[np.float64], ...] = ()
 ) -> Optional[IndexedLifetimeData]:
     if time.shape[-1] == 1:  # 1D time
+        if event is None:
+            event = np.ones((len(time), 1)).astype(np.bool_)
         index = np.where(event)[0]
         if index.size > 0:
             values = time[index]  # (m, 1)
@@ -92,6 +94,8 @@ def get_right_censoring(
     time: NDArray[np.float64], event: Optional[NDArray[np.bool_]] = None, args: tuple[NDArray[np.float64], ...] = ()
 ) -> Optional[IndexedLifetimeData]:
     if time.shape[-1] == 1:  # 1D time
+        if event is None:
+            event = np.ones((len(time), 1)).astype(np.bool_)
         index = np.where(~event)[0]
         if index.size > 0:
             values = time[index]  # (m, 1)
@@ -111,6 +115,8 @@ def get_interval_censoring(
     time: NDArray[np.float64], event: Optional[NDArray[np.bool_]] = None, args: tuple[NDArray[np.float64], ...] = ()
 ) -> Optional[IndexedLifetimeData]:
     if time.shape[-1] == 1:  # 1D time
+        if event is None:
+            event = np.ones((len(time), 1)).astype(np.bool_)
         rc_index = np.where(~event)[0]
         if rc_index.size > 0:
             rc_values = np.c_[time[rc_index], np.ones(len(rc_index)) * np.inf]  # add a column of inf
@@ -132,8 +138,10 @@ def get_interval_censoring(
 
 
 def get_left_truncation(
-    time: NDArray[np.float64], entry: NDArray[np.float64], args: tuple[NDArray[np.float64], ...] = ()
+    time: NDArray[np.float64], entry: Optional[NDArray[np.float64]] = None, args: tuple[NDArray[np.float64], ...] = ()
 ) -> Optional[IndexedLifetimeData]:
+    if entry is None:
+        entry = np.zeros((len(time), 1))
     if time.shape[-1] == 1:  # 1D time
         index = np.where(entry > 0)[0]
         if index.size > 0:
@@ -151,8 +159,10 @@ def get_left_truncation(
 
 
 def get_right_truncation(
-    time: NDArray[np.float64], departure: NDArray[np.float64], args: tuple[NDArray[np.float64], ...] = ()
+    time: NDArray[np.float64], departure: Optional[NDArray[np.float64]] = None, args: tuple[NDArray[np.float64], ...] = ()
 ) -> Optional[IndexedLifetimeData]:
+    if departure is None:
+        departure = np.ones((len(time), 1)) * np.inf
     if time.shape[-1] == 1:  # 1D time
         index = np.where(departure < np.inf)[0]
         if index.size > 0:
@@ -174,8 +184,8 @@ class IndexedLifetimeData(NamedTuple):
     Object that encapsulates lifetime data values and corresponding units index
     """
 
-    values: NDArray[np.float64]  # (m, 1) or (m, 2)
-    index: NDArray[np.int64]  # (m,)
+    lifetime_values: NDArray[np.float64]  # (m, 1) or (m, 2)
+    lifetime_index: NDArray[np.int64]  # (m,)
     args: tuple[NDArray[np.float64], ...] = ()
 
 
@@ -208,17 +218,8 @@ class LifetimeData:
                 raise ValueError(
                     "When time is 2d, event is not necessary because time already encodes event information. Remove event"
                 )
-        else:
-            if event is None:
-                event = np.ones((len(time), 1)).astype(np.bool_)
-
         entry = entry_reshape(entry)
         departure = departure_reshape(departure)
-        if entry is None:
-            entry = np.zeros((len(time), 1))
-        if departure is None:
-            departure = np.ones((len(time), 1)) * np.inf
-
         args = args_reshape(args)
 
         # Check sizes
@@ -245,11 +246,11 @@ class LifetimeData:
         ]:
             data = getattr(self, field_name)
             if data is not None and self.left_truncation is not None:
-                inter_ids = np.intersect1d(data.index, self.left_truncation.index)
+                inter_ids = np.intersect1d(data.lifetime_index, self.left_truncation.lifetime_index)
                 intersection_values = np.concatenate(
                     (
-                        data.values[np.isin(data.index, inter_ids)],
-                        self.left_truncation.values[np.isin(self.left_truncation.index, inter_ids)],
+                        data.lifetime_values[np.isin(data.lifetime_index, inter_ids)],
+                        self.left_truncation.lifetime_values[np.isin(self.left_truncation.lifetime_index, inter_ids)],
                     ),
                     axis=1,
                 )
@@ -267,11 +268,11 @@ class LifetimeData:
                     ):
                         raise ValueError("Some lifetimes are under left truncation bounds")
             if data is not None and self.right_truncation is not None:
-                inter_ids = np.intersect1d(data.index, self.right_truncation.index)
+                inter_ids = np.intersect1d(data.lifetime_index, self.right_truncation.lifetime_index)
                 intersection_values = np.concatenate(
                     (
-                        data.values[np.isin(data.index, inter_ids)],
-                        self.right_truncation.values[np.isin(self.right_truncation.index, inter_ids)],
+                        data.lifetime_values[np.isin(data.lifetime_index, inter_ids)],
+                        self.right_truncation.lifetime_values[np.isin(self.right_truncation.lifetime_index, inter_ids)],
                     ),
                     axis=1,
                 )
@@ -293,8 +294,8 @@ class LifetimeData:
         # compute complete_or_right_censored
         self.complete_or_right_censored = None
         if self.complete is not None and self.right_censoring is not None:
-            values = np.concatenate([self.complete.values, self.right_censoring.values], axis=0)
-            index = np.concatenate([self.complete.index, self.right_censoring.index], axis=0)
+            values = np.concatenate([self.complete.lifetime_values, self.right_censoring.lifetime_values], axis=0)
+            index = np.concatenate([self.complete.lifetime_index, self.right_censoring.lifetime_index], axis=0)
             args = tuple(
                 (np.concatenate(x, axis=0) for x in zip_longest(self.complete.args, self.right_censoring.args))
             )
