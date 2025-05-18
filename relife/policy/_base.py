@@ -7,7 +7,8 @@ from numpy.typing import NDArray
 
 from relife import freeze
 from relife.economic import Cost, ExponentialDiscounting, cost
-from relife.lifetime_model import LeftTruncatedModel
+from relife.lifetime_model import LeftTruncatedModel, FrozenLifetimeRegression, LifetimeDistribution, \
+    FrozenAgeReplacementModel, FrozenLeftTruncatedModel, AgeReplacementModel
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -16,33 +17,33 @@ if TYPE_CHECKING:
     )
 
     from .age_replacement import (
-        DefaultAgeReplacementPolicy,
+        AgeReplacementPolicy,
         OneCycleAgeReplacementPolicy,
     )
-    from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
+    from .run_to_failure import RunToFailurePolicy, OneCycleRunToFailurePolicy
 
 
-class RenewalPolicy:
-
-    cost: Cost
-    model: FrozenParametricLifetimeModel
-    model1: Optional[FrozenParametricLifetimeModel]
-
-    def __init__(
-        self,
-        model: LifetimeDistribution | FrozenParametricLifetimeModel,
-        model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
-        discounting_rate: float = 0.0,
-        **kwcost: float | NDArray[np.float64],
-    ):
-        self.model = model
-        self.model1 = model1
-        self.discounting = ExponentialDiscounting(discounting_rate)
-        self.cost = cost(**kwcost)
-
-    @property
-    def discounting_rate(self):
-        return self.discounting.rate
+# class AgeRenewalPolicy:
+#
+#     cost: Cost
+#     model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel
+#     model1: Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel]
+#
+#     def __init__(
+#         self,
+#         model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
+#         model1: Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel] = None,
+#         discounting_rate: float = 0.0,
+#         **kwcost: float | NDArray[np.float64],
+#     ):
+#         self.model = model
+#         self.model1 = model1
+#         self.discounting = ExponentialDiscounting(discounting_rate)
+#         self.cost = cost(**kwcost)
+#
+#     @property
+#     def discounting_rate(self):
+#         return self.discounting.rate
 
     # def sample(
     #     self,
@@ -71,59 +72,110 @@ class RenewalPolicy:
 
 
 @overload
-def age_replacement_policy(
-    model: LifetimeDistribution | FrozenParametricLifetimeModel,
+def run_to_failure_policy(
+    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
     cost: Cost,
+    a0: Optional[float | NDArray[np.float64]] = None,
     one_cycle: Literal[True] = True,
     discounting_rate: float = 0.0,
-    model1: Literal[None] = None,
-    a0: Optional[float | NDArray[np.float64]] = None,
-    ar: Optional[float | NDArray[np.float64]] = None,
-    ar1: Optional[float | NDArray[np.float64]] = None,
 ) -> OneCycleRunToFailurePolicy: ...
 
 
 @overload
-def age_replacement_policy(
-    model: LifetimeDistribution | FrozenParametricLifetimeModel,
+def run_to_failure_policy(
+    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
     cost: Cost,
+    a0: Optional[float | NDArray[np.float64]] = None,
     one_cycle: Literal[False] = False,
     discounting_rate: float = 0.0,
-    model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
+) -> RunToFailurePolicy: ...
+
+
+def run_to_failure_policy(
+    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
+    cost: Cost,
+    a0: Optional[float | NDArray[np.float64]] = None,
+    one_cycle: bool = False,
+    discounting_rate: float = 0.0,
+) -> RunToFailurePolicy | OneCycleRunToFailurePolicy:
+    from .run_to_failure import RunToFailurePolicy, OneCycleRunToFailurePolicy
+
+    discounting = ExponentialDiscounting(discounting_rate)
+    if not one_cycle:
+        first_lifetime_model = None
+        if a0 is not None:
+            first_lifetime_model : FrozenLeftTruncatedModel = freeze(LeftTruncatedModel(lifetime_model), a0)
+        return RunToFailurePolicy(
+            lifetime_model,
+            cost,
+            discounting,
+            first_lifetime_model = first_lifetime_model,
+        )
+    if a0 is not None:
+        lifetime_model : FrozenLeftTruncatedModel = freeze(LeftTruncatedModel(lifetime_model), a0)
+    return OneCycleRunToFailurePolicy(
+        lifetime_model,
+        cost,
+        discounting,
+    )
+
+@overload
+def age_replacement_policy(
+    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
+    cost: Cost,
+    one_cycle = True,
+    a0: Optional[float | NDArray[np.float64]] = None,
+    ar: Optional[float | NDArray[np.float64]] = None,
+    ar1 = None,
+    discounting_rate: float = 0.0,
+) -> OneCycleAgeReplacementPolicy: ...
+
+
+@overload
+def age_replacement_policy(
+    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
+    cost: Cost,
+    one_cycle = False,
     a0: Optional[float | NDArray[np.float64]] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,
-) -> DefaultRunToFailurePolicy: ...
+    discounting_rate: float = 0.0,
+) -> AgeReplacementPolicy: ...
 
 
 def age_replacement_policy(
-    model: LifetimeDistribution | FrozenParametricLifetimeModel,
+    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
     cost: Cost,
     one_cycle: bool = False,
-    discounting_rate: float = 0.0,
-    model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
-    a0: Optional[float | NDArray[np.float64]] = None,
+    a0: float | NDArray[np.float64] = None,
     ar: Optional[float | NDArray[np.float64]] = None,
     ar1: Optional[float | NDArray[np.float64]] = None,
-) -> OneCycleRunToFailurePolicy | DefaultRunToFailurePolicy:
-    from .age_replacement import (
-        DefaultAgeReplacementPolicy,
-        OneCycleAgeReplacementPolicy,
-    )
 
-    if one_cycle:
-        if a0 is not None:
-            # model = getattr(model, "unfrozen_model", model)
-            # args = getattr(model, "frozen_args", ())
-            model = freeze(LeftTruncatedModel(model), a0)
-        return OneCycleAgeReplacementPolicy(
-            model,
-            cost["cf"],
-            cost["cp"],
-            discounting_rate=discounting_rate,
-            ar=ar,
-            a0=a0,
+    discounting_rate: float = 0.0,
+) -> OneCycleRunToFailurePolicy | RunToFailurePolicy:
+
+    ar = np.nan if ar is None else ar
+    if not one_cycle:
+        first_lifetime_model = None
+        if a0 is not None and ar1 is not None:
+            first_lifetime_model = freeze(AgeReplacementModel(LeftTruncatedModel(lifetime_model)), ar1, a0)
+        elif ar1 is not None:
+            first_lifetime_model = freeze(AgeReplacementModel(lifetime_model), ar1)
+        elif a0 is not None:
+            first_lifetime_model = freeze(AgeReplacementModel(LeftTruncatedModel(lifetime_model)), ar, a0)
+        return AgeReplacementPolicy(
+            freeze(AgeReplacementModel(lifetime_model), ar),
+            cost,
+            ExponentialDiscounting(discounting_rate),
+            first_lifetime_model=first_lifetime_model
         )
+    else:
+        if ar1 is not None:
+            raise ValueError
+        if a0 is not None and
+
+
+
     return DefaultAgeReplacementPolicy(
         model,
         cost["cf"],
@@ -144,53 +196,8 @@ def run_to_failure_policy(
     discounting_rate: Optional[float] = None,
     model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
     a0: Optional[float | NDArray[np.float64]] = None,
-) -> DefaultRunToFailurePolicy: ...
+) -> RunToFailurePolicy: ...
 
-
-@overload
-def run_to_failure_policy(
-    model: LifetimeDistribution | FrozenParametricLifetimeModel,
-    cost: Cost,
-    one_cycle: Literal[True] = True,
-    discounting_rate: Optional[float] = None,
-    model1: Literal[None] = None,
-    a0: Optional[float | NDArray[np.float64]] = None,
-) -> OneCycleRunToFailurePolicy: ...
-
-
-def run_to_failure_policy(
-    model: LifetimeDistribution | FrozenParametricLifetimeModel,
-    cost: Cost,
-    one_cycle: bool = False,
-    discounting_rate: Optional[float] = None,
-    model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
-    a0: Optional[float | NDArray[np.float64]] = None,
-) -> DefaultRunToFailurePolicy | OneCycleRunToFailurePolicy:
-    from .run_to_failure import DefaultRunToFailurePolicy, OneCycleRunToFailurePolicy
-
-    if not one_cycle:
-        if a0 is not None:
-            model1 = model1 if model1 is not None else model
-            # model1 = getattr(model1, "unfrozen_model", model1)
-            # args = getattr(model1, "frozen_args", ())
-            # model1 = freeze(LeftTruncatedModel(model1), a0, *args)
-            model1 = freeze(LeftTruncatedModel(model1), a0)
-        return DefaultRunToFailurePolicy(
-            model,
-            cf=cost["cf"],
-            discounting_rate=discounting_rate,
-            model1=model1,
-        )
-    if a0 is not None:
-        # model = getattr(model, "unfrozen_model", model)
-        # args = getattr(model, "frozen_args", ())
-        # model = freeze(LeftTruncatedModel(model), a0, *args)
-        model = freeze(LeftTruncatedModel(model), a0)
-    return OneCycleRunToFailurePolicy(
-        model,
-        cf=cost["cf"],
-        discounting_rate=discounting_rate,
-    )
 
 
 #

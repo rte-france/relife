@@ -49,7 +49,7 @@ def get_if_none(*args_names: str):
                 attr_value = getattr(self, name)
                 arg_value = kwargs.get(name, None)
                 if attr_value is None and arg_value is None:
-                    if name == "ar1" and self.model1 is not None:
+                    if name == "ar1" and self.first_lifetime_model is not None:
                         raise ValueError(
                             f"{name} is not set. If fit exists, you may need to fit the object first or instanciate the object with {name}"
                         )

@@ -93,9 +93,9 @@ class RenewalProcessIterator(CountDataIterator):
 
     @property
     def model(self) -> LifetimeDistribution | FrozenParametricLifetimeModel:
-        if self.cycle == 0 and self.process.model1 is not None:
-            return self.process.model1
-        return self.process.model
+        if self.cycle == 0 and self.process.first_lifetime_model is not None:
+            return self.process.first_lifetime_model
+        return self.process.lifetime_model
 
     def step(self):
         time, event, entry = self.model.rvs(size=self.size, return_event=True, return_entry=True, seed=self.seed)

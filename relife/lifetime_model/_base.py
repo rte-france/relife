@@ -1204,7 +1204,7 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
 
     frozen_args: tuple[*Args]
 
-    def __init__(self, model: ParametricLifetimeModel[*tuple[float|np.float64, ...]], *args: *Args):
+    def __init__(self, model: ParametricLifetimeModel[*Args], *args: *Args):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("You try to freeze a model with unsetted parameters. Set params first")
@@ -1462,6 +1462,10 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float|NDArray[np.fl
     @property
     def covar(self) -> float | NDArray[np.float64]:
         return self.frozen_args[0]
+
+    @covar.setter
+    def covar(self, value : float | NDArray[np.float64]) -> None:
+        self.frozen_args = (value,) + self.frozen_args[1:]
 
     def dhf(
         self,

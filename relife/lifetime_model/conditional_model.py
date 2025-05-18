@@ -39,7 +39,7 @@ class AgeReplacementModel(
     """
 
     # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
-    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]] | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
 
@@ -228,7 +228,7 @@ class LeftTruncatedModel(
     """
 
     # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
-    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]] | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
         super().__init__()
         self.baseline = baseline
 
@@ -324,14 +324,17 @@ class FrozenAgeReplacementModel(FrozenParametricLifetimeModel[float|NDArray[np.f
     def __init__(self, model : AgeReplacementModel, ar : float|NDArray[np.float64], *args : float|NDArray[np.float64]):
         super().__init__(model, *(ar, *args))
 
-
     @override
     def unfreeze(self) -> AgeReplacementModel:
         return super().unfreeze()
 
     @property
-    def ar(self):
+    def ar(self) -> float | NDArray[np.float64]:
         return self.frozen_args[0]
+
+    @ar.setter
+    def ar(self, value : float | NDArray[np.float64]) -> None:
+        self.frozen_args = (value,) + self.frozen_args[1:]
 
 
 class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel[float|NDArray[np.float64], *tuple[float|NDArray[np.float64], ...]]):
@@ -348,5 +351,9 @@ class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel[float|NDArray[np.fl
         return super().unfreeze()
 
     @property
-    def a0(self):
+    def a0(self) -> float | NDArray[np.float64]:
         return self.frozen_args[0]
+
+    @a0.setter
+    def a0(self, value : float | NDArray[np.float64]) -> None:
+        self.frozen_args = (value,) + self.frozen_args[1:]

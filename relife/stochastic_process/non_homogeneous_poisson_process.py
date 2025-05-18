@@ -13,14 +13,14 @@ from numpy.typing import NDArray
 
 from relife import ParametricModel
 from relife.data import NHPPData
-from relife.lifetime_model import FittableParametricLifetimeModel
+from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
 
 class NonHomogeneousPoissonProcess(ParametricModel):
 
     def __init__(
         self,
-        baseline: FittableParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
+        baseline: LifetimeDistribution | LifetimeRegression
     ):
         super().__init__()
         self.baseline = baseline

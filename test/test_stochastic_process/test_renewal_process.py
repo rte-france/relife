@@ -7,7 +7,7 @@ from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 class TestDistribution:
     def test_renewal_density(self, distribution):
-        renewal_process = RenewalProcess(distribution, model1=EquilibriumDistribution(distribution))
+        renewal_process = RenewalProcess(distribution, first_lifetime_model=EquilibriumDistribution(distribution))
         assert renewal_process.renewal_density(100, 200).shape == (200,)
         assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / distribution.mean(), rel=1e-4)
 
@@ -22,7 +22,7 @@ class TestDistribution:
 
 class TestAgeReplacementDistribution:
     def test_renewal_density(self, frozen_ar_distribution):
-        renewal_process = RenewalProcess(frozen_ar_distribution, model1=EquilibriumDistribution(frozen_ar_distribution))
+        renewal_process = RenewalProcess(frozen_ar_distribution, first_lifetime_model=EquilibriumDistribution(frozen_ar_distribution))
         assert renewal_process.renewal_density(100, 200).shape == (200,)
         assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(
             1 / frozen_ar_distribution.mean(), rel=1e-4
@@ -40,7 +40,7 @@ class TestAgeReplacementDistribution:
 
 class TestRegression:
     def test_renewal_density(self, frozen_regression):
-        renewal_process = RenewalProcess(frozen_regression, model1=EquilibriumDistribution(frozen_regression))
+        renewal_process = RenewalProcess(frozen_regression, first_lifetime_model=EquilibriumDistribution(frozen_regression))
         assert renewal_process.renewal_density(100, 200).shape == (3, 200)
         assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / frozen_regression.mean(), rel=1e-4)
 
@@ -56,7 +56,7 @@ class TestRegression:
 
 class TestAgeReplacementRegression:
     def test_renewal_density(self, frozen_ar_regression):
-        renewal_process = RenewalProcess(frozen_ar_regression, model1=EquilibriumDistribution(frozen_ar_regression))
+        renewal_process = RenewalProcess(frozen_ar_regression, first_lifetime_model=EquilibriumDistribution(frozen_ar_regression))
         assert renewal_process.renewal_density(100, 200).shape == (3, 200)
         assert renewal_process.renewal_density(100, 200)[..., -1:] == approx(1 / frozen_ar_regression.mean(), rel=1e-4)
 

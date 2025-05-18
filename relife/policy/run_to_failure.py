@@ -5,49 +5,50 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic import RunToFailureReward
+from relife.economic import RunToFailureReward, Cost, ExponentialDiscounting, Discounting
 from relife.stochastic_process import RenewalRewardProcess
 
-from ._base import RenewalPolicy
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
         FrozenParametricLifetimeModel,
-        LifetimeDistribution,
-    )
+        LifetimeDistribution, FrozenLifetimeRegression, FrozenLeftTruncatedModel,
+)
 
 
-class OneCycleRunToFailurePolicy(RenewalPolicy):
+class OneCycleRunToFailurePolicy:
     r"""One cyle run-to-failure policy
 
     A policy for running assets to failure within one cycle.
 
     Parameters
     ----------
-    model : BaseLifetimeModel
+    lifetime_model : BaseLifetimeModel
         The lifetime model of the assets.
-    cf : np.ndarray
-        The cost of failure for each asset.
     discounting_rate : float, default is 0.
         The discounting rate.
     period_before_discounting: float, default is 1.
         The length of the first period before discounting.
     """
-
-    model1 = None
+    lifetime_model : LifetimeDistribution | FrozenParametricLifetimeModel
+    cost : Cost
+    reward : RunToFailureReward
+    discounting : ExponentialDiscounting
 
     def __init__(
         self,
-        model: LifetimeDistribution | FrozenParametricLifetimeModel,
-        cf: float | NDArray[np.float64],
-        discounting_rate: float = 0.0,
+        lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel,
+        cost: Cost,
+        discounting: Discounting,
         period_before_discounting: float = 1.0,
     ) -> None:
-        super().__init__(model, discounting_rate=discounting_rate, cf=cf)
+        self.lifetime_model = lifetime_model
+        self.cost = cost
+        self.reward = RunToFailureReward(cost["cf"])
+        self.discounting = discounting
         if period_before_discounting <= 0:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
-        self.reward = RunToFailureReward(cf)
 
     @property
     def discounting_rate(self):
@@ -60,13 +61,13 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
     def expected_total_cost(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)
         # reward partial expectation
-        return self.model.ls_integrate(
+        return self.lifetime_model.ls_integrate(
             lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=10
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         # reward partial expectation
-        return self.model.ls_integrate(
+        return self.lifetime_model.ls_integrate(
             lambda x: self.reward.sample(x) * self.discounting.factor(x), 0.0, np.inf, deg=10
         )
 
@@ -76,12 +77,12 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
                 self.reward.conditional_expectation(x) * self.discounting.factor(x) / self.discounting.annuity_factor(x)
             )
 
-        q0 = self.model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)
+        q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)
         a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,)
         # change first value of lower bound to compute the integral
         a = np.where(timeline < self.period_before_discounting, timeline, a)  # (nb_steps,)
         integral = np.atleast_2d(
-            self.model.ls_integrate(f, a, timeline)
+            self.lifetime_model.ls_integrate(f, a, timeline)
         )  # (nb_steps,) if q0: (), or (m, nb_steps) if q0 : (m, 1)
         mask = np.broadcast_to(
             timeline < self.period_before_discounting, integral.shape
@@ -100,7 +101,7 @@ class OneCycleRunToFailurePolicy(RenewalPolicy):
         return self._expected_equivalent_annual_cost(np.array(np.inf))
 
 
-class DefaultRunToFailurePolicy(RenewalPolicy):
+class RunToFailurePolicy:
     r"""Run-to-failure renewal policy.
 
     Renewal reward stochastic_process where assets are replaced on failure with costs
@@ -127,32 +128,37 @@ class DefaultRunToFailurePolicy(RenewalPolicy):
         theory with exponential and hyperbolic discounting. Probability in
         the Engineering and Informational Sciences, 22(1), 53-74.
     """
+    reward : RunToFailureReward
 
     def __init__(
         self,
-        model: LifetimeDistribution | FrozenParametricLifetimeModel,
-        cf: float | NDArray[np.float64],
-        *,
-        discounting_rate: float = 0.0,
-        model1: Optional[LifetimeDistribution | FrozenParametricLifetimeModel] = None,
+        lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
+        cost: Cost,
+        discounting: Discounting,
+        first_lifetime_model : Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel] = None,
     ) -> None:
-        super().__init__(model, model1, discounting_rate, cf=cf)
+        self.lifetime_model = lifetime_model
+        self.first_lifetime_model = first_lifetime_model
+        self.cost = cost
+        self.reward = RunToFailureReward(cost["cf"])
+        self.discounting = discounting
 
-        self.reward = RunToFailureReward(cf)
-        self.underlying_process = RenewalRewardProcess(
-            self.model,
+    @property
+    def underlying_process(self) -> RenewalRewardProcess:
+        return RenewalRewardProcess(
+            self.lifetime_model,
             self.reward,
-            discounting_rate=self.discounting_rate,
-            model1=self.model1,
+            self.discounting,
+            first_lifetime_model=self.first_lifetime_model,
         )
 
     @property
     def discounting_rate(self):
-        return self.discounting.rate
+        return self.underlying_process.discounting.rate
 
     @property
     def cf(self):
-        return self.cost["cf"]
+        return self.reward.cost["cf"]
 
     def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         return self.underlying_process.renewal_function(tf, nb_steps)
@@ -184,7 +190,7 @@ OneCycleRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTR
 OneCycleRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
 OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING
 
-DefaultRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
-DefaultRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
-DefaultRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
-DefaultRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING
+RunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
+RunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
+RunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
+RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING

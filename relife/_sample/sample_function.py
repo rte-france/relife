@@ -50,19 +50,19 @@ def sample_failure_data(
             from relife.stochastic_process.sample import RenewalProcessIterator
 
             model1 = getattr(process, "model1", None)
-            if model1 is not None and model1 != process.model:
-                if isinstance(model1, LeftTruncatedModel) and model1.baseline == process.model:
+            if model1 is not None and model1 != process.lifetime_model:
+                if isinstance(model1, LeftTruncatedModel) and model1.baseline == process.lifetime_model:
                     pass
                 else:
                     raise ValueError(
                         f"Calling sample_failure_data on {type(process)} having different model and model1 is ambiguous. Instantiate {type(process)} with only one model"
                     )
 
-            iterator = RenewalProcessIterator(size, tf, process.model, t0, model1=process.model1, maxsample=maxsample, seed=seed)
+            iterator = RenewalProcessIterator(size, tf, process.lifetime_model, t0, model1=process.first_lifetime_model, maxsample=maxsample, seed=seed)
             struct_array = np.concatenate((arr for arr in iterator))
             args = ()
-            if hasattr(process.model, "args"):  #  may be FrozenParametricLifetimeModel
-                args = tuple((np.take(arg, struct_array["asset_id"]) for arg in process.model.args))
+            if hasattr(process.lifetime_model, "args"):  #  may be FrozenParametricLifetimeModel
+                args = tuple((np.take(arg, struct_array["asset_id"]) for arg in process.lifetime_model.args))
             if astuple:
                 return struct_array["time"].copy(), struct_array["event"].copy(), struct_array["entry"].copy(), args
             return LifetimeData(struct_array["time"].copy(), event=struct_array["event"].copy(), entry=struct_array["entry"].copy(), args=args)
