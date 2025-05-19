@@ -20,18 +20,16 @@ if TYPE_CHECKING:
 class OneCycleRunToFailurePolicy(OneCycleAgeRenewalPolicy):
 
     reward: RunToFailureReward
-    discounting: ExponentialDiscounting
 
     def __init__(
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel,
         cf: float | NDArray[np.float64],
-        discounting_rate: float,
+        discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
     ) -> None:
         reward = RunToFailureReward(cf)
-        discounting = ExponentialDiscounting(discounting_rate)
-        super().__init__(lifetime_model, reward, discounting, period_before_discounting)
+        super().__init__(lifetime_model, reward, discounting_rate, period_before_discounting)
 
     @property
     def cf(self):
@@ -55,23 +53,21 @@ class RunToFailurePolicy(AgeRenewalPolicy):
     first_lifetime_model: Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel]
     reward: RunToFailureReward
     first_reward: Optional[RunToFailureReward]
-    discounting: ExponentialDiscounting
 
     def __init__(
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
         cf: float | NDArray[np.float64],
-        discounting_rate: float,
+        discounting_rate: float = 0.0,
         first_lifetime_model: Optional[
             LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel
         ] = None,
     ) -> None:
         reward = RunToFailureReward(cf)
-        discounting = ExponentialDiscounting(discounting_rate)
         first_reward = None
         if first_lifetime_model is not None:
             first_reward = RunToFailureReward(cf)
-        super().__init__(lifetime_model, reward, discounting, first_lifetime_model, first_reward)
+        super().__init__(lifetime_model, reward, discounting_rate, first_lifetime_model, first_reward)
 
     @property
     def cf(self):

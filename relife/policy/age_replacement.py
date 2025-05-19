@@ -37,21 +37,19 @@ class OneCycleAgeReplacementPolicy(OneCycleAgeRenewalPolicy):
 
     lifetime_model: FrozenAgeReplacementModel
     reward: AgeReplacementReward
-    discounting: ExponentialDiscounting
 
     def __init__(
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel,
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
-        discounting_rate: float,
+        discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
         ar: float | NDArray[np.float64] = np.nan,
     ) -> None:
         lifetime_model: FrozenAgeReplacementModel = freeze(AgeReplacementModel(lifetime_model), ar)
         reward = AgeReplacementReward(cf, cp, ar)
-        discounting = ExponentialDiscounting(discounting_rate)
-        super().__init__(lifetime_model, reward, discounting, period_before_discounting)
+        super().__init__(lifetime_model, reward, discounting_rate, period_before_discounting)
 
     @property
     def cf(self) -> NDArray[np.float64]:
@@ -155,14 +153,13 @@ class AgeReplacementPolicy(AgeRenewalPolicy):
     first_lifetime_model: Optional[FrozenAgeReplacementModel]
     reward: AgeReplacementReward
     first_reward: Optional[AgeReplacementReward]
-    discounting: ExponentialDiscounting
 
     def __init__(
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel,
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
-        discounting_rate: float,
+        discounting_rate: float = 0.0,
         first_lifetime_model: Optional[
             LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel
         ] = None,
@@ -171,12 +168,11 @@ class AgeReplacementPolicy(AgeRenewalPolicy):
     ) -> None:
         self.lifetime_model: FrozenAgeReplacementModel = freeze(AgeReplacementModel(lifetime_model), ar)
         reward = AgeReplacementReward(cf, cp, ar)
-        discounting = ExponentialDiscounting(discounting_rate)
         first_reward = None
         if first_lifetime_model is not None:
             first_lifetime_model: FrozenAgeReplacementModel = freeze(AgeReplacementModel(lifetime_model), ar1)
             first_reward = AgeReplacementReward(cf, cp, ar1)
-        super().__init__(lifetime_model, reward, discounting, first_lifetime_model, first_reward)
+        super().__init__(lifetime_model, reward, discounting_rate, first_lifetime_model, first_reward)
 
     @property
     def ar(self) -> float | NDArray[np.float64]:

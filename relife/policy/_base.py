@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic import Discounting, Reward, cost
+from relife.economic import ExponentialDiscounting, Reward, cost
 from relife.stochastic_process import RenewalRewardProcess
 
 if TYPE_CHECKING:
@@ -21,12 +21,12 @@ class OneCycleAgeRenewalPolicy:
         self,
         lifetime_model: LifetimeDistribution | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
         reward: Reward,
-        discounting: Discounting,
+        discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
     ) -> None:
         self.cost = cost
         self.reward = reward
-        self.discounting = discounting
+        self.discounting = ExponentialDiscounting(discounting_rate)
         if period_before_discounting <= 0:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
@@ -40,13 +40,13 @@ class OneCycleAgeRenewalPolicy:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)
         # reward partial expectation
         return timeline, self.lifetime_model.ls_integrate(
-            lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=10
+            lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         # reward partial expectation
         return self.lifetime_model.ls_integrate(
-            lambda x: self.reward.sample(x) * self.discounting.factor(x), 0.0, np.inf, deg=10
+            lambda x: self.reward.sample(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
         )
 
     def _expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -87,7 +87,7 @@ class AgeRenewalPolicy:
         self,
         lifetime_model: LifetimeDistribution | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
         reward: Reward,
-        discounting: Discounting,
+        discounting_rate: float = 0.0,
         first_lifetime_model: Optional[
             LifetimeDistribution | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
         ] = None,
@@ -97,7 +97,7 @@ class AgeRenewalPolicy:
         self.first_lifetime_model = first_lifetime_model
         self.reward = reward
         self.first_reward = first_reward
-        self.discounting = discounting
+        self.discounting = ExponentialDiscounting(discounting_rate)
 
     @property
     def underlying_process(self) -> RenewalRewardProcess:

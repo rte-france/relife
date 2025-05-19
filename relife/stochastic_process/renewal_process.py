@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife import ParametricModel
+from relife import ParametricModel, args_nb_assets
 from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
@@ -39,6 +39,10 @@ class RenewalProcess(ParametricModel):
 
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
+        try:
+            self.args_nb_assets : int = args_nb_assets(self.lifetime_model, self.first_lifetime_model)
+        except ValueError:
+            raise ValueError("Different number of assets per arguments are given in lifetime_model and first_lifetime_model")
         self.sample_data = None
 
     @property
@@ -48,18 +52,22 @@ class RenewalProcess(ParametricModel):
 
             return SampleFunction(type(self), self.sample_data)
 
+    def _timeline(self, tf, nb_steps: int):
+        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+        if self.args_nb_assets > 1:
+            return np.tile(timeline, (self.args_nb_assets, 1)) # (m, nb_steps)
+        return timeline
+
     def renewal_function(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
         return renewal_equation_solver(
-            tf,
-            nb_steps,
+            self._timeline(tf, nb_steps),
             self.lifetime_model,
             self.lifetime_model.cdf if self.first_lifetime_model is None else self.first_lifetime_model.cdf,
         )
 
     def renewal_density(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
         return renewal_equation_solver(
-            tf,
-            nb_steps,
+            self._timeline(tf, nb_steps),
             self.lifetime_model,
             self.lifetime_model.pdf if self.first_lifetime_model is None else self.first_lifetime_model.pdf,
         )
@@ -116,7 +124,7 @@ class RenewalRewardProcess(RenewalProcess):
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
         reward: Reward,
-        discounting: Discounting,
+        discounting_rate: float = 0.,
         first_lifetime_model: Optional[
             LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
         ] = None,
@@ -125,28 +133,32 @@ class RenewalRewardProcess(RenewalProcess):
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else reward
-        self.discounting = discounting
+        try:
+            self.args_nb_assets : int = args_nb_assets(self.lifetime_model, self.first_lifetime_model, self.reward, self.first_reward)
+        except ValueError:
+            raise ValueError
+        self.discounting = ExponentialDiscounting(discounting_rate)
+
 
     def expected_total_reward(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
         z = renewal_equation_solver(
-            tf,
-            nb_steps,
+            self._timeline(tf, nb_steps),
             self.lifetime_model,
             lambda timeline: self.lifetime_model.ls_integrate(
-                lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline
+                lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
             ),  # reward partial expectation
             discounting=self.discounting,
         )
         if self.first_lifetime_model is not None:
             return delayed_renewal_equation_solver(
-                tf,
-                nb_steps,
+                self._timeline(tf, nb_steps),
                 z,
                 self.first_lifetime_model,
                 lambda timeline: self.first_lifetime_model.ls_integrate(
                     lambda x: self.first_reward.sample(x) * self.discounting.factor(x),
                     np.zeros_like(timeline),
                     timeline,
+                    deg=15,
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
@@ -155,15 +167,15 @@ class RenewalRewardProcess(RenewalProcess):
     def asymptotic_expected_total_reward(
         self,
     ) -> NDArray[np.float64]:
-        lf = self.lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=10)
+        lf = self.lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=15)
         ly = self.lifetime_model.ls_integrate(
-            lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=10
+            lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=15
         )
         z = ly / (1 - lf)
         if self.first_lifetime_model is not None:
-            lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=10)
+            lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=15)
             ly1 = self.first_lifetime_model.ls_integrate(
-                lambda x: self.discounting.factor(x) * self.first_reward.sample(x), 0.0, np.inf, deg=10
+                lambda x: self.discounting.factor(x) * self.first_reward.sample(x), 0.0, np.inf, deg=15
             )
             z = ly1 + z * lf1
         return z
@@ -183,7 +195,7 @@ class RenewalRewardProcess(RenewalProcess):
     def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
         if self.discounting.rate == 0.0:
             return (
-                self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=10)
+                self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=15)
                 / self.lifetime_model.mean()
             )
         return self.discounting.rate * self.asymptotic_expected_total_reward()
@@ -204,25 +216,25 @@ class RenewalRewardProcess(RenewalProcess):
 #     return timeline, rewards / len(self)
 
 
+# replace t by timeline
 def renewal_equation_solver(
-    tf: float,
-    nb_steps: int,
+    timeline : NDArray[np.float64],
     lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[Discounting] = None,
 ) -> NDArray[np.float64]:
 
-    t = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-    tm = 0.5 * (t[1:] + t[:-1])  # (nb_steps - 1,)
-    f = lifetime_model.cdf(t)  # (nb_steps,) or (m, nb_steps)
+    # timeline : (nb_steps,) or (m, nb_steps)
+    tm = 0.5 * (timeline[1:] + timeline[:-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
+    f = lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
     fm = lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
-    y = evaluated_func(t)  # (nb_steps,)
+    y = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps)
 
     if y.shape != f.shape:
         raise ValueError("Invalid shape between model and evaluated_func")
 
     if discounting is not None:
-        d = discounting.factor(t)
+        d = discounting.factor(timeline) # (nb_steps,) or (m, nb_steps)
     else:
         d = np.ones_like(f)
     z = np.empty(y.shape)
@@ -237,8 +249,7 @@ def renewal_equation_solver(
 
 
 def delayed_renewal_equation_solver(
-    tf: float,
-    nb_steps: int,
+    timeline : NDArray[np.float64],
     z: NDArray[np.float64],
     first_lifetime_model: (
         LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
@@ -246,14 +257,13 @@ def delayed_renewal_equation_solver(
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[ExponentialDiscounting] = None,
 ) -> NDArray[np.float64]:
-
-    t = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-    tm = 0.5 * (t[1:] + t[:-1])  # (nb_steps - 1,)
-    f1 = first_lifetime_model.cdf(t)  # (nb_steps,) or (m, nb_steps)
+    # timeline : (nb_steps,) or (m, nb_steps)
+    tm = 0.5 * (timeline[1:] + timeline[:-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
+    f1 = first_lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
     f1m = first_lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
-    y1 = evaluated_func(t)  # (nb_steps,)
+    y1 = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps - 1)
     if discounting is not None:
-        d = discounting.factor(t)
+        d = discounting.factor(timeline) # (nb_steps,) or (m, nb_steps - 1)
     else:
         d = np.ones_like(f1)
     z1 = np.empty(y1.shape)

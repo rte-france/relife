@@ -53,7 +53,6 @@ class AgeReplacementModel(
     def args_names(self) -> tuple[str, *tuple[str, ...]]:
         return ("ar",) + self.baseline.args_names
 
-
     def sf(
         self,
         time: float | NDArray[np.float64],

@@ -264,8 +264,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     @property
     @abstractmethod
-    def args_names(self) -> tuple[str, ...]:
-        ...
+    def args_names(self) -> tuple[str, ...]: ...
 
     def ls_integrate(
         self,
@@ -306,7 +305,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         model: LifetimeDistribution | FrozenParametricLifetimeModel
 
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
-            #  x.shape == (deg,), (deg, n) or (deg, m, n)
+            #  x.shape == (deg,), (deg, n) or (deg, m, n), ie points of quadratures
             # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             fx = func(x)
             if fx.shape[-len(x.shape) :] != x.shape:
@@ -469,6 +468,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
+
     @property
     def args_names(self) -> tuple[()]:
         return ()
@@ -825,7 +825,6 @@ class LifetimeRegression(
     @property
     def args_names(self) -> tuple[str, *tuple[str, ...]]:
         return ("covar",) + self.baseline.args_names
-
 
     def init_params_structure(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
         covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))

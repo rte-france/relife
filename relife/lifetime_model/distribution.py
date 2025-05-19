@@ -662,6 +662,10 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.
         super().__init__()
         self.baseline = baseline
 
+    @property
+    def args_names(self) -> tuple[str, ...]:
+        return self.baseline.args_names
+
     @override
     def cdf(
         self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]

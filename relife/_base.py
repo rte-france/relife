@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import InitVar, asdict, dataclass, field
-from itertools import chain
+from itertools import chain, filterfalse
 from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, overload
 
 import numpy as np
@@ -15,12 +16,14 @@ if TYPE_CHECKING:
         FrozenLeftTruncatedModel,
         FrozenLifetimeRegression,
         LeftTruncatedModel,
-        LifetimeRegression, LifetimeDistribution,
-)
+        LifetimeDistribution,
+        LifetimeRegression,
+    )
     from relife.stochastic_process import (
         FrozenNonHomogeneousPoissonProcess,
         NonHomogeneousPoissonProcess,
     )
+    from relife.economic import AgeReplacementReward, RunToFailureReward
 
 
 class ParametricModel:
@@ -371,11 +374,14 @@ class FittingResults:
 @overload
 def freeze(model: LifetimeRegression, *args: float | NDArray[np.float64]) -> FrozenLifetimeRegression: ...
 
+
 @overload
 def freeze(model: LeftTruncatedModel, *args: float | NDArray[np.float64]) -> FrozenLeftTruncatedModel: ...
 
+
 @overload
 def freeze(model: AgeReplacementModel, *args: float | NDArray[np.float64]) -> FrozenAgeReplacementModel: ...
+
 
 @overload
 def freeze(
@@ -389,8 +395,18 @@ def freeze(
 ) -> (
     FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel | FrozenNonHomogeneousPoissonProcess
 ):
-    from relife.lifetime_model import LifetimeRegression, AgeReplacementModel, LeftTruncatedModel, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel
-    from relife.stochastic_process import NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess
+    from relife.lifetime_model import (
+        AgeReplacementModel,
+        FrozenAgeReplacementModel,
+        FrozenLeftTruncatedModel,
+        FrozenLifetimeRegression,
+        LeftTruncatedModel,
+        LifetimeRegression,
+    )
+    from relife.stochastic_process import (
+        FrozenNonHomogeneousPoissonProcess,
+        NonHomogeneousPoissonProcess,
+    )
 
     match model:
         case LifetimeRegression():
@@ -403,6 +419,60 @@ def freeze(
             return FrozenNonHomogeneousPoissonProcess(model, *args)
         case _:
             raise ValueError(f"{type(model)} can't be be frozen")
+
+
+def args_nb_assets_generator(
+    obj: (
+        LifetimeDistribution
+        | FrozenLifetimeRegression
+        | FrozenLeftTruncatedModel
+        | FrozenAgeReplacementModel
+        | RunToFailureReward
+        | AgeReplacementReward
+    ),
+) -> Iterator[int]:
+
+    from relife.lifetime_model import (
+        FrozenAgeReplacementModel,
+        FrozenLeftTruncatedModel,
+        FrozenLifetimeRegression,
+        LifetimeDistribution,
+    )
+    from relife.economic import AgeReplacementReward, RunToFailureReward
+
+    match obj:
+        case LifetimeDistribution():
+            yield 1
+        case FrozenLifetimeRegression():
+            yield np.atleast_2d(np.asarray(obj.covar)).shape[0]
+            yield from args_nb_assets_generator(obj.unfreeze())
+        case FrozenLeftTruncatedModel():
+            yield np.asarray(obj.a0).size
+            yield from args_nb_assets_generator(obj.unfreeze())
+        case FrozenAgeReplacementModel():
+            yield np.asarray(obj.ar).size
+            yield from args_nb_assets_generator(obj.unfreeze())
+        case RunToFailureReward() | AgeReplacementReward():
+            yield obj.cf.size
+        case _:
+            return
+
+
+def args_nb_assets(
+    *obj: Optional[
+        LifetimeDistribution
+        | FrozenLifetimeRegression
+        | FrozenLeftTruncatedModel
+        | FrozenAgeReplacementModel
+        | RunToFailureReward
+        | AgeReplacementReward
+    ],
+) -> int:
+    all_nb_assets = tuple(itertools.chain(*(args_nb_assets_generator(_obj) for _obj in obj if _obj is not None)))
+    non_one_nb_assets = set(tuple(filterfalse(lambda x: x == 1, all_nb_assets)))
+    if len(non_one_nb_assets) > 1:
+        raise ValueError(f"Invalid number of assets given in arguments. Got {non_one_nb_assets}")
+    return list(non_one_nb_assets)[0]
 
 
 # see sklearn/base.py : return unfitted ParametricModel

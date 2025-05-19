@@ -47,6 +47,7 @@ class Reward(ABC):
 
 class RunToFailureReward(Reward):
     def __init__(self, cf: float | NDArray[np.float64]):
+        cost_array = cost(cf=cf)
         self.cf = cost(cf=cf)["cf"]
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
