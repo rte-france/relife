@@ -33,6 +33,8 @@ def cost(
 
 
 class Reward(ABC):
+    cost : Cost
+
     @abstractmethod
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         """Conditional expected reward"""
@@ -105,16 +107,3 @@ class ExponentialDiscounting:
             return (1 - np.exp(-self.rate * timeline)) / self.rate
         else:
             return timeline
-
-
-def reward_partial_expectation(
-    timeline: NDArray[np.float64],
-    model: LifetimeDistribution | FrozenParametricLifetimeModel,
-    reward: Reward,
-    discounting_rate: float = 0.0,
-) -> NDArray[np.float64]:
-    return model.ls_integrate(
-        lambda x: reward.sample(x) * ExponentialDiscounting(discounting_rate).factor(x),
-        np.zeros_like(timeline),
-        timeline,
-    )
