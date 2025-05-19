@@ -18,10 +18,7 @@ from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
 
 class NonHomogeneousPoissonProcess(ParametricModel):
 
-    def __init__(
-        self,
-        baseline: LifetimeDistribution | LifetimeRegression
-    ):
+    def __init__(self, baseline: LifetimeDistribution | LifetimeRegression):
         super().__init__()
         self.baseline = baseline
 

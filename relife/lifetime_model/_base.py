@@ -20,9 +20,14 @@ from typing_extensions import override
 from relife import FittingResults, ParametricModel
 from relife.data import LifetimeData
 from relife.likelihood import LikelihoodFromLifetimes
-from relife.quadrature import  check_and_broadcast_bounds, legendre_quadrature, unweighted_laguerre_quadrature
+from relife.quadrature import (
+    check_and_broadcast_bounds,
+    legendre_quadrature,
+    unweighted_laguerre_quadrature,
+)
 
 Args = TypeVarTuple("Args")
+
 
 class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     r"""Base class for lifetime model.
@@ -258,35 +263,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     #     return PlotSurvivalFunc(self)
 
     @property
+    @abstractmethod
     def args_names(self) -> tuple[str, ...]:
-        from relife.lifetime_model import (
-            AcceleratedFailureTime,
-            AgeReplacementModel,
-            LeftTruncatedModel,
-            ProportionalHazard,
-        )
-
-        try:
-            next(self.nested_models())
-            _, nested_models = zip(*self.nested_models())
-        except StopIteration:
-            return ()
-        args_names = ()
-        #  iterate on self instance and every components
-        for nested_model in (self, *nested_models):
-            match nested_model:
-                case ProportionalHazard() | AcceleratedFailureTime():
-                    args_names += ("covar",)
-                case AgeReplacementModel():
-                    args_names += ("ar",)
-                case LeftTruncatedModel():
-                    args_names += ("a0",)
-                #  break because other args are frozen in frozen instance
-                case FrozenParametricLifetimeModel():
-                    break
-                case _:
-                    continue
-        return args_names
+        ...
 
     def ls_integrate(
         self,
@@ -321,8 +300,10 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
             LifetimeDistribution,
         )
 
-        model = freeze(self, *args)
-        model : LifetimeDistribution | FrozenParametricLifetimeModel
+        model = self
+        if bool(args):
+            model = freeze(self, *args)
+        model: LifetimeDistribution | FrozenParametricLifetimeModel
 
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
             #  x.shape == (deg,), (deg, n) or (deg, m, n)
@@ -413,9 +394,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     def var(self, *args: *Args) -> np.float64 | NDArray[np.float64]:
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
-    def mrl(
-        self, time: float | NDArray[np.float64], *args: *Args
-    ) -> np.float64 | NDArray[np.float64]:
+    def mrl(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
         sf = self.sf(time, *args)
         ls = self.ls_integrate(lambda x: x - time, time, np.array(np.inf), *args)
         if sf.ndim < 2:  # 2d to 1d or 0d
@@ -490,6 +469,9 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
+    @property
+    def args_names(self) -> tuple[()]:
+        return ()
 
     def init_params_structure(self) -> None:
         pass
@@ -767,7 +749,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().ls_integrate(func, a, b, deg=deg)
 
 
-
 class CovarEffect(ParametricModel):
     """
     Covariates effect.
@@ -840,6 +821,11 @@ class LifetimeRegression(
         super().__init__()
         self.covar_effect = CovarEffect(coefficients)
         self.baseline = baseline
+
+    @property
+    def args_names(self) -> tuple[str, *tuple[str, ...]]:
+        return ("covar",) + self.baseline.args_names
+
 
     def init_params_structure(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
         covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
@@ -1180,7 +1166,6 @@ class LifetimeRegression(
         return super().sample_lifetime_data(*(covar, *args), size=size, window=window, seed=seed)
 
 
-
 class NonParametricLifetimeModel(ABC):
 
     @abstractmethod
@@ -1316,6 +1301,7 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
     ) -> np.float64 | NDArray[np.float64]:
         return self.unfrozen_model.ls_integrate(func, a, b, *self.frozen_args, deg=deg)
 
+
 #
 # class FrozenLifetimeDistribution(FrozenParametricLifetimeModel[()]):
 #
@@ -1442,13 +1428,17 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
 #         return self.unfrozen_model.jac_pdf(time, asarray=asarray)
 
 
-class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float|NDArray[np.float64], *tuple[float|NDArray[np.float64], ...]]):
+class FrozenLifetimeRegression(
+    FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
+):
 
     unfrozen_model: LifetimeRegression
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
-    def __init__(self, model : LifetimeRegression, covar : float|NDArray[np.float64], *args : float|NDArray[np.float64]):
+    def __init__(
+        self, model: LifetimeRegression, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ):
         super().__init__(model, *(covar, *args))
 
     @override
@@ -1464,7 +1454,7 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel[float|NDArray[np.fl
         return self.frozen_args[0]
 
     @covar.setter
-    def covar(self, value : float | NDArray[np.float64]) -> None:
+    def covar(self, value: float | NDArray[np.float64]) -> None:
         self.frozen_args = (value,) + self.frozen_args[1:]
 
     def dhf(

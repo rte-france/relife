@@ -4,4 +4,4 @@ from .age_replacement import (
     NonHomogeneousPoissonAgeReplacementPolicy,
     OneCycleAgeReplacementPolicy,
 )
-from .run_to_failure import RunToFailurePolicy, OneCycleRunToFailurePolicy
+from .run_to_failure import OneCycleRunToFailurePolicy, RunToFailurePolicy

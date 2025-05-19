@@ -33,7 +33,7 @@ def cost(
 
 
 class Reward(ABC):
-    cost : Cost
+    cost: Cost
 
     @abstractmethod
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -47,10 +47,10 @@ class Reward(ABC):
 
 class RunToFailureReward(Reward):
     def __init__(self, cf: float | NDArray[np.float64]):
-        self.cost = cost(cf=cf)
+        self.cf = cost(cf=cf)["cf"]
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return np.ones_like(time) * self.cost["cf"]
+        return np.ones_like(time) * self.cf
 
     def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.conditional_expectation(time)
@@ -60,13 +60,15 @@ class AgeReplacementReward(Reward):
     def __init__(
         self, cf: float | NDArray[np.float64], cp: float | NDArray[np.float64], ar: float | NDArray[np.float64]
     ):
-        self.cost = cost(cf=cf, cp=cp)
+        cost_array = cost(cf=cf, cp=cp)
+        self.cf = cost_array["cf"]
+        self.cp = cost_array["cp"]
         ar = np.asarray(ar, dtype=np.float64)
         shape = () if ar.ndim == 0 else (ar.size, 1)
         self.ar = ar.reshape(shape)
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return np.where(time < self.ar, self.cost["cf"], self.cost["cp"])
+        return np.where(time < self.ar, self.cf, self.cp)
 
     def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return self.conditional_expectation(time)

@@ -27,6 +27,7 @@ def event_reshape(event: Optional[NDArray[np.bool_]] = None) -> Optional[NDArray
         return event
     return None
 
+
 def entry_reshape(entry: Optional[NDArray[np.float64]] = None) -> Optional[NDArray[np.float64]]:
     if entry is not None:
         if entry.ndim > 2 or (entry.ndim == 2 and entry.shape[-1] != 1):
@@ -36,6 +37,7 @@ def entry_reshape(entry: Optional[NDArray[np.float64]] = None) -> Optional[NDArr
         return entry
     return None
 
+
 def departure_reshape(departure: Optional[NDArray[np.float64]] = None) -> Optional[NDArray[np.float64]]:
     if departure is not None:
         if departure.ndim > 2 or (departure.ndim == 2 and departure.shape[-1] != 1):
@@ -44,6 +46,7 @@ def departure_reshape(departure: Optional[NDArray[np.float64]] = None) -> Option
             departure = departure.reshape(-1, 1)
         return departure
     return None
+
 
 def args_reshape(args: tuple[float | NDArray[np.float64], ...] = ()) -> tuple[NDArray[np.float64], ...]:
     args_list: list[NDArray[np.float64]] = [np.asarray(arg) for arg in args]
@@ -159,7 +162,9 @@ def get_left_truncation(
 
 
 def get_right_truncation(
-    time: NDArray[np.float64], departure: Optional[NDArray[np.float64]] = None, args: tuple[NDArray[np.float64], ...] = ()
+    time: NDArray[np.float64],
+    departure: Optional[NDArray[np.float64]] = None,
+    args: tuple[NDArray[np.float64], ...] = (),
 ) -> Optional[IndexedLifetimeData]:
     if departure is None:
         departure = np.ones((len(time), 1)) * np.inf

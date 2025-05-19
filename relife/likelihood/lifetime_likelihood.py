@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import copy
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.data import LifetimeData
-from relife.lifetime_model import LifetimeDistribution, LifetimeRegression
-
 from ._base import Likelihood
+
+if TYPE_CHECKING:
+    from relife.lifetime_model import FittableParametricLifetimeModel
+
 
 
 class LikelihoodFromLifetimes(Likelihood):
@@ -25,7 +29,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def __init__(
         self,
-        model: LifetimeDistribution | LifetimeRegression,
+        model: FittableParametricLifetimeModel[*tuple[float|NDArray[np.float64]]],
         lifetime_data: LifetimeData,
     ):
         self.model = copy.deepcopy(model)

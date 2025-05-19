@@ -1,1 +1,1 @@
-from ._base import FittingResults, FrozenParametricModel, ParametricModel, freeze
+from ._base import FittingResults, ParametricModel, freeze

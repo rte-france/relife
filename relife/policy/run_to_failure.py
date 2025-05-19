@@ -5,19 +5,27 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.economic import RunToFailureReward, ExponentialDiscounting
-from ._base import OneCycleAgeRenewalPolicy, AgeRenewalPolicy
+from relife.economic import ExponentialDiscounting, RunToFailureReward
+
+from ._base import AgeRenewalPolicy, OneCycleAgeRenewalPolicy
 
 if TYPE_CHECKING:
-    from relife.lifetime_model import LifetimeDistribution, FrozenLifetimeRegression, FrozenLeftTruncatedModel
+    from relife.lifetime_model import (
+        FrozenLeftTruncatedModel,
+        FrozenLifetimeRegression,
+        LifetimeDistribution,
+    )
 
 
 class OneCycleRunToFailurePolicy(OneCycleAgeRenewalPolicy):
 
+    reward: RunToFailureReward
+    discounting: ExponentialDiscounting
+
     def __init__(
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel,
-        cf : float | NDArray[np.float64],
+        cf: float | NDArray[np.float64],
         discounting_rate: float,
         period_before_discounting: float = 1.0,
     ) -> None:
@@ -27,7 +35,7 @@ class OneCycleRunToFailurePolicy(OneCycleAgeRenewalPolicy):
 
     @property
     def cf(self):
-        return self.reward.cost["cf"]
+        return self.reward.cf
 
 
 class RunToFailurePolicy(AgeRenewalPolicy):
@@ -43,12 +51,20 @@ class RunToFailurePolicy(AgeRenewalPolicy):
         the Engineering and Informational Sciences, 22(1), 53-74.
     """
 
+    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression
+    first_lifetime_model: Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel]
+    reward: RunToFailureReward
+    first_reward: Optional[RunToFailureReward]
+    discounting: ExponentialDiscounting
+
     def __init__(
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
-        cf : float | NDArray[np.float64],
+        cf: float | NDArray[np.float64],
         discounting_rate: float,
-        first_lifetime_model : Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel] = None,
+        first_lifetime_model: Optional[
+            LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel
+        ] = None,
     ) -> None:
         reward = RunToFailureReward(cf)
         discounting = ExponentialDiscounting(discounting_rate)
@@ -59,7 +75,7 @@ class RunToFailurePolicy(AgeRenewalPolicy):
 
     @property
     def cf(self):
-        return self.reward.cost["cf"]
+        return self.reward.cf
 
 
 from ._docstring import (

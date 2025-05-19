@@ -1,6 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVarTuple, overload, Literal
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Generic,
+    Literal,
+    Optional,
+    TypeVarTuple,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,17 +16,20 @@ from numpy.typing import NDArray
 if TYPE_CHECKING:
     from relife.lifetime_model import ParametricLifetimeModel
 
+
 @overload
 def check_and_broadcast_bounds(
     a: float | NDArray[np.float64],
     b: None = None,
-) -> NDArray[np.float64] :...
+) -> NDArray[np.float64]: ...
+
 
 @overload
 def check_and_broadcast_bounds(
     a: float | NDArray[np.float64],
     b: float | NDArray[np.float64],
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:...
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
+
 
 def check_and_broadcast_bounds(
     a: float | NDArray[np.float64],

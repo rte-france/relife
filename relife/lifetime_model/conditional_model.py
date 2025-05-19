@@ -39,9 +39,20 @@ class AgeReplacementModel(
     """
 
     # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
-    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]] | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+    def __init__(
+        self,
+        baseline: (
+            ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
+            | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
+        ),
+    ):
         super().__init__()
         self.baseline = baseline
+
+    @property
+    def args_names(self) -> tuple[str, *tuple[str, ...]]:
+        return ("ar",) + self.baseline.args_names
+
 
     def sf(
         self,
@@ -228,9 +239,19 @@ class LeftTruncatedModel(
     """
 
     # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
-    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]] | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+    def __init__(
+        self,
+        baseline: (
+            ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
+            | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
+        ),
+    ):
         super().__init__()
         self.baseline = baseline
+
+    @property
+    def args_names(self) -> tuple[str, *tuple[str, ...]]:
+        return ("a0",) + self.baseline.args_names
 
     def sf(
         self,
@@ -315,13 +336,14 @@ class LeftTruncatedModel(
             return super_rvs
 
 
-
-class FrozenAgeReplacementModel(FrozenParametricLifetimeModel[float|NDArray[np.float64], *tuple[float|NDArray[np.float64], ...]]):
+class FrozenAgeReplacementModel(
+    FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
+):
     unfrozen_model: AgeReplacementModel
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
-    def __init__(self, model : AgeReplacementModel, ar : float|NDArray[np.float64], *args : float|NDArray[np.float64]):
+    def __init__(self, model: AgeReplacementModel, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]):
         super().__init__(model, *(ar, *args))
 
     @override
@@ -333,18 +355,19 @@ class FrozenAgeReplacementModel(FrozenParametricLifetimeModel[float|NDArray[np.f
         return self.frozen_args[0]
 
     @ar.setter
-    def ar(self, value : float | NDArray[np.float64]) -> None:
+    def ar(self, value: float | NDArray[np.float64]) -> None:
         self.frozen_args = (value,) + self.frozen_args[1:]
 
 
-class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel[float|NDArray[np.float64], *tuple[float|NDArray[np.float64], ...]]):
+class FrozenLeftTruncatedModel(
+    FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
+):
     unfrozen_model: LeftTruncatedModel
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
-    def __init__(self, model : LeftTruncatedModel, a0 : float|NDArray[np.float64], *args : float|NDArray[np.float64]):
+    def __init__(self, model: LeftTruncatedModel, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]):
         super().__init__(model, *(a0, *args))
-
 
     @override
     def unfreeze(self) -> LeftTruncatedModel:
@@ -355,5 +378,5 @@ class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel[float|NDArray[np.fl
         return self.frozen_args[0]
 
     @a0.setter
-    def a0(self, value : float | NDArray[np.float64]) -> None:
+    def a0(self, value: float | NDArray[np.float64]) -> None:
         self.frozen_args = (value,) + self.frozen_args[1:]

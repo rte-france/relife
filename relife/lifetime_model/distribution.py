@@ -1,4 +1,4 @@
-from typing import Optional, TypeVarTuple, overload, Literal
+from typing import Literal, Optional, TypeVarTuple, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -64,7 +64,6 @@ class Exponential(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return cumulative_hazard_rate / np.asarray(self.rate)
 
-
     @overload
     def jac_hf(
         self,
@@ -80,7 +79,6 @@ class Exponential(LifetimeDistribution):
         *,
         asarray: Literal[True],
     ) -> np.float64 | NDArray[np.float64]: ...
-
 
     def jac_hf(self, time: float | NDArray[np.float64], *, asarray: bool = False) -> np.float64 | NDArray[np.float64]:
         if isinstance(time, np.ndarray):
@@ -107,7 +105,9 @@ class Exponential(LifetimeDistribution):
         asarray: Literal[True],
     ) -> np.float64 | NDArray[np.float64]: ...
 
-    def jac_chf(self, time: float | NDArray[np.float64], *, asarray: bool = False) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+    def jac_chf(
+        self, time: float | NDArray[np.float64], *, asarray: bool = False
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(time, axis=0).copy()
         else:
@@ -201,7 +201,6 @@ class Weibull(LifetimeDistribution):
         *,
         asarray: Literal[True],
     ) -> np.float64 | NDArray[np.float64]: ...
-
 
     def jac_hf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False
@@ -316,7 +315,6 @@ class Gompertz(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
-
     @overload
     def jac_hf(
         self,
@@ -332,7 +330,6 @@ class Gompertz(LifetimeDistribution):
         *,
         asarray: Literal[True],
     ) -> np.float64 | NDArray[np.float64]: ...
-
 
     def jac_hf(
         self, time: float | NDArray[np.float64], *, asarray: bool = False

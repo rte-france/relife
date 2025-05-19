@@ -15,7 +15,7 @@ if TYPE_CHECKING:
         FrozenLeftTruncatedModel,
         FrozenLifetimeRegression,
         LeftTruncatedModel,
-        LifetimeRegression, LifetimeDistribution, ParametricLifetimeModel, FrozenParametricLifetimeModel,
+        LifetimeRegression, LifetimeDistribution,
 )
     from relife.stochastic_process import (
         FrozenNonHomogeneousPoissonProcess,
@@ -368,7 +368,6 @@ class FittingResults:
         return asdict(self)
 
 
-
 @overload
 def freeze(model: LifetimeRegression, *args: float | NDArray[np.float64]) -> FrozenLifetimeRegression: ...
 
@@ -390,6 +389,9 @@ def freeze(
 ) -> (
     FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel | FrozenNonHomogeneousPoissonProcess
 ):
+    from relife.lifetime_model import LifetimeRegression, AgeReplacementModel, LeftTruncatedModel, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel
+    from relife.stochastic_process import NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess
+
     match model:
         case LifetimeRegression():
             return FrozenLifetimeRegression(model, *args)

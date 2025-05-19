@@ -437,7 +437,7 @@ class Turnbull(NonParametricLifetimeModel):
                 )
                 * np.less_equal.outer(
                     timeline_temp[1:],
-                lifetime_data.interval_censoring.lifetime_values[:, 1],
+                    lifetime_data.interval_censoring.lifetime_values[:, 1],
                 )
             ).T
 

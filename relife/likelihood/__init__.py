@@ -1,3 +1,2 @@
 from ._base import Likelihood
 from .lifetime_likelihood import LikelihoodFromLifetimes
-from .maximum_likelihood_estimation import maximum_likelihood_estimation

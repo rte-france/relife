@@ -20,6 +20,7 @@ from relife.lifetime_model import (
 
 if TYPE_CHECKING:
     from relife.economic import Reward
+
     from .sample import CountData, SampleFunction
 
 
@@ -86,9 +87,12 @@ class RenewalProcess(ParametricModel):
         from .sample import concatenate_count_data
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
-            from relife.lifetime_model import LeftTruncatedModel
+            from relife.lifetime_model import FrozenLeftTruncatedModel
 
-            if isinstance(self.first_lifetime_model, LeftTruncatedModel) and self.first_lifetime_model.baseline == self.lifetime_model:
+            if (
+                isinstance(self.first_lifetime_model, FrozenLeftTruncatedModel)
+                and self.first_lifetime_model.unfreeze() == self.lifetime_model
+            ):
                 pass
             else:
                 raise ValueError(
@@ -100,19 +104,22 @@ class RenewalProcess(ParametricModel):
             count_data.struct["time"].copy(),
             event=count_data.struct["event"].copy(),
             entry=count_data.struct["entry"].copy(),
-            args=tuple((np.take(arg, count_data.struct["asset_id"]) for arg in getattr(self.lifetime_model, "frozen_args", ()))),
+            args=tuple(
+                (np.take(arg, count_data.struct["asset_id"]) for arg in getattr(self.lifetime_model, "frozen_args", ()))
+            ),
         )
 
 
 class RenewalRewardProcess(RenewalProcess):
-
 
     def __init__(
         self,
         lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
         reward: Reward,
         discounting: Discounting,
-        first_lifetime_model: Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel] = None,
+        first_lifetime_model: Optional[
+            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
+        ] = None,
         first_reward: Optional[Reward] = None,
     ):
         super().__init__(lifetime_model, first_lifetime_model)
@@ -137,7 +144,9 @@ class RenewalRewardProcess(RenewalProcess):
                 z,
                 self.first_lifetime_model,
                 lambda timeline: self.first_lifetime_model.ls_integrate(
-                    lambda x: self.first_reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline
+                    lambda x: self.first_reward.sample(x) * self.discounting.factor(x),
+                    np.zeros_like(timeline),
+                    timeline,
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
@@ -147,7 +156,9 @@ class RenewalRewardProcess(RenewalProcess):
         self,
     ) -> NDArray[np.float64]:
         lf = self.lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=10)
-        ly = self.lifetime_model.ls_integrate(lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=10)
+        ly = self.lifetime_model.ls_integrate(
+            lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=10
+        )
         z = ly / (1 - lf)
         if self.first_lifetime_model is not None:
             lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=10)
@@ -171,7 +182,10 @@ class RenewalRewardProcess(RenewalProcess):
 
     def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
         if self.discounting.rate == 0.0:
-            return self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=10) / self.lifetime_model.mean()
+            return (
+                self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=10)
+                / self.lifetime_model.mean()
+            )
         return self.discounting.rate * self.asymptotic_expected_total_reward()
 
 
@@ -226,7 +240,9 @@ def delayed_renewal_equation_solver(
     tf: float,
     nb_steps: int,
     z: NDArray[np.float64],
-    first_lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel,
+    first_lifetime_model: (
+        LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
+    ),
     evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
     discounting: Optional[ExponentialDiscounting] = None,
 ) -> NDArray[np.float64]:

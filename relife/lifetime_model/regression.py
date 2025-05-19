@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from __future__ import annotations
 
-from typing import overload, Literal
+from typing import Literal, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -157,8 +157,6 @@ class ProportionalHazard(LifetimeRegression):
         *args: float | NDArray[np.float64],
         asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
-
-
 
     def jac_hf(
         self,
@@ -345,7 +343,6 @@ class AcceleratedFailureTime(LifetimeRegression):
         *args: float | NDArray[np.float64],
         asarray: Literal[True] = True,
     ) -> np.float64 | NDArray[np.float64]: ...
-
 
     def jac_hf(
         self,
