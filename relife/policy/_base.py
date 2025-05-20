@@ -58,8 +58,9 @@ class OneCycleAgeRenewalPolicy:
     def _expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: float | NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+            # avoid zero division + 1e-6
             return (
-                self.reward.conditional_expectation(x) * self.discounting.factor(x) / self.discounting.annuity_factor(x)
+                self.reward.conditional_expectation(x) * self.discounting.factor(x) / (self.discounting.annuity_factor(x) + 1e-6)
             )
 
         q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)

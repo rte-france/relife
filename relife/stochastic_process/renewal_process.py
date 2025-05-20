@@ -191,7 +191,7 @@ class RenewalRewardProcess(RenewalProcess):
     def expected_equivalent_annual_worth(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline, z = self.expected_total_reward(tf, nb_steps) # (nb_steps,) or (m, nb_steps)
         af = self.discounting.annuity_factor(timeline) # (nb_steps,) or (m, nb_steps)
-        q = np.where(af == 0, z, z / af) # (nb_steps,) or (m, nb_steps)
+        q = z / (af + 1e-6) # # (nb_steps,) or (m, nb_steps) avoid zero division
         if self.first_lifetime_model is not None:
             q0 = self.first_reward.sample(0.0) * self.first_lifetime_model.pdf(0.0)
         else:
