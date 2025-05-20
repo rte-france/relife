@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
+from relife import args_nb_assets
 from relife.economic import ExponentialDiscounting, Reward, cost
 from relife.stochastic_process import RenewalRewardProcess
 
@@ -38,11 +39,11 @@ class OneCycleAgeRenewalPolicy:
 
     def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)
-        # timeline : () or (nb_steps,)
-        # like in stochastic_process.renewal_process::RenewalRewardProcess::expected_total_reward, timeline must be
-        # reshaped if reward as more than on value
         if self.reward.cost_array.size > 1:
             timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
+        elif args_nb_assets(self.lifetime_model) > 1:
+            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
+        # timeline : (nb_steps,) or (m, nb_steps)
         # reward partial expectation
         return timeline, self.lifetime_model.ls_integrate(
             lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
@@ -52,28 +53,21 @@ class OneCycleAgeRenewalPolicy:
         # reward partial expectation
         return self.lifetime_model.ls_integrate(
             lambda x: self.reward.sample(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
-        )
+        ) # () or (m, 1)
 
-    def _expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        # timeline : () or (nb_steps,)
-        # like in stochastic_process.renewal_process::RenewalRewardProcess::expected_total_reward, timeline must be
-        # reshaped if reward as more than on value
-        if self.reward.cost_array.size > 1:
-            timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
-
-        # timeline : (), (nb_steps,) or (m, nb_steps)
-
+    def _expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: float | NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
             return (
                 self.reward.conditional_expectation(x) * self.discounting.factor(x) / self.discounting.annuity_factor(x)
             )
 
         q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)
-        a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,)
+        a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,) or (m, nb_steps)
         # change first value of lower bound to compute the integral
         a[timeline < self.period_before_discounting] = 0. # (nb_steps,)
         # a = np.where(timeline < self.period_before_discounting, 0., a)  # (nb_steps,)
-        integral = self.lifetime_model.ls_integrate(f, a, timeline, deg=100)  # (nb_steps,) if q0: (), or (m, nb_steps) if q0 : (m, 1)
+        integral = self.lifetime_model.ls_integrate(f, a, timeline, deg=100)  # (nb_steps,) or (m, nb_steps) if q0: (), or (m, nb_steps) if q0 : (m, 1)
         mask = np.broadcast_to(timeline < self.period_before_discounting, integral.shape) # (), (nb_steps,) or (m, nb_steps)
         q0 = np.broadcast_to(q0, integral.shape)  # (nb_steps,) or (m, nb_steps)
         integral = np.where(mask, q0, q0 + integral)
@@ -82,13 +76,24 @@ class OneCycleAgeRenewalPolicy:
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        return self._expected_equivalent_annual_cost(timeline)
+        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)
+        if self.reward.cost_array.size > 1:
+            timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
+        elif args_nb_assets(self.lifetime_model) > 1:
+            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
+        # timeline : (nb_steps,) or (m, nb_steps)
+        return self._expected_equivalent_annual_cost(timeline) # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(
         self,
     ) -> NDArray[np.float64]:
-        return self._expected_equivalent_annual_cost(np.array(np.inf))[-1]
+        timeline = np.array(np.inf)
+        if self.reward.cost_array.size > 1:
+            timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
+        elif args_nb_assets(self.lifetime_model) > 1:
+            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
+        # timeline : (nb_steps,) or (m, nb_steps)
+        return self._expected_equivalent_annual_cost(timeline)[-1] # () or (m, 1)
 
 
 class AgeRenewalPolicy:
@@ -120,21 +125,21 @@ class AgeRenewalPolicy:
         )
 
     def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        return self.underlying_process.renewal_function(tf, nb_steps)
+        return self.underlying_process.renewal_function(tf, nb_steps) # (nb_steps,) or (m, nb_steps)
 
     def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        return self.underlying_process.expected_total_reward(tf, nb_steps)
+        return self.underlying_process.expected_total_reward(tf, nb_steps) # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
-        return self.underlying_process.asymptotic_expected_total_reward()
+        return self.underlying_process.asymptotic_expected_total_reward() # () or (m, 1)
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        return self.underlying_process.expected_equivalent_annual_worth(tf, nb_steps)
+        return self.underlying_process.expected_equivalent_annual_worth(tf, nb_steps) # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        return self.underlying_process.asymptotic_expected_equivalent_annual_worth()
+        return self.underlying_process.asymptotic_expected_equivalent_annual_worth() # () or (m, 1)
 
 
 # @overload

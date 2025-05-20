@@ -136,7 +136,7 @@ class RenewalRewardProcess(RenewalProcess):
         self.discounting = ExponentialDiscounting(discounting_rate)
 
 
-    def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:  # (nb_steps,) or (m, nb_steps)
+    def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
         # timeline needs to be reshaped to ensure broadcasting
         if self.reward.cost_array.size > 1:
@@ -170,7 +170,7 @@ class RenewalRewardProcess(RenewalProcess):
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
-        return timeline, z
+        return timeline, z # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_reward(
         self,
@@ -189,15 +189,9 @@ class RenewalRewardProcess(RenewalProcess):
         return z  # () or (m, 1)
 
     def expected_equivalent_annual_worth(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        z = self.expected_total_reward(tf, nb_steps) # (nb_steps,) or (m, nb_steps)
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        if self.reward.cost_array.size > 1:
-            timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
-        elif args_nb_assets(self.lifetime_model) > 1:
-            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
-        # timeline : (nb_steps,) or (m, nb_steps)
+        timeline, z = self.expected_total_reward(tf, nb_steps) # (nb_steps,) or (m, nb_steps)
         af = self.discounting.annuity_factor(timeline) # (nb_steps,) or (m, nb_steps)
-        q = z / (af + 1e-5) # (nb_steps,) or (m, nb_steps) # avoid zero division
+        q = np.where(af == 0, z, z / af) # (nb_steps,) or (m, nb_steps)
         if self.first_lifetime_model is not None:
             q0 = self.first_reward.sample(0.0) * self.first_lifetime_model.pdf(0.0)
         else:

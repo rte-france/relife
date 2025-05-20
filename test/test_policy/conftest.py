@@ -33,11 +33,9 @@ def cp():
 def cf(cp):
     return cp + np.array([5, 10, 20, 100, 1000]).reshape(-1, 1)
 
-
-
 @pytest.fixture(
     params=[
-        # OneCycleRunToFailurePolicy,
+        OneCycleRunToFailurePolicy,
         RunToFailurePolicy,
     ],
 )

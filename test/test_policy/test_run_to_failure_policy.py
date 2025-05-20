@@ -1,10 +1,11 @@
+import numpy as np
 import pytest
 
 def test_asymptotic_expected_equivalent_annual_cost(run_to_failure_policy):
     qa = run_to_failure_policy.asymptotic_expected_equivalent_annual_cost()
     timeline, q = run_to_failure_policy.expected_equivalent_annual_cost(400, nb_steps=2000)
-    assert timeline.shape == q.shape
-    assert q[..., [-1]] == pytest.approx(qa, rel=1e-1)
+    assert timeline.shape == q.shape == (5, 2000)
+    assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
 
 
 # FIXME : does not work because now max ndim in ls_integrate is 2d, here it's 3d -> broadcasting error
