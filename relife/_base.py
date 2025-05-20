@@ -23,7 +23,6 @@ if TYPE_CHECKING:
         FrozenNonHomogeneousPoissonProcess,
         NonHomogeneousPoissonProcess,
     )
-    from relife.economic import AgeReplacementReward, RunToFailureReward
 
 
 class ParametricModel:
@@ -422,13 +421,11 @@ def freeze(
 
 
 def args_nb_assets_generator(
-    obj: (
+    model: (
         LifetimeDistribution
         | FrozenLifetimeRegression
         | FrozenLeftTruncatedModel
         | FrozenAgeReplacementModel
-        | RunToFailureReward
-        | AgeReplacementReward
     ),
 ) -> Iterator[int]:
 
@@ -438,40 +435,31 @@ def args_nb_assets_generator(
         FrozenLifetimeRegression,
         LifetimeDistribution,
     )
-    from relife.economic import AgeReplacementReward, RunToFailureReward
 
-    match obj:
+    match model:
         case LifetimeDistribution():
             yield 1
         case FrozenLifetimeRegression():
-            yield np.atleast_2d(np.asarray(obj.covar)).shape[0]
-            yield from args_nb_assets_generator(obj.unfreeze())
+            yield np.atleast_2d(np.asarray(model.covar)).shape[0]
+            yield from args_nb_assets_generator(model.unfreeze())
         case FrozenLeftTruncatedModel():
-            yield np.asarray(obj.a0).size
-            yield from args_nb_assets_generator(obj.unfreeze())
+            yield np.asarray(model.a0).size
+            yield from args_nb_assets_generator(model.unfreeze())
         case FrozenAgeReplacementModel():
-            yield np.asarray(obj.ar).size
-            yield from args_nb_assets_generator(obj.unfreeze())
-        case RunToFailureReward() | AgeReplacementReward():
-            yield obj.cf.size
+            yield np.asarray(model.ar).size
+            yield from args_nb_assets_generator(model.unfreeze())
         case _:
             return
 
 
 def args_nb_assets(
-    *obj: Optional[
-        LifetimeDistribution
-        | FrozenLifetimeRegression
-        | FrozenLeftTruncatedModel
-        | FrozenAgeReplacementModel
-        | RunToFailureReward
-        | AgeReplacementReward
-    ],
+    model: LifetimeDistribution| FrozenLifetimeRegression | FrozenLeftTruncatedModel| FrozenAgeReplacementModel
 ) -> int:
-    all_nb_assets = tuple(itertools.chain(*(args_nb_assets_generator(_obj) for _obj in obj if _obj is not None)))
-    non_one_nb_assets = set(tuple(filterfalse(lambda x: x == 1, all_nb_assets)))
+    non_one_nb_assets = set(tuple(filterfalse(lambda x: x == 1, tuple((args_nb_assets_generator(model))))))
     if len(non_one_nb_assets) > 1:
         raise ValueError(f"Invalid number of assets given in arguments. Got {non_one_nb_assets}")
+    if len(non_one_nb_assets) == 0:
+        return 1
     return list(non_one_nb_assets)[0]
 
 

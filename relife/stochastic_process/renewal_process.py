@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife import ParametricModel
+from relife import ParametricModel, args_nb_assets
 from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
@@ -48,17 +48,25 @@ class RenewalProcess(ParametricModel):
             return SampleFunction(type(self), self.sample_data)
         return None
 
-    def renewal_function(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
+    def renewal_function(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        return renewal_equation_solver(
+        # timeline needs to be reshaped to ensure broadcasting
+        if args_nb_assets(self.lifetime_model) > 1:
+            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
+        # timeline : (nb_steps,) or (m, nb_steps)
+        return timeline, renewal_equation_solver(
             timeline,
             self.lifetime_model,
             self.lifetime_model.cdf if self.first_lifetime_model is None else self.first_lifetime_model.cdf,
         )
 
-    def renewal_density(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
+    def renewal_density(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        return renewal_equation_solver(
+        # timeline needs to be reshaped to ensure broadcasting
+        if args_nb_assets(self.lifetime_model) > 1:
+            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
+        # timeline : (nb_steps,) or (m, nb_steps)
+        return timeline, renewal_equation_solver(
             timeline,
             self.lifetime_model,
             self.lifetime_model.pdf if self.first_lifetime_model is None else self.first_lifetime_model.pdf,
@@ -128,8 +136,9 @@ class RenewalRewardProcess(RenewalProcess):
         self.discounting = ExponentialDiscounting(discounting_rate)
 
 
-    def expected_total_reward(self, tf: float, nb_steps: int) -> NDArray[np.float64]:  # (nb_steps,) or (m, nb_steps)
+    def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:  # (nb_steps,) or (m, nb_steps)
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+        # timeline needs to be reshaped to ensure broadcasting
         if self.reward.cost_array.size > 1:
             # HERE timeline needs a reshape to ensure broadcasting in the func evaluation inside ls_integrate
             # eg : if lifetime_model .pdf return (nb_steps,) but reward is (m, 1), then a, b bounds will be (deg, nb_steps)
@@ -137,6 +146,9 @@ class RenewalRewardProcess(RenewalProcess):
             # timeline must be (m, nb_steps) so that a, b are (deg, m, nb_steps)
             # ls_integrate will be (m, nb_steps)
             timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
+        elif args_nb_assets(self.lifetime_model) > 1: # elif because we consider that if m > 1 in reward, it is the same in lifetime_model
+            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
+
         z = renewal_equation_solver(
             timeline,
             self.lifetime_model,
@@ -158,7 +170,7 @@ class RenewalRewardProcess(RenewalProcess):
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
-        return z
+        return timeline, z
 
     def asymptotic_expected_total_reward(
         self,
@@ -167,34 +179,40 @@ class RenewalRewardProcess(RenewalProcess):
         ly = self.lifetime_model.ls_integrate(
             lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=15
         )
-        z = ly / (1 - lf)
+        z = ly / (1 - lf) # () or (m, 1)
         if self.first_lifetime_model is not None:
             lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=15)
             ly1 = self.first_lifetime_model.ls_integrate(
                 lambda x: self.discounting.factor(x) * self.first_reward.sample(x), 0.0, np.inf, deg=15
             )
-            z = ly1 + z * lf1
-        return z
+            z = ly1 + z * lf1  # () or (m, 1)
+        return z  # () or (m, 1)
 
-    def expected_equivalent_annual_worth(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
-        z = self.expected_total_reward(tf, nb_steps)
-        af = self.discounting.annuity_factor(np.linspace(0, tf, nb_steps, dtype=np.float64))
-        q = z / (af + 1e-5)  # avoid zero division
-        res = np.full_like(af, q)
-        if self.first_lifetime_model is None:
-            q0 = self.reward.sample(0.0) * self.lifetime_model.pdf(0.0)
-        else:
+    def expected_equivalent_annual_worth(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        z = self.expected_total_reward(tf, nb_steps) # (nb_steps,) or (m, nb_steps)
+        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+        if self.reward.cost_array.size > 1:
+            timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
+        elif args_nb_assets(self.lifetime_model) > 1:
+            timeline = np.tile(timeline, (args_nb_assets(self.lifetime_model), 1))
+        # timeline : (nb_steps,) or (m, nb_steps)
+        af = self.discounting.annuity_factor(timeline) # (nb_steps,) or (m, nb_steps)
+        q = z / (af + 1e-5) # (nb_steps,) or (m, nb_steps) # avoid zero division
+        if self.first_lifetime_model is not None:
             q0 = self.first_reward.sample(0.0) * self.first_lifetime_model.pdf(0.0)
-        res[af == 0.0] = q0
-        return res
+        else:
+            q0 = self.reward.sample(0.0) * self.lifetime_model.pdf(0.0)
+        # q0 : () or (m, 1)
+        q0 = np.broadcast_to(q0, af.shape) # (), (nb_steps,) or (m, nb_steps)
+        return timeline, np.where(af == 0, q0, q)
 
     def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
         if self.discounting.rate == 0.0:
             return (
                 self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=15)
                 / self.lifetime_model.mean()
-            )
-        return self.discounting.rate * self.asymptotic_expected_total_reward()
+            ) # () or (m, 1)
+        return self.discounting.rate * self.asymptotic_expected_total_reward() # () or (m, 1)
 
 
 # def total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:

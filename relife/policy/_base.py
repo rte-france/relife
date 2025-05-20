@@ -38,6 +38,11 @@ class OneCycleAgeRenewalPolicy:
 
     def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)
+        # timeline : () or (nb_steps,)
+        # like in stochastic_process.renewal_process::RenewalRewardProcess::expected_total_reward, timeline must be
+        # reshaped if reward as more than on value
+        if self.reward.cost_array.size > 1:
+            timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
         # reward partial expectation
         return timeline, self.lifetime_model.ls_integrate(
             lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
@@ -50,7 +55,15 @@ class OneCycleAgeRenewalPolicy:
         )
 
     def _expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-        def f(x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+        # timeline : () or (nb_steps,)
+        # like in stochastic_process.renewal_process::RenewalRewardProcess::expected_total_reward, timeline must be
+        # reshaped if reward as more than on value
+        if self.reward.cost_array.size > 1:
+            timeline = np.tile(timeline, (self.reward.cost_array.size, 1))
+
+        # timeline : (), (nb_steps,) or (m, nb_steps)
+
+        def f(x: float | NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
             return (
                 self.reward.conditional_expectation(x) * self.discounting.factor(x) / self.discounting.annuity_factor(x)
             )
@@ -58,27 +71,24 @@ class OneCycleAgeRenewalPolicy:
         q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)
         a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,)
         # change first value of lower bound to compute the integral
-        a = np.where(timeline < self.period_before_discounting, timeline, a)  # (nb_steps,)
-        integral = np.atleast_2d(
-            self.lifetime_model.ls_integrate(f, a, timeline)
-        )  # (nb_steps,) if q0: (), or (m, nb_steps) if q0 : (m, 1)
-        mask = np.broadcast_to(
-            timeline < self.period_before_discounting, integral.shape
-        )  # (nb_steps,) or (m, nb_steps)
+        a[timeline < self.period_before_discounting] = 0. # (nb_steps,)
+        # a = np.where(timeline < self.period_before_discounting, 0., a)  # (nb_steps,)
+        integral = self.lifetime_model.ls_integrate(f, a, timeline, deg=100)  # (nb_steps,) if q0: (), or (m, nb_steps) if q0 : (m, 1)
+        mask = np.broadcast_to(timeline < self.period_before_discounting, integral.shape) # (), (nb_steps,) or (m, nb_steps)
         q0 = np.broadcast_to(q0, integral.shape)  # (nb_steps,) or (m, nb_steps)
-        integral = np.where(mask, q0, integral)
-        return integral
+        integral = np.where(mask, q0, q0 + integral)
+        return timeline, integral
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        return timeline, self._expected_equivalent_annual_cost(timeline)
+        return self._expected_equivalent_annual_cost(timeline)
 
     def asymptotic_expected_equivalent_annual_cost(
         self,
     ) -> NDArray[np.float64]:
-        return self._expected_equivalent_annual_cost(np.array(np.inf))
+        return self._expected_equivalent_annual_cost(np.array(np.inf))[-1]
 
 
 class AgeRenewalPolicy:
@@ -97,21 +107,17 @@ class AgeRenewalPolicy:
         self.first_lifetime_model = first_lifetime_model
         self.reward = reward
         self.first_reward = first_reward
-        self.discounting = ExponentialDiscounting(discounting_rate)
+        self.discounting_rate = discounting_rate
 
     @property
     def underlying_process(self) -> RenewalRewardProcess:
         return RenewalRewardProcess(
             self.lifetime_model,
             self.reward,
-            self.discounting,
+            self.discounting_rate,
             first_lifetime_model=self.first_lifetime_model,
             first_reward=self.first_reward,
         )
-
-    @property
-    def discounting_rate(self):
-        return self.discounting.rate
 
     def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         return self.underlying_process.renewal_function(tf, nb_steps)
