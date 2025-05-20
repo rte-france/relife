@@ -44,7 +44,7 @@ def distribution(request):
 )
 def frozen_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return freeze(request.param, covar)
+    return freeze(request.param, covar=covar)
 
 
 @pytest.fixture(
@@ -58,7 +58,7 @@ def frozen_regression(request):
 )
 def frozen_ar_distribution(request):
     ar = request.param.isf(0.75)
-    return freeze(AgeReplacementModel(request.param), ar)
+    return freeze(AgeReplacementModel(request.param), ar=ar)
 
 
 @pytest.fixture(
@@ -79,4 +79,4 @@ def frozen_ar_distribution(request):
 def frozen_ar_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
     ar = request.param.isf(0.75, covar)
-    return freeze(AgeReplacementModel(request.param), ar, covar)
+    return freeze(AgeReplacementModel(request.param), ar=ar, covar=covar)

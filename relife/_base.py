@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain, filterfalse
 from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, overload
@@ -371,26 +370,26 @@ class FittingResults:
 
 
 @overload
-def freeze(model: LifetimeRegression, *args: float | NDArray[np.float64]) -> FrozenLifetimeRegression: ...
+def freeze(model: LifetimeRegression, **kwargs: float | NDArray[np.float64]) -> FrozenLifetimeRegression: ...
 
 
 @overload
-def freeze(model: LeftTruncatedModel, *args: float | NDArray[np.float64]) -> FrozenLeftTruncatedModel: ...
+def freeze(model: LeftTruncatedModel, **kwargs: float | NDArray[np.float64]) -> FrozenLeftTruncatedModel: ...
 
 
 @overload
-def freeze(model: AgeReplacementModel, *args: float | NDArray[np.float64]) -> FrozenAgeReplacementModel: ...
+def freeze(model: AgeReplacementModel, **kwargs: float | NDArray[np.float64]) -> FrozenAgeReplacementModel: ...
 
 
 @overload
 def freeze(
-    model: NonHomogeneousPoissonProcess, *args: float | NDArray[np.float64]
+    model: NonHomogeneousPoissonProcess, **kwargs: float | NDArray[np.float64]
 ) -> FrozenNonHomogeneousPoissonProcess: ...
 
 
 def freeze(
     model: LifetimeRegression | LeftTruncatedModel | AgeReplacementModel | NonHomogeneousPoissonProcess,
-    *args: float | NDArray[np.float64],
+    **kwargs: float | NDArray[np.float64],
 ) -> (
     FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel | FrozenNonHomogeneousPoissonProcess
 ):
@@ -407,26 +406,35 @@ def freeze(
         NonHomogeneousPoissonProcess,
     )
 
-    match model:
-        case LifetimeRegression():
-            return FrozenLifetimeRegression(model, *args)
-        case AgeReplacementModel():
-            return FrozenAgeReplacementModel(model, *args)
-        case LeftTruncatedModel():
-            return FrozenLeftTruncatedModel(model, *args)
-        case NonHomogeneousPoissonProcess():
-            return FrozenNonHomogeneousPoissonProcess(model, *args)
-        case _:
-            raise ValueError(f"{type(model)} can't be be frozen")
+    if not hasattr(model, "args_names"):
+        raise ValueError
+    args_names = model.args_names
+    set_args_names = set(args_names)
+    set_keys = set(kwargs.keys())
+    if set_args_names != set_keys:
+        raise ValueError(f"Expected {set_args_names} but got {set_keys}")
+
+    position_mapping = {name: i for i, name in enumerate(args_names)}
+    reorder_kwargs = dict(sorted(kwargs.items(), key=lambda item: position_mapping[item[0]]))
+    args_values : tuple[float | NDArray[np.float64], ...] = tuple(reorder_kwargs.values())
+
+    # here args_nb_assets is set to 1 by default and then, will be overriden after testing frozen_args coherence
+    if isinstance(model, LifetimeRegression):
+        frozen_model = FrozenLifetimeRegression(model, 1, args_values[0], *args_values[1:])
+    elif isinstance(model, AgeReplacementModel):
+        frozen_model = FrozenAgeReplacementModel(model, 1, args_values[0], *args_values[1:])
+    elif isinstance(model, LeftTruncatedModel):
+        frozen_model = FrozenLeftTruncatedModel(model, 1, args_values[0], *args_values[1:])
+    elif isinstance(model, NonHomogeneousPoissonProcess):
+        frozen_model = FrozenNonHomogeneousPoissonProcess(model, *args_values)
+    else:
+        raise ValueError
+    frozen_model.args_nb_assets = args_nb_assets(frozen_model)
+    return frozen_model
 
 
 def args_nb_assets_generator(
-    model: (
-        LifetimeDistribution
-        | FrozenLifetimeRegression
-        | FrozenLeftTruncatedModel
-        | FrozenAgeReplacementModel
-    ),
+    model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel,
 ) -> Iterator[int]:
 
     from relife.lifetime_model import (
@@ -453,11 +461,11 @@ def args_nb_assets_generator(
 
 
 def args_nb_assets(
-    model: LifetimeDistribution| FrozenLifetimeRegression | FrozenLeftTruncatedModel| FrozenAgeReplacementModel
+    model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel,
 ) -> int:
     non_one_nb_assets = set(tuple(filterfalse(lambda x: x == 1, tuple((args_nb_assets_generator(model))))))
     if len(non_one_nb_assets) > 1:
-        raise ValueError(f"Invalid number of assets given in arguments. Got {non_one_nb_assets}")
+        raise ValueError(f"Invalid number of assets given in arguments. Got several nb assets : {non_one_nb_assets}")
     if len(non_one_nb_assets) == 0:
         return 1
     return list(non_one_nb_assets)[0]

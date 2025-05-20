@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 from relife.economic import ExponentialDiscounting, RunToFailureReward
 
-from ._base import AgeRenewalPolicy, OneCycleAgeRenewalPolicy
+from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     )
 
 
-class OneCycleRunToFailurePolicy(OneCycleAgeRenewalPolicy):
+class OneCycleRunToFailurePolicy(BaseOneCycleAgeReplacementPolicy):
 
     reward: RunToFailureReward
 
@@ -36,7 +36,7 @@ class OneCycleRunToFailurePolicy(OneCycleAgeRenewalPolicy):
         return self.reward.cf
 
 
-class RunToFailurePolicy(AgeRenewalPolicy):
+class RunToFailurePolicy(BaseAgeReplacementPolicy):
     r"""Run-to-failure renewal policy.
 
     Renewal reward stochastic_process where assets are replaced on failure with costs

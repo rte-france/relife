@@ -301,7 +301,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
         model = self
         if bool(args):
-            model = freeze(self, *args)
+            model = freeze(self, **{k : v for k, v in zip(self.args_names, args)})
         model: LifetimeDistribution | FrozenParametricLifetimeModel
 
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -1188,12 +1188,13 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
 
     frozen_args: tuple[*Args]
 
-    def __init__(self, model: ParametricLifetimeModel[*Args], *args: *Args):
+    def __init__(self, model: ParametricLifetimeModel[*Args], args_nb_assets: int, *args: *Args):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("You try to freeze a model with unsetted parameters. Set params first")
         self.unfrozen_model = model
         self.frozen_args = args
+        self.args_nb_assets = args_nb_assets
 
     def unfreeze(self) -> ParametricLifetimeModel[*Args]:
         return self.unfrozen_model
@@ -1436,9 +1437,13 @@ class FrozenLifetimeRegression(
 
     @override
     def __init__(
-        self, model: LifetimeRegression, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+        self,
+        model: LifetimeRegression,
+        args_nb_assets: int,
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
     ):
-        super().__init__(model, *(covar, *args))
+        super().__init__(model, args_nb_assets, *(covar, *args))
 
     @override
     def unfreeze(self) -> LifetimeRegression:

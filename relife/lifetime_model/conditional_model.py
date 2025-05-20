@@ -342,8 +342,14 @@ class FrozenAgeReplacementModel(
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
-    def __init__(self, model: AgeReplacementModel, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]):
-        super().__init__(model, *(ar, *args))
+    def __init__(
+        self,
+        model: AgeReplacementModel,
+        args_nb_assets: int,
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+    ):
+        super().__init__(model, args_nb_assets, *(ar, *args))
 
     @override
     def unfreeze(self) -> AgeReplacementModel:
@@ -365,8 +371,14 @@ class FrozenLeftTruncatedModel(
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
     @override
-    def __init__(self, model: LeftTruncatedModel, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]):
-        super().__init__(model, *(a0, *args))
+    def __init__(
+        self,
+        model: LeftTruncatedModel,
+        args_nb_assets: int,
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+    ):
+        super().__init__(model, args_nb_assets, *(a0, *args))
 
     @override
     def unfreeze(self) -> LeftTruncatedModel:

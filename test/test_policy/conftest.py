@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from relife.lifetime_model import Weibull, Gompertz, Gamma, LogLogistic
-from relife.policy import OneCycleRunToFailurePolicy, RunToFailurePolicy
+from relife.policy import OneCycleRunToFailurePolicy, RunToFailurePolicy, OneCycleAgeReplacementPolicy
 
 
 @pytest.fixture(
@@ -41,3 +41,8 @@ def cf(cp):
 )
 def run_to_failure_policy(request, distribution, cf, discounting_rate):
     return request.param(distribution, cf, discounting_rate=discounting_rate)
+
+
+@pytest.fixture
+def one_cycle_age_replacement_policy(distribution, cf, cp, discounting_rate):
+    return OneCycleAgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate)

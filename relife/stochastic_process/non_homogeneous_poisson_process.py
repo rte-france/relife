@@ -86,10 +86,11 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
 
 class FrozenNonHomogeneousPoissonProcess(ParametricModel):
-    def __init__(self, model: NonHomogeneousPoissonProcess, *args: float | NDArray[np.float64]):
+    def __init__(self, model: NonHomogeneousPoissonProcess, args_nb_assets: int, *args: float | NDArray[np.float64]):
         super().__init__()
         self.unfrozen_model = model
-        self.frozen_args = model.baseline.freeze_args(*args)
+        self.frozen_args = args
+        self.args_nb_assets = args_nb_assets
 
     def unfreeze(self) -> NonHomogeneousPoissonProcess:
         return self.unfrozen_model

@@ -4,16 +4,14 @@ from typing import Optional, Protocol
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.lifetime_model import FrozenParametricLifetimeModel, LifetimeDistribution
-
-Cost = NDArray[np.float64]
+CostArray = NDArray[np.float64]
 
 
 def cost(
     cf: float | NDArray[np.float64] = 0.0,
     cp: float | NDArray[np.float64] = 0.0,
     cr: float | NDArray[np.float64] = 0.0,
-) -> Optional[Cost]:
+) -> Optional[CostArray]:
     dtype = np.dtype(
         [
             ("cf", np.float64),
@@ -33,7 +31,7 @@ def cost(
 
 
 class Reward(ABC):
-    cost_array: Cost
+    _cost_array: CostArray
 
     @abstractmethod
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -44,14 +42,17 @@ class Reward(ABC):
     def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         """Reward conditional sampling."""
 
+    def __len__(self) -> int:
+        return self._cost_array.size
+
 
 class RunToFailureReward(Reward):
     def __init__(self, cf: float | NDArray[np.float64]):
-        self.cost_array = cost(cf=cf)
+        self._cost_array = cost(cf=cf)
 
     @property
     def cf(self):
-        return self.cost_array["cf"]
+        return self._cost_array["cf"]
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.ones_like(time) * self.cf
@@ -64,18 +65,18 @@ class AgeReplacementReward(Reward):
     def __init__(
         self, cf: float | NDArray[np.float64], cp: float | NDArray[np.float64], ar: float | NDArray[np.float64]
     ):
-        self.cost_array = cost(cf=cf, cp=cp)
+        self._cost_array = cost(cf=cf, cp=cp)
         ar = np.asarray(ar, dtype=np.float64)
         shape = () if ar.ndim == 0 else (ar.size, 1)
         self.ar = ar.reshape(shape)
 
     @property
     def cf(self):
-        return self.cost_array["cf"]
+        return self._cost_array["cf"]
 
     @property
     def cp(self):
-        return self.cost_array["cp"]
+        return self._cost_array["cp"]
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.where(time < self.ar, self.cf, self.cp)
