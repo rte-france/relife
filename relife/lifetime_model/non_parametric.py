@@ -6,6 +6,7 @@ from numpy.typing import DTypeLike, NDArray
 from relife.data import LifetimeData
 
 from ._base import NonParametricLifetimeModel
+from relife._plot import PlotECDF, PlotTurnbull, PlotKaplanMeier, PlotNelsonAalen
 
 
 class ECDF(NonParametricLifetimeModel):
@@ -45,16 +46,21 @@ class ECDF(NonParametricLifetimeModel):
             entry=entry,
             departure=departure,
         )
-
         timeline, counts = np.unique(lifetime_data.complete_or_right_censored.lifetime_values, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
-        cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
-        sf = 1 - cdf
-        se = np.sqrt(cdf * (1 - cdf) / len(lifetime_data.complete_or_right_censored.lifetime_values))
 
-        dtype = np.dtype([("timeline", np.float64), ("values", np.float64), ("se", np.float64)])
-        self._sf = np.array([timeline, sf, se], dtype=dtype)
-        self._cdf = np.array([timeline, cdf, se], dtype=dtype)
+        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
+        self._sf = np.empty((timeline.size,), dtype=dtype)
+        self._cdf = np.empty((timeline.size,), dtype=dtype)
+
+        self._sf["timeline"] = timeline
+        self._cdf["timeline"] = timeline
+        cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
+        self._cdf["estimation"] = cdf
+        self._sf["estimation"] = 1 - cdf
+        se = np.sqrt(*(1 - cdf) / len(lifetime_data.complete_or_right_censored.lifetime_values))
+        self._sf["se"] = se
+        self._cdf["se"] = se
         return self
 
     @overload
@@ -74,8 +80,8 @@ class ECDF(NonParametricLifetimeModel):
         if self._sf is None:
             return None
         if se:
-            return self._sf["timeline"], self._sf["values"], self._sf["se"]
-        return self._sf["timeline"], self._sf["values"]
+            return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
+        return self._sf["timeline"], self._sf["estimation"]
 
     @overload
     def cdf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
@@ -94,9 +100,12 @@ class ECDF(NonParametricLifetimeModel):
         if self._cdf is None:
             return None
         if se:
-            return self._cdf["timeline"], self._cdf["values"], self._cdf["se"]
-        return self._cdf["timeline"], self._cdf["values"]
+            return self._cdf["timeline"], self._cdf["estimation"], self._cdf["se"]
+        return self._cdf["timeline"], self._cdf["estimation"]
 
+    @property
+    def plot(self) -> PlotECDF:
+        return PlotECDF(self)
 
 class KaplanMeier(NonParametricLifetimeModel):
     r"""Kaplan-Meier estimator.
@@ -217,8 +226,12 @@ class KaplanMeier(NonParametricLifetimeModel):
             )
         se = np.sqrt(np.insert(var, 0, 0))
         timeline = np.insert(timeline, 0, 0)
-        dtype = np.dtype([("timeline", np.float64), ("values", np.float64), ("se", np.float64)])
-        self._sf = np.array([timeline, sf, se], dtype=dtype)
+
+        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
+        self._sf = np.empty((timeline.size,), dtype=dtype)
+        self._sf["timeline"] = timeline
+        self._sf["estimation"] = sf
+        self._sf["se"] = se
         return self
 
     @overload
@@ -238,8 +251,12 @@ class KaplanMeier(NonParametricLifetimeModel):
         if self._sf is None:
             return None
         if se:
-            return self._sf["timeline"], self._sf["values"], self._sf["se"]
-        return self._sf["timeline"], self._sf["values"]
+            return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
+        return self._sf["timeline"], self._sf["estimation"]
+
+    @property
+    def plot(self) -> PlotKaplanMeier:
+        return PlotKaplanMeier(self)
 
 
 class NelsonAalen(NonParametricLifetimeModel):
@@ -354,8 +371,11 @@ class NelsonAalen(NonParametricLifetimeModel):
         se = np.sqrt(np.insert(var, 0, 0))
         timeline = np.insert(timeline, 0, 0)
 
-        dtype = np.dtype([("timeline", np.float64), ("values", np.float64), ("se", np.float64)])
-        self._chf = np.array([timeline, chf, se], dtype=dtype)
+        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
+        self._chf = np.empty((timeline.size,), dtype=dtype)
+        self._chf["timeline"] = timeline
+        self._chf["estimation"] = chf
+        self._chf["se"] = se
         return self
 
     @overload
@@ -375,8 +395,12 @@ class NelsonAalen(NonParametricLifetimeModel):
         if self._chf is None:
             return None
         if se:
-            return self._chf["timeline"], self._chf["values"], self._chf["se"]
-        return self._chf["timeline"], self._chf["values"]
+            return self._chf["timeline"], self._chf["estimation"], self._chf["se"]
+        return self._chf["timeline"], self._chf["estimation"]
+
+    @property
+    def plot(self) -> PlotNelsonAalen:
+        return PlotNelsonAalen(self)
 
 
 class Turnbull(NonParametricLifetimeModel):
@@ -470,14 +494,16 @@ class Turnbull(NonParametricLifetimeModel):
         ind_del = np.where(timeline_temp == np.inf)
         sf = np.delete(s, ind_del)
         timeline = np.delete(timeline_temp, ind_del)
-        dtype = np.dtype([("timeline", np.float64), ("values", np.float64)])
-        self._sf = np.array([timeline, sf], dtype=dtype)
+        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64)])
+        self._sf = np.empty((timeline.size,), dtype=dtype)
+        self._sf["timeline"] = timeline
+        self._sf["estimation"] = sf
         return self
 
     def sf(self) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]:
         if self._sf is None:
             return None
-        return self._sf["timeline"], self._sf["values"]
+        return self._sf["timeline"], self._sf["estimation"]
 
     def _estimate_with_low_memory(
         self,
@@ -566,3 +592,8 @@ class Turnbull(NonParametricLifetimeModel):
             s = s_updated
             count += 1
         return s
+
+
+    @property
+    def plot(self) -> PlotTurnbull:
+        return PlotTurnbull(self)

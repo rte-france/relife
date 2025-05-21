@@ -321,7 +321,7 @@ class FittingResults:
     )  #: Standard error, square root of the diagonal of the covariance matrix.
 
     params: NDArray[np.float64] = field(init=False)  #: Optimal parameters values
-    nb_params: int = field(init=False)  #: Number of parameters.
+    nb_params: int = field(init=False, repr=False)  #: Number of parameters.
     AIC: float = field(init=False)  #: Akaike Information Criterion.
     AICc: float = field(init=False)  #: Akaike Information Criterion with a correction for small sample sizes.
     BIC: float = field(init=False)  #: Bayesian Information Criterion.
@@ -329,15 +329,15 @@ class FittingResults:
     def __post_init__(self, nb_samples, opt):
         self.params = opt.x
         self.nb_params = opt.x.size
-        self.AIC = 2 * self.nb_params + 2 * opt.fun
-        self.AICc = self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (nb_samples - self.nb_params - 1)
-        self.BIC = np.log(nb_samples) * self.nb_params + 2 * opt.fun
+        self.AIC = float(2 * self.nb_params + 2 * opt.fun)
+        self.AICc = float(self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (nb_samples - self.nb_params - 1))
+        self.BIC = float(np.log(nb_samples) * self.nb_params + 2 * opt.fun)
 
         self.se = None
         if self.var is not None:
             self.se = np.sqrt(np.diag(self.var))
 
-    def standard_error(self, jac_f: np.ndarray) -> np.ndarray:
+    def se_estimation_function(self, jac_f: np.ndarray) -> np.ndarray:
         """Standard error estimation function.
 
         Parameters
@@ -367,6 +367,21 @@ class FittingResults:
             Returns the fitting result as a dictionary.
         """
         return asdict(self)
+
+    def __str__(self) -> str:
+        """Returns a string representation of FittingResults with fields in a single column."""
+        fields = [("fitted params", self.params), ("AIC", self.AIC), ("AICc", self.AICc), ("BIC", self.BIC)]
+        # Find the maximum field name length for alignment
+        max_name_length = max(len(name) for name, _ in fields)
+        lines = []
+        for name, value in fields:
+            # Format arrays to be more compact
+            if isinstance(value, np.ndarray):
+                value_str = f"[{', '.join(f'{x:.6g}' for x in value)}]"
+            else:
+                value_str = f"{value:.6g}" if isinstance(value, float) else str(value)
+            lines.append(f"{name:<{max_name_length}} : {value_str}")
+        return "\n".join(lines)
 
 
 @overload

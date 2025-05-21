@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Protocol, Literal
+from typing import Literal, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,7 +19,7 @@ def cost(
     )
     kwargs = {"cf": np.asarray(cf), "cp": np.asarray(cp), "cr": np.asarray(cr)}
     nb_assets = max(v.size if v.ndim > 0 else 0 for v in kwargs.values())
-    shape : tuple[int, Literal[1]] | tuple[()] = (nb_assets, 1) if nb_assets > 0 else ()
+    shape: tuple[int, Literal[1]] | tuple[()] = (nb_assets, 1) if nb_assets > 0 else ()
     struct_cost = np.zeros(shape, dtype=struct_dtype)
     for k, v in kwargs.items():
         if v.ndim > 0:

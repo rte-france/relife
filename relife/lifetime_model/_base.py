@@ -25,6 +25,7 @@ from relife.quadrature import (
     legendre_quadrature,
     unweighted_laguerre_quadrature,
 )
+from relife._plot import PlotParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 
@@ -52,7 +53,12 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @abstractmethod
     def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
         if hasattr(self, "chf"):
-            return np.exp(-self.chf(time, *args, ))
+            return np.exp(
+                -self.chf(
+                    time,
+                    *args,
+                )
+            )
         elif hasattr(self, "pdf") and hasattr(self, "hf"):
             return self.pdf(time, *args) / self.hf(time, *args)
         else:
@@ -189,6 +195,21 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]
     ]: ...
 
+    @overload
+    def rvs(
+        self,
+        *args: *Args,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        return_event: bool,
+        return_entry: bool,
+        seed: Optional[int] = None,
+    ) -> (
+        np.float64
+        | NDArray[np.float64]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
+    ): ...
+
     def rvs(
         self,
         *args: *Args,
@@ -205,7 +226,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         rs = np.random.RandomState(seed=seed)
         probability = rs.uniform(size=size)
         time = self.isf(probability, *args)
-        event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else True
+        event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
         entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
         if not return_event and not return_entry:
             return time
@@ -235,10 +256,10 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
             time[selection].copy(), event=event[selection].copy(), entry=entry[selection].copy(), args=args
         )
 
-    # @property
-    # def plot(self) -> PlotSurvivalFunc:
-    #     """Plot"""
-    #     return PlotSurvivalFunc(self)
+    @property
+    def plot(self) -> PlotParametricLifetimeModel:
+        """Plot"""
+        return PlotParametricLifetimeModel(self)
 
     @property
     @abstractmethod
@@ -427,7 +448,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Args], ABC):
             likelihood.negative_log,
             minimize_kwargs.pop("x0"),
             jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-            callback=lambda x: print(x),
             **minimize_kwargs,
         )
         # set fitted params
