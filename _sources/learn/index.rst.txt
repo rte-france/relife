@@ -1,12 +1,9 @@
 Learn
 =====
 
-If you're new to reliability and renewal theory but you have some maths knowledge, try to learn more about this field
-of statistics.
+.. toctree::
+    :maxdepth: 1
+    :numbered:
 
 
-Reliability theory
-~~~~~~~~~~~~~~~~~~
-
-Renewal theory
-~~~~~~~~~~~~~~
+    lifetime_data

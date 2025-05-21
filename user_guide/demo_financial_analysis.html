@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=733aff7d" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=da1e0c12" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -97,9 +97,6 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
-<aside class="bd-header-announcement" aria-label="Announcement">
-  <div class="bd-header-announcement__content"><em>beta version</em> : the code is still in development (expected release by the end of April 2025). The documentation might not be up-to-date</div>
-</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -123,14 +120,8 @@
   
   
   
-    
-    
-      
-    
-    
-    <img src="../_static/logo.png" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
   
+    <p class="title logo__title">ReLife</p>
   
 </a></div>
     
@@ -159,15 +150,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
-    API
+  <a class="nav-link nav-internal" href="../learn/index.html">
+    Learn
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../learn/index.html">
-    Learn
+  <a class="nav-link nav-internal" href="../contributor_guide/index.html">
+    Contributor’s guide
   </a>
 </li>
 
@@ -179,13 +170,6 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
-<li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../contributor_guide/index.html">
-    Contributor’s guide
-  </a>
-</li>
-
-
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../future/index.html">
     Future improvements
@@ -306,13 +290,6 @@
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="index.html">
     User’s guide
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
-    API
   </a>
 </li>
 
@@ -467,94 +444,95 @@
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gompertz</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.policies</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgeReplacementPolicy</span><span class="p">,</span> <span class="n">OneCycleAgeReplacementPolicy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.policies</span><span class="w"> </span><span class="kn">import</span> <span class="n">renewal_policy</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">a0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">25</span><span class="p">])</span>
+<span class="n">cp</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">cf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">900</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+<span class="n">discounting_rate</span> <span class="o">=</span> <span class="mf">0.04</span>
+<span class="n">costs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cf&quot;</span> <span class="p">:</span><span class="n">cf</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span> <span class="p">:</span><span class="n">cp</span><span class="p">}</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Gompertz</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mf">0.00391</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.0758</span><span class="p">)</span>
+
+<span class="n">ar_policy</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="n">costs</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">a0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">25</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Ages initiaux des actifs</span>
-<span class="n">cp</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Cout d&#39;un rempalcement préventif</span>
-<span class="n">cf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">900</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Cout d&#39;un rempalcement sur défaillance</span>
-<span class="n">discounting_rate</span> <span class="o">=</span> <span class="mf">0.04</span>  <span class="c1"># taux d&#39;actualisation</span>
-
-<span class="n">distribution</span> <span class="o">=</span> <span class="n">Gompertz</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mf">0.00391</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.0758</span><span class="p">)</span>  <span class="c1"># Modèle de durée de vie des actifs</span>
-
-<span class="c1"># Remplacement par âge sur une infinité de cycles</span>
-<span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
-    <span class="n">distribution</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span>
-<span class="p">)</span>
-<span class="n">ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">ar_policy</span><span class="o">.</span><span class="n">ar1</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ar1&quot;</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(array([[ 7.82608906],
-        [ 9.06699905],
-        [19.02758643]]),
- array([[20.91316269],
-        [25.54310597],
-        [41.59988035]]))
+ar [[20.91316269]
+ [25.54310597]
+ [41.59988035]]
+ar1 [[ 7.82608906]
+ [ 9.06699905]
+ [19.02758643]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Remplacement par âge sur un cycle</span>
-<span class="n">onecycle_ar_policy</span> <span class="o">=</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">(</span>
-    <span class="n">distribution</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span>
-<span class="p">)</span>
-<span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">ar</span>
+<span class="n">onecycle_ar_policy</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="n">costs</span><span class="p">,</span> <span class="n">one_cycle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[ 7.82608906],
-       [ 9.06699905],
-       [19.02758643]])
+ar [[ 7.82608906]
+ [ 9.06699905]
+ [19.02758643]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distrib</span> <span class="o">=</span> <span class="n">Gompertz</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="n">distrib</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">distrib</span><span class="o">.</span><span class="n">var</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Gompertz</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">distrib</span><span class="o">.</span><span class="n">var</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(array(14.93348747), np.float64(60.372106915294125))
+(np.float64(14.933487469322392), None)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
-<span class="n">ax</span> <span class="o">=</span> <span class="n">distrib</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Distribution des durées de vie&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">durations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">durations</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Lifetimes distribution&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Age&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Densité&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -563,15 +541,14 @@ array([[ 7.82608906],
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_demo_financial_analysis_5_0.png" src="../_images/user_guide_demo_financial_analysis_5_0.png" />
+<img alt="../_images/user_guide_demo_financial_analysis_6_0.png" src="../_images/user_guide_demo_financial_analysis_6_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">ar_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ar_policy</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
 <span class="n">optimal_ar</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">optimal_ar</span><span class="p">)</span>
 </pre></div>
@@ -588,27 +565,29 @@ array([[ 7.82608906],
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cp</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">cf</span> <span class="o">=</span> <span class="mi">5</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cf</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">cp</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">costs</span><span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cf&quot;</span> <span class="p">:</span><span class="n">cf</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span> <span class="p">:</span><span class="n">cp</span><span class="p">}</span>
 <span class="n">discounting_rate</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">nb_assets</span> <span class="o">=</span> <span class="n">ar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-<span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># range of ar</span>
-<span class="n">za</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
-    <span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">ar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="p">)</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span>
-<span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="n">parametrized_ar_policy</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="n">costs</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">)</span>
+<span class="n">za</span> <span class="o">=</span> <span class="n">parametrized_ar_policy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span>
+
+<span class="n">ar_policy</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="n">costs</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
 <span class="n">ar_opt</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span>  <span class="c1"># optimal ar</span>
 <span class="n">za_opt</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">za</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">za_opt</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; cf=</span><span class="si">{</span><span class="n">cf</span><span class="si">}</span><span class="s2"> k€, ar=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> years&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">za_opt</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; cf=</span><span class="si">{</span><span class="n">cf</span><span class="si">}</span><span class="s2"> k€, ar=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">ar_opt</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">}</span><span class="s2"> years&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Age of preventive replacement [years]&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Asymptotic expected equivalent annual cost [k€]&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;asymptotic expected equivalent annual cost with optimal ar :&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">za_opt</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;asymptotic expected equivalent annual cost with optimal ar :&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">za_opt</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -616,7 +595,7 @@ array([[ 7.82608906],
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_demo_financial_analysis_7_0.png" src="../_images/user_guide_demo_financial_analysis_7_0.png" />
+<img alt="../_images/user_guide_demo_financial_analysis_8_0.png" src="../_images/user_guide_demo_financial_analysis_8_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -624,64 +603,20 @@ array([[ 7.82608906],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-asymptotic expected equivalent annual cost with optimal ar : [0.22]
+asymptotic expected equivalent annual cost with optimal ar : 0.22
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dt</span> <span class="o">=</span> <span class="mf">0.5</span>
-<span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">dt</span><span class="p">)</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span> <span class="o">+</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
-<span class="n">z</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">t</span><span class="p">[::</span><span class="n">step</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
-<span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">z</span><span class="p">[::</span><span class="n">step</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="mi">2020</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;edge&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=-</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C2&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">cumul_total_cost</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span>
+<span class="n">total_cost_per_year</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">cumul_total_cost</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="n">total_cost_per_year</span><span class="p">,</span> <span class="n">drawstyle</span><span class="o">=</span><span class="s2">&quot;steps-post&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="n">total_cost_per_year</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">total_cost_per_year</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Year&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Expected discounted annual cost in k€&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/user_guide_demo_financial_analysis_8_0.png" src="../_images/user_guide_demo_financial_analysis_8_0.png" />
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">policya</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">policyb</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">mt</span> <span class="o">=</span> <span class="n">policya</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-<span class="n">mf</span> <span class="o">=</span> <span class="n">policyb</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-<span class="n">qt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mt</span><span class="p">[::</span><span class="n">step</span><span class="p">])</span>
-<span class="n">qf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mf</span><span class="p">[::</span><span class="n">step</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
-    <span class="n">y</span> <span class="o">+</span> <span class="mi">2020</span><span class="p">,</span>
-    <span class="n">qt</span><span class="p">,</span>
-    <span class="n">align</span><span class="o">=</span><span class="s2">&quot;edge&quot;</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=-</span><span class="mf">0.8</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C1&quot;</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;all replacements&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
-    <span class="n">y</span> <span class="o">+</span> <span class="mi">2020</span><span class="p">,</span>
-    <span class="n">qf</span><span class="p">,</span>
-    <span class="n">align</span><span class="o">=</span><span class="s2">&quot;edge&quot;</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=-</span><span class="mf">0.8</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C0&quot;</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;failure replacements only&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Years&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Expected number of annual replacements&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -694,17 +629,58 @@ asymptotic expected equivalent annual cost with optimal ar : [0.22]
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[61]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">policya</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cf&quot;</span> <span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span> <span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">policyb</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cf&quot;</span> <span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span> <span class="p">:</span><span class="mi">0</span><span class="p">},</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar_opt</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">mt</span> <span class="o">=</span> <span class="n">policya</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">policyb</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mt</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+    <span class="n">timeline</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mt</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;all replacements&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+    <span class="n">timeline</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;failure replacements only&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Years&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Expected number of annual replacements&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(200,)
+(200,)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/user_guide_demo_financial_analysis_10_1.png" src="../_images/user_guide_demo_financial_analysis_10_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[62]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Choix d&#39;une stratégie de remplacement a priori, sans calcul d&#39;optimalité.</span>
 <span class="n">ar</span> <span class="o">=</span> <span class="mi">25</span>
 <span class="c1"># Projection des conséquences de la stratégie</span>
-<span class="n">sub_opti_ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
-    <span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
-<span class="p">)</span>
+<span class="n">sub_opti_ar_policy</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="n">costs</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="c1"># Cout de long terme de la stratégie</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">sub_opti_ar_policy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">())</span>
 <span class="c1"># Distribution des coûts de la stratégie au cours du temps</span>
 <span class="n">dt</span> <span class="o">=</span> <span class="mf">0.5</span>
 <span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">dt</span><span class="p">)</span>
@@ -719,27 +695,19 @@ asymptotic expected equivalent annual cost with optimal ar : [0.22]
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[[0.25232943]]
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_demo_financial_analysis_10_1.png" src="../_images/user_guide_demo_financial_analysis_10_1.png" />
+<img alt="../_images/user_guide_demo_financial_analysis_11_0.png" src="../_images/user_guide_demo_financial_analysis_11_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[64]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">policya</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">policyb</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">distrib</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">policya</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cf&quot;</span> <span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span> <span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">policyb</span> <span class="o">=</span> <span class="n">renewal_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cf&quot;</span> <span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span> <span class="p">:</span><span class="mi">0</span><span class="p">},</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># Distribution des remplacements de la stratégie au cours du temps</span>
 <span class="n">mt</span> <span class="o">=</span> <span class="n">policya</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
@@ -776,7 +744,7 @@ asymptotic expected equivalent annual cost with optimal ar : [0.22]
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_demo_financial_analysis_11_0.png" src="../_images/user_guide_demo_financial_analysis_11_0.png" />
+<img alt="../_images/user_guide_demo_financial_analysis_12_0.png" src="../_images/user_guide_demo_financial_analysis_12_0.png" />
 </div>
 </div>
 </section>
