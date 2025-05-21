@@ -51,65 +51,43 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     @abstractmethod
     def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        match self:
-            case ParametricLifetimeModel(chf=_):
-                return np.exp(
-                    -self.chf(
-                        time,
-                        *args,
-                    )
-                )
-            case ParametricLifetimeModel(pdf=_, hf=_):
-                return self.pdf(time, *args) / self.hf(time, *args)
-            case _:
-                class_name = type(self).__name__
-                raise NotImplementedError(
-                    f"""
-                    {class_name} must implement concrete sf function
-                    """
-                )
+        if hasattr(self, "chf"):
+            return np.exp(-self.chf(time, *args, ))
+        elif hasattr(self, "pdf") and hasattr(self, "hf"):
+            return self.pdf(time, *args) / self.hf(time, *args)
+        else:
+            class_name = type(self).__name__
+            raise NotImplementedError(
+                f"""
+                {class_name} must implement concrete sf function
+                """
+            )
 
     @abstractmethod
     def hf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        match self:
-            case ParametricLifetimeModel(pdf=_, sf=_):
-                return self.pdf(time, *args) / self.sf(time, *args)
-            case ParametricLifetimeModel(sf=_):
-                raise NotImplementedError(
+        if hasattr(self, "pdf") and hasattr(self, "sf"):
+            return self.pdf(time, *args) / self.sf(time, *args)
+        else:
+            class_name = type(self).__name__
+            raise NotImplementedError(
+                f"""
+                    {class_name} must implement concrete hf function
                     """
-                    ReLife does not implement hf as the derivate of chf yet. Consider adding it in future versions
-                    see: https://docs.scipy.org/doc/scipy-1.11.4/reference/generated/scipy.misc.derivative.html
-                    or : https://github.com/maroba/findiff
-                    """
-                )
-            case _:
-                class_name = type(self).__name__
-                raise NotImplementedError(
-                    f"""
-                        {class_name} must implement concrete hf function
-                        """
-                )
+            )
 
     @abstractmethod
     def chf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        match self:
-            case ParametricLifetimeModel(sf=_):
-                return -np.log(self.sf(time, *args))
-            case ParametricLifetimeModel(pdf=_, hf=_):
-                return -np.log(self.pdf(time, *args) / self.hf(time, *args))
-            case ParametricLifetimeModel(hf=_):
-                raise NotImplementedError(
-                    """
-                    ReLife does not implement chf as the integration of hf yet. Consider adding it in future versions
-                    """
-                )
-            case _:
-                class_name = type(self).__name__
-                raise NotImplementedError(
-                    f"""
-                    {class_name} must implement concrete chf or at least concrete hf function
-                    """
-                )
+        if hasattr(self, "sf"):
+            return -np.log(self.sf(time, *args))
+        elif hasattr(self, "pdf") and hasattr(self, "hf"):
+            return -np.log(self.pdf(time, *args) / self.hf(time, *args))
+        else:
+            class_name = type(self).__name__
+            raise NotImplementedError(
+                f"""
+                {class_name} must implement concrete chf or at least concrete hf function
+                """
+            )
 
     @abstractmethod
     def pdf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
@@ -174,8 +152,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[False] = False,
-        return_entry: Literal[False] = False,
+        return_event: Literal[False],
+        return_entry: Literal[False],
         seed: Optional[int] = None,
     ) -> np.float64 | NDArray[np.float64]: ...
 
@@ -184,8 +162,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[True] = True,
-        return_entry: Literal[False] = False,
+        return_event: Literal[True],
+        return_entry: Literal[False],
         seed: Optional[int] = None,
     ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
 
@@ -194,8 +172,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[False] = False,
-        return_entry: Literal[True] = True,
+        return_event: Literal[False],
+        return_entry: Literal[True],
         seed: Optional[int] = None,
     ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
 
@@ -204,8 +182,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         *args: *Args,
         size: int | tuple[int] | tuple[int, int] = 1,
-        return_event: Literal[True] = True,
-        return_entry: Literal[True] = True,
+        return_event: Literal[True],
+        return_entry: Literal[True],
         seed: Optional[int] = None,
     ) -> tuple[
         np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]

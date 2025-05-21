@@ -1,18 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Protocol
+from typing import Protocol, Literal
 
 import numpy as np
 from numpy.typing import NDArray
-
-CostArray = NDArray[np.float64]
 
 
 def cost(
     cf: float | NDArray[np.float64] = 0.0,
     cp: float | NDArray[np.float64] = 0.0,
     cr: float | NDArray[np.float64] = 0.0,
-) -> Optional[CostArray]:
-    dtype = np.dtype(
+) -> NDArray[np.void]:
+    struct_dtype = np.dtype(
         [
             ("cf", np.float64),
             ("cp", np.float64),
@@ -21,8 +19,8 @@ def cost(
     )
     kwargs = {"cf": np.asarray(cf), "cp": np.asarray(cp), "cr": np.asarray(cr)}
     nb_assets = max(v.size if v.ndim > 0 else 0 for v in kwargs.values())
-    shape = (nb_assets, 1) if nb_assets > 0 else ()
-    struct_cost = np.zeros(shape, dtype=dtype)
+    shape : tuple[int, Literal[1]] | tuple[()] = (nb_assets, 1) if nb_assets > 0 else ()
+    struct_cost = np.zeros(shape, dtype=struct_dtype)
     for k, v in kwargs.items():
         if v.ndim > 0:
             v = v.reshape(-1, 1)
@@ -31,7 +29,7 @@ def cost(
 
 
 class Reward(ABC):
-    _cost_array: CostArray
+    _cost_array: NDArray[np.void]
 
     @abstractmethod
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
