@@ -416,7 +416,7 @@ def freeze(
 
     position_mapping = {name: i for i, name in enumerate(args_names)}
     reorder_kwargs = dict(sorted(kwargs.items(), key=lambda item: position_mapping[item[0]]))
-    args_values : tuple[float | NDArray[np.float64], ...] = tuple(reorder_kwargs.values())
+    args_values: tuple[float | NDArray[np.float64], ...] = tuple(reorder_kwargs.values())
 
     # here args_nb_assets is set to 1 by default and then, will be overriden after testing frozen_args coherence
     if isinstance(model, LifetimeRegression):

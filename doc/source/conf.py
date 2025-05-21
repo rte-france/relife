@@ -69,6 +69,7 @@ exclude_patterns = [
     "user_guide/_*",
     "user_guide/.ipynb_checkpoints/*",
     "learn/_*",
+    "api/_*",
 ]  # note to be parsed by compiler
 
 # -- Options for HTML output -------------------------------------------------
@@ -77,7 +78,7 @@ exclude_patterns = [
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_title = "ReLife"  # sidebar title
-html_logo = "_static/pixel_full_logo_clip.png"
+html_logo = "_static/small_relife.gif"
 html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 

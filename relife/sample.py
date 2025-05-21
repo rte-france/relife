@@ -7,16 +7,43 @@ from typing import TYPE_CHECKING, NamedTuple, Optional, Self, TypeVarTuple
 import numpy as np
 from numpy.lib import recfunctions as rfn
 from numpy.typing import ArrayLike, DTypeLike, NDArray
+from typing_extensions import override
+
+from relife.economic import ExponentialDiscounting, Reward
+from relife.lifetime_model import (
+    FrozenAgeReplacementModel,
+    FrozenLeftTruncatedModel,
+    FrozenLifetimeRegression,
+    LifetimeDistribution,
+)
+from relife.policy import BaseOneCycleAgeReplacementPolicy
 
 if TYPE_CHECKING:
-    from relife.lifetime_model import (
-        FrozenParametricLifetimeModel,
-        LifetimeDistribution,
+    from relife.stochastic_process.renewal_process import (
+        RenewalProcess,
+        RenewalRewardProcess,
     )
 
-    from .renewal_process import RenewalProcess
-
 Args = TypeVarTuple("Args")
+
+
+class CountData(NamedTuple):
+    t0: float
+    tf: float
+    struct_array: NDArray[DTypeLike]
+
+
+def concatenate_count_data(
+    iterator: CountDataIterator,
+    maxsample: int = 1e5,
+) -> CountData:
+    struct_array = next(iterator)
+    for arr in iterator:
+        if len(arr) > maxsample:
+            raise RuntimeError("Max number of sample reached")
+        struct_array = np.concatenate((struct_array, arr))
+    struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
+    return CountData(iterator.t0, iterator.tf, struct_array)
 
 
 class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
@@ -83,7 +110,9 @@ class RenewalProcessIterator(CountDataIterator):
 
     def __init__(
         self,
-        process: RenewalProcess,
+        process: RenewalProcess[
+            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
+        ],
         size: int | tuple[int] | tuple[int, int],
         window: tuple[float, float],
         seed: Optional[int] = None,
@@ -92,7 +121,9 @@ class RenewalProcessIterator(CountDataIterator):
         self.process = process
 
     @property
-    def model(self) -> LifetimeDistribution | FrozenParametricLifetimeModel:
+    def model(
+        self,
+    ) -> LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel:
         if self.cycle == 0 and self.process.first_lifetime_model is not None:
             return self.process.first_lifetime_model
         return self.process.lifetime_model
@@ -105,7 +136,7 @@ class RenewalProcessIterator(CountDataIterator):
             self.stop_counter = np.zeros_like(self.timeline, dtype=np.int64)
             self.start_counter = np.zeros_like(self.timeline, dtype=np.int64)
         else:  # no model entry after the first cycle
-            entry = np.zeros_like(entry)
+            entry.fill(0.0)
 
         # update timeline
         self.timeline += time
@@ -147,68 +178,37 @@ class RenewalProcessIterator(CountDataIterator):
         raise StopIteration
 
 
-class CountData(NamedTuple):
-    t0: float
-    tf: float
-    struct: NDArray[DTypeLike]  # struct array
+class RenewalRewardProcessIterator(RenewalProcessIterator):
+    reward: Reward
+    discounting: ExponentialDiscounting
+
+    def __init__(
+        self,
+        process: RenewalRewardProcess[
+            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel,
+            Reward,
+        ],
+        size: int | tuple[int] | tuple[int, int],
+        window: tuple[float, float],
+        seed: Optional[int] = None,
+    ):
+        super().__init__(process, size, window, seed)
+        self.reward = self.process.reward
+        self.discounting = self.process.discounting
+
+    @override
+    def __next__(self) -> NDArray[DTypeLike]:
+        for struct_array in super().__iter__():
+            return rfn.append_fields(
+                struct_array,
+                "reward",
+                self.reward.sample(struct_array["time"]) * self.discounting.factor(struct_array["timeline"]),
+                np.float64,
+                usemask=False,
+                asrecarray=False,
+            )
 
 
-def concatenate_count_data(
-    model: RenewalProcess,
-    tf: float,
-    t0: float = 0.0,
-    size: int | tuple[int] | tuple[int, int] = 1,
-    maxsample: int = 1e5,
-    seed: Optional[int] = None,
-) -> CountData:
-
-    iterator = RenewalProcessIterator(model, size, (t0, tf), seed=seed)
-    struct_arr = next(iterator)
-    for arr in iterator:
-        if len(arr) > maxsample:
-            raise RuntimeError("Max number of sample reached")
-        struct_arr = np.concatenate((struct_arr, arr))
-    struct_arr = np.sort(struct_arr, order=("sample_id", "asset_id", "timeline"))
-    return CountData(t0, tf, struct_arr)
-
-
-#
-#
-# class RenewalRewardProcessIterator(RenewalProcessIterator):
-#     reward: Reward
-#     discounting: Discounting
-#
-#     def __init__(
-#         self,
-#         nb_sample: int,
-#         tf: float,  # calendar end time
-#         model: ParametricLifetimeModel[()],
-#         reward: Reward,
-#         t0: float = 0.0,  # calendar start time
-#         model1: Optional[ParametricLifetimeModel[()]] = None,
-#         discounting_rate: Optional[float] = None,
-#         maxsample: int = 1e5,
-#         seed: Optional[int] = None,
-#     ):
-#         super().__init__(nb_sample, tf, model, t0=t0, model1=model1, maxsample=maxsample, seed=seed)
-#         self.reward = reward
-#         self.discounting = ExponentialDiscounting(discounting_rate)
-#
-#     @override
-#     def __next__(self) -> NDArray[DTypeLike]:
-#         for struct_array in super().__iter__():
-#             return rfn.append_fields(
-#                 struct_array,
-#                 "reward",
-#                 self.reward.sample(struct_array["time"]) * self.discounting.factor(struct_array["timeline"]),
-#                 np.float64,
-#                 usemask=False,
-#                 asrecarray=False,
-#             )
-
-
-#
-#
 # class NonHomogeneousPoissonProcessIterator(SampleIterator):
 #
 #     rewards: Optional[Reward]
@@ -359,69 +359,86 @@ def concatenate_count_data(
 #         )
 
 
-def check_nb_events_call(obj_type: type):
-    from .renewal_process import RenewalProcess
+def _nb_events(selection: CountDataFunctions) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    from relife.policy import BaseOneCycleAgeReplacementPolicy
+    from relife.stochastic_process import RenewalProcess
 
-    if obj_type is not RenewalProcess:
-        raise ValueError(f"{obj_type} object compute nb_events from sample")
+    if not issubclass(selection.obj_type, RenewalProcess) or not issubclass(
+        selection.obj_type, BaseOneCycleAgeReplacementPolicy
+    ):
+        raise ValueError(f"{selection.obj_type} object type does not have nb_events from sample")
+
+    sort = np.argsort(selection.count_data.struct_array["timeline"])
+    timeline = selection.count_data.struct_array["timeline"][sort]
+    counts = np.ones_like(timeline)
+
+    timeline = np.insert(timeline, 0, selection.t0)
+    counts = np.insert(counts, 0, 0)
+    counts[timeline == selection.tf] = 0
+    return timeline, np.cumsum(counts)
 
 
-class SampleFunction:
+def _total_rewards(selection: CountDataFunctions) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    from relife.policy import BaseOneCycleAgeReplacementPolicy
+    from relife.stochastic_process import RenewalRewardProcess
 
-    sample_data: CountData
+    if not issubclass(selection.obj_type, RenewalRewardProcess) or not issubclass(
+        selection.obj_type, BaseOneCycleAgeReplacementPolicy
+    ):
+        raise ValueError(f"{selection.obj_type} object type does not have nb_events from sample")
 
-    def __init__(self, obj_type: type, sample_data: CountData):
+    sort = np.argsort(selection.count_data.struct_array["timeline"])
+    timeline = selection.count_data.struct_array["timeline"][sort]
+    reward = selection.count_data.struct_array["reward"][sort]
+
+    timeline = np.insert(timeline, 0, selection.t0)
+    reward = np.insert(reward, 0, 0)
+    reward[timeline == selection.tf] = 0
+
+    return timeline, np.cumsum(reward)
+
+
+class CountDataFunctions:
+
+    count_data: CountData
+
+    def __init__(self, obj_type: type[RenewalProcess] | type[BaseOneCycleAgeReplacementPolicy], count_data: CountData):
         self.obj_type = obj_type
-        self.sample_data = sample_data
-
-    def _check_sample_data(self):
-        if self.sample_data is None:
-            raise ValueError(f"{self.obj_type} object has no sample_data yet. Call sample_count_data first")
+        self.count_data = count_data
 
     @property
     def t0(self) -> float:
-        return self.sample_data.t0
+        return self.count_data.t0
 
     @property
     def tf(self) -> float:
-        return self.sample_data.tf
-
-    @property
-    def sample(self) -> NDArray[DTypeLike]:
-        return self.sample_data.struct
+        return self.count_data.tf
 
     def nb_events(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        self._check_sample_data()
-        check_nb_events_call(self.obj_type)
         selection = self.select(sample_id=sample_id, asset_id=asset_id)
-
-        sort = np.argsort(selection.sample["timeline"])
-        timeline = selection.sample["timeline"][sort]
-        counts = np.ones_like(timeline)
-        timeline = np.insert(timeline, 0, selection.t0)
-        counts = np.insert(counts, 0, 0)
-        counts[timeline == selection.tf] = 0
-
-        return timeline, np.cumsum(counts)
+        return _nb_events(selection)
 
     def mean_nb_events(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(asset_id=asset_id)
+        timeline, counts = _nb_events(selection)
+        nb_sample = len(np.unique(selection.count_data.struct_array["sample_id"]))
+        return timeline, counts / nb_sample
 
-        sort = np.argsort(selection.sample["timeline"])
-        timeline = selection.sample["timeline"][sort]
-        counts = np.ones_like(timeline)
-        timeline = np.insert(timeline, 0, selection.t0)
-        counts = np.insert(counts, 0, 0)
-        counts[timeline == selection.tf] = 0
+    def total_rewards(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        selection = self.select(sample_id=sample_id, asset_id=asset_id)
+        return _total_rewards(selection)
 
-        nb_sample = len(np.unique(selection.sample["sample_id"]))
-        return timeline, np.cumsum(counts) / nb_sample
+    def mean_total_rewards(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        selection = self.select(asset_id=asset_id)
+        timeline, rewards = _nb_events(selection)
+        nb_sample = len(np.unique(selection.count_data.struct_array["sample_id"]))
+        return timeline, rewards / nb_sample
 
     def select(self, sample_id: Optional[ArrayLike] = None, asset_id: Optional[ArrayLike] = None) -> Self:
-        mask = np.ones(len(self.sample), dtype=np.bool_)
+        mask = np.ones(len(self.count_data.struct_array), dtype=np.bool_)
         if sample_id is not None:
-            mask = mask & np.isin(self.sample["sample_id"], sample_id)
+            mask = mask & np.isin(self.count_data.struct_array["sample_id"], sample_id)
         if asset_id is not None:
-            mask = mask & np.isin(self.sample["asset_id"], asset_id)
-        substruct_array = self.sample[mask].copy()
-        return SampleFunction(self.obj_type, CountData(self.t0, self.tf, substruct_array))
+            mask = mask & np.isin(self.count_data.struct_array["asset_id"], asset_id)
+        struct_subarray = self.count_data.struct_array[mask].copy()
+        return CountDataFunctions(self.obj_type, CountData(self.t0, self.tf, struct_subarray))

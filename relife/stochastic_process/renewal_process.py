@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife import ParametricModel, args_nb_assets
+from relife import ParametricModel
 from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
@@ -21,33 +21,38 @@ from relife.lifetime_model import (
 
 if TYPE_CHECKING:
     from relife.economic import Reward
+    from relife.sample import (
+        CountData,
+        CountDataFunctions,
+        RenewalProcessIterator,
+        RenewalRewardProcessIterator,
+    )
 
-    from .sample import CountData, SampleFunction
+M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
+R = TypeVar("R", bound=Reward)
 
 
-class RenewalProcess(ParametricModel):
+class RenewalProcess(ParametricModel, Generic[M]):
 
-    sample_data: Optional[CountData]
+    count_data: Optional[CountData]
 
     def __init__(
         self,
-        lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
-        first_lifetime_model: Optional[
-            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
-        ] = None,
+        lifetime_model: M,
+        first_lifetime_model: Optional[M] = None,
     ):
         super().__init__()
 
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
-        self.sample_data = None
+        self.count_data = None
 
     @property
-    def sample(self) -> Optional[SampleFunction]:
-        if self.sample_data is not None:
-            from .sample import SampleFunction
+    def sample(self) -> Optional[CountDataFunctions]:
+        if self.count_data is not None:
+            from relife.sample import CountDataFunctions
 
-            return SampleFunction(type(self), self.sample_data)
+            return CountDataFunctions(type(self), self.count_data)
         return None
 
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
@@ -81,9 +86,10 @@ class RenewalProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> None:
-        from .sample import concatenate_count_data
+        from relife.sample import concatenate_count_data
 
-        self.sample_data = concatenate_count_data(self, tf, t0, size, maxsample, seed)
+        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
+        self.count_data = concatenate_count_data(iterator, maxsample)
 
     def sample_lifetime_data(
         self,
@@ -93,7 +99,7 @@ class RenewalProcess(ParametricModel):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> LifetimeData:
-        from .sample import concatenate_count_data
+        from relife.sample import concatenate_count_data
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
             from relife.lifetime_model import FrozenLeftTruncatedModel
@@ -105,36 +111,41 @@ class RenewalProcess(ParametricModel):
                 pass
             else:
                 raise ValueError(
-                    f"Calling sample_failure_data on RenewalProcess having different model and model1 is ambiguous. Instantiate RenewalProcess with only one model"
+                    f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
-
-        count_data = concatenate_count_data(self, tf, t0, size, maxsample, seed)
+        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
+        count_data = concatenate_count_data(iterator, maxsample)
         return LifetimeData(
-            count_data.struct["time"].copy(),
-            event=count_data.struct["event"].copy(),
-            entry=count_data.struct["entry"].copy(),
+            count_data.struct_array["time"].copy(),
+            event=count_data.struct_array["event"].copy(),
+            entry=count_data.struct_array["entry"].copy(),
             args=tuple(
-                (np.take(arg, count_data.struct["asset_id"]) for arg in getattr(self.lifetime_model, "frozen_args", ()))
+                (
+                    np.take(arg, count_data.struct_array["asset_id"])
+                    for arg in getattr(self.lifetime_model, "frozen_args", ())
+                )
             ),
         )
 
 
-class RenewalRewardProcess(RenewalProcess):
+class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
 
     def __init__(
         self,
-        lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
-        reward: Reward,
+        lifetime_model: M,
+        reward: R,
         discounting_rate: float = 0.0,
-        first_lifetime_model: Optional[
-            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
-        ] = None,
-        first_reward: Optional[Reward] = None,
+        first_lifetime_model: Optional[M] = None,
+        first_reward: Optional[R] = None,
     ):
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else reward
         self.discounting = ExponentialDiscounting(discounting_rate)
+
+    @property
+    def discounting_rate(self) -> float:
+        return self.discounting.rate
 
     @override
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
@@ -203,30 +214,28 @@ class RenewalRewardProcess(RenewalProcess):
         return timeline, np.where(af == 0, q0, q)
 
     def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
-        if self.discounting.rate == 0.0:
+        if self.discounting_rate == 0.0:
             return (
                 self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=15)
                 / self.lifetime_model.mean()
             )  # () or (m, 1)
-        return self.discounting.rate * self.asymptotic_expected_total_reward()  # () or (m, 1)
+        return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m, 1)
+
+    @override
+    def sample_count_data(
+        self,
+        tf: float,
+        t0: float = 0.0,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> None:
+        from relife.sample import concatenate_count_data
+
+        iterator = RenewalRewardProcessIterator(self, size, (t0, tf), seed=seed)
+        self.count_data = concatenate_count_data(iterator, maxsample)
 
 
-# def total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-#     sort = np.argsort(self.timeline)
-#     timeline = self.timeline[sort]
-#     rewards = self.rewards[sort]
-#     timeline = np.insert(timeline, 0, self.t0)
-#     rewards = np.insert(rewards, 0, 0)
-#     rewards[timeline == self.tf] = 0
-#     return timeline, rewards.cumsum()
-#
-#
-# def mean_total_rewards(count_data : CountData) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-#     timeline, rewards = self.total_rewards()
-#     return timeline, rewards / len(self)
-
-
-# replace t by timeline
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
     lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,

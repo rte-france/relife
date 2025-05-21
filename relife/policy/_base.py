@@ -1,26 +1,39 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from itertools import islice
+from typing import Generic, Optional, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
+from relife.data import LifetimeData
 from relife.economic import ExponentialDiscounting, Reward, cost
+from relife.lifetime_model import (
+    FrozenAgeReplacementModel,
+    FrozenLeftTruncatedModel,
+    FrozenLifetimeRegression,
+    LifetimeDistribution,
+)
+from relife.sample import (
+    CountData,
+    CountDataFunctions,
+    RenewalProcessIterator,
+    RenewalRewardProcessIterator,
+)
 from relife.stochastic_process import RenewalRewardProcess
 
-if TYPE_CHECKING:
-    from relife.lifetime_model import (
-        FrozenParametricLifetimeModel,
-        LifetimeDistribution,
-    )
+M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
+R = TypeVar("R", bound=Reward)
 
 
-class BaseOneCycleAgeReplacementPolicy:
+class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
+
+    count_data: Optional[CountData]
 
     def __init__(
         self,
-        lifetime_model: LifetimeDistribution | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
-        reward: Reward,
+        lifetime_model: M,
+        reward: R,
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
     ) -> None:
@@ -31,10 +44,19 @@ class BaseOneCycleAgeReplacementPolicy:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
         self.lifetime_model = lifetime_model
+        self.count_data = None
 
     @property
     def discounting_rate(self):
         return self.discounting.rate
+
+    @property
+    def sample(self) -> Optional[CountDataFunctions]:
+        if self.count_data is not None:
+            from relife.sample import CountDataFunctions
+
+            return CountDataFunctions(type(self), self.count_data)
+        return None
 
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         # control with reward too
@@ -104,51 +126,85 @@ class BaseOneCycleAgeReplacementPolicy:
         # timeline : () or (m, 1)
         return self._expected_equivalent_annual_cost(timeline)[-1]  # () or (m, 1)
 
-
-class BaseAgeReplacementPolicy:
-
-    def __init__(
+    def sample_count_data(
         self,
-        lifetime_model: LifetimeDistribution | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
-        reward: Reward,
-        discounting_rate: float = 0.0,
-        first_lifetime_model: Optional[
-            LifetimeDistribution | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
-        ] = None,
-        first_reward: Optional[Reward] = None,
+        tf: float,
+        t0: float = 0.0,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
     ) -> None:
-        self.lifetime_model = lifetime_model
-        self.first_lifetime_model = first_lifetime_model
-        self.reward = reward
-        self.first_reward = first_reward
-        self.discounting_rate = discounting_rate
+        from relife.sample import concatenate_count_data
 
-    @property
-    def underlying_process(self) -> RenewalRewardProcess:
-        return RenewalRewardProcess(
-            self.lifetime_model,
-            self.reward,
-            self.discounting_rate,
-            first_lifetime_model=self.first_lifetime_model,
-            first_reward=self.first_reward,
+        iterator = RenewalRewardProcessIterator(self, size, (t0, tf), seed=seed)
+        self.count_data = concatenate_count_data(islice(iterator, 1), maxsample)
+
+    def sample_lifetime_data(
+        self,
+        tf: float,
+        t0: float = 0.0,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> LifetimeData:
+        from relife.sample import concatenate_count_data
+
+        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
+        count_data = concatenate_count_data(islice(iterator, 1), maxsample)
+        return LifetimeData(
+            count_data.struct_array["time"].copy(),
+            event=count_data.struct_array["event"].copy(),
+            entry=count_data.struct_array["entry"].copy(),
+            args=tuple(
+                (
+                    np.take(arg, count_data.struct_array["asset_id"])
+                    for arg in getattr(self.lifetime_model, "frozen_args", ())
+                )
+            ),
         )
 
+
+class BaseAgeReplacementPolicy(Generic[M, R]):
+
+    def __init__(self, stochastic_process: RenewalRewardProcess[M, R]):
+        self.stochastic_process = stochastic_process
+
     def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        return self.underlying_process.renewal_function(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
+        return self.stochastic_process.renewal_function(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
     def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        return self.underlying_process.expected_total_reward(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
+        return self.stochastic_process.expected_total_reward(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
-        return self.underlying_process.asymptotic_expected_total_reward()  # () or (m, 1)
+        return self.stochastic_process.asymptotic_expected_total_reward()  # () or (m, 1)
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        return self.underlying_process.expected_equivalent_annual_worth(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
+        return self.stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-        return self.underlying_process.asymptotic_expected_equivalent_annual_worth()  # () or (m, 1)
+        return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()  # () or (m, 1)
+
+    def sample_count_data(
+        self,
+        tf: float,
+        t0: float = 0.0,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> None:
+        self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
+
+    def sample_lifetime_data(
+        self,
+        tf: float,
+        t0: float = 0.0,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        maxsample: int = 1e5,
+        seed: Optional[int] = None,
+    ) -> LifetimeData:
+        return self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
 
 
 # @overload

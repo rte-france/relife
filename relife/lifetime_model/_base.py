@@ -301,7 +301,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
         model = self
         if bool(args):
-            model = freeze(self, **{k : v for k, v in zip(self.args_names, args)})
+            model = freeze(self, **{k: v for k, v in zip(self.args_names, args)})
         model: LifetimeDistribution | FrozenParametricLifetimeModel
 
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:

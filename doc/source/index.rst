@@ -1,7 +1,5 @@
 :html_theme.sidebar_secondary.remove: true
 
-.. image:: ./_static/pixel_full_logo_clip.png
-
 .. grid:: 3
 
     .. grid-item-card::  Asset management
