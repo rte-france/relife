@@ -443,9 +443,8 @@
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.parametric_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gompertz</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.non_parametric_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">KaplanMeier</span><span class="p">,</span> <span class="n">NelsonAalen</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_circuit_breaker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gompertz</span><span class="p">,</span> <span class="n">KaplanMeier</span><span class="p">,</span> <span class="n">NelsonAalen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_circuit_breaker</span>
 </pre></div>
 </div>
 </div>
@@ -468,7 +467,7 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;relife.non_parametric_model.KaplanMeier at 0x76ba1db8aa50&gt;
+&lt;relife.lifetime_model.non_parametric.KaplanMeier at 0x7675214fe0d0&gt;
 </pre></div></div>
 </div>
 </section>
@@ -479,7 +478,9 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="n">km</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">sf</span><span class="p">()</span>
+
+<span class="n">timeline</span><span class="p">,</span> <span class="n">sf</span><span class="p">,</span> <span class="n">se</span> <span class="o">=</span> <span class="n">km</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">se</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="n">sf</span><span class="p">,</span> <span class="n">drawstyle</span><span class="o">=</span><span class="s2">&quot;steps-post&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -490,6 +491,23 @@
 <div class="output_area docutils container">
 <img alt="../_images/user_guide_demo_nonparametric_5_0.png" src="../_images/user_guide_demo_nonparametric_5_0.png" />
 </div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">timeline</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(3, 70)
+</pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -521,7 +539,7 @@
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_demo_nonparametric_8_0.png" src="../_images/user_guide_demo_nonparametric_8_0.png" />
+<img alt="../_images/user_guide_demo_nonparametric_9_0.png" src="../_images/user_guide_demo_nonparametric_9_0.png" />
 </div>
 </div>
 </section>
