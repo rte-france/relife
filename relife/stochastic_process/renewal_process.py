@@ -9,9 +9,9 @@ from typing_extensions import override
 from relife import ParametricModel
 from relife.data import LifetimeData
 from relife.economic import (
-    Reward,
     Discounting,
     ExponentialDiscounting,
+    Reward,
 )
 from relife.lifetime_model import (
     FrozenAgeReplacementModel,
@@ -155,8 +155,8 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)  # default 1 for LifetimeDistribution case
         if args_nb_assets > 1:
             timeline = np.tile(timeline, (args_nb_assets, 1))
-        elif len(self.reward) > 1:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
-            timeline = np.tile(timeline, (len(self.reward), 1))
+        elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
+            timeline = np.tile(timeline, (self.reward.size, 1))
         return timeline  # (nb_steps,) or (m, nb_steps)
 
     def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:

@@ -40,8 +40,19 @@ class Reward(ABC):
     def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         """Reward conditional sampling."""
 
-    def __len__(self) -> int:
+    @property
+    def nb_assets(self) -> int:
+        if self._cost_array.shape == ():
+            return 1
+
+    @property
+    def ndim(self)-> int:
+        return self._cost_array.ndim
+
+    @property
+    def size(self)-> int:
         return self._cost_array.size
+
 
 
 class RunToFailureReward(Reward):

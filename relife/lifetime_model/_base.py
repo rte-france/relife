@@ -18,6 +18,7 @@ from scipy.optimize import Bounds, minimize, newton
 from typing_extensions import override
 
 from relife import FittingResults, ParametricModel
+from relife._plot import PlotParametricLifetimeModel
 from relife.data import LifetimeData
 from relife.likelihood import LikelihoodFromLifetimes
 from relife.quadrature import (
@@ -25,7 +26,6 @@ from relife.quadrature import (
     legendre_quadrature,
     unweighted_laguerre_quadrature,
 )
-from relife._plot import PlotParametricLifetimeModel
 
 Args = TypeVarTuple("Args")
 

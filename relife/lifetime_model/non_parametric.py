@@ -3,10 +3,10 @@ from typing import Literal, Optional, Self, overload
 import numpy as np
 from numpy.typing import DTypeLike, NDArray
 
+from relife._plot import PlotECDF, PlotKaplanMeier, PlotNelsonAalen, PlotTurnbull
 from relife.data import LifetimeData
 
 from ._base import NonParametricLifetimeModel
-from relife._plot import PlotECDF, PlotTurnbull, PlotKaplanMeier, PlotNelsonAalen
 
 
 class ECDF(NonParametricLifetimeModel):
@@ -106,6 +106,7 @@ class ECDF(NonParametricLifetimeModel):
     @property
     def plot(self) -> PlotECDF:
         return PlotECDF(self)
+
 
 class KaplanMeier(NonParametricLifetimeModel):
     r"""Kaplan-Meier estimator.
@@ -592,7 +593,6 @@ class Turnbull(NonParametricLifetimeModel):
             s = s_updated
             count += 1
         return s
-
 
     @property
     def plot(self) -> PlotTurnbull:

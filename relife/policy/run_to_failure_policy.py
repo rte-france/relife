@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 from relife.economic import ExponentialDiscounting, RunToFailureReward
 
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
+from relife.stochastic_process import RenewalRewardProcess
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -67,7 +68,14 @@ class RunToFailurePolicy(BaseAgeReplacementPolicy):
         first_reward = None
         if first_lifetime_model is not None:
             first_reward = RunToFailureReward(cf)
-        super().__init__(lifetime_model, reward, discounting_rate, first_lifetime_model, first_reward)
+        stochastic_process = RenewalRewardProcess(
+            lifetime_model,
+            reward,
+            discounting_rate,
+            first_lifetime_model=first_lifetime_model,
+            first_reward=first_reward,
+        )
+        super().__init__(stochastic_process)
 
     @property
     def cf(self):

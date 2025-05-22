@@ -17,13 +17,12 @@ from relife.lifetime_model import (
     LifetimeDistribution,
 )
 
-
 if TYPE_CHECKING:
+    from relife.policy import BaseOneCycleAgeReplacementPolicy
     from relife.stochastic_process.renewal_process import (
         RenewalProcess,
         RenewalRewardProcess,
     )
-    from relife.policy import BaseOneCycleAgeReplacementPolicy
 
 Args = TypeVarTuple("Args")
 
@@ -443,3 +442,144 @@ class CountDataFunctions:
             mask = mask & np.isin(self.count_data.struct_array["asset_id"], asset_id)
         struct_subarray = self.count_data.struct_array[mask].copy()
         return CountDataFunctions(self.obj_type, CountData(self.t0, self.tf, struct_subarray))
+
+
+#
+# @sample_count_data.register
+# def _(
+#     obj: Union[
+#         NonHomogeneousPoissonProcess,
+#         NonHomogeneousPoissonAgeReplacementPolicy,
+#     ],
+#     size: int,
+#     tf: float,
+#     t0: float = 0.0,
+#     maxsample: int = 1e5,
+#     seed: Optional[int] = None,
+# ):
+#     keys = (
+#         "timeline",
+#         "ages",
+#         "events_indicators",
+#         "samples_ids",
+#         "assets_ids",
+#         "rewards",
+#     )
+#     iterator = NonHomogeneousPoissonProcessIterator(size, tf, t0=t0, seed=seed)
+#     iterator.set_model(obj.model, ar=getattr(obj, "ar", None))
+#     if isinstance(
+#         obj,
+#         NonHomogeneousPoissonAgeReplacementPolicy,
+#     ):
+#         iterator.rewards = age_replacement_rewards(obj.ar, obj.cr, obj.cp)
+#         iterator.discounting = obj.discounting
+#     stack = stack1d(iterator, keys, maxsample=maxsample)
+#
+#     return NHPPCountData(t0, tf, **stack)
+
+
+# @failure_data_sample.register
+# def _(
+#     obj: Union[
+#         NonHomogeneousPoissonProcess,
+#         NonHomogeneousPoissonAgeReplacementPolicy,
+#     ],
+#     size: int,
+#     tf: float,
+#     t0: float = 0.0,
+#     maxsample: int = 1e5,
+#     seed: Optional[int] = None,
+#     use: str = "model",
+# ):
+#     keys = (
+#         "timeline",
+#         "samples_ids",
+#         "assets_ids",
+#         "ages",
+#         "entries",
+#         "events_indicators",
+#         "renewals_ids",
+#     )
+#
+#     if use != "model":
+#         raise ValueError("Invalid 'use' value. Only 'model' can be set")
+#
+#     iterator = NonHomogeneousPoissonProcessIterator(size, tf, t0=t0, seed=seed, keep_last=True)
+#     iterator.set_model(obj.model, ar=obj.ar if hasattr(obj, "ar") else None)
+#
+#     stack = stack1d(iterator, keys, maxsample=maxsample)
+#
+#     str_samples_ids = np.char.add(
+#         np.full_like(stack["samples_ids"], "S", dtype=np.str_),
+#         stack["samples_ids"].astype(np.str_),
+#     )
+#     str_assets_ids = np.char.add(
+#         np.full_like(stack["assets_ids"], "A", dtype=np.str_),
+#         stack["assets_ids"].astype(np.str_),
+#     )
+#     str_renewals_ids = np.char.add(
+#         np.full_like(stack["assets_ids"], "R", dtype=np.str_),
+#         stack["renewals_ids"].astype(np.str_),
+#     )
+#     assets_ids = np.char.add(str_samples_ids, str_assets_ids)
+#     assets_ids = np.char.add(assets_ids, str_renewals_ids)
+#
+#     sort_ind = np.lexsort((stack["timeline"], assets_ids))
+#
+#     entries = stack["entries"][sort_ind]
+#     events_indicators = stack["events_indicators"][sort_ind]
+#     ages = stack["ages"][sort_ind]
+#     assets_ids = assets_ids[sort_ind]
+#
+#     # print("assets_ids", assets_ids)
+#     # print("timeline", timeline)
+#     # print("ages", ages)
+#     # print("events_indicators", events_indicators)
+#     # print("entries", entries)
+#
+#     first_ages_index = np.roll(assets_ids, 1) != assets_ids
+#     last_ages_index = np.roll(first_ages_index, -1)
+#
+#     immediatly_replaced = np.logical_and(~events_indicators, first_ages_index)
+#
+#     # print("first_ages_index", first_ages_index)
+#     # print("last_ages_index", last_ages_index)
+#     # print("immediatly_replaced", immediatly_replaced)
+#
+#     # prefix = np.full_like(assets_ids[immediatly_replaced], "Z", dtype=np.str_)
+#     # _assets_ids = np.char.add(prefix, assets_ids[immediatly_replaced])
+#     _assets_ids = assets_ids[immediatly_replaced]
+#     first_ages = entries[immediatly_replaced].copy()
+#     last_ages = ages[immediatly_replaced].copy()
+#
+#     # print("assets_ids", _assets_ids)
+#     # print("first_ages", first_ages)
+#     # print("last_ages", last_ages)
+#
+#     events_assets_ids = assets_ids[events_indicators]
+#     events_ages = ages[events_indicators]
+#     other_assets_ids = np.unique(events_assets_ids)
+#     _assets_ids = np.concatenate((_assets_ids, other_assets_ids))
+#     first_ages = np.concatenate(
+#         (first_ages, entries[first_ages_index & events_indicators])
+#     )
+#     last_ages = np.concatenate(
+#         (last_ages, ages[last_ages_index & ~immediatly_replaced])
+#     )
+#
+#     # print("events_assets_ids", events_assets_ids)
+#     # print("events_ages", events_ages)
+#     # print("assets_ids", _assets_ids)
+#     # print("first_ages", first_ages)
+#     # print("last_ages", last_ages)
+#
+#     # last sort (optional but convenient to control data)
+#     sort_ind = np.argsort(events_assets_ids)
+#     events_assets_ids = events_assets_ids[sort_ind]
+#
+#     sort_ind = np.argsort(_assets_ids)
+#     _assets_ids = _assets_ids[sort_ind]
+#     first_ages = first_ages[sort_ind]
+#     last_ages = last_ages[sort_ind]
+#
+#     return events_assets_ids, events_ages, _assets_ids, first_ages, last_ages

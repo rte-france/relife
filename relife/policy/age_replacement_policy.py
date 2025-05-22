@@ -117,21 +117,14 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
              Same instance with optimized ``ar`` (optionnaly ``ar1``).
         """
 
-        cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)  # (1, 1, 1) or (1, m, 1)
-        x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)  # () or (m, 1)
+        x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # () or (m, 1)
         hf = self.lifetime_model.unfrozen_model.baseline.hf
-
-        def eq(a):
-            return np.sum(
-                self.discounting.factor(a)
-                / self.discounting.annuity_factor(a)
-                * ((cf_3d - cp_3d) * hf(a) - cp_3d / self.discounting.annuity_factor(a)),
-                axis=0,
-            )  # () or (m, 1)
-
-        ar = np.asarray(newton(eq, x0), dtype=np.float64)
-        self.ar = ar
+        def eq(a):  # () or (m, 1)
+            return self.discounting.factor(a) / self.discounting.annuity_factor(a) * ((self.cf - self.cp) * hf(a) - self.cp / self.discounting.annuity_factor(a))
+            # return ((self.cf - self.cp) / self.cp) * hf(a) * self.discounting.annuity_factor(a)
+        self.ar = newton(eq, x0) # () or (m, 1)
         return self
+
 
 
 class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, AgeReplacementReward]):
@@ -261,14 +254,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         Self
              Same instance with optimized ``ar`` (optionnaly ``ar1``).
         """
-        cf_3d, cp_3d = np.array(self.cf, ndmin=3), np.array(self.cp, ndmin=3)
-        x0 = np.minimum(np.sum(cp_3d, axis=0) / np.sum(cf_3d - cp_3d, axis=0), 1)  # () or (m, 1)
+        x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # () or (m, 1)
         discounting = ExponentialDiscounting(self.stochastic_process.discounting_rate)
         sf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.sf
         pdf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.pdf
         hf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.hf
 
-        def eq(a):  # () or (m, 1)
+        def eq(a): # () or (m, 1)
             f = legendre_quadrature(
                 lambda x: discounting.factor(x) * sf(x),
                 0,
@@ -279,7 +271,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
                 0,
                 a,
             )
-            return np.sum(discounting.factor(a) * ((cf_3d - cp_3d) * (hf(a) * f - g) - cp_3d) / f**2, axis=0)
+            return discounting.factor(a) * ((self.cf - self.cp) * (hf(a) * f - g) - self.cp) / f**2
 
         self.ar = newton(eq, x0)
         if self.ar1 is not None:

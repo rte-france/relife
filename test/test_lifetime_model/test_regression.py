@@ -146,27 +146,21 @@ def test_ls_integrate(regression, integration_bound_a, integration_bound_b, cova
     )
 
 
-# def test_fit(regression, insulator_string_data):
-#     regression.fit(
-#         insulator_string_data[0],
-#         zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
-#         event=insulator_string_data[1] == 1,
-#     )
-#
-
-
-# # @pytest.mark.xfail
 def test_aft_pph_weibull_eq(insulator_string_data):
-
+    covar = np.column_stack((
+        boxcox(insulator_string_data["pHCl"])[0],
+        boxcox(insulator_string_data["pH2SO4"])[0],
+        boxcox(insulator_string_data["HNO3"])[0],
+    ))
     weibull_aft = AcceleratedFailureTime(Weibull()).fit(
-        insulator_string_data[0],
-        zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
-        event=insulator_string_data[1] == 1,
+        insulator_string_data["time"],
+        covar,
+        event=insulator_string_data["event"],
     )
     weibull_pph = ProportionalHazard(Weibull()).fit(
-        insulator_string_data[0],
-        zscore(np.column_stack([boxcox(v)[0] for v in insulator_string_data[3:]])),
-        event=insulator_string_data[1] == 1,
+        insulator_string_data["time"],
+        covar,
+        event=insulator_string_data["event"],
     )
 
     assert weibull_pph.baseline.params == approx(weibull_aft.baseline.params, rel=1e-3)

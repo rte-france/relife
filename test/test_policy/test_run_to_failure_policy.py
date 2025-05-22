@@ -1,9 +1,24 @@
+import numpy as np
 import pytest
 
-def test_asymptotic_expected_equivalent_annual_cost(run_to_failure_policy):
-    qa = run_to_failure_policy.asymptotic_expected_equivalent_annual_cost()
-    timeline, q = run_to_failure_policy.expected_equivalent_annual_cost(400, nb_steps=2000)
-    assert timeline.shape == q.shape == (5, 2000)
+from relife.policy import OneCycleRunToFailurePolicy, RunToFailurePolicy
+
+
+def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, discounting_rate, expected_out_shape):
+    policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+    qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m, 1)
+    timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
+    assert timeline.shape == q.shape
+    assert timeline.shape == q.shape == np.broadcast_shapes(expected_out_shape(cf=cf), (2000,)) # (m, 2000) or (2000,)
+    assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
+
+
+def test_asymptotic_expected_equivalent_annual_cost(distribution, cf, discounting_rate, expected_out_shape):
+    policy = RunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+    qa = policy.asymptotic_expected_equivalent_annual_cost()
+    timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
+    assert timeline.shape == q.shape
+    assert timeline.shape == np.broadcast_shapes(expected_out_shape(cf=cf), (2000,)) # (m, 2000) or (2000,)
     assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
 
 

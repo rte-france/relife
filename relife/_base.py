@@ -357,8 +357,8 @@ class FittingResults:
         """
         # [1] equation B.10 in Appendix
         # jac_f : (p,), (p, n) or (p, m, n)
-        # self.var : (p, p)
-        return np.sqrt(np.einsum("p...,pp,p...", jac_f, self.var, jac_f)) # (), (n,) or (m, n)
+        # self.var : (p, p)
+        return np.sqrt(np.einsum("p...,pp,p...", jac_f, self.var, jac_f))  # (), (n,) or (m, n)
 
     def asdict(self) -> dict:
         """converts FittingResult into a dictionary.

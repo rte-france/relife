@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.ma.testutils import assert_array_equal
+from pytest import approx
 
 from relife import ParametricModel
 
@@ -17,20 +17,20 @@ class ModelB(ParametricModel):
 
 def test_model_composition():
     model_a = ModelA(1, 2)
-    assert_array_equal(model_a.params, np.array([1, 2], dtype=np.float64))
+    assert model_a.params == approx(np.array([1, 2], dtype=np.float64))
     assert model_a.params_names == ("x", "y")
 
     model_b = ModelB(model_a, (3, 4, 5))
-    assert_array_equal(model_b.params, np.array([3, 4, 5, 1, 2], dtype=np.float64))
+    assert model_b.params == approx(np.array([3, 4, 5, 1, 2], dtype=np.float64))
     assert model_b.params_names == ("coef_1", "coef_2", "coef_3", "x", "y")
 
     model_a.params = np.array([2, 3])
-    assert_array_equal(model_a.params, np.array([2, 3], dtype=np.float64))
+    assert model_a.params == approx(np.array([2, 3], dtype=np.float64))
 
     model_b.params = np.array([2, 3, 4, 5, 6])
-    assert_array_equal(model_b.params, np.array([2, 3, 4, 5, 6], dtype=np.float64))
+    assert model_b.params == approx(np.array([2, 3, 4, 5, 6], dtype=np.float64))
 
-    assert_array_equal(model_b.baseline.params, np.array([5, 6], dtype=np.float64))
+    assert model_b.baseline.params == approx(np.array([5, 6], dtype=np.float64))
 
     model_b.baseline.params = np.array([1, 2])
-    assert_array_equal(model_b.params, np.array([2, 3, 4, 1, 2], dtype=np.float64))
+    assert model_b.params == approx(np.array([2, 3, 4, 1, 2], dtype=np.float64))

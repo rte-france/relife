@@ -116,9 +116,9 @@ def test_ls_integrate(distribution, integration_bound_a, integration_bound_b, ex
 def test_fit(distribution, power_transformer_data):
     expected_params = distribution.params.copy()
     distribution = distribution.fit(
-        power_transformer_data[0, :],
-        event=power_transformer_data[1, :] == 1,
-        entry=power_transformer_data[2, :],
+        power_transformer_data["time"],
+        event=power_transformer_data["event"],
+        entry=power_transformer_data["entry"],
     )
     assert distribution.params == pytest.approx(expected_params, rel=1e-3)
 

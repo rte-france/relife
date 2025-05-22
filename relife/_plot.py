@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 ALPHA_CI: float = 0.05
 
+
 def plot_prob_function(
     x: NDArray[np.float64],
     y: NDArray[np.float64],
@@ -55,7 +56,9 @@ class PlotParametricLifetimeModel:
         se = None
         if self.model.fitting_results is not None:
             se = zeros_like(timeline)
-            se[..., 1:] = self.model.fitting_results.se_estimation_function(jac_f(timeline[..., 1:], *args, asarray=True))
+            se[..., 1:] = self.model.fitting_results.se_estimation_function(
+                jac_f(timeline[..., 1:], *args, asarray=True)
+            )
         label = kwargs.pop("label", f"{self.model.__class__.__name__}" + f".{fname}")
         ax = plot_prob_function(timeline, y, se=se, ci_bounds=ci_bounds, label=label, **kwargs)
         return ax

@@ -1,1 +1,0 @@
-from .sample_function import sample_failure_data
