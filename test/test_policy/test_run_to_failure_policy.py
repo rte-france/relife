@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 def test_asymptotic_expected_equivalent_annual_cost(run_to_failure_policy):

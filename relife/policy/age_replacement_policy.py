@@ -91,12 +91,18 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         if np.any(np.isnan(self.ar)):
             raise ValueError
+        # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
+        if np.any(self.period_before_discounting >= self.ar):
+            raise ValueError("The period before discounting must be lower than ar values")
         return super().expected_equivalent_annual_cost(tf, nb_steps)
 
     @override
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         if np.any(np.isnan(self.ar)):
             raise ValueError
+        # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
+        if np.any(self.period_before_discounting >= self.ar):
+            raise ValueError("The period before discounting must be lower than ar values")
         return super().asymptotic_expected_equivalent_annual_cost()
 
     def optimize(

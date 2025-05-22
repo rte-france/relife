@@ -16,13 +16,14 @@ from relife.lifetime_model import (
     FrozenLifetimeRegression,
     LifetimeDistribution,
 )
-from relife.policy import BaseOneCycleAgeReplacementPolicy
+
 
 if TYPE_CHECKING:
     from relife.stochastic_process.renewal_process import (
         RenewalProcess,
         RenewalRewardProcess,
     )
+    from relife.policy import BaseOneCycleAgeReplacementPolicy
 
 Args = TypeVarTuple("Args")
 

@@ -3,7 +3,7 @@ from pytest import approx
 from relife.quadrature import legendre_quadrature, laguerre_quadrature
 
 
-def test_laguerre_quadrature(a, b):
+def test_laguerre_quadrature(a):
     m = 2
     n = 3
 

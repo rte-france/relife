@@ -9,6 +9,7 @@ from typing_extensions import override
 from relife import ParametricModel
 from relife.data import LifetimeData
 from relife.economic import (
+    Reward,
     Discounting,
     ExponentialDiscounting,
 )

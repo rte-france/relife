@@ -4,16 +4,15 @@ import numpy as np
 from relife.policy import OneCycleAgeReplacementPolicy, AgeReplacementPolicy
 
 
-def test_asymptotic_expected_equivalent_annual_cost(run_to_failure_policy):
-    qa = run_to_failure_policy.asymptotic_expected_equivalent_annual_cost()
-    timeline, q = run_to_failure_policy.expected_equivalent_annual_cost(400, nb_steps=2000)
+def test_asymptotic_expected_equivalent_annual_cost(age_replacement_policy):
+    age_replacement_policy.optimize()
+    qa = age_replacement_policy.asymptotic_expected_equivalent_annual_cost()
+    timeline, q = age_replacement_policy.expected_equivalent_annual_cost(400, nb_steps=2000)
     assert timeline.shape == q.shape == (5, 2000)
     assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
 
 
-# TODO : tester juste sur Weibull(3.46597395, 0.01227849). Dans tous les cas, mettre retour d'erreur si dt < ar
-@pytest.mark.skip(reason="conflict between ar and period_before_discounting for ls_integrate computation")
-def test_one_cycle_(distribution, cf, cp, discounting_rate):
+def test_one_cycle(distribution, cf, cp, discounting_rate):
     eps = 1e-2
     policy = OneCycleAgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate).optimize()
     policy1 = OneCycleAgeReplacementPolicy(
@@ -32,10 +31,6 @@ def test_one_cycle_(distribution, cf, cp, discounting_rate):
         period_before_discounting=0.1,
         ar=policy.ar - eps,
     )
-    # TODO : error in ReLife 1 too
-    # policy.asymptotic_expected_equivalent_annual_cost() computes ls_integrate where b < a
-    # a = period_before_discounting (0.1)
-    # because b = np.minimum(ar, b), with b = inf BUT some ar < 0.1
     assert np.all(
         policy1.asymptotic_expected_equivalent_annual_cost()
         > policy.asymptotic_expected_equivalent_annual_cost()
@@ -45,7 +40,6 @@ def test_one_cycle_(distribution, cf, cp, discounting_rate):
     )
 
 
-@pytest.mark.skip(reason="conflict between ar and period_before_discounting for ls_integrate computation")
 def test_optimal_replacement_age(distribution, cf, cp, discounting_rate):
     eps = 1e-2
     policy = AgeReplacementPolicy(

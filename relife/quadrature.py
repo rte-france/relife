@@ -3,18 +3,12 @@ from __future__ import annotations
 from typing import (
     TYPE_CHECKING,
     Callable,
-    Generic,
-    Literal,
     Optional,
-    TypeVarTuple,
     overload,
 )
 
 import numpy as np
 from numpy.typing import NDArray
-
-if TYPE_CHECKING:
-    from relife.lifetime_model import ParametricLifetimeModel
 
 
 @overload
