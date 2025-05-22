@@ -337,7 +337,7 @@ class FittingResults:
         if self.var is not None:
             self.se = np.sqrt(np.diag(self.var))
 
-    def se_estimation_function(self, jac_f: np.ndarray) -> np.ndarray:
+    def se_estimation_function(self, jac_f: np.ndarray) -> np.float64 | NDArray[np.float64]:
         """Standard error estimation function.
 
         Parameters
@@ -356,7 +356,9 @@ class FittingResults:
             Statistical methods for reliability data. John Wiley & Sons.
         """
         # [1] equation B.10 in Appendix
-        return np.sqrt(np.einsum("ni,ij,nj->n", jac_f, self.var, jac_f))
+        # jac_f : (p,), (p, n) or (p, m, n)
+        # self.var : (p, p)
+        return np.sqrt(np.einsum("p...,pp,p...", jac_f, self.var, jac_f)) # (), (n,) or (m, n)
 
     def asdict(self) -> dict:
         """converts FittingResult into a dictionary.

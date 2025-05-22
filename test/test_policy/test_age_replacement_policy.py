@@ -11,6 +11,7 @@ def test_asymptotic_expected_equivalent_annual_cost(run_to_failure_policy):
     assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
 
 
+# TODO : tester juste sur Weibull(3.46597395, 0.01227849). Dans tous les cas, mettre retour d'erreur si dt < ar
 @pytest.mark.skip(reason="conflict between ar and period_before_discounting for ls_integrate computation")
 def test_one_cycle_(distribution, cf, cp, discounting_rate):
     eps = 1e-2

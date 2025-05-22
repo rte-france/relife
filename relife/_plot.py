@@ -17,26 +17,9 @@ if TYPE_CHECKING:
 
 ALPHA_CI: float = 0.05
 
-
-def plot_confidence_interval(
-    ax: Axes,
+def plot_prob_function(
     x: NDArray[np.float64],
     y: NDArray[np.float64],
-    se: NDArray[np.float64],
-    ci_bounds: tuple[float, float],
-    drawstyle: str = "default",
-) -> Axes:
-    z = stats.norm.ppf(1 - ALPHA_CI / 2)
-    yl = np.clip(y - z * se, ci_bounds[0], ci_bounds[1])
-    yu = np.clip(y + z * se, ci_bounds[0], ci_bounds[1])
-    step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
-    ax.fill_between(x, yl, yu, facecolor=ax.lines.get_color(), step=step, alpha=0.25)
-    return ax
-
-
-def plot_prob_function(
-    x: np.ndarray,
-    y: np.ndarray,
     se: Optional[NDArray[np.float64]] = None,
     ci_bounds: Optional[tuple[float, float]] = None,
     label: Optional[str] = None,
@@ -46,7 +29,11 @@ def plot_prob_function(
     ax = kwargs.pop("ax", plt.gca())
     ax.plot(x, y, drawstyle=drawstyle, label=label, **kwargs)
     if se is not None and ci_bounds is not None:
-        ax = plot_confidence_interval(ax, x, y, se, ci_bounds, drawstyle=drawstyle)
+        z = stats.norm.ppf(1 - ALPHA_CI / 2)
+        yl = np.clip(y - z * se, ci_bounds[0], ci_bounds[1])
+        yu = np.clip(y + z * se, ci_bounds[0], ci_bounds[1])
+        step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
+        ax.fill_between(x, yl, yu, facecolors=[line.get_color() for line in ax.lines], step=step, alpha=0.25)
     if label is not None:
         ax.legend()
     return ax
@@ -67,8 +54,6 @@ class PlotParametricLifetimeModel:
         y = f(timeline, *args)
         se = None
         if self.model.fitting_results is not None:
-            se = self.model.fitting_results.se
-        if se is not None:
             se = zeros_like(timeline)
             se[..., 1:] = self.model.fitting_results.se_estimation_function(jac_f(timeline[..., 1:], *args, asarray=True))
         label = kwargs.pop("label", f"{self.model.__class__.__name__}" + f".{fname}")
