@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, overload
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import OptimizeResult
+from scipy import stats
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -315,19 +316,20 @@ class FittingResults:
     opt: InitVar[OptimizeResult] = field(repr=False)  #: Optimization result (see scipy.optimize.OptimizeResult doc).
     var: Optional[NDArray[np.float64]] = field(
         repr=False, default=None
-    )  #: Covariance matrix (computed as the inverse of the Hessian matrix)
-    se: NDArray[np.float64] = field(
-        init=False, repr=False
-    )  #: Standard error, square root of the diagonal of the covariance matrix.
-
+    )  #: Covariance matrix (computed as the inverse of the Hessian matrix).
     params: NDArray[np.float64] = field(init=False)  #: Optimal parameters values
     nb_params: int = field(init=False, repr=False)  #: Number of parameters.
     AIC: float = field(init=False)  #: Akaike Information Criterion.
     AICc: float = field(init=False)  #: Akaike Information Criterion with a correction for small sample sizes.
     BIC: float = field(init=False)  #: Bayesian Information Criterion.
+    se: Optional[NDArray[np.float64]] = field(
+        init=False, repr=False
+    )  #: Standard error, square root of the diagonal of the covariance matrix
+    IC : Optional[NDArray[np.float64]] = field(init=False, repr=False) #: 95% IC
+
 
     def __post_init__(self, nb_samples, opt):
-        self.params = opt.x
+        self.params = opt.x # (p,)
         self.nb_params = opt.x.size
         self.AIC = float(2 * self.nb_params + 2 * opt.fun)
         self.AICc = float(self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (nb_samples - self.nb_params - 1))
@@ -336,6 +338,9 @@ class FittingResults:
         self.se = None
         if self.var is not None:
             self.se = np.sqrt(np.diag(self.var))
+            self.IC = self.params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se / np.sqrt(nb_samples) # (p, 2)
+
+        # TODO : ajouter IC95% et tirer 100 tirage et verifier si parametre dans l'intervalle
 
     def se_estimation_function(self, jac_f: np.ndarray) -> np.float64 | NDArray[np.float64]:
         """Standard error estimation function.

@@ -3,13 +3,13 @@ import numpy as np
 
 from relife.policy import OneCycleAgeReplacementPolicy, AgeReplacementPolicy
 
-@pytest.mark.filterwarnings("ignore: some failed to converge")
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, cp, discounting_rate, expected_out_shape):
     policy = OneCycleAgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate)
     try:
         policy.optimize()
     except RuntimeError:
-        pytest.skip("Optimization failed, tested cf, cp may be innappropriate")
+        pytest.skip("Optimization failed, EEAC may be too flat")
     qa = policy.asymptotic_expected_equivalent_annual_cost()
     assert qa.shape == expected_out_shape(cf=cf, cp=cp) # () or (m, 1)
     timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
@@ -18,18 +18,19 @@ def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, 
     assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
 
 
-@pytest.mark.filterwarnings("ignore: some failed to converge")
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_asymptotic_expected_equivalent_annual_cost(distribution, cf, cp, discounting_rate, expected_out_shape):
     policy = AgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate)
     try:
         policy.optimize()
     except RuntimeError:
-        pytest.skip("Optimization failed, tested cf, cp may be innappropriate")
+        pytest.skip("Optimization failed, EEAC may be too flat")
     qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m, 1)
     timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
     assert timeline.shape == q.shape
     assert timeline.shape == np.broadcast_shapes(expected_out_shape(cf=cf, cp=cp), (2000,))  # (m, 2000) or (2000,)
     assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
+
 
 def test_one_cycle_optimal_replacement_age(distribution, cf, cp, discounting_rate):
     eps = 1e-2

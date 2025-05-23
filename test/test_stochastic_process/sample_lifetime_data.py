@@ -1,8 +1,6 @@
-import numpy as np
-import pytest
-
 from relife.lifetime_model import Weibull, Exponential, Gompertz, Gamma, LogLogistic
 from relife.stochastic_process import RenewalProcess
+import numpy as np
 
 DISTRIBUTION_INSTANCES = [
     Exponential(0.00795203),
@@ -12,44 +10,23 @@ DISTRIBUTION_INSTANCES = [
     LogLogistic(3.92614064, 0.0133325),
 ]
 
-@pytest.fixture(
-    params=DISTRIBUTION_INSTANCES,
-    ids=["Exponential", "Weibull", "Gompertz", "Gamma", "LogLogistic"],
-)
-def distribution(request):
-    return request.param
-
-# for distri in DISTRIBUTION_INSTANCES:
-#     print(type(distri).__name__, distri.params)
-#     renewal_process = RenewalProcess(distri)
-#     expected_params = distri.params.copy()
-#     q1 = distri.ppf(0.25)
-#     q3 = distri.ppf(0.75)
-#     lifetime_data = renewal_process.sample_lifetime_data(10 * q3, t0=q1, size=1000, seed=10)
-#     print("nb lifetime data :", len(lifetime_data))
-#     distri.fit_from_lifetime_data(lifetime_data)
-#     print(distri.params)
-
-def test_sample_lifetime_data(distribution):
-    renewal_process = RenewalProcess(distribution)
-    expected_params = distribution.params.copy()
-    q1 = distribution.ppf(0.25)
-    q3 = distribution.ppf(0.75)
-    lifetime_data = renewal_process.sample_lifetime_data(10*q3, t0=q1, size=1000, seed=10)
-    print("nb lifetime data :", len(lifetime_data))
-    distribution.fit_from_lifetime_data(lifetime_data)
-    print(distribution.params)
-    assert np.allclose(distribution.params, expected_params, rtol=1e-3)
-
-# def test():
-#     for distri in DISTRIBUTION_INSTANCES:
-#         print(type(distri).__name__, distri.params)
-#         renewal_process = RenewalProcess(distri)
-#         expected_params = distri.params.copy()
-#         q1 = distri.ppf(0.25)
-#         q3 = distri.ppf(0.75)
-#         lifetime_data = renewal_process.sample_lifetime_data(10*q3, t0=q1, size=1000, seed=10)
-#         print("nb lifetime data :", len(lifetime_data))
-#         distri.fit_from_lifetime_data(lifetime_data)
-#         print(distri.params)
-#         assert np.allclose(distri.params, expected_params, rtol=1e-3)
+for distri in DISTRIBUTION_INSTANCES:
+    renewal_process = RenewalProcess(distri)
+    expected_params = distri.params.copy()
+    q1 = distri.ppf(0.25)
+    q3 = distri.ppf(0.75)
+    success = 0
+    n = 100
+    for i in range(n):
+        lifetime_data = renewal_process.sample_lifetime_data(10 * q3, t0=q1, size=100)
+        try: # for gamma and loglogistic essentially (convergence errors may occcur)
+            distri.fit_from_lifetime_data(lifetime_data)
+        except RuntimeError:
+            continue
+        ic = distri.fitting_results.IC
+        if np.all(distri.params.reshape(-1,1) >= ic[:, [0]]) and np.all(distri.params.reshape(-1,1) <= ic[:, [1]]):
+            success += 1
+    if success >= 0.95*n:
+        print(type(distri).__name__, "OK")
+    else:
+        print(type(distri).__name__, "FAILED")

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from pytest import approx
 from relife.economic import RunToFailureReward
 from relife.lifetime_model import EquilibriumDistribution
@@ -46,10 +47,29 @@ class TestDistribution:
         assert z.shape == (n, 200)
         assert z0 == approx(z.sum(axis=0), rel=1e-4)
 
+    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_sample_lifetime_data(self, distribution):
+        expected_params = distribution.params.copy()
+        q1 = distribution.ppf(0.25)
+        q3 = distribution.ppf(0.75)
+        success = 0
+        n = 100
         renewal_process = RenewalProcess(distribution)
-        renewal_process.sample_lifetime_data(200, size=1000, seed=10)
-
+        for i in range(n):
+            lifetime_data = renewal_process.sample_lifetime_data(10 * q3, t0=0, size=100000)
+            try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
+                distribution.fit_from_lifetime_data(lifetime_data)
+            except RuntimeError:
+                continue
+            ic = distribution.fitting_results.IC
+            # params found are within params IC
+            print("expected params :", expected_params)
+            print("IC95 :", ic)
+            if np.all(expected_params.reshape(-1, 1) >= ic[:, [0]]) and np.all(
+                    expected_params.reshape(-1, 1) <= ic[:, [1]]):
+                success += 1
+        print(success / n)
+        assert success >= 0.95 * n
 
 
 class TestAgeReplacementDistribution:
