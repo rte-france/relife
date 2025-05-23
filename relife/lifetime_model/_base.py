@@ -315,10 +315,10 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
                     """
                 )
             if x.ndim == 3:  # reshape because model.pdf is tested only for input ndim <= 2
-                deg, m, n = x.shape
+                xdeg, m, n = x.shape
                 x = np.rollaxis(x, 1).reshape(m, -1)  # (m, deg*n), roll on m because axis 0 must align with m of args
                 pdf = model.pdf(x)  # (m, deg*n)
-                pdf = np.rollaxis(pdf.reshape(m, deg, n), 1, 0)  #  (deg, m, n)
+                pdf = np.rollaxis(pdf.reshape(m, xdeg, n), 1, 0)  #  (deg, m, n)
             else:  # ndim == 1 | 2
                 # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args
                 pdf = model.pdf(x.reshape(1, -1))  # (1, deg*n) or (1, deg)
@@ -1055,7 +1055,7 @@ class LifetimeRegression(
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
+        asarray: Literal[False],
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
@@ -1064,8 +1064,17 @@ class LifetimeRegression(
         time: float | NDArray[np.float64],
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
+        asarray: Literal[True],
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @overload
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        covar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        asarray: Literal[True],
+    ) -> tuple[np.float64 | NDArray[np.float64], ...] | np.float64 | NDArray[np.float64]: ...
 
     def jac_cdf(
         self,
@@ -1532,21 +1541,28 @@ class FrozenLifetimeRegression(
     def jac_cdf(
         self,
         time: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
+        asarray: Literal[False],
     ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
 
     @overload
     def jac_cdf(
         self,
         time: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
+        asarray: Literal[True],
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @overload
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        asarray: bool,
+    ) -> tuple[np.float64 | NDArray[np.float64], ...] | np.float64 | NDArray[np.float64]: ...
 
     def jac_cdf(
         self,
         time: float | NDArray[np.float64],
         asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
+    ) -> tuple[np.float64 | NDArray[np.float64], ...] | np.float64 | NDArray[np.float64]:
         return self.unfrozen_model.jac_cdf(time, self.frozen_args[0], *self.frozen_args[1:], asarray=asarray)
 
     @overload

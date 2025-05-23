@@ -129,14 +129,15 @@ class RenewalProcessIterator(CountDataIterator):
         return self.process.lifetime_model
 
     def step(self):
-        time, event, entry = self.model.rvs(size=self.size, return_event=True, return_entry=True, seed=self.seed)
+        # time is not residual age if return_entry is True (see LeftTruncatedModel)
+        time, event, model_entry = self.model.rvs(size=self.size, return_event=True, return_entry=True, seed=self.seed)
         if self.cycle == 0:
             # initialize timeline, stop_counter and start_counter
             self.timeline = np.zeros_like(time)  #  ensure broadcasting
             self.stop_counter = np.zeros_like(self.timeline, dtype=np.int64)
             self.start_counter = np.zeros_like(self.timeline, dtype=np.int64)
-        else:  # no model entry after the first cycle
-            entry.fill(0.0)
+        else:
+            model_entry.fill(0.0) # cancel any model entry after the first cycle
 
         # update timeline
         self.timeline += time
@@ -146,24 +147,33 @@ class RenewalProcessIterator(CountDataIterator):
         self.stop_counter[self.timeline > self.tf] += 1
 
         # tf right censorings
+        # censored time : self.timeline - self.tf
+        # observed time : time - censored time
         time = np.where(self.just_crossed_tf, time - (self.timeline - self.tf), time)
         self.timeline[self.just_crossed_tf] = self.tf
         event[self.just_crossed_tf] = False
 
-        # t0 entry (entry is 0 after the first cycle)
-        entry = np.where(self.just_crossed_t0, self.t0 + entry, entry)
+
+        entry = np.zeros_like(model_entry)
+        if self.cycle == 0: # t0 added to model_entry
+            entry = np.where(self.just_crossed_t0, self.t0 + model_entry, entry)
+        else:
+            # previous timeline step = self.timeline - time
+            entry = np.where(self.just_crossed_t0, self.t0 - (self.timeline - time), entry)
 
         # update seed to avoid having the same rvs result
         if self.seed is not None:
             self.seed += 1
         # update cycle
         self.cycle += 1
+        base_structarray = self.base_structarray()
+        nb_renewal = np.full_like(self.timeline, self.cycle, dtype=np.uint32)
 
         struct_arr = rfn.append_fields(  #  works on structured_array too
-            self.base_structarray(),  # add to struct of timeline, sample_id, asset_id
-            ("time", "event", "entry"),
-            (time[self.selection], event[self.selection], entry[self.selection]),
-            (np.float64, np.bool_, np.float64),
+            base_structarray,  # add to struct of timeline, sample_id, asset_id
+            ("time", "event", "entry", "nb_renewal"),
+            (time[self.selection], event[self.selection], entry[self.selection], nb_renewal[self.selection]),
+            (np.float64, np.bool_, np.float64, np.uint32),
             usemask=False,
             asrecarray=False,
         )
@@ -176,6 +186,20 @@ class RenewalProcessIterator(CountDataIterator):
                 struct_arr = self.step()
             return struct_arr
         raise StopIteration
+
+
+def concatenate_renewal_data(
+    iterator: RenewalProcessIterator,
+    maxsample: int = 1e5,
+) -> CountData:
+    struct_array = next(iterator)
+    for arr in iterator:
+        if len(arr) > maxsample:
+            raise RuntimeError("Max number of sample reached")
+        struct_array = np.concatenate((struct_array, arr))
+    # with fields defined, order specifies which fields to compare first, second, etc
+    struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
+    return CountData(iterator.t0, iterator.tf, struct_array)
 
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):

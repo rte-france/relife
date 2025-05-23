@@ -123,14 +123,6 @@ def test_fit(distribution, power_transformer_data):
     assert distribution.params == pytest.approx(expected_params, rel=1e-3)
 
 
-# def test_sample_lifetime_data(distribution):
-#     t0, tf = distribution.ppf(0.75).item(), distribution.ppf(0.25).item()
-#     lifetime_data = distribution.sample_lifetime_data(size=1e4, window=(t0, tf), seed=10)
-#     expected_params = distribution.params.copy()
-#     fitted_distribution = type(distribution)().fit_from_lifetime_data(lifetime_data)
-#     assert fitted_distribution.params == approx(expected_params, rel=1e-3)
-
-
 class TestEquilibriumDistribution:
 
     # def test_args_names(self, equilibrium_distribution):

@@ -29,7 +29,7 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel[*tuple[float | NDArray[np.float64]]],
+        model: FittableParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
         lifetime_data: LifetimeData,
     ):
         self.model = copy.deepcopy(model)

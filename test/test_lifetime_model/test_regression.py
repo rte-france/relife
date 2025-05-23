@@ -147,20 +147,22 @@ def test_ls_integrate(regression, integration_bound_a, integration_bound_b, cova
 
 
 def test_aft_pph_weibull_eq(insulator_string_data):
-    covar = np.column_stack((
+    covar = zscore(np.column_stack((
         boxcox(insulator_string_data["pHCl"])[0],
         boxcox(insulator_string_data["pH2SO4"])[0],
         boxcox(insulator_string_data["HNO3"])[0],
-    ))
+    )))
     weibull_aft = AcceleratedFailureTime(Weibull()).fit(
         insulator_string_data["time"],
         covar,
         event=insulator_string_data["event"],
+        entry=insulator_string_data["entry"],
     )
     weibull_pph = ProportionalHazard(Weibull()).fit(
         insulator_string_data["time"],
         covar,
         event=insulator_string_data["event"],
+        entry=insulator_string_data["entry"],
     )
 
     assert weibull_pph.baseline.params == approx(weibull_aft.baseline.params, rel=1e-3)

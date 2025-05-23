@@ -46,6 +46,11 @@ class TestDistribution:
         assert z.shape == (n, 200)
         assert z0 == approx(z.sum(axis=0), rel=1e-4)
 
+    def test_sample_lifetime_data(self, distribution):
+        renewal_process = RenewalProcess(distribution)
+        renewal_process.sample_lifetime_data(200, size=1000, seed=10)
+
+
 
 class TestAgeReplacementDistribution:
     def test_renewal_density(self, frozen_ar_distribution):

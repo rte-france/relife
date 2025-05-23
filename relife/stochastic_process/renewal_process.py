@@ -19,14 +19,13 @@ from relife.lifetime_model import (
     FrozenLifetimeRegression,
     LifetimeDistribution,
 )
+from relife.sample import RenewalProcessIterator, RenewalRewardProcessIterator, concatenate_renewal_data
 
 if TYPE_CHECKING:
     from relife.economic import Reward
     from relife.sample import (
         CountData,
         CountDataFunctions,
-        RenewalProcessIterator,
-        RenewalRewardProcessIterator,
     )
 
 M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
@@ -87,10 +86,10 @@ class RenewalProcess(ParametricModel, Generic[M]):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> None:
-        from relife.sample import concatenate_count_data
+        from relife.sample import concatenate_renewal_data
 
-        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
-        self.count_data = concatenate_count_data(iterator, maxsample)
+        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)  # type: ignore
+        self.count_data = concatenate_renewal_data(iterator, maxsample)
 
     def sample_lifetime_data(
         self,
@@ -100,7 +99,7 @@ class RenewalProcess(ParametricModel, Generic[M]):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> LifetimeData:
-        from relife.sample import concatenate_count_data
+        from relife.sample import concatenate_renewal_data
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
             from relife.lifetime_model import FrozenLeftTruncatedModel
@@ -115,7 +114,7 @@ class RenewalProcess(ParametricModel, Generic[M]):
                     f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
         iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
-        count_data = concatenate_count_data(iterator, maxsample)
+        count_data = concatenate_renewal_data(iterator, maxsample)
         return LifetimeData(
             count_data.struct_array["time"].copy(),
             event=count_data.struct_array["event"].copy(),
@@ -164,8 +163,8 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         z = renewal_equation_solver(
             timeline,
             self.lifetime_model,
-            lambda timeline: self.lifetime_model.ls_integrate(
-                lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
+            lambda t: self.lifetime_model.ls_integrate(
+                lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(t), t, deg=15
             ),  # reward partial expectation
             discounting=self.discounting,
         )
@@ -174,9 +173,9 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
                 timeline,
                 z,
                 self.first_lifetime_model,
-                lambda timeline: self.first_lifetime_model.ls_integrate(
+                lambda t: self.first_lifetime_model.ls_integrate(
                     lambda x: self.first_reward.sample(x) * self.discounting.factor(x),
-                    np.zeros_like(timeline),
+                    np.zeros_like(t),
                     timeline,
                     deg=15,
                 ),  # reward partial expectation
