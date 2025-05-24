@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,7 +19,11 @@ from relife.lifetime_model import (
     FrozenLifetimeRegression,
     LifetimeDistribution,
 )
-from relife.sample import RenewalProcessIterator, RenewalRewardProcessIterator, concatenate_renewal_data
+from relife.sample import (
+    RenewalProcessIterator,
+    RenewalRewardProcessIterator,
+    concatenate_renewal_data,
+)
 
 if TYPE_CHECKING:
     from relife.economic import Reward
@@ -28,7 +32,10 @@ if TYPE_CHECKING:
         CountDataFunctions,
     )
 
-M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
+M = TypeVar(
+    "M",
+    bound=Union[LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel],
+)
 R = TypeVar("R", bound=Reward)
 
 

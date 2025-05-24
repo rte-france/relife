@@ -48,7 +48,7 @@ class PlotParametricLifetimeModel:
         self, fname: str, *args: float | NDArray[np.float64], ci_bounds: Optional[tuple[float, float]] = None, **kwargs
     ) -> Axes:
         max_time = np.squeeze(self.model.isf(1e-3, *args))  # () or (m,)
-        timeline = np.linspace(0, max_time, 200)  # (200,) or (200, m)
+        timeline = np.linspace(0, max_time, 200, dtype=np.float64)  # (200,) or (200, m)
         timeline = np.transpose(timeline)  # (200,) (m, 200)
         f = getattr(self.model, fname)
         jac_f = getattr(self.model, "jac_" + fname)
@@ -63,19 +63,19 @@ class PlotParametricLifetimeModel:
         ax = plot_prob_function(timeline, y, se=se, ci_bounds=ci_bounds, label=label, **kwargs)
         return ax
 
-    def sf(self, *args: tuple[float | NDArray[np.float64], ...], **kwargs) -> Axes:
+    def sf(self, *args: float | NDArray[np.float64], **kwargs) -> Axes:
         return self._plot("sf", *args, ci_bounds=(0.0, 1.0), **kwargs)
 
-    def cdf(self, *args: tuple[float | NDArray[np.float64], ...], **kwargs) -> Axes:
+    def cdf(self, *args: float | NDArray[np.float64], **kwargs) -> Axes:
         return self._plot("cdf", *args, ci_bounds=(0.0, 1.0), **kwargs)
 
-    def chf(self, *args: tuple[float | NDArray[np.float64], ...], **kwargs) -> Axes:
+    def chf(self, *args: float | NDArray[np.float64], **kwargs) -> Axes:
         return self._plot("chf", *args, ci_bounds=(0.0, np.inf), **kwargs)
 
-    def hf(self, *args: tuple[float | NDArray[np.float64], ...], **kwargs) -> Axes:
+    def hf(self, *args: float | NDArray[np.float64], **kwargs) -> Axes:
         return self._plot("hf", *args, ci_bounds=(0.0, np.inf), **kwargs)
 
-    def pdf(self, *args: tuple[float | NDArray[np.float64], ...], **kwargs) -> Axes:
+    def pdf(self, *args: float | NDArray[np.float64], **kwargs) -> Axes:
         return self._plot("pdf", *args, ci_bounds=(0.0, np.inf), **kwargs)
 
 

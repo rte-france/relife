@@ -119,12 +119,17 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
 
         x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # () or (m, 1)
         hf = self.lifetime_model.unfrozen_model.baseline.hf
-        def eq(a):  # () or (m, 1)
-            return self.discounting.factor(a) / self.discounting.annuity_factor(a) * ((self.cf - self.cp) * hf(a) - self.cp / self.discounting.annuity_factor(a))
-            # return ((self.cf - self.cp) / self.cp) * hf(a) * self.discounting.annuity_factor(a)
-        self.ar = newton(eq, x0) # () or (m, 1)
-        return self
 
+        def eq(a):  # () or (m, 1)
+            return (
+                self.discounting.factor(a)
+                / self.discounting.annuity_factor(a)
+                * ((self.cf - self.cp) * hf(a) - self.cp / self.discounting.annuity_factor(a))
+            )
+            # return ((self.cf - self.cp) / self.cp) * hf(a) * self.discounting.annuity_factor(a)
+
+        self.ar = newton(eq, x0)  # () or (m, 1)
+        return self
 
 
 class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, AgeReplacementReward]):
@@ -260,7 +265,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         pdf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.pdf
         hf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.hf
 
-        def eq(a): # () or (m, 1)
+        def eq(a):  # () or (m, 1)
             f = legendre_quadrature(
                 lambda x: discounting.factor(x) * sf(x),
                 0,

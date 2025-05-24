@@ -2,11 +2,19 @@ from __future__ import annotations
 
 from abc import ABC
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, NamedTuple, Optional, Self, TypeVarTuple
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+    NamedTuple,
+    Optional,
+    Self,
+    Sequence,
+    TypeVarTuple,
+)
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
-from numpy.typing import ArrayLike, DTypeLike, NDArray
+from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.economic import ExponentialDiscounting, Reward
@@ -30,12 +38,12 @@ Args = TypeVarTuple("Args")
 class CountData(NamedTuple):
     t0: float
     tf: float
-    struct_array: NDArray[DTypeLike]
+    struct_array: NDArray[np.void]
 
 
 def concatenate_count_data(
     iterator: CountDataIterator,
-    maxsample: int = 1e5,
+    maxsample: int = 100000,
 ) -> CountData:
     struct_array = next(iterator)
     for arr in iterator:
@@ -46,10 +54,10 @@ def concatenate_count_data(
     return CountData(iterator.t0, iterator.tf, struct_array)
 
 
-class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
+class CountDataIterator(Iterator[NDArray[np.void]], ABC):
     timeline: Optional[NDArray[np.float64]]
-    start_counter: Optional[NDArray[np.int64]]
-    end_counter: Optional[NDArray[np.int64]]
+    start_counter: Optional[NDArray[np.uint32]]
+    end_counter: Optional[NDArray[np.uint32]]
 
     def __init__(
         self,
@@ -69,23 +77,27 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
     def stop(self) -> Optional[bool]:
         if self.stop_counter is not None:
             return np.all(self.stop_counter > 0)
+        return None
 
     @property
     def just_crossed_t0(self) -> Optional[NDArray[np.bool_]]:
         if self.start_counter is not None:
             return self.start_counter == 1
+        return None
 
     @property
     def just_crossed_tf(self) -> Optional[NDArray[np.bool_]]:
         if self.stop_counter is not None:
             return self.stop_counter == 1
+        return None
 
     @property
     def selection(self) -> Optional[NDArray[np.bool_]]:
         if self.start_counter is not None and self.stop_counter is not None:
             return np.logical_and(self.start_counter >= 1, self.stop_counter <= 1)
+        return None
 
-    def base_structarray(self) -> Optional[NDArray[DTypeLike]]:
+    def base_structarray(self) -> Optional[NDArray[np.void]]:
         selection = self.selection
         if selection is None:
             return None
@@ -94,7 +106,6 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
             sample_id.size,
             dtype=np.dtype(
                 [
-                    ("timeline", np.float64),
                     ("sample_id", np.uint32),  #  unsigned 32bit integer
                     ("asset_id", np.uint32),  #  unsigned 32bit integer
                 ]
@@ -102,7 +113,6 @@ class CountDataIterator(Iterator[NDArray[DTypeLike]], ABC):
         )
         struct_array["sample_id"] = sample_id.astype(np.uint32)
         struct_array["asset_id"] = asset_id.astype(np.uint32)
-        struct_array["timeline"] = self.timeline[selection]
         return struct_array
 
 
@@ -133,11 +143,11 @@ class RenewalProcessIterator(CountDataIterator):
         time, event, model_entry = self.model.rvs(size=self.size, return_event=True, return_entry=True, seed=self.seed)
         if self.cycle == 0:
             # initialize timeline, stop_counter and start_counter
-            self.timeline = np.zeros_like(time)  #  ensure broadcasting
-            self.stop_counter = np.zeros_like(self.timeline, dtype=np.int64)
-            self.start_counter = np.zeros_like(self.timeline, dtype=np.int64)
+            self.timeline = np.zeros_like(time, dtype=np.float64)  # ensure broadcasting
+            self.stop_counter = np.zeros_like(self.timeline, dtype=np.uint32)
+            self.start_counter = np.zeros_like(self.timeline, dtype=np.uint32)
         else:
-            model_entry.fill(0.0) # cancel any model entry after the first cycle
+            model_entry.fill(0.0)  # cancel any model entry after the first cycle
 
         # update timeline
         self.timeline += time
@@ -147,18 +157,17 @@ class RenewalProcessIterator(CountDataIterator):
         self.stop_counter[self.timeline > self.tf] += 1
 
         # tf right censorings
-        # censored time : self.timeline - self.tf
-        # observed time : time - censored time
+        # censored time : self.timeline - self.tf
+        # observed time : time - censored time
         time = np.where(self.just_crossed_tf, time - (self.timeline - self.tf), time)
         self.timeline[self.just_crossed_tf] = self.tf
         event[self.just_crossed_tf] = False
 
-
         entry = np.zeros_like(model_entry)
-        if self.cycle == 0: # t0 added to model_entry
+        if self.cycle == 0:  # t0 added to model_entry
             entry = np.where(self.just_crossed_t0, self.t0 + model_entry, entry)
         else:
-            # previous timeline step = self.timeline - time
+            # previous timeline step = self.timeline - time
             entry = np.where(self.just_crossed_t0, self.t0 - (self.timeline - time), entry)
 
         # update seed to avoid having the same rvs result
@@ -171,15 +180,21 @@ class RenewalProcessIterator(CountDataIterator):
 
         struct_arr = rfn.append_fields(  #  works on structured_array too
             base_structarray,  # add to struct of timeline, sample_id, asset_id
-            ("time", "event", "entry", "nb_renewal"),
-            (time[self.selection], event[self.selection], entry[self.selection], nb_renewal[self.selection]),
+            ("timeline", "time", "event", "entry", "nb_renewal"),
+            (
+                self.timeline[self.selection],
+                time[self.selection],
+                event[self.selection],
+                entry[self.selection],
+                nb_renewal[self.selection],
+            ),
             (np.float64, np.bool_, np.float64, np.uint32),
             usemask=False,
             asrecarray=False,
         )
         return struct_arr
 
-    def __next__(self) -> NDArray[DTypeLike]:
+    def __next__(self) -> NDArray[np.void]:
         while not self.stop:
             struct_arr = self.step()
             while struct_arr.size == 0 and not self.stop:  # skip cycles while arrays are empty (if t0 != 0.)
@@ -190,14 +205,14 @@ class RenewalProcessIterator(CountDataIterator):
 
 def concatenate_renewal_data(
     iterator: RenewalProcessIterator,
-    maxsample: int = 1e5,
+    maxsample: int = 10000,
 ) -> CountData:
     struct_array = next(iterator)
     for arr in iterator:
         if len(arr) > maxsample:
             raise RuntimeError("Max number of sample reached")
         struct_array = np.concatenate((struct_array, arr))
-    # with fields defined, order specifies which fields to compare first, second, etc
+    # with fields defined, order specifies which fields to compare first, second, etc
     struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
     return CountData(iterator.t0, iterator.tf, struct_array)
 
@@ -221,16 +236,17 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
         self.discounting = self.process.discounting
 
     @override
-    def __next__(self) -> NDArray[DTypeLike]:
-        for struct_array in super().__iter__():
-            return rfn.append_fields(
-                struct_array,
-                "reward",
-                self.reward.sample(struct_array["time"]) * self.discounting.factor(struct_array["timeline"]),
-                np.float64,
-                usemask=False,
-                asrecarray=False,
-            )
+    def __next__(self) -> NDArray[np.void]:
+        struct_array = super().__next__()
+        # may be type hint error in rfn.append_fields
+        return rfn.append_fields(
+            struct_array,
+            "reward",
+            self.reward.sample(struct_array["time"]) * self.discounting.factor(struct_array["timeline"]),
+            np.float64,
+            usemask=False,
+            asrecarray=False,
+        )  # type: ignore
 
 
 # class NonHomogeneousPoissonProcessIterator(SampleIterator):
@@ -458,8 +474,8 @@ class CountDataFunctions:
         nb_sample = len(np.unique(selection.count_data.struct_array["sample_id"]))
         return timeline, rewards / nb_sample
 
-    def select(self, sample_id: Optional[ArrayLike] = None, asset_id: Optional[ArrayLike] = None) -> Self:
-        mask = np.ones(len(self.count_data.struct_array), dtype=np.bool_)
+    def select(self, sample_id: Optional[int] = None, asset_id: Optional[int] = None) -> CountDataFunctions:
+        mask: NDArray[np.bool_] = np.ones_like(self.count_data.struct_array, dtype=np.bool_)
         if sample_id is not None:
             mask = mask & np.isin(self.count_data.struct_array["sample_id"], sample_id)
         if asset_id is not None:

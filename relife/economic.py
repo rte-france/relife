@@ -44,15 +44,15 @@ class Reward(ABC):
     def nb_assets(self) -> int:
         if self._cost_array.shape == ():
             return 1
+        return self._cost_array.shape[0]
 
     @property
-    def ndim(self)-> int:
+    def ndim(self) -> int:
         return self._cost_array.ndim
 
     @property
-    def size(self)-> int:
+    def size(self) -> int:
         return self._cost_array.size
-
 
 
 class RunToFailureReward(Reward):

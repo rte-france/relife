@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import InitVar, asdict, dataclass, field
 from itertools import chain, filterfalse
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, overload
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import OptimizeResult
 from scipy import stats
+from scipy.optimize import OptimizeResult
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
@@ -15,9 +15,11 @@ if TYPE_CHECKING:
         FrozenAgeReplacementModel,
         FrozenLeftTruncatedModel,
         FrozenLifetimeRegression,
+        FrozenParametricLifetimeModel,
         LeftTruncatedModel,
         LifetimeDistribution,
         LifetimeRegression,
+        ParametricLifetimeModel,
     )
     from relife.stochastic_process import (
         FrozenNonHomogeneousPoissonProcess,
@@ -33,6 +35,7 @@ class ParametricModel:
     """
 
     fitting_results: Optional[FittingResults]
+    _nested_models: dict[str, ParametricModel]
 
     def __init__(self, **kwparams: Optional[float]):
         self._parameters = Parameters(**kwparams)
@@ -199,6 +202,10 @@ class Parameters:
     """
 
     parent: Optional[Self]
+    leaves: dict[str, Self]
+    _nodedata: dict[str, float]  # np.nan is float
+    _allkeys: tuple[str, ...]
+    _allvalues: tuple[float, ...]
 
     def __init__(self, mapping: Optional[dict[str, Optional[float]]] = None, /, **kwargs: Optional[float]):
         self._nodedata = {}
@@ -238,12 +245,12 @@ class Parameters:
 
         return chain.from_iterable(items_walk(self))
 
-    def set_allvalues(self, *values: Optional[float | complex]):
+    def set_allvalues(self, *values: Optional[float]):
         if len(values) != len(self):
             raise ValueError(f"values expects {len(self)} items but got {len(values)}")
         self._allvalues = tuple((np.nan if v is None else v for v in values))
         pos = len(self._nodedata)
-        self._nodedata.update(zip(self._nodedata, values[:pos]))
+        self._nodedata.update(zip(self._nodedata.keys(), (np.nan if v is None else v for v in values[:pos])))
         for leaf in self.leaves.values():
             leaf.set_allvalues(*values[pos : pos + len(leaf)])
             pos += len(leaf)
@@ -255,7 +262,7 @@ class Parameters:
             raise ValueError(f"names expects {len(self)} items but got {len(keys)}")
         self._allkeys = keys
         pos = len(self._nodedata)
-        self._nodedata = {keys[:pos][i]: v for i, v in self._nodedata.values()}
+        self._nodedata = {keys[:pos][i]: v for i, v in enumerate(self._nodedata.values())}
         for leaf in self.leaves.values():
             leaf.set_allkeys(*keys[pos : pos + len(leaf)])
             pos += len(leaf)
@@ -325,11 +332,10 @@ class FittingResults:
     se: Optional[NDArray[np.float64]] = field(
         init=False, repr=False
     )  #: Standard error, square root of the diagonal of the covariance matrix
-    IC : Optional[NDArray[np.float64]] = field(init=False, repr=False) #: 95% IC
-
+    IC: Optional[NDArray[np.float64]] = field(init=False, repr=False)  #: 95% IC
 
     def __post_init__(self, nb_samples, opt):
-        self.params = opt.x # (p,)
+        self.params = opt.x  # (p,)
         self.nb_params = opt.x.size
         self.AIC = float(2 * self.nb_params + 2 * opt.fun)
         self.AICc = float(self.AIC + 2 * self.nb_params * (self.nb_params + 1) / (nb_samples - self.nb_params - 1))
@@ -338,9 +344,11 @@ class FittingResults:
         self.se = None
         if self.var is not None:
             self.se = np.sqrt(np.diag(self.var))
-            self.IC = self.params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se / np.sqrt(nb_samples) # (p, 2)
+            self.IC = self.params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se / np.sqrt(
+                nb_samples
+            )  # (p, 2)
 
-        # TODO : ajouter IC95% et tirer 100 tirage et verifier si parametre dans l'intervalle
+        # TODO : ajouter IC95% et tirer 100 tirage et verifier si parametre dans l'intervalle
 
     def se_estimation_function(self, jac_f: np.ndarray) -> np.float64 | NDArray[np.float64]:
         """Standard error estimation function.
@@ -363,7 +371,9 @@ class FittingResults:
         # [1] equation B.10 in Appendix
         # jac_f : (p,), (p, n) or (p, m, n)
         # self.var : (p, p)
-        return np.sqrt(np.einsum("p...,pp,p...", jac_f, self.var, jac_f))  # (), (n,) or (m, n)
+        if self.var is not None:
+            return np.sqrt(np.einsum("p...,pp,p...", jac_f, self.var, jac_f))  # (), (n,) or (m, n)
+        raise ValueError("Can't compute if var is None")
 
     def asdict(self) -> dict:
         """converts FittingResult into a dictionary.
@@ -440,6 +450,12 @@ def freeze(
     reorder_kwargs = dict(sorted(kwargs.items(), key=lambda item: position_mapping[item[0]]))
     args_values: tuple[float | NDArray[np.float64], ...] = tuple(reorder_kwargs.values())
 
+    frozen_model: Union[
+        FrozenLifetimeRegression,
+        FrozenLeftTruncatedModel,
+        FrozenAgeReplacementModel,
+        FrozenNonHomogeneousPoissonProcess,
+    ]
     # here args_nb_assets is set to 1 by default and then, will be overriden after testing frozen_args coherence
     if isinstance(model, LifetimeRegression):
         frozen_model = FrozenLifetimeRegression(model, 1, args_values[0], *args_values[1:])
@@ -448,16 +464,22 @@ def freeze(
     elif isinstance(model, LeftTruncatedModel):
         frozen_model = FrozenLeftTruncatedModel(model, 1, args_values[0], *args_values[1:])
     elif isinstance(model, NonHomogeneousPoissonProcess):
-        frozen_model = FrozenNonHomogeneousPoissonProcess(model, *args_values)
+        frozen_model = FrozenNonHomogeneousPoissonProcess(model, 1, *args_values)
     else:
         raise ValueError
-    frozen_model.args_nb_assets = args_nb_assets(frozen_model)
+    frozen_model.args_nb_assets = get_args_nb_assets(frozen_model)
     return frozen_model
 
 
-def args_nb_assets_generator(
-    model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel,
-) -> Iterator[int]:
+def get_args_nb_assets(
+    model: Union[
+        LifetimeDistribution,
+        FrozenLifetimeRegression,
+        FrozenLeftTruncatedModel,
+        FrozenAgeReplacementModel,
+        FrozenNonHomogeneousPoissonProcess,
+    ],
+) -> int:
 
     from relife.lifetime_model import (
         FrozenAgeReplacementModel,
@@ -465,31 +487,41 @@ def args_nb_assets_generator(
         FrozenLifetimeRegression,
         LifetimeDistribution,
     )
+    from relife.stochastic_process import FrozenNonHomogeneousPoissonProcess
 
-    match model:
-        case LifetimeDistribution():
-            yield 1
-        case FrozenLifetimeRegression():
-            yield np.atleast_2d(np.asarray(model.covar)).shape[0]
-            yield from args_nb_assets_generator(model.unfreeze())
-        case FrozenLeftTruncatedModel():
-            yield np.asarray(model.a0).size
-            yield from args_nb_assets_generator(model.unfreeze())
-        case FrozenAgeReplacementModel():
-            yield np.asarray(model.ar).size
-            yield from args_nb_assets_generator(model.unfreeze())
-        case _:
-            return
+    model_chain: (
+        ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
+        | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
+    )
+    nb_assets_list: list[int] = []
+    if isinstance(model, FrozenNonHomogeneousPoissonProcess):
+        model_chain = model.unfreeze().baseline
+    else:
+        model_chain = model
+    if isinstance(model_chain, LifetimeDistribution):
+        return 1
 
+    for arg in model.frozen_args:
+        if isinstance(model_chain, FrozenLifetimeRegression):
+            # arg is covar
+            nb_assets_list.append(np.atleast_2d(np.asarray(arg)).shape[0])
+            model_chain = model_chain.unfreeze().baseline
+        elif isinstance(model_chain, LifetimeRegression):
+            # arg is covar
+            nb_assets_list.append(np.atleast_2d(np.asarray(arg)).shape[0])
+            model_chain = model_chain.baseline
+        elif isinstance(model_chain, FrozenLeftTruncatedModel):
+            # arg is a0
+            nb_assets_list.append(np.asarray(arg).size)
+            model_chain = model_chain.baseline
+        elif isinstance(model_chain, FrozenAgeReplacementModel):
+            # arg is ar
+            nb_assets_list.append(np.asarray(arg).size)
+            model_chain = model_chain.baseline
 
-def args_nb_assets(
-    model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel,
-) -> int:
-    non_one_nb_assets = set(tuple(filterfalse(lambda x: x == 1, tuple((args_nb_assets_generator(model))))))
+    non_one_nb_assets = set(filterfalse(lambda x: x == 1, nb_assets_list))
     if len(non_one_nb_assets) > 1:
         raise ValueError(f"Invalid number of assets given in arguments. Got several nb assets : {non_one_nb_assets}")
-    if len(non_one_nb_assets) == 0:
-        return 1
     return list(non_one_nb_assets)[0]
 
 

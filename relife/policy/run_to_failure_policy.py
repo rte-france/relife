@@ -6,9 +6,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.economic import ExponentialDiscounting, RunToFailureReward
+from relife.stochastic_process import RenewalRewardProcess
 
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
-from relife.stochastic_process import RenewalRewardProcess
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
