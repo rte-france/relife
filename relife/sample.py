@@ -238,7 +238,7 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
     @override
     def __next__(self) -> NDArray[np.void]:
         struct_array = super().__next__()
-        # may be type hint error in rfn.append_fields
+        # may be type hint error in rfn.append_fields overload
         return rfn.append_fields(
             struct_array,
             "reward",

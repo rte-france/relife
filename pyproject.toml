@@ -52,7 +52,6 @@ plugins = "numpy.typing.mypy_plugin" # needed to type hing nympy
 [[tool.mypy.overrides]]
 module = [
     "relife/data/*",
-    "relife/lifetime_model/*",
     "relife/likelihood/*",
     "relife/policy/*",
     "relife/stochastic_process/*",

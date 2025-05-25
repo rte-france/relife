@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional, Union, overload
 
 import numpy as np
-from numpy.typing import DTypeLike, NDArray
+from numpy.typing import NDArray
 from typing_extensions import override
 
 from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
@@ -152,20 +152,83 @@ class AgeReplacementModel(
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[False],
+        return_entry: Literal[False],
+        seed: Optional[int] = None,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[True],
+        return_entry: Literal[False],
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[False],
+        return_entry: Literal[True],
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[True],
+        return_entry: Literal[True],
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: bool,
+        return_entry: bool,
+        seed: Optional[int] = None,
+    ) -> Union[
+        np.float64 | NDArray[np.float64],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
+        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
+    ]: ...
+
     @override
     def rvs(
         self,
+        size: int | tuple[int] | tuple[int, int],
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-        size: Optional[int | tuple[int] | tuple[int, int]] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> NDArray[DTypeLike]:
+    ) -> Union[
+        np.float64 | NDArray[np.float64],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
+        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
+    ]:
         ar = reshape_ar_or_a0("ar", ar)
-        baseline_rvs = self.baseline.rvs(
-            *args, size=size, return_event=return_event, return_entry=return_entry, seed=seed
-        )
+        baseline_rvs = self.baseline.rvs(size, *args, return_event=return_event, return_entry=return_entry, seed=seed)
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
         time = np.minimum(time, ar)  # it may change time shape by broadcasting
         if not return_event and not return_entry:
@@ -187,7 +250,7 @@ class AgeReplacementModel(
     @override
     def ls_integrate(
         self,
-        func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+        func: Callable[[float | np.float64 | NDArray[np.float64]], float | np.float64 | NDArray[np.float64]],
         a: float | NDArray[np.float64],
         b: float | NDArray[np.float64],
         ar: float | NDArray[np.float64],
@@ -307,20 +370,83 @@ class LeftTruncatedModel(
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[False],
+        return_entry: Literal[False],
+        seed: Optional[int] = None,
+    ) -> np.float64 | NDArray[np.float64]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[True],
+        return_entry: Literal[False],
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[False],
+        return_entry: Literal[True],
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: Literal[True],
+        return_entry: Literal[True],
+        seed: Optional[int] = None,
+    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]: ...
+
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        return_event: bool,
+        return_entry: bool,
+        seed: Optional[int] = None,
+    ) -> Union[
+        np.float64 | NDArray[np.float64],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
+        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
+    ]: ...
+
     @override
     def rvs(
         self,
+        size: int | tuple[int] | tuple[int, int],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-        size: Optional[int | tuple[int] | tuple[int, int]] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> NDArray[DTypeLike]:
+    ) -> Union[
+        np.float64 | NDArray[np.float64],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
+        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
+        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
+    ]:
         a0 = reshape_ar_or_a0("a0", a0)
-        super_rvs = super().rvs(
-            *(a0, *args), size=size, return_event=return_event, return_entry=return_entry, seed=seed
-        )
+        super_rvs = super().rvs(size, *(a0, *args), return_event=return_event, return_entry=return_entry, seed=seed)
         if not return_event and return_entry:
             time, entry = super_rvs
             entry = np.broadcast_to(a0, entry.shape).copy()

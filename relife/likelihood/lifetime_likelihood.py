@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Generic, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,8 +14,10 @@ from ._base import Likelihood
 if TYPE_CHECKING:
     from relife.lifetime_model import FittableParametricLifetimeModel
 
+Args = TypeVarTuple("Args")
 
-class LikelihoodFromLifetimes(Likelihood):
+
+class LikelihoodFromLifetimes(Likelihood, Generic[*Args]):
     """
     Generic likelihood object for parametric_model lifetime model
 
@@ -29,8 +31,8 @@ class LikelihoodFromLifetimes(Likelihood):
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
-        lifetime_data: LifetimeData,
+        model: FittableParametricLifetimeModel[*Args],
+        lifetime_data: LifetimeData[*Args],
     ):
         self.model = copy.deepcopy(model)
         self.data = lifetime_data

@@ -50,7 +50,7 @@ def check_and_broadcast_bounds(
 
 
 def legendre_quadrature(
-    func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+    func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
     a: float | NDArray[np.float64],
     b: float | NDArray[np.float64],
     deg: int = 10,
@@ -90,7 +90,7 @@ def legendre_quadrature(
 
 
 def laguerre_quadrature(
-    func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+    func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:
@@ -123,7 +123,7 @@ def laguerre_quadrature(
 
 
 def unweighted_laguerre_quadrature(
-    func: Callable[[float | NDArray[np.float64]], NDArray[np.float64]],
+    func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:

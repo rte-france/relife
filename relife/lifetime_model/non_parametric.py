@@ -1,7 +1,7 @@
 from typing import Literal, Optional, Self, overload
 
 import numpy as np
-from numpy.typing import DTypeLike, NDArray
+from numpy.typing import NDArray
 
 from relife._plot import PlotECDF, PlotKaplanMeier, PlotNelsonAalen, PlotTurnbull
 from relife.data import LifetimeData
@@ -15,8 +15,8 @@ class ECDF(NonParametricLifetimeModel):
     """
 
     def __init__(self):
-        self._sf: Optional[NDArray[DTypeLike]] = None
-        self._cdf: Optional[NDArray[DTypeLike]] = None
+        self._sf: Optional[NDArray[np.void]] = None
+        self._cdf: Optional[NDArray[np.void]] = None
 
     def fit(
         self,
@@ -147,12 +147,11 @@ class KaplanMeier(NonParametricLifetimeModel):
     """
 
     def __init__(self):
-        self._sf: Optional[DTypeLike] = None
+        self._sf: Optional[np.void] = None
 
     def fit(
         self,
         time: NDArray[np.float64],
-        /,
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
@@ -299,12 +298,11 @@ class NelsonAalen(NonParametricLifetimeModel):
     """
 
     def __init__(self):
-        self._chf: Optional[NDArray[DTypeLike]] = None
+        self._chf: Optional[NDArray[np.void]] = None
 
     def fit(
         self,
         time: NDArray[np.float64],
-        /,
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
@@ -415,12 +413,11 @@ class Turnbull(NonParametricLifetimeModel):
         super().__init__()
         self.tol = tol
         self.lowmem = lowmem
-        self._sf: Optional[NDArray[DTypeLike]] = None
+        self._sf: Optional[NDArray[np.void]] = None
 
     def fit(
         self,
-        time: float | NDArray[np.float64],
-        /,
+        time: NDArray[np.float64],
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,

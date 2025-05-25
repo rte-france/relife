@@ -321,7 +321,7 @@ class FittingResults:
     nb_samples: InitVar[int]  #: Number of observations (samples).
 
     opt: InitVar[OptimizeResult] = field(repr=False)  #: Optimization result (see scipy.optimize.OptimizeResult doc).
-    var: Optional[NDArray[np.float64]] = field(
+    var: Optional[NDArray[np.floating[Any]]] = field(
         repr=False, default=None
     )  #: Covariance matrix (computed as the inverse of the Hessian matrix).
     params: NDArray[np.float64] = field(init=False)  #: Optimal parameters values
@@ -401,6 +401,36 @@ class FittingResults:
         return "\n".join(lines)
 
 
+def model_args_names(
+    model: Union[
+        LifetimeDistribution, LifetimeRegression, LeftTruncatedModel, AgeReplacementModel, NonHomogeneousPoissonProcess
+    ],
+) -> tuple[str, ...]:
+    from relife.lifetime_model import (
+        AgeReplacementModel,
+        LeftTruncatedModel,
+        LifetimeRegression,
+    )
+    from relife.stochastic_process import (
+        NonHomogeneousPoissonProcess,
+    )
+
+    args_names = ()
+    if isinstance(model, LifetimeRegression):
+        args_names = args_names + ("covar",) + model_args_names(model.baseline)
+    elif isinstance(model, AgeReplacementModel):
+        args_names = args_names + ("ar",) + model_args_names(model.baseline)
+    elif isinstance(model, LeftTruncatedModel):
+        args_names = args_names + ("a0",) + model_args_names(model.baseline)
+    elif isinstance(model, NonHomogeneousPoissonProcess):
+        args_names = model_args_names(model.baseline)
+    elif isinstance(model, LifetimeDistribution):
+        return args_names
+    else:
+        raise ValueError
+    return args_names
+
+
 @overload
 def freeze(model: LifetimeRegression, **kwargs: float | NDArray[np.float64]) -> FrozenLifetimeRegression: ...
 
@@ -438,9 +468,7 @@ def freeze(
         NonHomogeneousPoissonProcess,
     )
 
-    if not hasattr(model, "args_names"):
-        raise ValueError
-    args_names = model.args_names
+    args_names = model_args_names(model)
     set_args_names = set(args_names)
     set_keys = set(kwargs.keys())
     if set_args_names != set_keys:
