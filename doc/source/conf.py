@@ -64,8 +64,9 @@ else:
     mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 #########################################################################################
 
-templates_path = ["_templates"]
+templates_path = ["_templates"] #toto
 exclude_patterns = [
+    "_*",
     "user_guide/_*",
     "user_guide/.ipynb_checkpoints/*",
     "learn/_*",
