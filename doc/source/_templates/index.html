@@ -1,17 +1,15 @@
 {% extends "layout.html" %}
 {% set title = 'relife: asset management in Python' %}
 
-
 {% block docs_navbar %}
-{# Banner with Grid section #}
 <div class="container-fluid px-0 vw-100">
     <div style="background: linear-gradient(to right, rgb(175, 215, 237), rgba(237, 247, 250, 0.5));">
         <div class="container py-4">
-            {# Top row with logos and description #}
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="d-flex align-items-center">
-                    <div class="me-4">
-                        <img src="{{ pathto('_static/relife_blue.gif', 1) }}" alt="ReLife Logo" style="max-width: 30vw;">
+            {# Mobile version #}
+            <div class="d-block d-md-none">
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="me-3">
+                        <img src="{{ pathto('_static/relife_blue.gif', 1) }}" alt="ReLife Logo" style="max-width: 40vw;">
                     </div>
                     <div class="d-flex flex-column">
                         <a href="https://pypi.org/project/relife/" class="btn shadow mb-2"
@@ -21,19 +19,36 @@
                         <span class="text-muted">2.0.0 release</span>
                     </div>
                 </div>
+            </div>
 
-                {# Center description #}
-                <div class="mx-4" style="flex: 1;">
-                    <p class="mb-2 fs-6">ReLife is an open source Python library for asset management based on reliability theory and lifetime data analysis. It gathers functionnalities from:</p>
-                    <ul class="fs-6">
-                        <li>Survival analysis</li>
-                        <li>Reliability theory</li>
-                        <li>Renewal theory</li>
-                    </ul>
-                </div>
+            {# Desktop version #}
+            <div class="d-none d-md-block">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="me-4">
+                            <img src="{{ pathto('_static/relife_blue.gif', 1) }}" alt="ReLife Logo" style="max-width: 30vw;">
+                        </div>
+                        <div class="d-flex flex-column">
+                            <a href="https://pypi.org/project/relife/" class="btn shadow mb-2"
+                               style="background-color: rgb(87, 214, 255); color: white;">
+                                Download
+                            </a>
+                            <span class="text-muted">2.0.0 release</span>
+                        </div>
+                    </div>
 
-                <div>
-                    <img src="{{ pathto('_static/rte.png', 1) }}" alt="RTE Logo" style="max-width: 30vw;">
+                    <div class="mx-4" style="flex: 1;">
+                        <p class="mb-2 fs-6">ReLife is an open source Python library for asset management based on reliability theory and lifetime data analysis. It gathers functionnalities from:</p>
+                        <ul class="fs-6">
+                            <li>Survival analysis</li>
+                            <li>Reliability theory</li>
+                            <li>Renewal theory</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <img src="{{ pathto('_static/rte.png', 1) }}" alt="RTE Logo" style="max-width: 30vw;">
+                    </div>
                 </div>
             </div>
         </div>
