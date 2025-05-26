@@ -1,0 +1,6 @@
+﻿relife.lifetime\_model.Gompertz
+===============================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: Gompertz

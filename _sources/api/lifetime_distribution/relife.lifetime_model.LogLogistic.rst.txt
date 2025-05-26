@@ -1,0 +1,6 @@
+﻿relife.lifetime\_model.LogLogistic
+==================================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: LogLogistic

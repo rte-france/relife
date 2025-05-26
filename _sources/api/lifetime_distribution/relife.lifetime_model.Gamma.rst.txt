@@ -1,0 +1,6 @@
+﻿relife.lifetime\_model.Gamma
+============================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: Gamma

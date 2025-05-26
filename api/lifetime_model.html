@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Get started &#8212; ReLife</title>
+    <title>Lifetime models &#8212; ReLife</title>
   
   
   
@@ -50,12 +50,12 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'get_started/index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/lifetime_model';</script>
     <script src="../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="../index.html" />
+    <link rel="next" title="relife.lifetime_model.Exponential" href="lifetime_distribution/relife.lifetime_model.Exponential.html" />
+    <link rel="prev" title="API" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -143,15 +143,15 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get_started/index.html">
     Get started
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
     API
   </a>
 </li>
@@ -257,15 +257,15 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get_started/index.html">
     Get started
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
     API
   </a>
 </li>
@@ -325,9 +325,17 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="get_started_example.html">First example</a></li>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Lifetime models</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Exponential.html">relife.lifetime_model.Exponential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Weibull.html">relife.lifetime_model.Weibull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gompertz.html">relife.lifetime_model.Gompertz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gamma.html">relife.lifetime_model.Gamma</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.LogLogistic.html">relife.lifetime_model.LogLogistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lifetime_regression/relife.lifetime_model.ProportionalHazard.html">relife.lifetime_model.ProportionalHazard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html">relife.lifetime_model.AcceleratedFailureTime</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -368,7 +376,10 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Get started</span></li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Lifetime models</span></li>
   </ul>
 </nav>
 </div>
@@ -385,26 +396,43 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="get-started">
-<h1>Get started<a class="headerlink" href="#get-started" title="Link to this heading">#</a></h1>
-<p>In this section you’ll find information on how to install ReLife and a first detailed example of study.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#pip-recommended">Pip (recommended)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#conda">Conda</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#for-linux-users">For Linux users</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#for-windows-users">For windows users</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#for-macos-users">For macOS users</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="get_started_example.html">First example</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="get_started_example.html#Survival-analysis">Survival analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_started_example.html#Optimal-age-replacement">Optimal age replacement</a></li>
-<li class="toctree-l2"><a class="reference internal" href="get_started_example.html#Budget-and-operations-planning">Budget and operations planning</a></li>
-</ul>
-</li>
-</ul>
+  <section id="lifetime-models">
+<h1>Lifetime models<a class="headerlink" href="#lifetime-models" title="Link to this heading">#</a></h1>
+<p>Lifetime models are objects whose exposed interface can answer basic probility functions of the survival analysis. In
+object-oriented programming, one must not see them as a group of probability functions solely : it also encapsulates
+data like parameters, other nested models, etc.</p>
+<p class="rubric">Lifetime distributions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Exponential.html#relife.lifetime_model.Exponential" title="relife.lifetime_model.Exponential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetime_model.Exponential</span></code></a></p></td>
+<td><p>Exponential lifetime distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Weibull.html#relife.lifetime_model.Weibull" title="relife.lifetime_model.Weibull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetime_model.Weibull</span></code></a></p></td>
+<td><p>Weibull lifetime distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gompertz.html#relife.lifetime_model.Gompertz" title="relife.lifetime_model.Gompertz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetime_model.Gompertz</span></code></a></p></td>
+<td><p>Gompertz lifetime distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gamma.html#relife.lifetime_model.Gamma" title="relife.lifetime_model.Gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetime_model.Gamma</span></code></a></p></td>
+<td><p>Gamma lifetime distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.LogLogistic.html#relife.lifetime_model.LogLogistic" title="relife.lifetime_model.LogLogistic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetime_model.LogLogistic</span></code></a></p></td>
+<td><p>Log-logistic probability distribution.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Lifetime regression</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard" title="relife.lifetime_model.ProportionalHazard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetime_model.ProportionalHazard</span></code></a></p></td>
+<td><p>Proportional Hazard regression core.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime" title="relife.lifetime_model.AcceleratedFailureTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetime_model.AcceleratedFailureTime</span></code></a></p></td>
+<td><p>Accelerated failure time regression.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
 
@@ -427,7 +455,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/get_started/index.rst.txt"
+      <li><a href="../_sources/api/lifetime_model.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

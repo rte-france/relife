@@ -1,0 +1,6 @@
+﻿relife.lifetime\_model.Weibull
+==============================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: Weibull

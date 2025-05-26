@@ -1,0 +1,6 @@
+﻿relife.lifetime\_model.ProportionalHazard
+=========================================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: ProportionalHazard

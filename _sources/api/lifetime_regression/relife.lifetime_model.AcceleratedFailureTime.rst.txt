@@ -1,0 +1,6 @@
+﻿relife.lifetime\_model.AcceleratedFailureTime
+=============================================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: AcceleratedFailureTime
