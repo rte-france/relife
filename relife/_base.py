@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import InitVar, asdict, dataclass, field
-from itertools import chain, filterfalse
+from itertools import chain
 from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, Union, overload
 
 import numpy as np
@@ -344,7 +344,7 @@ class FittingResults:
         self.se = None
         if self.var is not None:
             self.se = np.sqrt(np.diag(self.var))
-            self.IC = self.params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se / np.sqrt(
+            self.IC = self.params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se.reshape(-1, 1) / np.sqrt(
                 nb_samples
             )  # (p, 2)
 
@@ -407,6 +407,7 @@ def model_args_names(
     ],
 ) -> tuple[str, ...]:
     from relife.lifetime_model import (
+        LifetimeDistribution,
         AgeReplacementModel,
         LeftTruncatedModel,
         LifetimeRegression,
@@ -501,7 +502,6 @@ def freeze(
 
 def get_args_nb_assets(
     model: Union[
-        LifetimeDistribution,
         FrozenLifetimeRegression,
         FrozenLeftTruncatedModel,
         FrozenAgeReplacementModel,
@@ -510,47 +510,66 @@ def get_args_nb_assets(
 ) -> int:
 
     from relife.lifetime_model import (
+        FrozenLifetimeRegression,
         FrozenAgeReplacementModel,
         FrozenLeftTruncatedModel,
-        FrozenLifetimeRegression,
-        LifetimeDistribution,
+        LifetimeRegression,
+        AgeReplacementModel,
+        LeftTruncatedModel,
     )
     from relife.stochastic_process import FrozenNonHomogeneousPoissonProcess
 
-    model_chain: (
+    local_model: (
         ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
         | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
     )
-    nb_assets_list: list[int] = []
+    arg_nb_assets: int = 1
+    arg_name : Optional[str] = None
     if isinstance(model, FrozenNonHomogeneousPoissonProcess):
-        model_chain = model.unfreeze().baseline
+        local_model = model.unfreeze().baseline
     else:
-        model_chain = model
-    if isinstance(model_chain, LifetimeDistribution):
-        return 1
+        local_model = model
 
+    _arg_nb_assets : int = 1
     for arg in model.frozen_args:
-        if isinstance(model_chain, FrozenLifetimeRegression):
+        if isinstance(local_model, FrozenLifetimeRegression):
             # arg is covar
-            nb_assets_list.append(np.atleast_2d(np.asarray(arg)).shape[0])
-            model_chain = model_chain.unfreeze().baseline
-        elif isinstance(model_chain, LifetimeRegression):
+            _arg_nb_assets = np.atleast_2d(np.asarray(arg)).shape[0]
+            arg_name = "covar"
+            local_model = local_model.unfreeze().baseline
+        elif isinstance(local_model, LifetimeRegression):
             # arg is covar
-            nb_assets_list.append(np.atleast_2d(np.asarray(arg)).shape[0])
-            model_chain = model_chain.baseline
-        elif isinstance(model_chain, FrozenLeftTruncatedModel):
+            _arg_nb_assets = np.atleast_2d(np.asarray(arg)).shape[0]
+            arg_name = "covar"
+            local_model = local_model.baseline
+        elif isinstance(local_model, FrozenLeftTruncatedModel):
             # arg is a0
-            nb_assets_list.append(np.asarray(arg).size)
-            model_chain = model_chain.baseline
-        elif isinstance(model_chain, FrozenAgeReplacementModel):
+            _arg_nb_assets = np.asarray(arg).size
+            arg_name = "a0"
+            local_model = local_model.unfreeze().baseline
+        elif isinstance(local_model, LeftTruncatedModel):
+            # arg is a0
+            _arg_nb_assets = np.asarray(arg).size
+            arg_name = "a0"
+            local_model = local_model.baseline
+        elif isinstance(local_model, FrozenAgeReplacementModel):
             # arg is ar
-            nb_assets_list.append(np.asarray(arg).size)
-            model_chain = model_chain.baseline
-
-    non_one_nb_assets = set(filterfalse(lambda x: x == 1, nb_assets_list))
-    if len(non_one_nb_assets) > 1:
-        raise ValueError(f"Invalid number of assets given in arguments. Got several nb assets : {non_one_nb_assets}")
-    return list(non_one_nb_assets)[0]
+            _arg_nb_assets = np.asarray(arg).size
+            arg_name = "ar"
+            local_model = local_model.unfreeze().baseline
+        elif isinstance(local_model, AgeReplacementModel):
+            # arg is ar
+            _arg_nb_assets = np.asarray(arg).size
+            arg_name = "ar"
+            local_model = local_model.baseline
+        if arg_name is not None:
+            # test if nb_assets changed and would not be broadcastable
+            if _arg_nb_assets != 1 and arg_nb_assets != 1 and _arg_nb_assets != arg_nb_assets:
+                raise ValueError(
+                    f"Invalid number of assets given in arguments. Got several nb assets. {arg_name} has {_arg_nb_assets} but already got {arg_nb_assets}"
+                )
+            arg_nb_assets = _arg_nb_assets
+    return arg_nb_assets
 
 
 # see sklearn/base.py : return unfitted ParametricModel

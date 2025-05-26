@@ -8,18 +8,18 @@ class TestFrozenRegression:
 
     def test_rvs(self, regression, rvs_size, covar, expected_out_shape):
         frozen_regression = freeze(regression, covar=covar)
-        assert frozen_regression.rvs(size=rvs_size).shape == expected_out_shape(covar=covar, size=rvs_size)
+        assert frozen_regression.rvs(rvs_size).shape == expected_out_shape(covar=covar, size=rvs_size)
         assert all(
             arr.shape == expected_out_shape(covar=covar, size=rvs_size)
-            for arr in frozen_regression.rvs(size=rvs_size, return_event=True)
+            for arr in frozen_regression.rvs(rvs_size, return_event=True)
         )
         assert all(
             arr.shape == expected_out_shape(covar=covar, size=rvs_size)
-            for arr in frozen_regression.rvs(size=rvs_size, return_entry=True)
+            for arr in frozen_regression.rvs(rvs_size, return_entry=True)
         )
         assert all(
             arr.shape == expected_out_shape(covar=covar, size=rvs_size)
-            for arr in frozen_regression.rvs(size=rvs_size, return_event=True, return_entry=True)
+            for arr in frozen_regression.rvs(rvs_size, return_event=True, return_entry=True)
         )
 
     def test_sf(self, regression, time, covar, expected_out_shape):
@@ -97,18 +97,18 @@ class TestFrozenAgeReplacementDistribution:
     def test_rvs(self, distribution, rvs_size, ar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(distribution), ar=ar)
 
-        assert frozen_model.rvs(size=rvs_size).shape == expected_out_shape(ar=ar, size=rvs_size)
+        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(ar=ar, size=rvs_size)
         assert all(
             arr.shape == expected_out_shape(ar=ar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True)
         )
         assert all(
             arr.shape == expected_out_shape(ar=ar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_entry=True)
         )
         assert all(
             arr.shape == expected_out_shape(ar=ar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True, return_entry=True)
         )
 
     def test_sf(self, distribution, time, ar, expected_out_shape):
@@ -194,18 +194,18 @@ class TestFrozenAgeReplacementRegression:
 
     def test_rvs(self, regression, rvs_size, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.rvs(size=rvs_size).shape == expected_out_shape(ar=ar,  covar=covar, size=rvs_size)
+        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(ar=ar,  covar=covar, size=rvs_size)
         assert all(
             arr.shape == expected_out_shape(ar=ar, covar=covar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True)
         )
         assert all(
             arr.shape == expected_out_shape(ar=ar, covar=covar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_entry=True)
         )
         assert all(
             arr.shape == expected_out_shape(ar=ar, covar=covar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True, return_entry=True)
         )
 
     def test_sf(self, regression, time, ar, covar, expected_out_shape):
@@ -307,18 +307,18 @@ class TestFrozenLeftTruncatedDistribution:
 
     def test_rvs(self, distribution, rvs_size, a0, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(distribution), a0=a0)
-        assert frozen_model.rvs(size=rvs_size).shape == expected_out_shape(a0=a0, size=rvs_size)
+        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(a0=a0, size=rvs_size)
         assert all(
             arr.shape == expected_out_shape(a0=a0, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True)
         )
         assert all(
             arr.shape == expected_out_shape(a0=a0, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_entry=True)
         )
         assert all(
             arr.shape == expected_out_shape(a0=a0, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True, return_entry=True)
         )
 
     def test_sf(self, distribution, time, a0, expected_out_shape):
@@ -405,18 +405,18 @@ class TestLeftTruncatedRegression:
 
     def test_rvs(self, regression, rvs_size, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.rvs(size=rvs_size).shape == expected_out_shape(a0=a0,  covar=covar, size=rvs_size)
+        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(a0=a0,  covar=covar, size=rvs_size)
         assert all(
             arr.shape == expected_out_shape(a0=a0, covar=covar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True)
         )
         assert all(
             arr.shape == expected_out_shape(a0=a0, covar=covar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_entry=True)
         )
         assert all(
             arr.shape == expected_out_shape(a0=a0, covar=covar, size=rvs_size)
-            for arr in frozen_model.rvs(size=rvs_size, return_event=True, return_entry=True)
+            for arr in frozen_model.rvs(rvs_size, return_event=True, return_entry=True)
         )
 
     def test_sf(self, regression, time, a0, covar, expected_out_shape):

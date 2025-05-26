@@ -42,18 +42,18 @@ def test_args_names(regression):
 
 
 def test_rvs(regression, rvs_size, covar, expected_out_shape):
-    assert regression.rvs(covar, size=rvs_size).shape == expected_out_shape(covar=covar, size=rvs_size)
+    assert regression.rvs(rvs_size, covar).shape == expected_out_shape(covar=covar, size=rvs_size)
     assert all(
         arr.shape == expected_out_shape(covar=covar, size=rvs_size)
-        for arr in regression.rvs(covar, size=rvs_size, return_event=True)
+        for arr in regression.rvs(rvs_size, covar, return_event=True)
     )
     assert all(
         arr.shape == expected_out_shape(covar=covar, size=rvs_size)
-        for arr in regression.rvs(covar, size=rvs_size, return_entry=True)
+        for arr in regression.rvs(rvs_size, covar, return_entry=True)
     )
     assert all(
         arr.shape == expected_out_shape(covar=covar, size=rvs_size)
-        for arr in regression.rvs(covar, size=rvs_size, return_event=True, return_entry=True)
+        for arr in regression.rvs(rvs_size, covar, return_event=True, return_entry=True)
     )
 
 

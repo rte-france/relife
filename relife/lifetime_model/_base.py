@@ -207,8 +207,8 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         self,
         size: int | tuple[int] | tuple[int, int],
         *args: *Args,
-        return_event: bool,
-        return_entry: bool,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> Union[
         np.float64 | NDArray[np.float64],
@@ -720,8 +720,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     def rvs(
         self,
         size: int | tuple[int] | tuple[int, int],
-        return_event: bool,
-        return_entry: bool,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> Union[
         np.float64 | NDArray[np.float64],
@@ -1214,8 +1214,8 @@ class LifetimeRegression(
         size: int | tuple[int] | tuple[int, int],
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-        return_event: bool,
-        return_entry: bool,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> Union[
         np.float64 | NDArray[np.float64],
@@ -1399,8 +1399,8 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
     def rvs(
         self,
         size: int | tuple[int] | tuple[int, int],
-        return_event: bool,
-        return_entry: bool,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> Union[
         np.float64 | NDArray[np.float64],
@@ -1411,7 +1411,7 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
 
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int] = 1,
+        size: int | tuple[int] | tuple[int, int],
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,

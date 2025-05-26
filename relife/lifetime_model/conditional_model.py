@@ -202,8 +202,8 @@ class AgeReplacementModel(
         size: int | tuple[int] | tuple[int, int],
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-        return_event: bool,
-        return_entry: bool,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> Union[
         np.float64 | NDArray[np.float64],
@@ -420,8 +420,8 @@ class LeftTruncatedModel(
         size: int | tuple[int] | tuple[int, int],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-        return_event: bool,
-        return_entry: bool,
+        return_event: bool = False,
+        return_entry: bool = False,
         seed: Optional[int] = None,
     ) -> Union[
         np.float64 | NDArray[np.float64],
