@@ -47,6 +47,23 @@
     <div class="bd-article-container">
         <article class="bd-article">
 
+            {# Search bar section #}
+            <div class="container mt-4 mb-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <form class="bd-search" action="{{ pathto('search') }}" method="get">
+                            <div class="input-group">
+                                <input type="search" class="form-control" name="q" placeholder="Search the documentation..." aria-label="Search">
+                                <button class="btn" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
             {# Documentation sections table #}
             <div class="container mt-4">
                 <h5 class="mb-4">Content of this site</h5>
