@@ -64,7 +64,7 @@ else:
     mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 #########################################################################################
 
-templates_path = ["_templates", "_templates/autosummary"]
+templates_path = ["_templates"]
 exclude_patterns = [
     "user_guide/_*",
     "user_guide/.ipynb_checkpoints/*",
@@ -109,4 +109,9 @@ html_theme_options = {
             "icon": "fa-custom fa-pypi",
         },
     ],
+    "navbar_start": ["navbar-logo", "version"],
 }
+
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+html_additional_pages = {"index": "index.html"}

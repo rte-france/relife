@@ -1,0 +1,130 @@
+{% extends "layout.html" %}
+{% set title = 'relife: asset management in Python' %}
+
+
+{% block docs_navbar %}
+{{ super() }}
+{# Banner with Grid section #}
+<div class="container-fluid px-0 vw-100">
+    <div style="background: linear-gradient(to right, rgb(175, 215, 237), rgba(237, 247, 250, 0.5));">
+        <div class="container py-4">
+            {# Top row with logos and description #}
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="me-4">
+                        <img src="{{ pathto('_static/relife_blue.gif', 1) }}" alt="ReLife Logo" style="max-width: 30vw;">
+                    </div>
+                    <div class="d-flex flex-column">
+                        <a href="https://pypi.org/project/relife/" class="btn shadow mb-2"
+                           style="background-color: rgb(87, 214, 255); color: white;">
+                            Download
+                        </a>
+                        <span class="text-muted">2.0.0 release</span>
+                    </div>
+                </div>
+
+                {# Center description #}
+                <div class="mx-4" style="flex: 1;">
+                    <p class="mb-2 fs-6">ReLife is an open source Python library for asset management based on reliability theory and lifetime data analysis. It gathers functionnalities from:</p>
+                    <ul class="fs-6">
+                        <li>Survival analysis</li>
+                        <li>Reliability theory</li>
+                        <li>Renewal theory</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <img src="{{ pathto('_static/rte.png', 1) }}" alt="RTE Logo" style="max-width: 30vw;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock docs_navbar %}
+
+
+{% block docs_main %}
+<div class="bd-content">
+    <div class="bd-article-container">
+        <article class="bd-article">
+
+            {# Grid section #}
+            <div class="sd-container-fluid sd-sphinx-override sd-mb-4 mt-5">
+                <h5 class="mb-4">Why you should use ReLife ?</h5>
+                <div class="sd-row row-eq-height sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-1 sd-row-cols-md-3 sd-g-2">
+                    <div class="sd-col d-flex">
+                        <div class="sd-card bg-white w-100">
+                            <div class="sd-card-body p-2" style="display: block;">
+                                <h6 class="sd-card-title" style="margin-top: 0;">Asset management</h6>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife was created at RTE for asset management based on reliability and renewal theory.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sd-col d-flex">
+                        <div class="sd-card bg-white w-100">
+                            <div class="sd-card-body p-2" style="display: block;">
+                                <h6 class="sd-card-title" style="margin-top: 0;">Open science</h6>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife is open source and tries to gather both statistical knowledge and pratical examples to conduct appropriate risk analysis for asset management.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sd-col d-flex">
+                        <div class="sd-card bg-white w-100">
+                            <div class="sd-card-body p-2" style="display: block;">
+                                <h6 class="sd-card-title" style="margin-top: 0;">Easy to use</h6>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife is coded in Python and was designed to be accessible for user from any programming background or experience level.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Supporters section #}
+            <div class="container mb-5">
+                <h6 class="mb-4">They already use ReLife</h6>
+                <hr class="container my-5" style="border-top: 2px solid rgba(0, 0, 0, 0.3);">
+                <div class="row row-cols-2 row-cols-md-4 g-4 justify-content-center align-items-center">
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/rte.png', 1) }}" alt="RTE"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/artelys.png', 1) }}" alt="Artelys"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/company3.png', 1) }}" alt="Company 3"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/company4.png', 1) }}" alt="Company 4"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                </div>
+                <hr class="container my-5" style="border-top: 2px solid rgba(0, 0, 0, 0.3);">
+            </div>
+
+            {# What's new section #}
+            <div class="container mt-5 mb-5">
+                <h6 class="mb-4">Current release news</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">New feature 1</li>
+                    <li class="mb-2">New feature 2</li>
+                    <li class="mb-2">New feature 3</li>
+                </ul>
+            </div>
+
+            {# Roadmap section #}
+            <div class="container mb-5">
+                <h6 class="mb-4">🚀 Things we've planned to do</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">Planned feature 1</li>
+                    <li class="mb-2">Planned feature 2</li>
+                    <li class="mb-2">Planned feature 3</li>
+                </ul>
+            </div>
+
+        </article>
+    </div>
+</div>
+{% endblock docs_main %}
