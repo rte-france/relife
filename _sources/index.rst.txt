@@ -62,12 +62,6 @@
     :maxdepth: 2
     :hidden:
 
-    api/index
-
-.. toctree::
-    :maxdepth: 2
-    :hidden:
-
     user_guide/index
 
 .. toctree::
