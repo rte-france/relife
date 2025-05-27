@@ -9,11 +9,6 @@
 
 import os
 
-# import sys
-# from pathlib import Path
-#
-# sys.path.insert(0, str(Path("..", "..").resolve()))
-
 project = "relife_doc"
 copyright = "2025, RTE"
 author = "RTE-SAGA"

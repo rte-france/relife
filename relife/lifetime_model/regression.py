@@ -60,7 +60,7 @@ def broadcast_time_covar_shapes(
 
 class ProportionalHazard(LifetimeRegression):
     r"""
-    Proportional Hazard regression core.
+    Proportional Hazard regression.
 
     The cumulative hazard function :math:`H` is linked to the multiplier
     function :math:`g` by the relation:
@@ -77,23 +77,18 @@ class ProportionalHazard(LifetimeRegression):
 
     Parameters
     ----------
-    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`
+    baseline : Any lifetime model that can be fitted.
+        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.
         Any parametric_model lifetime model to serve as the baseline.
-    coef : tuple of floats (values can be None), optional
+    coefficients : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
-
 
     Attributes
     ----------
-    params : np.ndarray
-        The model parameters (both baseline parameters and covariate effects parameters).
-    params_names : np.ndarray
-        The model parameters (both baseline parameters and covariate effects parameters).
     baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`
         The regression baseline model.
     covar_effect : :py:class:`~relife.model.regression.CovarEffect`
         The regression covariate effect.
-
 
     References
     ----------
@@ -264,17 +259,13 @@ class AcceleratedFailureTime(LifetimeRegression):
 
     Parameters
     ----------
-    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`
-        Any parametric_model lifetime model to serve as the baseline.
-    coef : tuple of floats (values can be None), optional
+    baseline : Any lifetime model that can be fitted.
+        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.
+    coefficients : tuple of floats (values can be None), optional
         Coefficients values of the covariate effects.
 
     Attributes
     ----------
-    params : np.ndarray
-        The model parameters (both baseline parameters and covariate effects parameters).
-    params_names : np.ndarray
-        The model parameters (both baseline parameters and covariate effects parameters).
     baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`
         The regression baseline model.
     covar_effect : :py:class:`~relife.model.regression.CovarEffect`
@@ -440,18 +431,58 @@ Parameters
 time : float or np.ndarray
     Elapsed time value(s) at which to compute the function.
     If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-covar : np.ndarray
-    Covariate values. The ndarray must be broadcastable with ``time``.
-*args : variable number of np.ndarray
-    Any variables needed to compute the function. Those variables must be
-    broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
+covar : float or np.ndarray
+    Covariates values. float can only be valid if the regression has one coefficients. 
+    Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+*args : float or np.ndarray
+    Additional arguments needed by the model.
 
 Returns
 -------
-np.ndarray
+np.float64 or np.ndarray
     Function values at each given time(s).
 """
 
+JAC_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+time : float or np.ndarray
+    Elapsed time value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+covar : float or np.ndarray
+    Covariates values. float can only be valid if the regression has one coefficients. 
+    Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+asarray : bool, default is False
+
+Returns
+-------
+np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+    The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+    the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+    whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+    tuple when ``asarray`` is False.
+"""
+
+MOMENT_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+covar : float or np.ndarray
+    Covariates values. float can only be valid if the regression has one coefficients. 
+    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64
+    {name} value.
+"""
 
 ICHF_DOCSTRING = """
 Inverse cumulative hazard function.
@@ -461,32 +492,37 @@ Parameters
 cumulative_hazard_rate : float or np.ndarray
     Cumulative hazard rate value(s) at which to compute the function.
     If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-covar : np.ndarray
-    Covariate values. The ndarray must be broadcastable with ``time``.
-*args : variable number of np.ndarray
-    Any variables needed to compute the function.
+covar : float or np.ndarray
+    Covariates values. float can only be valid if the regression has one coefficients. 
+    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+*args : float or np.ndarray
+    Additional arguments needed by the model.
 
 Returns
 -------
-np.ndarray
-    Function values at each given time(s).
+np.float64 or np.ndarray
+    Function values at each given cumulative hazard rate(s).
 """
 
-MOMENT_BASE_DOCSTRING = """
+
+PROBABILITY_BASE_DOCSTRING = """
 {name}.
 
 Parameters
 ----------
-covar : np.ndarray
-    Covariate values. The ndarray must be broadcastable with ``time``.
-*args : variable number of np.ndarray
-    Any variables needed to compute the function. Those variables must be
-    broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
+probability : float or np.ndarray
+    Probability value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+covar : float or np.ndarray
+    Covariates values. float can only be valid if the regression has one coefficients. 
+    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+*args : float or np.ndarray
+    Additional arguments needed by the model.
 
 Returns
 -------
-np.ndarray
-    {name} values.
+np.float64 or np.ndarray
+    Function values at each given probability value(s).
 """
 
 
@@ -495,17 +531,189 @@ for class_obj in (AcceleratedFailureTime, ProportionalHazard):
     class_obj.hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The hazard function")
     class_obj.chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative hazard function")
     class_obj.pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The probability density function")
-    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(name="The mean residual life function")
     class_obj.cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative distribution function")
+    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(name="The mean residual life function")
     class_obj.dhf.__doc__ = TIME_BASE_DOCSTRING.format(name="The derivative of the hazard function")
-    class_obj.jac_hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the hazard function")
-    class_obj.jac_chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the cumulative hazard function")
-    class_obj.jac_sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the survival function")
-    class_obj.jac_pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the probability density function")
-    class_obj.jac_cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the cumulative distribution function")
+    class_obj.jac_hf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the hazard function")
+    class_obj.jac_chf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the cumulative hazard function")
+    class_obj.jac_sf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the survival function")
+    class_obj.jac_pdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the probability density function")
+    class_obj.jac_cdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the cumulative distribution function")
 
+    class_obj.ppf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="The percent point function")
+    class_obj.ppf.__doc__ += f"""
+    Notes
+    -----
+    The ``ppf`` is the inverse of :py:meth:`~{class_obj}.cdf`.
+    """
+    class_obj.isf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="Inverse survival function")
+
+    class_obj.rvs.__doc__ = """
+    Random variable sampling.
+
+    Parameters
+    ----------
+    size : int, (int,) or (int, int)
+        Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+        2d array of samples is generated. 
+    return_event : bool, default is False
+        If True, returns event indicators along with the sample time values.
+    random_entry : bool, default is False
+        If True, returns corresponding entry values of the sample time values.
+    seed : optional int, default is None
+        Random seed used to fix random sampling.
+
+    Returns
+    -------
+    float, ndarray or tuple of float or ndarray
+        The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
+        the time values followed by event values, entry values or both.
+    """
+
+    class_obj.sample_lifetime_data.__doc__ = """
+    Random variable sampling.
+
+    Parameters
+    ----------
+    size : int, (int,) or (int, int)
+        Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+        2d array of samples are generated. 
+    covar : float or np.ndarray
+        Covariates values. float can only be valid if the regression has one coefficients. 
+        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+    *args : float or np.ndarray
+        Additional arguments needed by the model.
+    window : (float, float)
+        The observation window of the generated sample.
+    seed : optional int, default is None
+        Random seed applied to fix random sampling.
+
+    Returns
+    -------
+    LifetimeData
+        A ``LifetimeData`` object that encapsulates the lifetime values
+    """
+
+    class_obj.plot.__doc__ = """
+    Provides access to plotting functionality for this distribution.
+    """
+
+    class_obj.ls_integrate.__doc__ = """
+    Lebesgue-Stieltjes integration.
+
+    Parameters
+    ----------
+    func : callable (in : 1 ndarray , out : 1 ndarray)
+        The callable must have only one ndarray object as argument and one ndarray object as output
+    a : ndarray (maximum number of dimension is 2)
+        Lower bound(s) of integration.
+    b : ndarray (maximum number of dimension is 2)
+        Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+    covar : float or np.ndarray
+        Covariates values. float can only be valid if the regression has one coefficients. 
+        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+    *args : float or np.ndarray
+        Additional arguments needed by the model.
+    deg : int, default 10
+        Degree of the polynomials interpolation
+
+    Returns
+    -------
+    np.ndarray
+        Lebesgue-Stieltjes integral of func from `a` to `b`.
+    """
+
+    class_obj.moment.__doc__ = """
+    n-th order moment
+
+    Parameters
+    ----------
+    n : order of the moment, at least 1.
+
+    Returns
+    -------
+    np.float64
+        n-th order moment.
+    """
     class_obj.mean.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The mean")
     class_obj.var.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The variance")
     class_obj.median.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The median")
 
-    class_obj.ichf.__doc__ = ICHF_DOCSTRING
+    class_obj.ichf.__doc__ = """
+    Inverse cumulative hazard function.
+
+    Parameters
+    ----------
+    cumulative_hazard_rate : float or np.ndarray
+        Cumulative hazard rate value(s) at which to compute the function.
+        If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        
+    covar : float or np.ndarray
+        Covariates values. float can only be valid if the regression has one coefficients. 
+        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+    *args : float or np.ndarray
+        Additional arguments needed by the model.
+
+    Returns
+    -------
+    np.float64 or np.ndarray
+        Function values at each given cumulative hazard rate(s).
+    """
+
+    class_obj.fit.__doc__ = """
+    Estimation of parameters.
+
+    Parameters
+    ----------
+    time : ndarray (1d or 2d)
+        Observed lifetime values.
+    covar : float or np.ndarray
+        Covariates values. float can only be valid if the regression has one coefficients. 
+        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+    *args : float or np.ndarray
+        Additional arguments needed by the model.
+    event : ndarray of boolean values (1d), default is None
+        Boolean indicators tagging lifetime values as right censored or complete.
+    entry : ndarray of float (1d), default is None
+        Left truncations applied to lifetime values.
+    departure : ndarray of float (1d), default is None
+        Right truncations applied to lifetime values.
+    **kwargs
+        Extra arguments used by `scipy.minimize`. Default values are:
+            - `method` : `"L-BFGS-B"`
+            - `contraints` : `()`
+            - `tol` : `None`
+            - `callback` : `None`
+            - `options` : `None`
+            - `bounds` : `self.params_bounds`
+            - `x0` : `self.init_params`
+
+    Returns
+    -------
+    Self
+        The current object with the estimated parameters setted inplace.
+
+    Notes
+    -----
+    Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
+    format that allows to pass other information as left-censored or interval-censored values. In this case,
+    `event` is not needed as 2d-array encodes right-censored values by itself.
+    """
+
+    class_obj.fit_from_lifetime_data.__doc__ = """
+    Estimation of parameters from ```LifetimeData``.
+
+    It is a convenient method for one that would have generated ``LifetimeData`` from another method and wants
+    to fit the model with these data. Internally, it calls ``fit`` but avoid having to decompose ``LifetimeData``
+    data into ``time``, ``event``, ``entry`` formalism.
+
+    Parameters
+    ----------
+    lifetime_data : LifetimeData
+        The ```LifetimeData```.
+
+    Returns
+    -------
+    Self
+        The current object with the estimated parameters setted inplace.
+    """

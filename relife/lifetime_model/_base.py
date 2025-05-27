@@ -34,11 +34,15 @@ Args = TypeVarTuple("Args")
 class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     r"""Base class for lifetime model.
 
-    This class defines the structure for creating lifetime model. It is s a blueprint
-    for implementing lifetime model parametrized by a variadic set of arguments.
-    It provides the framework for implementing hazard functions (``hf``), cumulative hazard functions (``chf``),
+    This class defines the structure for creating lifetime model. It is a blueprint
+    for implementing lifetime model expecting a variadic set of arguments.
+    It expects implemantation of hazard functions (``hf``), cumulative hazard functions (``chf``),
     probability density function (``pdf``) and survival function (``sf``).
     Other functions are implemented by default but can be overridden by derived classes.
+
+    Note:
+        The abstract methods also provides a default implementation. One may not have to implement
+        ``hf``, ``chf``, ``pdf`` and ``sf`` and just call ``super()`` to access the base implementation.
 
     Methods:
         hf: Abstract method to compute the hazard function.
@@ -126,19 +130,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         probability: float | NDArray[np.float64],
         *args: *Args,
     ) -> np.float64 | NDArray[np.float64]:
-        """Inverse survival function.
-
-        Parameters
-        ----------
-        probability : float or ndarray, shape (n, ) or (m, n)
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Complement quantile corresponding to probability.
-        """
-
         # return type of func cannot be NDArray, thus np.sum is needed (see scipy type stubs)
         func: Callable[[float | NDArray[np.float64]], np.float64] = lambda x: np.sum(self.sf(x, *args) - probability)
         return newton(
@@ -266,7 +257,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     @property
     def plot(self) -> PlotParametricLifetimeModel:
-        """Plot"""
+        """Get plot"""
         return PlotParametricLifetimeModel(self)
 
     def ls_integrate(
@@ -277,25 +268,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         *args: *Args,
         deg: int = 10,
     ) -> np.float64 | NDArray[np.float64]:
-        r"""
-        Lebesgue-Stieltjes integration.
-
-        Parameters
-        ----------
-        func : callable (in : 1 ndarray , out : 1 ndarray)
-            The callable must have only one ndarray object as argument and returns one ndarray object
-        a : ndarray (max dim of 2)
-            Lower bound(s) of integration.
-        b : ndarray (max dim of 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-        deg : int, default 10
-            Degree of the polynomials interpolation
-
-        Returns
-        -------
-        np.ndarray
-            Lebesgue-Stieltjes integral of func from `a` to `b`.
-        """
 
         def integrand(x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
             #  x.shape == (deg,), (deg, n) or (deg, m, n), ie points of quadratures
@@ -350,18 +322,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
 
     def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]:
-        """n-th order moment
-
-        Parameters
-        ----------
-        n : order of the moment, at least 1.
-        *args : variadic arguments required by the function
-
-        Returns
-        -------
-        ndarray of shape (0, )
-            n-th order moment.
-        """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
         func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]] = lambda x: np.power(x, n)
@@ -441,10 +401,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     Base class for distribution model.
     """
 
-    @property
-    def args_names(self) -> tuple[()]:
-        return ()
-
     def init_params_structure(self) -> None:
         pass
 
@@ -469,19 +425,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
     @override
     def isf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
-        """Inverse survival function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
         return self.ichf(cumulative_hazard_rate)
 
@@ -503,21 +446,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
     @override
     def ppf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
-        """Percent point function.
-
-        The percent point corresponds to the inverse of the cumulative distribution function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return super().ppf(probability)
 
     @override
@@ -664,20 +592,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
     @override
     def moment(self, n: int) -> np.float64:
-        """
-        n-th order moment of the distribution.
-
-        Parameters
-        ----------
-        n : int
-            Order of the moment, at least 1.
-
-        Returns
-        -------
-        np.float64
-            n-th order moment of the distribution.
-        """
-
         return super().moment(n)
 
     @overload
@@ -743,23 +657,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
         tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
     ]:
-        """Random variable sampling.
-
-        Parameters
-        ----------
-        return_entry
-        return_event
-        size : int or (int, int), default 1
-            Shape of the sample.
-        seed : int, default None
-            Random seed.
-
-        Returns
-        -------
-        np.ndarray
-            Sample of random lifetimes.
-        """
-
         return super().rvs(size, return_event=return_event, return_entry=return_entry, seed=seed)
 
     @override
@@ -849,14 +746,18 @@ class CovarEffect(ParametricModel):
         return jac  # (nb_coef, m, 1)
 
 
-# note that LifetimeRegression does not preserve generic : at the moment, additional args are supposed to be always float | NDArray[np.float64]
+
 class LifetimeRegression(
     FittableParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]], ABC
 ):
     """
     Base class for regression model.
 
-    At least one positional covar arg and 0 or more additional args (variable number) : https://peps.python.org/pep-0646/#unpacking-unbounded-tuple-types
+    At least one positional covar arg and 0 or more additional args (variable number)
+    see : https://peps.python.org/pep-0646/#unpacking-unbounded-tuple-types*
+
+    Note:
+    LifetimeRegression does not preserve generic : at the moment, additional args are supposed to be always float | NDArray[np.float64]
     """
 
     def __init__(
@@ -915,24 +816,6 @@ class LifetimeRegression(
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
     ) -> np.float64 | NDArray[np.float64]:
-        """Inverse survival function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        covar : np.ndarray
-            Covariate values. The ndarray must be broadcastable with ``time``.
-        *args : variable number of np.ndarray
-            Any variables needed to compute the function. Those variables must be
-            broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.
-
-        Returns
-        -------
-        ndarray of shape (), (n, ) or (m, n)
-            Time values corresponding to the given survival probabilities.
-        """
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
         return self.ichf(cumulative_hazard_rate, covar, *args)
 
@@ -1239,29 +1122,6 @@ class LifetimeRegression(
         tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
         tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
     ]:
-        """
-        Random variable sampling.
-
-        Parameters
-        ----------
-        return_entry
-        return_event
-        size : int or (int, int)
-            Shape of the sample.
-        covar : np.ndarray
-            Covariate values. Shapes can be ``(n_values,)`` or ``(n_assets, n_values)``.
-        *args : variable number of np.ndarray
-            Any variables needed to compute the function. Those variables must be
-            broadcastable with ``covar``. They may exist and result from method chaining due to nested class instantiation.
-
-        seed : int, default None
-            Random seed.
-
-        Returns
-        -------
-        np.ndarray
-            Sample of random lifetimes.
-        """
         return super().rvs(size, *(covar, *args), return_event=return_event, return_entry=return_entry, seed=seed)
 
     @override
@@ -1304,11 +1164,6 @@ class NonParametricLifetimeModel(ABC):
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self: ...
 
-    # @property
-    # def plot(self) -> PlotSurvivalFunc:
-    #     if self.estimations is None:
-    #         raise ValueError
-    #     return PlotSurvivalFunc(self)
 
 
 class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):

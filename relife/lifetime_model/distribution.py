@@ -7,7 +7,6 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygam
 from typing_extensions import override
 
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
-
 from ..data import LifetimeData
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
@@ -151,10 +150,22 @@ class Weibull(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
+        """Get the current shape value.
+
+        Returns
+        -------
+        float
+        """
         return self._parameters["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
+        """Get the current rate value.
+
+        Returns
+        -------
+        float
+        """
         return self._parameters["rate"]
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -718,7 +729,7 @@ Parameters
 ----------
 time : float or np.ndarray
     Elapsed time value(s) at which to compute the function.
-    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
 
 Returns
 -------
@@ -727,20 +738,25 @@ np.float64 or np.ndarray
 """
 
 
-ICHF_DOCSTRING = """
-Inverse cumulative hazard function.
+JAC_BASE_DOCSTRING = """
+{name}.
 
 Parameters
 ----------
-cumulative_hazard_rate : float or np.ndarray
-    Cumulative hazard rate value(s) at which to compute the function.
-    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+time : float or np.ndarray
+    Elapsed time value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+asarray : bool, default is False
 
 Returns
 -------
-np.float64 or np.ndarray
-    Function values at each given time(s).
+np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+    The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+    the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+    whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+    tuple when ``asarray`` is False.
 """
+
 
 MOMENT_BASE_DOCSTRING = """
 {name}.
@@ -752,22 +768,191 @@ np.float64
 """
 
 
+PROBABILITY_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+probability : float or np.ndarray
+    Probability value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given probability value(s).
+"""
+
+
 for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
     class_obj.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The survival function")
     class_obj.hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The hazard function")
     class_obj.chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative hazard function")
     class_obj.pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The probability density function")
-    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(name="The mean residual life function")
     class_obj.cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative distribution function")
+    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(name="The mean residual life function")
     class_obj.dhf.__doc__ = TIME_BASE_DOCSTRING.format(name="The derivative of the hazard function")
-    class_obj.jac_hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the hazard function")
-    class_obj.jac_chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the cumulative hazard function")
-    class_obj.jac_sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the survival function")
-    class_obj.jac_pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the probability density function")
-    class_obj.jac_cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The jacobian of the cumulative distribution function")
+    class_obj.jac_hf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the hazard function")
+    class_obj.jac_chf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the cumulative hazard function")
+    class_obj.jac_sf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the survival function")
+    class_obj.jac_pdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the probability density function")
+    class_obj.jac_cdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the cumulative distribution function")
 
+
+    class_obj.ppf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="The percent point function")
+    class_obj.ppf.__doc__ += f"""
+    Notes
+    -----
+    The ``ppf`` is the inverse of :py:meth:`~{class_obj}.cdf`.
+    """
+    class_obj.isf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="Inverse survival function")
+
+    class_obj.rvs.__doc__ = """
+    Random variable sampling.
+
+    Parameters
+    ----------
+    size : int, (int,) or (int, int)
+        Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+        2d array of samples is generated. 
+    return_event : bool, default is False
+        If True, returns event indicators along with the sample time values.
+    random_entry : bool, default is False
+        If True, returns corresponding entry values of the sample time values.
+    seed : optional int, default is None
+        Random seed used to fix random sampling.
+
+    Returns
+    -------
+    float, ndarray or tuple of float or ndarray
+        The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
+        the time values followed by event values, entry values or both.
+    """
+
+    class_obj.sample_lifetime_data.__doc__ = """
+    Random variable sampling.
+
+    Parameters
+    ----------
+    size : int, (int,) or (int, int)
+        Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+        2d array of samples are generated. 
+    window : (float, float)
+        The observation window of the generated sample.
+    seed : optional int, default is None
+        Random seed applied to fix random sampling.
+    
+    Returns
+    -------
+    LifetimeData
+        A ``LifetimeData`` object that encapsulates the lifetime values
+    """
+
+    class_obj.plot.__doc__ = """
+    Provides access to plotting functionality for this distribution.
+    """
+
+    class_obj.ls_integrate.__doc__ = """
+    Lebesgue-Stieltjes integration.
+
+    Parameters
+    ----------
+    func : callable (in : 1 ndarray , out : 1 ndarray)
+        The callable must have only one ndarray object as argument and one ndarray object as output
+    a : ndarray (maximum number of dimension is 2)
+        Lower bound(s) of integration.
+    b : ndarray (maximum number of dimension is 2)
+        Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+    deg : int, default 10
+        Degree of the polynomials interpolation
+
+    Returns
+    -------
+    np.ndarray
+        Lebesgue-Stieltjes integral of func from `a` to `b`.
+    """
+
+    class_obj.moment.__doc__ = """
+    n-th order moment
+
+    Parameters
+    ----------
+    n : order of the moment, at least 1.
+
+    Returns
+    -------
+    np.float64
+        n-th order moment.
+    """
     class_obj.mean.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The mean")
     class_obj.var.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The variance")
     class_obj.median.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The median")
 
-    class_obj.ichf.__doc__ = ICHF_DOCSTRING
+    class_obj.ichf.__doc__ = """
+    Inverse cumulative hazard function.
+    
+    Parameters
+    ----------
+    cumulative_hazard_rate : float or np.ndarray
+        Cumulative hazard rate value(s) at which to compute the function.
+        If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+    
+    Returns
+    -------
+    np.float64 or np.ndarray
+        Function values at each given cumulative hazard rate(s).
+    """
+
+
+    class_obj.fit.__doc__ = """
+    Estimation of parameters.
+
+    Parameters
+    ----------
+    time : ndarray (1d or 2d)
+        Observed lifetime values.
+    event : ndarray of boolean values (1d), default is None
+        Boolean indicators tagging lifetime values as right censored or complete.
+    entry : ndarray of float (1d), default is None
+        Left truncations applied to lifetime values.
+    departure : ndarray of float (1d), default is None
+        Right truncations applied to lifetime values.
+    **kwargs
+        Extra arguments used by `scipy.minimize`. Default values are:
+            - `method` : `"L-BFGS-B"`
+            - `contraints` : `()`
+            - `tol` : `None`
+            - `callback` : `None`
+            - `options` : `None`
+            - `bounds` : `self.params_bounds`
+            - `x0` : `self.init_params`
+
+    Returns
+    -------
+    Self
+        The current object with the estimated parameters setted inplace.
+
+    Notes
+    -----
+    Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
+    format that allows to pass other information as left-censored or interval-censored values. In this case,
+    `event` is not needed as 2d-array encodes right-censored values by itself.
+    """
+
+    class_obj.fit_from_lifetime_data.__doc__ = """
+    Estimation of parameters from ```LifetimeData``.
+    
+    It is a convenient method for one that would have generated ``LifetimeData`` from another method and wants
+    to fit the model with these data. Internally, it calls ``fit`` but avoid having to decompose ``LifetimeData``
+    data into ``time``, ``event``, ``entry`` formalism.
+    
+    Parameters
+    ----------
+    lifetime_data : LifetimeData
+        The ```LifetimeData```.
+    
+    Returns
+    -------
+    Self
+        The current object with the estimated parameters setted inplace.
+    """

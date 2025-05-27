@@ -1,4 +1,0 @@
-.. currentmodule:: relife
-
-Generators
-===========

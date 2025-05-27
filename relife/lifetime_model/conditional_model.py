@@ -517,3 +517,433 @@ class FrozenLeftTruncatedModel(
     @a0.setter
     def a0(self, value: float | NDArray[np.float64]) -> None:
         self.frozen_args = (value,) + self.frozen_args[1:]
+
+
+A0_TIME_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+time : float or np.ndarray
+    Elapsed time value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given time(s).
+"""
+
+
+A0_MOMENT_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64
+    {name} value.
+"""
+
+A0_PROBABILITY_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+probability : float or np.ndarray
+    Probability value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given probability value(s).
+"""
+
+LeftTruncatedModel.sf.__doc__ = A0_TIME_BASE_DOCSTRING.format(name="The survival function")
+LeftTruncatedModel.hf.__doc__ = A0_TIME_BASE_DOCSTRING.format(name="The hazard function")
+LeftTruncatedModel.chf.__doc__ = A0_TIME_BASE_DOCSTRING.format(name="The cumulative hazard function")
+LeftTruncatedModel.pdf.__doc__ = A0_TIME_BASE_DOCSTRING.format(name="The probability density function")
+LeftTruncatedModel.cdf.__doc__ = A0_TIME_BASE_DOCSTRING.format(name="The cumulative distribution function")
+LeftTruncatedModel.mrl.__doc__ = A0_TIME_BASE_DOCSTRING.format(name="The mean residual life function")
+LeftTruncatedModel.ppf.__doc__ = A0_PROBABILITY_BASE_DOCSTRING.format(name="The percent point function")
+LeftTruncatedModel.ppf.__doc__ += f"""
+Notes
+-----
+The ``ppf`` is the inverse of :py:meth:`~LeftTruncatedModel.cdf`.
+"""
+LeftTruncatedModel.isf.__doc__ = A0_PROBABILITY_BASE_DOCSTRING.format(name="Inverse survival function")
+
+LeftTruncatedModel.rvs.__doc__ = """
+Random variable sampling.
+
+Parameters
+----------
+size : int, (int,) or (int, int)
+    Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+    2d array of samples is generated.
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model. 
+return_event : bool, default is False
+    If True, returns event indicators along with the sample time values.
+return_entry : bool, default is False
+    If True, returns corresponding entry values of the sample time values.
+seed : optional int, default is None
+    Random seed used to fix random sampling.
+
+Returns
+-------
+float, ndarray or tuple of float or ndarray
+    The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
+    the time values followed by event values, entry values or both.
+    
+Note
+----
+If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
+"""
+
+LeftTruncatedModel.ichf.__doc__ = """
+Inverse cumulative hazard function.
+
+Parameters
+----------
+cumulative_hazard_rate : float or np.ndarray
+    Cumulative hazard rate value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given cumulative hazard rate(s).
+"""
+
+LeftTruncatedModel.sample_lifetime_data.__doc__ = """
+Random variable sampling.
+
+Parameters
+----------
+size : int, (int,) or (int, int)
+    Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+    2d array of samples are generated. 
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+window : (float, float)
+    The observation window of the generated sample.
+seed : optional int, default is None
+    Random seed applied to fix random sampling.
+
+Returns
+-------
+LifetimeData
+    A ``LifetimeData`` object that encapsulates the lifetime values
+"""
+
+LeftTruncatedModel.plot.__doc__ = """
+Provides access to plotting functionality for this distribution.
+"""
+
+LeftTruncatedModel.ls_integrate.__doc__ = """
+Lebesgue-Stieltjes integration.
+
+Parameters
+----------
+func : callable (in : 1 ndarray , out : 1 ndarray)
+    The callable must have only one ndarray object as argument and one ndarray object as output
+a : ndarray (maximum number of dimension is 2)
+    Lower bound(s) of integration.
+b : ndarray (maximum number of dimension is 2)
+    Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+deg : int, default 10
+    Degree of the polynomials interpolation
+
+Returns
+-------
+np.ndarray
+    Lebesgue-Stieltjes integral of func from `a` to `b`.
+"""
+
+LeftTruncatedModel.moment.__doc__ = """
+n-th order moment
+
+Parameters
+----------
+n : order of the moment, at least 1.
+
+Returns
+-------
+np.float64
+    n-th order moment.
+"""
+LeftTruncatedModel.mean.__doc__ = A0_MOMENT_BASE_DOCSTRING.format(name="The mean")
+LeftTruncatedModel.var.__doc__ = A0_MOMENT_BASE_DOCSTRING.format(name="The variance")
+LeftTruncatedModel.median.__doc__ = A0_MOMENT_BASE_DOCSTRING.format(name="The median")
+
+LeftTruncatedModel.ichf.__doc__ = """
+Inverse cumulative hazard function.
+
+Parameters
+----------
+cumulative_hazard_rate : float or np.ndarray
+    Cumulative hazard rate value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+a0 : float or np.ndarray
+    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+    as only one age per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given cumulative hazard rate(s).
+"""
+
+
+
+AR_TIME_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+time : float or np.ndarray
+    Elapsed time value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given time(s).
+"""
+
+
+AR_MOMENT_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64
+    {name} value.
+"""
+
+AR_PROBABILITY_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+probability : float or np.ndarray
+    Probability value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given probability value(s).
+"""
+
+AgeReplacementModel.sf.__doc__ = AR_TIME_BASE_DOCSTRING.format(name="The survival function")
+AgeReplacementModel.hf.__doc__ = AR_TIME_BASE_DOCSTRING.format(name="The hazard function")
+AgeReplacementModel.chf.__doc__ = AR_TIME_BASE_DOCSTRING.format(name="The cumulative hazard function")
+AgeReplacementModel.pdf.__doc__ = AR_TIME_BASE_DOCSTRING.format(name="The probability density function")
+AgeReplacementModel.cdf.__doc__ = AR_TIME_BASE_DOCSTRING.format(name="The cumulative distribution function")
+AgeReplacementModel.mrl.__doc__ = AR_TIME_BASE_DOCSTRING.format(name="The mean residual life function")
+AgeReplacementModel.ppf.__doc__ = AR_PROBABILITY_BASE_DOCSTRING.format(name="The percent point function")
+AgeReplacementModel.isf.__doc__ = AR_PROBABILITY_BASE_DOCSTRING.format(name="Inverse survival function")
+
+AgeReplacementModel.rvs.__doc__ = """
+Random variable sampling.
+
+Parameters
+----------
+size : int, (int,) or (int, int)
+    Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+    2d array of samples is generated.
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model. 
+return_event : bool, default is False
+    If True, returns event indicators along with the sample time values.
+return_entry : bool, default is False
+    If True, returns corresponding entry values of the sample time values.
+seed : optional int, default is None
+    Random seed used to fix random sampling.
+
+Returns
+-------
+float, ndarray or tuple of float or ndarray
+    The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
+    the time values followed by event values, entry values or both.
+
+Note
+----
+If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
+"""
+
+AgeReplacementModel.ichf.__doc__ = """
+Inverse cumulative hazard function.
+
+Parameters
+----------
+cumulative_hazard_rate : float or np.ndarray
+    Cumulative hazard rate value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given cumulative hazard rate(s).
+"""
+
+AgeReplacementModel.sample_lifetime_data.__doc__ = """
+Random variable sampling.
+
+Parameters
+----------
+size : int, (int,) or (int, int)
+    Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+    2d array of samples are generated. 
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+window : (float, float)
+    The observation window of the generated sample.
+seed : optional int, default is None
+    Random seed applied to fix random sampling.
+
+Returns
+-------
+LifetimeData
+    A ``LifetimeData`` object that encapsulates the lifetime values
+"""
+
+AgeReplacementModel.plot.__doc__ = """
+Provides access to plotting functionality for this distribution.
+"""
+
+AgeReplacementModel.ls_integrate.__doc__ = """
+Lebesgue-Stieltjes integration.
+
+Parameters
+----------
+func : callable (in : 1 ndarray , out : 1 ndarray)
+    The callable must have only one ndarray object as argument and one ndarray object as output
+a : ndarray (maximum number of dimension is 2)
+    Lower bound(s) of integration.
+b : ndarray (maximum number of dimension is 2)
+    Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+deg : int, default 10
+    Degree of the polynomials interpolation
+
+Returns
+-------
+np.ndarray
+    Lebesgue-Stieltjes integral of func from `a` to `b`.
+"""
+
+AgeReplacementModel.moment.__doc__ = """
+n-th order moment
+
+Parameters
+----------
+n : order of the moment, at least 1.
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    n-th order moment.
+"""
+AgeReplacementModel.mean.__doc__ = A0_MOMENT_BASE_DOCSTRING.format(name="The mean")
+AgeReplacementModel.var.__doc__ = A0_MOMENT_BASE_DOCSTRING.format(name="The variance")
+AgeReplacementModel.median.__doc__ = A0_MOMENT_BASE_DOCSTRING.format(name="The median")
+
+AgeReplacementModel.ichf.__doc__ = """
+Inverse cumulative hazard function.
+
+Parameters
+----------
+cumulative_hazard_rate : float or np.ndarray
+    Cumulative hazard rate value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+ar : float or np.ndarray
+    Age of replacement values. If ndarray, shape can only be (m,) 
+    as only one age of replacement per asset can be given
+*args : float or np.ndarray
+    Additional arguments needed by the model.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given cumulative hazard rate(s).
+"""
