@@ -1,6 +1,105 @@
-﻿relife.lifetime\_model.Gamma
-============================
+﻿
+
+
+Gamma
+=====
 
 .. currentmodule:: relife.lifetime_model
 
 .. autoclass:: Gamma
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: bysource
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~Gamma.cdf
+        
+        
+            ~Gamma.chf
+        
+        
+            ~Gamma.compose_with
+        
+        
+            ~Gamma.dhf
+        
+        
+            ~Gamma.fit
+        
+        
+            ~Gamma.fit_from_lifetime_data
+        
+        
+            ~Gamma.hf
+        
+        
+            ~Gamma.ichf
+        
+        
+            ~Gamma.init_params_structure
+        
+        
+            ~Gamma.init_params_values
+        
+        
+            ~Gamma.isf
+        
+        
+            ~Gamma.jac_cdf
+        
+        
+            ~Gamma.jac_chf
+        
+        
+            ~Gamma.jac_hf
+        
+        
+            ~Gamma.jac_pdf
+        
+        
+            ~Gamma.jac_sf
+        
+        
+            ~Gamma.ls_integrate
+        
+        
+            ~Gamma.mean
+        
+        
+            ~Gamma.median
+        
+        
+            ~Gamma.moment
+        
+        
+            ~Gamma.mrl
+        
+        
+            ~Gamma.nested_models
+        
+        
+            ~Gamma.pdf
+        
+        
+            ~Gamma.ppf
+        
+        
+            ~Gamma.rvs
+        
+        
+            ~Gamma.sample_lifetime_data
+        
+        
+            ~Gamma.sf
+        
+        
+            ~Gamma.var
+        

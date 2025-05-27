@@ -1,6 +1,105 @@
-﻿relife.lifetime\_model.AcceleratedFailureTime
-=============================================
+﻿
+
+
+AcceleratedFailureTime
+======================
 
 .. currentmodule:: relife.lifetime_model
 
 .. autoclass:: AcceleratedFailureTime
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: bysource
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~AcceleratedFailureTime.cdf
+        
+        
+            ~AcceleratedFailureTime.chf
+        
+        
+            ~AcceleratedFailureTime.compose_with
+        
+        
+            ~AcceleratedFailureTime.dhf
+        
+        
+            ~AcceleratedFailureTime.fit
+        
+        
+            ~AcceleratedFailureTime.fit_from_lifetime_data
+        
+        
+            ~AcceleratedFailureTime.hf
+        
+        
+            ~AcceleratedFailureTime.ichf
+        
+        
+            ~AcceleratedFailureTime.init_params_structure
+        
+        
+            ~AcceleratedFailureTime.init_params_values
+        
+        
+            ~AcceleratedFailureTime.isf
+        
+        
+            ~AcceleratedFailureTime.jac_cdf
+        
+        
+            ~AcceleratedFailureTime.jac_chf
+        
+        
+            ~AcceleratedFailureTime.jac_hf
+        
+        
+            ~AcceleratedFailureTime.jac_pdf
+        
+        
+            ~AcceleratedFailureTime.jac_sf
+        
+        
+            ~AcceleratedFailureTime.ls_integrate
+        
+        
+            ~AcceleratedFailureTime.mean
+        
+        
+            ~AcceleratedFailureTime.median
+        
+        
+            ~AcceleratedFailureTime.moment
+        
+        
+            ~AcceleratedFailureTime.mrl
+        
+        
+            ~AcceleratedFailureTime.nested_models
+        
+        
+            ~AcceleratedFailureTime.pdf
+        
+        
+            ~AcceleratedFailureTime.ppf
+        
+        
+            ~AcceleratedFailureTime.rvs
+        
+        
+            ~AcceleratedFailureTime.sample_lifetime_data
+        
+        
+            ~AcceleratedFailureTime.sf
+        
+        
+            ~AcceleratedFailureTime.var
+        

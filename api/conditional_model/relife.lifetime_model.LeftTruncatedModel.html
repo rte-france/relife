@@ -1,0 +1,1106 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LeftTruncatedModel &#8212; ReLife</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=a8af75d9" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/conditional_model/relife.lifetime_model.LeftTruncatedModel';</script>
+    <script src="../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="AgeReplacementModel" href="relife.lifetime_model.AgeReplacementModel.html" />
+    <link rel="prev" title="AcceleratedFailureTime" href="../lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/relife_blue.gif" class="logo__image only-light" alt="ReLife - Home"/>
+    <img src="../../_static/relife_blue.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+  
+  
+</a></div>
+    
+      <div class="navbar-item"><!-- This will display the version of the docs -->
+</div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Lifetime distributions</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../lifetime_distribution/relife.lifetime_model.Exponential.html">Exponential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lifetime_distribution/relife.lifetime_model.Weibull.html">Weibull</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lifetime_distribution/relife.lifetime_model.Gompertz.html">Gompertz</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lifetime_distribution/relife.lifetime_model.Gamma.html">Gamma</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lifetime_distribution/relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Lifetime regressions</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../lifetime_regression/relife.lifetime_model.ProportionalHazard.html">ProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html">AcceleratedFailureTime</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">LeftTruncatedModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">LeftTruncatedModel</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="lefttruncatedmodel">
+<h1>LeftTruncatedModel<a class="headerlink" href="#lefttruncatedmodel" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">LeftTruncatedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel" title="Link to this definition">#</a></dt>
+<dd><p>Left truncated core.</p>
+<p>Conditional distribution of the lifetime core for an asset having reach age <span class="math notranslate nohighlight">\(a_0\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>baseline</strong><span class="classifier">BaseLifetimeModel</span></dt><dd><p>Underlying lifetime core.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.cdf" title="relife.lifetime_model.LeftTruncatedModel.cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></a></p></td>
+<td><p>The cumulative distribution function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.chf" title="relife.lifetime_model.LeftTruncatedModel.chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></a></p></td>
+<td><p>The cumulative hazard function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.compose_with" title="relife.lifetime_model.LeftTruncatedModel.compose_with"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compose_with</span></code></a></p></td>
+<td><p>Compose with new <code class="docutils literal notranslate"><span class="pre">ParametricModel</span></code> instance(s).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.hf" title="relife.lifetime_model.LeftTruncatedModel.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
+<td><p>The hazard function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.ichf" title="relife.lifetime_model.LeftTruncatedModel.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
+<td><p>Inverse cumulative hazard function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.isf" title="relife.lifetime_model.LeftTruncatedModel.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<td><p>Inverse survival function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.ls_integrate" title="relife.lifetime_model.LeftTruncatedModel.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<td><p>Lebesgue-Stieltjes integration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.mean" title="relife.lifetime_model.LeftTruncatedModel.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<td><p>The mean.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.median" title="relife.lifetime_model.LeftTruncatedModel.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
+<td><p>The median.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.moment" title="relife.lifetime_model.LeftTruncatedModel.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<td><p>n-th order moment</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.mrl" title="relife.lifetime_model.LeftTruncatedModel.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
+<td><p>The mean residual life function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.nested_models" title="relife.lifetime_model.LeftTruncatedModel.nested_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nested_models</span></code></a></p></td>
+<td><p>parallel walk through key value pairs</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.pdf" title="relife.lifetime_model.LeftTruncatedModel.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<td><p>The probability density function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.ppf" title="relife.lifetime_model.LeftTruncatedModel.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
+<td><p>The percent point function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.rvs" title="relife.lifetime_model.LeftTruncatedModel.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<td><p>Random variable sampling.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.sample_lifetime_data" title="relife.lifetime_model.LeftTruncatedModel.sample_lifetime_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_lifetime_data</span></code></a></p></td>
+<td><p>Random variable sampling.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.sf" title="relife.lifetime_model.LeftTruncatedModel.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<td><p>The survival function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.var" title="relife.lifetime_model.LeftTruncatedModel.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
+<td><p>The variance.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.cdf">
+<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.cdf" title="Link to this definition">#</a></dt>
+<dd><p>The cumulative distribution function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.chf">
+<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.chf" title="Link to this definition">#</a></dt>
+<dd><p>The cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.compose_with">
+<span class="sig-name descname"><span class="pre">compose_with</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwcomponents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.compose_with" title="Link to this definition">#</a></dt>
+<dd><p>Compose with new <code class="docutils literal notranslate"><span class="pre">ParametricModel</span></code> instance(s).</p>
+<p>This method must be seen as standard function composition exept that objects are not
+functions but group of functions (as object encapsulates functions). When you
+compose your <code class="docutils literal notranslate"><span class="pre">ParametricModel</span></code> instance with new one(s), the followings happen :</p>
+<ul class="simple">
+<li><p>each new parameters are added to the current <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> instance</p></li>
+<li><p>each new <cite>ParametricModel</cite> instance is accessible as a standard attribute</p></li>
+</ul>
+<p>Like so, you can request new <cite>ParametricModel</cite> components in current <cite>ParametricModel</cite>
+instance while setting and getting all parameters. This is usefull when <cite>ParametricModel</cite>
+can be seen as a nested function (see <cite>Regression</cite>).</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>**kwcomponents</strong><span class="classifier">variadic named <code class="docutils literal notranslate"><span class="pre">ParametricModel</span></code> instance</span></dt><dd><p>Instance names (keys) are followed by the instances themself (values).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If one wants to pass a <cite>dict</cite> of key-value, make sure to unpack the dict
+with <cite>**</cite> operator or you will get a nasty <cite>TypeError</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.hf">
+<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.hf" title="Link to this definition">#</a></dt>
+<dd><p>The hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.ichf">
+<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ichf" title="Link to this definition">#</a></dt>
+<dd><p>Inverse cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>cumulative_hazard_rate</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Cumulative hazard rate value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given cumulative hazard rate(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.isf">
+<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.isf" title="Link to this definition">#</a></dt>
+<dd><p>Inverse survival function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given probability value(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.ls_integrate">
+<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ls_integrate" title="Link to this definition">#</a></dt>
+<dd><p>Lebesgue-Stieltjes integration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output</p>
+</dd>
+<dt><strong>a</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
+</dd>
+<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+<dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>Lebesgue-Stieltjes integral of func from <cite>a</cite> to <cite>b</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.mean" title="Link to this definition">#</a></dt>
+<dd><p>The mean.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64</dt><dd><p>The mean value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.median">
+<span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.median" title="Link to this definition">#</a></dt>
+<dd><p>The median.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64</dt><dd><p>The median value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.moment">
+<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.moment" title="Link to this definition">#</a></dt>
+<dd><p>n-th order moment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">order of the moment, at least 1.</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64</dt><dd><p>n-th order moment.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.mrl">
+<span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.mrl" title="Link to this definition">#</a></dt>
+<dd><p>The mean residual life function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.nb_params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_params</span></span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.nb_params" title="Link to this definition">#</a></dt>
+<dd><p>Number of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Number of parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.nested_models">
+<span class="sig-name descname"><span class="pre">nested_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.nested_models" title="Link to this definition">#</a></dt>
+<dd><p>parallel walk through key value pairs</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.params" title="Link to this definition">#</a></dt>
+<dd><p>Parameters values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ndarray</dt><dd><p>Parameters values of the core</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If parameter values are not set, they are encoded as <cite>np.nan</cite> value.</p>
+<p>Parameters can be by manually setting`params` through its setter, fitting the core if <cite>fit</cite> exists or
+by specifying all parameters values when the core object is initialized.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.params_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_names</span></span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.params_names" title="Link to this definition">#</a></dt>
+<dd><p>Parameters names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list of str</dt><dd><p>Parameters names</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Parameters values can be requested (a.k.a. get) by their name at instance level.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.pdf">
+<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.pdf" title="Link to this definition">#</a></dt>
+<dd><p>The probability density function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.plot">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.plot" title="Link to this definition">#</a></dt>
+<dd><p>Provides access to plotting functionality for this distribution.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.ppf">
+<span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ppf" title="Link to this definition">#</a></dt>
+<dd><p>The percent point function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given probability value(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ppf</span></code> is the inverse of <a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.cdf" title="relife.lifetime_model.LeftTruncatedModel.cdf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cdf()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.rvs">
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.rvs" title="Link to this definition">#</a></dt>
+<dd><p>Random variable sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>size</strong><span class="classifier">int, (int,) or (int, int)</span></dt><dd><p>Size of the generated sample. If size is <code class="docutils literal notranslate"><span class="pre">n</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>, n samples are generated. If size is <code class="docutils literal notranslate"><span class="pre">(m,n)</span></code>, a 
+2d array of samples is generated.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time values.</p>
+</dd>
+<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">optional int, default is None</span></dt><dd><p>Random seed used to fix random sampling.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float, ndarray or tuple of float or ndarray</dt><dd><p>The sample values. If either <code class="docutils literal notranslate"><span class="pre">return_event</span></code> or <code class="docutils literal notranslate"><span class="pre">random_entry</span></code> is True, returns a tuple containing
+the time values followed by event values, entry values or both.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.sample_lifetime_data">
+<span class="sig-name descname"><span class="pre">sample_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">inf)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.sample_lifetime_data" title="Link to this definition">#</a></dt>
+<dd><p>Random variable sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>size</strong><span class="classifier">int, (int,) or (int, int)</span></dt><dd><p>Size of the sample generated internally. If size is <code class="docutils literal notranslate"><span class="pre">n</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>, n samples are generated. If size is <code class="docutils literal notranslate"><span class="pre">(m,n)</span></code>, a 
+2d array of samples are generated.</p>
+</dd>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,) 
+as only one age of replacement per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+<dt><strong>window</strong><span class="classifier">(float, float)</span></dt><dd><p>The observation window of the generated sample.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">optional int, default is None</span></dt><dd><p>Random seed applied to fix random sampling.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>LifetimeData</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">LifetimeData</span></code> object that encapsulates the lifetime values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.sf">
+<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.sf" title="Link to this definition">#</a></dt>
+<dd><p>The survival function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.var">
+<span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.var" title="Link to this definition">#</a></dt>
+<dd><p>The variance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
+as only one age per asset can be given</p>
+</dd>
+<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.float64</dt><dd><p>The variance value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.cdf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.cdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.chf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.chf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.compose_with"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.compose_with()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.hf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.hf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.ichf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.ichf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.isf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.isf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.ls_integrate"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.ls_integrate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.mean"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.mean()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.median"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.median()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.moment"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.moment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.mrl"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.mrl()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.nb_params"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.nb_params</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.nested_models"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.nested_models()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.params"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.params</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.params_names"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.params_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.pdf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.pdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.plot"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.ppf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.ppf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.rvs"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.rvs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.sample_lifetime_data"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.sample_lifetime_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.sf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.sf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.var"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.var()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/conditional_model/relife.lifetime_model.LeftTruncatedModel.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, RTE.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

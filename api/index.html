@@ -54,7 +54,7 @@
     <script src="../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Lifetime models" href="lifetime_model.html" />
+    <link rel="next" title="Exponential" href="lifetime_distribution/relife.lifetime_model.Exponential.html" />
     <link rel="prev" title="First example" href="../get_started/get_started_example.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -325,17 +325,23 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="lifetime_model.html">Lifetime models</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Exponential.html">relife.lifetime_model.Exponential</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Weibull.html">relife.lifetime_model.Weibull</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gompertz.html">relife.lifetime_model.Gompertz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gamma.html">relife.lifetime_model.Gamma</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.LogLogistic.html">relife.lifetime_model.LogLogistic</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_regression/relife.lifetime_model.ProportionalHazard.html">relife.lifetime_model.ProportionalHazard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html">relife.lifetime_model.AcceleratedFailureTime</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Lifetime distributions</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Exponential.html">Exponential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Weibull.html">Weibull</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gompertz.html">Gompertz</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gamma.html">Gamma</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
 </ul>
-</details></li>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Lifetime regressions</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="lifetime_regression/relife.lifetime_model.ProportionalHazard.html">ProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html">AcceleratedFailureTime</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="conditional_model/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conditional_model/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -396,11 +402,62 @@
   <section id="api">
 <h1>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h1>
 <p>This section provides comprehensive details about the exposed ReLife API.
-ReLife is structured into different modules, each with a clear and specific role. We divided the API documentation close to the same logic:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="lifetime_model.html">Lifetime models</a></li>
-</ul>
+ReLife is structured into different modules, each with a clear and specific role. We divided the API documentation close to the same logic.</p>
+</section>
+<section id="lifetime-models">
+<h1>Lifetime models<a class="headerlink" href="#lifetime-models" title="Link to this heading">#</a></h1>
+<p>Lifetime models are objects whose exposed interface can answer basic probility functions of the survival analysis. In
+object-oriented programming, one must not see them as a group of probability functions solely : it also encapsulates
+data like parameters, other nested models, etc.</p>
+<p>Lifetime models are imported like this :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="o">&lt;</span><span class="n">model_constructor</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Here is an exhaustive list of all lifetime model constructors that can be used in Relife :</p>
+<p class="rubric">Lifetime distributions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Exponential.html#relife.lifetime_model.Exponential" title="relife.lifetime_model.Exponential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Exponential</span></code></a></p></td>
+<td><p>Exponential lifetime distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Weibull.html#relife.lifetime_model.Weibull" title="relife.lifetime_model.Weibull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Weibull</span></code></a></p></td>
+<td><p>Weibull lifetime distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gompertz.html#relife.lifetime_model.Gompertz" title="relife.lifetime_model.Gompertz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Gompertz</span></code></a></p></td>
+<td><p>Gompertz lifetime distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.Gamma.html#relife.lifetime_model.Gamma" title="relife.lifetime_model.Gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Gamma</span></code></a></p></td>
+<td><p>Gamma lifetime distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_distribution/relife.lifetime_model.LogLogistic.html#relife.lifetime_model.LogLogistic" title="relife.lifetime_model.LogLogistic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogLogistic</span></code></a></p></td>
+<td><p>Log-logistic probability distribution.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Lifetime regression</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard" title="relife.lifetime_model.ProportionalHazard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProportionalHazard</span></code></a></p></td>
+<td><p>Proportional Hazard regression.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime" title="relife.lifetime_model.AcceleratedFailureTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AcceleratedFailureTime</span></code></a></p></td>
+<td><p>Accelerated failure time regression.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Conditional lifetime models</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="conditional_model/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel" title="relife.lifetime_model.LeftTruncatedModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeftTruncatedModel</span></code></a></p></td>
+<td><p>Left truncated core.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="conditional_model/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel" title="relife.lifetime_model.AgeReplacementModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgeReplacementModel</span></code></a></p></td>
+<td><p>Age replacement core.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
 
@@ -418,6 +475,22 @@ ReLife is structured into different modules, each with a clear and specific role
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">API</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#lifetime-models">Lifetime models</a><ul class="visible nav section-nav flex-column">
+</ul>
+</li>
+</ul>
+
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">

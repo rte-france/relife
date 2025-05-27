@@ -1,0 +1,75 @@
+﻿
+
+
+AgeReplacementModel
+===================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: AgeReplacementModel
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: bysource
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~AgeReplacementModel.cdf
+        
+        
+            ~AgeReplacementModel.chf
+        
+        
+            ~AgeReplacementModel.compose_with
+        
+        
+            ~AgeReplacementModel.hf
+        
+        
+            ~AgeReplacementModel.ichf
+        
+        
+            ~AgeReplacementModel.isf
+        
+        
+            ~AgeReplacementModel.ls_integrate
+        
+        
+            ~AgeReplacementModel.mean
+        
+        
+            ~AgeReplacementModel.median
+        
+        
+            ~AgeReplacementModel.moment
+        
+        
+            ~AgeReplacementModel.mrl
+        
+        
+            ~AgeReplacementModel.nested_models
+        
+        
+            ~AgeReplacementModel.pdf
+        
+        
+            ~AgeReplacementModel.ppf
+        
+        
+            ~AgeReplacementModel.rvs
+        
+        
+            ~AgeReplacementModel.sample_lifetime_data
+        
+        
+            ~AgeReplacementModel.sf
+        
+        
+            ~AgeReplacementModel.var
+        

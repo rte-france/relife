@@ -433,7 +433,7 @@
 <a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ProportionalHazard</span><span class="p">(</span><span class="n">LifetimeRegression</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Proportional Hazard regression core.</span>
+<span class="sd">    Proportional Hazard regression.</span>
 
 <span class="sd">    The cumulative hazard function :math:`H` is linked to the multiplier</span>
 <span class="sd">    function :math:`g` by the relation:</span>
@@ -450,23 +450,18 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`</span>
+<span class="sd">    baseline : Any lifetime model that can be fitted.</span>
+<span class="sd">        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.</span>
 <span class="sd">        Any parametric_model lifetime model to serve as the baseline.</span>
-<span class="sd">    coef : tuple of floats (values can be None), optional</span>
+<span class="sd">    coefficients : tuple of floats (values can be None), optional</span>
 <span class="sd">        Coefficients values of the covariate effects.</span>
-
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    params : np.ndarray</span>
-<span class="sd">        The model parameters (both baseline parameters and covariate effects parameters).</span>
-<span class="sd">    params_names : np.ndarray</span>
-<span class="sd">        The model parameters (both baseline parameters and covariate effects parameters).</span>
 <span class="sd">    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`</span>
 <span class="sd">        The regression baseline model.</span>
 <span class="sd">    covar_effect : :py:class:`~relife.model.regression.CovarEffect`</span>
 <span class="sd">        The regression covariate effect.</span>
-
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -479,14 +474,19 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="ProportionalHazard.hf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">covar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="ProportionalHazard.chf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -494,8 +494,11 @@
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="c1"># (m,)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="ProportionalHazard.ichf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.ichf">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -503,15 +506,19 @@
         <span class="n">covar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="ProportionalHazard.dhf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.dhf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">covar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
@@ -531,6 +538,8 @@
         <span class="n">asarray</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="ProportionalHazard.jac_hf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -563,7 +572,8 @@
         <span class="n">jac</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_params</span><span class="p">,)</span> <span class="o">+</span> <span class="n">out_shape</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jac</span>
+        <span class="k">return</span> <span class="n">jac</span></div>
+
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
@@ -583,6 +593,8 @@
         <span class="n">asarray</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="ProportionalHazard.jac_chf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -615,6 +627,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span></div>
+</div>
 
 
 
@@ -640,17 +653,13 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`</span>
-<span class="sd">        Any parametric_model lifetime model to serve as the baseline.</span>
-<span class="sd">    coef : tuple of floats (values can be None), optional</span>
+<span class="sd">    baseline : Any lifetime model that can be fitted.</span>
+<span class="sd">        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.</span>
+<span class="sd">    coefficients : tuple of floats (values can be None), optional</span>
 <span class="sd">        Coefficients values of the covariate effects.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    params : np.ndarray</span>
-<span class="sd">        The model parameters (both baseline parameters and covariate effects parameters).</span>
-<span class="sd">    params_names : np.ndarray</span>
-<span class="sd">        The model parameters (both baseline parameters and covariate effects parameters).</span>
 <span class="sd">    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`</span>
 <span class="sd">        The regression baseline model.</span>
 <span class="sd">    covar_effect : :py:class:`~relife.model.regression.CovarEffect`</span>
@@ -666,6 +675,8 @@
 <span class="sd">    regression.ProportionalHazard : proportional hazard regression</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="AcceleratedFailureTime.hf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -673,8 +684,11 @@
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="AcceleratedFailureTime.chf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -682,8 +696,11 @@
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="AcceleratedFailureTime.ichf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.ichf">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -691,8 +708,11 @@
         <span class="n">covar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="AcceleratedFailureTime.dhf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.dhf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -700,7 +720,8 @@
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
+
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
@@ -720,6 +741,8 @@
         <span class="n">asarray</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="AcceleratedFailureTime.jac_hf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -753,7 +776,8 @@
         <span class="n">jac</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_params</span><span class="p">,)</span> <span class="o">+</span> <span class="n">out_shape</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jac</span>
+        <span class="k">return</span> <span class="n">jac</span></div>
+
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
@@ -773,6 +797,8 @@
         <span class="n">asarray</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="AcceleratedFailureTime.jac_chf">
+<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -806,6 +832,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span></div>
+</div>
 
 
 
@@ -817,18 +844,58 @@
 <span class="s2">time : float or np.ndarray</span>
 <span class="s2">    Elapsed time value(s) at which to compute the function.</span>
 <span class="s2">    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.</span>
-<span class="s2">covar : np.ndarray</span>
-<span class="s2">    Covariate values. The ndarray must be broadcastable with ``time``.</span>
-<span class="s2">*args : variable number of np.ndarray</span>
-<span class="s2">    Any variables needed to compute the function. Those variables must be</span>
-<span class="s2">    broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.</span>
+<span class="s2">covar : float or np.ndarray</span>
+<span class="s2">    Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">    Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
+<span class="s2">*args : float or np.ndarray</span>
+<span class="s2">    Additional arguments needed by the model.</span>
 
 <span class="s2">Returns</span>
 <span class="s2">-------</span>
-<span class="s2">np.ndarray</span>
+<span class="s2">np.float64 or np.ndarray</span>
 <span class="s2">    Function values at each given time(s).</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
+<span class="n">JAC_BASE_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="si">{name}</span><span class="s2">.</span>
+
+<span class="s2">Parameters</span>
+<span class="s2">----------</span>
+<span class="s2">time : float or np.ndarray</span>
+<span class="s2">    Elapsed time value(s) at which to compute the function.</span>
+<span class="s2">    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.</span>
+<span class="s2">covar : float or np.ndarray</span>
+<span class="s2">    Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">    Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
+<span class="s2">*args : float or np.ndarray</span>
+<span class="s2">    Additional arguments needed by the model.</span>
+<span class="s2">asarray : bool, default is False</span>
+
+<span class="s2">Returns</span>
+<span class="s2">-------</span>
+<span class="s2">np.float64, np.ndarray or tuple of np.float64 or np.ndarray</span>
+<span class="s2">    The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing</span>
+<span class="s2">    the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray</span>
+<span class="s2">    whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
+<span class="s2">    tuple when ``asarray`` is False.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">MOMENT_BASE_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="si">{name}</span><span class="s2">.</span>
+
+<span class="s2">Parameters</span>
+<span class="s2">----------</span>
+<span class="s2">covar : float or np.ndarray</span>
+<span class="s2">    Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
+<span class="s2">*args : float or np.ndarray</span>
+<span class="s2">    Additional arguments needed by the model.</span>
+
+<span class="s2">Returns</span>
+<span class="s2">-------</span>
+<span class="s2">np.float64</span>
+<span class="s2">    </span><span class="si">{name}</span><span class="s2"> value.</span>
+<span class="s2">&quot;&quot;&quot;</span>
 
 <span class="n">ICHF_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">Inverse cumulative hazard function.</span>
@@ -838,32 +905,37 @@
 <span class="s2">cumulative_hazard_rate : float or np.ndarray</span>
 <span class="s2">    Cumulative hazard rate value(s) at which to compute the function.</span>
 <span class="s2">    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.</span>
-<span class="s2">covar : np.ndarray</span>
-<span class="s2">    Covariate values. The ndarray must be broadcastable with ``time``.</span>
-<span class="s2">*args : variable number of np.ndarray</span>
-<span class="s2">    Any variables needed to compute the function.</span>
+<span class="s2">covar : float or np.ndarray</span>
+<span class="s2">    Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
+<span class="s2">*args : float or np.ndarray</span>
+<span class="s2">    Additional arguments needed by the model.</span>
 
 <span class="s2">Returns</span>
 <span class="s2">-------</span>
-<span class="s2">np.ndarray</span>
-<span class="s2">    Function values at each given time(s).</span>
+<span class="s2">np.float64 or np.ndarray</span>
+<span class="s2">    Function values at each given cumulative hazard rate(s).</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
-<span class="n">MOMENT_BASE_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">PROBABILITY_BASE_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="si">{name}</span><span class="s2">.</span>
 
 <span class="s2">Parameters</span>
 <span class="s2">----------</span>
-<span class="s2">covar : np.ndarray</span>
-<span class="s2">    Covariate values. The ndarray must be broadcastable with ``time``.</span>
-<span class="s2">*args : variable number of np.ndarray</span>
-<span class="s2">    Any variables needed to compute the function. Those variables must be</span>
-<span class="s2">    broadcastable with ``time``. They may exist and result from method chaining due to nested class instantiation.</span>
+<span class="s2">probability : float or np.ndarray</span>
+<span class="s2">    Probability value(s) at which to compute the function.</span>
+<span class="s2">    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
+<span class="s2">covar : float or np.ndarray</span>
+<span class="s2">    Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
+<span class="s2">*args : float or np.ndarray</span>
+<span class="s2">    Additional arguments needed by the model.</span>
 
 <span class="s2">Returns</span>
 <span class="s2">-------</span>
-<span class="s2">np.ndarray</span>
-<span class="s2">    </span><span class="si">{name}</span><span class="s2"> values.</span>
+<span class="s2">np.float64 or np.ndarray</span>
+<span class="s2">    Function values at each given probability value(s).</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
 
@@ -872,20 +944,192 @@
     <span class="n">class_obj</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The hazard function&quot;</span><span class="p">)</span>
     <span class="n">class_obj</span><span class="o">.</span><span class="n">chf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The cumulative hazard function&quot;</span><span class="p">)</span>
     <span class="n">class_obj</span><span class="o">.</span><span class="n">pdf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The probability density function&quot;</span><span class="p">)</span>
-    <span class="n">class_obj</span><span class="o">.</span><span class="n">mrl</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The mean residual life function&quot;</span><span class="p">)</span>
     <span class="n">class_obj</span><span class="o">.</span><span class="n">cdf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The cumulative distribution function&quot;</span><span class="p">)</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">mrl</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The mean residual life function&quot;</span><span class="p">)</span>
     <span class="n">class_obj</span><span class="o">.</span><span class="n">dhf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The derivative of the hazard function&quot;</span><span class="p">)</span>
-    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_hf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the hazard function&quot;</span><span class="p">)</span>
-    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_chf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the cumulative hazard function&quot;</span><span class="p">)</span>
-    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_sf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the survival function&quot;</span><span class="p">)</span>
-    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_pdf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the probability density function&quot;</span><span class="p">)</span>
-    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_cdf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TIME_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the cumulative distribution function&quot;</span><span class="p">)</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_hf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">JAC_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the hazard function&quot;</span><span class="p">)</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_chf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">JAC_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the cumulative hazard function&quot;</span><span class="p">)</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_sf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">JAC_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the survival function&quot;</span><span class="p">)</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_pdf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">JAC_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the probability density function&quot;</span><span class="p">)</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">jac_cdf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">JAC_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The jacobian of the cumulative distribution function&quot;</span><span class="p">)</span>
 
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">ppf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">PROBABILITY_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The percent point function&quot;</span><span class="p">)</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">ppf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Notes</span>
+<span class="s2">    -----</span>
+<span class="s2">    The ``ppf`` is the inverse of :py:meth:`~</span><span class="si">{</span><span class="n">class_obj</span><span class="si">}</span><span class="s2">.cdf`.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">isf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">PROBABILITY_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Inverse survival function&quot;</span><span class="p">)</span>
+
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">rvs</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Random variable sampling.</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">    size : int, (int,) or (int, int)</span>
+<span class="s2">        Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a </span>
+<span class="s2">        2d array of samples is generated. </span>
+<span class="s2">    return_event : bool, default is False</span>
+<span class="s2">        If True, returns event indicators along with the sample time values.</span>
+<span class="s2">    random_entry : bool, default is False</span>
+<span class="s2">        If True, returns corresponding entry values of the sample time values.</span>
+<span class="s2">    seed : optional int, default is None</span>
+<span class="s2">        Random seed used to fix random sampling.</span>
+
+<span class="s2">    Returns</span>
+<span class="s2">    -------</span>
+<span class="s2">    float, ndarray or tuple of float or ndarray</span>
+<span class="s2">        The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing</span>
+<span class="s2">        the time values followed by event values, entry values or both.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">sample_lifetime_data</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Random variable sampling.</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">    size : int, (int,) or (int, int)</span>
+<span class="s2">        Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a </span>
+<span class="s2">        2d array of samples are generated. </span>
+<span class="s2">    covar : float or np.ndarray</span>
+<span class="s2">        Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
+<span class="s2">    *args : float or np.ndarray</span>
+<span class="s2">        Additional arguments needed by the model.</span>
+<span class="s2">    window : (float, float)</span>
+<span class="s2">        The observation window of the generated sample.</span>
+<span class="s2">    seed : optional int, default is None</span>
+<span class="s2">        Random seed applied to fix random sampling.</span>
+
+<span class="s2">    Returns</span>
+<span class="s2">    -------</span>
+<span class="s2">    LifetimeData</span>
+<span class="s2">        A ``LifetimeData`` object that encapsulates the lifetime values</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Provides access to plotting functionality for this distribution.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">ls_integrate</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Lebesgue-Stieltjes integration.</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">    func : callable (in : 1 ndarray , out : 1 ndarray)</span>
+<span class="s2">        The callable must have only one ndarray object as argument and one ndarray object as output</span>
+<span class="s2">    a : ndarray (maximum number of dimension is 2)</span>
+<span class="s2">        Lower bound(s) of integration.</span>
+<span class="s2">    b : ndarray (maximum number of dimension is 2)</span>
+<span class="s2">        Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)</span>
+<span class="s2">    covar : float or np.ndarray</span>
+<span class="s2">        Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
+<span class="s2">    *args : float or np.ndarray</span>
+<span class="s2">        Additional arguments needed by the model.</span>
+<span class="s2">    deg : int, default 10</span>
+<span class="s2">        Degree of the polynomials interpolation</span>
+
+<span class="s2">    Returns</span>
+<span class="s2">    -------</span>
+<span class="s2">    np.ndarray</span>
+<span class="s2">        Lebesgue-Stieltjes integral of func from `a` to `b`.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">moment</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    n-th order moment</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">    n : order of the moment, at least 1.</span>
+
+<span class="s2">    Returns</span>
+<span class="s2">    -------</span>
+<span class="s2">    np.float64</span>
+<span class="s2">        n-th order moment.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
     <span class="n">class_obj</span><span class="o">.</span><span class="n">mean</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">MOMENT_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The mean&quot;</span><span class="p">)</span>
     <span class="n">class_obj</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">MOMENT_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The variance&quot;</span><span class="p">)</span>
     <span class="n">class_obj</span><span class="o">.</span><span class="n">median</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">MOMENT_BASE_DOCSTRING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The median&quot;</span><span class="p">)</span>
 
-    <span class="n">class_obj</span><span class="o">.</span><span class="n">ichf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ICHF_DOCSTRING</span>
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">ichf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Inverse cumulative hazard function.</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">    cumulative_hazard_rate : float or np.ndarray</span>
+<span class="s2">        Cumulative hazard rate value(s) at which to compute the function.</span>
+<span class="s2">        If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
+<span class="s2">        </span>
+<span class="s2">    covar : float or np.ndarray</span>
+<span class="s2">        Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
+<span class="s2">    *args : float or np.ndarray</span>
+<span class="s2">        Additional arguments needed by the model.</span>
+
+<span class="s2">    Returns</span>
+<span class="s2">    -------</span>
+<span class="s2">    np.float64 or np.ndarray</span>
+<span class="s2">        Function values at each given cumulative hazard rate(s).</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">fit</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Estimation of parameters.</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">    time : ndarray (1d or 2d)</span>
+<span class="s2">        Observed lifetime values.</span>
+<span class="s2">    covar : float or np.ndarray</span>
+<span class="s2">        Covariates values. float can only be valid if the regression has one coefficients. </span>
+<span class="s2">        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
+<span class="s2">    *args : float or np.ndarray</span>
+<span class="s2">        Additional arguments needed by the model.</span>
+<span class="s2">    event : ndarray of boolean values (1d), default is None</span>
+<span class="s2">        Boolean indicators tagging lifetime values as right censored or complete.</span>
+<span class="s2">    entry : ndarray of float (1d), default is None</span>
+<span class="s2">        Left truncations applied to lifetime values.</span>
+<span class="s2">    departure : ndarray of float (1d), default is None</span>
+<span class="s2">        Right truncations applied to lifetime values.</span>
+<span class="s2">    **kwargs</span>
+<span class="s2">        Extra arguments used by `scipy.minimize`. Default values are:</span>
+<span class="s2">            - `method` : `&quot;L-BFGS-B&quot;`</span>
+<span class="s2">            - `contraints` : `()`</span>
+<span class="s2">            - `tol` : `None`</span>
+<span class="s2">            - `callback` : `None`</span>
+<span class="s2">            - `options` : `None`</span>
+<span class="s2">            - `bounds` : `self.params_bounds`</span>
+<span class="s2">            - `x0` : `self.init_params`</span>
+
+<span class="s2">    Returns</span>
+<span class="s2">    -------</span>
+<span class="s2">    Self</span>
+<span class="s2">        The current object with the estimated parameters setted inplace.</span>
+
+<span class="s2">    Notes</span>
+<span class="s2">    -----</span>
+<span class="s2">    Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced</span>
+<span class="s2">    format that allows to pass other information as left-censored or interval-censored values. In this case,</span>
+<span class="s2">    `event` is not needed as 2d-array encodes right-censored values by itself.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="n">class_obj</span><span class="o">.</span><span class="n">fit_from_lifetime_data</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Estimation of parameters from ```LifetimeData``.</span>
+
+<span class="s2">    It is a convenient method for one that would have generated ``LifetimeData`` from another method and wants</span>
+<span class="s2">    to fit the model with these data. Internally, it calls ``fit`` but avoid having to decompose ``LifetimeData``</span>
+<span class="s2">    data into ``time``, ``event``, ``entry`` formalism.</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">    lifetime_data : LifetimeData</span>
+<span class="s2">        The ```LifetimeData```.</span>
+
+<span class="s2">    Returns</span>
+<span class="s2">    -------</span>
+<span class="s2">    Self</span>
+<span class="s2">        The current object with the estimated parameters setted inplace.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
 </pre></div>
 
                 </article>
