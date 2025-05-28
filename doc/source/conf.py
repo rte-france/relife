@@ -9,11 +9,6 @@
 
 import os
 
-# import sys
-# from pathlib import Path
-#
-# sys.path.insert(0, str(Path("..", "..").resolve()))
-
 project = "relife_doc"
 copyright = "2025, RTE"
 author = "RTE-SAGA"
@@ -64,8 +59,14 @@ else:
     mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 #########################################################################################
 
-templates_path = ["_templates", "_templates/autosummary"]
-# exclude_patterns = ['_build', '_templates'] # note to be parsed by compiler
+templates_path = ["_templates"] #toto
+exclude_patterns = [
+    "_*",
+    "user_guide/_*",
+    "user_guide/.ipynb_checkpoints/*",
+    "learn/_*",
+    "api/_*",
+]  # note to be parsed by compiler
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -73,7 +74,7 @@ templates_path = ["_templates", "_templates/autosummary"]
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_title = "ReLife"  # sidebar title
-html_logo = "_static/logo.png"
+html_logo = "_static/small_relife.gif"
 html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 
@@ -83,6 +84,7 @@ html_theme_options = {
     "navbar_align": "left",  # align to the left header bar sections
     "header_links_before_dropdown": 4,  # control the number of section displayed in the header bar
     "show_prev_next": False,  # hide previous and next button
+    "show_nav_level": 2,  # unfold nav section by 2 levels
     "icon_links": [
         {
             # Label for this link
@@ -103,4 +105,9 @@ html_theme_options = {
             "icon": "fa-custom fa-pypi",
         },
     ],
+    "navbar_start": ["navbar-logo", "version"],
 }
+
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+html_additional_pages = {"index": "index.html"}

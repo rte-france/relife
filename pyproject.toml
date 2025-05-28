@@ -28,6 +28,7 @@ dev = [
     "pylint",
     "mypy",
     "no-implicit-optional",
+    "scipy-stubs", # needed to type hint scipy https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-library-stubs-or-py-typed-marker
 
     "sphinx",
     "pydata-sphinx-theme",
@@ -39,8 +40,24 @@ dev = [
     "jupyterlab",
 ]
 
+[tool.black]
+line-length = 120
+
 [tool.isort]
 profile = 'black'
+
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin" # needed to type hing nympy
+
+[[tool.mypy.overrides]]
+module = [
+    "relife/data/*",
+    "relife/likelihood/*",
+    "relife/policy/*",
+    "relife/stochastic_process/*",
+]
+ignore_errors = true
+
 
 [tool.pylint.format]
 max-line-length = "88"
@@ -50,14 +67,14 @@ disable = """
 """
 ignored-modules = "scipy.special"
 
-# mypy does not recognize Tuple[Any, ...] notation (bug)
-# see : https://github.com/python/mypy/issues/9459
-[[tool.mypy.overrides]]
-module = ["relife.typing.args"]
-disable_error_code = ["misc"]
 
-# current scipy is untyped and does not work with mypy
-# see : https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
-[[tool.mypy.overrides]]
-module = ["scipy.*"]
-ignore_missing_imports = true
+# pytest
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-rxXs"
+# addopts = "-rxXs -k 'not test_ls_integrate[loglogistic]'"
+testpaths = [
+    "test/test_lifetime_model/test_distribution.py",
+    "test/test_parametric_model.py",
+    "test/test_quadrature.py"
+]

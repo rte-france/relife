@@ -11,7 +11,7 @@
     --pst-font-size-h6: 19px;
 
     /*    sphinx-design-color*/
-    --sd-color-primary: rgb(250 51 100);
+    --sd-color-primary: rgb(0 167 222);
 }
 
 /*remove underline links*/
@@ -28,7 +28,7 @@ html[data-theme="light"] {
     /*****************************************************************************
     * main colors
     */
-    --pst-color-primary: rgb(250 51 100);
+    --pst-color-primary: rgb(0 167 222);
     --pst-color-secondary: rgb(238 144 64);
     --pst-color-success: rgb(40, 167, 69);
     --pst-color-info: var(--pst-color-primary);
@@ -87,7 +87,7 @@ html[data-theme="dark"] {
     /*****************************************************************************
     * main colors
     */
-    --pst-color-primary: rgb(250 51 100);
+    --pst-color-primary: rgb(0 167 222);
     --pst-color-secondary: rgb(238 144 64);
     --pst-color-success: rgb(72, 135, 87);
     --pst-color-info: var(--pst-color-primary);

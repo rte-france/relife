@@ -1,0 +1,225 @@
+{% extends "layout.html" %}
+{% set title = 'relife: asset management in Python' %}
+
+{% block docs_navbar %}
+<div class="container-fluid px-0 vw-100">
+    <div style="background: linear-gradient(to right, rgba(122, 218, 250, 0.7), rgba(176, 228, 245, 0.5), rgba(176, 228, 245, 0.5), rgba(225, 246, 252, 0.5), rgba(225, 246, 252, 0.5), rgba(232, 248, 252, 0.5));">
+        <div class="container py-4">
+            {# Mobile version #}
+            <div class="d-block d-md-none">
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="me-3">
+                        <img src="{{ pathto('_static/relife.gif', 1) }}" alt="ReLife Logo" style="max-width: 40vw;">
+                    </div>
+                    <div class="d-flex flex-column">
+                        <a href="https://pypi.org/project/relife/" class="btn shadow mb-2"
+                           style="background-color: rgb(50, 164, 220); color: white;">
+                            Download
+                        </a>
+                        <span class="text-muted">2.0.0 release</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Desktop version #}
+            <div class="d-none d-md-block">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="me-4">
+                            <img src="{{ pathto('_static/relife.gif', 1) }}" alt="ReLife Logo" style="max-width: 30vw;">
+                        </div>
+                        <div class="d-flex flex-column">
+                            <a href="https://pypi.org/project/relife/" class="btn shadow mb-2"
+                               style="background-color: rgb(50, 164, 220); color: white;">
+                                Download
+                            </a>
+                            <span class="text-muted">2.0.0 release</span>
+                        </div>
+                    </div>
+
+                    <div class="mx-4" style="flex: 1;">
+                        <p class="mb-2 fs-6">ReLife is an <b>open source</b> Python library for <b>asset management</b> based on reliability theory and lifetime data analysis. It gathers functionnalities from:</p>
+                        <ul class="fs-6">
+                            <li>Survival analysis</li>
+                            <li>Reliability theory</li>
+                            <li>Renewal theory</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <img src="{{ pathto('_static/rte.png', 1) }}" alt="RTE Logo" style="max-width: 30vw;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock docs_navbar %}
+
+
+{% block docs_main %}
+<div class="bd-content">
+    <div class="bd-article-container">
+        <article class="bd-article">
+
+            {# Search bar section #}
+            <div class="container mt-4 mb-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <form class="bd-search" action="{{ pathto('search') }}" method="get">
+                            <div class="input-group">
+                                <input type="search" class="form-control" name="q" placeholder="Search the documentation..." aria-label="Search">
+                                <button class="btn" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            {# Documentation sections table #}
+            <div class="container mt-4">
+                <h5 class="mb-4">Content of this site</h5>
+                <table class="table">
+                    <tbody style="background-color: white;">
+                        <tr>
+                            <td style="width: 25%; background-color: white;">
+                                <a href="{{ pathto('get_started/index') }}">Get started</a>
+                            </td>
+                            <td style="width: 75%; background-color: white;">
+                                Installation and a first example to begin with ReLife
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: white;">
+                                <a href="{{ pathto('api/index') }}">API</a>
+                            </td>
+                            <td style="background-color: white;">
+                                The content of the exposed ReLife API
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: white;">
+                                <a href="{{ pathto('user_guide/index') }}">Usage examples</a>
+                            </td>
+                            <td style="background-color: white;">
+                                Detailed use case examples
+                            </td>
+                        </tr>
+<!--                        <tr>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                <a href="{{ pathto('learn/index') }}">Learn</a>-->
+<!--                            </td>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                Learn more about reliability and renewal theory-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                <a href="{{ pathto('contributor_guide/index') }}">Contributor's guide</a>-->
+<!--                            </td>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                Information about the conception of ReLife and how to contribute-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                <a href="{{ pathto('future/index') }}">Future improvements</a>-->
+<!--                            </td>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                Works that are in progress-->
+<!--                            </td>-->
+<!--                        </tr>-->
+                    </tbody>
+                </table>
+            </div>
+
+
+            {# Grid section #}
+            <div class="sd-container-fluid sd-sphinx-override sd-mb-4 mt-5">
+                <h5 class="mb-4">Why you should use ReLife ?</h5>
+                <div class="sd-row row-eq-height sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-1 sd-row-cols-md-3 sd-g-2">
+                    <div class="sd-col d-flex">
+                        <div class="sd-card bg-white w-100">
+                            <div class="sd-card-body p-2" style="display: block;">
+                                <h6 class="sd-card-title" style="margin-top: 0;">Statiscal expertise</h6>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife implements approved statistical models of reliability and renewal theory</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sd-col d-flex">
+                        <div class="sd-card bg-white w-100">
+                            <div class="sd-card-body p-2" style="display: block;">
+                                <h6 class="sd-card-title" style="margin-top: 0;">Open science</h6>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife is open source and tries to gather the best of scientific knowledge to conduct appropriate risk analysis for asset management</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sd-col d-flex">
+                        <div class="sd-card bg-white w-100">
+                            <div class="sd-card-body p-2" style="display: block;">
+                                <h6 class="sd-card-title" style="margin-top: 0;">Easy to use</h6>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife is coded in Python and was designed to be accessible for user from any programming background or experience level</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Supporters section #}
+            <div class="container mb-5">
+                <h6 class="mb-4">They use ReLife</h6>
+                <hr class="container my-5" style="border-top: 2px solid rgba(0, 0, 0, 0.3);">
+                <div class="row row-cols-2 row-cols-md-4 g-4 justify-content-center align-items-center">
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/rte.png', 1) }}" alt="RTE"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/artelys.png', 1) }}" alt="Artelys"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/company3.png', 1) }}" alt="Company 3"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/company4.png', 1) }}" alt="Company 4"
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                </div>
+                <hr class="container my-5" style="border-top: 2px solid rgba(0, 0, 0, 0.3);">
+            </div>
+
+            {# What's new section #}
+            <div class="container mt-5 mb-5">
+                <h6 class="mb-4">Release notes</h6>
+                <ul>
+                    <li class="mb-2">2.0.0 version is a significant refactored version of the unique ReLife release. It might be better for contributions, testing, and long-term maintainability.</li>
+                    <li class="mb-2">Parametric models, including lifetime models and stochastic processes, are now unified under one ParametricModel interface which includes a composite parameter structure, making model model composition and reuse easy</li>
+                    <li class="mb-2">The new version makes use of extensive type hinting, including generic abstract base classes. It enhances modularity and clarifies object interaction logic. Currently, the codebase is type hint in the source files. It adds a lot of boilerplate code. So we plan to pass it to stub files (see below) in next releases</li>
+                    <li class="mb-2">ReLife is built on NumPy. Thus, in v2.0.0, we try to incluse rigorous testing for array shape validation and broadcasting compatibility, ensuring consistent function behavior.
+                    <li class="mb-2">The current release proposes a new documentation. The old one was buggy and not maintained. The new document is still incomplete. Writting is long and it will be done continuously. In the long term, we hope that it will make the API more accessible, including tutorials, mathematical explanations, and usage examples to encourage collaboration </li>
+                </ul>
+            </div>
+
+            {# Roadmap section #}
+            <div class="container mb-5">
+                <h6 class="mb-4">🚀 Ongoing work</h6>
+                <ul>
+                    <li class="mb-2">Enhance type hinting with mypy validations. We also plan to experiment with stub files to consolidate type hints in a single location, improving code readability.</li>
+                    <li class="mb-2">Adding more documentation, notebook tutorials, high-level math explanations of ReLife functionnalities, a contribution guide explaning conception choices</li>
+                    <li class="mb-2">Implementing Non Homogeneous Poisson Process -> v2.1.0</li>
+                    <li class="mb-2">Implementing Gamma Process -> v2.2.0</li>
+                    <li class="mb-2">Implementing Cox Regression -> v2.3.0</li>
+                    <li class="mb-2">Creating an Orange Data Mining pluggin to have a GUI -> v(?)</li>
+                    <li class="mb-2">Adding low-level bindings to speed up some code (renewal equations) : possibilities are cython or pybind11 -> v(?)</li>
+                </ul>
+            </div>
+
+        </article>
+    </div>
+</div>
+{% endblock docs_main %}
