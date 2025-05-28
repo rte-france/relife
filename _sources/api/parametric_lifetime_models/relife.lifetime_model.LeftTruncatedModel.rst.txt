@@ -1,0 +1,69 @@
+﻿
+
+
+LeftTruncatedModel
+==================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: LeftTruncatedModel
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~LeftTruncatedModel.cdf
+        
+        
+            ~LeftTruncatedModel.chf
+        
+        
+            ~LeftTruncatedModel.hf
+        
+        
+            ~LeftTruncatedModel.ichf
+        
+        
+            ~LeftTruncatedModel.isf
+        
+        
+            ~LeftTruncatedModel.ls_integrate
+        
+        
+            ~LeftTruncatedModel.mean
+        
+        
+            ~LeftTruncatedModel.median
+        
+        
+            ~LeftTruncatedModel.moment
+        
+        
+            ~LeftTruncatedModel.mrl
+        
+        
+            ~LeftTruncatedModel.pdf
+        
+        
+            ~LeftTruncatedModel.ppf
+        
+        
+            ~LeftTruncatedModel.rvs
+        
+        
+            ~LeftTruncatedModel.sample_lifetime_data
+        
+        
+            ~LeftTruncatedModel.sf
+        
+        
+            ~LeftTruncatedModel.var
+        

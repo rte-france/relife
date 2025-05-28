@@ -1,0 +1,93 @@
+﻿
+
+
+ProportionalHazard
+==================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: ProportionalHazard
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~ProportionalHazard.cdf
+        
+        
+            ~ProportionalHazard.chf
+        
+        
+            ~ProportionalHazard.dhf
+        
+        
+            ~ProportionalHazard.fit
+        
+        
+            ~ProportionalHazard.fit_from_lifetime_data
+        
+        
+            ~ProportionalHazard.hf
+        
+        
+            ~ProportionalHazard.ichf
+        
+        
+            ~ProportionalHazard.isf
+        
+        
+            ~ProportionalHazard.jac_cdf
+        
+        
+            ~ProportionalHazard.jac_chf
+        
+        
+            ~ProportionalHazard.jac_hf
+        
+        
+            ~ProportionalHazard.jac_pdf
+        
+        
+            ~ProportionalHazard.jac_sf
+        
+        
+            ~ProportionalHazard.ls_integrate
+        
+        
+            ~ProportionalHazard.mean
+        
+        
+            ~ProportionalHazard.median
+        
+        
+            ~ProportionalHazard.moment
+        
+        
+            ~ProportionalHazard.mrl
+        
+        
+            ~ProportionalHazard.pdf
+        
+        
+            ~ProportionalHazard.ppf
+        
+        
+            ~ProportionalHazard.rvs
+        
+        
+            ~ProportionalHazard.sample_lifetime_data
+        
+        
+            ~ProportionalHazard.sf
+        
+        
+            ~ProportionalHazard.var
+        

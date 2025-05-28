@@ -1,0 +1,45 @@
+﻿
+
+
+RenewalRewardProcess
+====================
+
+.. currentmodule:: relife.stochastic_process
+
+.. autoclass:: RenewalRewardProcess
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth
+        
+        
+            ~RenewalRewardProcess.asymptotic_expected_total_reward
+        
+        
+            ~RenewalRewardProcess.expected_equivalent_annual_worth
+        
+        
+            ~RenewalRewardProcess.expected_total_reward
+        
+        
+            ~RenewalRewardProcess.renewal_density
+        
+        
+            ~RenewalRewardProcess.renewal_function
+        
+        
+            ~RenewalRewardProcess.sample_count_data
+        
+        
+            ~RenewalRewardProcess.sample_lifetime_data
+        

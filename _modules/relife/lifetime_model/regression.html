@@ -379,13 +379,14 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">overload</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">overload</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..data</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Args</span><span class="p">,</span> <span class="n">LifetimeRegression</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_time_covar</span><span class="p">(</span>
@@ -430,7 +431,7 @@
 
 
 <div class="viewcode-block" id="ProportionalHazard">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ProportionalHazard</span><span class="p">(</span><span class="n">LifetimeRegression</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Proportional Hazard regression.</span>
@@ -450,17 +451,16 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    baseline : Any lifetime model that can be fitted.</span>
-<span class="sd">        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.</span>
-<span class="sd">        Any parametric_model lifetime model to serve as the baseline.</span>
-<span class="sd">    coefficients : tuple of floats (values can be None), optional</span>
+<span class="sd">    baseline : FittableParametricLifetimeModel</span>
+<span class="sd">        Any lifetime model that can be fitted.</span>
+<span class="sd">    coefficients : tuple of floats (values can be None), default is (None,)</span>
 <span class="sd">        Coefficients values of the covariate effects.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`</span>
-<span class="sd">        The regression baseline model.</span>
-<span class="sd">    covar_effect : :py:class:`~relife.model.regression.CovarEffect`</span>
+<span class="sd">    baseline : FittableParametricLifetimeModel</span>
+<span class="sd">        The regression baseline model (lifetime model).</span>
+<span class="sd">    covar_effect : CovarEffect</span>
 <span class="sd">        The regression covariate effect.</span>
 
 <span class="sd">    References</span>
@@ -475,7 +475,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ProportionalHazard.hf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.hf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -486,7 +486,7 @@
 
 
 <div class="viewcode-block" id="ProportionalHazard.chf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.chf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -498,7 +498,7 @@
 
 
 <div class="viewcode-block" id="ProportionalHazard.ichf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.ichf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.ichf">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -510,7 +510,7 @@
 
 
 <div class="viewcode-block" id="ProportionalHazard.dhf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.dhf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.dhf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -539,7 +539,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="ProportionalHazard.jac_hf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_hf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -594,7 +594,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="ProportionalHazard.jac_chf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_chf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -627,12 +627,21 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span></div>
+
+
+<div class="viewcode-block" id="ProportionalHazard.moment">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.moment">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 </div>
 
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AcceleratedFailureTime</span><span class="p">(</span><span class="n">LifetimeRegression</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Accelerated failure time regression.</span>
@@ -653,16 +662,16 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    baseline : Any lifetime model that can be fitted.</span>
-<span class="sd">        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.</span>
-<span class="sd">    coefficients : tuple of floats (values can be None), optional</span>
+<span class="sd">    baseline : FittableParametricLifetimeModel</span>
+<span class="sd">        Any lifetime model that can be fitted.</span>
+<span class="sd">    coefficients : tuple of floats (values can be None), default is (None,)</span>
 <span class="sd">        Coefficients values of the covariate effects.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`</span>
-<span class="sd">        The regression baseline model.</span>
-<span class="sd">    covar_effect : :py:class:`~relife.model.regression.CovarEffect`</span>
+<span class="sd">    baseline : FittableParametricLifetimeModel</span>
+<span class="sd">        The regression baseline model (lifetime model).</span>
+<span class="sd">    covar_effect : CovarEffect</span>
 <span class="sd">        The regression covariate effect.</span>
 
 <span class="sd">    References</span>
@@ -676,7 +685,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="AcceleratedFailureTime.hf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.hf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -688,7 +697,7 @@
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime.chf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.chf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -700,7 +709,7 @@
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime.ichf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.ichf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.ichf">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -712,7 +721,7 @@
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime.dhf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.dhf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.dhf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -742,7 +751,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="AcceleratedFailureTime.jac_hf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_hf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_hf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -798,7 +807,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="AcceleratedFailureTime.jac_chf">
-<a class="viewcode-back" href="../../../api/lifetime_regression/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_chf">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -832,6 +841,15 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span></div>
+
+
+<div class="viewcode-block" id="AcceleratedFailureTime.moment">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.moment">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 </div>
 
 
@@ -1114,7 +1132,7 @@
 <span class="s2">    &quot;&quot;&quot;</span>
 
     <span class="n">class_obj</span><span class="o">.</span><span class="n">fit_from_lifetime_data</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    Estimation of parameters from ```LifetimeData``.</span>
+<span class="s2">    Estimation of parameters from lifetime data.</span>
 
 <span class="s2">    It is a convenient method for one that would have generated ``LifetimeData`` from another method and wants</span>
 <span class="s2">    to fit the model with these data. Internally, it calls ``fit`` but avoid having to decompose ``LifetimeData``</span>

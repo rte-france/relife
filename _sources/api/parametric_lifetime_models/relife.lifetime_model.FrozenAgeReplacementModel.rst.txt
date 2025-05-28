@@ -1,0 +1,69 @@
+﻿
+
+
+FrozenAgeReplacementModel
+=========================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: FrozenAgeReplacementModel
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~FrozenAgeReplacementModel.cdf
+        
+        
+            ~FrozenAgeReplacementModel.chf
+        
+        
+            ~FrozenAgeReplacementModel.hf
+        
+        
+            ~FrozenAgeReplacementModel.ichf
+        
+        
+            ~FrozenAgeReplacementModel.isf
+        
+        
+            ~FrozenAgeReplacementModel.ls_integrate
+        
+        
+            ~FrozenAgeReplacementModel.mean
+        
+        
+            ~FrozenAgeReplacementModel.median
+        
+        
+            ~FrozenAgeReplacementModel.moment
+        
+        
+            ~FrozenAgeReplacementModel.mrl
+        
+        
+            ~FrozenAgeReplacementModel.pdf
+        
+        
+            ~FrozenAgeReplacementModel.ppf
+        
+        
+            ~FrozenAgeReplacementModel.rvs
+        
+        
+            ~FrozenAgeReplacementModel.sf
+        
+        
+            ~FrozenAgeReplacementModel.unfreeze
+        
+        
+            ~FrozenAgeReplacementModel.var
+        

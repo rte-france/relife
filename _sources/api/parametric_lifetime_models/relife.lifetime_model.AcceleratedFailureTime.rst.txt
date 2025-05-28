@@ -1,0 +1,93 @@
+﻿
+
+
+AcceleratedFailureTime
+======================
+
+.. currentmodule:: relife.lifetime_model
+
+.. autoclass:: AcceleratedFailureTime
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~AcceleratedFailureTime.cdf
+        
+        
+            ~AcceleratedFailureTime.chf
+        
+        
+            ~AcceleratedFailureTime.dhf
+        
+        
+            ~AcceleratedFailureTime.fit
+        
+        
+            ~AcceleratedFailureTime.fit_from_lifetime_data
+        
+        
+            ~AcceleratedFailureTime.hf
+        
+        
+            ~AcceleratedFailureTime.ichf
+        
+        
+            ~AcceleratedFailureTime.isf
+        
+        
+            ~AcceleratedFailureTime.jac_cdf
+        
+        
+            ~AcceleratedFailureTime.jac_chf
+        
+        
+            ~AcceleratedFailureTime.jac_hf
+        
+        
+            ~AcceleratedFailureTime.jac_pdf
+        
+        
+            ~AcceleratedFailureTime.jac_sf
+        
+        
+            ~AcceleratedFailureTime.ls_integrate
+        
+        
+            ~AcceleratedFailureTime.mean
+        
+        
+            ~AcceleratedFailureTime.median
+        
+        
+            ~AcceleratedFailureTime.moment
+        
+        
+            ~AcceleratedFailureTime.mrl
+        
+        
+            ~AcceleratedFailureTime.pdf
+        
+        
+            ~AcceleratedFailureTime.ppf
+        
+        
+            ~AcceleratedFailureTime.rvs
+        
+        
+            ~AcceleratedFailureTime.sample_lifetime_data
+        
+        
+            ~AcceleratedFailureTime.sf
+        
+        
+            ~AcceleratedFailureTime.var
+        

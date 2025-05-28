@@ -1,0 +1,45 @@
+﻿
+
+
+AgeReplacementPolicy
+====================
+
+.. currentmodule:: relife.policy
+
+.. autoclass:: AgeReplacementPolicy
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
+        
+        
+            ~AgeReplacementPolicy.asymptotic_expected_total_cost
+        
+        
+            ~AgeReplacementPolicy.expected_equivalent_annual_cost
+        
+        
+            ~AgeReplacementPolicy.expected_nb_replacements
+        
+        
+            ~AgeReplacementPolicy.expected_total_cost
+        
+        
+            ~AgeReplacementPolicy.optimize
+        
+        
+            ~AgeReplacementPolicy.sample_count_data
+        
+        
+            ~AgeReplacementPolicy.sample_lifetime_data
+        

@@ -1,0 +1,39 @@
+﻿
+
+
+BaseOneCycleAgeReplacementPolicy
+================================
+
+.. currentmodule:: relife.policy
+
+.. autoclass:: BaseOneCycleAgeReplacementPolicy
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
+        
+        
+            ~BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost
+        
+        
+            ~BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost
+        
+        
+            ~BaseOneCycleAgeReplacementPolicy.expected_total_cost
+        
+        
+            ~BaseOneCycleAgeReplacementPolicy.sample_count_data
+        
+        
+            ~BaseOneCycleAgeReplacementPolicy.sample_lifetime_data
+        
