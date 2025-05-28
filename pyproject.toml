@@ -1,17 +1,36 @@
 [build-system] # see setuptools quickstart
-requires = ["setuptools"]
+requires = ["setuptools >= 59.6.0"]
 build-backend = "setuptools.build_meta"
+
+# to build and publish see https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
 [project]
 name = "relife"
 version = "2.0.0"
-requires-python = ">=3.11"
-dependencies = [
-    "numpy", # 1.26.4
-    "scipy",
-    "matplotlib",
-    "typing-extensions",
+authors = [
+	{name = "Thomas Guillon", email="thomas.guillon@rte-france.com"},
+    {name = "William Grison", email="william.grison@artelys.com"},
 ]
+description = "ReLife is an open source Python library for asset management based on reliability theory and lifetime data analysis."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "Apache-2.0"
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+    "numpy >= 2.2.0",
+    "scipy >= 1.15.0",
+    "matplotlib >= 3.10.0",
+    "typing_extensions >= 4.12.2",
+]
+[project.urls]
+Homepage = "https://github.com/rte-france/relife"
+Documentation = "http://opensource.rte-france.com/relife/"
+Issues = "https://github.com/rte-france/relife/issues"
+
 
 [tool.setuptools.packages.find] # project structure is "flat layout"
 where = ["."] # current directory for flat layout
@@ -19,25 +38,24 @@ include = ["relife*"]  # ["*"] by default
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pandas",
+    "pytest >= 8.3.0",
 
-    "nox",
-    "isort",
-    "black",
-    "pylint",
-    "mypy",
+    "nox >= 2024.10.0",
+    "isort >= 6.0.0",
+    "black >= 25.1.0",
+    "pylint >= 3.3.0",
+    "mypy >= 1.15.0",
+    "mypy-extensions >= 1.0.0",
     "no-implicit-optional",
     "scipy-stubs", # needed to type hint scipy https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-library-stubs-or-py-typed-marker
-
-    "sphinx",
-    "pydata-sphinx-theme",
-    "sphinx-copybutton",
-    "sphinx-design",
-    "numpydoc",
-    "nbsphinx",
-    "myst-parser",
-    "jupyterlab",
+    "Sphinx >= 8.1.3",
+    "pydata-sphinx-theme >= 0.16.1",
+    "sphinx-copybutton >= 0.5.2",
+    "sphinx_design >= 0.6.1",
+    "numpydoc >= 1.8.0",
+    "nbsphinx >= 0.9.7",
+    "myst-parser >= 4.0.1",
+    "jupyterlab >= 4.3.5",
 ]
 
 [tool.black]
@@ -66,7 +84,6 @@ disable = """
     line-too-long,
 """
 ignored-modules = "scipy.special"
-
 
 # pytest
 [tool.pytest.ini_options]
