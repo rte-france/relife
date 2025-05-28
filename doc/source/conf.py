@@ -79,7 +79,7 @@ html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 
 html_theme_options = {
-    "announcement": "<em>beta version</em> : the code is still in development (expected release by the end of April 2025). The documentation might not be up-to-date",  # annoucement bar
+    "announcement": "<em>New version in test</em> : your seeing the new documentation which is still in progress (information might be missing or incomplete)",  # annoucement bar
     "navigation_with_keys": False,
     "navbar_align": "left",  # align to the left header bar sections
     "header_links_before_dropdown": 4,  # control the number of section displayed in the header bar
