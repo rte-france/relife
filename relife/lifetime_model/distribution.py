@@ -7,6 +7,7 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygam
 from typing_extensions import override
 
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
+
 from ..data import LifetimeData
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
@@ -287,7 +288,7 @@ class Gompertz(LifetimeDistribution):
         super().__init__(shape=shape, rate=rate)
 
     @override
-    def init_params_values(self, lifetime_data: LifetimeData) -> None:
+    def _init_params_values(self, lifetime_data: LifetimeData) -> None:
         param0 = np.empty(self.nb_params, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.lifetime_values))
         shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.lifetime_values))
@@ -798,7 +799,6 @@ for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
     class_obj.jac_pdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the probability density function")
     class_obj.jac_cdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the cumulative distribution function")
 
-
     class_obj.ppf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="The percent point function")
     class_obj.ppf.__doc__ += f"""
     Notes
@@ -830,7 +830,7 @@ for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
     """
 
     class_obj.sample_lifetime_data.__doc__ = """
-    Random variable sampling.
+    Sample lifetime data in an observation window.
 
     Parameters
     ----------
@@ -902,7 +902,6 @@ for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
     np.float64 or np.ndarray
         Function values at each given cumulative hazard rate(s).
     """
-
 
     class_obj.fit.__doc__ = """
     Estimation of parameters.

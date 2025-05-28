@@ -9,7 +9,7 @@
     :members:
     :inherited-members:
     :exclude-members: {{ exclude_members }}
-    :member-order: bysource
+    :member-order: alphabetical
 
     .. rubric:: {{ _('Methods') }}
 

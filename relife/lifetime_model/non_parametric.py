@@ -155,7 +155,6 @@ class KaplanMeier(NonParametricLifetimeModel):
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-        inplace: bool = False,
     ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.

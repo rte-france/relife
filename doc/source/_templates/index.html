@@ -94,14 +94,6 @@
                         </tr>
                         <tr>
                             <td style="background-color: white;">
-                                <a href="{{ pathto('user_guide/index') }}">User's guide</a>
-                            </td>
-                            <td style="background-color: white;">
-                                More detailed examples
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="background-color: white;">
                                 <a href="{{ pathto('api/index') }}">API</a>
                             </td>
                             <td style="background-color: white;">
@@ -110,28 +102,36 @@
                         </tr>
                         <tr>
                             <td style="background-color: white;">
-                                <a href="{{ pathto('learn/index') }}">Learn</a>
+                                <a href="{{ pathto('user_guide/index') }}">Usage examples</a>
                             </td>
                             <td style="background-color: white;">
-                                Learn more about reliability and renewal theory
+                                Detailed use case examples
                             </td>
                         </tr>
-                        <tr>
-                            <td style="background-color: white;">
-                                <a href="{{ pathto('contributor_guide/index') }}">Contributor's guide</a>
-                            </td>
-                            <td style="background-color: white;">
-                                Information about the conception of ReLife and how to contribute
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="background-color: white;">
-                                <a href="{{ pathto('future/index') }}">Future improvements</a>
-                            </td>
-                            <td style="background-color: white;">
-                                Works that are in progress
-                            </td>
-                        </tr>
+<!--                        <tr>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                <a href="{{ pathto('learn/index') }}">Learn</a>-->
+<!--                            </td>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                Learn more about reliability and renewal theory-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                <a href="{{ pathto('contributor_guide/index') }}">Contributor's guide</a>-->
+<!--                            </td>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                Information about the conception of ReLife and how to contribute-->
+<!--                            </td>-->
+<!--                        </tr>-->
+<!--                        <tr>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                <a href="{{ pathto('future/index') }}">Future improvements</a>-->
+<!--                            </td>-->
+<!--                            <td style="background-color: white;">-->
+<!--                                Works that are in progress-->
+<!--                            </td>-->
+<!--                        </tr>-->
                     </tbody>
                 </table>
             </div>
@@ -195,21 +195,27 @@
 
             {# What's new section #}
             <div class="container mt-5 mb-5">
-                <h6 class="mb-4">Current release news</h6>
-                <ul class="list-unstyled">
-                    <li class="mb-2">New feature 1</li>
-                    <li class="mb-2">New feature 2</li>
-                    <li class="mb-2">New feature 3</li>
+                <h6 class="mb-4">Release notes</h6>
+                <ul>
+                    <li class="mb-2">2.0.0 version is a significant refactored version of the unique ReLife release. It might be better for contributions, testing, and long-term maintainability.</li>
+                    <li class="mb-2">Parametric models, including lifetime models and stochastic processes, are now unified under one ParametricModel interface which includes a composite parameter structure, making model model composition and reuse easy</li>
+                    <li class="mb-2">The new version makes use of extensive type hinting, including generic abstract base classes. It enhances modularity and clarifies object interaction logic. Currently, the codebase is type hint in the source files. It adds a lot of boilerplate code. So we plan to pass it to stub files (see below) in next releases</li>
+                    <li class="mb-2">ReLife is built on NumPy. Thus, in v2.0.0, we try to incluse rigorous testing for array shape validation and broadcasting compatibility, ensuring consistent function behavior.
+                    <li class="mb-2">The current release proposes a new documentation. The old one was buggy and not maintained. The new document is still incomplete. Writting is long and it will be done continuously. In the long term, we hope that it will make the API more accessible, including tutorials, mathematical explanations, and usage examples to encourage collaboration </li>
                 </ul>
             </div>
 
             {# Roadmap section #}
             <div class="container mb-5">
-                <h6 class="mb-4">🚀 Things we've planned to do</h6>
-                <ul class="list-unstyled">
-                    <li class="mb-2">Planned feature 1</li>
-                    <li class="mb-2">Planned feature 2</li>
-                    <li class="mb-2">Planned feature 3</li>
+                <h6 class="mb-4">🚀 Ongoing work</h6>
+                <ul>
+                    <li class="mb-2">Enhance type hinting with mypy validations. We also plan to experiment with stub files to consolidate type hints in a single location, improving code readability.</li>
+                    <li class="mb-2">Adding more documentation, notebook tutorials, high-level math explanations of ReLife functionnalities, a contribution guide explaning conception choices</li>
+                    <li class="mb-2">Implementing Non Homogeneous Poisson Process -> v2.1.0</li>
+                    <li class="mb-2">Implementing Gamma Process -> v2.2.0</li>
+                    <li class="mb-2">Implementing Cox Regression -> v2.3.0</li>
+                    <li class="mb-2">Creating an Orange Data Mining pluggin to have a GUI -> v(?)</li>
+                    <li class="mb-2">Adding low-level bindings to speed up some code (renewal equations) : possibilities are cython or pybind11 -> v(?)</li>
                 </ul>
             </div>
 

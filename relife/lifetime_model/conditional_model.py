@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
+from ..data import LifetimeData
 from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
 
 
@@ -23,19 +24,15 @@ class AgeReplacementModel(
     ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 ):
     r"""
-    Age replacement core.
+    Age replacement model.
 
-    Lifetime core where the asset is replaced at age :math:`a_r`.
+    Lifetime model where the assets are replaced at age :math:`a_r`. This is equivalent to the model of :math:`\min(X,a_r)` where
+    :math:`X` is a baseline lifetime and :math:`a_r` is the age of replacement.
 
     Parameters
     ----------
-    baseline : BaseLifetimeModel
-        Underlying lifetime core.
-
-    Notes
-    -----
-    This is equivalent to the distribution of :math:`\min(X,a_r)` where
-    :math:`X` is a baseline lifetime and ar the age of replacement.
+    baseline : any parametric lifetime model (frozen lifetime model works)
+        The base lifetime model without conditional probabilities
     """
 
     # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
@@ -286,18 +283,30 @@ class AgeReplacementModel(
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
+    @override
+    def sample_lifetime_data(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        window: tuple[float, float] = (0.0, np.inf),
+        seed: Optional[int] = None,
+    ) -> LifetimeData:
+        ar = reshape_ar_or_a0("ar", ar)
+        return super().sample_lifetime_data(size, *(ar, *args), window=window, seed=seed)
+
 
 class LeftTruncatedModel(
     ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 ):
-    r"""Left truncated core.
+    r"""Left truncated model.
 
-    Conditional distribution of the lifetime core for an asset having reach age :math:`a_0`.
+    Lifetime model where the assets have already reached the age :math:`a_0`.
 
     Parameters
     ----------
-    baseline : BaseLifetimeModel
-        Underlying lifetime core.
+    baseline : any parametric lifetime model (frozen lifetime model works)
+        The base lifetime model without conditional probabilities
     """
 
     # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
@@ -320,7 +329,7 @@ class LeftTruncatedModel(
         time: float | NDArray[np.float64],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         a0 = reshape_ar_or_a0("a0", a0)
         return super().sf(time, a0, *args)
 
@@ -329,7 +338,7 @@ class LeftTruncatedModel(
         time: float | NDArray[np.float64],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         a0 = reshape_ar_or_a0("a0", a0)
         return super().pdf(time, a0, *args)
 
@@ -338,7 +347,7 @@ class LeftTruncatedModel(
         probability: NDArray[np.float64],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
         a0 = reshape_ar_or_a0("a0", a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
@@ -348,25 +357,34 @@ class LeftTruncatedModel(
         time: float | NDArray[np.float64],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
+
+    def cdf(
+        self,
+        time: float | NDArray[np.float64],
+        ar: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+    ) -> np.float64 | NDArray[np.float64]:
+        ar = reshape_ar_or_a0("ar", ar)
+        return super().cdf(time, *(ar, *args))
 
     def hf(
         self,
         time: float | NDArray[np.float64],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.hf(a0 + time, *args)
 
     def ichf(
         self,
-        cumulative_hazard_rate: NDArray[np.float64],
+        cumulative_hazard_rate: float | NDArray[np.float64],
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    ) -> np.float64 | NDArray[np.float64]:
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
@@ -460,10 +478,111 @@ class LeftTruncatedModel(
         else:
             return super_rvs
 
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[float | np.float64 | NDArray[np.float64]], float | np.float64 | NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        deg: int = 10,
+    ) -> NDArray[np.float64]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
+
+    @override
+    def mean(
+        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().mean(*(a0, *args))
+
+    @override
+    def median(
+        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().median(*(a0, *args))
+
+    @override
+    def var(
+        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().var(*(a0, *args))
+
+    @override
+    def moment(
+        self, n: int, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().moment(n, *(a0, *args))
+
+    @override
+    def mrl(
+        self, time: float | NDArray[np.float64], a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().mrl(time, *(a0, *args))
+
+    @override
+    def ppf(
+        self,
+        probability: float | NDArray[np.float64],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+    ) -> np.float64 | NDArray[np.float64]:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().ppf(probability, *(a0, *args))
+
+    @override
+    def sample_lifetime_data(
+        self,
+        size: int | tuple[int] | tuple[int, int],
+        a0: float | NDArray[np.float64],
+        *args: float | NDArray[np.float64],
+        window: tuple[float, float] = (0.0, np.inf),
+        seed: Optional[int] = None,
+    ) -> LifetimeData:
+        a0 = reshape_ar_or_a0("a0", a0)
+        return super().sample_lifetime_data(size, *(a0, *args), window=window, seed=seed)
+
 
 class FrozenAgeReplacementModel(
     FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 ):
+    r"""
+    Frozen age replacement model.
+
+    Parameters
+    ----------
+    model : AgeReplacementModel
+        Any age replacement model.
+    args_nb_assets : int
+        Number of assets given in frozen arguments. It is automatically computed by ``freeze`` function.
+    ar : float or np.ndarray
+        Age of replacement values to be frozen.
+    *args : float or np.ndarray
+        Additional arguments needed by the model to be frozen.
+
+    Attributes
+    ----------
+    unfrozen_model : AgeReplacementModel
+        The unfrozen age replacement model.
+    frozen_args : tuple of float or np.ndarray
+        All the frozen arguments given and necessary to compute model functions.
+    args_nb_assets : int
+        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
+        interest an user.
+
+    Warnings
+    --------
+    This class is documented for the purpose of clarity and mainly address contributors or advance users. Actually, the
+    recommanded way to instanciate a ``FrozenAgeReplacementModel`` is use to ``freeze`` factory function.
+
+    """
+
     unfrozen_model: AgeReplacementModel
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
@@ -493,6 +612,38 @@ class FrozenAgeReplacementModel(
 class FrozenLeftTruncatedModel(
     FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 ):
+    r"""
+    Frozen left truncated model.
+
+    Parameters
+    ----------
+    model : LeftTruncatedModel
+        Any left truncated model.
+    args_nb_assets : int
+        Number of assets given in frozen arguments. It is automatically computed by ``freeze`` function.
+    a0 : float or np.ndarray
+        Conditional age values to be frozen.
+    *args : float or np.ndarray
+        Additional arguments needed by the model to be frozen.
+
+
+    Attributes
+    ----------
+    unfrozen_model : LeftTruncatedModel
+        The unfrozen left truncated model.
+    frozen_args : tuple of float or np.ndarray
+        All the frozen arguments given and necessary to compute model functions.
+    args_nb_assets : int
+        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
+        interest an user.
+
+    Warnings
+    --------
+    This class is documented for the purpose of clarity and mainly address contributors or advance users. Actually, the
+    recommanded way to instanciate a ``FrozenLeftTruncatedModel`` is use to ``freeze`` factory function.
+
+    """
+
     unfrozen_model: LeftTruncatedModel
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 
@@ -616,10 +767,6 @@ Returns
 float, ndarray or tuple of float or ndarray
     The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
     the time values followed by event values, entry values or both.
-    
-Note
-----
-If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
 """
 
 LeftTruncatedModel.ichf.__doc__ = """
@@ -644,7 +791,7 @@ np.float64 or np.ndarray
 """
 
 LeftTruncatedModel.sample_lifetime_data.__doc__ = """
-Random variable sampling.
+Sample lifetime data in an observation window.
 
 Parameters
 ----------
@@ -732,7 +879,6 @@ Returns
 np.float64 or np.ndarray
     Function values at each given cumulative hazard rate(s).
 """
-
 
 
 AR_TIME_BASE_DOCSTRING = """
@@ -828,8 +974,8 @@ float, ndarray or tuple of float or ndarray
     The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
     the time values followed by event values, entry values or both.
 
-Note
-----
+Notes
+-----
 If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
 """
 
@@ -855,7 +1001,7 @@ np.float64 or np.ndarray
 """
 
 AgeReplacementModel.sample_lifetime_data.__doc__ = """
-Random variable sampling.
+Sample lifetime data in an observation window.
 
 Parameters
 ----------

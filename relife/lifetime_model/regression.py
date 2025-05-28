@@ -8,13 +8,14 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from __future__ import annotations
 
-from typing import Literal, overload
+from typing import Literal, Self, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from ._base import LifetimeRegression
+from ..data import LifetimeData
+from ._base import Args, LifetimeRegression
 
 
 def broadcast_time_covar(
@@ -77,17 +78,16 @@ class ProportionalHazard(LifetimeRegression):
 
     Parameters
     ----------
-    baseline : Any lifetime model that can be fitted.
-        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.
-        Any parametric_model lifetime model to serve as the baseline.
-    coefficients : tuple of floats (values can be None), optional
+    baseline : FittableParametricLifetimeModel
+        Any lifetime model that can be fitted.
+    coefficients : tuple of floats (values can be None), default is (None,)
         Coefficients values of the covariate effects.
 
     Attributes
     ----------
-    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`
-        The regression baseline model.
-    covar_effect : :py:class:`~relife.model.regression.CovarEffect`
+    baseline : FittableParametricLifetimeModel
+        The regression baseline model (lifetime model).
+    covar_effect : CovarEffect
         The regression covariate effect.
 
     References
@@ -238,6 +238,12 @@ class ProportionalHazard(LifetimeRegression):
             return np.unstack(jac)
         return jac
 
+    @override
+    def moment(
+        self, n: int, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        return super().moment(n, *(covar, *args))
+
 
 class AcceleratedFailureTime(LifetimeRegression):
     r"""
@@ -259,16 +265,16 @@ class AcceleratedFailureTime(LifetimeRegression):
 
     Parameters
     ----------
-    baseline : Any lifetime model that can be fitted.
-        It corresponds to :py:class:`~relife.lifetime_model.FittableParametricLifetimeModel` type.
-    coefficients : tuple of floats (values can be None), optional
+    baseline : FittableParametricLifetimeModel
+        Any lifetime model that can be fitted.
+    coefficients : tuple of floats (values can be None), default is (None,)
         Coefficients values of the covariate effects.
 
     Attributes
     ----------
-    baseline : :py:class:`~relife.model.protocols.FittableLifetimeDistribution`
-        The regression baseline model.
-    covar_effect : :py:class:`~relife.model.regression.CovarEffect`
+    baseline : FittableParametricLifetimeModel
+        The regression baseline model (lifetime model).
+    covar_effect : CovarEffect
         The regression covariate effect.
 
     References
@@ -421,6 +427,12 @@ class AcceleratedFailureTime(LifetimeRegression):
         if not asarray:
             return np.unstack(jac)
         return jac
+
+    @override
+    def moment(
+        self, n: int, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        return super().moment(n, *(covar, *args))
 
 
 TIME_BASE_DOCSTRING = """
@@ -701,7 +713,7 @@ for class_obj in (AcceleratedFailureTime, ProportionalHazard):
     """
 
     class_obj.fit_from_lifetime_data.__doc__ = """
-    Estimation of parameters from ```LifetimeData``.
+    Estimation of parameters from lifetime data.
 
     It is a convenient method for one that would have generated ``LifetimeData`` from another method and wants
     to fit the model with these data. Internally, it calls ``fit`` but avoid having to decompose ``LifetimeData``

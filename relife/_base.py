@@ -98,7 +98,7 @@ class ParametricModel:
         """
         return len(self._parameters)
 
-    def compose_with(self, **kwcomponents: Self):
+    def _compose_with(self, **kwcomponents: Self):
         """Compose with new ``ParametricModel`` instance(s).
 
         This method must be seen as standard function composition exept that objects are not
@@ -132,15 +132,15 @@ class ParametricModel:
             self._nested_models[name] = model
             self._parameters.set_leaf(f"{name}.params", getattr(model, "_parameters"))
 
-    def nested_models(self) -> Iterator[Self]:
-        """parallel walk through key value pairs"""
-
-        def items_walk(model: Self) -> Iterator:
-            yield list(model._nested_models.items())
-            for leaf in model._nested_models.values():
-                yield list(chain.from_iterable(items_walk(leaf)))
-
-        return chain.from_iterable(items_walk(self))
+    # def nested_models(self) -> Iterator[Self]:
+    #     """parallel walk through key value pairs"""
+    #
+    #     def items_walk(model: Self) -> Iterator:
+    #         yield list(model._nested_models.items())
+    #         for leaf in model._nested_models.values():
+    #             yield list(chain.from_iterable(items_walk(leaf)))
+    #
+    #     return chain.from_iterable(items_walk(self))
 
     def __getattr__(self, name: str):
         class_name = type(self).__name__
@@ -162,7 +162,7 @@ class ParametricModel:
                 "ParametricModel named {name} is already set. If you want to change it, recreate a ParametricModel"
             )
         elif isinstance(value, ParametricModel):
-            self.compose_with(**{name: value})
+            self._compose_with(**{name: value})
         else:
             super().__setattr__(name, value)
 
@@ -407,9 +407,9 @@ def model_args_names(
     ],
 ) -> tuple[str, ...]:
     from relife.lifetime_model import (
-        LifetimeDistribution,
         AgeReplacementModel,
         LeftTruncatedModel,
+        LifetimeDistribution,
         LifetimeRegression,
     )
     from relife.stochastic_process import (
@@ -456,6 +456,43 @@ def freeze(
 ) -> (
     FrozenLifetimeRegression | FrozenLeftTruncatedModel | FrozenAgeReplacementModel | FrozenNonHomogeneousPoissonProcess
 ):
+    """
+    Freeze a parametric model with given arguments.
+
+    This function takes a parametric model instance (lifetime model or stochastic process) and stores the given arguments
+    in a new model interface allowing to resquest functions only with ``time`` argument.
+
+    Parameters
+    ----------
+    model: LifetimeRegression, LeftTruncatedModel, AgeReplacementModel or NonHomogeneousPoissonProcess
+        The model to be frozen. It should be one of the supported model types.
+    **kwargs: float or np.ndarray
+        Keyword arguments representing the parameter names and their respective values to be frozen.
+
+    Returns
+    -------
+    FrozenLifetimeRegression, FrozenLeftTruncatedModel, FrozenAgeReplacementModel or FrozenNonHomogeneousPoissonProcess
+        The frozen version of the input model with immutable provided argument values.
+
+    Raises
+    ------
+    ValueError
+        Raised when the provided arguments do not match the expected argument names
+        for the given model, or if the model is not one of the supported types.
+
+
+    Examples
+    --------
+    >>> from relife import freeze
+    >>> from relife.lifetime_model import Weibull, ProportionalHazard
+    >>> weibull = Weibull(3.5, 0.01)
+    >>> regression = ProportionalHazard(weibull, coefficients=(1., 2.))
+    >>> frozen_regression = freeze(regression, covar=1.5)
+    >>> sf = frozen_regression.sf(np.array([10, 20])) # covar is fixed at 1.5
+
+
+    """
+
     from relife.lifetime_model import (
         AgeReplacementModel,
         FrozenAgeReplacementModel,
@@ -510,12 +547,12 @@ def get_args_nb_assets(
 ) -> int:
 
     from relife.lifetime_model import (
-        FrozenLifetimeRegression,
+        AgeReplacementModel,
         FrozenAgeReplacementModel,
         FrozenLeftTruncatedModel,
-        LifetimeRegression,
-        AgeReplacementModel,
+        FrozenLifetimeRegression,
         LeftTruncatedModel,
+        LifetimeRegression,
     )
     from relife.stochastic_process import FrozenNonHomogeneousPoissonProcess
 
@@ -524,13 +561,13 @@ def get_args_nb_assets(
         | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
     )
     arg_nb_assets: int = 1
-    arg_name : Optional[str] = None
+    arg_name: Optional[str] = None
     if isinstance(model, FrozenNonHomogeneousPoissonProcess):
         local_model = model.unfreeze().baseline
     else:
         local_model = model
 
-    _arg_nb_assets : int = 1
+    _arg_nb_assets: int = 1
     for arg in model.frozen_args:
         if isinstance(local_model, FrozenLifetimeRegression):
             # arg is covar
@@ -563,7 +600,7 @@ def get_args_nb_assets(
             arg_name = "ar"
             local_model = local_model.baseline
         if arg_name is not None:
-            # test if nb_assets changed and would not be broadcastable
+            # test if nb_assets changed and would not be broadcastable
             if _arg_nb_assets != 1 and arg_nb_assets != 1 and _arg_nb_assets != arg_nb_assets:
                 raise ValueError(
                     f"Invalid number of assets given in arguments. Got several nb assets. {arg_name} has {_arg_nb_assets} but already got {arg_nb_assets}"

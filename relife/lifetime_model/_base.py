@@ -351,7 +351,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 class FittableParametricLifetimeModel(ParametricLifetimeModel[*Args], ABC):
 
     @abstractmethod
-    def init_params_structure(self, *args: *Args) -> None:
+    def _init_params_structure(self, *args: *Args) -> None:
         """
         Initialize the number of parameters with respect to addtional args
         Eg: For LifetimeDistribution, it changes nothing. For LifetimeRegression, covar changes the number of parameters
@@ -359,23 +359,23 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Args], ABC):
         """
 
     @abstractmethod
-    def init_params_values(self, lifetime_data: LifetimeData) -> None: ...
+    def _init_params_values(self, lifetime_data: LifetimeData) -> None: ...
 
     @property
     @abstractmethod
-    def params_bounds(self) -> Bounds: ...
+    def _params_bounds(self) -> Bounds: ...
 
     def fit_from_lifetime_data(self, lifetime_data: LifetimeData[*Args], **kwargs) -> Self:
 
         # initialize params values
-        self.init_params_values(lifetime_data)
+        self._init_params_values(lifetime_data)
         likelihood: LikelihoodFromLifetimes[*Args] = LikelihoodFromLifetimes(self, lifetime_data)
 
         # configure and run the optimizer
         minimize_kwargs = {
             "method": kwargs.get("method", "L-BFGS-B"),
             "constraints": kwargs.get("constraints", ()),
-            "bounds": kwargs.get("bounds", self.params_bounds),
+            "bounds": kwargs.get("bounds", self._params_bounds),
             "x0": kwargs.get("x0", self.params),
         }
         optimizer = minimize(
@@ -401,10 +401,10 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     Base class for distribution model.
     """
 
-    def init_params_structure(self) -> None:
+    def _init_params_structure(self) -> None:
         pass
 
-    def init_params_values(self, lifetime_data: LifetimeData) -> None:
+    def _init_params_values(self, lifetime_data: LifetimeData) -> None:
         if lifetime_data.complete_or_right_censored is not None:
             param0 = np.ones(self.nb_params, dtype=np.float64)
             param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.lifetime_values)
@@ -413,7 +413,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
             self.params = np.zeros(self.nb_params, dtype=np.float64)
 
     @property
-    def params_bounds(self) -> Bounds:
+    def _params_bounds(self) -> Bounds:
         return Bounds(
             np.full(self.nb_params, np.finfo(float).resolution),
             np.full(self.nb_params, np.inf),
@@ -746,7 +746,6 @@ class CovarEffect(ParametricModel):
         return jac  # (nb_coef, m, 1)
 
 
-
 class LifetimeRegression(
     FittableParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]], ABC
 ):
@@ -769,29 +768,29 @@ class LifetimeRegression(
         self.covar_effect = CovarEffect(coefficients)
         self.baseline = baseline
 
-    def init_params_structure(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
+    def _init_params_structure(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
         covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
         self.covar_effect._parameters.nodedata = {f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
-        self.baseline.init_params_structure(*args)
+        self.baseline._init_params_structure(*args)
 
-    def init_params_values(self, lifetime_data: LifetimeData) -> None:
-        self.baseline.init_params_values(lifetime_data)
+    def _init_params_values(self, lifetime_data: LifetimeData) -> None:
+        self.baseline._init_params_values(lifetime_data)
         param0 = np.zeros_like(self.params, dtype=np.float64)
         param0[-self.baseline.params.size :] = self.baseline.params
         self.params = param0
 
     @property
-    def params_bounds(self) -> Bounds:
+    def _params_bounds(self) -> Bounds:
         lb = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, -np.inf),
-                self.baseline.params_bounds.lb,
+                self.baseline._params_bounds.lb,
             )
         )
         ub = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, np.inf),
-                self.baseline.params_bounds.ub,
+                self.baseline._params_bounds.ub,
             )
         )
         return Bounds(lb, ub)
@@ -1146,7 +1145,7 @@ class LifetimeRegression(
         **kwargs: Any,
     ) -> Self:
         # initialize params structure (number of parameters in params tree)
-        self.init_params_structure(covar, *args)
+        self._init_params_structure(covar, *args)
         lifetime_data: LifetimeData[NDArray[np.float64], *tuple[NDArray[np.float64], ...]] = LifetimeData(
             time, event=event, entry=entry, departure=departure, args=(covar, *args)
         )
@@ -1163,7 +1162,6 @@ class NonParametricLifetimeModel(ABC):
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self: ...
-
 
 
 class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
@@ -1299,6 +1297,37 @@ class FrozenParametricLifetimeModel(ParametricModel, Generic[*Args]):
 class FrozenLifetimeRegression(
     FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 ):
+    r"""
+    Frozen lifetime regression.
+
+    Parameters
+    ----------
+    model : LifetimeRegression
+        Any lifetime regression.
+    args_nb_assets : int
+        Number of assets given in frozen arguments. It is automatically computed by ``freeze`` function.
+    covar : float or np.ndarray
+        Covariate values to be frozen.
+    *args : float or np.ndarray
+        Additional arguments needed by the model to be frozen.
+
+
+    Attributes
+    ----------
+    unfrozen_model : LifetimeRegression
+        The unfrozen regression model.
+    frozen_args : tuple of float or np.ndarray
+        All the frozen arguments given and necessary to compute model functions.
+    args_nb_assets : int
+        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
+        interest an user.
+
+    Warnings
+    --------
+    This class is documented for the purpose of clarity and mainly address contributors or advance users. Actually, the
+    recommanded way to instanciate a ``FrozenLifetimeRegression`` is use to ``freeze`` factory function.
+
+    """
 
     unfrozen_model: LifetimeRegression
     frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
@@ -1446,3 +1475,162 @@ class FrozenLifetimeRegression(
         asarray: bool = False,
     ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]:
         return self.unfrozen_model.jac_pdf(time, self.frozen_args[0], *self.frozen_args[1:], asarray=asarray)
+
+
+TIME_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+time : float or np.ndarray
+    Elapsed time value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given time(s).
+"""
+
+JAC_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+time : float or np.ndarray
+    Elapsed time value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+asarray : bool, default is False
+
+Returns
+-------
+np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+    The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+    the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+    whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+    tuple when ``asarray`` is False.
+"""
+
+MOMENT_BASE_DOCSTRING = """
+{name}.
+
+Returns
+-------
+np.float64
+    {name} value.
+"""
+
+PROBABILITY_BASE_DOCSTRING = """
+{name}.
+
+Parameters
+----------
+probability : float or np.ndarray
+    Probability value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given probability value(s).
+"""
+
+FrozenParametricLifetimeModel.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The survival function")
+FrozenParametricLifetimeModel.hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The hazard function")
+FrozenParametricLifetimeModel.chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative hazard function")
+FrozenParametricLifetimeModel.pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The probability density function")
+FrozenParametricLifetimeModel.cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative distribution function")
+FrozenParametricLifetimeModel.mrl.__doc__ = TIME_BASE_DOCSTRING.format(name="The mean residual life function")
+FrozenParametricLifetimeModel.ppf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="The percent point function")
+FrozenParametricLifetimeModel.ppf.__doc__ += f"""
+Notes
+-----
+The ``ppf`` is the inverse of :py:meth:`~FrozenParametricLifetimeModel.cdf`.
+"""
+FrozenParametricLifetimeModel.isf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="Inverse survival function")
+
+FrozenParametricLifetimeModel.rvs.__doc__ = """
+Random variable sampling.
+
+Parameters
+----------
+size : int, (int,) or (int, int)
+    Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
+    2d array of samples is generated. 
+return_event : bool, default is False
+    If True, returns event indicators along with the sample time values.
+random_entry : bool, default is False
+    If True, returns corresponding entry values of the sample time values.
+seed : optional int, default is None
+    Random seed used to fix random sampling.
+
+Returns
+-------
+float, ndarray or tuple of float or ndarray
+    The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
+    the time values followed by event values, entry values or both.
+"""
+
+FrozenParametricLifetimeModel.ls_integrate.__doc__ = """
+Lebesgue-Stieltjes integration.
+
+Parameters
+----------
+func : callable (in : 1 ndarray , out : 1 ndarray)
+    The callable must have only one ndarray object as argument and one ndarray object as output
+a : ndarray (maximum number of dimension is 2)
+    Lower bound(s) of integration.
+b : ndarray (maximum number of dimension is 2)
+    Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+deg : int, default 10
+    Degree of the polynomials interpolation
+
+Returns
+-------
+np.ndarray
+    Lebesgue-Stieltjes integral of func from `a` to `b`.
+"""
+
+FrozenParametricLifetimeModel.moment.__doc__ = """
+n-th order moment
+
+Parameters
+----------
+n : order of the moment, at least 1.
+
+Returns
+-------
+np.float64
+    n-th order moment.
+"""
+FrozenParametricLifetimeModel.mean.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The mean")
+FrozenParametricLifetimeModel.var.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The variance")
+FrozenParametricLifetimeModel.median.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The median")
+
+FrozenParametricLifetimeModel.ichf.__doc__ = """
+Inverse cumulative hazard function.
+
+Parameters
+----------
+cumulative_hazard_rate : float or np.ndarray
+    Cumulative hazard rate value(s) at which to compute the function.
+    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+Returns
+-------
+np.float64 or np.ndarray
+    Function values at each given cumulative hazard rate(s).
+"""
+
+FrozenLifetimeRegression.dhf.__doc__ = TIME_BASE_DOCSTRING.format(name="The derivative of the hazard function")
+FrozenLifetimeRegression.jac_hf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the hazard function")
+FrozenLifetimeRegression.jac_chf.__doc__ = JAC_BASE_DOCSTRING.format(
+    name="The jacobian of the cumulative hazard function"
+)
+FrozenLifetimeRegression.jac_sf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the survival function")
+FrozenLifetimeRegression.jac_pdf.__doc__ = JAC_BASE_DOCSTRING.format(
+    name="The jacobian of the probability density function"
+)
+FrozenLifetimeRegression.jac_cdf.__doc__ = JAC_BASE_DOCSTRING.format(
+    name="The jacobian of the cumulative distribution function"
+)
