@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 # to build and publish see https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
 [project]
-name = "relife"
+name = "relife-refactored"
 version = "2.0.0"
 authors = [
 	{name = "Thomas Guillon", email="thomas.guillon@rte-france.com"},

@@ -247,10 +247,13 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         entry = np.where(time > t0, np.full_like(time, t0), entry)
         time = np.where(time > tf, np.full_like(time, tf), time)
         event = np.where(time > tf, False, event)
-        selection: NDArray[np.bool_] = np.asarray(t0 <= time <= tf)  # ensure array to index later
+        selection: NDArray[np.bool_] = np.logical_and(t0 <= time, time <= tf)
         asset_id, sample_id = np.where(selection)
         # Args TypeVarTuple cannot be bounded at the moment so type hint fails with np.take
-        tuple_args_arr = tuple((np.take(np.asarray(arg), asset_id) for arg in args))
+        nb_assets = int(np.max(asset_id)) + 1
+        args_2d = tuple((np.atleast_2d(arg) for arg in args))
+        broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
+        tuple_args_arr = tuple((np.take(np.asarray(arg), asset_id) for arg in broadcasted_args))
         return LifetimeData(
             time[selection].copy(), event=event[selection].copy(), entry=entry[selection].copy(), args=tuple_args_arr
         )

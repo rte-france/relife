@@ -74,10 +74,10 @@ class CountDataIterator(Iterator[NDArray[np.void]], ABC):
         self.cycle = 0
 
     @property
-    def stop(self) -> Optional[bool]:
+    def stop(self) -> bool:
         if self.stop_counter is not None:
             return np.all(self.stop_counter > 0)
-        return None
+        return False
 
     @property
     def just_crossed_t0(self) -> Optional[NDArray[np.bool_]]:
@@ -188,7 +188,7 @@ class RenewalProcessIterator(CountDataIterator):
                 entry[self.selection],
                 nb_renewal[self.selection],
             ),
-            (np.float64, np.bool_, np.float64, np.uint32),
+            (np.float64, np.float64, np.bool_, np.float64, np.uint32),
             usemask=False,
             asrecarray=False,
         )

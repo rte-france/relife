@@ -232,7 +232,7 @@ class AgeReplacementModel(
             return time
         elif return_event and not return_entry:
             event = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            event = event != ar
+            event = np.where(time != ar, event, ~event)
             return time, event
         elif not return_event and return_entry:
             entry = np.broadcast_to(baseline_rvs[1], time.shape).copy()
@@ -241,7 +241,7 @@ class AgeReplacementModel(
             event, entry = baseline_rvs[1:]
             event = np.broadcast_to(event, time.shape).copy()
             entry = np.broadcast_to(entry, time.shape).copy()
-            event = event != ar
+            event = np.where(time != ar, event, ~event)
             return time, event, entry
 
     @override
