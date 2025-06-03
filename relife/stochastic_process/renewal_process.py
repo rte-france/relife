@@ -22,7 +22,6 @@ from relife.lifetime_model import (
 from relife.sample import (
     RenewalProcessIterator,
     RenewalRewardProcessIterator,
-    concatenate_renewal_data,
 )
 
 if TYPE_CHECKING:
@@ -40,6 +39,16 @@ R = TypeVar("R", bound=Reward)
 
 
 class RenewalProcess(ParametricModel, Generic[M]):
+    """Renewal process.
+
+    Parameters
+    ----------
+    lifetime_model : any lifetime distribution or frozen lifetime model
+        A lifetime model representing the durations between events.
+
+    first_lifetime_model : any lifetime distribution or frozen lifetime model, optional
+        A lifetime model for the first renewal (delayed renewal process). It is None by default
+    """
 
     count_data: Optional[CountData]
 
@@ -70,6 +79,46 @@ class RenewalProcess(ParametricModel, Generic[M]):
         return timeline  # (nb_steps,) or (m, nb_steps)
 
     def renewal_function(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        r"""The renewal function.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The renewal function will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the renewal function.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the renewal function and its corresponding values at each
+            step of the timeline.
+
+        Notes
+        -----
+        The expected total number of renewals is computed  by solving the
+        renewal equation:
+
+        .. math::
+
+            m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)
+
+        where:
+
+        - :math:`m` is the renewal function,
+        - :math:`F` is the cumulative distribution function of the underlying
+          lifetime model,
+        - :math:`F_1` is the cumulative distribution function of the underlying
+          lifetime model for the fist renewal in the case of a delayed renewal
+          process.
+
+        References
+        ----------
+        .. [1] Rausand, M., Barros, A., & Hoyland, A. (2020). System Reliability
+            Theory: Models, Statistical Methods, and Applications. John Wiley &
+            Sons.
+        """
+
         timeline = self._make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
         return timeline, renewal_equation_solver(
             timeline,
@@ -78,6 +127,45 @@ class RenewalProcess(ParametricModel, Generic[M]):
         )
 
     def renewal_density(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        r"""The renewal density.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The renewal density will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the renewal density.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the renewal density and its corresponding values at each
+            step of the timeline.
+
+        Notes
+        -----
+        The renewal density is the derivative of the renewal function with
+        respect to time. It is computed by solving the renewal equation:
+
+        .. math::
+
+            \mu(t) = f_1(t) + \int_0^t \mu(t-x) \mathrm{d}F(x)
+
+        where:
+
+        - :math:`\mu` is the renewal function,
+        - :math:`F` is the cumulative distribution function of the underlying
+          lifetime model,
+        - :math:`f_1` is the probability density function of the underlying
+          lifetime model for the fist renewal in the case of a delayed renewal
+          process.
+
+        References
+        ----------
+        .. [1] Rausand, M., Barros, A., & Hoyland, A. (2020). System Reliability
+            Theory: Models, Statistical Methods, and Applications. John Wiley &
+            Sons.
+        """
         timeline = self._make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         return timeline, renewal_equation_solver(
             timeline,
@@ -90,9 +178,28 @@ class RenewalProcess(ParametricModel, Generic[M]):
         tf: float,
         t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
-        maxsample: int = 1e5,
+        maxsample: int = 100000,
         seed: Optional[int] = None,
     ) -> None:
+        """Renewal data sampling.
+
+        This function will generate sampling data insternally. These data
+
+        Parameters
+        ----------
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        size : int or tuple of 2 int
+            Size of the sample
+        maxsample : int, optional
+            Maximum number of samples, by default 100000.
+        seed : int, optional
+            Random seed, by default None.
+
+        """
+
         from relife.sample import concatenate_renewal_data
 
         iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)  # type: ignore

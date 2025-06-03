@@ -78,6 +78,10 @@ html_logo = "_static/small_relife.gif"
 html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 
+html_sidebars = {
+    "installation": [] # removes navigation bar for installation.rst
+}
+
 html_theme_options = {
     "announcement": "<em>New version in test</em> : you're seeing the new documentation which is still in progress (information might be missing or incomplete)",  # annoucement bar
     "navigation_with_keys": False,
