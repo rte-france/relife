@@ -1,1 +1,1 @@
-from ._base import FittingResults, ParametricModel, freeze, get_args_nb_assets
+from ._base import ParametricModel, freeze, get_args_nb_assets

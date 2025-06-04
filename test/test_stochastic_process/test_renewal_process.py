@@ -49,7 +49,7 @@ class TestDistribution:
 
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_sample_lifetime_data(self, distribution):
-        expected_params = distribution.params.copy()
+        expected_params = distribution.optimal_params.copy()
         q1 = distribution.ppf(0.25)
         q3 = distribution.ppf(0.75)
         success = 0
@@ -58,7 +58,7 @@ class TestDistribution:
         for i in range(n):
             lifetime_data = renewal_process.sample_lifetime_data(10 * q3, t0=0, size=100000)
             try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
-                distribution.fit_from_lifetime_data(lifetime_data)
+                distribution._fit_from_lifetime_data(lifetime_data)
             except RuntimeError:
                 continue
             ic = distribution.fitting_results.IC

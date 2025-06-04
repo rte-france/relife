@@ -8,14 +8,13 @@ SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 
 from __future__ import annotations
 
-from typing import Literal, Self, overload
+from typing import Literal, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from ..data import LifetimeData
-from ._base import Args, LifetimeRegression
+from ._base import LifetimeRegression
 
 
 def broadcast_time_covar(
@@ -582,30 +581,6 @@ for class_obj in (AcceleratedFailureTime, ProportionalHazard):
         the time values followed by event values, entry values or both.
     """
 
-    class_obj.sample_lifetime_data.__doc__ = """
-    Random variable sampling.
-
-    Parameters
-    ----------
-    size : int, (int,) or (int, int)
-        Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
-        2d array of samples are generated. 
-    covar : float or np.ndarray
-        Covariates values. float can only be valid if the regression has one coefficients. 
-        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-    *args : float or np.ndarray
-        Additional arguments needed by the model.
-    window : (float, float)
-        The observation window of the generated sample.
-    seed : optional int, default is None
-        Random seed applied to fix random sampling.
-
-    Returns
-    -------
-    LifetimeData
-        A ``LifetimeData`` object that encapsulates the lifetime values
-    """
-
     class_obj.plot.__doc__ = """
     Provides access to plotting functionality for this distribution.
     """
@@ -710,22 +685,4 @@ for class_obj in (AcceleratedFailureTime, ProportionalHazard):
     Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
     format that allows to pass other information as left-censored or interval-censored values. In this case,
     `event` is not needed as 2d-array encodes right-censored values by itself.
-    """
-
-    class_obj.fit_from_lifetime_data.__doc__ = """
-    Estimation of parameters from lifetime data.
-
-    It is a convenient method for one that would have generated ``LifetimeData`` from another method and wants
-    to fit the model with these data. Internally, it calls ``fit`` but avoid having to decompose ``LifetimeData``
-    data into ``time``, ``event``, ``entry`` formalism.
-
-    Parameters
-    ----------
-    lifetime_data : LifetimeData
-        The ```LifetimeData```.
-
-    Returns
-    -------
-    Self
-        The current object with the estimated parameters setted inplace.
     """

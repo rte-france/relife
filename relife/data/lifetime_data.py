@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from dataclasses import InitVar, dataclass, field
 from itertools import zip_longest
-from typing import Generic, NamedTuple, Optional, TypeVarTuple
+from typing import NamedTuple, Optional, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -187,29 +187,27 @@ def get_right_truncation(
 Args = TypeVarTuple("Args")
 
 
-class IndexedLifetimeData(NamedTuple, Generic[*Args]):
+class IndexedLifetimeData(NamedTuple):
     """
     Object that encapsulates lifetime data values and corresponding units index
     """
 
     lifetime_values: NDArray[np.float64]  # (m, 1) or (m, 2)
     lifetime_index: NDArray[np.int64]  # (m,)
-    args: tuple[*Args] = ()
+    args: tuple[NDArray[np.float64], ...] = ()
 
 
 @dataclass
-class LifetimeData(Generic[*Args]):
+class LifetimeData:
     nb_samples: int = field(init=False)
 
-    complete: Optional[IndexedLifetimeData[*Args]] = field(init=False, repr=False)  # values shape (m, 1)
-    right_censoring: Optional[IndexedLifetimeData[*Args]] = field(init=False, repr=False)  # values shape (m, 1)
-    left_censoring: Optional[IndexedLifetimeData[*Args]] = field(init=False, repr=False)  # values shape (m, 1)
-    interval_censoring: Optional[IndexedLifetimeData[*Args]] = field(init=False, repr=False)  # values shape (m, 2)
-    left_truncation: Optional[IndexedLifetimeData[*Args]] = field(init=False, repr=False)  # values shape (m, 1)
-    right_truncation: Optional[IndexedLifetimeData[*Args]] = field(init=False, repr=False)  # values shape (m, 1)
-    complete_or_right_censored: Optional[IndexedLifetimeData[*Args]] = field(
-        init=False, repr=False
-    )  # values shape (m, 1)
+    complete: Optional[IndexedLifetimeData] = field(init=False, repr=False)  # values shape (m, 1)
+    right_censoring: Optional[IndexedLifetimeData] = field(init=False, repr=False)  # values shape (m, 1)
+    left_censoring: Optional[IndexedLifetimeData] = field(init=False, repr=False)  # values shape (m, 1)
+    interval_censoring: Optional[IndexedLifetimeData] = field(init=False, repr=False)  # values shape (m, 2)
+    left_truncation: Optional[IndexedLifetimeData] = field(init=False, repr=False)  # values shape (m, 1)
+    right_truncation: Optional[IndexedLifetimeData] = field(init=False, repr=False)  # values shape (m, 1)
+    complete_or_right_censored: Optional[IndexedLifetimeData] = field(init=False, repr=False)  # values shape (m, 1)
 
     time: InitVar[NDArray[np.float64]]
     event: InitVar[Optional[NDArray[np.bool_]]] = None
@@ -239,6 +237,7 @@ class LifetimeData(Generic[*Args]):
                 f"All lifetime data must have the same number of values. Fields length are different. Got {set(sizes)}"
             )
 
+        # TODO : control here
         self.nb_samples = len(time)
         self.complete = get_complete(time, event, args)
         self.right_censoring = get_right_censoring(time, event, args)

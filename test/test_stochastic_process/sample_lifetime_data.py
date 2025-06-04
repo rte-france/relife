@@ -20,7 +20,7 @@ for distri in DISTRIBUTION_INSTANCES:
     for i in range(n):
         lifetime_data = renewal_process.sample_lifetime_data(10 * q3, t0=q1, size=100)
         try: # for gamma and loglogistic essentially (convergence errors may occcur)
-            distri.fit_from_lifetime_data(lifetime_data)
+            distri._fit_from_lifetime_data(lifetime_data)
         except RuntimeError:
             continue
         ic = distri.fitting_results.IC

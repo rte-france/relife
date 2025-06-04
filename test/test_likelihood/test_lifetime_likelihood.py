@@ -11,7 +11,7 @@ class TestLikelihoodDistribution:
             entry = power_transformer_data["entry"]
         )
         likelihood = LikelihoodFromLifetimes(distribution, lifetime_data)
-        assert likelihood.negative_log(distribution.params).shape == ()
+        assert likelihood.negative_log(distribution.optimal_params).shape == ()
 
     def test_jac_negative_log(self, distribution, power_transformer_data):
         lifetime_data = LifetimeData(
@@ -20,7 +20,7 @@ class TestLikelihoodDistribution:
             entry = power_transformer_data["entry"]
         )
         likelihood = LikelihoodFromLifetimes(distribution, lifetime_data)
-        assert likelihood.jac_negative_log(distribution.params).shape == (distribution.nb_params,)
+        assert likelihood.jac_negative_log(distribution.optimal_params).shape == (distribution.nb_params,)
 
 
 class TestLikelihoodRegression:
@@ -36,7 +36,7 @@ class TestLikelihoodRegression:
             args=(covar,)
         )
         likelihood = LikelihoodFromLifetimes(regression, lifetime_data)
-        assert likelihood.negative_log(regression.params).shape == ()
+        assert likelihood.negative_log(regression.optimal_params).shape == ()
 
     def test_jac_negative_log(self, regression, insulator_string_data):
         covar = np.column_stack((
@@ -50,4 +50,4 @@ class TestLikelihoodRegression:
             args=(covar,)
         )
         likelihood = LikelihoodFromLifetimes(regression, lifetime_data)
-        assert likelihood.jac_negative_log(regression.params).shape == (regression.nb_params,)
+        assert likelihood.jac_negative_log(regression.optimal_params).shape == (regression.nb_params,)

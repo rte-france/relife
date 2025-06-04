@@ -81,7 +81,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
             last_ages=last_ages,
         )
         lifetime_data = nhpp_data.to_lifetime_data()
-        self.baseline = self.baseline.fit_from_lifetime_data(lifetime_data)
+        self.baseline = self.baseline._fit_from_lifetime_data(lifetime_data)
         return self
 
 

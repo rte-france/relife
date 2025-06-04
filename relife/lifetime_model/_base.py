@@ -15,13 +15,13 @@ from typing import (
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, minimize, newton
+from scipy.optimize import newton
 from typing_extensions import override
 
-from relife import FittingResults, ParametricModel
+from relife import ParametricModel
 from relife._plot import PlotParametricLifetimeModel
 from relife.data import LifetimeData
-from relife.likelihood import LikelihoodFromLifetimes
+from relife.likelihood import FittingResults, LikelihoodFromLifetimes
 from relife.quadrature import (
     check_and_broadcast_bounds,
     legendre_quadrature,
@@ -54,6 +54,12 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         NotImplementedError: Raised when an abstract method or feature in this
         class has not been implemented in a derived class.
     """
+
+    fitting_results = Optional[FittingResults]
+
+    def __init__(self, **kwparams: Optional[float]):
+        super().__init__(**kwparams)
+        self.fitting_results = None
 
     @abstractmethod
     def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
@@ -235,29 +241,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         else:
             return time, event, entry
 
-    def sample_lifetime_data(
-        self,
-        size: int | tuple[int] | tuple[int, int],
-        *args: *Args,
-        window: tuple[float, float] = (0.0, np.inf),
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        time, event, entry = self.rvs(size, *args, return_event=True, return_entry=True, seed=seed)
-        t0, tf = window
-        entry = np.where(time > t0, np.full_like(time, t0), entry)
-        time = np.where(time > tf, np.full_like(time, tf), time)
-        event = np.where(time > tf, False, event)
-        selection: NDArray[np.bool_] = np.logical_and(t0 <= time, time <= tf)
-        asset_id, sample_id = np.where(selection)
-        # Args TypeVarTuple cannot be bounded at the moment so type hint fails with np.take
-        nb_assets = int(np.max(asset_id)) + 1
-        args_2d = tuple((np.atleast_2d(arg) for arg in args))
-        broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
-        tuple_args_arr = tuple((np.take(np.asarray(arg), asset_id) for arg in broadcasted_args))
-        return LifetimeData(
-            time[selection].copy(), event=event[selection].copy(), entry=entry[selection].copy(), args=tuple_args_arr
-        )
-
     @property
     def plot(self) -> PlotParametricLifetimeModel:
         """Get plot"""
@@ -351,76 +334,10 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         return ls / sf
 
 
-class FittableParametricLifetimeModel(ParametricLifetimeModel[*Args], ABC):
-
-    @abstractmethod
-    def _init_params_structure(self, *args: *Args) -> None:
-        """
-        Initialize the number of parameters with respect to addtional args
-        Eg: For LifetimeDistribution, it changes nothing. For LifetimeRegression, covar changes the number of parameters
-        in CovarEffect.
-        """
-
-    @abstractmethod
-    def _init_params_values(self, lifetime_data: LifetimeData) -> None: ...
-
-    @property
-    @abstractmethod
-    def _params_bounds(self) -> Bounds: ...
-
-    def fit_from_lifetime_data(self, lifetime_data: LifetimeData[*Args], **kwargs) -> Self:
-
-        # initialize params values
-        self._init_params_values(lifetime_data)
-        likelihood: LikelihoodFromLifetimes[*Args] = LikelihoodFromLifetimes(self, lifetime_data)
-
-        # configure and run the optimizer
-        minimize_kwargs = {
-            "method": kwargs.get("method", "L-BFGS-B"),
-            "constraints": kwargs.get("constraints", ()),
-            "bounds": kwargs.get("bounds", self._params_bounds),
-            "x0": kwargs.get("x0", self.params),
-        }
-        optimizer = minimize(
-            likelihood.negative_log,
-            minimize_kwargs.pop("x0"),
-            jac=None if not likelihood.hasjac else likelihood.jac_negative_log,
-            **minimize_kwargs,
-        )
-        # set fitted params
-        self.params = optimizer.x
-
-        # compute parameters variance (Hessian inverse)
-        hessian_inverse = np.linalg.inv(likelihood.hessian())
-
-        # set fitting_results
-        self.fitting_results = FittingResults(len(lifetime_data), optimizer, var=hessian_inverse)
-
-        return self
-
-
-class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
+class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
-
-    def _init_params_structure(self) -> None:
-        pass
-
-    def _init_params_values(self, lifetime_data: LifetimeData) -> None:
-        if lifetime_data.complete_or_right_censored is not None:
-            param0 = np.ones(self.nb_params, dtype=np.float64)
-            param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.lifetime_values)
-            self.params = param0
-        else:
-            self.params = np.zeros(self.nb_params, dtype=np.float64)
-
-    @property
-    def _params_bounds(self) -> Bounds:
-        return Bounds(
-            np.full(self.nb_params, np.finfo(float).resolution),
-            np.full(self.nb_params, np.inf),
-        )
 
     @override
     def sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -663,15 +580,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().rvs(size, return_event=return_event, return_entry=return_entry, seed=seed)
 
     @override
-    def sample_lifetime_data(
-        self,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        window: tuple[float, float] = (0.0, np.inf),
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        return super().sample_lifetime_data(size=size, window=window, seed=seed)
-
-    @override
     def ls_integrate(
         self,
         func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
@@ -691,8 +599,12 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         **kwargs: Any,
     ) -> Self:
         # initialize params structure (number of parameters in params tree)
-        lifetime_data: LifetimeData[()] = LifetimeData(time, event=event, entry=entry, departure=departure)
-        return self.fit_from_lifetime_data(lifetime_data, **kwargs)
+        lifetime_data: LifetimeData = LifetimeData(time, event=event, entry=entry, departure=departure)
+        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
+        fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
+        self.params = fitting_results.optimal_params
+        self.fitting_results = fitting_results
+        return self
 
 
 class CovarEffect(ParametricModel):
@@ -750,7 +662,7 @@ class CovarEffect(ParametricModel):
 
 
 class LifetimeRegression(
-    FittableParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]], ABC
+    ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]], ABC
 ):
     """
     Base class for regression model.
@@ -764,39 +676,12 @@ class LifetimeRegression(
 
     def __init__(
         self,
-        baseline: FittableParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]],
+        baseline: LifetimeDistribution | LifetimeRegression,
         coefficients: tuple[Optional[float], ...] = (None,),
     ):
         super().__init__()
         self.covar_effect = CovarEffect(coefficients)
         self.baseline = baseline
-
-    def _init_params_structure(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
-        covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
-        self.covar_effect._parameters.nodedata = {f"coef_{i}": 0.0 for i in range(covar.shape[-1])}
-        self.baseline._init_params_structure(*args)
-
-    def _init_params_values(self, lifetime_data: LifetimeData) -> None:
-        self.baseline._init_params_values(lifetime_data)
-        param0 = np.zeros_like(self.params, dtype=np.float64)
-        param0[-self.baseline.params.size :] = self.baseline.params
-        self.params = param0
-
-    @property
-    def _params_bounds(self) -> Bounds:
-        lb = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, -np.inf),
-                self.baseline._params_bounds.lb,
-            )
-        )
-        ub = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, np.inf),
-                self.baseline._params_bounds.ub,
-            )
-        )
-        return Bounds(lb, ub)
 
     @property
     def nb_coef(self) -> int:
@@ -1126,16 +1011,11 @@ class LifetimeRegression(
     ]:
         return super().rvs(size, *(covar, *args), return_event=return_event, return_entry=return_entry, seed=seed)
 
-    @override
-    def sample_lifetime_data(
-        self,
-        size: int | tuple[int] | tuple[int, int],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        window: tuple[float, float] = (0.0, np.inf),
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        return super().sample_lifetime_data(size, *(covar, *args), window=window, seed=seed)
+    def _init_coefficients(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
+        covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
+        self.covar_effect = CovarEffect((None,) * covar.shape[-1])  # set new covar_effet -> changes params structure
+        if hasattr(self.baseline, "_init_coefficients"):  # recursion in case of PPH(AFT(...))
+            self.baseline._init_coefficients(*args)
 
     def fit(
         self,
@@ -1147,12 +1027,16 @@ class LifetimeRegression(
         departure: Optional[NDArray[np.float64]] = None,
         **kwargs: Any,
     ) -> Self:
-        # initialize params structure (number of parameters in params tree)
-        self._init_params_structure(covar, *args)
-        lifetime_data: LifetimeData[NDArray[np.float64], *tuple[NDArray[np.float64], ...]] = LifetimeData(
+        # change number of coefficients depending on covar passed
+        self._init_coefficients(covar, *args)
+        lifetime_data: LifetimeData = LifetimeData(
             time, event=event, entry=entry, departure=departure, args=(covar, *args)
         )
-        return self.fit_from_lifetime_data(lifetime_data, **kwargs)
+        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
+        fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
+        self.params = fitting_results.optimal_params
+        self.fitting_results = fitting_results
+        return self
 
 
 class NonParametricLifetimeModel(ABC):

@@ -1,6 +1,5 @@
 from ._base import (
     CovarEffect,
-    FittableParametricLifetimeModel,
     FrozenLifetimeRegression,
     FrozenParametricLifetimeModel,
     LifetimeDistribution,
@@ -20,6 +19,7 @@ from .distribution import (
     Gamma,
     Gompertz,
     LogLogistic,
+    MinimumDistribution,
     Weibull,
 )
 from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull

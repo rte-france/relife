@@ -283,18 +283,6 @@ class AgeReplacementModel(
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
-    @override
-    def sample_lifetime_data(
-        self,
-        size: int | tuple[int] | tuple[int, int],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        window: tuple[float, float] = (0.0, np.inf),
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        ar = reshape_ar_or_a0("ar", ar)
-        return super().sample_lifetime_data(size, *(ar, *args), window=window, seed=seed)
-
 
 class LeftTruncatedModel(
     ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
@@ -535,18 +523,6 @@ class LeftTruncatedModel(
     ) -> np.float64 | NDArray[np.float64]:
         a0 = reshape_ar_or_a0("a0", a0)
         return super().ppf(probability, *(a0, *args))
-
-    @override
-    def sample_lifetime_data(
-        self,
-        size: int | tuple[int] | tuple[int, int],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        window: tuple[float, float] = (0.0, np.inf),
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        a0 = reshape_ar_or_a0("a0", a0)
-        return super().sample_lifetime_data(size, *(a0, *args), window=window, seed=seed)
 
 
 class FrozenAgeReplacementModel(
@@ -790,30 +766,6 @@ np.float64 or np.ndarray
     Function values at each given cumulative hazard rate(s).
 """
 
-LeftTruncatedModel.sample_lifetime_data.__doc__ = """
-Sample lifetime data in an observation window.
-
-Parameters
-----------
-size : int, (int,) or (int, int)
-    Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
-    2d array of samples are generated. 
-a0 : float or np.ndarray
-    Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,) 
-    as only one age per asset can be given
-*args : float or np.ndarray
-    Additional arguments needed by the model.
-window : (float, float)
-    The observation window of the generated sample.
-seed : optional int, default is None
-    Random seed applied to fix random sampling.
-
-Returns
--------
-LifetimeData
-    A ``LifetimeData`` object that encapsulates the lifetime values
-"""
-
 LeftTruncatedModel.plot.__doc__ = """
 Provides access to plotting functionality for this distribution.
 """
@@ -1000,29 +952,6 @@ np.float64 or np.ndarray
     Function values at each given cumulative hazard rate(s).
 """
 
-AgeReplacementModel.sample_lifetime_data.__doc__ = """
-Sample lifetime data in an observation window.
-
-Parameters
-----------
-size : int, (int,) or (int, int)
-    Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
-    2d array of samples are generated. 
-ar : float or np.ndarray
-    Age of replacement values. If ndarray, shape can only be (m,) 
-    as only one age of replacement per asset can be given
-*args : float or np.ndarray
-    Additional arguments needed by the model.
-window : (float, float)
-    The observation window of the generated sample.
-seed : optional int, default is None
-    Random seed applied to fix random sampling.
-
-Returns
--------
-LifetimeData
-    A ``LifetimeData`` object that encapsulates the lifetime values
-"""
 
 AgeReplacementModel.plot.__doc__ = """
 Provides access to plotting functionality for this distribution.

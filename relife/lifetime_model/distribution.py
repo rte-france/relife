@@ -6,9 +6,9 @@ from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 from typing_extensions import override
 
+from relife.lifetime_model import LifetimeRegression
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
-from ..data import LifetimeData
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
 
@@ -40,7 +40,13 @@ class Exponential(LifetimeDistribution):
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._parameters["rate"]
+        """Get the current rate value.
+
+        Returns
+        -------
+        float
+        """
+        return self._params.get_param_value("rate")
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.rate * np.ones_like(time)
@@ -157,7 +163,7 @@ class Weibull(LifetimeDistribution):
         -------
         float
         """
-        return self._parameters["shape"]
+        return self._params.get_param_value("shape")
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
@@ -167,7 +173,7 @@ class Weibull(LifetimeDistribution):
         -------
         float
         """
-        return self._parameters["rate"]
+        return self._params.get_param_value("rate")
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.shape * self.rate * (self.rate * np.asarray(time)) ** (self.shape - 1)
@@ -287,22 +293,25 @@ class Gompertz(LifetimeDistribution):
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
         super().__init__(shape=shape, rate=rate)
 
-    @override
-    def _init_params_values(self, lifetime_data: LifetimeData) -> None:
-        param0 = np.empty(self.nb_params, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.lifetime_values))
-        shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.lifetime_values))
-        param0[0] = shape
-        param0[1] = rate
-        self.params = param0
-
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        return self._parameters["shape"]
+        """Get the current shape value.
+
+        Returns
+        -------
+        float
+        """
+        return self._params.get_param_value("shape")
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._parameters["rate"]
+        """Get the current rate value.
+
+        Returns
+        -------
+        float
+        """
+        return self._params.get_param_value("rate")
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.shape * self.rate * np.exp(self.rate * time)
@@ -417,11 +426,23 @@ class Gamma(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        return self._parameters["shape"]
+        """Get the current shape value.
+
+        Returns
+        -------
+        float
+        """
+        return self._params.get_param_value("shape")
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._parameters["rate"]
+        """Get the current rate value.
+
+        Returns
+        -------
+        float
+        """
+        return self._params.get_param_value("rate")
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         x = self.rate * time
@@ -546,11 +567,23 @@ class LogLogistic(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        return self._parameters["shape"]
+        """Get the current shape value.
+
+        Returns
+        -------
+        float
+        """
+        return self._params.get_param_value("shape")
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        return self._parameters["rate"]
+        """Get the current rate value.
+
+        Returns
+        -------
+        float
+        """
+        return self._params.get_param_value("rate")
 
     def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         x = self.rate * np.asarray(time)
@@ -723,6 +756,78 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.
         return self.isf(np.exp(-cumulative_hazard_rate), *args)
 
 
+class MinimumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+    r"""Series structure of n identical and independent components.
+
+    The hazard function of the system is given by:
+
+    .. math::
+
+        h(t) = n \cdot  h_0(t)
+
+    where :math:`h_0` is the baseline hazard function of the components.
+
+    Examples
+    --------
+
+    Computing the survival (or reliability) function for 3 structures of 3,6 and
+    9 identical and idependent components:
+
+    .. code-block::
+
+        model = MinimumDistribution(Weibull(2, 0.05))
+        t = np.arange(0, 10, 0.1)
+        n = np.array([3, 6, 9]).reshape(-1, 1)
+        model.sf(t, n)
+    """
+
+    def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+        pass
+
+    def hf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+        pass
+
+    def chf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+        pass
+
+    def pdf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
+        pass
+
+    def __init__(self, baseline: LifetimeDistribution | LifetimeRegression):
+        super().__init__()
+        self.baseline = baseline
+
+    # def _chf(
+    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
+    # ) -> np.ndarray:
+    #     return n * self.baseline._chf(params, t, *args)
+    #
+    # def _hf(
+    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
+    # ) -> np.ndarray:
+    #     return n * self.baseline._hf(params, t, *args)
+    #
+    # def _dhf(
+    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
+    # ) -> np.ndarray:
+    #     return n * self.baseline._dhf(params, t, *args)
+    #
+    # def _jac_chf(
+    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
+    # ) -> np.ndarray:
+    #     return n * self.baseline._jac_chf(params, t, *args)
+    #
+    # def _jac_hf(
+    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
+    # ) -> np.ndarray:
+    #     return n * self.baseline._jac_hf(params, t, *args)
+    #
+    # def _ichf(
+    #     self, params: np.ndarray, v: np.ndarray, n: np.ndarray, *args: np.ndarray
+    # ) -> np.ndarray:
+    #     return self.baseline._ichf(params, v / n, *args)
+
+
 TIME_BASE_DOCSTRING = """
 {name}.
 
@@ -829,25 +934,6 @@ for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
         the time values followed by event values, entry values or both.
     """
 
-    class_obj.sample_lifetime_data.__doc__ = """
-    Sample lifetime data in an observation window.
-
-    Parameters
-    ----------
-    size : int, (int,) or (int, int)
-        Size of the sample generated internally. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
-        2d array of samples are generated. 
-    window : (float, float)
-        The observation window of the generated sample.
-    seed : optional int, default is None
-        Random seed applied to fix random sampling.
-    
-    Returns
-    -------
-    LifetimeData
-        A ``LifetimeData`` object that encapsulates the lifetime values
-    """
-
     class_obj.plot.__doc__ = """
     Provides access to plotting functionality for this distribution.
     """
@@ -936,22 +1022,4 @@ for class_obj in (Exponential, Weibull, Gompertz, Gamma, LogLogistic):
     Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
     format that allows to pass other information as left-censored or interval-censored values. In this case,
     `event` is not needed as 2d-array encodes right-censored values by itself.
-    """
-
-    class_obj.fit_from_lifetime_data.__doc__ = """
-    Estimation of parameters from ```LifetimeData``.
-    
-    It is a convenient method for one that would have generated ``LifetimeData`` from another method and wants
-    to fit the model with these data. Internally, it calls ``fit`` but avoid having to decompose ``LifetimeData``
-    data into ``time``, ``event``, ``entry`` formalism.
-    
-    Parameters
-    ----------
-    lifetime_data : LifetimeData
-        The ```LifetimeData```.
-    
-    Returns
-    -------
-    Self
-        The current object with the estimated parameters setted inplace.
     """
