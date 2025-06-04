@@ -14,9 +14,7 @@ from relife.lifetime_model import (
     FrozenLifetimeRegression,
     LifetimeDistribution,
 )
-from relife.sample import (
-    CountData,
-    CountDataFunctions,
+from relife.stochastic_process import (
     RenewalProcessIterator,
     RenewalRewardProcessIterator,
 )
@@ -27,8 +25,6 @@ R = TypeVar("R", bound=Reward)
 
 
 class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
-
-    count_data: Optional[CountData]
 
     def __init__(
         self,
@@ -49,14 +45,6 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
     @property
     def discounting_rate(self):
         return self.discounting.rate
-
-    @property
-    def sample(self) -> Optional[CountDataFunctions]:
-        if self.count_data is not None:
-            from relife.sample import CountDataFunctions
-
-            return CountDataFunctions(type(self), self.count_data)
-        return None
 
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         # control with reward too
@@ -126,20 +114,19 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         # timeline : () or (m, 1)
         return self._expected_equivalent_annual_cost(timeline)[-1]  # () or (m, 1)
 
-    def sample_count_data(
+    def sample(
         self,
         tf: float,
         t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
-        maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> None:
-        from relife.sample import concatenate_count_data
+        from relife.stochastic_process.sample import RenewalProcessIterable
 
-        iterator = RenewalRewardProcessIterator(self, size, (t0, tf), seed=seed)
+        iterator = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
         self.count_data = concatenate_count_data(islice(iterator, 1), maxsample)
 
-    def sample_lifetime_data(
+    def generate_lifetime_data(
         self,
         tf: float,
         t0: float = 0.0,
@@ -147,7 +134,7 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> LifetimeData:
-        from relife.sample import concatenate_count_data
+        from relife.stochastic_process.sample import concatenate_count_data
 
         iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
         count_data = concatenate_count_data(islice(iterator, 1), maxsample)
@@ -196,7 +183,7 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
     ) -> None:
         self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
 
-    def sample_lifetime_data(
+    def generate_lifetime_data(
         self,
         tf: float,
         t0: float = 0.0,

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar, Union
+from dataclasses import dataclass, replace
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar, Union, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife import ParametricModel
-from relife.data import LifetimeData
 from relife.economic import (
     Discounting,
     ExponentialDiscounting,
@@ -19,23 +19,22 @@ from relife.lifetime_model import (
     FrozenLifetimeRegression,
     LifetimeDistribution,
 )
-from relife.sample import (
-    RenewalProcessIterator,
-    RenewalRewardProcessIterator,
-)
 
 if TYPE_CHECKING:
     from relife.economic import Reward
-    from relife.sample import (
-        CountData,
-        CountDataFunctions,
-    )
 
 M = TypeVar(
     "M",
     bound=Union[LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel],
 )
 R = TypeVar("R", bound=Reward)
+
+
+class LifetimeFitArg(TypedDict):
+    time : NDArray[np.float64]
+    event : NDArray[np.bool_]
+    entry : NDArray[np.float64]
+    args : tuple[NDArray[np.float64], ...]
 
 
 class RenewalProcess(ParametricModel, Generic[M]):
@@ -50,8 +49,6 @@ class RenewalProcess(ParametricModel, Generic[M]):
         A lifetime model for the first renewal (delayed renewal process). It is None by default
     """
 
-    count_data: Optional[CountData]
-
     def __init__(
         self,
         lifetime_model: M,
@@ -63,13 +60,6 @@ class RenewalProcess(ParametricModel, Generic[M]):
         self.first_lifetime_model = first_lifetime_model
         self.count_data = None
 
-    @property
-    def sample(self) -> Optional[CountDataFunctions]:
-        if self.count_data is not None:
-            from relife.sample import CountDataFunctions
-
-            return CountDataFunctions(type(self), self.count_data)
-        return None
 
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
@@ -173,14 +163,13 @@ class RenewalProcess(ParametricModel, Generic[M]):
             self.lifetime_model.pdf if self.first_lifetime_model is None else self.first_lifetime_model.pdf,
         )
 
-    def sample_count_data(
+    def sample(
         self,
         tf: float,
         t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
-        maxsample: int = 100000,
         seed: Optional[int] = None,
-    ) -> None:
+    ) -> RenewalProcessSample:
         """Renewal data sampling.
 
         This function will generate sampling data insternally. These data
@@ -193,27 +182,26 @@ class RenewalProcess(ParametricModel, Generic[M]):
             Time at the beginning of the observation.
         size : int or tuple of 2 int
             Size of the sample
-        maxsample : int, optional
-            Maximum number of samples, by default 100000.
         seed : int, optional
             Random seed, by default None.
 
         """
 
-        from relife.sample import concatenate_renewal_data
+        from .sample import RenewalProcessIterable
 
-        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)  # type: ignore
-        self.count_data = concatenate_renewal_data(iterator, maxsample)
+        iterable = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
+        struct_array = np.concatenate(tuple(iterable))
+        struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
+        return RenewalProcessSample(t0, tf, struct_array)
 
-    def sample_lifetime_data(
+    def generate_lifetime_data(
         self,
         tf: float,
         t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
-        maxsample: int = 1e5,
         seed: Optional[int] = None,
-    ) -> LifetimeData:
-        from relife.sample import concatenate_renewal_data
+    ) -> LifetimeFitArg:
+        from .sample import RenewalProcessIterable
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
             from relife.lifetime_model import FrozenLeftTruncatedModel
@@ -227,19 +215,23 @@ class RenewalProcess(ParametricModel, Generic[M]):
                 raise ValueError(
                     f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
-        iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
-        count_data = concatenate_renewal_data(iterator, maxsample)
-        return LifetimeData(
-            count_data.struct_array["time"].copy(),
-            event=count_data.struct_array["event"].copy(),
-            entry=count_data.struct_array["entry"].copy(),
-            args=tuple(
-                (
-                    np.take(arg, count_data.struct_array["asset_id"])
-                    for arg in getattr(self.lifetime_model, "frozen_args", ())
-                )
-            ),
-        )
+        iterable = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
+        struct_array = np.concatenate(tuple(iterable))
+        struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
+
+        nb_assets = int(np.max(struct_array["asset_id"])) + 1
+        args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "frozen_args", ())))
+        broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
+        tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"]) for arg in broadcasted_args))
+
+        returned_dict = {
+            "time" : struct_array["time"].copy(),
+            "event" : struct_array["event"].copy(),
+            "entry" : struct_array["entry"].copy(),
+            "args" : tuple_args_arr
+        }
+        return returned_dict
+
 
 
 class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
@@ -336,18 +328,20 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m, 1)
 
     @override
-    def sample_count_data(
+    def sample(
         self,
         tf: float,
         t0: float = 0.0,
         size: int | tuple[int] | tuple[int, int] = 1,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
-    ) -> None:
-        from relife.sample import concatenate_count_data
+    ) -> RenewalRewardProcessSample:
+        from .sample import RenewalProcessIterable
 
-        iterator = RenewalRewardProcessIterator(self, size, (t0, tf), seed=seed)
-        self.count_data = concatenate_count_data(iterator, maxsample)
+        iterable = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
+        struct_array = np.concatenate(tuple(iterable))
+        struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
+        return RenewalRewardProcessSample(t0, tf, struct_array)
 
 
 def renewal_equation_solver(
@@ -412,3 +406,70 @@ def delayed_renewal_equation_solver(
             + np.sum(z[..., 1:n][..., ::-1] * v1[..., 1:n], axis=-1)
         )
     return z1
+
+
+@dataclass
+class CountDataSample:
+    t0: float
+    tf: float
+    struct_array: NDArray[np.void]
+
+    def select(self, sample_id: Optional[int] = None, asset_id: Optional[int] = None) -> CountDataSample:
+        mask: NDArray[np.bool_] = np.ones_like(self.struct_array, dtype=np.bool_)
+        if sample_id is not None:
+            mask = mask & np.isin(self.struct_array["sample_id"], sample_id)
+        if asset_id is not None:
+            mask = mask & np.isin(self.struct_array["asset_id"], asset_id)
+        struct_subarray = self.struct_array[mask].copy()
+        return replace(self, t0=self.t0, tf=self.tf, struct_array=struct_subarray)
+
+
+@dataclass
+class RenewalProcessSample(CountDataSample):
+
+    @staticmethod
+    def _nb_events(selection: RenewalProcessSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        sort = np.argsort(selection.struct_array["timeline"])
+        timeline = selection.struct_array["timeline"][sort]
+        counts = np.ones_like(timeline)
+
+        timeline = np.insert(timeline, 0, selection.t0)
+        counts = np.insert(counts, 0, 0)
+        counts[timeline == selection.tf] = 0
+        return timeline, np.cumsum(counts)
+
+    def nb_events(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        selection = self.select(sample_id=sample_id, asset_id=asset_id)
+        return RenewalProcessSample._nb_events(selection)
+
+    def mean_nb_events(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        selection = self.select(asset_id=asset_id)
+        timeline, counts = RenewalProcessSample._nb_events(selection)
+        nb_sample = len(np.unique(selection.struct_array["sample_id"]))
+        return timeline, counts / nb_sample
+
+
+@dataclass
+class RenewalRewardProcessSample(RenewalProcessSample):
+
+    @staticmethod
+    def _total_rewards(selection: RenewalRewardProcessSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        sort = np.argsort(selection.struct_array["timeline"])
+        timeline = selection.struct_array["timeline"][sort]
+        reward = selection.struct_array["reward"][sort]
+
+        timeline = np.insert(timeline, 0, selection.t0)
+        reward = np.insert(reward, 0, 0)
+        reward[timeline == selection.tf] = 0
+
+        return timeline, np.cumsum(reward)
+
+    def total_rewards(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        selection = self.select(sample_id=sample_id, asset_id=asset_id)
+        return RenewalRewardProcessSample._total_rewards(selection)
+
+    def mean_total_rewards(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        selection = self.select(asset_id=asset_id)
+        timeline, rewards = RenewalRewardProcessSample._nb_events(selection)
+        nb_sample = len(np.unique(selection.struct_array["sample_id"]))
+        return timeline, rewards / nb_sample
