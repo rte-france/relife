@@ -32,9 +32,6 @@ AcceleratedFailureTime
             ~AcceleratedFailureTime.fit
         
         
-            ~AcceleratedFailureTime.fit_from_lifetime_data
-        
-        
             ~AcceleratedFailureTime.hf
         
         
@@ -81,9 +78,6 @@ AcceleratedFailureTime
         
         
             ~AcceleratedFailureTime.rvs
-        
-        
-            ~AcceleratedFailureTime.sample_lifetime_data
         
         
             ~AcceleratedFailureTime.sf

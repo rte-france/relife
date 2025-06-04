@@ -32,9 +32,6 @@ Gamma
             ~Gamma.fit
         
         
-            ~Gamma.fit_from_lifetime_data
-        
-        
             ~Gamma.hf
         
         
@@ -81,9 +78,6 @@ Gamma
         
         
             ~Gamma.rvs
-        
-        
-            ~Gamma.sample_lifetime_data
         
         
             ~Gamma.sf

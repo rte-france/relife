@@ -32,9 +32,6 @@ ProportionalHazard
             ~ProportionalHazard.fit
         
         
-            ~ProportionalHazard.fit_from_lifetime_data
-        
-        
             ~ProportionalHazard.hf
         
         
@@ -81,9 +78,6 @@ ProportionalHazard
         
         
             ~ProportionalHazard.rvs
-        
-        
-            ~ProportionalHazard.sample_lifetime_data
         
         
             ~ProportionalHazard.sf

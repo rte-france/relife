@@ -2,7 +2,7 @@
     :maxdepth: 2
     :hidden:
 
-    get_started/index
+    installation
 
 .. toctree::
     :maxdepth: 2

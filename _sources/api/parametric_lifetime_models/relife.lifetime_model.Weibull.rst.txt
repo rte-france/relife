@@ -32,9 +32,6 @@ Weibull
             ~Weibull.fit
         
         
-            ~Weibull.fit_from_lifetime_data
-        
-        
             ~Weibull.hf
         
         
@@ -81,9 +78,6 @@ Weibull
         
         
             ~Weibull.rvs
-        
-        
-            ~Weibull.sample_lifetime_data
         
         
             ~Weibull.sf

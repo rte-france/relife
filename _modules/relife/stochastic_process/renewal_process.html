@@ -142,8 +142,8 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../get_started/index.html">
-    Get started
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
   </a>
 </li>
 
@@ -254,8 +254,8 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../get_started/index.html">
-    Get started
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
   </a>
 </li>
 
@@ -396,7 +396,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.sample</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">RenewalProcessIterator</span><span class="p">,</span>
     <span class="n">RenewalRewardProcessIterator</span><span class="p">,</span>
-    <span class="n">concatenate_renewal_data</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -416,6 +415,16 @@
 <div class="viewcode-block" id="RenewalProcess">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RenewalProcess</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">M</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Renewal process.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lifetime_model : any lifetime distribution or frozen lifetime model</span>
+<span class="sd">        A lifetime model representing the durations between events.</span>
+
+<span class="sd">    first_lifetime_model : any lifetime distribution or frozen lifetime model, optional</span>
+<span class="sd">        A lifetime model for the first renewal (delayed renewal process). It is None by default</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">count_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CountData</span><span class="p">]</span>
 
@@ -445,34 +454,141 @@
             <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="p">(</span><span class="n">args_nb_assets</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">timeline</span>  <span class="c1"># (nb_steps,) or (m, nb_steps)</span>
 
+<div class="viewcode-block" id="RenewalProcess.renewal_function">
+<a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.renewal_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">renewal_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The renewal function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tf : float</span>
+<span class="sd">            Time horizon. The renewal function will be computed up until this calendar time.</span>
+<span class="sd">        nb_steps : int</span>
+<span class="sd">            The number of steps used to compute the renewal function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of two ndarrays</span>
+<span class="sd">            A tuple containing the timeline used to compute the renewal function and its corresponding values at each</span>
+<span class="sd">            step of the timeline.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The expected total number of renewals is computed  by solving the</span>
+<span class="sd">        renewal equation:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)</span>
+
+<span class="sd">        where:</span>
+
+<span class="sd">        - :math:`m` is the renewal function,</span>
+<span class="sd">        - :math:`F` is the cumulative distribution function of the underlying</span>
+<span class="sd">          lifetime model,</span>
+<span class="sd">        - :math:`F_1` is the cumulative distribution function of the underlying</span>
+<span class="sd">          lifetime model for the fist renewal in the case of a delayed renewal</span>
+<span class="sd">          process.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [1] Rausand, M., Barros, A., &amp; Hoyland, A. (2020). System Reliability</span>
+<span class="sd">            Theory: Models, Statistical Methods, and Applications. John Wiley &amp;</span>
+<span class="sd">            Sons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">timeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_timeline</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">)</span>  <span class="c1"># (nb_steps,) or (m, nb_steps)</span>
         <span class="k">return</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">renewal_equation_solver</span><span class="p">(</span>
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">cdf</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">cdf</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="RenewalProcess.renewal_density">
+<a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.renewal_density">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">renewal_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The renewal density.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tf : float</span>
+<span class="sd">            Time horizon. The renewal density will be computed up until this calendar time.</span>
+<span class="sd">        nb_steps : int</span>
+<span class="sd">            The number of steps used to compute the renewal density.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of two ndarrays</span>
+<span class="sd">            A tuple containing the timeline used to compute the renewal density and its corresponding values at each</span>
+<span class="sd">            step of the timeline.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The renewal density is the derivative of the renewal function with</span>
+<span class="sd">        respect to time. It is computed by solving the renewal equation:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \mu(t) = f_1(t) + \int_0^t \mu(t-x) \mathrm{d}F(x)</span>
+
+<span class="sd">        where:</span>
+
+<span class="sd">        - :math:`\mu` is the renewal function,</span>
+<span class="sd">        - :math:`F` is the cumulative distribution function of the underlying</span>
+<span class="sd">          lifetime model,</span>
+<span class="sd">        - :math:`f_1` is the probability density function of the underlying</span>
+<span class="sd">          lifetime model for the fist renewal in the case of a delayed renewal</span>
+<span class="sd">          process.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [1] Rausand, M., Barros, A., &amp; Hoyland, A. (2020). System Reliability</span>
+<span class="sd">            Theory: Models, Statistical Methods, and Applications. John Wiley &amp;</span>
+<span class="sd">            Sons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">timeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_timeline</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">)</span>  <span class="c1">#  (nb_steps,) or (m, nb_steps)</span>
         <span class="k">return</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">renewal_equation_solver</span><span class="p">(</span>
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">pdf</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="RenewalProcess.sample_count_data">
+<a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.sample_count_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sample_count_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">t0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">maxsample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">1e5</span><span class="p">,</span>
+        <span class="n">maxsample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
+
+<span class="sd">        This function will generate sampling data insternally. These data</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tf : float</span>
+<span class="sd">            Time at the end of the observation.</span>
+<span class="sd">        t0 : float, default 0</span>
+<span class="sd">            Time at the beginning of the observation.</span>
+<span class="sd">        size : int or tuple of 2 int</span>
+<span class="sd">            Size of the sample</span>
+<span class="sd">        maxsample : int, optional</span>
+<span class="sd">            Maximum number of samples, by default 100000.</span>
+<span class="sd">        seed : int, optional</span>
+<span class="sd">            Random seed, by default None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="kn">from</span><span class="w"> </span><span class="nn">relife.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">concatenate_renewal_data</span>
 
         <span class="n">iterator</span> <span class="o">=</span> <span class="n">RenewalProcessIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">count_data</span> <span class="o">=</span> <span class="n">concatenate_renewal_data</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">maxsample</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count_data</span> <span class="o">=</span> <span class="n">concatenate_renewal_data</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">maxsample</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sample_lifetime_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -607,6 +723,8 @@
             <span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">()</span>  <span class="c1"># () or (m, 1)</span>
 
+<div class="viewcode-block" id="RenewalRewardProcess.sample_count_data">
+<a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.sample_count_data">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sample_count_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -620,6 +738,7 @@
 
         <span class="n">iterator</span> <span class="o">=</span> <span class="n">RenewalRewardProcessIterator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">count_data</span> <span class="o">=</span> <span class="n">concatenate_count_data</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">maxsample</span><span class="p">)</span></div>
+</div>
 
 
 

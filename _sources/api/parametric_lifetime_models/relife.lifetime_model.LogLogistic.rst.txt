@@ -32,9 +32,6 @@ LogLogistic
             ~LogLogistic.fit
         
         
-            ~LogLogistic.fit_from_lifetime_data
-        
-        
             ~LogLogistic.hf
         
         
@@ -81,9 +78,6 @@ LogLogistic
         
         
             ~LogLogistic.rvs
-        
-        
-            ~LogLogistic.sample_lifetime_data
         
         
             ~LogLogistic.sf

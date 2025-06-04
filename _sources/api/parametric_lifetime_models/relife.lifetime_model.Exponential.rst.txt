@@ -32,9 +32,6 @@ Exponential
             ~Exponential.fit
         
         
-            ~Exponential.fit_from_lifetime_data
-        
-        
             ~Exponential.hf
         
         
@@ -81,9 +78,6 @@ Exponential
         
         
             ~Exponential.rvs
-        
-        
-            ~Exponential.sample_lifetime_data
         
         
             ~Exponential.sf

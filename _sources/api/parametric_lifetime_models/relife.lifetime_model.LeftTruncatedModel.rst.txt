@@ -59,9 +59,6 @@ LeftTruncatedModel
             ~LeftTruncatedModel.rvs
         
         
-            ~LeftTruncatedModel.sample_lifetime_data
-        
-        
             ~LeftTruncatedModel.sf
         
         

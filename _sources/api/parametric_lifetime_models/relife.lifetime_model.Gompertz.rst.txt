@@ -32,9 +32,6 @@ Gompertz
             ~Gompertz.fit
         
         
-            ~Gompertz.fit_from_lifetime_data
-        
-        
             ~Gompertz.hf
         
         
@@ -81,9 +78,6 @@ Gompertz
         
         
             ~Gompertz.rvs
-        
-        
-            ~Gompertz.sample_lifetime_data
         
         
             ~Gompertz.sf

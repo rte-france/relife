@@ -59,9 +59,6 @@ AgeReplacementModel
             ~AgeReplacementModel.rvs
         
         
-            ~AgeReplacementModel.sample_lifetime_data
-        
-        
             ~AgeReplacementModel.sf
         
         
