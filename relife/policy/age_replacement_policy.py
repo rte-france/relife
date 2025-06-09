@@ -248,6 +248,52 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
             raise ValueError
         return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()
 
+    def total_annual_number_of_replacements(
+        self,
+        tf: float,
+        nb_steps: int,
+    ):
+        if np.any(np.isnan(self.ar)):
+            raise ValueError
+        if self.ar1 is not None and np.any(np.isnan(self.ar1)):
+            raise ValueError
+
+        policya = type(self)(
+            self.stochastic_process.lifetime_model.unfrozen_model,
+            cf=1.,
+            cp=1.,
+            discounting_rate=self.stochastic_process.discounting_rate,
+            first_lifetime_model=self.stochastic_process.first_lifetime_model.unfrozen_model if self.stochastic_process.first_lifetime_model is not None else None,
+            ar=self.ar,
+            ar1=self.ar1,
+        )
+        timeline, mt = policya.expected_total_cost(tf, nb_steps)
+        return timeline, np.diff(mt, prepend=0)
+
+
+    def annual_number_of_replacements_upon_failure(
+        self,
+        tf: float,
+        nb_steps: int,
+    ):
+        if np.any(np.isnan(self.ar)):
+            raise ValueError
+        if self.ar1 is not None and np.any(np.isnan(self.ar1)):
+            raise ValueError
+
+        policya = type(self)(
+            self.stochastic_process.lifetime_model.unfrozen_model,
+            cf=1.,
+            cp=0.,
+            discounting_rate=self.stochastic_process.discounting_rate,
+            first_lifetime_model=self.stochastic_process.first_lifetime_model.unfrozen_model if self.stochastic_process.first_lifetime_model is not None else None,
+            ar=self.ar,
+            ar1=self.ar1,
+        )
+        timeline, mt = policya.expected_total_cost(tf, nb_steps)
+        return timeline, np.diff(mt, prepend=0)
+
+
     def optimize(
         self,
     ) -> AgeReplacementPolicy:
