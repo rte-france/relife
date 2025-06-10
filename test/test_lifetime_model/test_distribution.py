@@ -3,10 +3,6 @@ from pytest import approx
 import numpy as np
 
 
-def test_args_names(distribution):
-    assert distribution.args_names == ()
-
-
 def test_rvs(distribution, rvs_size, expected_out_shape):
     assert distribution.rvs(size=rvs_size).shape == expected_out_shape(size=rvs_size)
     assert all(

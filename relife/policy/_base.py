@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from itertools import islice
 from typing import Generic, Optional, TypeVar
 
 import numpy as np
@@ -156,6 +155,14 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
 
     def __init__(self, stochastic_process: RenewalRewardProcess[M, R]):
         self.stochastic_process = stochastic_process
+
+    @property
+    def discounting_rate(self):
+        return self.stochastic_process.discounting_rate
+
+    @discounting_rate.setter
+    def discounting_rate(self, value: float) -> None:
+        self.stochastic_process.discounting_rate = value
 
     def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         return self.stochastic_process.renewal_function(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)

@@ -117,14 +117,14 @@ class AgeReplacementModel(
         ar = reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    def cdf(
-        self,
-        time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
-        ar = reshape_ar_or_a0("ar", ar)
-        return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
+    # def cdf(
+    #     self,
+    #     time: float | NDArray[np.float64],
+    #     ar: float | NDArray[np.float64],
+    #     *args: float | NDArray[np.float64],
+    # ) -> NDArray[np.float64]:
+    #     ar = reshape_ar_or_a0("ar", ar)
+    #     return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
 
     @override
     def mrl(
@@ -254,7 +254,7 @@ class AgeReplacementModel(
     ) -> NDArray[np.float64]:
         ar = reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
-        integration = super().ls_integrate(func, a, b, *(ar, *args), deg=deg)
+        integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
 
     @override

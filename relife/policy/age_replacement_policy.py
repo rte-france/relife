@@ -213,7 +213,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     @property
     def ar(self) -> float | NDArray[np.float64]:
-        return np.squeeze(self.stochastic_process.lifetime_model.ar) # may be (m, 1) so squeeze it
+        return np.squeeze(self.stochastic_process.lifetime_model.ar)  # may be (m, 1) so squeeze it
 
     @ar.setter
     def ar(self, value: float | NDArray[np.float64]) -> None:
@@ -223,7 +223,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
     @property
     def ar1(self) -> Optional[float | NDArray[np.float64]]:
         if self.stochastic_process.first_lifetime_model is not None:
-            return np.squeeze(self.stochastic_process.first_lifetime_model.ar) # may be (m, 1) so squeeze it
+            return np.squeeze(self.stochastic_process.first_lifetime_model.ar)  # may be (m, 1) so squeeze it
         return None
 
     @ar1.setter
@@ -241,6 +241,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
     @cf.setter
     def cf(self, value: float | NDArray[np.float64]) -> None:
         self.stochastic_process.reward.cf = value
+        self.stochastic_process.first_reward.cf = value
 
     @property
     def cp(self) -> float | NDArray[np.float64]:
@@ -249,6 +250,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
     @cp.setter
     def cp(self, value: float | NDArray[np.float64]) -> None:
         self.stochastic_process.reward.cp = value
+        self.stochastic_process.first_reward.cp = value
 
     def expected_total_cost(
         self,
@@ -288,25 +290,35 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     def annual_number_of_replacements(
         self,
-        nb_years : int,
-        upon_failure : bool = False,
+        nb_years: int,
+        upon_failure: bool = False,
+        total: bool = True,
     ):
         if np.any(np.isnan(self.ar)):
             raise ValueError
         if self.ar1 is not None and np.any(np.isnan(self.ar1)):
             raise ValueError
 
-        temp_policy = copy.deepcopy(self)
-        temp_policy.cf = 1.
-        temp_policy.cp = 1.
-        timeline, mt = temp_policy.expected_total_cost(nb_years, nb_years) # nb steps equals nb of
-        nb_replacements = np.diff(mt, prepend=0)
+        copied_policy = copy.deepcopy(self)
+        copied_policy.cf = 1.0
+        copied_policy.cp = 1.0
+        copied_policy.discounting_rate = 0.0
+        timeline, total_cost = copied_policy.expected_total_cost(nb_years, nb_years + 1)  # equiv to np.arange
+        if total:
+            mt = np.sum(np.atleast_2d(total_cost), axis=0)
+        else:
+            mt = total_cost
+        nb_replacements = np.diff(mt)
         if upon_failure:
-            temp_policy.cp = 0.
-            _, mf = temp_policy.expected_total_cost(nb_years, nb_years)
-            nb_failures = np.diff(mf, prepend=0)
-            return timeline, nb_replacements, nb_failures
-        return timeline, nb_replacements
+            copied_policy.cp = 0.0
+            _, total_cost = copied_policy.expected_total_cost(nb_years, nb_years + 1)  # equiv to np.arange
+            if total:
+                mf = np.sum(np.atleast_2d(total_cost), axis=0)
+            else:
+                mf = total_cost
+            nb_failures = np.diff(mf)
+            return timeline[1:], nb_replacements, nb_failures
+        return timeline[1:], nb_replacements
 
     def optimize(
         self,

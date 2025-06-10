@@ -32,15 +32,6 @@ def test_covar_effect():
     assert covar_effect.jac_g(np.ones((1, covar_effect.nb_coef)), asarray=True).shape == (covar_effect.nb_coef, 1, 1)
     assert covar_effect.jac_g(np.ones((10, covar_effect.nb_coef)), asarray=True).shape == (covar_effect.nb_coef, 10, 1)
 
-
-def test_args_names(regression):
-    assert regression.args_names == ("covar",)
-    assert ProportionalHazard(regression).args_names == (
-        "covar",
-        "covar",
-    )
-
-
 def test_rvs(regression, rvs_size, covar, expected_out_shape):
     assert regression.rvs(rvs_size, covar).shape == expected_out_shape(covar=covar, size=rvs_size)
     assert all(

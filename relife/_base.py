@@ -238,10 +238,10 @@ def model_args_names(
 ) -> tuple[str, ...]:
     from relife.lifetime_model import (
         AgeReplacementModel,
+        FrozenParametricLifetimeModel,
         LeftTruncatedModel,
         LifetimeDistribution,
         LifetimeRegression,
-        FrozenParametricLifetimeModel,
     )
     from relife.stochastic_process import (
         NonHomogeneousPoissonProcess,

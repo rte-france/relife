@@ -100,7 +100,7 @@ class AgeReplacementReward(Reward):
         return self._ar
 
     @ar.setter
-    def ar(self, value : float | NDArray[np.float64]) -> None:
+    def ar(self, value: float | NDArray[np.float64]) -> None:
         shape = () if value.ndim == 0 else (value.size, 1)
         self._ar = value.reshape(shape)
 

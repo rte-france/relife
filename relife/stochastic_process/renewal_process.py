@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Callable, Generic, Optional, TypedDict, TypeVar, Union
 
@@ -244,12 +245,16 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
     ):
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
-        self.first_reward = first_reward if first_reward is not None else reward
+        self.first_reward = first_reward if first_reward is not None else copy.deepcopy(reward)
         self.discounting = ExponentialDiscounting(discounting_rate)
 
     @property
     def discounting_rate(self) -> float:
         return self.discounting.rate
+
+    @discounting_rate.setter
+    def discounting_rate(self, value: float) -> None:
+        self.discounting.rate = value
 
     @override
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
@@ -268,7 +273,10 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
             timeline,
             self.lifetime_model,
             lambda t: self.lifetime_model.ls_integrate(
-                lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(t), t, deg=15
+                lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
+                np.zeros_like(t),
+                t,
+                deg=15,
             ),  # reward partial expectation
             discounting=self.discounting,
         )
@@ -278,9 +286,9 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
                 z,
                 self.first_lifetime_model,
                 lambda t: self.first_lifetime_model.ls_integrate(
-                    lambda x: self.first_reward.sample(x) * self.discounting.factor(x),
+                    lambda x: self.first_reward.conditional_expectation(x) * self.discounting.factor(x),
                     np.zeros_like(t),
-                    timeline,
+                    t,
                     deg=15,
                 ),  # reward partial expectation
                 discounting=self.discounting,
