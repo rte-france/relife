@@ -77,7 +77,7 @@ class AgeReplacementReward(Reward):
         self._cost_array = cost(cf=cf, cp=cp)
         ar = np.asarray(ar, dtype=np.float64)
         shape = () if ar.ndim == 0 else (ar.size, 1)
-        self.ar = ar.reshape(shape)
+        self._ar = ar.reshape(shape)
 
     @property
     def cf(self):
@@ -86,6 +86,23 @@ class AgeReplacementReward(Reward):
     @property
     def cp(self):
         return self._cost_array["cp"]
+
+    @cf.setter
+    def cf(self, value: float | NDArray[np.float64]) -> None:
+        self._cost_array["cf"] = value
+
+    @cp.setter
+    def cp(self, value: float | NDArray[np.float64]) -> None:
+        self._cost_array["cp"] = value
+
+    @property
+    def ar(self) -> float | NDArray[np.float64]:
+        return self._ar
+
+    @ar.setter
+    def ar(self, value : float | NDArray[np.float64]) -> None:
+        shape = () if value.ndim == 0 else (value.size, 1)
+        self._ar = value.reshape(shape)
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.where(time < self.ar, self.cf, self.cp)

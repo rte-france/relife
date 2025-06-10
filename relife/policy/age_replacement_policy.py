@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from typing import Optional, Self
 
 import numpy as np
@@ -14,6 +15,7 @@ from relife.lifetime_model import (
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
     FrozenLifetimeRegression,
+    LeftTruncatedModel,
     LifetimeDistribution,
 )
 from relife.quadrature import legendre_quadrature
@@ -46,9 +48,18 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
         cp: float | NDArray[np.float64],
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
-        ar: float | NDArray[np.float64] = np.nan,
+        a0: Optional[float | NDArray[np.float64]] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
-        lifetime_model: FrozenAgeReplacementModel = freeze(AgeReplacementModel(lifetime_model), ar=ar)
+        if a0 is not None:
+            lifetime_model: FrozenAgeReplacementModel = freeze(
+                AgeReplacementModel(freeze(LeftTruncatedModel(lifetime_model), a0=a0)),
+                ar=ar if ar is not None else np.nan,
+            )
+        else:
+            lifetime_model: FrozenAgeReplacementModel = freeze(
+                AgeReplacementModel(lifetime_model), ar=ar if ar is not None else np.nan
+            )
         reward = AgeReplacementReward(cf, cp, ar)
         super().__init__(lifetime_model, reward, discounting_rate, period_before_discounting)
 
@@ -117,8 +128,9 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
              Same instance with optimized ``ar`` (optionnaly ``ar1``).
         """
 
-        x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # () or (m, 1)
+        x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # ()
         hf = self.lifetime_model.unfrozen_model.baseline.hf
+        x0 = np.broadcast_to(x0, hf(x0).shape).copy()  # () or (m, 1)
 
         def eq(a):  # () or (m, 1)
             return (
@@ -160,17 +172,35 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         cf: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         discounting_rate: float = 0.0,
-        first_lifetime_model: None | LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel = None,
-        ar: float | NDArray[np.float64] = np.nan,
-        ar1: float | NDArray[np.float64] = np.nan,
+        first_lifetime_model: Optional[
+            LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel
+        ] = None,
+        a0: Optional[float | NDArray[np.float64]] = None,
+        ar: Optional[float | NDArray[np.float64]] = None,
+        ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
-        lifetime_model: FrozenAgeReplacementModel = freeze(AgeReplacementModel(lifetime_model), ar=ar)
-        reward = AgeReplacementReward(cf, cp, ar)
         first_reward: Optional[AgeReplacementReward] = None
         if first_lifetime_model is not None:
-            first_lifetime_model: FrozenAgeReplacementModel = freeze(AgeReplacementModel(lifetime_model), ar=ar1)
-            first_reward = AgeReplacementReward(cf, cp, ar1)
+            if a0 is not None:
+                first_lifetime_model: FrozenAgeReplacementModel = freeze(
+                    AgeReplacementModel(freeze(LeftTruncatedModel(first_lifetime_model), a0=a0)),
+                    ar=ar1 if ar1 is not None else np.nan,
+                )
+            else:
+                first_lifetime_model: FrozenAgeReplacementModel = freeze(
+                    AgeReplacementModel(first_lifetime_model), ar=ar1 if ar1 is not None else np.nan
+                )
+            first_reward = AgeReplacementReward(cf, cp, ar1 if ar1 is not None else np.nan)
+        elif a0 is not None:
+            first_lifetime_model: FrozenAgeReplacementModel = freeze(
+                AgeReplacementModel(freeze(LeftTruncatedModel(lifetime_model), a0=a0)),
+                ar=ar1 if ar1 is not None else np.nan,
+            )
         first_lifetime_model: Optional[FrozenAgeReplacementModel]
+        lifetime_model: FrozenAgeReplacementModel = freeze(
+            AgeReplacementModel(lifetime_model), ar=ar if ar is not None else np.nan
+        )
+        reward = AgeReplacementReward(cf, cp, ar if ar is not None else np.nan)
 
         stochastic_process = RenewalRewardProcess(
             lifetime_model,
@@ -183,7 +213,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     @property
     def ar(self) -> float | NDArray[np.float64]:
-        return self.stochastic_process.lifetime_model.ar
+        return np.squeeze(self.stochastic_process.lifetime_model.ar) # may be (m, 1) so squeeze it
 
     @ar.setter
     def ar(self, value: float | NDArray[np.float64]) -> None:
@@ -193,24 +223,32 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
     @property
     def ar1(self) -> Optional[float | NDArray[np.float64]]:
         if self.stochastic_process.first_lifetime_model is not None:
-            return self.stochastic_process.first_lifetime_model.ar
+            return np.squeeze(self.stochastic_process.first_lifetime_model.ar) # may be (m, 1) so squeeze it
         return None
 
     @ar1.setter
     def ar1(self, value: float | NDArray[np.float64]) -> None:
         if self.stochastic_process.first_lifetime_model is not None:
-            self.stochastic_process.first_lifetime_mode.ar = value
+            self.stochastic_process.first_lifetime_model.ar = value
             self.stochastic_process.first_reward.ar = value
         else:
             raise ValueError
 
     @property
+    def cf(self) -> float | NDArray[np.float64]:
+        return self.stochastic_process.reward.cf
+
+    @cf.setter
+    def cf(self, value: float | NDArray[np.float64]) -> None:
+        self.stochastic_process.reward.cf = value
+
+    @property
     def cp(self) -> float | NDArray[np.float64]:
         return self.stochastic_process.reward.cp
 
-    @property
-    def cf(self) -> float | NDArray[np.float64]:
-        return self.stochastic_process.reward.cf
+    @cp.setter
+    def cp(self, value: float | NDArray[np.float64]) -> None:
+        self.stochastic_process.reward.cp = value
 
     def expected_total_cost(
         self,
@@ -248,51 +286,27 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
             raise ValueError
         return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()
 
-    def total_annual_number_of_replacements(
+    def annual_number_of_replacements(
         self,
-        tf: float,
-        nb_steps: int,
+        nb_years : int,
+        upon_failure : bool = False,
     ):
         if np.any(np.isnan(self.ar)):
             raise ValueError
         if self.ar1 is not None and np.any(np.isnan(self.ar1)):
             raise ValueError
 
-        policya = type(self)(
-            self.stochastic_process.lifetime_model.unfrozen_model,
-            cf=1.,
-            cp=1.,
-            discounting_rate=self.stochastic_process.discounting_rate,
-            first_lifetime_model=self.stochastic_process.first_lifetime_model.unfrozen_model if self.stochastic_process.first_lifetime_model is not None else None,
-            ar=self.ar,
-            ar1=self.ar1,
-        )
-        timeline, mt = policya.expected_total_cost(tf, nb_steps)
-        return timeline, np.diff(mt, prepend=0)
-
-
-    def annual_number_of_replacements_upon_failure(
-        self,
-        tf: float,
-        nb_steps: int,
-    ):
-        if np.any(np.isnan(self.ar)):
-            raise ValueError
-        if self.ar1 is not None and np.any(np.isnan(self.ar1)):
-            raise ValueError
-
-        policya = type(self)(
-            self.stochastic_process.lifetime_model.unfrozen_model,
-            cf=1.,
-            cp=0.,
-            discounting_rate=self.stochastic_process.discounting_rate,
-            first_lifetime_model=self.stochastic_process.first_lifetime_model.unfrozen_model if self.stochastic_process.first_lifetime_model is not None else None,
-            ar=self.ar,
-            ar1=self.ar1,
-        )
-        timeline, mt = policya.expected_total_cost(tf, nb_steps)
-        return timeline, np.diff(mt, prepend=0)
-
+        temp_policy = copy.deepcopy(self)
+        temp_policy.cf = 1.
+        temp_policy.cp = 1.
+        timeline, mt = temp_policy.expected_total_cost(nb_years, nb_years) # nb steps equals nb of
+        nb_replacements = np.diff(mt, prepend=0)
+        if upon_failure:
+            temp_policy.cp = 0.
+            _, mf = temp_policy.expected_total_cost(nb_years, nb_years)
+            nb_failures = np.diff(mf, prepend=0)
+            return timeline, nb_replacements, nb_failures
+        return timeline, nb_replacements
 
     def optimize(
         self,
@@ -305,11 +319,12 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         Self
              Same instance with optimized ``ar`` (optionnaly ``ar1``).
         """
-        x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # () or (m, 1)
+        x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # ()
         discounting = ExponentialDiscounting(self.stochastic_process.discounting_rate)
         sf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.sf
         pdf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.pdf
         hf = self.stochastic_process.lifetime_model.unfrozen_model.baseline.hf
+        x0 = np.broadcast_to(x0, hf(x0).shape).copy()  # () or (m, 1)
 
         def eq(a):  # () or (m, 1)
             f = legendre_quadrature(
@@ -327,9 +342,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         self.ar = newton(eq, x0)
         if self.ar1 is not None:
             one_cycle_ar_policy = OneCycleAgeReplacementPolicy(
-                self.stochastic_process.lifetime_model, self.cf, self.cp, self.stochastic_process.discounting.rate
+                self.stochastic_process.first_lifetime_model.unfrozen_model.baseline,
+                self.cf,
+                self.cp,
+                self.stochastic_process.discounting.rate,
             ).optimize()
             self.ar1 = one_cycle_ar_policy.ar
+            self.ar = np.broadcast_to(self.ar, self.ar1.shape).copy()
         return self
 
 

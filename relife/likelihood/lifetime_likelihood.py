@@ -151,14 +151,14 @@ class LikelihoodFromLifetimes(Likelihood):
         params: NDArray[np.float64],  # (p,)
     ) -> np.float64:
         model_params = np.copy(self.model.params)
-        self.model.params = params # changes model params
+        self.model.params = params  # changes model params
         contributions = (
             self._complete_contribs(self.data),
             self._right_censored_contribs(self.data),
             self._left_censored_contribs(self.data),
             self._left_truncations_contribs(self.data),
         )
-        self.model.params = model_params # reset model params (negative_log must not change model params)
+        self.model.params = model_params  # reset model params (negative_log must not change model params)
         return sum(x for x in contributions if x is not None)  # ()
 
     def jac_negative_log(
@@ -181,14 +181,14 @@ class LikelihoodFromLifetimes(Likelihood):
             Jacobian of the negative log likelihood value
         """
         model_params = np.copy(self.model.params)
-        self.model.params = params # changes model params
+        self.model.params = params  # changes model params
         jac_contributions = (
             self._jac_complete_contribs(self.data),
             self._jac_right_censored_contribs(self.data),
             self._jac_left_censored_contribs(self.data),
             self._jac_left_truncations_contribs(self.data),
         )
-        self.model.params = model_params # reset model params (jac_negative_log must not change model params)
+        self.model.params = model_params  # reset model params (jac_negative_log must not change model params)
         return sum(x for x in jac_contributions if x is not None)  # (p,)
 
     def maximum_likelihood_estimation(self, **kwargs: Any) -> FittingResults:
@@ -208,10 +208,12 @@ class LikelihoodFromLifetimes(Likelihood):
             **minimize_kwargs,
         )
         optimal_params = np.copy(optimizer.x)
-        neg_log_likelihood = np.copy(optimizer.fun) # neg_log_likelihood value at optimal
+        neg_log_likelihood = np.copy(optimizer.fun)  # neg_log_likelihood value at optimal
         hessian = approx_hessian(self, optimal_params)
         covariance_matrix = np.linalg.inv(hessian)
-        return FittingResults(self.data.nb_samples, optimal_params, neg_log_likelihood, covariance_matrix=covariance_matrix)
+        return FittingResults(
+            self.data.nb_samples, optimal_params, neg_log_likelihood, covariance_matrix=covariance_matrix
+        )
 
 
 M = TypeVar("M", bound=Union["LifetimeDistribution", "LifetimeRegression", "MinimumDistribution"])

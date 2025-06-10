@@ -6,8 +6,8 @@ from typing import Any, Optional, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import approx_fprime
 from scipy import stats
+from scipy.optimize import approx_fprime
 
 from relife import ParametricModel
 
@@ -41,14 +41,14 @@ L = TypeVar("L", bound="LikelihoodFromLifetimes")  # maybe other likelihood in t
 
 def hessian_cs(
     likelihood: L,
-    params : NDArray[np.float64],
+    params: NDArray[np.float64],
     eps: float = 1e-6,
 ) -> NDArray[np.float64]:
 
     size = params.size
     hess = np.empty((size, size))
     u = eps * 1j * np.eye(size)
-    complex_params = params.astype(np.complex64) # change params to complex
+    complex_params = params.astype(np.complex64)  # change params to complex
     for i in range(size):
         for j in range(i, size):
             hess[i, j] = np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
@@ -76,7 +76,7 @@ def hessian_2point(
 M = TypeVar("M", bound=Union["LifetimeDistribution", "LifetimeRegression", "MinimumDistribution"])
 
 
-def approx_hessian(likelihood: L, params : NDArray[np.float64], eps: float = 1e-6) -> NDArray[np.float64]:
+def approx_hessian(likelihood: L, params: NDArray[np.float64], eps: float = 1e-6) -> NDArray[np.float64]:
 
     def hessian_scheme(model: M):
         from relife.lifetime_model import Gamma, LifetimeRegression
@@ -115,9 +115,7 @@ class FittingResults:
         nb_params = self.optimal_params.size
         self.AIC = float(2 * nb_params + 2 * self.neg_log_likelihood)
         self.AICc = float(self.AIC + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1))
-        self.BIC = float(
-            np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
-        )
+        self.BIC = float(np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood)
 
         self.se = None
         if self.covariance_matrix is not None:

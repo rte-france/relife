@@ -241,6 +241,7 @@ def model_args_names(
         LeftTruncatedModel,
         LifetimeDistribution,
         LifetimeRegression,
+        FrozenParametricLifetimeModel,
     )
     from relife.stochastic_process import (
         NonHomogeneousPoissonProcess,
@@ -255,7 +256,7 @@ def model_args_names(
         args_names = args_names + ("a0",) + model_args_names(model.baseline)
     elif isinstance(model, NonHomogeneousPoissonProcess):
         args_names = model_args_names(model.baseline)
-    elif isinstance(model, LifetimeDistribution):
+    elif isinstance(model, (LifetimeDistribution, FrozenParametricLifetimeModel)):
         return args_names
     else:
         raise ValueError

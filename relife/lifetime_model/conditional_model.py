@@ -6,7 +6,6 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from ..data import LifetimeData
 from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
 
 
@@ -35,7 +34,6 @@ class AgeReplacementModel(
         The base lifetime model without conditional probabilities
     """
 
-    # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
     def __init__(
         self,
         baseline: (
@@ -297,7 +295,6 @@ class LeftTruncatedModel(
         The base lifetime model without conditional probabilities
     """
 
-    # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
     def __init__(
         self,
         baseline: (

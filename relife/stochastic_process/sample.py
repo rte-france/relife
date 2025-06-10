@@ -1,8 +1,9 @@
 from abc import ABC
 from collections.abc import Iterator
 from typing import (
+    Iterable,
     Optional,
-    TypeVarTuple, Iterable,
+    TypeVarTuple,
 )
 
 import numpy as np
@@ -172,7 +173,6 @@ class RenewalProcessIterator(CountDataIterator):
         raise StopIteration
 
 
-
 class RenewalRewardProcessIterator(RenewalProcessIterator):
     reward: Reward
     discounting: ExponentialDiscounting
@@ -221,13 +221,11 @@ class RenewalProcessIterable(Iterable):
         self.window = window
         self.seed = seed
 
-
     def __iter__(self) -> RenewalProcessIterator:
         if isinstance(self.process, RenewalProcess):
             return RenewalProcessIterator(self.process, self.size, self.window, self.seed)
         else:
             return RenewalRewardProcessIterator(self.process, self.size, self.window, self.seed)
-
 
 
 # class NonHomogeneousPoissonProcessIterator(SampleIterator):
@@ -378,12 +376,6 @@ class RenewalProcessIterable(Iterable):
 #             events_indicators=events_indicators,
 #             rewards=rewards,
 #         )
-
-
-
-
-
-
 
 
 #

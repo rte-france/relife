@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar, Union, TypedDict
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypedDict, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -31,10 +31,10 @@ R = TypeVar("R", bound=Reward)
 
 
 class LifetimeFitArg(TypedDict):
-    time : NDArray[np.float64]
-    event : NDArray[np.bool_]
-    entry : NDArray[np.float64]
-    args : tuple[NDArray[np.float64], ...]
+    time: NDArray[np.float64]
+    event: NDArray[np.bool_]
+    entry: NDArray[np.float64]
+    args: tuple[NDArray[np.float64], ...]
 
 
 class RenewalProcess(ParametricModel, Generic[M]):
@@ -59,7 +59,6 @@ class RenewalProcess(ParametricModel, Generic[M]):
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
         self.count_data = None
-
 
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
@@ -225,13 +224,12 @@ class RenewalProcess(ParametricModel, Generic[M]):
         tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"]) for arg in broadcasted_args))
 
         returned_dict = {
-            "time" : struct_array["time"].copy(),
-            "event" : struct_array["event"].copy(),
-            "entry" : struct_array["entry"].copy(),
-            "args" : tuple_args_arr
+            "time": struct_array["time"].copy(),
+            "event": struct_array["event"].copy(),
+            "entry": struct_array["entry"].copy(),
+            "args": tuple_args_arr,
         }
         return returned_dict
-
 
 
 class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
@@ -275,7 +273,7 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
             discounting=self.discounting,
         )
         if self.first_lifetime_model is not None:
-            return delayed_renewal_equation_solver(
+            z = delayed_renewal_equation_solver(
                 timeline,
                 z,
                 self.first_lifetime_model,
@@ -303,7 +301,7 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
                 lambda x: self.discounting.factor(x) * self.first_reward.sample(x), 0.0, np.inf, deg=15
             )
             z = ly1 + z * lf1  # () or (m, 1)
-        return z  # () or (m, 1)
+        return np.squeeze(z)  # () or (m,)
 
     def expected_equivalent_annual_worth(
         self, tf: float, nb_steps: int
@@ -325,7 +323,7 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
                 self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=15)
                 / self.lifetime_model.mean()
             )  # () or (m, 1)
-        return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m, 1)
+        return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
     @override
     def sample(
