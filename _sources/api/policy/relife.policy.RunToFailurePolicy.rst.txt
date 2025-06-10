@@ -35,8 +35,8 @@ RunToFailurePolicy
             ~RunToFailurePolicy.expected_total_cost
         
         
+            ~RunToFailurePolicy.generate_lifetime_data
+        
+        
             ~RunToFailurePolicy.sample_count_data
-        
-        
-            ~RunToFailurePolicy.sample_lifetime_data
         

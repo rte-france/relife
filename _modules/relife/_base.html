@@ -618,6 +618,7 @@
         <span class="n">LeftTruncatedModel</span><span class="p">,</span>
         <span class="n">LifetimeDistribution</span><span class="p">,</span>
         <span class="n">LifetimeRegression</span><span class="p">,</span>
+        <span class="n">FrozenParametricLifetimeModel</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">NonHomogeneousPoissonProcess</span><span class="p">,</span>
@@ -632,7 +633,7 @@
         <span class="n">args_names</span> <span class="o">=</span> <span class="n">args_names</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,)</span> <span class="o">+</span> <span class="n">model_args_names</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">):</span>
         <span class="n">args_names</span> <span class="o">=</span> <span class="n">model_args_names</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">LifetimeDistribution</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">LifetimeDistribution</span><span class="p">,</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">)):</span>
         <span class="k">return</span> <span class="n">args_names</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>

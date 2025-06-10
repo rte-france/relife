@@ -34,9 +34,3 @@ OneCycleAgeReplacementPolicy
         
             ~OneCycleAgeReplacementPolicy.optimize
         
-        
-            ~OneCycleAgeReplacementPolicy.sample_count_data
-        
-        
-            ~OneCycleAgeReplacementPolicy.sample_lifetime_data
-        

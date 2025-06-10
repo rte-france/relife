@@ -20,14 +20,14 @@ RenewalProcess
     
         
         
+            ~RenewalProcess.generate_lifetime_data
+        
+        
             ~RenewalProcess.renewal_density
         
         
             ~RenewalProcess.renewal_function
         
         
-            ~RenewalProcess.sample_count_data
-        
-        
-            ~RenewalProcess.sample_lifetime_data
+            ~RenewalProcess.sample
         

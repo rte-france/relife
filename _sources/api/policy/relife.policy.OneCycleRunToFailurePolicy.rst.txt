@@ -31,9 +31,3 @@ OneCycleRunToFailurePolicy
         
             ~OneCycleRunToFailurePolicy.expected_total_cost
         
-        
-            ~OneCycleRunToFailurePolicy.sample_count_data
-        
-        
-            ~OneCycleRunToFailurePolicy.sample_lifetime_data
-        

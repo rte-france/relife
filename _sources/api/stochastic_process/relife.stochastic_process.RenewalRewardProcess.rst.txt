@@ -32,14 +32,14 @@ RenewalRewardProcess
             ~RenewalRewardProcess.expected_total_reward
         
         
+            ~RenewalRewardProcess.generate_lifetime_data
+        
+        
             ~RenewalRewardProcess.renewal_density
         
         
             ~RenewalRewardProcess.renewal_function
         
         
-            ~RenewalRewardProcess.sample_count_data
-        
-        
-            ~RenewalRewardProcess.sample_lifetime_data
+            ~RenewalRewardProcess.sample
         

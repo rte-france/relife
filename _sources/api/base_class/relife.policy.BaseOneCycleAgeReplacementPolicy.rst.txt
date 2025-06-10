@@ -31,9 +31,3 @@ BaseOneCycleAgeReplacementPolicy
         
             ~BaseOneCycleAgeReplacementPolicy.expected_total_cost
         
-        
-            ~BaseOneCycleAgeReplacementPolicy.sample_count_data
-        
-        
-            ~BaseOneCycleAgeReplacementPolicy.sample_lifetime_data
-        

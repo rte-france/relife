@@ -20,6 +20,9 @@ AgeReplacementPolicy
     
         
         
+            ~AgeReplacementPolicy.annual_number_of_replacements
+        
+        
             ~AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
         
         
@@ -35,11 +38,11 @@ AgeReplacementPolicy
             ~AgeReplacementPolicy.expected_total_cost
         
         
+            ~AgeReplacementPolicy.generate_lifetime_data
+        
+        
             ~AgeReplacementPolicy.optimize
         
         
             ~AgeReplacementPolicy.sample_count_data
-        
-        
-            ~AgeReplacementPolicy.sample_lifetime_data
         
