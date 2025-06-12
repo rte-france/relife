@@ -374,6 +374,7 @@
   <h1>Source code for relife.stochastic_process.renewal_process</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -632,12 +633,16 @@
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="n">first_lifetime_model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span> <span class="o">=</span> <span class="n">first_reward</span> <span class="k">if</span> <span class="n">first_reward</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">reward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span> <span class="o">=</span> <span class="n">first_reward</span> <span class="k">if</span> <span class="n">first_reward</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span> <span class="o">=</span> <span class="n">ExponentialDiscounting</span><span class="p">(</span><span class="n">discounting_rate</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">rate</span>
+
+    <span class="nd">@discounting_rate</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_timeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -656,7 +661,10 @@
             <span class="n">timeline</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">,</span>
             <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">t</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">15</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">),</span>
+                <span class="n">t</span><span class="p">,</span>
+                <span class="n">deg</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
             <span class="p">),</span>  <span class="c1"># reward partial expectation</span>
             <span class="n">discounting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="p">,</span>
         <span class="p">)</span>
@@ -666,9 +674,9 @@
                 <span class="n">z</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="p">,</span>
                 <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">),</span>
-                    <span class="n">timeline</span><span class="p">,</span>
+                    <span class="n">t</span><span class="p">,</span>
                     <span class="n">deg</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
                 <span class="p">),</span>  <span class="c1"># reward partial expectation</span>
                 <span class="n">discounting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="p">,</span>

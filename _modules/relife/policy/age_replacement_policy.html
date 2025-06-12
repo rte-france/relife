@@ -607,7 +607,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span> <span class="c1"># may be (m, 1) so squeeze it</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>  <span class="c1"># may be (m, 1) so squeeze it</span>
 
     <span class="nd">@ar</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -617,7 +617,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ar1</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span> <span class="c1"># may be (m, 1) so squeeze it</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>  <span class="c1"># may be (m, 1) so squeeze it</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@ar1</span><span class="o">.</span><span class="n">setter</span>
@@ -635,6 +635,7 @@
     <span class="nd">@cf</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -643,6 +644,7 @@
     <span class="nd">@cp</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">cp</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">cp</span> <span class="o">=</span> <span class="n">value</span>
 
 <div class="viewcode-block" id="AgeReplacementPolicy.expected_total_cost">
 <a class="viewcode-back" href="../../../api/policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost">[docs]</a>
@@ -694,25 +696,35 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">annual_number_of_replacements</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_years</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">upon_failure</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">nb_years</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">upon_failure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">total</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ar1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar1</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
-        <span class="n">temp_policy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">temp_policy</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="mf">1.</span>
-        <span class="n">temp_policy</span><span class="o">.</span><span class="n">cp</span> <span class="o">=</span> <span class="mf">1.</span>
-        <span class="n">timeline</span><span class="p">,</span> <span class="n">mt</span> <span class="o">=</span> <span class="n">temp_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_years</span><span class="p">)</span> <span class="c1"># nb steps equals nb of</span>
-        <span class="n">nb_replacements</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mt</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">copied_policy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">copied_policy</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">copied_policy</span><span class="o">.</span><span class="n">cp</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">copied_policy</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">timeline</span><span class="p">,</span> <span class="n">total_cost</span> <span class="o">=</span> <span class="n">copied_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_years</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># equiv to np.arange</span>
+        <span class="k">if</span> <span class="n">total</span><span class="p">:</span>
+            <span class="n">mt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">total_cost</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mt</span> <span class="o">=</span> <span class="n">total_cost</span>
+        <span class="n">nb_replacements</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mt</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">upon_failure</span><span class="p">:</span>
-            <span class="n">temp_policy</span><span class="o">.</span><span class="n">cp</span> <span class="o">=</span> <span class="mf">0.</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">mf</span> <span class="o">=</span> <span class="n">temp_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_years</span><span class="p">)</span>
-            <span class="n">nb_failures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">nb_replacements</span><span class="p">,</span> <span class="n">nb_failures</span>
-        <span class="k">return</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">nb_replacements</span>
+            <span class="n">copied_policy</span><span class="o">.</span><span class="n">cp</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">total_cost</span> <span class="o">=</span> <span class="n">copied_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_years</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># equiv to np.arange</span>
+            <span class="k">if</span> <span class="n">total</span><span class="p">:</span>
+                <span class="n">mf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">total_cost</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mf</span> <span class="o">=</span> <span class="n">total_cost</span>
+            <span class="n">nb_failures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">timeline</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">nb_replacements</span><span class="p">,</span> <span class="n">nb_failures</span>
+        <span class="k">return</span> <span class="n">timeline</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">nb_replacements</span>
 
 <div class="viewcode-block" id="AgeReplacementPolicy.optimize">
 <a class="viewcode-back" href="../../../api/policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.optimize">[docs]</a>

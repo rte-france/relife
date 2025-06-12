@@ -374,7 +374,6 @@
   <h1>Source code for relife.policy._base</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">islice</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -547,6 +546,14 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stochastic_process</span><span class="p">:</span> <span class="n">RenewalRewardProcess</span><span class="p">[</span><span class="n">M</span><span class="p">,</span> <span class="n">R</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span> <span class="o">=</span> <span class="n">stochastic_process</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">discounting_rate</span>
+
+    <span class="nd">@discounting_rate</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_nb_replacements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">renewal_function</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">)</span>  <span class="c1"># (nb_steps,) or (m, nb_steps)</span>
