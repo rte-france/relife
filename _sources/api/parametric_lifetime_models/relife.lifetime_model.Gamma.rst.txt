@@ -1,6 +1,7 @@
 ﻿
 
 
+
 Gamma
 =====
 
@@ -12,6 +13,7 @@ Gamma
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -85,3 +87,4 @@ Gamma
         
             ~Gamma.var
         
+    

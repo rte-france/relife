@@ -28,7 +28,7 @@ Here is an exhaustive list of all lifetime model constructors that can be used i
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_template.rst
+    :template: default_class_template.rst
     :caption: Parametric lifetime models
     :nosignatures:
 
@@ -42,23 +42,21 @@ Here is a quick example that instanciates a ``Weibull`` distribution and compute
 
 .. code-block:: python
 
-    import numpy as np
-    from relife.lifetime_model import Weibull
-
-    weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
-
+    >>> import numpy as np
+    >>> from relife.lifetime_model import Weibull
+    >>> weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
     # sf is np.float64, ie. a scalar
-    sf = weibull.sf(10.)
+    >>> sf = weibull.sf(10.)
     # sf is np.array of shape (2,), 2 points for 1 asset
-    sf_1d = weibull.sf(np.array([10., 20.]))
+    >>> sf_1d = weibull.sf(np.array([10., 20.]))
     # sf is np.array of (2, 3), 3 points for 2 assets
-    sf_2d = weibull.sf(np.array([[10., 20., 30.], [30., 40., 50.]]))
+    >>> sf_2d = weibull.sf(np.array([[10., 20., 30.], [30., 40., 50.]]))
 
 .. rubric:: Lifetime regression
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_template.rst
+    :template: default_class_template.rst
     :nosignatures:
 
     ProportionalHazard
@@ -69,23 +67,23 @@ The regression has 3 coefficients.
 
 .. code-block:: python
 
-    import numpy as np
-    from relife.lifetime_model import Weibull
-    from relife.lifetime_model import ProportionalHazard
+    >>> import numpy as np
+    >>> from relife.lifetime_model import Weibull
+    >>> from relife.lifetime_model import ProportionalHazard
 
-    weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
+    >>> weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
     # 3 coefficients
-    regression = ProportionalHazard(weibull, coefficients=(0.2, 0.01, 0.4))
+    >>> regression = ProportionalHazard(weibull, coefficients=(0.2, 0.01, 0.4))
 
     # 1 value per covar
-    covar = np.array([3., 59., 9.3])
+    >>> covar = np.array([3., 59., 9.3])
     # sf is np.float64, ie. a scalar
-    sf = regression.sf(10., covar)
+    >>> sf = regression.sf(10., covar)
 
     # 2 values per covar, meaning two assets
-    covar_2d = np.array([[3., 59., 9.3], [2., 64., 5.6]])
+    >>> covar_2d = np.array([[3., 59., 9.3], [2., 64., 5.6]])
     # sf is np.array of shape (2, 1), 1 point for 2 assets
-    sf_2d = regression.sf(10., covar_2d)
+    >>> sf_2d = regression.sf(10., covar_2d)
 
 Note that the example above uses Numpy broadcasting. It is a core functionnality of ReLife. For more explanations and pratical
 examples about broadcasting in ReLife, please read Broadcasting in ReLife.
@@ -94,7 +92,7 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_template.rst
+    :template: default_class_template.rst
     :nosignatures:
 
     LeftTruncatedModel
@@ -102,14 +100,14 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.
 
 .. code-block:: python
 
-    import numpy as np
-    from relife.lifetime_model import LeftTruncatedModel, Weibull
-    from relife.lifetime_model import ProportionalHazard
+    >>> import numpy as np
+    >>> from relife.lifetime_model import LeftTruncatedModel, Weibull
+    >>> from relife.lifetime_model import ProportionalHazard
 
-    left_truncated_weibull = LeftTruncated(Weibull(3.47, 0.01))
+    >>> left_truncated_weibull = LeftTruncated(Weibull(3.47, 0.01))
 
     # sf is np.float64, ie. a scalar
-    sf = left_truncated_weibull.sf(10., a0=20.)
+    >>> sf = left_truncated_weibull.sf(10., a0=20.)
 
 .. rubric:: Frozen parametric lifetime models
 
@@ -122,8 +120,8 @@ It is specifically the case of policy objects. To freeze a lifetime model, do th
 
 .. code-block:: python
 
-    from relife import freeze
-    frozen_model = freeze(<a_lifetime_model>, **kwargs)
+    >>> from relife import freeze
+    >>> frozen_model = freeze(<a_lifetime_model>, **kwargs)
 
 ``**kwargs`` is an unpacked dictionnary (a set of key-value pairs). Concretelly, a user must passed named arguments,
 eg ``frozen_regression = freeze(regression, covar= ...)``. If the user passes an argument that is not appropriate with
@@ -139,7 +137,7 @@ the lifetime model, a error message will be raised.
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_template.rst
+    :template: default_class_template.rst
     :nosignatures:
 
     FrozenLifetimeRegression
@@ -152,7 +150,7 @@ Non parametric lifetime models
 
 .. autosummary::
     :toctree: non_parametric_lifetime_models
-    :template: default_template.rst
+    :template: default_class_template.rst
     :caption: Non parametric lifetime models
     :nosignatures:
 
@@ -168,7 +166,7 @@ Stochastic processes
 
 .. autosummary::
     :toctree: stochastic_process
-    :template: default_template.rst
+    :template: default_class_template.rst
     :caption: Stochastic processes
     :nosignatures:
 
@@ -184,7 +182,7 @@ Maintenance policies
 
 .. autosummary::
     :toctree: policy
-    :template: default_template.rst
+    :template: default_class_template.rst
     :caption: Maintenance policies
     :nosignatures:
 
@@ -220,7 +218,7 @@ Base classes
 
 .. autosummary::
     :toctree: base_class
-    :template: default_template.rst
+    :template: default_class_template.rst
     :caption: Base classes
     :nosignatures:
 
@@ -235,7 +233,7 @@ Base classes
 
 .. autosummary::
     :toctree: base_class
-    :template: default_template.rst
+    :template: default_class_template.rst
     :nosignatures:
 
     BaseAgeReplacementPolicy

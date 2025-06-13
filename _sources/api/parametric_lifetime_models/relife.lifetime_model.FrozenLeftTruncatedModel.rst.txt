@@ -1,6 +1,7 @@
 ﻿
 
 
+
 FrozenLeftTruncatedModel
 ========================
 
@@ -12,6 +13,7 @@ FrozenLeftTruncatedModel
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -67,3 +69,4 @@ FrozenLeftTruncatedModel
         
             ~FrozenLeftTruncatedModel.var
         
+    

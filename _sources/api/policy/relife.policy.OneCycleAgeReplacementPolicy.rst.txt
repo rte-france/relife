@@ -1,6 +1,7 @@
 ﻿
 
 
+
 OneCycleAgeReplacementPolicy
 ============================
 
@@ -12,6 +13,7 @@ OneCycleAgeReplacementPolicy
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -34,3 +36,4 @@ OneCycleAgeReplacementPolicy
         
             ~OneCycleAgeReplacementPolicy.optimize
         
+    

@@ -149,6 +149,20 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../contributions.html">
+    Contributors guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../api/index.html">
     API
   </a>
@@ -256,6 +270,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../installation.html">
     Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../contributions.html">
+    Contributors guide
   </a>
 </li>
 
@@ -435,6 +463,7 @@
 <div class="viewcode-block" id="ProportionalHazard">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ProportionalHazard</span><span class="p">(</span><span class="n">LifetimeRegression</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Proportional Hazard regression.</span>
 
@@ -464,6 +493,14 @@
 <span class="sd">        The regression baseline model (lifetime model).</span>
 <span class="sd">    covar_effect : CovarEffect</span>
 <span class="sd">        The regression covariate effect.</span>
+<span class="sd">    fitting_results : FittingResults, default is None</span>
+<span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
+<span class="sd">    coefficients</span>
+<span class="sd">    nb_params</span>
+<span class="sd">    params</span>
+<span class="sd">    params_names</span>
+<span class="sd">    plot</span>
+
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -645,6 +682,7 @@
 <div class="viewcode-block" id="AcceleratedFailureTime">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AcceleratedFailureTime</span><span class="p">(</span><span class="n">LifetimeRegression</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Accelerated failure time regression.</span>
 
@@ -675,6 +713,14 @@
 <span class="sd">        The regression baseline model (lifetime model).</span>
 <span class="sd">    covar_effect : CovarEffect</span>
 <span class="sd">        The regression covariate effect.</span>
+<span class="sd">    fitting_results : FittingResults, default is None</span>
+<span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
+<span class="sd">    coefficients</span>
+<span class="sd">    nb_params</span>
+<span class="sd">    params</span>
+<span class="sd">    params_names</span>
+<span class="sd">    plot</span>
+
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>

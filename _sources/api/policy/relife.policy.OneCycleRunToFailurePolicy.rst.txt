@@ -1,6 +1,7 @@
 ﻿
 
 
+
 OneCycleRunToFailurePolicy
 ==========================
 
@@ -12,6 +13,7 @@ OneCycleRunToFailurePolicy
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -31,3 +33,4 @@ OneCycleRunToFailurePolicy
         
             ~OneCycleRunToFailurePolicy.expected_total_cost
         
+    

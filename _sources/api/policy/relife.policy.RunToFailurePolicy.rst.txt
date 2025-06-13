@@ -1,6 +1,7 @@
 ﻿
 
 
+
 RunToFailurePolicy
 ==================
 
@@ -12,6 +13,7 @@ RunToFailurePolicy
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -40,3 +42,4 @@ RunToFailurePolicy
         
             ~RunToFailurePolicy.sample_count_data
         
+    

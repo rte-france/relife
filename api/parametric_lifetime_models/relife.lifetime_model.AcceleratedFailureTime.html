@@ -153,6 +153,20 @@
 </li>
 
 
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contributions.html">
+    Contributors guide
+  </a>
+</li>
+
+
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../index.html">
     API
@@ -263,6 +277,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../installation.html">
     Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contributions.html">
+    Contributors guide
   </a>
 </li>
 
@@ -473,6 +501,18 @@ hazard function <a class="reference internal" href="#r21ad2c257af0-1" id="id1">[
 </dd>
 <dt><strong>covar_effect</strong><span class="classifier">CovarEffect</span></dt><dd><p>The regression covariate effect.</p>
 </dd>
+<dt><strong>fitting_results</strong><span class="classifier">FittingResults, default is None</span></dt><dd><p>An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients" title="relife.lifetime_model.AcceleratedFailureTime.coefficients"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coefficients</span></code></a></dt><dd><p>Get the coefficients values of the covariate effect.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.nb_params" title="relife.lifetime_model.AcceleratedFailureTime.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></dt><dd><p>Number of parameters.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.params" title="relife.lifetime_model.AcceleratedFailureTime.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></dt><dd><p>Parameters values.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.params_names" title="relife.lifetime_model.AcceleratedFailureTime.params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params_names</span></code></a></dt><dd><p>Parameters names.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.plot" title="relife.lifetime_model.AcceleratedFailureTime.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></dt><dd><p>Provides access to plotting functionality for this distribution.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -610,6 +650,19 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 <dd class="field-even"><dl class="simple">
 <dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
 </dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.coefficients">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coefficients</span></span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients" title="Link to this definition">#</a></dt>
+<dd><p>Get the coefficients values of the covariate effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1254,6 +1307,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.cdf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.cdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.chf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.chf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.coefficients</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.dhf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.dhf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.fit"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.fit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.hf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.hf()</span></code></a></li>

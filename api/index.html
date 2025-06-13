@@ -55,7 +55,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Exponential" href="parametric_lifetime_models/relife.lifetime_model.Exponential.html" />
-    <link rel="prev" title="Installation" href="../installation.html" />
+    <link rel="prev" title="Contributors guide" href="../contributions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -149,6 +149,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../installation.html">
     Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contributions.html">
+    Contributors guide
   </a>
 </li>
 
@@ -263,6 +277,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../installation.html">
     Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contributions.html">
+    Contributors guide
   </a>
 </li>
 
@@ -476,17 +504,15 @@ data like parameters, other nested models, etc.</p>
 </table>
 </div>
 <p>Here is a quick example that instanciates a <code class="docutils literal notranslate"><span class="pre">Weibull</span></code> distribution and computes the survival function.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
-
-<span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span> <span class="c1"># shape = 3.47, rate = 0.01</span>
-
-<span class="c1"># sf is np.float64, ie. a scalar</span>
-<span class="n">sf</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">)</span>
-<span class="c1"># sf is np.array of shape (2,), 2 points for 1 asset</span>
-<span class="n">sf_1d</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">]))</span>
-<span class="c1"># sf is np.array of (2, 3), 3 points for 2 assets</span>
-<span class="n">sf_2d</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">,</span> <span class="mf">30.</span><span class="p">],</span> <span class="p">[</span><span class="mf">30.</span><span class="p">,</span> <span class="mf">40.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">]]))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span> <span class="c1"># shape = 3.47, rate = 0.01</span>
+<span class="go"># sf is np.float64, ie. a scalar</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">)</span>
+<span class="go"># sf is np.array of shape (2,), 2 points for 1 asset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sf_1d</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">]))</span>
+<span class="go"># sf is np.array of (2, 3), 3 points for 2 assets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sf_2d</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">,</span> <span class="mf">30.</span><span class="p">],</span> <span class="p">[</span><span class="mf">30.</span><span class="p">,</span> <span class="mf">40.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">]]))</span>
 </pre></div>
 </div>
 <p class="rubric">Lifetime regression</p>
@@ -503,23 +529,23 @@ data like parameters, other nested models, etc.</p>
 </div>
 <p>Here is a quick example that instanciates a <code class="docutils literal notranslate"><span class="pre">ProportionalHazard</span></code> regression from the same <code class="docutils literal notranslate"><span class="pre">Weibull</span></code> distribution (see above).
 The regression has 3 coefficients.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProportionalHazard</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProportionalHazard</span>
 
-<span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span> <span class="c1"># shape = 3.47, rate = 0.01</span>
-<span class="c1"># 3 coefficients</span>
-<span class="n">regression</span> <span class="o">=</span> <span class="n">ProportionalHazard</span><span class="p">(</span><span class="n">weibull</span><span class="p">,</span> <span class="n">coefficients</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span> <span class="c1"># shape = 3.47, rate = 0.01</span>
+<span class="go"># 3 coefficients</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">regression</span> <span class="o">=</span> <span class="n">ProportionalHazard</span><span class="p">(</span><span class="n">weibull</span><span class="p">,</span> <span class="n">coefficients</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">))</span>
 
-<span class="c1"># 1 value per covar</span>
-<span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">59.</span><span class="p">,</span> <span class="mf">9.3</span><span class="p">])</span>
-<span class="c1"># sf is np.float64, ie. a scalar</span>
-<span class="n">sf</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
+<span class="go"># 1 value per covar</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">59.</span><span class="p">,</span> <span class="mf">9.3</span><span class="p">])</span>
+<span class="go"># sf is np.float64, ie. a scalar</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
-<span class="c1"># 2 values per covar, meaning two assets</span>
-<span class="n">covar_2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">59.</span><span class="p">,</span> <span class="mf">9.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">64.</span><span class="p">,</span> <span class="mf">5.6</span><span class="p">]])</span>
-<span class="c1"># sf is np.array of shape (2, 1), 1 point for 2 assets</span>
-<span class="n">sf_2d</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">covar_2d</span><span class="p">)</span>
+<span class="go"># 2 values per covar, meaning two assets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">covar_2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">59.</span><span class="p">,</span> <span class="mf">9.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">64.</span><span class="p">,</span> <span class="mf">5.6</span><span class="p">]])</span>
+<span class="go"># sf is np.array of shape (2, 1), 1 point for 2 assets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sf_2d</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">covar_2d</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that the example above uses Numpy broadcasting. It is a core functionnality of ReLife. For more explanations and pratical
@@ -536,14 +562,14 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.</p>
 </tbody>
 </table>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span><span class="p">,</span> <span class="n">Weibull</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProportionalHazard</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span><span class="p">,</span> <span class="n">Weibull</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProportionalHazard</span>
 
-<span class="n">left_truncated_weibull</span> <span class="o">=</span> <span class="n">LeftTruncated</span><span class="p">(</span><span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">left_truncated_weibull</span> <span class="o">=</span> <span class="n">LeftTruncated</span><span class="p">(</span><span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">))</span>
 
-<span class="c1"># sf is np.float64, ie. a scalar</span>
-<span class="n">sf</span> <span class="o">=</span> <span class="n">left_truncated_weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="mf">20.</span><span class="p">)</span>
+<span class="go"># sf is np.float64, ie. a scalar</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">left_truncated_weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="mf">20.</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="rubric">Frozen parametric lifetime models</p>
@@ -551,8 +577,8 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.</p>
 This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
 These models are important in ReLife because other objects expect frozen-like lifetime models: any lifetime model that has only time as a method argument.
 It is specifically the case of policy objects. To freeze a lifetime model, do the following :</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">freeze</span>
-<span class="n">frozen_model</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="o">&lt;</span><span class="n">a_lifetime_model</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">freeze</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frozen_model</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="o">&lt;</span><span class="n">a_lifetime_model</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> is an unpacked dictionnary (a set of key-value pairs). Concretelly, a user must passed named arguments,
@@ -604,7 +630,7 @@ the lifetime model, a error message will be raised.</p>
 <td><p>Renewal process.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess" title="relife.stochastic_process.RenewalRewardProcess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RenewalRewardProcess</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Renewal reward process.</p></td>
 </tr>
 </tbody>
 </table>

@@ -1,5 +1,5 @@
 Installation
-------------
+============
 
 .. contents::
     :local:
@@ -10,7 +10,8 @@ sure :
 * Python **3.11 (or newer)** is installed on you're machine. For Linux users with a Debian based distribution, an appropriate version of Python is already installed if your OS is up-to-date. For Windows users, please go to `python.org <https://www.python.org/>`_, read the documentation and install the appropriate Python version.
 * You created a new python virtual environment (e.g, relife). For Linux users, you may need to install ``python3.**-venv`` (where ``**`` corresponds to your python version). If you don't know what a Python virtual environment is, please go to `docs.python.org <https://docs.python.org/>`_, read and learn. You're about to use a Python package so you must know the very basics of Python, including virtual environments.
 
-**Linux users (Debian based)**
+Linux users (Debian based)
+--------------------------
 
 Create and activate the virtual environment :
 
@@ -25,7 +26,8 @@ Install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#p
 
     pip install relife
 
-**Windows users**
+Windows users
+-------------
 
 Create and activate the virtual environment :
 
@@ -40,8 +42,8 @@ Install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#p
 
     pip install relife
 
-Installation from source
-------------------------
+From source
+-----------
 
 To install ReLife from source, go to `relife repository <https://github.com/rte-france/relife>`_. Clone the codebase and install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#pip>`_.
 

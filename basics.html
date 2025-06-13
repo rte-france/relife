@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; ReLife</title>
+    <title>Basics &#8212; ReLife</title>
   
   
   
@@ -48,12 +48,14 @@
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'installation';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'basics';</script>
     <script src="_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Basics" href="basics.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="index.html" />
+    <link rel="next" title="Contributors guide" href="contributions.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -144,15 +146,15 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
     Installation
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="basics.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
     Basics
   </a>
 </li>
@@ -272,15 +274,15 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
     Installation
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="basics.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
     Basics
   </a>
 </li>
@@ -384,7 +386,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Installation</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Basics</span></li>
   </ul>
 </nav>
 </div>
@@ -401,57 +403,60 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
+  <section id="basics">
+<h1>Basics<a class="headerlink" href="#basics" title="Link to this heading">#</a></h1>
 <nav class="contents local" id="contents">
 <ul class="simple">
-<li><p><a class="reference internal" href="#linux-users-debian-based" id="id3">Linux users (Debian based)</a></p></li>
-<li><p><a class="reference internal" href="#windows-users" id="id4">Windows users</a></p></li>
-<li><p><a class="reference internal" href="#from-source" id="id5">From source</a></p></li>
+<li><p><a class="reference internal" href="#relife-and-numpy" id="id1">ReLife and Numpy</a></p></li>
+<li><p><a class="reference internal" href="#variables-dimensions" id="id2">Variables dimensions</a></p></li>
 </ul>
 </nav>
-<p>ReLife is a python package and it is uploaded on the <a class="reference external" href="https://pypi.org/">Python Package Index (PyPi)</a>. To install ReLife locally make
-sure :</p>
+<p>The section will help you understand basic commands and math concepts to begin with ReLife.</p>
+<section id="relife-and-numpy">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">ReLife and Numpy</a><a class="headerlink" href="#relife-and-numpy" title="Link to this heading">#</a></h2>
+<p>ReLife is built using <a class="reference external" href="https://numpy.org/">NumPy</a>, a fundamental Python library for numerical computing.
+While you don’t need to be a NumPy expert, understanding its basics will help since:</p>
+<ol class="arabic simple">
+<li><p>Most ReLife examples use the standard NumPy import: <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">numpy</span> <span class="pre">as</span> <span class="pre">np</span></code></p></li>
+<li><p>ReLife often requires data input of type <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p></li>
+</ol>
+<p>There are 3 standard representation of data in ReLife :</p>
 <ul class="simple">
-<li><p>Python <strong>3.11 (or newer)</strong> is installed on you’re machine. For Linux users with a Debian based distribution, an appropriate version of Python is already installed if your OS is up-to-date. For Windows users, please go to <a class="reference external" href="https://www.python.org/">python.org</a>, read the documentation and install the appropriate Python version.</p></li>
-<li><p>You created a new python virtual environment (e.g, relife). For Linux users, you may need to install <code class="docutils literal notranslate"><span class="pre">python3.**-venv</span></code> (where <code class="docutils literal notranslate"><span class="pre">**</span></code> corresponds to your python version). If you don’t know what a Python virtual environment is, please go to <a class="reference external" href="https://docs.python.org/">docs.python.org</a>, read and learn. You’re about to use a Python package so you must know the very basics of Python, including virtual environments.</p></li>
+<li><p>If you want to pass a scalar value, then use a <code class="docutils literal notranslate"><span class="pre">float</span></code></p></li>
+<li><p>If you want to pass a vector of <span class="math notranslate nohighlight">\(\mathbb{R}^n\)</span>, eg <span class="math notranslate nohighlight">\(n\)</span> values for one asset, then use a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code></p></li>
+<li><p>If you want to pass a matrix of <span class="math notranslate nohighlight">\(\mathbb{R}^{m\times n}\)</span>, eg <span class="math notranslate nohighlight">\(n\)</span> values for <span class="math notranslate nohighlight">\(m\)</span> assets, then use a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code></p></li>
 </ul>
-<section id="linux-users-debian-based">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Linux users (Debian based)</a><a class="headerlink" href="#linux-users-debian-based" title="Link to this heading">#</a></h2>
-<p>Create and activate the virtual environment :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python3</span><span class="o">.**</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;/</span><span class="n">relife</span>
-<span class="n">source</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;/</span><span class="n">relife</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+<p><strong>Broadcasting examples</strong></p>
+<p>Here we create a very simple lifetime model (a lifetime distribution) called Weibull. To demonstrate input/output logic, we will begin with a <code class="docutils literal notranslate"><span class="pre">float</span></code> input. Here
+we want to comput <span class="math notranslate nohighlight">\(P(T &gt; 40)\)</span>. The output has the same number of dimension than the input. It is a float-like object called <code class="docutils literal notranslate"><span class="pre">np.float64</span></code> that is compatible
+with the NumPy interfaces. For instance, this object can answer to <code class="docutils literal notranslate"><span class="pre">.ndim```and</span> <span class="pre">``.shape</span></code>. Here it would be <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.012</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">40.</span><span class="p">)</span>
+<span class="go">np.float64(0.9246627462729304)</span>
 </pre></div>
 </div>
-<p>Install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a> :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">relife</span>
+<p>Now, imagine that you want to compute not only <span class="math notranslate nohighlight">\(P(T &gt; 40)\)</span>, but also <span class="math notranslate nohighlight">\(P(T &gt; 50)\)</span> and <span class="math notranslate nohighlight">\(P(T &gt; 60)\)</span>. Because ReLife is built on NumPy, it benefits from
+a concept called <a class="reference external" href="https://numpy.org/doc/stable/user/basics.broadcasting.html">broadcasting</a>. It provides a way to vectorize operation so that the three survival function
+values are computed in parallel. To do that, you need to pass a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> that encapsulate all your input values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">40.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">,</span> <span class="mf">60.</span><span class="p">]))</span> <span class="c1"># 1d array of shape (3,)</span>
+<span class="go">array([0.92466275, 0.84375201, 0.72625935])</span>
 </pre></div>
 </div>
+<p>Note that the input is a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of 1 dimension with a shape of <code class="docutils literal notranslate"><span class="pre">(3,)</span></code>. The output is consistent to the input and has the same shape. This logic is extended <strong>until
+two dimensions</strong>. With ReLife, asset managers may be interested to compute values on a fleet of assets. In this scenario, it is sometimes usefull to pass several values per
+assets.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">40.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">,</span> <span class="mf">60.</span><span class="p">],</span> <span class="p">[</span><span class="mf">42.</span><span class="p">,</span> <span class="mf">55.</span><span class="p">,</span> <span class="mf">68.</span><span class="p">]]))</span> <span class="c1"># 2d array of shape (2, 3)</span>
+<span class="go">array([[0.92466275, 0.84375201, 0.72625935],</span>
+<span class="go">       [0.91139796, 0.78939177, 0.61029328]])</span>
+</pre></div>
+</div>
+<p>Note that the input is a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of 2 dimensions with a shape of <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">3)</span></code>. Each row is like a vector of values for each assets. Here the number of assets is 2.
+The output shape is consistent to the input.</p>
 </section>
-<section id="windows-users">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Windows users</a><a class="headerlink" href="#windows-users" title="Link to this heading">#</a></h2>
-<p>Create and activate the virtual environment :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">py</span> <span class="o">-</span><span class="mf">3.</span><span class="o">**</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;</span>\<span class="n">relife</span>
-<span class="o">.</span>\<span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;</span>\<span class="n">relife</span>\<span class="n">Scripts</span>\<span class="n">activate</span>
-</pre></div>
-</div>
-<p>Install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">relife</span>
-</pre></div>
-</div>
-</section>
-<section id="from-source">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">From source</a><a class="headerlink" href="#from-source" title="Link to this heading">#</a></h2>
-<p>To install ReLife from source, go to <a class="reference external" href="https://github.com/rte-france/relife">relife repository</a>. Clone the codebase and install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">rte</span><span class="o">-</span><span class="n">france</span><span class="o">/</span><span class="n">relife</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">relife</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
-</pre></div>
-</div>
-<p>As a contributor, you may want to install optional dependencies (type checking, documentation builder, etc.). You can use this command instead :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;.[dev]&quot;</span>
-</pre></div>
-</div>
+<section id="variables-dimensions">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Variables dimensions</a><a class="headerlink" href="#variables-dimensions" title="Link to this heading">#</a></h2>
 </section>
 </section>
 
@@ -478,9 +483,8 @@ sure :</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linux-users-debian-based">Linux users (Debian based)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#windows-users">Windows users</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#from-source">From source</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife-and-numpy">ReLife and Numpy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables-dimensions">Variables dimensions</a></li>
 </ul>
   </nav></div>
 
@@ -488,7 +492,7 @@ sure :</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/installation.rst.txt"
+      <li><a href="_sources/basics.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

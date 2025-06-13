@@ -149,6 +149,20 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../contributions.html">
+    Contributors guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../api/index.html">
     API
   </a>
@@ -256,6 +270,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../installation.html">
     Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../contributions.html">
+    Contributors guide
   </a>
 </li>
 
@@ -389,27 +417,38 @@
 <div class="viewcode-block" id="Exponential">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.Exponential.html#relife.lifetime_model.Exponential">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Exponential</span><span class="p">(</span><span class="n">LifetimeDistribution</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Exponential lifetime distribution.</span>
+<span class="sd">        Exponential lifetime distribution.</span>
 
-<span class="sd">    The exponential distribution is a 1-parameter distribution with</span>
-<span class="sd">    :math:`(\lambda)`. The probability density function is:</span>
+<span class="sd">        The exponential distribution is a 1-parameter distribution with</span>
+<span class="sd">        :math:`(\lambda)`. The probability density function is:</span>
 
-<span class="sd">    .. math::</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">        f(t) = \lambda e^{-\lambda t}</span>
+<span class="sd">            f(t) = \lambda e^{-\lambda t}</span>
 
-<span class="sd">    where:</span>
-<span class="sd">        - :math:`\lambda &gt; 0`, the rate parameter,</span>
-<span class="sd">        - :math:`t\geq 0`, the operating time, age, cycles, etc.</span>
+<span class="sd">        where:</span>
+<span class="sd">            - :math:`\lambda &gt; 0`, the rate parameter,</span>
+<span class="sd">            - :math:`t\geq 0`, the operating time, age, cycles, etc.</span>
 
-<span class="sd">    |</span>
+<span class="sd">        |</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    rate : float, optional</span>
-<span class="sd">        rate parameter</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rate : float, optional</span>
+<span class="sd">            rate parameter</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fitting_results : FittingResults, default is None</span>
+<span class="sd">            An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
+<span class="sd">        nb_params</span>
+<span class="sd">        params</span>
+<span class="sd">        params_names</span>
+<span class="sd">        plot</span>
+<span class="sd">        rate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="n">rate</span><span class="p">)</span>
@@ -535,6 +574,7 @@
 <div class="viewcode-block" id="Weibull">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.Weibull.html#relife.lifetime_model.Weibull">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Weibull</span><span class="p">(</span><span class="n">LifetimeDistribution</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Weibull lifetime distribution.</span>
 
@@ -556,6 +596,17 @@
 <span class="sd">        shape parameter</span>
 <span class="sd">    rate : float, optional</span>
 <span class="sd">        rate parameter</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fitting_results : FittingResults, default is None</span>
+<span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
+<span class="sd">    nb_params</span>
+<span class="sd">    params</span>
+<span class="sd">    params_names</span>
+<span class="sd">    plot</span>
+<span class="sd">    shape</span>
+<span class="sd">    rate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -700,6 +751,7 @@
 <div class="viewcode-block" id="Gompertz">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.Gompertz.html#relife.lifetime_model.Gompertz">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Gompertz</span><span class="p">(</span><span class="n">LifetimeDistribution</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gompertz lifetime distribution.</span>
 
@@ -724,6 +776,17 @@
 <span class="sd">        shape parameter</span>
 <span class="sd">    rate : float, optional</span>
 <span class="sd">        rate parameter</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fitting_results : FittingResults, default is None</span>
+<span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
+<span class="sd">    nb_params</span>
+<span class="sd">    params</span>
+<span class="sd">    params_names</span>
+<span class="sd">    plot</span>
+<span class="sd">    shape</span>
+<span class="sd">    rate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -861,6 +924,7 @@
 <div class="viewcode-block" id="Gamma">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.Gamma.html#relife.lifetime_model.Gamma">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Gamma</span><span class="p">(</span><span class="n">LifetimeDistribution</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gamma lifetime distribution.</span>
 
@@ -885,6 +949,17 @@
 <span class="sd">        shape parameter</span>
 <span class="sd">    rate : float, optional</span>
 <span class="sd">        rate parameter</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fitting_results : FittingResults, default is None</span>
+<span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
+<span class="sd">    nb_params</span>
+<span class="sd">    params</span>
+<span class="sd">    params_names</span>
+<span class="sd">    plot</span>
+<span class="sd">    shape</span>
+<span class="sd">    rate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -1032,6 +1107,7 @@
 <div class="viewcode-block" id="LogLogistic">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LogLogistic.html#relife.lifetime_model.LogLogistic">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LogLogistic</span><span class="p">(</span><span class="n">LifetimeDistribution</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Log-logistic probability distribution.</span>
 
@@ -1056,6 +1132,17 @@
 <span class="sd">        shape parameter</span>
 <span class="sd">    rate : float, optional</span>
 <span class="sd">        rate parameter</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fitting_results : FittingResults, default is None</span>
+<span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
+<span class="sd">    nb_params</span>
+<span class="sd">    params</span>
+<span class="sd">    params_names</span>
+<span class="sd">    plot</span>
+<span class="sd">    shape</span>
+<span class="sd">    rate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>

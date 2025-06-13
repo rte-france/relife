@@ -1,6 +1,7 @@
 ﻿
 
 
+
 ECDF
 ====
 
@@ -12,6 +13,7 @@ ECDF
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -28,3 +30,4 @@ ECDF
         
             ~ECDF.sf
         
+    

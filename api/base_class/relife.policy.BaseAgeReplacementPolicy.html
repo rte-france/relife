@@ -153,6 +153,20 @@
 </li>
 
 
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contributions.html">
+    Contributors guide
+  </a>
+</li>
+
+
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../index.html">
     API
@@ -263,6 +277,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../installation.html">
     Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contributions.html">
+    Contributors guide
   </a>
 </li>
 
@@ -458,8 +486,8 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>Calculate the expected equivalent annual cost  over a given timeline.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_nb_replacements</span></code></p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements" title="relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_nb_replacements</span></code></a></p></td>
+<td><p>The expected number of replacements.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost" title="relife.policy.BaseAgeReplacementPolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
 <td><p>Calculate the expected total cost  over a given timeline.</p></td>
@@ -542,6 +570,41 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements">
+<span class="sig-name descname"><span class="pre">expected_nb_replacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.expected_nb_replacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements" title="Link to this definition">#</a></dt>
+<dd><p>The expected number of replacements.</p>
+<p>It is computed  by solving the renewal equation:</p>
+<div class="math notranslate nohighlight">
+\[m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(m\)</span> is the renewal function,</p></li>
+<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
+lifetime model,</p></li>
+<li><p><span class="math notranslate nohighlight">\(F_1\)</span> is the cumulative distribution function of the underlying
+lifetime model for the fist renewal in the case of a delayed renewal
+process.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected number of replacements will be computed up until this calendar time.</p>
+</dd>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected number of replacements</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected number of replacements and its corresponding values at each
+step of the timeline.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.expected_total_cost">
 <span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.expected_total_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the expected total cost  over a given timeline.</p>
@@ -603,6 +666,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_total_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.asymptotic_expected_total_cost()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_equivalent_annual_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_nb_replacements()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_total_cost()</span></code></a></li>
 </ul>
 </li>

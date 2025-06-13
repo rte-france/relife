@@ -1,6 +1,7 @@
 ﻿
 
 
+
 BaseOneCycleAgeReplacementPolicy
 ================================
 
@@ -12,6 +13,7 @@ BaseOneCycleAgeReplacementPolicy
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -31,3 +33,4 @@ BaseOneCycleAgeReplacementPolicy
         
             ~BaseOneCycleAgeReplacementPolicy.expected_total_cost
         
+    

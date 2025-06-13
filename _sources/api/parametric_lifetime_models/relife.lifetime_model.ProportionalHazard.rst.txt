@@ -1,6 +1,7 @@
 ﻿
 
 
+
 ProportionalHazard
 ==================
 
@@ -12,6 +13,7 @@ ProportionalHazard
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -85,3 +87,4 @@ ProportionalHazard
         
             ~ProportionalHazard.var
         
+    

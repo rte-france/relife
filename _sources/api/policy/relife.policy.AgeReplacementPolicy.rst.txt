@@ -1,6 +1,7 @@
 ﻿
 
 
+
 AgeReplacementPolicy
 ====================
 
@@ -12,6 +13,7 @@ AgeReplacementPolicy
     :exclude-members: __init__, __new__
     :member-order: alphabetical
 
+    
     .. rubric:: Methods
 
     .. autosummary::
@@ -46,3 +48,4 @@ AgeReplacementPolicy
         
             ~AgeReplacementPolicy.sample_count_data
         
+    

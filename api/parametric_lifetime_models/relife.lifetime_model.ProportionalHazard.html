@@ -153,6 +153,20 @@
 </li>
 
 
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contributions.html">
+    Contributors guide
+  </a>
+</li>
+
+
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../index.html">
     API
@@ -263,6 +277,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../installation.html">
     Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basics.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contributions.html">
+    Contributors guide
   </a>
 </li>
 
@@ -472,6 +500,18 @@ hazard function <a class="reference internal" href="#r80f15e69ec0e-1" id="id1">[
 </dd>
 <dt><strong>covar_effect</strong><span class="classifier">CovarEffect</span></dt><dd><p>The regression covariate effect.</p>
 </dd>
+<dt><strong>fitting_results</strong><span class="classifier">FittingResults, default is None</span></dt><dd><p>An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ProportionalHazard.coefficients" title="relife.lifetime_model.ProportionalHazard.coefficients"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coefficients</span></code></a></dt><dd><p>Get the coefficients values of the covariate effect.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ProportionalHazard.nb_params" title="relife.lifetime_model.ProportionalHazard.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></dt><dd><p>Number of parameters.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ProportionalHazard.params" title="relife.lifetime_model.ProportionalHazard.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></dt><dd><p>Parameters values.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ProportionalHazard.params_names" title="relife.lifetime_model.ProportionalHazard.params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params_names</span></code></a></dt><dd><p>Parameters names.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ProportionalHazard.plot" title="relife.lifetime_model.ProportionalHazard.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></dt><dd><p>Provides access to plotting functionality for this distribution.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -609,6 +649,19 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 <dd class="field-even"><dl class="simple">
 <dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
 </dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.ProportionalHazard.coefficients">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coefficients</span></span><a class="headerlink" href="#relife.lifetime_model.ProportionalHazard.coefficients" title="Link to this definition">#</a></dt>
+<dd><p>Get the coefficients values of the covariate effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1253,6 +1306,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ProportionalHazard"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ProportionalHazard.cdf"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.cdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ProportionalHazard.chf"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.chf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ProportionalHazard.coefficients"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.coefficients</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ProportionalHazard.dhf"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.dhf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ProportionalHazard.fit"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.fit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ProportionalHazard.hf"><code class="docutils literal notranslate"><span class="pre">ProportionalHazard.hf()</span></code></a></li>
