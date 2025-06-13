@@ -59,6 +59,7 @@ def broadcast_time_covar_shapes(
 
 
 class ProportionalHazard(LifetimeRegression):
+    # noinspection PyUnresolvedReferences
     r"""
     Proportional Hazard regression.
 
@@ -88,6 +89,14 @@ class ProportionalHazard(LifetimeRegression):
         The regression baseline model (lifetime model).
     covar_effect : CovarEffect
         The regression covariate effect.
+    fitting_results : FittingResults, default is None
+        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+    coefficients
+    nb_params
+    params
+    params_names
+    plot
+
 
     References
     ----------
@@ -245,6 +254,7 @@ class ProportionalHazard(LifetimeRegression):
 
 
 class AcceleratedFailureTime(LifetimeRegression):
+    # noinspection PyUnresolvedReferences
     r"""
     Accelerated failure time regression.
 
@@ -275,6 +285,14 @@ class AcceleratedFailureTime(LifetimeRegression):
         The regression baseline model (lifetime model).
     covar_effect : CovarEffect
         The regression covariate effect.
+    fitting_results : FittingResults, default is None
+        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+    coefficients
+    nb_params
+    params
+    params_names
+    plot
+
 
     References
     ----------

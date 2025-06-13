@@ -165,20 +165,135 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
         self.stochastic_process.discounting_rate = value
 
     def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        r"""
+        The expected number of replacements.
+
+        It is computed  by solving the renewal equation:
+
+        .. math::
+
+            m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)
+
+        where:
+
+        - :math:`m` is the renewal function,
+        - :math:`F` is the cumulative distribution function of the underlying
+          lifetime model,
+        - :math:`F_1` is the cumulative distribution function of the underlying
+          lifetime model for the fist renewal in the case of a delayed renewal
+          process.
+
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected number of replacements will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected number of replacements
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected number of replacements and its corresponding values at each
+            step of the timeline.
+        """
         return self.stochastic_process.renewal_function(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
     def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        r"""
+        The expected total cost.
+
+        It is computed by solving the renewal equation and is given by:
+
+        .. math::
+
+            z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
+
+        where :
+
+        - :math:`t` is the time
+        - :math:`X_i \sim F` are :math:`n` random variable lifetimes, *i.i.d.*, of cumulative distribution :math:`F`.
+        - :math:`Z_t` is the random variable reward at each time :math:`t`.
+        - :math:`\delta` is the discounting rate.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected total cost will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected total cost
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
+            step of the timeline.
+        """
         return self.stochastic_process.expected_total_reward(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+        r"""
+        The asymtotic expected total cost
+
+        .. math::
+
+            \lim_{t\to\infty} z(t)
+
+        where :math:`z(t)` is the expected total cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_total_cost` for more details.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected total cost values
+        """
         return self.stochastic_process.asymptotic_expected_total_reward()  # () or (m, 1)
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        r"""
+        The expected equivalent annual cost.
+
+        .. math::
+
+            \text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
+
+        where :
+
+        - :math:`t` is the time
+        - :math:`z(t)` is the expected_total_cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_total_cost` for more details.`.
+        - :math:`\delta` is the discounting rate.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected equivalent annual cost
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
+            step of the timeline.
+        """
         return self.stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        r"""
+        The asymtotic expected equivalent annual cost
+
+        .. math::
+
+            \lim_{t\to\infty} \text{EEAC}(t)
+
+        where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_equivalent_annual_cost` for more details.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost
+        """
         return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()  # () or (m, 1)
 
     def sample_count_data(

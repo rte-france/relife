@@ -1,4 +1,5 @@
-{% set exclude_methods = ["__init__", "__new__", "compose_with", "new_params", "init_params"] %}
+{# see https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html for more information on jinja2 templates #}
+{% set exclude_methods = ["__init__", "__new__"] %}
 {% set exclude_members = ", ".join(exclude_methods)  %}
 
 {{ name | escape | underline }}
@@ -9,8 +10,9 @@
     :members:
     :inherited-members:
     :exclude-members: {{ exclude_members }}
+    :member-order: alphabetical
 
-
+    {% if methods %}
     .. rubric:: {{ _('Methods') }}
 
     .. autosummary::
@@ -21,3 +23,4 @@
             ~{{ name }}.{{ item }}
         {% endif %}
     {%- endfor %}
+    {% endif %}

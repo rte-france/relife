@@ -39,6 +39,7 @@ class LifetimeFitArg(TypedDict):
 
 
 class RenewalProcess(ParametricModel, Generic[M]):
+    # noinspection PyUnresolvedReferences
     """Renewal process.
 
     Parameters
@@ -48,6 +49,17 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
     first_lifetime_model : any lifetime distribution or frozen lifetime model, optional
         A lifetime model for the first renewal (delayed renewal process). It is None by default
+
+    Attributes
+    ----------
+    lifetime_model : any lifetime distribution or frozen lifetime model
+        A lifetime model representing the durations between events.
+
+    first_lifetime_model : any lifetime distribution or frozen lifetime model, optional
+        A lifetime model for the first renewal (delayed renewal process). It is None by default
+    nb_params
+    params
+    params_names
     """
 
     def __init__(
@@ -59,7 +71,6 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
-        self.count_data = None
 
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
@@ -172,7 +183,7 @@ class RenewalProcess(ParametricModel, Generic[M]):
     ) -> RenewalProcessSample:
         """Renewal data sampling.
 
-        This function will generate sampling data insternally. These data
+        This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
@@ -201,6 +212,26 @@ class RenewalProcess(ParametricModel, Generic[M]):
         size: int | tuple[int] | tuple[int, int] = 1,
         seed: Optional[int] = None,
     ) -> LifetimeFitArg:
+        """Generate lifetime data
+
+        This function will generate lifetime data that can be used to fit a lifetime model.
+
+        Parameters
+        ----------
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        size : int or tuple of 2 int
+            Size of the sample
+        seed : int, optional
+            Random seed, by default None.
+
+        Returns
+        -------
+        A dict of time, event, entry and args (covariates)
+
+        """
         from .sample import RenewalProcessIterable
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
@@ -234,7 +265,37 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
 
 class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
+    # noinspection PyUnresolvedReferences
+    """Renewal reward process.
 
+    Parameters
+    ----------
+    lifetime_model : any lifetime distribution or frozen lifetime model
+        A lifetime model representing the durations between events.
+    reward : Reward
+        A reward object that answers costs or conditional costs given lifetime values
+    discounting_rate : float
+        The discounting rate value used in the exponential discounting function
+    first_lifetime_model : any lifetime distribution or frozen lifetime model, optional
+        A lifetime model for the first renewal (delayed renewal process). It is None by default
+    reward : Reward
+        A reward object for the first renewal
+
+    Attributes
+    ----------
+    lifetime_model : any lifetime distribution or frozen lifetime model
+        A lifetime model representing the durations between events.
+    first_lifetime_model : any lifetime distribution or frozen lifetime model, optional
+        A lifetime model for the first renewal (delayed renewal process). It is None by default
+    reward : Reward
+        A reward object that answers costs or conditional costs given lifetime values
+    first_reward : Reward
+        A reward object for the first renewal. If it is not given at the initialization, it is a copy of reward.
+    discounting_rate
+    nb_params
+    params
+    params_names
+    """
     def __init__(
         self,
         lifetime_model: M,
@@ -250,10 +311,21 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
 
     @property
     def discounting_rate(self) -> float:
+        """
+        The discounting rate value
+        """
         return self.discounting.rate
 
     @discounting_rate.setter
     def discounting_rate(self, value: float) -> None:
+        """
+        The discounting rate value setter
+
+        Parameters
+        ----------
+        value : float
+            The new discounting rate value to be set
+        """
         self.discounting.rate = value
 
     @override
@@ -268,6 +340,53 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         return timeline  # (nb_steps,) or (m, nb_steps)
 
     def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        r"""The expected total reward.
+
+        The renewal equation solved to compute the expected reward is:
+
+        .. math::
+
+            z(t) = \int_0^t E[Y | X = x] D(x) \mathrm{d}F(x) + \int_0^t z(t-x)
+            D(x)\mathrm{d}F(x)
+
+        where:
+
+        - :math:`z` is the expected total reward,
+        - :math:`F` is the cumulative distribution function of the underlying
+          lifetime model,
+        - :math:`X` the interarrival random variable,
+        - :math:`Y` the associated reward,
+        - :math:`D` the exponential discount factor.
+
+        If the renewal reward process is delayed, the expected total reward is
+        modified as:
+
+        .. math::
+
+            z_1(t) = \int_0^t E[Y_1 | X_1 = x] D(x) \mathrm{d}F_1(x) + \int_0^t
+            z(t-x) D(x) \mathrm{d}F_1(x)
+
+        where:
+
+        - :math:`z_1` is the expected total reward with delay,
+        - :math:`F_1` is the cumulative distribution function of the lifetime
+          model for the first renewal,
+        - :math:`X_1` the interarrival random variable of the first renewal,
+        - :math:`Y_1` the associated reward of the first renewal,
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected total reward will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected total reward.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected total reward and its corresponding values at each
+            step of the timeline.
+        """
         timeline = self._make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         z = renewal_equation_solver(
             timeline,
@@ -298,6 +417,37 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
     def asymptotic_expected_total_reward(
         self,
     ) -> NDArray[np.float64]:
+        r"""Asymptotic expected total reward.
+
+        The asymptotic expected total reward is:
+
+        .. math::
+
+            z^\infty = \lim_{t\to \infty} z(t) = \dfrac{E[Y D(X)]}{1-E[D(X)]}
+
+        where:
+
+        - :math:`X` the interarrival random variable,
+        - :math:`Y` the associated reward,
+        - :math:`D` the exponential discount factor.
+
+        If the renewal reward process is delayed, the asymptotic expected total
+        reward is modified as:
+
+        .. math::
+
+            z_1^\infty = E[Y_1 D(X_1)] + z^\infty E[D(X_1)]
+
+        where:
+
+        - :math:`X_1` the interarrival random variable of the first renewal,
+        - :math:`Y_1` the associated reward of the first renewal,
+
+        Returns
+        -------
+        ndarray
+            The assymptotic expected total reward of the process.
+        """
         lf = self.lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=15)
         ly = self.lifetime_model.ls_integrate(
             lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=15
@@ -314,6 +464,27 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
     def expected_equivalent_annual_worth(
         self, tf: float, nb_steps: int
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        """Expected equivalent annual worth.
+
+        Gives the equivalent annual worth of the expected total reward of the
+        process at each point of the timeline.
+
+        The equivalent annual worth at time :math:`t` is equal to the expected
+        total reward :math:`z` divided by the annuity factor :math:`AF(t)`.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected equivalent annual worth will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected equivalent annual worth.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected equivalent annual worth and its corresponding values at each
+            step of the timeline.
+        """
         timeline, z = self.expected_total_reward(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
         af = self.discounting.annuity_factor(timeline)  # (nb_steps,) or (m, nb_steps)
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
@@ -326,6 +497,13 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         return timeline, np.where(af == 0, q0, q)
 
     def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
+        """Asymptotic expected equivalent annual worth.
+
+        Returns
+        -------
+        ndarray
+            The assymptotic expected equivalent annual worth
+        """
         if self.discounting_rate == 0.0:
             return (
                 self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=15)

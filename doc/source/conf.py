@@ -79,7 +79,9 @@ html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 
 html_sidebars = {
-    "installation": [] # removes navigation bar for installation.rst
+    "installation": [], # removes navigation bar for installation.rst
+    "basics": [], # idem
+    "contributions": [],  #  idem
 }
 
 html_theme_options = {

@@ -55,7 +55,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         class has not been implemented in a derived class.
     """
 
-    fitting_results = Optional[FittingResults]
+    fitting_results = Optional[FittingResults] #: fitting results
 
     def __init__(self, **kwparams: Optional[float]):
         super().__init__(**kwparams)
@@ -684,8 +684,14 @@ class LifetimeRegression(
         self.baseline = baseline
 
     @property
-    def nb_coef(self) -> int:
-        return self.covar_effect.nb_coef
+    def coefficients(self) -> NDArray[np.float64]:
+        """Get the coefficients values of the covariate effect.
+
+        Returns
+        -------
+        ndarray
+        """
+        return self.covar_effect.params
 
     @override
     def sf(

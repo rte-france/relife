@@ -13,27 +13,38 @@ from ._base import LifetimeDistribution, ParametricLifetimeModel
 
 
 class Exponential(LifetimeDistribution):
+    # noinspection PyUnresolvedReferences
     r"""
-    Exponential lifetime distribution.
+        Exponential lifetime distribution.
 
-    The exponential distribution is a 1-parameter distribution with
-    :math:`(\lambda)`. The probability density function is:
+        The exponential distribution is a 1-parameter distribution with
+        :math:`(\lambda)`. The probability density function is:
 
-    .. math::
+        .. math::
 
-        f(t) = \lambda e^{-\lambda t}
+            f(t) = \lambda e^{-\lambda t}
 
-    where:
-        - :math:`\lambda > 0`, the rate parameter,
-        - :math:`t\geq 0`, the operating time, age, cycles, etc.
+        where:
+            - :math:`\lambda > 0`, the rate parameter,
+            - :math:`t\geq 0`, the operating time, age, cycles, etc.
 
-    |
+        |
 
-    Parameters
-    ----------
-    rate : float, optional
-        rate parameter
-    """
+        Parameters
+        ----------
+        rate : float, optional
+            rate parameter
+
+        Attributes
+        ----------
+        fitting_results : FittingResults, default is None
+            An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        nb_params
+        params
+        params_names
+        plot
+        rate
+        """
 
     def __init__(self, rate: Optional[float] = None):
         super().__init__(rate=rate)
@@ -129,6 +140,7 @@ class Exponential(LifetimeDistribution):
 
 
 class Weibull(LifetimeDistribution):
+    # noinspection PyUnresolvedReferences
     r"""
     Weibull lifetime distribution.
 
@@ -150,6 +162,17 @@ class Weibull(LifetimeDistribution):
         shape parameter
     rate : float, optional
         rate parameter
+
+    Attributes
+    ----------
+    fitting_results : FittingResults, default is None
+        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+    nb_params
+    params
+    params_names
+    plot
+    shape
+    rate
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
@@ -264,6 +287,7 @@ class Weibull(LifetimeDistribution):
 
 
 class Gompertz(LifetimeDistribution):
+    # noinspection PyUnresolvedReferences
     r"""
     Gompertz lifetime distribution.
 
@@ -288,6 +312,17 @@ class Gompertz(LifetimeDistribution):
         shape parameter
     rate : float, optional
         rate parameter
+
+    Attributes
+    ----------
+    fitting_results : FittingResults, default is None
+        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+    nb_params
+    params
+    params_names
+    plot
+    shape
+    rate
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
@@ -395,6 +430,7 @@ class Gompertz(LifetimeDistribution):
 
 
 class Gamma(LifetimeDistribution):
+    # noinspection PyUnresolvedReferences
     r"""
     Gamma lifetime distribution.
 
@@ -419,6 +455,17 @@ class Gamma(LifetimeDistribution):
         shape parameter
     rate : float, optional
         rate parameter
+
+    Attributes
+    ----------
+    fitting_results : FittingResults, default is None
+        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+    nb_params
+    params
+    params_names
+    plot
+    shape
+    rate
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
@@ -536,6 +583,7 @@ class Gamma(LifetimeDistribution):
 
 
 class LogLogistic(LifetimeDistribution):
+    # noinspection PyUnresolvedReferences
     r"""
     Log-logistic probability distribution.
 
@@ -560,6 +608,17 @@ class LogLogistic(LifetimeDistribution):
         shape parameter
     rate : float, optional
         rate parameter
+
+    Attributes
+    ----------
+    fitting_results : FittingResults, default is None
+        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+    nb_params
+    params
+    params_names
+    plot
+    shape
+    rate
     """
 
     def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):

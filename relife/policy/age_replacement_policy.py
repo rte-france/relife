@@ -147,21 +147,41 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
 class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, AgeReplacementReward]):
     r"""Time based replacement policy.
 
-    Renewal reward stochastic_process where assets are replaced at a fixed age :math:`a_r`
+    Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`
     with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.
 
-    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
-        Maintenance optimization. Encyclopedia of Statistics in Quality and
-        Reliability, 1000-1008.
+    Parameters
+    ----------
+    lifetime_model : any lifetime distribution or frozen lifetime model
+        A lifetime model representing the durations between events.
+    cf : float or 1darray
+        Costs of failures
+    cp : float or 1darray
+        Costs of preventive replacements
+    discounting_rate : float, default is 0.
+        The discounting rate value used in the exponential discounting function
+    a0 : float or 1darray, optional
+        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
+        be take into account for the first cycle.
+    ar : float or 1darray, optional
+        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
+        and access to the rest of the object interface.
+    ar1 : float, 2D array, optional
+        Ages of the first preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
+        and access to the rest of the object interface.
 
     Attributes
     ----------
-    ar : np.ndarray or None
-        Times until preventive replacements. This parameter can be optimized
-        with ``optimize``
-    ar1 : np.ndarray or None
-        Times until preventive replacements for the first cycle. This parameter can be optimized
-        with ``optimize``
+    ar
+    ar1
+    cf
+    cp
+
+    References
+    ----------
+    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
+        Maintenance optimization. Encyclopedia of Statistics in Quality and
+        Reliability, 1000-1008.
     """
 
     stochastic_process: RenewalRewardProcess[FrozenAgeReplacementModel, AgeReplacementReward]
@@ -213,6 +233,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     @property
     def ar(self) -> float | NDArray[np.float64]:
+        """
+        Ages of the preventive replacements
+
+        Returns
+        -------
+        ndarray
+        """
         return np.squeeze(self.stochastic_process.lifetime_model.ar)  # may be (m, 1) so squeeze it
 
     @ar.setter
@@ -222,6 +249,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     @property
     def ar1(self) -> Optional[float | NDArray[np.float64]]:
+        """
+        Ages of the first preventive replacements
+
+        Returns
+        -------
+        ndarray
+        """
         if self.stochastic_process.first_lifetime_model is not None:
             return np.squeeze(self.stochastic_process.first_lifetime_model.ar)  # may be (m, 1) so squeeze it
         return None
@@ -236,6 +270,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     @property
     def cf(self) -> float | NDArray[np.float64]:
+        """
+        Cost of failures
+
+        Returns
+        -------
+        ndarray
+        """
         return self.stochastic_process.reward.cf
 
     @cf.setter
@@ -245,6 +286,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     @property
     def cp(self) -> float | NDArray[np.float64]:
+        """
+        Cost of preventive replacements
+
+        Returns
+        -------
+        ndarray
+        """
         return self.stochastic_process.reward.cp
 
     @cp.setter
@@ -252,6 +300,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         self.stochastic_process.reward.cp = value
         self.stochastic_process.first_reward.cp = value
 
+    @override
     def expected_total_cost(
         self,
         tf: float,
@@ -263,6 +312,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
             raise ValueError
         return self.stochastic_process.expected_total_reward(tf, nb_steps)
 
+    @override
     def expected_equivalent_annual_cost(
         self,
         tf: float,
@@ -274,6 +324,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
             raise ValueError
         return self.stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)
 
+    @override
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         if np.any(np.isnan(self.ar)):
             raise ValueError
@@ -281,6 +332,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
             raise ValueError
         return self.stochastic_process.asymptotic_expected_total_reward()
 
+    @override
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
         if np.any(np.isnan(self.ar)):
             raise ValueError
@@ -484,7 +536,3 @@ OneCycleAgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNI
 OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING + WARNING
 OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING + WARNING
 OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING + WARNING
-AgeReplacementPolicy.expected_total_cost.__doc__ = ETC_DOCSTRING + WARNING
-AgeReplacementPolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING + WARNING
-AgeReplacementPolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING + WARNING
-AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING + WARNING

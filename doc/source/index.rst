@@ -3,6 +3,8 @@
     :hidden:
 
     installation
+    basics
+    contributions
 
 .. toctree::
     :maxdepth: 2
