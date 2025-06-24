@@ -137,7 +137,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         *args: *Args,
     ) -> np.float64 | NDArray[np.float64]:
         # return type of func cannot be NDArray, thus np.sum is needed (see scipy type stubs)
-        func: Callable[[float | NDArray[np.float64]], np.float64] = lambda x: np.sum(self.sf(x, *args) - probability)
+        func: Callable[[float | NDArray[np.float64]], np.float64] = lambda x: self.sf(x, *args) - probability
         return newton(
             func,
             x0=np.zeros_like(probability),
