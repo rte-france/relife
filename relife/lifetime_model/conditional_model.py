@@ -22,6 +22,7 @@ def reshape_ar_or_a0(name: str, value: float | NDArray[np.float64]) -> NDArray[n
 class AgeReplacementModel(
     ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 ):
+    # noinspection PyUnresolvedReferences
     r"""
     Age replacement model.
 
@@ -32,6 +33,14 @@ class AgeReplacementModel(
     ----------
     baseline : any parametric lifetime model (frozen lifetime model works)
         The base lifetime model without conditional probabilities
+
+    Attributes
+    ----------
+    baseline
+    nb_params
+    params
+    params_names
+    plot
     """
 
     def __init__(
@@ -285,6 +294,7 @@ class AgeReplacementModel(
 class LeftTruncatedModel(
     ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
 ):
+    # noinspection PyUnresolvedReferences
     r"""Left truncated model.
 
     Lifetime model where the assets have already reached the age :math:`a_0`.
@@ -293,6 +303,18 @@ class LeftTruncatedModel(
     ----------
     baseline : any parametric lifetime model (frozen lifetime model works)
         The base lifetime model without conditional probabilities
+    nb_params
+    params
+    params_names
+    plot
+
+    Attributes
+    ----------
+    baseline
+    nb_params
+    params
+    params_names
+    plot
     """
 
     def __init__(
@@ -551,9 +573,7 @@ class FrozenAgeReplacementModel(
 
     Warnings
     --------
-    This class is documented for the purpose of clarity and mainly address contributors or advance users. Actually, the
-    recommanded way to instanciate a ``FrozenAgeReplacementModel`` is use to ``freeze`` factory function.
-
+    The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
     """
 
     unfrozen_model: AgeReplacementModel
@@ -612,9 +632,7 @@ class FrozenLeftTruncatedModel(
 
     Warnings
     --------
-    This class is documented for the purpose of clarity and mainly address contributors or advance users. Actually, the
-    recommanded way to instanciate a ``FrozenLeftTruncatedModel`` is use to ``freeze`` factory function.
-
+    The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
     """
 
     unfrozen_model: LeftTruncatedModel
