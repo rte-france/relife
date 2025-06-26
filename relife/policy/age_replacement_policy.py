@@ -25,10 +25,34 @@ from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
 
 
 class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeReplacementModel, AgeReplacementReward]):
+    # noinspection PyUnresolvedReferences
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
     with costs :math:`c_f` if earlier.
+
+    Parameters
+    ----------
+    lifetime_model : any lifetime distribution or frozen lifetime model
+        A lifetime model representing the durations between events.
+    cf : float or 1darray
+        Costs of failures
+    cp : float or 1darray
+        Costs of preventive replacements
+    discounting_rate : float, default is 0.
+        The discounting rate value used in the exponential discounting function
+    a0 : float or 1darray, optional
+        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
+        be take into account for the first cycle.
+    ar : float or 1darray, optional
+        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
+        and access to the rest of the object interface.
+
+    Attributes
+    ----------
+    ar
+    cf
+    cp
 
     References
     ----------
@@ -120,7 +144,7 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
         self,
     ) -> OneCycleAgeReplacementPolicy:
         """
-        Computes the optimal age(s) of replacement and updates the internal ``ar`̀` value(s) and, optionally ``ar1``.
+        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and, optionally ``ar1``.
 
         Returns
         -------
@@ -145,7 +169,8 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
 
 
 class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, AgeReplacementReward]):
-    r"""Time based replacement policy.
+    # noinspection PyUnresolvedReferences
+    r"""Age replacement policy.
 
     Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`
     with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.
@@ -160,6 +185,8 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         Costs of preventive replacements
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
+    first_lifetime_model : any lifetime distribution or frozen lifetime model, optional
+        A lifetime model for the first renewal (delayed renewal process). It is None by default
     a0 : float or 1darray, optional
         Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
@@ -346,6 +373,18 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         upon_failure: bool = False,
         total: bool = True,
     ):
+        """
+        The expected number of annual replacements.
+
+        Parameters
+        ----------
+        nb_years : int
+            The number of years on which the annual number of replacements are projected
+        upon_failure : bool, default is False
+            If True, it also returns the annual number of replacements due to unexpected failures
+        total : bool, default is True
+            If True, the given numbers of replacements are the sum of all replacements without distinction between assets
+        """
         if np.any(np.isnan(self.ar)):
             raise ValueError
         if self.ar1 is not None and np.any(np.isnan(self.ar1)):
@@ -376,7 +415,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         self,
     ) -> AgeReplacementPolicy:
         """
-        Computes the optimal age(s) of replacement and updates the internal ``ar`̀` value(s) and, optionally ``ar1``.
+        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and, optionally ``ar1``.
 
         Returns
         -------

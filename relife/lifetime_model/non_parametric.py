@@ -77,6 +77,19 @@ class ECDF(NonParametricLifetimeModel):
         Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
         | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
     ):
+        """
+        The survival functions estimated values
+
+        Parameters
+        ----------
+        se : bool, default is False
+            If true, the estimated standard errors are returned too.
+
+        Returns
+        -------
+        tuple of 2 or 3 ndarrays
+            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        """
         if self._sf is None:
             return None
         if se:
@@ -97,6 +110,19 @@ class ECDF(NonParametricLifetimeModel):
         Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
         | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
     ):
+        """
+        The cumulative distribution function estimated values
+
+        Parameters
+        ----------
+        se : bool, default is False
+            If true, the estimated standard errors are returned too.
+
+        Returns
+        -------
+        tuple of 2 or 3 ndarrays
+            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        """
         if self._cdf is None:
             return None
         if se:
@@ -247,6 +273,19 @@ class KaplanMeier(NonParametricLifetimeModel):
         Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
         | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
     ):
+        """
+        The survival function estimation
+
+        Parameters
+        ----------
+        se : bool, default is False
+            If true, the estimated standard errors are returned too.
+
+        Returns
+        -------
+        tuple of 2 or 3 ndarrays
+            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        """
         if self._sf is None:
             return None
         if se:
@@ -390,6 +429,19 @@ class NelsonAalen(NonParametricLifetimeModel):
         Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
         | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
     ):
+        """
+        The cumulative hazard function estimation
+
+        Parameters
+        ----------
+        se : bool, default is False
+            If true, the estimated standard errors are returned too.
+
+        Returns
+        -------
+        tuple of 2 or 3 ndarrays
+            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        """
         if self._chf is None:
             return None
         if se:
@@ -402,7 +454,8 @@ class NelsonAalen(NonParametricLifetimeModel):
 
 
 class Turnbull(NonParametricLifetimeModel):
-    """Turnbull estimator"""
+    """Turnbull estimator.
+    """
 
     def __init__(
         self,
@@ -498,6 +551,14 @@ class Turnbull(NonParametricLifetimeModel):
         return self
 
     def sf(self) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]:
+        """
+        The survival function estimation
+
+        Returns
+        -------
+        tuple of 2 ndarrays
+            A tuple containing the timeline and the estimated values
+        """
         if self._sf is None:
             return None
         return self._sf["timeline"], self._sf["estimation"]

@@ -296,25 +296,25 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
         """
         return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()  # () or (m, 1)
 
-    def sample_count_data(
-        self,
-        tf: float,
-        t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> None:
-        self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
-
-    def generate_lifetime_data(
-        self,
-        tf: float,
-        t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> LifetimeData:
-        return self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
+    # def sample_count_data(
+    #     self,
+    #     tf: float,
+    #     t0: float = 0.0,
+    #     size: int | tuple[int] | tuple[int, int] = 1,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    # ) -> None:
+    #     self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
+    #
+    # def generate_lifetime_data(
+    #     self,
+    #     tf: float,
+    #     t0: float = 0.0,
+    #     size: int | tuple[int] | tuple[int, int] = 1,
+    #     maxsample: int = 1e5,
+    #     seed: Optional[int] = None,
+    # ) -> LifetimeData:
+    #     return self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
 
 
 # @overload

@@ -54,7 +54,28 @@ Here ``data`` is a `structured array <https://numpy.org/doc/stable/user/basics.
 Lifetime model estimation
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For the obtained data you can fit a lifetime model. In this example, we use a simple lifetime model : a Weibull lifetime distribution.
+From the obtained data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.
+
+.. code-block:: python
+
+    >>> from relife.lifetime_model import KaplanMeier
+    >>> kaplan_meier = KaplanMeier()
+    >>> kaplan_meier.fit(
+          data["time"],
+          event=data["event"],
+          entry=data["entry"],
+        )
+    <relife.lifetime_model.non_parametric.KaplanMeier at 0x732a2f85db90>
+
+You can quickly plot the estimated survival function
+
+.. code-block:: python
+
+    >>> kaplan_meier.plot.sf()
+
+.. image:: _static/compiled_nb/_starter_example/output_9_1.png
+
+You can also fit a simple parametric lifetime model : a Weibull lifetime distribution, and plot the two survival functions obtained in one graph
 
 .. code-block:: python
 
@@ -73,8 +94,9 @@ Note that this object holds ``params`` values and that the ``fit`` has modifie
 .. code-block:: python
 
     >>> weibull.plot.sf()
+    >>> kaplan_meier.plot.sf()
 
-.. image:: _static/compiled_nb/starter_example/output_9_1.png
+.. image:: _static/compiled_nb/_starter_example/output_13_1.png
 
 Maintenance policy optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -162,7 +184,7 @@ Here, ReLife does not offer built-in plot functionnalities. But of course, you c
     >>> plt.grid(True)
     >>> plt.show()
 
-.. image:: _static/compiled_nb/starter_example/output_23_0.png
+.. image:: _static/compiled_nb/_starter_example/output_27_0.png
 
 
 ReLife and Numpy

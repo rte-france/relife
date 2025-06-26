@@ -39,8 +39,49 @@ that contains three fields :
 Lifetime model estimation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For the obtained data you can fit a lifetime model. In this example, we
-use a simple lifetime model : a Weibull lifetime distribution.
+For the obtained data you can fit a lifetime model. It may be a good
+idea to start with a non-parametric model like a Kaplan-Meier estimator.
+
+.. code:: ipython3
+
+    from relife.lifetime_model import KaplanMeier
+    kaplan_meier = KaplanMeier()
+    kaplan_meier.fit(
+        data["time"],
+        event=data["event"],
+        entry=data["entry"],
+    )
+
+
+
+
+.. parsed-literal::
+
+    <relife.lifetime_model.non_parametric.KaplanMeier at 0x79609b197dd0>
+
+
+
+You can quickly plot the estimated survival function
+
+.. code:: ipython3
+
+    kaplan_meier.plot.sf()
+
+
+
+
+.. parsed-literal::
+
+    <Axes: xlabel='Time', ylabel='Estimated survival function'>
+
+
+
+
+.. image:: output_9_1.png
+
+
+You can also fit simple parametric lifetime model : a Weibull lifetime
+distribution, and plot the two survival functions obtained in one graph
 
 .. code:: ipython3
 
@@ -64,25 +105,6 @@ Note that these model objects hold \`\ ``params`` values and that the
 
 .. code:: ipython3
 
-    from relife.lifetime_model import KaplanMeier
-    kaplan_meier = KaplanMeier()
-    kaplan_meier.fit(
-        data["time"],
-        event=data["event"],
-        entry=data["entry"],
-    )
-
-
-
-
-.. parsed-literal::
-
-    <relife.lifetime_model.non_parametric.KaplanMeier at 0x732a2f85db90>
-
-
-
-.. code:: ipython3
-
     weibull.plot.sf()
     kaplan_meier.plot.sf()
 
@@ -96,7 +118,7 @@ Note that these model objects hold \`\ ``params`` values and that the
 
 
 
-.. image:: output_10_1.png
+.. image:: output_13_1.png
 
 
 Maintenance policy optimization
@@ -152,7 +174,7 @@ ages of replacement. You can print them.
 .. parsed-literal::
 
     (1000,)
-    [29.10323788 32.65158647 29.10323788 33.38825011 27.75037338]
+    [32.65158647 31.92366325 31.92366325 31.92366325 29.10323788]
     (1000,)
     [59.19751205 59.19751205 59.19751205 59.19751205 59.19751205]
 
@@ -174,7 +196,7 @@ the next 170 years.
 
 .. parsed-literal::
 
-    649 ms ± 8.75 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    639 ms ± 10.3 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 To do that, ReLife solves the renewal equation.
@@ -216,5 +238,5 @@ in one graph
 
 
 
-.. image:: output_24_0.png
+.. image:: output_27_0.png
 

@@ -38,30 +38,74 @@ class Reward(ABC):
 
     @abstractmethod
     def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Reward conditional sampling."""
+        """Reward conditional sampling.
+
+        Parameters
+        ----------
+        time : ndarray
+            Time duration values.
+
+
+        Returns
+        -------
+        ndarray
+            Random drawing of a reward with respect to time.
+        """
 
     @property
     def nb_assets(self) -> int:
+        """
+        Number of assets.
+        """
         if self._cost_array.shape == ():
             return 1
         return self._cost_array.shape[0]
 
     @property
     def ndim(self) -> int:
+        """
+        Cost number of dimension (either 0 or 1)
+        """
         return self._cost_array.ndim
 
     @property
     def size(self) -> int:
+        """
+        Cost size
+        """
         return self._cost_array.size
 
 
 class RunToFailureReward(Reward):
+    # noinspection PyUnresolvedReferences
+    r"""Run-to-failure reward.
+
+    Parameters
+    ----------
+    cf : float or 1darray
+        The cost(s) of failure
+
+    Attributes
+    ----------
+    cf
+    """
     def __init__(self, cf: float | NDArray[np.float64]):
         self._cost_array = cost(cf=cf)
 
     @property
-    def cf(self):
+    def cf(self) -> NDArray[np.float64]:
+        """
+        Cost of failures
+
+        Returns
+        -------
+        ndarray
+        """
         return self._cost_array["cf"]
+
+    @cf.setter
+    def cf(self, value: float | NDArray[np.float64]) -> None:
+        self._cost_array["cf"] = value
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.ones_like(time) * self.cf
@@ -71,6 +115,23 @@ class RunToFailureReward(Reward):
 
 
 class AgeReplacementReward(Reward):
+    # noinspection PyUnresolvedReferences
+    r"""Age replacement reward.
+
+    Parameters
+    ----------
+    cf : float or 1darray
+        The cost(s) of failure
+    cp : float or 1darray
+        The cost(s) of preventive replacement
+
+    Attributes
+    ----------
+    cf
+    cp
+    ar
+
+    """
     def __init__(
         self, cf: float | NDArray[np.float64], cp: float | NDArray[np.float64], ar: float | NDArray[np.float64]
     ):
@@ -80,11 +141,25 @@ class AgeReplacementReward(Reward):
         self._ar = ar.reshape(shape)
 
     @property
-    def cf(self):
+    def cf(self) -> NDArray[np.float64]:
+        """
+        Cost of failures
+
+        Returns
+        -------
+        ndarray
+        """
         return self._cost_array["cf"]
 
     @property
-    def cp(self):
+    def cp(self) -> NDArray[np.float64]:
+        """
+        Cost of preventive replacement
+
+        Returns
+        -------
+        ndarray
+        """
         return self._cost_array["cp"]
 
     @cf.setter
@@ -97,6 +172,13 @@ class AgeReplacementReward(Reward):
 
     @property
     def ar(self) -> float | NDArray[np.float64]:
+        """
+        Age of replacement
+
+        Returns
+        -------
+        ndarray
+        """
         return self._ar
 
     @ar.setter
