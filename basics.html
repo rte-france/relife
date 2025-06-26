@@ -462,7 +462,23 @@ To load this dataset, you must import the function <code class="docutils literal
 </section>
 <section id="lifetime-model-estimation">
 <h3><a class="toc-backref" href="#id4" role="doc-backlink">Lifetime model estimation</a><a class="headerlink" href="#lifetime-model-estimation" title="Link to this heading">#</a></h3>
-<p>For the obtained data you can fit a lifetime model. In this example, we use a simple lifetime model : a Weibull lifetime distribution.</p>
+<p>From the obtained data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">KaplanMeier</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span> <span class="o">=</span> <span class="n">KaplanMeier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+<span class="go">      data[&quot;time&quot;],</span>
+<span class="go">      event=data[&quot;event&quot;],</span>
+<span class="go">      entry=data[&quot;entry&quot;],</span>
+<span class="go">    )</span>
+<span class="go">&lt;relife.lifetime_model.non_parametric.KaplanMeier at 0x732a2f85db90&gt;</span>
+</pre></div>
+</div>
+<p>You can quickly plot the estimated survival function</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">sf</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/output_9_1.png" src="_images/output_9_1.png" />
+<p>You can also fit a simple parametric lifetime model : a Weibull lifetime distribution, and plot the two survival functions obtained in one graph</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
@@ -476,9 +492,10 @@ To load this dataset, you must import the function <code class="docutils literal
 </div>
 <p>Note that this object holds <code class="docutils literal notranslate"><span class="pre">params</span></code> values and that the <code class="docutils literal notranslate"><span class="pre">fit</span></code> has modified them inplace. You can quickly visualize probability functions plot, like the survival function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">sf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">sf</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="_images/output_9_1.png" src="_images/output_9_1.png" />
+<img alt="_images/output_13_1.png" src="_images/output_13_1.png" />
 </section>
 <section id="maintenance-policy-optimization">
 <h3><a class="toc-backref" href="#id5" role="doc-backlink">Maintenance policy optimization</a><a class="headerlink" href="#maintenance-policy-optimization" title="Link to this heading">#</a></h3>
@@ -551,7 +568,7 @@ For instance, you can be interested in seeing the expected number of replacement
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="_images/output_23_0.png" src="_images/output_23_0.png" />
+<img alt="_images/output_27_0.png" src="_images/output_27_0.png" />
 </section>
 </section>
 <section id="relife-and-numpy">

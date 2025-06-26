@@ -429,10 +429,34 @@
 <div class="viewcode-block" id="OneCycleAgeReplacementPolicy">
 <a class="viewcode-back" href="../../../api/policy/relife.policy.OneCycleAgeReplacementPolicy.html#relife.policy.OneCycleAgeReplacementPolicy">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OneCycleAgeReplacementPolicy</span><span class="p">(</span><span class="n">BaseOneCycleAgeReplacementPolicy</span><span class="p">[</span><span class="n">FrozenAgeReplacementModel</span><span class="p">,</span> <span class="n">AgeReplacementReward</span><span class="p">]):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One-cyle age replacement policy.</span>
 
 <span class="sd">    The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure</span>
 <span class="sd">    with costs :math:`c_f` if earlier.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lifetime_model : any lifetime distribution or frozen lifetime model</span>
+<span class="sd">        A lifetime model representing the durations between events.</span>
+<span class="sd">    cf : float or 1darray</span>
+<span class="sd">        Costs of failures</span>
+<span class="sd">    cp : float or 1darray</span>
+<span class="sd">        Costs of preventive replacements</span>
+<span class="sd">    discounting_rate : float, default is 0.</span>
+<span class="sd">        The discounting rate value used in the exponential discounting function</span>
+<span class="sd">    a0 : float or 1darray, optional</span>
+<span class="sd">        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will</span>
+<span class="sd">        be take into account for the first cycle.</span>
+<span class="sd">    ar : float or 1darray, optional</span>
+<span class="sd">        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values</span>
+<span class="sd">        and access to the rest of the object interface.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ar</span>
+<span class="sd">    cf</span>
+<span class="sd">    cp</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -538,7 +562,7 @@
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`̀` value(s) and, optionally ``ar1``.</span>
+<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and, optionally ``ar1``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -567,7 +591,8 @@
 <div class="viewcode-block" id="AgeReplacementPolicy">
 <a class="viewcode-back" href="../../../api/policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AgeReplacementPolicy</span><span class="p">(</span><span class="n">BaseAgeReplacementPolicy</span><span class="p">[</span><span class="n">FrozenAgeReplacementModel</span><span class="p">,</span> <span class="n">AgeReplacementReward</span><span class="p">]):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Time based replacement policy.</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Age replacement policy.</span>
 
 <span class="sd">    Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`</span>
 <span class="sd">    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.</span>
@@ -582,6 +607,8 @@
 <span class="sd">        Costs of preventive replacements</span>
 <span class="sd">    discounting_rate : float, default is 0.</span>
 <span class="sd">        The discounting rate value used in the exponential discounting function</span>
+<span class="sd">    first_lifetime_model : any lifetime distribution or frozen lifetime model, optional</span>
+<span class="sd">        A lifetime model for the first renewal (delayed renewal process). It is None by default</span>
 <span class="sd">    a0 : float or 1darray, optional</span>
 <span class="sd">        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will</span>
 <span class="sd">        be take into account for the first cycle.</span>
@@ -774,12 +801,26 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_worth</span><span class="p">()</span></div>
 
 
+<div class="viewcode-block" id="AgeReplacementPolicy.annual_number_of_replacements">
+<a class="viewcode-back" href="../../../api/policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.annual_number_of_replacements">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">annual_number_of_replacements</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">nb_years</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">upon_failure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">total</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The expected number of annual replacements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nb_years : int</span>
+<span class="sd">            The number of years on which the annual number of replacements are projected</span>
+<span class="sd">        upon_failure : bool, default is False</span>
+<span class="sd">            If True, it also returns the annual number of replacements due to unexpected failures</span>
+<span class="sd">        total : bool, default is True</span>
+<span class="sd">            If True, the given numbers of replacements are the sum of all replacements without distinction between assets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ar1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar1</span><span class="p">)):</span>
@@ -804,7 +845,8 @@
                 <span class="n">mf</span> <span class="o">=</span> <span class="n">total_cost</span>
             <span class="n">nb_failures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">timeline</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">nb_replacements</span><span class="p">,</span> <span class="n">nb_failures</span>
-        <span class="k">return</span> <span class="n">timeline</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">nb_replacements</span>
+        <span class="k">return</span> <span class="n">timeline</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">nb_replacements</span></div>
+
 
 <div class="viewcode-block" id="AgeReplacementPolicy.optimize">
 <a class="viewcode-back" href="../../../api/policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.optimize">[docs]</a>
@@ -812,7 +854,7 @@
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgeReplacementPolicy</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`̀` value(s) and, optionally ``ar1``.</span>
+<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and, optionally ``ar1``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>

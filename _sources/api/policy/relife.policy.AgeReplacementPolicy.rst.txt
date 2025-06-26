@@ -40,12 +40,6 @@ AgeReplacementPolicy
             ~AgeReplacementPolicy.expected_total_cost
         
         
-            ~AgeReplacementPolicy.generate_lifetime_data
-        
-        
             ~AgeReplacementPolicy.optimize
-        
-        
-            ~AgeReplacementPolicy.sample_count_data
         
     

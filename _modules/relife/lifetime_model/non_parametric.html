@@ -478,17 +478,33 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="ECDF.sf">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.sf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
         <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
         <span class="o">|</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The survival functions estimated values</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        se : bool, default is False</span>
+<span class="sd">            If true, the estimated standard errors are returned too.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of 2 or 3 ndarrays</span>
+<span class="sd">            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">se</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span></div>
+
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
@@ -498,17 +514,33 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="ECDF.cdf">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.cdf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
         <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
         <span class="o">|</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The cumulative distribution function estimated values</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        se : bool, default is False</span>
+<span class="sd">            If true, the estimated standard errors are returned too.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of 2 or 3 ndarrays</span>
+<span class="sd">            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">se</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlotECDF</span><span class="p">:</span>
@@ -654,17 +686,33 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="KaplanMeier.sf">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier.sf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
         <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
         <span class="o">|</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The survival function estimation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        se : bool, default is False</span>
+<span class="sd">            If true, the estimated standard errors are returned too.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of 2 or 3 ndarrays</span>
+<span class="sd">            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">se</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlotKaplanMeier</span><span class="p">:</span>
@@ -803,17 +851,33 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
+<div class="viewcode-block" id="NelsonAalen.chf">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen.chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
         <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
         <span class="o">|</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]</span>
     <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The cumulative hazard function estimation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        se : bool, default is False</span>
+<span class="sd">            If true, the estimated standard errors are returned too.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of 2 or 3 ndarrays</span>
+<span class="sd">            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">se</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlotNelsonAalen</span><span class="p">:</span>
@@ -821,8 +885,11 @@
 
 
 
+<div class="viewcode-block" id="Turnbull">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html#relife.lifetime_model.Turnbull">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Turnbull</span><span class="p">(</span><span class="n">NonParametricLifetimeModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turnbull estimator&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turnbull estimator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -834,6 +901,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">lowmem</span> <span class="o">=</span> <span class="n">lowmem</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
+<div class="viewcode-block" id="Turnbull.fit">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html#relife.lifetime_model.Turnbull.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -915,12 +984,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timeline</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sf</span>
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
+
+<div class="viewcode-block" id="Turnbull.sf">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html#relife.lifetime_model.Turnbull.sf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The survival function estimation</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of 2 ndarrays</span>
+<span class="sd">            A tuple containing the timeline and the estimated values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_with_low_memory</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1012,7 +1093,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlotTurnbull</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">PlotTurnbull</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">PlotTurnbull</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
 </pre></div>
 
                 </article>

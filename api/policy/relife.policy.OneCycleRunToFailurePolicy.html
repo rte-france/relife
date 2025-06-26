@@ -54,7 +54,7 @@
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="relife.freeze" href="../routines/relife.freeze.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../routines/relife.freeze.html" />
     <link rel="prev" title="RunToFailurePolicy" href="relife.policy.RunToFailurePolicy.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -382,11 +382,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html">Turnbull</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.RunToFailureReward.html">RunToFailureReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
 <ul class="current nav bd-sidenav">
@@ -394,10 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.policy.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">OneCycleRunToFailurePolicy</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.freeze.html">relife.freeze</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
@@ -473,8 +475,29 @@
 <h1>OneCycleRunToFailurePolicy<a class="headerlink" href="#onecycleruntofailurepolicy" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">OneCycleRunToFailurePolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period_before_discounting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/run_to_failure_policy.html#OneCycleRunToFailurePolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy" title="Link to this definition">#</a></dt>
-<dd><p class="rubric">Methods</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">OneCycleRunToFailurePolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period_before_discounting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/run_to_failure_policy.html#OneCycleRunToFailurePolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy" title="Link to this definition">#</a></dt>
+<dd><p>One cyle run-to-failure policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>lifetime_model</strong><span class="classifier">any lifetime distribution or frozen lifetime model</span></dt><dd><p>A lifetime model representing the durations between events.</p>
+</dd>
+<dt><strong>cf</strong><span class="classifier">float or 1darray</span></dt><dd><p>Costs of failures</p>
+</dd>
+<dt><strong>discounting_rate</strong><span class="classifier">float, default is 0.</span></dt><dd><p>The discounting rate value used in the exponential discounting function</p>
+</dd>
+<dt><strong>a0</strong><span class="classifier">float or 1darray, optional</span></dt><dd><p>Current ages of the assets, by default 0 for each asset. If it is given, left truncations of <code class="docutils literal notranslate"><span class="pre">a0</span></code> will
+be take into account for the first cycle.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>cf</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>

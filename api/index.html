@@ -382,11 +382,17 @@
 <li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html">Turnbull</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="economy/relife.economic.RunToFailureReward.html">RunToFailureReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
 <ul class="nav bd-sidenav">
@@ -394,10 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="policy/relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy/relife.policy.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy/relife.policy.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="routines/relife.freeze.html">relife.freeze</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
@@ -617,6 +619,9 @@ the lifetime model, a error message will be raised.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF" title="relife.lifetime_model.ECDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ECDF</span></code></a></p></td>
 <td><p>Empirical Cumulative Distribution Function.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html#relife.lifetime_model.Turnbull" title="relife.lifetime_model.Turnbull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Turnbull</span></code></a></p></td>
+<td><p>Turnbull estimator.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -636,12 +641,26 @@ the lifetime model, a error message will be raised.</p>
 </table>
 </div>
 </section>
+<section id="economy">
+<h2>Economy<a class="headerlink" href="#economy" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="economy/relife.economic.RunToFailureReward.html#relife.economic.RunToFailureReward" title="relife.economic.RunToFailureReward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunToFailureReward</span></code></a></p></td>
+<td><p>Run-to-failure reward.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="economy/relife.economic.AgeReplacementReward.html#relife.economic.AgeReplacementReward" title="relife.economic.AgeReplacementReward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgeReplacementReward</span></code></a></p></td>
+<td><p>Age replacement reward.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="maintenance-policies">
 <h2>Maintenance policies<a class="headerlink" href="#maintenance-policies" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy" title="relife.policy.AgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgeReplacementPolicy</span></code></a></p></td>
-<td><p>Time based replacement policy.</p></td>
+<td><p>Age replacement policy.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="policy/relife.policy.OneCycleAgeReplacementPolicy.html#relife.policy.OneCycleAgeReplacementPolicy" title="relife.policy.OneCycleAgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneCycleAgeReplacementPolicy</span></code></a></p></td>
 <td><p>One-cyle age replacement policy.</p></td>
@@ -650,7 +669,7 @@ the lifetime model, a error message will be raised.</p>
 <td><p>Run-to-failure renewal policy.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="policy/relife.policy.OneCycleRunToFailurePolicy.html#relife.policy.OneCycleRunToFailurePolicy" title="relife.policy.OneCycleRunToFailurePolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy</span></code></a></p></td>
-<td><p></p></td>
+<td><p>One cyle run-to-failure policy.</p></td>
 </tr>
 </tbody>
 </table>
@@ -660,7 +679,7 @@ the lifetime model, a error message will be raised.</p>
 <h2>Routines<a class="headerlink" href="#routines" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="routines/relife.freeze.html#relife.freeze" title="relife.freeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></a></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></p></td>
 <td><p>Freeze a parametric model with given arguments.</p></td>
 </tr>
 </tbody>
@@ -738,6 +757,7 @@ Otherwise, you can skip this part of the API</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stochastic-processes">Stochastic processes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#economy">Economy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-policies">Maintenance policies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routines">Routines</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#base-classes">Base classes</a><ul class="nav section-nav flex-column">

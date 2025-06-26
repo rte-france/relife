@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>RenewalProcess &#8212; ReLife</title>
+    <title>Turnbull &#8212; ReLife</title>
   
   
   
@@ -48,14 +48,12 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/stochastic_process/relife.stochastic_process.RenewalProcess';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="RenewalRewardProcess" href="relife.stochastic_process.RenewalRewardProcess.html" />
-    <link rel="prev" title="Turnbull" href="../non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html" />
+    <link rel="next" title="RenewalProcess" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html" />
+    <link rel="prev" title="ECDF" href="relife.lifetime_model.ECDF.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -378,16 +376,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.FrozenAgeReplacementModel.html">FrozenAgeReplacementModel</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html">Turnbull</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ECDF.html">ECDF</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Turnbull</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">RenewalProcess</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
@@ -454,7 +452,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RenewalProcess</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Turnbull</span></li>
   </ul>
 </nav>
 </div>
@@ -471,235 +469,54 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="renewalprocess">
-<h1>RenewalProcess<a class="headerlink" href="#renewalprocess" title="Link to this heading">#</a></h1>
+  <section id="turnbull">
+<h1>Turnbull<a class="headerlink" href="#turnbull" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.stochastic_process.</span></span><span class="sig-name descname"><span class="pre">RenewalProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_lifetime_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/renewal_process.html#RenewalProcess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.RenewalProcess" title="Link to this definition">#</a></dt>
-<dd><p>Renewal process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>lifetime_model</strong><span class="classifier">any lifetime distribution or frozen lifetime model</span></dt><dd><p>A lifetime model representing the durations between events.</p>
-</dd>
-<dt><strong>first_lifetime_model</strong><span class="classifier">any lifetime distribution or frozen lifetime model, optional</span></dt><dd><p>A lifetime model for the first renewal (delayed renewal process). It is None by default</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>lifetime_model</strong><span class="classifier">any lifetime distribution or frozen lifetime model</span></dt><dd><p>A lifetime model representing the durations between events.</p>
-</dd>
-<dt><strong>first_lifetime_model</strong><span class="classifier">any lifetime distribution or frozen lifetime model, optional</span></dt><dd><p>A lifetime model for the first renewal (delayed renewal process). It is None by default</p>
-</dd>
-<dt><a class="reference internal" href="#relife.stochastic_process.RenewalProcess.nb_params" title="relife.stochastic_process.RenewalProcess.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></dt><dd><p>Number of parameters.</p>
-</dd>
-<dt><a class="reference internal" href="#relife.stochastic_process.RenewalProcess.params" title="relife.stochastic_process.RenewalProcess.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></dt><dd><p>Parameters values.</p>
-</dd>
-<dt><a class="reference internal" href="#relife.stochastic_process.RenewalProcess.params_names" title="relife.stochastic_process.RenewalProcess.params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params_names</span></code></a></dt><dd><p>Parameters names.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="relife.lifetime_model.Turnbull">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">Turnbull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowmem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#Turnbull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Turnbull" title="Link to this definition">#</a></dt>
+<dd><p>Turnbull estimator.</p>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_process.RenewalProcess.generate_lifetime_data" title="relife.stochastic_process.RenewalProcess.generate_lifetime_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_lifetime_data</span></code></a></p></td>
-<td><p>Generate lifetime data</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Turnbull.fit" title="relife.lifetime_model.Turnbull.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Compute the non-parametric estimations with respect to lifetime data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_process.RenewalProcess.renewal_density" title="relife.stochastic_process.RenewalProcess.renewal_density"><code class="xref py py-obj docutils literal notranslate"><span class="pre">renewal_density</span></code></a></p></td>
-<td><p>The renewal density.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_process.RenewalProcess.renewal_function" title="relife.stochastic_process.RenewalProcess.renewal_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">renewal_function</span></code></a></p></td>
-<td><p>The renewal function.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_process.RenewalProcess.sample" title="relife.stochastic_process.RenewalProcess.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
-<td><p>Renewal data sampling.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Turnbull.sf" title="relife.lifetime_model.Turnbull.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<td><p>The survival function estimation</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.generate_lifetime_data">
-<span class="sig-name descname"><span class="pre">generate_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/renewal_process.html#RenewalProcess.generate_lifetime_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.generate_lifetime_data" title="Link to this definition">#</a></dt>
-<dd><p>Generate lifetime data</p>
-<p>This function will generate lifetime data that can be used to fit a lifetime model.</p>
+<dt class="sig sig-object py" id="relife.lifetime_model.Turnbull.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#Turnbull.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Turnbull.fit" title="Link to this definition">#</a></dt>
+<dd><p>Compute the non-parametric estimations with respect to lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
+<dt><strong>time</strong><span class="classifier">ndarray (1d or 2d)</span></dt><dd><p>Observed lifetime values.</p>
 </dd>
-<dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
+<dt><strong>event</strong><span class="classifier">ndarray of boolean values (1d), default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
 </dd>
-<dt><strong>size</strong><span class="classifier">int or tuple of 2 int</span></dt><dd><p>Size of the sample</p>
+<dt><strong>entry</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
 </dd>
-<dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
+<dt><strong>departure</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Right truncations applied to lifetime values.</p>
 </dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>A dict of time, event, entry and args (covariates)</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.nb_params">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_params</span></span><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.nb_params" title="Link to this definition">#</a></dt>
-<dd><p>Number of parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>int</dt><dd><p>Number of parameters.</p>
+<dt><strong>inplace</strong><span class="classifier">boolean, default is True</span></dt><dd><p>If true, estimations are stored in the object</p>
 </dd>
 </dl>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.params">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.params" title="Link to this definition">#</a></dt>
-<dd><p>Parameters values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd><p>Parameters values of the core</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>If parameter values are not set, they are encoded as <cite>np.nan</cite> value.</p>
-<p>Parameters can be by manually setting`params` through its setter, fitting the core if <cite>fit</cite> exists or
-by specifying all parameters values when the core object is initialized.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.params_names">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_names</span></span><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.params_names" title="Link to this definition">#</a></dt>
-<dd><p>Parameters names.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>list of str</dt><dd><p>Parameters names</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Parameters values can be requested (a.k.a. get) by their name at instance level.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.renewal_density">
-<span class="sig-name descname"><span class="pre">renewal_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/renewal_process.html#RenewalProcess.renewal_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.renewal_density" title="Link to this definition">#</a></dt>
-<dd><p>The renewal density.</p>
+<dt class="sig sig-object py" id="relife.lifetime_model.Turnbull.sf">
+<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#Turnbull.sf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Turnbull.sf" title="Link to this definition">#</a></dt>
+<dd><p>The survival function estimation</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The renewal density will be computed up until this calendar time.</p>
-</dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the renewal density.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the renewal density and its corresponding values at each
-step of the timeline.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The renewal density is the derivative of the renewal function with
-respect to time. It is computed by solving the renewal equation:</p>
-<div class="math notranslate nohighlight">
-\[\mu(t) = f_1(t) + \int_0^t \mu(t-x) \mathrm{d}F(x)\]</div>
-<p>where:</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(\mu\)</span> is the renewal function,</p></li>
-<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
-lifetime model,</p></li>
-<li><p><span class="math notranslate nohighlight">\(f_1\)</span> is the probability density function of the underlying
-lifetime model for the fist renewal in the case of a delayed renewal
-process.</p></li>
-</ul>
-<p class="rubric">References</p>
-<div role="list" class="citation-list">
-<div class="citation" id="r28d98d3984e7-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<p>Rausand, M., Barros, A., &amp; Hoyland, A. (2020). System Reliability
-Theory: Models, Statistical Methods, and Applications. John Wiley &amp;
-Sons.</p>
-</div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.renewal_function">
-<span class="sig-name descname"><span class="pre">renewal_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/renewal_process.html#RenewalProcess.renewal_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.renewal_function" title="Link to this definition">#</a></dt>
-<dd><p>The renewal function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The renewal function will be computed up until this calendar time.</p>
-</dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the renewal function.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the renewal function and its corresponding values at each
-step of the timeline.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The expected total number of renewals is computed  by solving the
-renewal equation:</p>
-<div class="math notranslate nohighlight">
-\[m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)\]</div>
-<p>where:</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(m\)</span> is the renewal function,</p></li>
-<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
-lifetime model,</p></li>
-<li><p><span class="math notranslate nohighlight">\(F_1\)</span> is the cumulative distribution function of the underlying
-lifetime model for the fist renewal in the case of a delayed renewal
-process.</p></li>
-</ul>
-<p class="rubric">References</p>
-<div role="list" class="citation-list">
-<div class="citation" id="rb52daa1f953d-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<p>Rausand, M., Barros, A., &amp; Hoyland, A. (2020). System Reliability
-Theory: Models, Statistical Methods, and Applications. John Wiley &amp;
-Sons.</p>
-</div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/renewal_process.html#RenewalProcess.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.sample" title="Link to this definition">#</a></dt>
-<dd><p>Renewal data sampling.</p>
-<p>This function will sample data and encapsulate them in an object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
-</dd>
-<dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
-</dd>
-<dt><strong>size</strong><span class="classifier">int or tuple of 2 int</span></dt><dd><p>Size of the sample</p>
-</dd>
-<dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
+<dt>tuple of 2 ndarrays</dt><dd><p>A tuple containing the timeline and the estimated values</p>
 </dd>
 </dl>
 </dd>
@@ -733,14 +550,9 @@ Sons.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess"><code class="docutils literal notranslate"><span class="pre">RenewalProcess</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess.generate_lifetime_data"><code class="docutils literal notranslate"><span class="pre">RenewalProcess.generate_lifetime_data()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess.nb_params"><code class="docutils literal notranslate"><span class="pre">RenewalProcess.nb_params</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess.params"><code class="docutils literal notranslate"><span class="pre">RenewalProcess.params</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess.params_names"><code class="docutils literal notranslate"><span class="pre">RenewalProcess.params_names</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess.renewal_density"><code class="docutils literal notranslate"><span class="pre">RenewalProcess.renewal_density()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess.renewal_function"><code class="docutils literal notranslate"><span class="pre">RenewalProcess.renewal_function()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_process.RenewalProcess.sample"><code class="docutils literal notranslate"><span class="pre">RenewalProcess.sample()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Turnbull"><code class="docutils literal notranslate"><span class="pre">Turnbull</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Turnbull.fit"><code class="docutils literal notranslate"><span class="pre">Turnbull.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Turnbull.sf"><code class="docutils literal notranslate"><span class="pre">Turnbull.sf()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -750,7 +562,7 @@ Sons.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/stochastic_process/relife.stochastic_process.RenewalProcess.rst.txt"
+      <li><a href="../../_sources/api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

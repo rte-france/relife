@@ -28,7 +28,7 @@ Here is an exhaustive list of all lifetime model constructors that can be used i
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_class_template.rst
+    :template: class_template.rst
     :caption: Parametric lifetime models
     :nosignatures:
 
@@ -56,7 +56,7 @@ Here is a quick example that instanciates a ``Weibull`` distribution and compute
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_class_template.rst
+    :template: class_template.rst
     :nosignatures:
 
     ProportionalHazard
@@ -92,7 +92,7 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_class_template.rst
+    :template: class_template.rst
     :nosignatures:
 
     LeftTruncatedModel
@@ -137,7 +137,7 @@ the lifetime model, a error message will be raised.
 
 .. autosummary::
     :toctree: parametric_lifetime_models
-    :template: default_class_template.rst
+    :template: class_template.rst
     :nosignatures:
 
     FrozenLifetimeRegression
@@ -150,13 +150,14 @@ Non parametric lifetime models
 
 .. autosummary::
     :toctree: non_parametric_lifetime_models
-    :template: default_class_template.rst
+    :template: class_template.rst
     :caption: Non parametric lifetime models
     :nosignatures:
 
     KaplanMeier
     NelsonAalen
     ECDF
+    Turnbull
 
 
 Stochastic processes
@@ -166,13 +167,26 @@ Stochastic processes
 
 .. autosummary::
     :toctree: stochastic_process
-    :template: default_class_template.rst
+    :template: class_template.rst
     :caption: Stochastic processes
     :nosignatures:
 
     RenewalProcess
     RenewalRewardProcess
 
+Economy
+-------
+
+.. currentmodule:: relife.economic
+
+.. autosummary::
+    :toctree: economy
+    :template: class_template.rst
+    :caption: Economy
+    :nosignatures:
+
+    RunToFailureReward
+    AgeReplacementReward
 
 Maintenance policies
 --------------------
@@ -182,7 +196,7 @@ Maintenance policies
 
 .. autosummary::
     :toctree: policy
-    :template: default_class_template.rst
+    :template: class_template.rst
     :caption: Maintenance policies
     :nosignatures:
 
@@ -199,6 +213,7 @@ Routines
 
 .. autosummary::
     :toctree: routines
+    :template: function_template.rst
     :caption: Routines
     :nosignatures:
 
@@ -218,7 +233,7 @@ Base classes
 
 .. autosummary::
     :toctree: base_class
-    :template: default_class_template.rst
+    :template: class_template.rst
     :caption: Base classes
     :nosignatures:
 
@@ -233,7 +248,7 @@ Base classes
 
 .. autosummary::
     :toctree: base_class
-    :template: default_class_template.rst
+    :template: class_template.rst
     :nosignatures:
 
     BaseAgeReplacementPolicy

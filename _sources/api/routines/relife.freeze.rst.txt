@@ -1,6 +1,1 @@
-﻿relife.freeze
-=============
-
-.. currentmodule:: relife
-
-.. autofunction:: freeze
+﻿
