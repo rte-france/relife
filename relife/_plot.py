@@ -34,7 +34,7 @@ def plot_prob_function(
         yl = np.clip(y - z * se, ci_bounds[0], ci_bounds[1])
         yu = np.clip(y + z * se, ci_bounds[0], ci_bounds[1])
         step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
-        ax.fill_between(x, yl, yu, facecolors=[line.get_color() for line in ax.lines], step=step, alpha=0.25)
+        ax.fill_between(x, yl, yu, facecolors=[ax.lines[-1].get_color()], step=step, alpha=0.25, label="IC-95%")
     if label is not None:
         ax.legend()
     return ax
@@ -65,20 +65,49 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         return ax
 
     def sf(self, *args: *Args, **kwargs) -> Axes:
-        return self._plot("sf", *args, ci_bounds=(0.0, 1.0), **kwargs)
+        ax = self._plot("sf", *args, ci_bounds=(0.0, 1.0), **kwargs)
+        ax.set_ylabel("$S(t) = P(T > t)$")
+        ax.set_xlabel("t")
+        ax.set_title("Survival function")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
     def cdf(self, *args: *Args, **kwargs) -> Axes:
-        return self._plot("cdf", *args, ci_bounds=(0.0, 1.0), **kwargs)
+        ax = self._plot("cdf", *args, ci_bounds=(0.0, 1.0), **kwargs)
+        ax.set_ylabel("$F(t) = P(T \leq t)$")
+        ax.set_xlabel("t")
+        ax.set_title("Cumulative distribution function")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
     def chf(self, *args: *Args, **kwargs) -> Axes:
-        return self._plot("chf", *args, ci_bounds=(0.0, np.inf), **kwargs)
+        ax = self._plot("chf", *args, ci_bounds=(0.0, np.inf), **kwargs)
+        ax.set_ylabel("$H(t)$")
+        ax.set_xlabel("t")
+        ax.set_title("Cumulative hazard function")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
     def hf(self, *args: *Args, **kwargs) -> Axes:
-        return self._plot("hf", *args, ci_bounds=(0.0, np.inf), **kwargs)
+        ax = self._plot("hf", *args, ci_bounds=(0.0, np.inf), **kwargs)
+        ax.set_ylabel("$h(t)$")
+        ax.set_xlabel("t")
+        ax.set_title("Hazard function")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
     def pdf(self, *args: *Args, **kwargs) -> Axes:
-        return self._plot("pdf", *args, ci_bounds=(0.0, np.inf), **kwargs)
-
+        ax = self._plot("pdf", *args, ci_bounds=(0.0, np.inf), **kwargs)
+        ax.set_ylabel("$f(t)$")
+        ax.set_xlabel("t")
+        ax.set_title("Probability density function")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
 class PlotNonParametricLifetimeModel:
     def __init__(self, model: NonParametricLifetimeModel):
@@ -92,29 +121,48 @@ class PlotNonParametricLifetimeModel:
         ax = plot_prob_function(timeline, y, se=se, ci_bounds=ci_bounds, label=label, drawstyle=drawstyle, **kwargs)
         return ax
 
-
 class PlotECDF(PlotNonParametricLifetimeModel):
     def sf(self, plot_se: bool = True, **kwargs) -> Axes:
-        return self.plot("sf", plot_se=plot_se, **kwargs)
+        ax = self.plot("sf", plot_se=plot_se, **kwargs)
+        ax.set_ylabel("Estimated survival function")
+        ax.set_xlabel("Time")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
     def cdf(self, plot_se: bool = True, **kwargs) -> Axes:
-        return self.plot("cdf", plot_se=plot_se, **kwargs)
-
+        ax = self.plot("cdf", plot_se=plot_se, **kwargs)
+        ax.set_ylabel("Estimated cumulative distribution function")
+        ax.set_xlabel("Time")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
 class PlotKaplanMeier(PlotNonParametricLifetimeModel):
     def sf(self, plot_se: bool = True, **kwargs) -> Axes:
-        return self.plot("sf", plot_se=plot_se, **kwargs)
-
+        ax = self.plot("sf", plot_se=plot_se, **kwargs)
+        ax.set_ylabel("Estimated survival function")
+        ax.set_xlabel("Time")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
 class PlotNelsonAalen(PlotNonParametricLifetimeModel):
     def chf(self, plot_se: bool = True, **kwargs) -> Axes:
-        return self.plot("chf", plot_se=plot_se, ci_bounds=(0.0, np.inf), **kwargs)
-
+        ax =  self.plot("chf", plot_se=plot_se, ci_bounds=(0.0, np.inf), **kwargs)
+        ax.set_ylabel("Estimated cumulative hazard function")
+        ax.set_xlabel("Time")
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(left=0)
+        return ax
 
 class PlotTurnbull(PlotNonParametricLifetimeModel):
     def sf(self, **kwargs) -> Axes:
-        return self.plot("sf", plot_se=False, **kwargs)
-
+        ax = self.plot("sf", plot_se=False, **kwargs)
+        ax.set_ylabel("Estimated survival function")
+        ax.set_xlabel("Time")
+        ax.set_xlim(left=0)
+        return ax
 
 # def count_data_plot(
 #     fname: str,
