@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contributors guide &#8212; ReLife</title>
+    <title>For developpers &#8212; ReLife</title>
   
   
   
@@ -48,12 +48,11 @@
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'contributions';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developpers';</script>
     <script src="_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API" href="api/index.html" />
-    <link rel="prev" title="Basics" href="basics.html" />
+    <link rel="prev" title="BaseOneCycleAgeReplacementPolicy" href="api/base_class/relife.policy.BaseOneCycleAgeReplacementPolicy.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -158,9 +157,9 @@
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    Contributors guide
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide/index.html">
+    User guide
   </a>
 </li>
 
@@ -168,6 +167,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="api/index.html">
     API
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    For developpers
   </a>
 </li>
 
@@ -257,7 +263,7 @@
       
       
       <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -286,9 +292,9 @@
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    Contributors guide
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide/index.html">
+    User guide
   </a>
 </li>
 
@@ -296,6 +302,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="api/index.html">
     API
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    For developpers
   </a>
 </li>
 
@@ -349,6 +362,15 @@
     
   </div>
   
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
       <div class="sidebar-primary-item">
@@ -384,7 +406,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Contributors guide</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">For developpers</span></li>
   </ul>
 </nav>
 </div>
@@ -401,8 +423,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="contributors-guide">
-<h1>Contributors guide<a class="headerlink" href="#contributors-guide" title="Link to this heading">#</a></h1>
+  <section id="for-developpers">
+<h1>For developpers<a class="headerlink" href="#for-developpers" title="Link to this heading">#</a></h1>
 <nav class="contents local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#documentation-style" id="id2">Documentation style</a></p></li>
@@ -414,8 +436,8 @@
 NumPy documentation style. Here are important points to have in mind if you want to <strong>contribute to the documentation</strong> :</p>
 <ul class="simple">
 <li><p>Read the <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a></p></li>
-<li><p>Classes documentation .rst files are generated using <a class="reference external" href="https://jinja.palletsprojects.com/en/stable/">Jinja2</a> template engine. The template is written in <code class="docutils literal notranslate"><span class="pre">default_class_templates.rst</span></code> of the <code class="docutils literal notranslate"><span class="pre">doc/source/_templates</span></code>. A guide to Jinja2 templating is given in <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html">Sphinx autosummary documentation</a>. Basically, one can catch usefull variables like <code class="docutils literal notranslate"><span class="pre">methods</span></code> and create nice autosummary tables inside an <code class="docutils literal notranslate"><span class="pre">autoclass</span></code>. We chose this style because it creates very clean and comprehension interface documentation of the class.</p></li>
-<li><p>Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are <strong>inherited</strong>. One must reference them manually in the object class under the <code class="docutils literal notranslate"><span class="pre">Attributes</span></code> field.  As it is mentionned in <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a>, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug… ignore it or disable them at the statement level.</p></li>
+<li><p>Classes documentation .rst files are generated using <a class="reference external" href="https://jinja.palletsprojects.com/en/stable/">Jinja2</a> template engine. The template is written in <code class="docutils literal notranslate"><span class="pre">class_template.rst</span></code> of the <code class="docutils literal notranslate"><span class="pre">doc/source/_templates</span></code>. A guide to Jinja2 templating is given in <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html">Sphinx autosummary documentation</a>. Basically, one can catch usefull variables like <code class="docutils literal notranslate"><span class="pre">methods</span></code> and create nice autosummary tables inside an <code class="docutils literal notranslate"><span class="pre">autoclass</span></code>. We chose this style because it creates very clean and comprehension interface documentation of the class.</p></li>
+<li><p>Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are <strong>inherited</strong>. One must reference them manually in the object class under the <code class="docutils literal notranslate"><span class="pre">Attributes</span></code> field of the docstring.  As it is mentionned in <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a>, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug… ignore or disable it at the statement level.</p></li>
 </ul>
 </section>
 </section>
@@ -451,7 +473,7 @@ NumPy documentation style. Here are important points to have in mind if you want
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/contributions.rst.txt"
+      <li><a href="_sources/developpers.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

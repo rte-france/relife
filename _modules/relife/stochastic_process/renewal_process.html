@@ -156,8 +156,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../contributions.html">
-    Contributors guide
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User guide
   </a>
 </li>
 
@@ -165,6 +165,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../api/index.html">
     API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developpers.html">
+    For developpers
   </a>
 </li>
 
@@ -282,8 +289,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../contributions.html">
-    Contributors guide
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User guide
   </a>
 </li>
 
@@ -291,6 +298,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../api/index.html">
     API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developpers.html">
+    For developpers
   </a>
 </li>
 
@@ -767,8 +781,8 @@
 
 <span class="sd">        .. math::</span>
 
-<span class="sd">            z(t) = \int_0^t E[Y | X = x] D(x) \mathrm{d}F(x) + \int_0^t z(t-x)</span>
-<span class="sd">            D(x)\mathrm{d}F(x)</span>
+<span class="sd">            z(t) = \int_0^t E[Y | X = x] e^{-\delta x} \mathrm{d}F(x) + \int_0^t z(t-x)</span>
+<span class="sd">            e^{-\delta x}\mathrm{d}F(x)</span>
 
 <span class="sd">        where:</span>
 
@@ -784,8 +798,8 @@
 
 <span class="sd">        .. math::</span>
 
-<span class="sd">            z_1(t) = \int_0^t E[Y_1 | X_1 = x] D(x) \mathrm{d}F_1(x) + \int_0^t</span>
-<span class="sd">            z(t-x) D(x) \mathrm{d}F_1(x)</span>
+<span class="sd">            z_1(t) = \int_0^t E[Y_1 | X_1 = x] e^{-\delta x} \mathrm{d}F_1(x) + \int_0^t</span>
+<span class="sd">            z(t-x) e^{-\delta x} \mathrm{d}F_1(x)</span>
 
 <span class="sd">        where:</span>
 
@@ -847,7 +861,7 @@
 
 <span class="sd">        .. math::</span>
 
-<span class="sd">            z^\infty = \lim_{t\to \infty} z(t) = \dfrac{E[Y D(X)]}{1-E[D(X)]}</span>
+<span class="sd">            z^\infty = \lim_{t\to \infty} z(t) = \dfrac{E\left[Y e^{-\delta X}\right]}{1-E\left[e^{-\delta X}\right]}</span>
 
 <span class="sd">        where:</span>
 
@@ -860,7 +874,7 @@
 
 <span class="sd">        .. math::</span>
 
-<span class="sd">            z_1^\infty = E[Y_1 D(X_1)] + z^\infty E[D(X_1)]</span>
+<span class="sd">            z_1^\infty = E\left[Y_1 e^{-\delta X_1}\right] + z^\infty E\left[e^{-\delta X_1}\right]</span>
 
 <span class="sd">        where:</span>
 
@@ -872,15 +886,17 @@
 <span class="sd">        ndarray</span>
 <span class="sd">            The assymptotic expected total reward of the process.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">lf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="n">lf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span> <span class="c1"># () or (m, 1)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">lf</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
         <span class="n">ly</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">15</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span>
         <span class="p">)</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">ly</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lf</span><span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">lf1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+            <span class="n">lf1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
             <span class="n">ly1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">15</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span>
             <span class="p">)</span>
             <span class="n">z</span> <span class="o">=</span> <span class="n">ly1</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="n">lf1</span>  <span class="c1"># () or (m, 1)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>  <span class="c1"># () or (m,)</span></div>
@@ -936,7 +952,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
                 <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
             <span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">())</span>  <span class="c1"># () or (m,)</span></div>

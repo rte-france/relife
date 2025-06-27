@@ -156,8 +156,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../contributions.html">
-    Contributors guide
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User guide
   </a>
 </li>
 
@@ -165,6 +165,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../api/index.html">
     API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developpers.html">
+    For developpers
   </a>
 </li>
 
@@ -282,8 +289,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../contributions.html">
-    Contributors guide
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User guide
   </a>
 </li>
 
@@ -291,6 +298,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../api/index.html">
     API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developpers.html">
+    For developpers
   </a>
 </li>
 
@@ -794,7 +808,7 @@
             <span class="n">departure</span><span class="o">=</span><span class="n">departure</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_censoring</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_censoring</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NelsonAalen does not accept left censored or interval censored lifetimes&quot;</span><span class="p">)</span>
 
         <span class="n">timeline</span><span class="p">,</span> <span class="n">unique_indices</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span>

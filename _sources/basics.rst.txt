@@ -18,8 +18,8 @@ The figure above represents the four elementary steps of ReLife's workflow (for 
 
 1. You first need to collect failure data
 2. Then, you generally fit a lifetime model. Note that all ReLife models are not necessarilly lifetime models. It can be stochastic processes too
-3. For the obtained model, you create a policy. It is generally an age replacement policy but it may vary too. With this kind of policy you can find a optimal age of replacement that minimize the annual costs of this maintenance strategy
-4. Finally, you can project consequences of the obtained strategy
+3. From the obtained model, you create a policy. It is generally an age replacement policy (but it may vary too). With this kind of policy you can find a optimal age of replacement that minimize the annual costs for this maintenance strategy
+4. Finally, you can project consequences (e.g. compute the expected number of annual replacements)
 
 The next parts provide ReLife command examples for each of these steps
 
@@ -196,8 +196,8 @@ While you don't need to be a NumPy expert, understanding its basics will help si
 There are 3 standard representations of data in ReLife :
 
 - If you want to pass a scalar value, then use a ``float``
-- If you want to pass a vector of :math:`\mathbb{R}^n`, i.e. **:math:`n` values for one asset**, then use a ``np.ndarray`` of shape ``(n,)``
-- If you want to pass a matrix of :math:`\mathbb{R}^{m\times n}`, i.e. **:math:`n` values for :math:`m` assets**, then use a ``np.ndarray`` of shape ``(n,)``
+- If you want to pass a vector of :math:`\mathbb{R}^n`, i.e. :math:`n` values for one asset, then use a ``np.ndarray`` of shape ``(n,)``
+- If you want to pass a matrix of :math:`\mathbb{R}^{m\times n}`, i.e. :math:`n` values for :math:`m` assets, then use a ``np.ndarray`` of shape ``(n,)``
 
 **Broadcasting examples**
 
@@ -242,6 +242,32 @@ The output shape is consistent to the input.
 Variables dimensions
 --------------------
 
+Some Numpy data passed to ReLife functions cannot have any number of dimension. They try to correspond to a coherent math representation.
 
+**ReLife does not control the dimension and the shapes or your data**. We believe that the user is responsible and must know what he's doing.
+That's why **you must be carefull to the way you encode your data in Numpy objects**. In this section, we provide a currated list of all possible encodings per input data and their possible shapes.
 
+.. list-table:: Numpy encodings
+    :header-rows: 1
+
+    * - name
+      - shape
+      - dim
+      - details
+    * - ``time``
+      - ``()``, ``(n,)`` or ``(m, n)``
+      - 0, 1 or 2
+      - ``n`` is the number of values and ``m`` is the number of assets
+    * - ``a0``
+      - ``()`` or ``(n,)``
+      - 0 or 1
+      -
+    * - ``ar``
+      - ``()`` or ``(n,)``
+      - 0 or 1
+      -
+    * - ``covar``
+      - ``()``, ``(k,)`` or ``(m, k)``
+      - 0, 1 or 2
+      - ``k`` is the number of regression coefficients
 
