@@ -89,7 +89,7 @@
                                 <a href="{{ pathto('installation') }}">Installation</a>
                             </td>
                             <td style="width: 75%; background-color: white;">
-                                How to install ReLife on you machine
+                                How to install ReLife on your machine
                             </td>
                         </tr>
                         <tr>
@@ -97,7 +97,15 @@
                                 <a href="{{ pathto('basics') }}">Basics</a>
                             </td>
                             <td style="background-color: white;">
-                                ReLife basic things to know before starting
+                                ReLife absolute basics for beginners
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color: white;">
+                                <a href="{{ pathto('user_guide/index') }}">User guide</a>
+                            </td>
+                            <td style="background-color: white;">
+                                Overview and explanations of ReLife important features
                             </td>
                         </tr>
                         <tr>
@@ -105,15 +113,15 @@
                                 <a href="{{ pathto('api/index') }}">API</a>
                             </td>
                             <td style="background-color: white;">
-                                The content of the exposed ReLife API
+                                The exposed ReLife API, a currated list of objects public interface
                             </td>
                         </tr>
                         <tr>
                             <td style="background-color: white;">
-                                <a href="{{ pathto('contributions') }}">Contributors guide</a>
+                                <a href="{{ pathto('developpers') }}">For developpers</a>
                             </td>
                             <td style="background-color: white;">
-                                Things to read if you want to contribute
+                                Under-the-hood documentation for contributors
                             </td>
                         </tr>
 <!--                        <tr>-->
@@ -153,7 +161,7 @@
                         <div class="sd-card bg-white w-100">
                             <div class="sd-card-body p-2" style="display: block;">
                                 <h6 class="sd-card-title" style="margin-top: 0;">Statiscal expertise</h6>
-                                <p style="text-align: left; margin-bottom: 0;">ReLife implements approved statistical models of reliability and renewal theory</p>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife implements statistical models of reliability and renewal theory</p>
                             </div>
                         </div>
                     </div>
@@ -169,7 +177,7 @@
                         <div class="sd-card bg-white w-100">
                             <div class="sd-card-body p-2" style="display: block;">
                                 <h6 class="sd-card-title" style="margin-top: 0;">Easy to use</h6>
-                                <p style="text-align: left; margin-bottom: 0;">ReLife is coded in Python and was designed to be accessible for user from any programming background or experience level</p>
+                                <p style="text-align: left; margin-bottom: 0;">ReLife is coded in Python and was designed to be accessible for many users</p>
                             </div>
                         </div>
                     </div>
@@ -182,6 +190,10 @@
                 <hr class="container my-5" style="border-top: 2px solid rgba(0, 0, 0, 0.3);">
                 <div class="row row-cols-2 row-cols-md-4 g-4 justify-content-center align-items-center">
                     <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="{{ pathto('_static/company1.png', 1) }}" alt=""
+                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
+                    </div>
+                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
                         <img src="{{ pathto('_static/rte.png', 1) }}" alt="RTE"
                              style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
                     </div>
@@ -190,11 +202,7 @@
                              style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
                     </div>
                     <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
-                        <img src="{{ pathto('_static/company3.png', 1) }}" alt="Company 3"
-                             style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
-                    </div>
-                    <div class="col d-flex justify-content-center align-items-center" style="height: 100px;">
-                        <img src="{{ pathto('_static/company4.png', 1) }}" alt="Company 4"
+                        <img src="{{ pathto('_static/company2.png', 1) }}" alt=""
                              style="max-width: 150px; max-height: 80px; width: auto; height: auto; filter: grayscale(100%); opacity: 0.7;">
                     </div>
                 </div>
@@ -206,10 +214,10 @@
                 <h6 class="mb-4">Release notes</h6>
                 <ul>
                     <li class="mb-2">2.0.0 version is a significant refactored version of the unique ReLife release. It might be better for contributions, testing, and long-term maintainability.</li>
-                    <li class="mb-2">Parametric models, including lifetime models and stochastic processes, are now unified under one ParametricModel interface which includes a composite parameter structure, making model model composition and reuse easy</li>
-                    <li class="mb-2">The new version makes use of extensive type hinting, including generic abstract base classes. It enhances modularity and clarifies object interaction logic. Currently, the codebase is type hint in the source files. It adds a lot of boilerplate code. So we plan to pass it to stub files (see below) in next releases</li>
-                    <li class="mb-2">ReLife is built on NumPy. Thus, in v2.0.0, we try to incluse rigorous testing for array shape validation and broadcasting compatibility, ensuring consistent function behavior.
-                    <li class="mb-2">The current release proposes a new documentation. The old one was buggy and not maintained. The new document is still incomplete. Writting is long and it will be done continuously. In the long term, we hope that it will make the API more accessible, including tutorials, mathematical explanations, and usage examples to encourage collaboration </li>
+                    <li class="mb-2">Parametric models, including lifetime models and stochastic processes, are now unified under one ParametricModel interface which includes a composite parameter structure, making model composition and reuse easier</li>
+                    <li class="mb-2">The new version makes use of extensive type hinting, including generic abstract base classes. It enhances modularity and clarifies object interaction logic. Currently, the codebase is typed in the source files. Thus, it adds a lot of boilerplate code. We plan to pass it to stub files (see below) in a next release</li>
+                    <li class="mb-2">ReLife is built on NumPy. Thus, in v2.0.0, we try to include rigorous testing for array shape validation and broadcasting compatibility, ensuring consistent function behavior.
+                    <li class="mb-2">The current release proposes a new documentation. The old one was buggy and was not maintained. We will update this documentation continuously. In the long term, we hope that it will make the API more accessible, including tutorials, mathematical explanations, and usage examples to encourage collaboration </li>
                 </ul>
             </div>
 
@@ -217,13 +225,13 @@
             <div class="container mb-5">
                 <h6 class="mb-4">🚀 Ongoing work</h6>
                 <ul>
-                    <li class="mb-2">Enhance type hinting with mypy validations. We also plan to experiment with stub files to consolidate type hints in a single location, improving code readability.</li>
-                    <li class="mb-2">Adding more documentation, notebook tutorials, high-level math explanations of ReLife functionnalities, a contribution guide explaning conception choices</li>
+                    <li class="mb-2">Enhance type hinting through mypy validations. We also plan to experiment with stub files to consolidate type hints in single files location, improving code readability.</li>
+                    <li class="mb-2">Adding more documentation, notebook tutorials, high-level math explanations and a guide for developpers explaning conception choices</li>
                     <li class="mb-2">Implementing Non Homogeneous Poisson Process -> v2.1.0</li>
                     <li class="mb-2">Implementing Gamma Process -> v2.2.0</li>
                     <li class="mb-2">Implementing Cox Regression -> v2.3.0</li>
                     <li class="mb-2">Creating an Orange Data Mining pluggin to have a GUI -> v(?)</li>
-                    <li class="mb-2">Adding low-level bindings to speed up some code (renewal equations) : possibilities are cython or pybind11 -> v(?)</li>
+                    <li class="mb-2">Adding low-level bindings to speed up some code (renewal equations at first) : possibilities are cython or pybind11 -> v(?)</li>
                 </ul>
             </div>
 

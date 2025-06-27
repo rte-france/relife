@@ -367,7 +367,7 @@ class NelsonAalen(NonParametricLifetimeModel):
             departure=departure,
         )
 
-        if len(lifetime_data.left_censoring) > 0:
+        if lifetime_data.left_censoring is not None:
             raise ValueError("NelsonAalen does not accept left censored or interval censored lifetimes")
 
         timeline, unique_indices, counts = np.unique(

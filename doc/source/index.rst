@@ -4,10 +4,8 @@
 
     installation
     basics
-    contributions
-
-.. toctree::
-    :maxdepth: 2
-    :hidden:
-
+    user_guide/index
     api/index
+    developpers
+
+

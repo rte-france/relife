@@ -88,7 +88,7 @@ html_theme_options = {
     "announcement": "<em>New version in test</em> : you're seeing the new documentation which is still in progress (information might be missing or incomplete)",  # annoucement bar
     "navigation_with_keys": False,
     "navbar_align": "left",  # align to the left header bar sections
-    "header_links_before_dropdown": 4,  # control the number of section displayed in the header bar
+    "header_links_before_dropdown": 5,  # control the number of section displayed in the header bar
     "show_prev_next": False,  # hide previous and next button
     "show_nav_level": 2,  # unfold nav section by 2 levels
     "icon_links": [

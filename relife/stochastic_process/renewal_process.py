@@ -346,8 +346,8 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
 
         .. math::
 
-            z(t) = \int_0^t E[Y | X = x] D(x) \mathrm{d}F(x) + \int_0^t z(t-x)
-            D(x)\mathrm{d}F(x)
+            z(t) = \int_0^t E[Y | X = x] e^{-\delta x} \mathrm{d}F(x) + \int_0^t z(t-x)
+            e^{-\delta x}\mathrm{d}F(x)
 
         where:
 
@@ -363,8 +363,8 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
 
         .. math::
 
-            z_1(t) = \int_0^t E[Y_1 | X_1 = x] D(x) \mathrm{d}F_1(x) + \int_0^t
-            z(t-x) D(x) \mathrm{d}F_1(x)
+            z_1(t) = \int_0^t E[Y_1 | X_1 = x] e^{-\delta x} \mathrm{d}F_1(x) + \int_0^t
+            z(t-x) e^{-\delta x} \mathrm{d}F_1(x)
 
         where:
 
@@ -423,7 +423,7 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
 
         .. math::
 
-            z^\infty = \lim_{t\to \infty} z(t) = \dfrac{E[Y D(X)]}{1-E[D(X)]}
+            z^\infty = \lim_{t\to \infty} z(t) = \dfrac{E\left[Y e^{-\delta X}\right]}{1-E\left[e^{-\delta X}\right]}
 
         where:
 
@@ -436,7 +436,7 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
 
         .. math::
 
-            z_1^\infty = E[Y_1 D(X_1)] + z^\infty E[D(X_1)]
+            z_1^\infty = E\left[Y_1 e^{-\delta X_1}\right] + z^\infty E\left[e^{-\delta X_1}\right]
 
         where:
 
@@ -448,15 +448,17 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         ndarray
             The assymptotic expected total reward of the process.
         """
-        lf = self.lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=15)
+        lf = self.lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100) # () or (m, 1)
+        if self.discounting_rate == 0.:
+            return np.full_like(np.squeeze(lf), np.inf)
         ly = self.lifetime_model.ls_integrate(
-            lambda x: self.discounting.factor(x) * self.reward.sample(x), 0.0, np.inf, deg=15
+            lambda x: self.discounting.factor(x) * self.reward.conditional_expectation(x), 0.0, np.inf, deg=100
         )
         z = ly / (1 - lf)  # () or (m, 1)
         if self.first_lifetime_model is not None:
-            lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=15)
+            lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100)
             ly1 = self.first_lifetime_model.ls_integrate(
-                lambda x: self.discounting.factor(x) * self.first_reward.sample(x), 0.0, np.inf, deg=15
+                lambda x: self.discounting.factor(x) * self.first_reward.conditional_expectation(x), 0.0, np.inf, deg=100
             )
             z = ly1 + z * lf1  # () or (m, 1)
         return np.squeeze(z)  # () or (m,)
@@ -506,7 +508,7 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         """
         if self.discounting_rate == 0.0:
             return (
-                self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=15)
+                self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=100)
                 / self.lifetime_model.mean()
             )  # () or (m, 1)
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)

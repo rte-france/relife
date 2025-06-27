@@ -48,8 +48,10 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         self.model = model
 
     def _plot(self, fname: str, *args: *Args, ci_bounds: Optional[tuple[float, float]] = None, **kwargs) -> Axes:
-        max_time = np.squeeze(self.model.isf(1e-3, *args))  # () or (m,)
-        timeline = np.linspace(0, max_time, 200, dtype=np.float64)  # (200,) or (200, m)
+        end_time = kwargs.pop("end_time", None)
+        if end_time is None:
+            end_time = np.squeeze(self.model.isf(1e-3, *args))  # () or (m,)
+        timeline = np.linspace(0, end_time, 200, dtype=np.float64)  # (200,) or (200, m)
         timeline = np.transpose(timeline)  # (200,) (m, 200)
         f = getattr(self.model, fname)
         jac_f = getattr(self.model, "jac_" + fname)
@@ -65,48 +67,53 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         return ax
 
     def sf(self, *args: *Args, **kwargs) -> Axes:
+        end_time = kwargs.get("end_time", None)
         ax = self._plot("sf", *args, ci_bounds=(0.0, 1.0), **kwargs)
         ax.set_ylabel("$S(t) = P(T > t)$")
         ax.set_xlabel("t")
         ax.set_title("Survival function")
         ax.set_ylim(bottom=0)
-        ax.set_xlim(left=0)
+        ax.set_xlim(left=0, right=end_time)
         return ax
 
     def cdf(self, *args: *Args, **kwargs) -> Axes:
+        end_time = kwargs.get("end_time", None)
         ax = self._plot("cdf", *args, ci_bounds=(0.0, 1.0), **kwargs)
         ax.set_ylabel("$F(t) = P(T \leq t)$")
         ax.set_xlabel("t")
         ax.set_title("Cumulative distribution function")
         ax.set_ylim(bottom=0)
-        ax.set_xlim(left=0)
+        ax.set_xlim(left=0, right=end_time)
         return ax
 
     def chf(self, *args: *Args, **kwargs) -> Axes:
+        end_time = kwargs.get("end_time", None)
         ax = self._plot("chf", *args, ci_bounds=(0.0, np.inf), **kwargs)
         ax.set_ylabel("$H(t)$")
         ax.set_xlabel("t")
         ax.set_title("Cumulative hazard function")
         ax.set_ylim(bottom=0)
-        ax.set_xlim(left=0)
+        ax.set_xlim(left=0, right=end_time)
         return ax
 
     def hf(self, *args: *Args, **kwargs) -> Axes:
+        end_time = kwargs.get("end_time", None)
         ax = self._plot("hf", *args, ci_bounds=(0.0, np.inf), **kwargs)
         ax.set_ylabel("$h(t)$")
         ax.set_xlabel("t")
         ax.set_title("Hazard function")
         ax.set_ylim(bottom=0)
-        ax.set_xlim(left=0)
+        ax.set_xlim(left=0, right=end_time)
         return ax
 
     def pdf(self, *args: *Args, **kwargs) -> Axes:
+        end_time = kwargs.get("end_time", None)
         ax = self._plot("pdf", *args, ci_bounds=(0.0, np.inf), **kwargs)
         ax.set_ylabel("$f(t)$")
         ax.set_xlabel("t")
         ax.set_title("Probability density function")
         ax.set_ylim(bottom=0)
-        ax.set_xlim(left=0)
+        ax.set_xlim(left=0, right=end_time)
         return ax
 
 class PlotNonParametricLifetimeModel:
