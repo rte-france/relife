@@ -609,6 +609,33 @@ class CountDataSample:
         struct_subarray = self.struct_array[mask].copy()
         return replace(self, t0=self.t0, tf=self.tf, struct_array=struct_subarray)
 
+    @property
+    def time(self) -> NDArray[np.float64]:
+        return self.struct_array["time"]
+
+    @property
+    def timeline(self) -> NDArray[np.float64]:
+        return self.struct_array["timeline"]
+
+    @property
+    def sample_id(self) -> NDArray[np.uint32]:
+        return self.struct_array["sample_id"]
+
+    @property
+    def asset_id(self) -> NDArray[np.uint32]:
+        return self.struct_array["asset_id"]
+
+    @property
+    def nb_renewal(self) -> NDArray[np.uint32]:
+        return self.struct_array["nb_renewal"]
+
+    @property
+    def event(self) -> NDArray[np.bool_]:
+        return self.struct_array["event"]
+
+    @property
+    def entry(self) -> NDArray[np.float64]:
+        return self.struct_array["entry"]
 
 @dataclass
 class RenewalProcessSample(CountDataSample):
