@@ -159,6 +159,21 @@ Non parametric lifetime models
     ECDF
     Turnbull
 
+Built-in dataset
+----------------
+
+.. currentmodule:: relife.data
+
+.. autosummary::
+    :toctree: data
+    :template: function_template.rst
+    :caption: Built-in datasets
+    :nosignatures:
+
+    ~load_circuit_breaker
+    ~load_insulator_string
+    ~load_power_transformer
+
 
 Stochastic processes
 --------------------

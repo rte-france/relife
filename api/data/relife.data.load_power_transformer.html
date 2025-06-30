@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>BaseOneCycleAgeReplacementPolicy &#8212; ReLife</title>
+    <title>load_power_transformer &#8212; ReLife</title>
   
   
   
@@ -48,14 +48,12 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/base_class/relife.policy.BaseOneCycleAgeReplacementPolicy';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/data/relife.data.load_power_transformer';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="For developpers" href="../../developpers.html" />
-    <link rel="prev" title="BaseAgeReplacementPolicy" href="relife.policy.BaseAgeReplacementPolicy.html" />
+    <link rel="next" title="RenewalProcess" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html" />
+    <link rel="prev" title="load_insulator_string" href="relife.data.load_insulator_string.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -399,10 +397,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html">Turnbull</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_circuit_breaker.html">load_circuit_breaker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="relife.data.load_circuit_breaker.html">load_circuit_breaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.data.load_insulator_string.html">load_insulator_string</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">load_power_transformer</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
@@ -427,14 +425,14 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.ParametricModel.html">ParametricModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.FrozenParametricLifetimeModel.html">FrozenParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.FrozenParametricLifetimeModel.html">FrozenParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.policy.BaseAgeReplacementPolicy.html">BaseAgeReplacementPolicy</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">BaseOneCycleAgeReplacementPolicy</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseAgeReplacementPolicy.html">BaseAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseOneCycleAgeReplacementPolicy.html">BaseOneCycleAgeReplacementPolicy</a></li>
 </ul>
 </div>
 </nav></div>
@@ -478,7 +476,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">BaseOneCycleAgeReplacementPolicy</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">load_power_transformer</span></li>
   </ul>
 </nav>
 </div>
@@ -495,128 +493,32 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="baseonecycleagereplacementpolicy">
-<h1>BaseOneCycleAgeReplacementPolicy<a class="headerlink" href="#baseonecycleagereplacementpolicy" title="Link to this heading">#</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="relife.policy.BaseOneCycleAgeReplacementPolicy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">BaseOneCycleAgeReplacementPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period_before_discounting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseOneCycleAgeReplacementPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseOneCycleAgeReplacementPolicy" title="Link to this definition">#</a></dt>
-<dd><p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected equivalent annual cost.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost" title="relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_cost</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected total cost.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the expected equivalent annual cost  over a given timeline.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.expected_total_cost" title="relife.policy.BaseOneCycleAgeReplacementPolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
-<td><p>Calculate the expected total cost  over a given timeline.</p></td>
-</tr>
-</tbody>
-</table>
+  <section id="load-power-transformer">
+<h1>load_power_transformer<a class="headerlink" href="#load-power-transformer" title="Link to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="relife.data.load_power_transformer">
+<span class="sig-prename descclassname"><span class="pre">relife.data.</span></span><span class="sig-name descname"><span class="pre">load_power_transformer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/data/dataset.html#load_power_transformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.data.load_power_transformer" title="Link to this definition">#</a></dt>
+<dd><p>Load power transformer dataset containing observed lifetimes and left truncations values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>structured array</dt><dd><p>A numpy structured array of 3 fields :</p>
+<ul class="simple">
+<li><p>time (<code class="docutils literal notranslate"><span class="pre">np.float64</span></code>) : observed lifetime values</p></li>
+<li><p>event (<code class="docutils literal notranslate"><span class="pre">np.bool_</span></code>) : boolean flag indicated if the event has been observed or not (if False, the observed lifetimes are right censored)</p></li>
+<li><p>entry (<code class="docutils literal notranslate"><span class="pre">np.float64</span></code>) : left truncation values</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_power_transformer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">load_power_transformer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])</span>
+<span class="go">[34.3 45.1 53.2 ... 30.  30.  30. ]</span>
+</pre></div>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected equivalent annual cost.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The asymptotic expected total cost is:</p>
-<div class="math notranslate nohighlight">
-\[\lim_{t\to\infty} \text{EEAC}(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost()</span></code></a> for more details.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected equivalent annual cost.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_total_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected total cost.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The asymptotic expected total cost is:</p>
-<div class="math notranslate nohighlight">
-\[\lim_{t\to\infty} z(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected total cost.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected equivalent annual cost  over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The expected equivalent annual cost <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is given by:</p>
-<div class="math notranslate nohighlight">
-\[\text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
-<p>where :</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
-<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_total_cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.`.</p></li>
-<li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>timeline: np.ndarray</strong></dt><dd><p>Values of the timeline over which the expected equivalent annual cost is to be calculated.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The expected equivalent annual cost.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.BaseOneCycleAgeReplacementPolicy.expected_total_cost">
-<span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseOneCycleAgeReplacementPolicy.expected_total_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected total cost  over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The expected total cost <span class="math notranslate nohighlight">\(z(t)\)</span> is computed by solving the renewal equation and is given by:</p>
-<div class="math notranslate nohighlight">
-\[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
-<p>where :</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
-<li><p><span class="math notranslate nohighlight">\(X_i \sim F\)</span> are <span class="math notranslate nohighlight">\(n\)</span> random variable lifetimes, <em>i.i.d.</em>, of cumulative distribution <span class="math notranslate nohighlight">\(F\)</span>.</p></li>
-<li><p><span class="math notranslate nohighlight">\(Z_t\)</span> is the random variable reward at each time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
-<li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>timeline: np.ndarray</strong></dt><dd><p>Values of the timeline over which the expected total cost is to be calculated.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The expected total cost.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>
@@ -644,13 +546,7 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseOneCycleAgeReplacementPolicy"><code class="docutils literal notranslate"><span class="pre">BaseOneCycleAgeReplacementPolicy</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">BaseOneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost"><code class="docutils literal notranslate"><span class="pre">BaseOneCycleAgeReplacementPolicy.asymptotic_expected_total_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">BaseOneCycleAgeReplacementPolicy.expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseOneCycleAgeReplacementPolicy.expected_total_cost"><code class="docutils literal notranslate"><span class="pre">BaseOneCycleAgeReplacementPolicy.expected_total_cost()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.data.load_power_transformer"><code class="docutils literal notranslate"><span class="pre">load_power_transformer()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -658,7 +554,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/base_class/relife.policy.BaseOneCycleAgeReplacementPolicy.rst.txt"
+      <li><a href="../../_sources/api/data/relife.data.load_power_transformer.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
