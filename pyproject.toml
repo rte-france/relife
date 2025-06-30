@@ -91,7 +91,13 @@ minversion = "6.0"
 addopts = "-rxXs"
 # addopts = "-rxXs -k 'not test_ls_integrate[loglogistic]'"
 testpaths = [
-    "test/test_lifetime_model/test_distribution.py",
+    "test/test_lifetime_model/",
+    "test/test_stochastic_process",
+    "test/test_likelihood",
+    "test/data",
+    "test/test_policy",
     "test/test_parametric_model.py",
-    "test/test_quadrature.py"
+    "test/test_quadrature.py",
+    "test/test_economic.py",
+    "test/test_stochastic_process",
 ]

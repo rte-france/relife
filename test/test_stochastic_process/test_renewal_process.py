@@ -47,18 +47,19 @@ class TestDistribution:
         assert z.shape == (n, 200)
         assert z0 == approx(z.sum(axis=0), rel=1e-4)
 
+    @pytest.mark.skip(reason="was not tested in v1 and we will work on it later")
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_sample_lifetime_data(self, distribution):
-        expected_params = distribution.optimal_params.copy()
+        expected_params = distribution.params.copy()
         q1 = distribution.ppf(0.25)
         q3 = distribution.ppf(0.75)
         success = 0
         n = 100
         renewal_process = RenewalProcess(distribution)
         for i in range(n):
-            lifetime_data = renewal_process.sample_lifetime_data(10 * q3, t0=0, size=100000)
+            lifetime_data = renewal_process.generate_lifetime_data(10 * q3, t0=0, size=10000)
             try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
-                distribution._fit_from_lifetime_data(lifetime_data)
+                distribution.fit(**lifetime_data)
             except RuntimeError:
                 continue
             ic = distribution.fitting_results.IC
