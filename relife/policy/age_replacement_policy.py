@@ -97,7 +97,7 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
 
     @property
     def ar(self) -> float | NDArray[np.float64]:
-        return self.lifetime_model.ar
+        return np.squeeze(self.lifetime_model.ar)
 
     @ar.setter
     def ar(self, value: float | NDArray[np.float64]) -> None:
