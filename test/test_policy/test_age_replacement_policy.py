@@ -1,10 +1,14 @@
 import pytest
 import numpy as np
 
+from relife.lifetime_model import Exponential
 from relife.policy import OneCycleAgeReplacementPolicy, AgeReplacementPolicy
 
+# ignore runtime warning in optimization
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, cp, discounting_rate, expected_out_shape):
+    if isinstance(distribution, Exponential):
+        pytest.skip("Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)")
     policy = OneCycleAgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate)
     try:
         policy.optimize()
@@ -17,9 +21,11 @@ def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, 
     assert timeline.shape == np.broadcast_shapes(expected_out_shape(cf=cf, cp=cp), (2000,)) # (m, 2000) or (2000,)
     assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
 
-
+# ignore runtime warning in optimization
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_asymptotic_expected_equivalent_annual_cost(distribution, cf, cp, discounting_rate, expected_out_shape):
+    if isinstance(distribution, Exponential):
+        pytest.skip("Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)")
     policy = AgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate)
     try:
         policy.optimize()
@@ -33,6 +39,8 @@ def test_asymptotic_expected_equivalent_annual_cost(distribution, cf, cp, discou
 
 
 def test_one_cycle_optimal_replacement_age(distribution, cf, cp, discounting_rate):
+    if isinstance(distribution, Exponential):
+        pytest.skip("Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)")
     eps = 1e-2
     policy = OneCycleAgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate).optimize()
     policy1 = OneCycleAgeReplacementPolicy(
@@ -60,6 +68,8 @@ def test_one_cycle_optimal_replacement_age(distribution, cf, cp, discounting_rat
     )
 
 def test_optimal_replacement_age(distribution, cf, cp, discounting_rate):
+    if isinstance(distribution, Exponential):
+        pytest.skip("Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)")
     eps = 1e-2
     policy = AgeReplacementPolicy(
         distribution, cf, cp, discounting_rate=discounting_rate

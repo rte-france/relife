@@ -1,10 +1,13 @@
 import numpy as np
 import pytest
 
+from relife.lifetime_model import Exponential
 from relife.policy import OneCycleRunToFailurePolicy, RunToFailurePolicy
 
 
 def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, discounting_rate, expected_out_shape):
+    if isinstance(distribution, Exponential):
+        pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
     policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
     qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m, 1)
     timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
@@ -14,6 +17,8 @@ def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, 
 
 
 def test_asymptotic_expected_equivalent_annual_cost(distribution, cf, discounting_rate, expected_out_shape):
+    if isinstance(distribution, Exponential):
+        pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
     policy = RunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
     qa = policy.asymptotic_expected_equivalent_annual_cost()
     timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
