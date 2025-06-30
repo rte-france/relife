@@ -6,3 +6,4 @@ User guide
 
     lifetime_model.ipynb
     stochastic_processes.ipynb
+    policies.ipynb
