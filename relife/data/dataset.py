@@ -5,7 +5,27 @@ from numpy.typing import NDArray
 
 
 def load_power_transformer() -> NDArray[np.void]:
-    """BLABLA"""
+    r"""
+    Load power transformer dataset containing observed lifetimes and left truncations values.
+
+    Examples
+    --------
+    >>> from relife.data import load_power_transformer
+    >>> data = load_power_transformer()
+    >>> print(data["time"])
+    [34.3 45.1 53.2 ... 30.  30.  30. ]
+
+    Returns
+    -------
+    structured array
+        A numpy structured array of 3 fields :
+
+        - time (``np.float64``) : observed lifetime values
+        - event (``np.bool_``) : boolean flag indicated if the event has been observed or not (if False, the observed lifetimes are right censored)
+        - entry (``np.float64``) : left truncation values
+
+    """
+
     data = np.loadtxt(
         Path(Path(__file__).parents[0], "csv/power_transformer.csv"),
         delimiter=",",
@@ -18,7 +38,31 @@ def load_power_transformer() -> NDArray[np.void]:
 
 
 def load_insulator_string() -> NDArray[np.void]:
-    """BLABLA"""
+    r"""
+    Load insulator string dataset containing observed lifetimes, left truncations values and covariates
+
+    Examples
+    --------
+    >>> from relife.data import load_insulator_string
+    >>> data = load_insulator_string()
+    >>> print(data["time"])
+    [70.  30.  45.  ...  8.8  7.6 53. ]
+    >>> print(data["pHCl"])
+    [0.49 0.76 0.43 ... 1.12 1.19 0.35]
+
+    Returns
+    -------
+    structured array
+        A numpy structured array of 3 fields :
+
+        - time (``np.float64``) : observed lifetime values
+        - event (``np.bool_``) : boolean flag indicated if the event has been observed or not (if False, the observed lifetimes are right censored)
+        - entry (``np.float64``) : left truncation values
+        - pHCl (``np.float64``) : quantitative covariate values (concentration of pHCl)
+        - pH2SO4 (``np.float64``) : quantitative covariate values (concentration of pH2SO4)
+        - HNO3 (``np.float64``) : quantitative covariate values (concentration of HNO3)
+
+    """
 
     data = np.loadtxt(
         Path(Path(__file__).parents[0], "csv/insulator_string.csv"),
@@ -50,7 +94,25 @@ def load_insulator_string() -> NDArray[np.void]:
 
 
 def load_circuit_breaker() -> NDArray[np.void]:
-    """BLABLA"""
+    r"""
+    Load circuit breaker dataset containing observed lifetimes and left truncations values
+
+    Examples
+    --------
+    >>> from relife.data import load_circuit_breaker
+    >>> data = load_circuit_breaker()
+    >>> print(data["time"])
+    [34. 28. 12. ... 42. 42. 37.]
+
+    Returns
+    -------
+    structured array
+        A numpy structured array of 3 fields :
+
+        - time (``np.float64``) : observed lifetime values
+        - event (``np.bool_``) : boolean flag indicated if the event has been observed or not (if False, the observed lifetimes are right censored)
+        - entry (``np.float64``) : left truncation values
+    """
 
     data = np.loadtxt(
         Path(Path(__file__).parents[0], "csv/circuit_breaker.csv"),
