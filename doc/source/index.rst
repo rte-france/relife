@@ -3,9 +3,9 @@
     :hidden:
 
     installation
-    basics
-    user_guide/index
+    basic/index
+    user/index
     api/index
-    developpers
+    developper/index
 
 

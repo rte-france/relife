@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.data import LifetimeData
 from relife.economic import ExponentialDiscounting, Reward, cost
 from relife.lifetime_model import (
     FrozenAgeReplacementModel,
