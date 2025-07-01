@@ -149,14 +149,14 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../basics.html">
+  <a class="nav-link nav-internal" href="../../../basic/index.html">
     Basics
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+  <a class="nav-link nav-internal" href="../../../user/index.html">
     User guide
   </a>
 </li>
@@ -170,7 +170,7 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../developpers.html">
+  <a class="nav-link nav-internal" href="../../../developper/index.html">
     For developpers
   </a>
 </li>
@@ -282,14 +282,14 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../basics.html">
+  <a class="nav-link nav-internal" href="../../../basic/index.html">
     Basics
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+  <a class="nav-link nav-internal" href="../../../user/index.html">
     User guide
   </a>
 </li>
@@ -303,7 +303,7 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../developpers.html">
+  <a class="nav-link nav-internal" href="../../../developper/index.html">
     For developpers
   </a>
 </li>
@@ -416,12 +416,11 @@
   <h1>Source code for relife.policy._base</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.economic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExponentialDiscounting</span><span class="p">,</span> <span class="n">Reward</span><span class="p">,</span> <span class="n">cost</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FrozenAgeReplacementModel</span><span class="p">,</span>

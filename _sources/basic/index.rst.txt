@@ -9,7 +9,7 @@ The section will help you understand basic commands and math concepts to begin w
 A starter example
 -------------------
 
-.. figure:: _static/relife_workflow.png
+.. figure:: images/relife_workflow.png
     :align: center
 
     The ReLife's workflow : from data collection to policy consequences
@@ -73,7 +73,7 @@ You can quickly plot the estimated survival function
 
     >>> kaplan_meier.plot.sf()
 
-.. image:: _static/compiled_nb/_starter_example/output_9_1.png
+.. image:: images/kaplan_meier.png
 
 You can also fit a simple parametric lifetime model : a Weibull lifetime distribution, and plot the two survival functions obtained in one graph
 
@@ -96,7 +96,7 @@ Note that this object holds ``params`` values and that the ``fit`` has modifie
     >>> weibull.plot.sf()
     >>> kaplan_meier.plot.sf()
 
-.. image:: _static/compiled_nb/_starter_example/output_13_1.png
+.. image:: images/kaplan_meier_and_weibull.png
 
 Maintenance policy optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -184,7 +184,7 @@ Here, ReLife does not offer built-in plot functionnalities. But of course, you c
     >>> plt.grid(True)
     >>> plt.show()
 
-.. image:: _static/compiled_nb/_starter_example/output_27_0.png
+.. image:: images/number_of_replacements.png
 
 
 ReLife and Numpy
