@@ -80,6 +80,16 @@ doc/build/
 docs/_build/
 docs/build/
 
+# Doc build generated files
+doc/source/api/base_class
+doc/source/api/data
+doc/source/api/economy
+doc/source/api/non_parametric_lifetime_models
+doc/source/api/parametric_lifetime_models
+doc/source/api/policy
+doc/source/api/routines
+doc/source/api/stochastic_process
+
 # PyBuilder
 .pybuilder/
 target/
