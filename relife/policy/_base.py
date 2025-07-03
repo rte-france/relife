@@ -59,13 +59,14 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         timeline = self._make_timeline(tf, nb_steps)
         # reward partial expectation
         return timeline, self.lifetime_model.ls_integrate(
-            lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
+            lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
         )
+
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         # reward partial expectation
         return self.lifetime_model.ls_integrate(
-            lambda x: self.reward.sample(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
+            lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
         )  # () or (m, 1)
 
     def _expected_equivalent_annual_cost(
