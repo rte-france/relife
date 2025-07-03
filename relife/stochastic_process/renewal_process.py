@@ -487,13 +487,15 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
             A tuple containing the timeline used to compute the expected equivalent annual worth and its corresponding values at each
             step of the timeline.
         """
-        timeline, z = self.expected_total_reward(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
-        af = self.discounting.annuity_factor(timeline)  # (nb_steps,) or (m, nb_steps)
+        timeline, z = self.expected_total_reward(tf, nb_steps)  # timeline : (nb_steps,) z : (nb_steps,) or (m, nb_steps)
+        af = self.discounting.annuity_factor(timeline)  # (nb_steps,)
+        if z.ndim == 2: # (m, nb_steps)
+            af = np.tile(af, (z.shape[0], 1)) # (m, nb_steps)
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
         if self.first_lifetime_model is not None:
-            q0 = self.first_reward.sample(0.0) * self.first_lifetime_model.pdf(0.0)
+            q0 = self.first_reward.conditional_expectation(0.0) * self.first_lifetime_model.pdf(0.0)
         else:
-            q0 = self.reward.sample(0.0) * self.lifetime_model.pdf(0.0)
+            q0 = self.reward.conditional_expectation(0.0) * self.lifetime_model.pdf(0.0)
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         return timeline, np.where(af == 0, q0, q)
@@ -508,7 +510,7 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
         """
         if self.discounting_rate == 0.0:
             return (
-                self.lifetime_model.ls_integrate(lambda x: self.reward.sample(x), 0.0, np.inf, deg=100)
+                self.lifetime_model.ls_integrate(lambda x: self.reward.conditional_expectation(x), 0.0, np.inf, deg=100)
                 / self.lifetime_model.mean()
             )  # () or (m, 1)
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)

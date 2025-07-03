@@ -59,13 +59,13 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         timeline = self._make_timeline(tf, nb_steps)
         # reward partial expectation
         return timeline, self.lifetime_model.ls_integrate(
-            lambda x: self.reward.sample(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
+            lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
         )
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         # reward partial expectation
         return self.lifetime_model.ls_integrate(
-            lambda x: self.reward.sample(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
+            lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
         )  # () or (m, 1)
 
     def _expected_equivalent_annual_cost(
@@ -83,6 +83,9 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)
         a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,) or (m, nb_steps)
         # change first value of lower bound to compute the integral
+
+        # TODO : filtrer par indice où tr == 0 et appliquer np.nan pour eux (les autres OK)
+
         a[timeline < self.period_before_discounting] = 0.0  # (nb_steps,)
         # a = np.where(timeline < self.period_before_discounting, 0., a)  # (nb_steps,)
         integral = self.lifetime_model.ls_integrate(
