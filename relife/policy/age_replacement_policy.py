@@ -97,17 +97,6 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
     def cp(self) -> NDArray[np.float64]:
         return self.reward.cp
 
-    # @property
-    # def tr(self):
-    #     return np.max(self.ar - self.a0, 0)
-
-    # @property
-    # def a0(self):
-    #     if self._a0 is not None:
-    #         # FrozenAgeReplacementModel(FrozenLeftTruncatedModel(...))
-    #         return self.lifetime_model.unfrozen_model.baseline.a0
-    #     return None
-
     @property
     def ar(self) -> float | NDArray[np.float64]:
         return np.squeeze(self._ar)
@@ -144,7 +133,7 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         if np.any(np.isnan(self.ar)):
             raise ValueError
-        return super().asymptotic_expected_total_cost()
+        return np.squeeze(super().asymptotic_expected_total_cost())
 
     @override
     def expected_equivalent_annual_cost(
@@ -185,7 +174,7 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
         elif self.ar.size == 1 and self.ar == np.inf:
             asymptotic_expected_equivalent_annual_cost[:] = np.nan
         self.ar = ar
-        return asymptotic_expected_equivalent_annual_cost
+        return np.squeeze(asymptotic_expected_equivalent_annual_cost)
 
     def optimize(
         self,
