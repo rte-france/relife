@@ -5,27 +5,41 @@ from relife.lifetime_model import Exponential
 from relife.policy import OneCycleRunToFailurePolicy, RunToFailurePolicy
 
 
-def test_one_cycle_asymptotic_expected_equivalent_annual_cost(distribution, cf, discounting_rate, expected_out_shape):
-    if isinstance(distribution, Exponential):
-        pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
-    policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
-    qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m, 1)
-    timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
-    assert timeline.shape == q.shape
-    assert timeline.shape == q.shape == np.broadcast_shapes(expected_out_shape(cf=cf), (2000,)) # (m, 2000) or (2000,)
-    assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
+class TestOneCycleRunToFailure:
+    def test_asymptotic_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
+        if isinstance(distribution, Exponential):
+            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
+        policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+        qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m,)
+        assert qa.shape == cf.shape
+
+    def test_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
+        if isinstance(distribution, Exponential):
+            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
+        policy = RunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+        qa = policy.asymptotic_expected_equivalent_annual_cost()
+        timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
+        assert timeline.shape == (2000,)
+        assert q.shape == qa.shape + timeline.shape
 
 
-def test_asymptotic_expected_equivalent_annual_cost(distribution, cf, discounting_rate, expected_out_shape):
-    if isinstance(distribution, Exponential):
-        pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
-    policy = RunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
-    qa = policy.asymptotic_expected_equivalent_annual_cost()
-    timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
-    assert timeline.shape == q.shape
-    assert timeline.shape == np.broadcast_shapes(expected_out_shape(cf=cf), (2000,)) # (m, 2000) or (2000,)
-    assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
+class TestRunToFailure:
+    def test_asymptotic_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
+        if isinstance(distribution, Exponential):
+            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
+        policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+        qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m,)
+        assert qa.shape == cf.shape
 
+    def test_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
+        if isinstance(distribution, Exponential):
+            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
+        policy = RunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+        qa = policy.asymptotic_expected_equivalent_annual_cost()
+        timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
+        assert timeline.shape == (2000,)
+        assert q.shape == qa.shape + timeline.shape
+        assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
 
 # FIXME : does not work because now max ndim in ls_integrate is 2d, here it's 3d -> broadcasting error
 # possible solutions :
