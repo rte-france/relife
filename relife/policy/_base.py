@@ -46,32 +46,34 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         return self.discounting.rate
 
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
-        # control with reward too
+        # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
         args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)  # default 1 for LifetimeDistribution case
         if args_nb_assets > 1:
             timeline = np.tile(timeline, (args_nb_assets, 1))
         elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
             timeline = np.tile(timeline, (self.reward.size, 1))
-        return timeline  # (nb_steps,) or (m, nb_steps)
+        return timeline  # (nb_steps,) or (m, nb_steps)w
 
     def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = self._make_timeline(tf, nb_steps)
-        # reward partial expectation
-        return timeline, self.lifetime_model.ls_integrate(
+        etc = self.lifetime_model.ls_integrate(
             lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
-        )
-
+        ) # (nb_steps,) or (m, nb_steps)
+        if timeline.ndim == 2:
+            return timeline[0, :], etc # (nb_steps,) and (m, nb_steps)
+        return timeline, etc # (nb_steps,) and (nb_steps,)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         # reward partial expectation
-        return self.lifetime_model.ls_integrate(
+        return np.squeeze(self.lifetime_model.ls_integrate(
             lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
-        )  # () or (m, 1)
+        ))  # () or (m,)
 
     def _expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: float | NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
             # avoid zero division + 1e-6
@@ -83,6 +85,7 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
 
         q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(self.period_before_discounting)  # () or (m, 1)
         a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,) or (m, nb_steps)
+
         # change first value of lower bound to compute the integral
         a[timeline < self.period_before_discounting] = 0.0  # (nb_steps,)
         # a = np.where(timeline < self.period_before_discounting, 0., a)  # (nb_steps,)
@@ -94,7 +97,9 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         )  # (), (nb_steps,) or (m, nb_steps)
         q0 = np.broadcast_to(q0, integral.shape)  # (nb_steps,) or (m, nb_steps)
         integral = np.where(mask, q0, q0 + integral)
-        return timeline, integral
+        if timeline.ndim == 2:
+            return timeline[0, :], integral # (nb_steps,) and (m, nb_steps)
+        return timeline, integral # (nb_steps,) and (nb_steps,)
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int
@@ -112,7 +117,7 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
             timeline = np.tile(timeline, (self.reward.size, 1))
         # timeline : () or (m, 1)
-        return self._expected_equivalent_annual_cost(timeline)[-1]  # () or (m, 1)
+        return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
 
     # def sample(
     #     self,

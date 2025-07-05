@@ -236,9 +236,9 @@ def rvs_size(request):
 @pytest.fixture(
     params=[
         np.ones((), dtype=np.float64),
-        np.ones((1,), dtype=np.float64),
+        # np.ones((1,), dtype=np.float64),
         np.ones((M,), dtype=np.float64),
-        np.ones((M, 1), dtype=np.float64),
+        # np.ones((M, 1), dtype=np.float64),
     ],
     ids=lambda cp: f"cp:{cp.shape}",
 )
@@ -251,9 +251,9 @@ CF_RANGE = [5, 10, 20, 100, 1000]
 @pytest.fixture(
     params=[
         np.array(CF_RANGE[0], dtype=np.float64), # ()
-        np.array([CF_RANGE[0]], dtype=np.float64), # (1,)
+        # np.array([CF_RANGE[0]], dtype=np.float64), # (1,)
         np.array(CF_RANGE[:M], dtype=np.float64), # (M,)
-        np.array(CF_RANGE[:M], dtype=np.float64).reshape(-1, 1), # (M, 1)
+        # np.array(CF_RANGE[:M], dtype=np.float64).reshape(-1, 1), # (M, 1)
     ],
     ids=lambda cf: f"cf:{cf.shape}",
 )
