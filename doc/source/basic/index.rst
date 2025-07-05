@@ -130,25 +130,23 @@ Now you can use these values with the previous lifetime model to optimize an age
           discounting_rate=0.04,
         ).optimize()
 
-The obtained object encapsulates two age replacement arrays of 1000 values (because we considered 1000 assets). These data are stored in ``ar1`` for the first
-ages of replacements and ``ar`` for every next ages of replacement. You can print them.
+The obtained object encapsulates optimal ages of replacement in one array of 1000 values (because we considered 1000 assets). These data are stored in ``ar``. One can also get the time before the first replacement
+by requesting `first_cycle_tr`. Note here, that the optimal ages of replacement are the same for each asset because the costs are the same for each of them (but you can also pass arrays of cost values if you want).
 
 .. code-block:: python
 
-    >>> print(policy.ar1.shape)
-    (1000,)
-    >>> print(policy.ar1[:5])
-    [32.65158647 33.38825011 30.49481795 23.3386567  34.13345578]
-    >>> print(policy.ar.shape)
-    (1000,)
-    >>> print(policy.ar[:5])
-    [59.19751205 59.19751205 59.19751205 59.19751205 59.19751205]
+    >>> print("Optimal ages of replacement (per asset)", policy.ar[:5])
+    Optimal ages of replacement (per asset) [59.19751205 59.19751205 59.19751205 59.19751205 59.19751205]
+    >>> print("Current asset ages", policy.a0[:5])
+    Current asset ages [31 30 25 27 32]
+    >>> print("Time before the first replacement (per asset)", policy.first_cycle_tr[:5])
+    Time before the first replacement (per asset) [28.19751205 29.19751205 34.19751205 32.19751205 27.19751205]
 
 
 Projection of consequences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now that we a optimized an age replacement policy, we can project the consequences of this strategy.
+Now that we have optimized ages of replacement, we can project the consequences of this strategy.
 For instance, you can be interested in seeing the expected number of replacements and number of failures for the next 170 years.
 
 .. code-block:: python
@@ -176,11 +174,11 @@ Here, ReLife does not offer built-in plot functionnalities. But of course, you c
     >>> fig, ax = plt.subplots(figsize=(18, 5),  dpi=100)
     >>> ax.bar(timeline + 2025, nb_replacements, align="edge", width=1., label="total replacements", color="C1", edgecolor="black")
     >>> ax.bar(timeline + 2025, nb_failures, align="edge", width=1., label="failure replacements", color="C0", edgecolor="black")
-    >>> ax.set_ylabel("Number of annual replacements", fontsize="xx-large")
-    >>> ax.set_xlabel("Year", fontsize="xx-large")
+    >>> ax.set_ylabel("Number of annual replacements", fontsize="x-large")
+    >>> ax.set_xlabel("Year", fontsize="x-large")
     >>> ax.set_ylim(bottom=0)
     >>> ax.set_xlim(left=2025, right=2025 + nb_years)
-    >>> ax.legend(loc="upper right", fontsize="xx-large")
+    >>> ax.legend(loc="upper right", fontsize="x-large")
     >>> plt.grid(True)
     >>> plt.show()
 
