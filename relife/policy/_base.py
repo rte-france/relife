@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Optional, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -13,15 +13,17 @@ from relife.lifetime_model import (
     LifetimeDistribution,
 )
 
-# from relife.stochastic_process import (
-#     RenewalProcessIterator,
-#     RenewalRewardProcessIterator,
-# )
 from relife.stochastic_process import RenewalRewardProcess
+from relife.stochastic_process.renewal_process import RenewalRewardProcessSample
 
 M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
 R = TypeVar("R", bound=Reward)
 
+class LifetimeFitArg(TypedDict):
+    time: NDArray[np.float64]
+    event: NDArray[np.bool_]
+    entry: NDArray[np.float64]
+    args: tuple[NDArray[np.float64], ...]
 
 class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
 
@@ -118,42 +120,6 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
             timeline = np.tile(timeline, (self.reward.size, 1))
         # timeline : () or (m, 1)
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
-
-    # def sample(
-    #     self,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     size: int | tuple[int] | tuple[int, int] = 1,
-    #     seed: Optional[int] = None,
-    # ) -> None:
-    #     from relife.stochastic_process.sample import RenewalProcessIterable
-    #
-    #     iterator = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
-    #     self.count_data = concatenate_count_data(islice(iterator, 1), maxsample)
-    #
-    # def generate_lifetime_data(
-    #     self,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     size: int | tuple[int] | tuple[int, int] = 1,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ) -> LifetimeData:
-    #     from relife.stochastic_process.sample import concatenate_count_data
-    #
-    #     iterator = RenewalProcessIterator(self, size, (t0, tf), seed=seed)
-    #     count_data = concatenate_count_data(islice(iterator, 1), maxsample)
-    #     return LifetimeData(
-    #         count_data.struct_array["time"].copy(),
-    #         event=count_data.struct_array["event"].copy(),
-    #         entry=count_data.struct_array["entry"].copy(),
-    #         args=tuple(
-    #             (
-    #                 np.take(arg, count_data.struct_array["asset_id"])
-    #                 for arg in getattr(self.lifetime_model, "frozen_args", ())
-    #             )
-    #         ),
-    #     )
 
 
 class BaseAgeReplacementPolicy(Generic[M, R]):
@@ -301,91 +267,57 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
         """
         return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()  # () or (m, 1)
 
-    # def sample_count_data(
-    #     self,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     size: int | tuple[int] | tuple[int, int] = 1,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ) -> None:
-    #     self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
-    #
-    # def generate_lifetime_data(
-    #     self,
-    #     tf: float,
-    #     t0: float = 0.0,
-    #     size: int | tuple[int] | tuple[int, int] = 1,
-    #     maxsample: int = 1e5,
-    #     seed: Optional[int] = None,
-    # ) -> LifetimeData:
-    #     return self.stochastic_process.sample_count_data(tf, t0, size, maxsample, seed)
+    def sample(
+        self,
+        tf: float,
+        t0: float = 0.0,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        seed: Optional[int] = None,
+    ) -> RenewalRewardProcessSample:
+        """Renewal data sampling.
 
+        This function will sample data and encapsulate them in an object.
 
-# @overload
-# def age_replacement_policy(
-#     lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
-#     cost: Cost,
-#     one_cycle = True,
-#     a0: Optional[float | NDArray[np.float64]] = None,
-#     ar: Optional[float | NDArray[np.float64]] = None,
-#     ar1 = None,
-#     discounting_rate: float = 0.0,
-# ) -> OneCycleAgeReplacementPolicy: ...
-#
-#
-# @overload
-# def age_replacement_policy(
-#     lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
-#     cost: Cost,
-#     one_cycle = False,
-#     a0: Optional[float | NDArray[np.float64]] = None,
-#     ar: Optional[float | NDArray[np.float64]] = None,
-#     ar1: Optional[float | NDArray[np.float64]] = None,
-#     discounting_rate: float = 0.0,
-# ) -> AgeReplacementPolicy: ...
-#
-#
-# def age_replacement_policy(
-#     lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
-#     cost: Cost,
-#     one_cycle: bool = False,
-#     a0: float | NDArray[np.float64] = None,
-#     ar: Optional[float | NDArray[np.float64]] = None,
-#     ar1: Optional[float | NDArray[np.float64]] = None,
-#     discounting_rate: float = 0.0,
-# ) -> OneCycleAgeRenewalPolicy | AgeReplacementPolicy:
-#
-#     ar = np.nan if ar is None else ar
-#     if not one_cycle:
-#         first_lifetime_model = None
-#         if a0 is not None and ar1 is not None:
-#             first_lifetime_model = freeze(AgeReplacementModel(LeftTruncatedModel(lifetime_model)), ar1, a0)
-#         elif ar1 is not None:
-#             first_lifetime_model = freeze(AgeReplacementModel(lifetime_model), ar1)
-#         elif a0 is not None:
-#             first_lifetime_model = freeze(AgeReplacementModel(LeftTruncatedModel(lifetime_model)), ar, a0)
-#         return AgeReplacementPolicy(
-#             freeze(AgeReplacementModel(lifetime_model), ar),
-#             cost,
-#             ExponentialDiscounting(discounting_rate),
-#             first_lifetime_model=first_lifetime_model
-#         )
-#     else:
-#         if ar1 is not None:
-#             raise ValueError
-#         if a0 is not None and
-#
-#
-#
-#     return DefaultAgeReplacementPolicy(
-#         model,
-#         cost["cf"],
-#         cost["cp"],
-#         discounting_rate=discounting_rate,
-#         ar=ar,
-#         ar1=ar1,
-#         a0=a0,
-#         model1=model1,
-#     )
-#
+        Parameters
+        ----------
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        size : int or tuple of 2 int
+            Size of the sample
+        seed : int, optional
+            Random seed, by default None.
+
+        """
+
+        return self.stochastic_process.sample(tf, t0, size, seed)
+
+    def generate_lifetime_data(
+        self,
+        tf: float,
+        t0: float = 0.0,
+        size: int | tuple[int] | tuple[int, int] = 1,
+        seed: Optional[int] = None,
+    ) -> LifetimeFitArg:
+        """Generate lifetime data
+
+        This function will generate lifetime data that can be used to fit a lifetime model.
+
+        Parameters
+        ----------
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        size : int or tuple of 2 int
+            Size of the sample
+        seed : int, optional
+            Random seed, by default None.
+
+        Returns
+        -------
+        A dict of time, event, entry and args (covariates)
+
+        """
+        return self.stochastic_process.generate_lifetime_data(tf, t0, size, seed)

@@ -165,7 +165,7 @@ To do that, ReLife solves the renewal equation. The returned objects are arrays 
     >>> print(nb_failures.shape)
     (170,)
 
-Here, ReLife does not offer built-in plot functionnalities. But of course, you can use [matplotlib](https://matplotlib.org/) code to represent these values in one graph.
+Here, ReLife does not offer built-in plot functionnalities. But of course, you can use `Matplotlib <https://matplotlib.org/>`_ code to represent these values in one graph.
 
 
 .. code-block:: python

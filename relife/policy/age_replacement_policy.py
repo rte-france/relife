@@ -44,7 +44,7 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
     a0 : float or 1darray, optional
-        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
+        Current ages of the assets. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
@@ -52,9 +52,14 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
 
     Attributes
     ----------
+    a0 : float or 1darray, optional
+        Current ages of the assets. If it is given, left truncations of ``a0`` will
+        be take into account for the first cycle.
     ar
     cf
     cp
+    tr
+
 
     References
     ----------
@@ -88,14 +93,35 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
 
     @property
     def cf(self) -> NDArray[np.float64]:
+        """
+        Cost of failures
+
+        Returns
+        -------
+        ndarray
+        """
         return self.reward.cf
 
     @property
     def cp(self) -> NDArray[np.float64]:
+        """
+        Cost of preventive replacements
+
+        Returns
+        -------
+        ndarray
+        """
         return self.reward.cp
 
     @property
     def ar(self) -> float | NDArray[np.float64]:
+        """
+        Ages of the preventive replacements
+
+        Returns
+        -------
+        ndarray
+        """
         return np.squeeze(self._ar)
 
     @ar.setter
@@ -111,6 +137,13 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
 
     @property
     def tr(self) -> float | NDArray[np.float64]:
+        """
+        Time before the replacement
+
+        Returns
+        -------
+        ndarray
+        """
         return np.squeeze(self.lifetime_model.ar)
 
     @override
@@ -237,7 +270,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
     a0 : float or 1darray, optional
-        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
+        Current ages of the assets. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
@@ -248,8 +281,11 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
     Attributes
     ----------
+    a0 : float or 1darray, optional
+        Current ages of the assets. If it is given, left truncations of ``a0`` will
+        be take into account for the first cycle.
     ar
-    ar1
+    first_cycle_tr
     cf
     cp
 
@@ -320,7 +356,14 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
             self.stochastic_process.first_reward.ar = first_cycle_tr
 
     @property
-    def first_cycle_tr(self) -> Optional[float | NDArray[np.float64]]:
+    def first_cycle_tr(self) -> float | NDArray[np.float64]:
+        """
+        Time before the first replacement
+
+        Returns
+        -------
+        ndarray
+        """
         if self.a0 is not None:
             return np.squeeze(self.stochastic_process.first_lifetime_model.ar)
         return self.ar
@@ -481,6 +524,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         self.ar = np.squeeze(newton(eq, x0))  # () or (m,) setter is called
 
         return self
+
 
 
 # class NonHomogeneousPoissonAgeReplacementPolicy(AgeRenewalPolicy):
