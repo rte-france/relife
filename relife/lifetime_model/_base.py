@@ -55,7 +55,7 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         class has not been implemented in a derived class.
     """
 
-    fitting_results = Optional[FittingResults] #: fitting results
+    fitting_results = Optional[FittingResults]  #: fitting results
 
     def __init__(self, **kwparams: Optional[float]):
         super().__init__(**kwparams)

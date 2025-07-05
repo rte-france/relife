@@ -454,8 +454,7 @@ class NelsonAalen(NonParametricLifetimeModel):
 
 
 class Turnbull(NonParametricLifetimeModel):
-    """Turnbull estimator.
-    """
+    """Turnbull estimator."""
 
     def __init__(
         self,

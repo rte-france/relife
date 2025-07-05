@@ -89,6 +89,7 @@ class RunToFailureReward(Reward):
     ----------
     cf
     """
+
     def __init__(self, cf: float | NDArray[np.float64]):
         self._cost_array = cost(cf=cf)
 
@@ -132,6 +133,7 @@ class AgeReplacementReward(Reward):
     ar
 
     """
+
     def __init__(
         self, cf: float | NDArray[np.float64], cp: float | NDArray[np.float64], ar: float | NDArray[np.float64]
     ):

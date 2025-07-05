@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Generic, TypeVar, Optional, TypedDict
+from typing import Generic, Optional, TypedDict, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,18 +12,19 @@ from relife.lifetime_model import (
     FrozenLifetimeRegression,
     LifetimeDistribution,
 )
-
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process.renewal_process import RenewalRewardProcessSample
 
 M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
 R = TypeVar("R", bound=Reward)
 
+
 class LifetimeFitArg(TypedDict):
     time: NDArray[np.float64]
     event: NDArray[np.bool_]
     entry: NDArray[np.float64]
     args: tuple[NDArray[np.float64], ...]
+
 
 class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
 
@@ -60,17 +61,22 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
     def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = self._make_timeline(tf, nb_steps)
         etc = self.lifetime_model.ls_integrate(
-            lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), np.zeros_like(timeline), timeline, deg=15
-        ) # (nb_steps,) or (m, nb_steps)
+            lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
+            np.zeros_like(timeline),
+            timeline,
+            deg=15,
+        )  # (nb_steps,) or (m, nb_steps)
         if timeline.ndim == 2:
-            return timeline[0, :], etc # (nb_steps,) and (m, nb_steps)
-        return timeline, etc # (nb_steps,) and (nb_steps,)
+            return timeline[0, :], etc  # (nb_steps,) and (m, nb_steps)
+        return timeline, etc  # (nb_steps,) and (nb_steps,)
 
     def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
         # reward partial expectation
-        return np.squeeze(self.lifetime_model.ls_integrate(
-            lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
-        ))  # () or (m,)
+        return np.squeeze(
+            self.lifetime_model.ls_integrate(
+                lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x), 0.0, np.inf, deg=15
+            )
+        )  # () or (m,)
 
     def _expected_equivalent_annual_cost(
         self, timeline: NDArray[np.float64]
@@ -100,8 +106,8 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         q0 = np.broadcast_to(q0, integral.shape)  # (nb_steps,) or (m, nb_steps)
         integral = np.where(mask, q0, q0 + integral)
         if timeline.ndim == 2:
-            return timeline[0, :], integral # (nb_steps,) and (m, nb_steps)
-        return timeline, integral # (nb_steps,) and (nb_steps,)
+            return timeline[0, :], integral  # (nb_steps,) and (m, nb_steps)
+        return timeline, integral  # (nb_steps,) and (nb_steps,)
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int

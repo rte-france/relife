@@ -116,6 +116,7 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         ax.set_xlim(left=0, right=end_time)
         return ax
 
+
 class PlotNonParametricLifetimeModel:
     def __init__(self, model: NonParametricLifetimeModel):
         self.model = model
@@ -127,6 +128,7 @@ class PlotNonParametricLifetimeModel:
         timeline, y = res[:2]
         ax = plot_prob_function(timeline, y, se=se, ci_bounds=ci_bounds, label=label, drawstyle=drawstyle, **kwargs)
         return ax
+
 
 class PlotECDF(PlotNonParametricLifetimeModel):
     def sf(self, plot_se: bool = True, **kwargs) -> Axes:
@@ -145,6 +147,7 @@ class PlotECDF(PlotNonParametricLifetimeModel):
         ax.set_xlim(left=0)
         return ax
 
+
 class PlotKaplanMeier(PlotNonParametricLifetimeModel):
     def sf(self, plot_se: bool = True, **kwargs) -> Axes:
         ax = self.plot("sf", plot_se=plot_se, **kwargs)
@@ -154,14 +157,16 @@ class PlotKaplanMeier(PlotNonParametricLifetimeModel):
         ax.set_xlim(left=0)
         return ax
 
+
 class PlotNelsonAalen(PlotNonParametricLifetimeModel):
     def chf(self, plot_se: bool = True, **kwargs) -> Axes:
-        ax =  self.plot("chf", plot_se=plot_se, ci_bounds=(0.0, np.inf), **kwargs)
+        ax = self.plot("chf", plot_se=plot_se, ci_bounds=(0.0, np.inf), **kwargs)
         ax.set_ylabel("Estimated cumulative hazard function")
         ax.set_xlabel("Time")
         ax.set_ylim(bottom=0)
         ax.set_xlim(left=0)
         return ax
+
 
 class PlotTurnbull(PlotNonParametricLifetimeModel):
     def sf(self, **kwargs) -> Axes:
@@ -170,6 +175,7 @@ class PlotTurnbull(PlotNonParametricLifetimeModel):
         ax.set_xlabel("Time")
         ax.set_xlim(left=0)
         return ax
+
 
 # def count_data_plot(
 #     fname: str,
