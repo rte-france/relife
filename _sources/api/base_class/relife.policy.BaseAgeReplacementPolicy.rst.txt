@@ -36,4 +36,10 @@ BaseAgeReplacementPolicy
         
             ~BaseAgeReplacementPolicy.expected_total_cost
         
+        
+            ~BaseAgeReplacementPolicy.generate_lifetime_data
+        
+        
+            ~BaseAgeReplacementPolicy.sample
+        
     

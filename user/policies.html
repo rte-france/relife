@@ -466,8 +466,8 @@
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.policy</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgeReplacementPolicy</span>
 
 <span class="n">ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ar1&quot;</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal ages of replacement (per asset)&quot;</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time before first replacement (per asset)&quot;</span><span class="p">,</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">first_cycle_tr</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -476,8 +476,8 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-ar [20.91316269 25.54310597 41.59988035]
-ar1 [ 7.82608906  9.06699905 19.02758643]
+Optimal ages of replacement (per asset) [20.91316269 25.54310597 41.59988035]
+Time before first replacement (per asset) [ 5.91316269  5.54310597 16.59988035]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -487,7 +487,8 @@ ar1 [ 7.82608906  9.06699905 19.02758643]
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.policy</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneCycleAgeReplacementPolicy</span>
 
 <span class="n">onecycle_ar_policy</span> <span class="o">=</span> <span class="n">OneCycleAgeReplacementPolicy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal ages of replacement (per asset), on one cycle&quot;</span><span class="p">,</span> <span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">ar</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time before replacement (per asset), on one cycle&quot;</span><span class="p">,</span> <span class="n">onecycle_ar_policy</span><span class="o">.</span><span class="n">tr</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -496,7 +497,8 @@ ar1 [ 7.82608906  9.06699905 19.02758643]
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-ar [ 7.82608906  9.06699905 19.02758643]
+Optimal ages of replacement (per asset), on one cycle [15.61079092 20.87305772 38.85510169]
+Time before replacement (per asset), on one cycle [ 0.61079092  0.87305772 13.85510169]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -548,7 +550,6 @@ ar [ 7.82608906  9.06699905 19.02758643]
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cf</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">cp</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">costs</span><span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cf&quot;</span> <span class="p">:</span><span class="n">cf</span><span class="p">,</span> <span class="s2">&quot;cp&quot;</span> <span class="p">:</span><span class="n">cp</span><span class="p">}</span>
 <span class="n">discounting_rate</span> <span class="o">=</span> <span class="mf">0.05</span>
 <span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
 <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">ar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>

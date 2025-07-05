@@ -518,6 +518,12 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost" title="relife.policy.BaseAgeReplacementPolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
 <td><p>Calculate the expected total cost  over a given timeline.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data" title="relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_lifetime_data</span></code></a></p></td>
+<td><p>Generate lifetime data</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.sample" title="relife.policy.BaseAgeReplacementPolicy.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
+<td><p>Renewal data sampling.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -655,6 +661,53 @@ step of the timeline.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data">
+<span class="sig-name descname"><span class="pre">generate_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.generate_lifetime_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data" title="Link to this definition">#</a></dt>
+<dd><p>Generate lifetime data</p>
+<p>This function will generate lifetime data that can be used to fit a lifetime model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
+</dd>
+<dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
+</dd>
+<dt><strong>size</strong><span class="classifier">int or tuple of 2 int</span></dt><dd><p>Size of the sample</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>A dict of time, event, entry and args (covariates)</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.sample" title="Link to this definition">#</a></dt>
+<dd><p>Renewal data sampling.</p>
+<p>This function will sample data and encapsulate them in an object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
+</dd>
+<dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
+</dd>
+<dt><strong>size</strong><span class="classifier">int or tuple of 2 int</span></dt><dd><p>Size of the sample</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -688,6 +741,8 @@ step of the timeline.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_equivalent_annual_cost()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_nb_replacements()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_total_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.generate_lifetime_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.sample"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.sample()</span></code></a></li>
 </ul>
 </li>
 </ul>
