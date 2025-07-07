@@ -2,21 +2,16 @@
   <img src="doc/source/_static/small_relife.gif" />
 </p>
 
-:warning: **Read this:** The repository is currently undergoing active code refactoring. A future release will be available soon.
+## Documentation
 
-## Installation (source)
+It is available at https://rte-france.github.io/relife/.
+Some explanations might be missing until we finish it properly, so do not hesitate to open an issue.
 
-The project package uploaded to PyPi has not changed. It means that the latest distribution package uploaded to PyPi is version 1.0.0.
-The current codebase has changed and will be used for the next release v2.0.0. If ``pip install relife`` you will install version 1.0.0.
-To install the current codebase 
+## Installation (PyPi)
 
 ```bash
-source <path_to_your_venv>/bin/activate
-mkdir -p <your_desired_path>/relife
-git clone https://github.com/rte-france/relife.git
-pip install .
+pip install relife
 ```
-
 **Developper installation**
 
 Just change the pip installation command by (notice the usage of the editable mode) :
@@ -25,10 +20,15 @@ Just change the pip installation command by (notice the usage of the editable mo
 pip install -e ".[dev]"
 ```
 
-## Documentation
+## Installation (source)
 
-It is available at https://rte-france.github.io/relife/.
-Some explanations might be missing until we finish it properly, so do not hesitate to open an issue.
+To install the current codebase 
+
+```bash
+git clone https://github.com/rte-france/relife.git
+cd relife
+pip install .
+```
 
 ## Citing
 
