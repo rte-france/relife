@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Callable, Generic, Optional, TypedDict, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, Optional, TypedDict, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,7 +9,6 @@ from typing_extensions import override
 
 from relife import ParametricModel
 from relife.economic import (
-    Discounting,
     ExponentialDiscounting,
     Reward,
 )
@@ -20,6 +18,8 @@ from relife.lifetime_model import (
     FrozenLifetimeRegression,
     LifetimeDistribution,
 )
+from ._sample import RenewalProcessSample, RenewalRewardProcessSample
+from relife.stochastic_process.renewal_equations import renewal_equation_solver, delayed_renewal_equation_solver
 
 if TYPE_CHECKING:
     from relife.economic import Reward
@@ -183,9 +183,9 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
     def sample(
         self,
+        size: int,
         tf: float,
         t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
         seed: Optional[int] = None,
     ) -> RenewalProcessSample:
         """Renewal data sampling.
@@ -194,6 +194,8 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
         Parameters
         ----------
+        size : int
+            The size of the desired sample
         tf : float
             Time at the end of the observation.
         t0 : float, default 0
@@ -205,18 +207,18 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
         """
 
-        from .sample import RenewalProcessIterable
+        from ._sample import RenewalProcessIterable
 
-        iterable = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
+        iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
+        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return RenewalProcessSample(t0, tf, struct_array)
 
-    def generate_lifetime_data(
+    def generate_failure_data(
         self,
+        size: int,
         tf: float,
         t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
         seed: Optional[int] = None,
     ) -> LifetimeFitArg:
         """Generate lifetime data
@@ -225,12 +227,12 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
         Parameters
         ----------
+        size : int
+            The size of the desired sample
         tf : float
             Time at the end of the observation.
         t0 : float, default 0
             Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
         seed : int, optional
             Random seed, by default None.
 
@@ -239,7 +241,7 @@ class RenewalProcess(ParametricModel, Generic[M]):
         A dict of time, event, entry and args (covariates)
 
         """
-        from .sample import RenewalProcessIterable
+        from ._sample import RenewalProcessIterable
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
             from relife.lifetime_model import FrozenLeftTruncatedModel
@@ -255,7 +257,7 @@ class RenewalProcess(ParametricModel, Generic[M]):
                 )
         iterable = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
+        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
         nb_assets = int(np.max(struct_array["asset_id"])) + 1
         args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "frozen_args", ())))
@@ -538,174 +540,15 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
     @override
     def sample(
         self,
+        size: int,
         tf: float,
         t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
         maxsample: int = 1e5,
         seed: Optional[int] = None,
     ) -> RenewalRewardProcessSample:
-        from .sample import RenewalProcessIterable
+        from ._sample import RenewalProcessIterable
 
-        iterable = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
+        iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
         return RenewalRewardProcessSample(t0, tf, struct_array)
-
-
-def renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
-    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    discounting: Optional[Discounting] = None,
-) -> NDArray[np.float64]:
-
-    # timeline : (nb_steps,) or (m, nb_steps)
-    tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
-    f = lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
-    fm = lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
-    y = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps)
-
-    if y.shape != f.shape:
-        raise ValueError("Invalid shape between model and evaluated_func")
-
-    if discounting is not None:
-        d = discounting.factor(timeline)  # (nb_steps,) or (m, nb_steps)
-    else:
-        d = np.ones_like(f)
-    z = np.empty(y.shape)
-    u = d * np.insert(f[..., 1:] - fm, 0, 1, axis=-1)
-    v = d[..., :-1] * np.insert(np.diff(fm), 0, 1, axis=-1)
-    q0 = 1 / (1 - d[..., 0] * fm[..., 0])
-    z[..., 0] = y[..., 0]
-    z[..., 1] = q0 * (y[..., 1] + z[..., 0] * u[..., 1])
-    for n in range(2, f.shape[-1]):
-        z[..., n] = q0 * (y[..., n] + z[..., 0] * u[..., n] + np.sum(z[..., 1:n][..., ::-1] * v[..., 1:n], axis=-1))
-    return z
-
-
-def delayed_renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    z: NDArray[np.float64],
-    first_lifetime_model: (
-        LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
-    ),
-    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    discounting: Optional[ExponentialDiscounting] = None,
-) -> NDArray[np.float64]:
-    # timeline : (nb_steps,) or (m, nb_steps)
-    tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
-    f1 = first_lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
-    f1m = first_lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
-    y1 = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps - 1)
-    if discounting is not None:
-        d = discounting.factor(timeline)  # (nb_steps,) or (m, nb_steps - 1)
-    else:
-        d = np.ones_like(f1)
-    z1 = np.empty(y1.shape)
-    u1 = d * np.insert(f1[..., 1:] - f1m, 0, 1, axis=-1)
-    v1 = d[..., :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)
-    z1[..., 0] = y1[..., 0]
-    z1[..., 1] = y1[..., 1] + z[..., 0] * u1[..., 1] + z[..., 1] * d[..., 0] * f1m[..., 0]
-    for n in range(2, f1.shape[-1]):
-        z1[..., n] = (
-            y1[..., n]
-            + z[..., 0] * u1[..., n]
-            + z[..., n] * d[..., 0] * f1m[..., 0]
-            + np.sum(z[..., 1:n][..., ::-1] * v1[..., 1:n], axis=-1)
-        )
-    return z1
-
-
-@dataclass
-class CountDataSample:
-    t0: float
-    tf: float
-    struct_array: NDArray[np.void]
-
-    def select(self, sample_id: Optional[int] = None, asset_id: Optional[int] = None) -> CountDataSample:
-        mask: NDArray[np.bool_] = np.ones_like(self.struct_array, dtype=np.bool_)
-        if sample_id is not None:
-            mask = mask & np.isin(self.struct_array["sample_id"], sample_id)
-        if asset_id is not None:
-            mask = mask & np.isin(self.struct_array["asset_id"], asset_id)
-        struct_subarray = self.struct_array[mask].copy()
-        return replace(self, t0=self.t0, tf=self.tf, struct_array=struct_subarray)
-
-    @property
-    def time(self) -> NDArray[np.float64]:
-        return self.struct_array["time"]
-
-    @property
-    def timeline(self) -> NDArray[np.float64]:
-        return self.struct_array["timeline"]
-
-    @property
-    def sample_id(self) -> NDArray[np.uint32]:
-        return self.struct_array["sample_id"]
-
-    @property
-    def asset_id(self) -> NDArray[np.uint32]:
-        return self.struct_array["asset_id"]
-
-    @property
-    def nb_renewal(self) -> NDArray[np.uint32]:
-        return self.struct_array["nb_renewal"]
-
-    @property
-    def event(self) -> NDArray[np.bool_]:
-        return self.struct_array["event"]
-
-    @property
-    def entry(self) -> NDArray[np.float64]:
-        return self.struct_array["entry"]
-
-
-@dataclass
-class RenewalProcessSample(CountDataSample):
-
-    @staticmethod
-    def _nb_events(selection: RenewalProcessSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        sort = np.argsort(selection.struct_array["timeline"])
-        timeline = selection.struct_array["timeline"][sort]
-        counts = np.ones_like(timeline)
-
-        timeline = np.insert(timeline, 0, selection.t0)
-        counts = np.insert(counts, 0, 0)
-        counts[timeline == selection.tf] = 0
-        return timeline, np.cumsum(counts)
-
-    def nb_events(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        selection = self.select(sample_id=sample_id, asset_id=asset_id)
-        return RenewalProcessSample._nb_events(selection)
-
-    def mean_nb_events(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        selection = self.select(asset_id=asset_id)
-        timeline, counts = RenewalProcessSample._nb_events(selection)
-        nb_sample = len(np.unique(selection.struct_array["sample_id"]))
-        return timeline, counts / nb_sample
-
-
-@dataclass
-class RenewalRewardProcessSample(RenewalProcessSample):
-
-    @staticmethod
-    def _total_rewards(selection: RenewalRewardProcessSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        sort = np.argsort(selection.struct_array["timeline"])
-        timeline = selection.struct_array["timeline"][sort]
-        reward = selection.struct_array["reward"][sort]
-
-        timeline = np.insert(timeline, 0, selection.t0)
-        reward = np.insert(reward, 0, 0)
-        reward[timeline == selection.tf] = 0
-
-        return timeline, np.cumsum(reward)
-
-    def total_rewards(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        selection = self.select(sample_id=sample_id, asset_id=asset_id)
-        return RenewalRewardProcessSample._total_rewards(selection)
-
-    def mean_total_rewards(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        selection = self.select(asset_id=asset_id)
-        timeline, rewards = RenewalRewardProcessSample._nb_events(selection)
-        nb_sample = len(np.unique(selection.struct_array["sample_id"]))
-        return timeline, rewards / nb_sample

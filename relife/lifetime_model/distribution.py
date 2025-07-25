@@ -1,4 +1,4 @@
-from typing import Literal, Optional, TypeVarTuple, overload
+from typing import Any, Callable, Literal, Optional, Self, TypeVarTuple, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,42 +9,44 @@ from typing_extensions import override
 from relife.lifetime_model import LifetimeRegression
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
+from ..data import LifetimeData
+from ..likelihood import LikelihoodFromLifetimes
 from ._base import LifetimeDistribution, ParametricLifetimeModel
 
 
 class Exponential(LifetimeDistribution):
     # noinspection PyUnresolvedReferences
     r"""
-        Exponential lifetime distribution.
+    Exponential lifetime distribution.
 
-        The exponential distribution is a 1-parameter distribution with
-        :math:`(\lambda)`. The probability density function is:
+    The exponential distribution is a 1-parameter distribution with
+    :math:`(\lambda)`. The probability density function is:
 
-        .. math::
+    .. math::
 
-            f(t) = \lambda e^{-\lambda t}
+        f(t) = \lambda e^{-\lambda t}
 
-        where:
-            - :math:`\lambda > 0`, the rate parameter,
-            - :math:`t\geq 0`, the operating time, age, cycles, etc.
+    where:
+        - :math:`\lambda > 0`, the rate parameter,
+        - :math:`t\geq 0`, the operating time, age, cycles, etc.
 
-        |
+    |
 
-        Parameters
-        ----------
-        rate : float, optional
-            rate parameter
+    Parameters
+    ----------
+    rate : float, optional
+        rate parameter
 
-        Attributes
-        ----------
-        fitting_results : FittingResults, default is None
-            An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
-        nb_params
-        params
-        params_names
-        plot
-        rate
-        """
+    Attributes
+    ----------
+    fitting_results : FittingResults, default is None
+        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+    nb_params
+    params
+    params_names
+    plot
+    rate
+    """
 
     def __init__(self, rate: Optional[float] = None):
         super().__init__(rate=rate)
@@ -427,6 +429,15 @@ class Gompertz(LifetimeDistribution):
 
     def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
+
+    @override
+    def _init_params(self, lifetime_data : LifetimeData) -> None:
+        param0 = np.empty(self.nb_params, dtype=np.float64)
+        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.lifetime_values))
+        shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.lifetime_values))
+        param0[0] = shape
+        param0[1] = rate
+        self.params = param0
 
 
 class Gamma(LifetimeDistribution):
@@ -815,7 +826,7 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.
         return self.isf(np.exp(-cumulative_hazard_rate), *args)
 
 
-class MinimumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+class MinimumDistribution(ParametricLifetimeModel[int | NDArray[np.int64], *tuple[float | NDArray[np.float64], ...]]):
     r"""Series structure of n identical and independent components.
 
     The hazard function of the system is given by:
@@ -840,51 +851,136 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.floa
         model.sf(t, n)
     """
 
-    def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        pass
-
-    def hf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        pass
-
-    def chf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        pass
-
-    def pdf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
-        pass
-
     def __init__(self, baseline: LifetimeDistribution | LifetimeRegression):
         super().__init__()
         self.baseline = baseline
 
-    # def _chf(
-    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
-    # ) -> np.ndarray:
-    #     return n * self.baseline._chf(params, t, *args)
-    #
-    # def _hf(
-    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
-    # ) -> np.ndarray:
-    #     return n * self.baseline._hf(params, t, *args)
-    #
-    # def _dhf(
-    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
-    # ) -> np.ndarray:
-    #     return n * self.baseline._dhf(params, t, *args)
-    #
-    # def _jac_chf(
-    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
-    # ) -> np.ndarray:
-    #     return n * self.baseline._jac_chf(params, t, *args)
-    #
-    # def _jac_hf(
-    #     self, params: np.ndarray, t: np.ndarray, n: np.ndarray, *args: np.ndarray
-    # ) -> np.ndarray:
-    #     return n * self.baseline._jac_hf(params, t, *args)
-    #
-    # def _ichf(
-    #     self, params: np.ndarray, v: np.ndarray, n: np.ndarray, *args: np.ndarray
-    # ) -> np.ndarray:
-    #     return self.baseline._ichf(params, v / n, *args)
+    @override
+    def sf(
+        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        return super().sf(time)
+
+    @override
+    def pdf(
+        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        return super().pdf(time)
+
+    @override
+    def hf(
+        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        return n * self.baseline.hf(time, *args)
+
+    @override
+    def chf(
+        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        return n * self.baseline.chf(time, *args)
+
+    @override
+    def ichf(
+        self,
+        cumulative_hazard_rate: float | NDArray[np.float64],
+        n: int | NDArray[np.int64],
+        *args: float | NDArray[np.float64],
+    ) -> np.float64 | NDArray[np.float64]:
+        return self.baseline.ichf(cumulative_hazard_rate / n, *args)
+
+    def dhf(
+        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        return n * self.baseline.dhf(time, *args)
+
+    def jac_chf(
+        self,
+        time: float | NDArray[np.float64],
+        n: int | NDArray[np.int64],
+        *args: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+        return n * self.baseline.jac_chf(time, *args, asarray=asarray)
+
+    def jac_hf(
+        self,
+        time: float | NDArray[np.float64],
+        n: int | NDArray[np.int64],
+        *args: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+        return n * self.baseline.jac_hf(time, *args, asarray=asarray)
+
+    def jac_sf(
+        self,
+        time: float | NDArray[np.float64],
+        n: int | NDArray[np.int64],
+        *args: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+        jac_chf, sf = self.jac_chf(time, n, *args, asarray=True), self.sf(time)
+        jac = -jac_chf * sf
+        if not asarray:
+            return np.unstack(jac)
+        return jac
+
+    def jac_cdf(
+        self,
+        time: float | NDArray[np.float64],
+        n: int | NDArray[np.int64],
+        *args: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+        jac = -self.jac_sf(time, n, *args, asarray=True)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
+
+    def jac_pdf(
+        self,
+        time: float | NDArray[np.float64],
+        n: int | NDArray[np.int64],
+        *args: float | NDArray[np.float64],
+        asarray: bool = False,
+    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+        jac_hf, hf = self.jac_hf(time, n, *args, asarray=True), self.hf(time)
+        jac_sf, sf = self.jac_sf(time, n, *args, asarray=True), self.sf(time)
+        jac = jac_hf * sf + jac_sf * hf
+        if not asarray:
+            return np.unstack(jac)
+        return jac
+
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
+        a: float | NDArray[np.float64],
+        b: float | NDArray[np.float64],
+        n: int | NDArray[np.int64],
+        *args: float | NDArray[np.float64],
+        deg: int = 10,
+    ) -> np.float64 | NDArray[np.float64]:
+        return super().ls_integrate(func, a, b, n, *args, deg=deg)
+
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        n: NDArray[np.int64],
+        *args: NDArray[np.float64],
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        **kwargs: Any,
+    ) -> Self:
+        # initialize params structure (number of parameters in params tree)
+        if isinstance(self.baseline, LifetimeRegression):
+            self.baseline._init_params(args[0], *args[1:])
+        lifetime_data: LifetimeData = LifetimeData(time, event=event, entry=entry, departure=departure, args=(n, *args))
+        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
+        fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
+        self.params = fitting_results.optimal_params
+        self.fitting_results = fitting_results
+        return self
 
 
 TIME_BASE_DOCSTRING = """

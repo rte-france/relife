@@ -3,7 +3,7 @@ from typing import Literal, Optional, Self, overload
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._plot import PlotECDF, PlotKaplanMeier, PlotNelsonAalen, PlotTurnbull
+from relife.lifetime_model._plot import PlotECDF, PlotKaplanMeier, PlotNelsonAalen, PlotTurnbull
 from relife.data import LifetimeData
 
 from ._base import NonParametricLifetimeModel

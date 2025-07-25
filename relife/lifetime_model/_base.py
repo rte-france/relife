@@ -15,12 +15,12 @@ from typing import (
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import newton
+from scipy.optimize import newton, Bounds
 from typing_extensions import override
 
 from relife import ParametricModel
-from relife._plot import PlotParametricLifetimeModel
 from relife.data import LifetimeData
+from ._plot import PlotParametricLifetimeModel
 from relife.likelihood import FittingResults, LikelihoodFromLifetimes
 from relife.quadrature import (
     check_and_broadcast_bounds,
@@ -54,12 +54,6 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         NotImplementedError: Raised when an abstract method or feature in this
         class has not been implemented in a derived class.
     """
-
-    fitting_results = Optional[FittingResults]  #: fitting results
-
-    def __init__(self, **kwparams: Optional[float]):
-        super().__init__(**kwparams)
-        self.fitting_results = None
 
     @abstractmethod
     def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]:
@@ -162,8 +156,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size : int,
         *args: *Args,
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -172,8 +167,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size : int,
         *args: *Args,
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -182,8 +178,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size : int,
         *args: *Args,
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -192,8 +189,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size : int,
         *args: *Args,
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -202,8 +200,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size : int,
         *args: *Args,
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -216,8 +215,9 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
 
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size : int,
         *args: *Args,
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -228,7 +228,11 @@ class ParametricLifetimeModel(ParametricModel, Generic[*Args], ABC):
         tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
     ]:
         rs = np.random.RandomState(seed=seed)
-        probability = rs.uniform(size=size)
+        if nb_assets is not None:
+            np_size = (nb_assets, size)
+        else:
+            np_size = size
+        probability = rs.uniform(size=np_size)
         time = self.isf(probability, *args)
         event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
         entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
@@ -338,6 +342,12 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
+
+    fitting_results = Optional[FittingResults]  #: fitting results
+
+    def __init__(self, **kwparams: Optional[float]):
+        super().__init__(**kwparams)
+        self.fitting_results = None
 
     @override
     def sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
@@ -517,7 +527,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
+        *,
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -526,7 +538,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
+        *,
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -535,7 +549,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
+        *,
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -544,7 +560,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
+        *,
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -553,7 +571,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
+        *,
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -567,7 +587,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @override
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
+        *,
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -577,7 +599,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
         tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
     ]:
-        return super().rvs(size, return_event=return_event, return_entry=return_entry, seed=seed)
+        return super().rvs(size, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
 
     @override
     def ls_integrate(
@@ -590,6 +612,21 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
         return super().ls_integrate(func, a, b, deg=deg)
 
+    def _init_params(self, lifetime_data : LifetimeData) -> None:
+        if lifetime_data.complete_or_right_censored is not None:
+            param0 = np.ones(self.nb_params, dtype=np.float64)
+            param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.lifetime_values)
+            self.params = param0
+        else:
+            self.params = np.zeros(self.nb_params, dtype=np.float64)
+
+    @property
+    def _params_bounds(self) -> Bounds:
+        return Bounds(
+            np.full(self.nb_params, np.finfo(float).resolution),
+            np.full(self.nb_params, np.inf),
+        )
+
     def fit(
         self,
         time: NDArray[np.float64],
@@ -600,6 +637,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     ) -> Self:
         # initialize params structure (number of parameters in params tree)
         lifetime_data: LifetimeData = LifetimeData(time, event=event, entry=entry, departure=departure)
+        self._init_params(lifetime_data)
         likelihood = LikelihoodFromLifetimes(self, lifetime_data)
         fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
         self.params = fitting_results.optimal_params
@@ -674,6 +712,8 @@ class LifetimeRegression(
     LifetimeRegression does not preserve generic : at the moment, additional args are supposed to be always float | NDArray[np.float64]
     """
 
+    fitting_results = Optional[FittingResults]  #: fitting results
+
     def __init__(
         self,
         baseline: LifetimeDistribution | LifetimeRegression,
@@ -682,6 +722,8 @@ class LifetimeRegression(
         super().__init__()
         self.covar_effect = CovarEffect(coefficients)
         self.baseline = baseline
+        self.fitting_results = None
+
 
     @property
     def coefficients(self) -> NDArray[np.float64]:
@@ -943,9 +985,10 @@ class LifetimeRegression(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -954,9 +997,10 @@ class LifetimeRegression(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -965,9 +1009,10 @@ class LifetimeRegression(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -976,9 +1021,10 @@ class LifetimeRegression(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -987,9 +1033,10 @@ class LifetimeRegression(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -1003,9 +1050,10 @@ class LifetimeRegression(
     @override
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         covar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -1015,13 +1063,30 @@ class LifetimeRegression(
         tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
         tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
     ]:
-        return super().rvs(size, *(covar, *args), return_event=return_event, return_entry=return_entry, seed=seed)
+        return super().rvs(size, *(covar, *args), nb_assets = nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
 
-    def _init_coefficients(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
+    def _init_params(self, lifetime_data : LifetimeData, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> None:
         covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))
         self.covar_effect = CovarEffect((None,) * covar.shape[-1])  # set new covar_effet -> changes params structure
-        if hasattr(self.baseline, "_init_coefficients"):  # recursion in case of PPH(AFT(...))
-            self.baseline._init_coefficients(*args)
+        param0 = np.zeros_like(self.params, dtype=np.float64)
+        param0[-self.baseline.params.size :] = self.baseline._init_params(lifetime_data, *args) # recursion in case of PPH(AFT(...))
+        self.params = param0
+
+    @property
+    def _params_bounds(self) -> Bounds:
+        lb = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, -np.inf),
+                self.baseline._params_bounds.lb, # baseline has _params_bounds according to typing
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, np.inf),
+                self.baseline._params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
 
     def fit(
         self,
@@ -1034,10 +1099,10 @@ class LifetimeRegression(
         **kwargs: Any,
     ) -> Self:
         # change number of coefficients depending on covar passed
-        self._init_coefficients(covar, *args)
         lifetime_data: LifetimeData = LifetimeData(
             time, event=event, entry=entry, departure=departure, args=(covar, *args)
         )
+        self._init_params(lifetime_data, covar, *args)
         likelihood = LikelihoodFromLifetimes(self, lifetime_data)
         fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
         self.params = fitting_results.optimal_params

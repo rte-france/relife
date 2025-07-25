@@ -13,7 +13,7 @@ from relife.lifetime_model import (
     LifetimeDistribution,
 )
 from relife.stochastic_process import RenewalRewardProcess
-from relife.stochastic_process.renewal_process import RenewalRewardProcessSample
+from relife.stochastic_process._sample.data import RenewalRewardProcessSample
 
 M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
 R = TypeVar("R", bound=Reward)
@@ -275,9 +275,9 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
 
     def sample(
         self,
+        size : int,
         tf: float,
         t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
         seed: Optional[int] = None,
     ) -> RenewalRewardProcessSample:
         """Renewal data sampling.
@@ -286,6 +286,8 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
 
         Parameters
         ----------
+        size : int
+            The size of the desired sample.
         tf : float
             Time at the end of the observation.
         t0 : float, default 0
@@ -301,9 +303,9 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
 
     def generate_lifetime_data(
         self,
+        size : int,
         tf: float,
         t0: float = 0.0,
-        size: int | tuple[int] | tuple[int, int] = 1,
         seed: Optional[int] = None,
     ) -> LifetimeFitArg:
         """Generate lifetime data
@@ -312,12 +314,12 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
 
         Parameters
         ----------
+        size : int
+            The size of the desired sample.
         tf : float
             Time at the end of the observation.
         t0 : float, default 0
             Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
         seed : int, optional
             Random seed, by default None.
 

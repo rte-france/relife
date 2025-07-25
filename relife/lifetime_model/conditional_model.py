@@ -159,9 +159,10 @@ class AgeReplacementModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -170,9 +171,10 @@ class AgeReplacementModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -181,9 +183,10 @@ class AgeReplacementModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -192,9 +195,10 @@ class AgeReplacementModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -203,9 +207,10 @@ class AgeReplacementModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -219,9 +224,10 @@ class AgeReplacementModel(
     @override
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         ar: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -232,7 +238,7 @@ class AgeReplacementModel(
         tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
     ]:
         ar = reshape_ar_or_a0("ar", ar)
-        baseline_rvs = self.baseline.rvs(size, *args, return_event=return_event, return_entry=return_entry, seed=seed)
+        baseline_rvs = self.baseline.rvs(size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
         time = np.minimum(time, ar)  # it may change time shape by broadcasting
         if not return_event and not return_entry:
@@ -398,9 +404,10 @@ class LeftTruncatedModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -409,9 +416,10 @@ class LeftTruncatedModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Optional[int] = None,
@@ -420,9 +428,10 @@ class LeftTruncatedModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -431,9 +440,10 @@ class LeftTruncatedModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Optional[int] = None,
@@ -442,9 +452,10 @@ class LeftTruncatedModel(
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -458,9 +469,10 @@ class LeftTruncatedModel(
     @override
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
         a0: float | NDArray[np.float64],
         *args: float | NDArray[np.float64],
+        nb_assets : Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
@@ -471,7 +483,7 @@ class LeftTruncatedModel(
         tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
     ]:
         a0 = reshape_ar_or_a0("a0", a0)
-        super_rvs = super().rvs(size, *(a0, *args), return_event=return_event, return_entry=return_entry, seed=seed)
+        super_rvs = super().rvs(size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
         if not return_event and return_entry:
             time, entry = super_rvs
             entry = np.broadcast_to(a0, entry.shape).copy()

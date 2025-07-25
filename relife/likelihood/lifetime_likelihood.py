@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import copy
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, minimize
+from scipy.optimize import minimize
 
 from relife.data import LifetimeData
 
@@ -37,7 +36,7 @@ class LikelihoodFromLifetimes(Likelihood):
         model: Union[LifetimeDistribution, LifetimeRegression, MinimumDistribution],
         lifetime_data: LifetimeData,
     ):
-        self.model = copy.deepcopy(model)
+        self.model = model
         self.data = lifetime_data
 
     def _complete_contribs(self, lifetime_data: LifetimeData) -> Optional[np.float64]:
@@ -192,14 +191,12 @@ class LikelihoodFromLifetimes(Likelihood):
         return sum(x for x in jac_contributions if x is not None)  # (p,)
 
     def maximum_likelihood_estimation(self, **kwargs: Any) -> FittingResults:
-        param0 = _init_params_values(self.model, self.data)
-
         # configure and run the optimizer
         minimize_kwargs = {
             "method": kwargs.get("method", "L-BFGS-B"),
             "constraints": kwargs.get("constraints", ()),
-            "bounds": kwargs.get("bounds", _get_params_bounds(self.model)),
-            "x0": kwargs.get("x0", param0),
+            "bounds": kwargs.get("bounds", getattr(self.model, "_params_bounds", None)),
+            "x0": kwargs.get("x0", self.model.params),
         }
         optimizer = minimize(
             self.negative_log,
@@ -216,51 +213,51 @@ class LikelihoodFromLifetimes(Likelihood):
         )
 
 
-M = TypeVar("M", bound=Union["LifetimeDistribution", "LifetimeRegression", "MinimumDistribution"])
-
-
-def _init_params_values(model: M, lifetime_data: LifetimeData) -> NDArray[np.float64]:
-    from relife.lifetime_model import Gompertz, LifetimeRegression
-
-    if isinstance(model, LifetimeRegression):
-        model.baseline.params = _init_params_values(model.baseline, lifetime_data)
-        param0 = np.zeros_like(model.params, dtype=np.float64)
-        param0[-model.baseline.params.size :] = model.baseline.params
-        return param0
-    elif isinstance(model, Gompertz):
-        param0 = np.empty(model.nb_params, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.lifetime_values))
-        shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.lifetime_values))
-        param0[0] = shape
-        param0[1] = rate
-        return param0
-    else:  # other cases : Weibull, Gamma, Exponential, ...
-        if lifetime_data.complete_or_right_censored is not None:
-            param0 = np.ones(model.nb_params, dtype=np.float64)
-            param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.lifetime_values)
-            return param0
-        return np.zeros(model.nb_params, dtype=np.float64)
-
-
-def _get_params_bounds(model: M) -> Bounds:
-    from relife.lifetime_model import LifetimeRegression
-
-    if isinstance(model, LifetimeRegression):
-        lb = np.concatenate(
-            (
-                np.full(model.covar_effect.nb_params, -np.inf),
-                _get_params_bounds(model.baseline).lb,
-            )
-        )
-        ub = np.concatenate(
-            (
-                np.full(model.covar_effect.nb_params, np.inf),
-                _get_params_bounds(model.baseline).ub,
-            )
-        )
-        return Bounds(lb, ub)
-    else:
-        return Bounds(
-            np.full(model.nb_params, np.finfo(float).resolution),
-            np.full(model.nb_params, np.inf),
-        )
+# M = TypeVar("M", bound=Union["LifetimeDistribution", "LifetimeRegression", "MinimumDistribution"])
+#
+# # TODO : move into model interface as _init_params(self, *args)
+# def _init_params_values(model: M, lifetime_data: LifetimeData) -> NDArray[np.float64]:
+#     from relife.lifetime_model import Gompertz, LifetimeRegression
+#
+#     if isinstance(model, LifetimeRegression):
+#         model.baseline.params = _init_params_values(model.baseline, lifetime_data)
+#         param0 = np.zeros_like(model.params, dtype=np.float64)
+#         param0[-model.baseline.params.size :] = model.baseline.params
+#         return param0
+#     elif isinstance(model, Gompertz):
+#         param0 = np.empty(model.nb_params, dtype=np.float64)
+#         rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.lifetime_values))
+#         shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.lifetime_values))
+#         param0[0] = shape
+#         param0[1] = rate
+#         return param0
+#     else:  # other cases : Weibull, Gamma, Exponential, ...
+#         if lifetime_data.complete_or_right_censored is not None:
+#             param0 = np.ones(model.nb_params, dtype=np.float64)
+#             param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.lifetime_values)
+#             return param0
+#         return np.zeros(model.nb_params, dtype=np.float64)
+#
+# # TODO : move into model interface as _params_bounds(self, *args)
+# def _get_params_bounds(model: M) -> Bounds:
+#     from relife.lifetime_model import LifetimeRegression
+#
+#     if isinstance(model, LifetimeRegression):
+#         lb = np.concatenate(
+#             (
+#                 np.full(model.covar_effect.nb_params, -np.inf),
+#                 _get_params_bounds(model.baseline).lb,
+#             )
+#         )
+#         ub = np.concatenate(
+#             (
+#                 np.full(model.covar_effect.nb_params, np.inf),
+#                 _get_params_bounds(model.baseline).ub,
+#             )
+#         )
+#         return Bounds(lb, ub)
+#     else:
+#         return Bounds(
+#             np.full(model.nb_params, np.finfo(float).resolution),
+#             np.full(model.nb_params, np.inf),
+#         )
