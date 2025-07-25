@@ -22,7 +22,7 @@ RenewalProcess
     
         
         
-            ~RenewalProcess.generate_failure_data
+            ~RenewalProcess.generate_lifetime_data
         
         
             ~RenewalProcess.renewal_density

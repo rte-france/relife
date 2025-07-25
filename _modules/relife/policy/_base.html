@@ -426,7 +426,7 @@
     <span class="n">LifetimeDistribution</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process._sample.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcessSample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process.renewal_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcessSample</span>
 
 <span class="n">M</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="n">LifetimeDistribution</span><span class="p">,</span> <span class="n">FrozenLifetimeRegression</span><span class="p">,</span> <span class="n">FrozenAgeReplacementModel</span><span class="p">,</span> <span class="n">FrozenLeftTruncatedModel</span><span class="p">)</span>
 <span class="n">R</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Reward</span><span class="p">)</span>
@@ -722,9 +722,9 @@
 <a class="viewcode-back" href="../../../api/base_class/relife.policy.BaseAgeReplacementPolicy.html#relife.policy.BaseAgeReplacementPolicy.sample">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">t0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardProcessSample</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
@@ -733,8 +733,6 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        size : int</span>
-<span class="sd">            The size of the desired sample.</span>
 <span class="sd">        tf : float</span>
 <span class="sd">            Time at the end of the observation.</span>
 <span class="sd">        t0 : float, default 0</span>
@@ -753,9 +751,9 @@
 <a class="viewcode-back" href="../../../api/base_class/relife.policy.BaseAgeReplacementPolicy.html#relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_lifetime_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">t0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LifetimeFitArg</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate lifetime data</span>
@@ -764,12 +762,12 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        size : int</span>
-<span class="sd">            The size of the desired sample.</span>
 <span class="sd">        tf : float</span>
 <span class="sd">            Time at the end of the observation.</span>
 <span class="sd">        t0 : float, default 0</span>
 <span class="sd">            Time at the beginning of the observation.</span>
+<span class="sd">        size : int or tuple of 2 int</span>
+<span class="sd">            Size of the sample</span>
 <span class="sd">        seed : int, optional</span>
 <span class="sd">            Random seed, by default None.</span>
 

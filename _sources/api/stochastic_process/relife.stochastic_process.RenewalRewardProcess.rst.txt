@@ -34,7 +34,7 @@ RenewalRewardProcess
             ~RenewalRewardProcess.expected_total_reward
         
         
-            ~RenewalRewardProcess.generate_failure_data
+            ~RenewalRewardProcess.generate_lifetime_data
         
         
             ~RenewalRewardProcess.renewal_density
