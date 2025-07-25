@@ -190,13 +190,13 @@ class LikelihoodFromLifetimes(Likelihood):
         self.model.params = model_params  # reset model params (jac_negative_log must not change model params)
         return sum(x for x in jac_contributions if x is not None)  # (p,)
 
-    def maximum_likelihood_estimation(self, **kwargs: Any) -> FittingResults:
+    def maximum_likelihood_estimation(self, **options: Any) -> FittingResults:
         # configure and run the optimizer
         minimize_kwargs = {
-            "method": kwargs.get("method", "L-BFGS-B"),
-            "constraints": kwargs.get("constraints", ()),
-            "bounds": kwargs.get("bounds", getattr(self.model, "_params_bounds", None)),
-            "x0": kwargs.get("x0", self.model.params),
+            "method": options.get("method", "L-BFGS-B"),
+            "constraints": options.get("constraints", ()),
+            "bounds": options.get("bounds", getattr(self.model, "_params_bounds", None)),
+            "x0": options.get("x0", self.model.params),
         }
         optimizer = minimize(
             self.negative_log,

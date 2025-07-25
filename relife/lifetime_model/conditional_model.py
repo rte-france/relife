@@ -43,6 +43,8 @@ class AgeReplacementModel(
     plot
     """
 
+    args_names = ("ar",)
+
     def __init__(
         self,
         baseline: (
@@ -52,10 +54,6 @@ class AgeReplacementModel(
     ):
         super().__init__()
         self.baseline = baseline
-
-    @property
-    def args_names(self) -> tuple[str, *tuple[str, ...]]:
-        return ("ar",) + self.baseline.args_names
 
     def sf(
         self,
@@ -323,6 +321,8 @@ class LeftTruncatedModel(
     plot
     """
 
+    args_names = ("a0",)
+
     def __init__(
         self,
         baseline: (
@@ -332,10 +332,6 @@ class LeftTruncatedModel(
     ):
         super().__init__()
         self.baseline = baseline
-
-    @property
-    def args_names(self) -> tuple[str, *tuple[str, ...]]:
-        return ("a0",) + self.baseline.args_names
 
     def sf(
         self,
