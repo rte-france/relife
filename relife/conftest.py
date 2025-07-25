@@ -13,9 +13,6 @@ from relife.lifetime_model import (
     ProportionalHazard,
     AcceleratedFailureTime, AgeReplacementModel,
 )
-from relife.policy import OneCycleRunToFailurePolicy, RunToFailurePolicy, OneCycleAgeReplacementPolicy, \
-    AgeReplacementPolicy
-
 
 DISTRIBUTION_INSTANCES = [
     Exponential(0.00795203),
