@@ -15,10 +15,10 @@ from relife.lifetime_model import (
     AgeReplacementModel,
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
-    FrozenLifetimeRegression,
     LeftTruncatedModel,
-    LifetimeDistribution,
 )
+from ..lifetime_model.distribution import LifetimeDistribution
+from ..lifetime_model.regression import FrozenLifetimeRegression
 from relife.quadrature import legendre_quadrature
 
 from ..stochastic_process import RenewalRewardProcess

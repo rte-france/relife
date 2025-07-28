@@ -2,7 +2,8 @@ import numpy as np
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
-from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard, CovarEffect
+from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard
+from relife.lifetime_model.regression import CovarEffect
 
 
 def test_covar_effect():
@@ -31,6 +32,7 @@ def test_covar_effect():
     assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef,)
     assert covar_effect.jac_g(np.ones((1, covar_effect.nb_coef)), asarray=True).shape == (covar_effect.nb_coef, 1, 1)
     assert covar_effect.jac_g(np.ones((10, covar_effect.nb_coef)), asarray=True).shape == (covar_effect.nb_coef, 10, 1)
+
 
 def test_rvs(regression, rvs_size, covar, expected_out_shape):
     assert regression.rvs(rvs_size, covar).shape == expected_out_shape(covar=covar, size=rvs_size)
@@ -138,11 +140,15 @@ def test_ls_integrate(regression, integration_bound_a, integration_bound_b, cova
 
 
 def test_aft_pph_weibull_eq(insulator_string_data):
-    covar = zscore(np.column_stack((
-        boxcox(insulator_string_data["pHCl"])[0],
-        boxcox(insulator_string_data["pH2SO4"])[0],
-        boxcox(insulator_string_data["HNO3"])[0],
-    )))
+    covar = zscore(
+        np.column_stack(
+            (
+                boxcox(insulator_string_data["pHCl"])[0],
+                boxcox(insulator_string_data["pH2SO4"])[0],
+                boxcox(insulator_string_data["HNO3"])[0],
+            )
+        )
+    )
     weibull_aft = AcceleratedFailureTime(Weibull()).fit(
         insulator_string_data["time"],
         covar,

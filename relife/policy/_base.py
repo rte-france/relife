@@ -9,9 +9,9 @@ from relife.economic import ExponentialDiscounting, Reward, cost
 from relife.lifetime_model import (
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
-    FrozenLifetimeRegression,
-    LifetimeDistribution,
 )
+from relife.lifetime_model.distribution import LifetimeDistribution
+from relife.lifetime_model.regression import FrozenLifetimeRegression
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process._sample.data import RenewalRewardProcessSample
 

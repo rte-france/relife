@@ -1,26 +1,10 @@
 from __future__ import annotations
 
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Optional, Self, Union, overload, Generic, TypeVarTuple
+from typing import Any, Optional, Self
 
 import numpy as np
 from numpy.typing import NDArray
-
-if TYPE_CHECKING:
-    from relife.lifetime_model import (
-        AgeReplacementModel,
-        FrozenAgeReplacementModel,
-        FrozenLeftTruncatedModel,
-        FrozenLifetimeRegression,
-        FrozenParametricLifetimeModel,
-        LeftTruncatedModel,
-        LifetimeRegression,
-        ParametricLifetimeModel,
-    )
-    from relife.stochastic_process import (
-        FrozenNonHomogeneousPoissonProcess,
-        NonHomogeneousPoissonProcess,
-    )
 
 
 class ParametricModel:
@@ -29,15 +13,12 @@ class ParametricModel:
 
     Any parametric_model core must inherit from `ParametricModel`.
     """
-    args_names : tuple[str, ...] = ()
-    _nested_models: dict[str, ParametricModel]
-
-    def __init__(self, **kwparams: Optional[float]):
+    def __init__(self, **kwparams):
         self._params = Parameters(**kwparams)
         self._nested_models = {}
 
     @property
-    def params(self) -> NDArray[np.float64]:
+    def params(self):
         """
         Parameters values.
 
@@ -56,7 +37,7 @@ class ParametricModel:
         return np.array(self._params.get_values())
 
     @params.setter
-    def params(self, new_params: NDArray[np.float64]):
+    def params(self, new_params):
         if not isinstance(new_params, np.ndarray):
             raise ValueError(
                 f"Incorrect params values. It must be contained in a 1d array. Got type {type(new_params)}"
@@ -66,7 +47,7 @@ class ParametricModel:
         self._params.set_values(tuple(v.item() for v in new_params))
 
     @property
-    def params_names(self) -> tuple[str, ...]:
+    def params_names(self):
         """
         Parameters names.
 
@@ -82,7 +63,7 @@ class ParametricModel:
         return self._params.get_names()
 
     @property
-    def nb_params(self) -> int:
+    def nb_params(self):
         """
         Number of parameters.
 
@@ -94,7 +75,7 @@ class ParametricModel:
         """
         return self._params.size
 
-    def _set_nested_model(self, name: str, model: ParametricModel):
+    def _set_nested_model(self, name, model):
         """Compose with new ``ParametricModel`` instance(s).
 
         This method acts like function. When you set a nested model instance, the followings happen :
@@ -109,10 +90,9 @@ class ParametricModel:
             model instance
         """
         self._nested_models[name] = model
-        self.args_names = self.args_names + model.args_names
         self._params.set_leaf(f"{name}.params", getattr(model, "_params"))
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name):
         class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
@@ -122,7 +102,7 @@ class ParametricModel:
             return super().__getattribute__("_nested_models").get(name)
         raise AttributeError(f"{class_name} has no attribute named {name}")
 
-    def __setattr__(self, name: str, value: Any):
+    def __setattr__(self, name, value):
         if name in ("_params", "_nested_models"):
             super().__setattr__(name, value)
         elif name in self._params.get_names():
@@ -141,13 +121,7 @@ class Parameters:
     Every ``ParametricModel`` are composed of a ``Parameters`` instance.
     """
 
-    _parent: Optional[Self]
-    _leaves: dict[str, Self]
-    _nodemapping: dict[str, float]  # np.nan is float
-    _names: tuple[str, ...]
-    _values: tuple[float, ...]
-
-    def __init__(self, **kwargs: Optional[float]):
+    def __init__(self, **kwargs):
         self._parent = None
         self._leaves = {}
         self._nodemapping = {}
@@ -156,42 +130,42 @@ class Parameters:
         if bool(kwargs):
             self.set_node(kwargs)
 
-    def get_names(self) -> tuple[str, ...]:
+    def get_names(self):
         return self._names
 
-    def get_values(self) -> tuple[float, ...]:
+    def get_values(self):
         return self._values
 
-    def get_leaf(self, name: str) -> Parameters:
+    def get_leaf(self, name: str):
         try:
             return self._leaves[name]
         except KeyError:
             raise ValueError(f"Parameters object does not have leaf parameters called {name} in its scope")
 
-    def get_param_value(self, name: str) -> float:
+    def get_param_value(self, name):
         try:
             return self._nodemapping[name]
         except KeyError:
             raise ValueError(f"Parameters object does not have parameter name called {name} in its scope")
 
-    def set_param_value(self, name: str, value: float) -> None:
+    def set_param_value(self, name, value):
         if name not in self._nodemapping:
             raise ValueError(f"Parameters object does not have parameter name called {name} in its scope")
         self._nodemapping[name] = value
         self._update_names_and_values()
 
     @property
-    def size(self) -> int:
+    def size(self):
         return len(self._values)
 
-    def set_node(self, mapping: dict[str, Optional[float]]) -> None:
+    def set_node(self, mapping):
         """
         set node dict
         """
         self._nodemapping = {k: v if v is not None else np.nan for k, v in mapping.items()}
         self._update_names_and_values()  # update _names and _values
 
-    def set_leaf(self, leaf_name: str, leaf: Parameters) -> None:
+    def set_leaf(self, leaf_name, leaf):
         """
         set a leaf or new leaf
         """
@@ -200,7 +174,7 @@ class Parameters:
         self._leaves[leaf_name] = leaf
         self._update_names_and_values()  # update _names and _values
 
-    def set_values(self, values: tuple[float, ...]) -> None:
+    def set_values(self, values):
         """set values of all tree"""
         if len(values) != self.size:
             raise ValueError(f"Expected {self.size} values but got {len(values)}")
@@ -213,7 +187,7 @@ class Parameters:
         if self._parent is not None:
             self._parent._update_names_and_values()
 
-    def _update_names_and_values(self) -> None:
+    def _update_names_and_values(self):
         """update names and values of current and parent nodes"""
 
         def items_walk(parameters: Self):
@@ -231,64 +205,46 @@ class Parameters:
             self._parent._update_names_and_values()
 
 
-Args = TypeVarTuple("Args")
+def _get_nb_assets(*args):
+    def reshape(x):
+        ary = np.asarray(x)
+        return ary.reshape(-1, 1) if ary.ndim <= 1 else x
 
+    args_2d = tuple((reshape(arys) for arys in args))
 
-class FrozenParametricModel(ParametricModel, Generic[*Args]):
-    def __init__(
-        self,
-        model : ParametricModel,
-        *args : *Args,
-    ):
+    try:
+        broadcast_shape = np.broadcast_shapes(*(ary.shape for ary in args_2d))
+        nb_assets = broadcast_shape[0]
+    except ValueError:
+        raise ValueError("Given args have incompatible shapes")
+
+    return nb_assets
+
+class FrozenParametricModel(ParametricModel):
+    def __init__(self, model, *args):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("You try to freeze a model with unsetted parameters. Set params first")
-
-        self.args = dict(zip(model.args_names, args))
-
+        self.nb_assets = _get_nb_assets(*args)
+        self.args = args
         self.unfrozen_model = model
-        self.nb_assets = self._get_nb_assets(model)
 
-    # TODO : store in one tuple, iterate while passing to 2D and take broadcast shape 0 axis length
-    def _get_nb_assets(self, model):
-        arg_nb_assets = None
-        for k, v in self.args.items():
-            if k == "covar":
-                _arg_nb_assets = np.atleast_2d(np.asarray(v)).shape[0]
-            elif k in ("a0", "ar"):
-                _arg_nb_assets = np.asarray(v).size
-            else:
-                _arg_nb_assets = np.asarray(v).size
-            if arg_nb_assets is not None and _arg_nb_assets != 1:
-                if _arg_nb_assets != arg_nb_assets:
-                    raise ValueError
-            if arg_nb_assets is None:
-                arg_nb_assets = _arg_nb_assets
-        return arg_nb_assets
-
-    @property
-    def args_values(self):
-        return tuple(self.args.values())
-
-    def unfreeze(self) -> ParametricModel:
+    def unfreeze(self):
         return self.unfrozen_model
 
 
 def is_frozen(model):
-    pass
+    return isinstance(model, FrozenParametricModel)
 
 
 def is_lifetime_model(model):
-    pass
+    from relife.lifetime_model import ParametricLifetimeModel, NonParametricLifetimeModel
+    return isinstance(model, (ParametricLifetimeModel, NonParametricLifetimeModel))
 
 
 def is_stochastic_process(model):
-    pass
-
-
-def is_age_replacement_policy(policy):
-    pass
-
+    from relife.stochastic_process import StochasticProcess
+    return isinstance(model, StochasticProcess)
 
 # see sklearn/base.py : return unfitted ParametricModel
 # def clone(model: ParametricModel) -> ParametricModel: ...

@@ -1,15 +1,8 @@
-from __future__ import annotations
-
-from typing import Callable, Literal, Optional, Union, overload
-
 import numpy as np
-from numpy.typing import NDArray
-from typing_extensions import override
-
 from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
 
 
-def reshape_ar_or_a0(name: str, value: float | NDArray[np.float64]) -> NDArray[np.float64]:
+def reshape_ar_or_a0(name: str, value):
     value = np.asarray(value)  # in shape : (), (m,) or (m, 1)
     if value.ndim > 2 or (value.ndim == 2 and value.shape[-1] != 1):
         raise ValueError(f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)")
@@ -19,9 +12,7 @@ def reshape_ar_or_a0(name: str, value: float | NDArray[np.float64]) -> NDArray[n
 
 
 # note that AgeReplacementModel does not preserve generic : at the moment, additional args are supposed to be always float | NDArray[np.float64]
-class AgeReplacementModel(
-    ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
-):
+class AgeReplacementModel(ParametricLifetimeModel):
     # noinspection PyUnresolvedReferences
     r"""
     Age replacement model.
@@ -43,103 +34,35 @@ class AgeReplacementModel(
     plot
     """
 
-    args_names = ("ar",)
-
-    def __init__(
-        self,
-        baseline: (
-            ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
-            | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
-        ),
-    ):
+    def __init__(self, baseline):
         super().__init__()
         self.baseline = baseline
 
-    def sf(
-        self,
-        time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    def sf(self, time, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
-    def hf(
-        self,
-        time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    def hf(self, time, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
-    def chf(
-        self,
-        time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    def chf(self, time, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
-    @override
-    def isf(
-        self,
-        probability: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    def isf(self, probability, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
-    @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate, ar, *args,):
         ar = reshape_ar_or_a0("ar", ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
-    def pdf(
-        self,
-        time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    def pdf(self, time, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
-    def ppf(
-        self,
-        probability: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
-        ar = reshape_ar_or_a0("ar", ar)
-        return self.isf(1 - probability, ar, *args)
-
-    def median(self, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        ar = reshape_ar_or_a0("ar", ar)
-        return self.ppf(np.array(0.5), ar, *args)
-
-    # def cdf(
-    #     self,
-    #     time: float | NDArray[np.float64],
-    #     ar: float | NDArray[np.float64],
-    #     *args: float | NDArray[np.float64],
-    # ) -> NDArray[np.float64]:
-    #     ar = reshape_ar_or_a0("ar", ar)
-    #     return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
-
-    @override
-    def mrl(
-        self,
-        time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> NDArray[np.float64]:
+    def mrl(self, time, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         ub = np.array(np.inf)
         # ar.shape == (m, 1)
@@ -154,89 +77,23 @@ class AgeReplacementModel(
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
-    @overload
-    def rvs(
-        self,
-        size: int,
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: Optional[int] = None,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Optional[int] = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Optional[int] = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Optional[int] = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Optional[int] = None,
-    ) -> Union[
-        np.float64 | NDArray[np.float64],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
-        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
-    ]: ...
-
-    @override
-    def rvs(
-        self,
-        size: int,
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Optional[int] = None,
-    ) -> Union[
-        np.float64 | NDArray[np.float64],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
-        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
-    ]:
+    def ppf(self, probability, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
-        baseline_rvs = self.baseline.rvs(size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
+        return self.isf(1 - probability, ar, *args)
+
+    # def cdf(self, time, ar, *args):
+    #     ar = reshape_ar_or_a0("ar", ar)
+    #     return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
+
+    def median(self, ar, *args):
+        ar = reshape_ar_or_a0("ar", ar)
+        return self.ppf(np.array(0.5), ar, *args)
+
+    def rvs(self, size, ar, *args, nb_assets = None, return_event = False, return_entry = False, seed = None):
+        ar = reshape_ar_or_a0("ar", ar)
+        baseline_rvs = self.baseline.rvs(
+            size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+        )
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
         time = np.minimum(time, ar)  # it may change time shape by broadcasting
         if not return_event and not return_entry:
@@ -255,25 +112,13 @@ class AgeReplacementModel(
             event = np.where(time != ar, event, ~event)
             return time, event, entry
 
-    @override
-    def ls_integrate(
-        self,
-        func: Callable[[float | np.float64 | NDArray[np.float64]], float | np.float64 | NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        deg: int = 10,
-    ) -> NDArray[np.float64]:
+    def ls_integrate(self, func, a, b, ar, *args, deg = 10):
         ar = reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
 
-    @override
-    def moment(
-        self, n: int, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def moment(self, n, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return self.ls_integrate(
             lambda x: x**n,
@@ -284,20 +129,16 @@ class AgeReplacementModel(
             deg=100,
         )
 
-    @override
-    def mean(self, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def mean(self, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(1, ar, *args)
 
-    @override
-    def var(self, ar: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    def var(self, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
 
-class LeftTruncatedModel(
-    ParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
-):
+class LeftTruncatedModel(ParametricLifetimeModel):
     # noinspection PyUnresolvedReferences
     r"""Left truncated model.
 
@@ -321,165 +162,44 @@ class LeftTruncatedModel(
     plot
     """
 
-    args_names = ("a0",)
-
-    def __init__(
-        self,
-        baseline: (
-            ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
-            | FrozenParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]
-        ),
-    ):
+    def __init__(self, baseline):
         super().__init__()
         self.baseline = baseline
 
-    def sf(
-        self,
-        time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def sf(self, time, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().sf(time, a0, *args)
 
-    def pdf(
-        self,
-        time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def pdf(self, time, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().pdf(time, a0, *args)
 
-    def isf(
-        self,
-        probability: NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def isf(self, probability, a0, *args):
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
         a0 = reshape_ar_or_a0("a0", a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
-    def chf(
-        self,
-        time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def chf(self, time, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
-    def cdf(
-        self,
-        time: float | NDArray[np.float64],
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def cdf(self, time, ar, *args):
         ar = reshape_ar_or_a0("ar", ar)
         return super().cdf(time, *(ar, *args))
 
-    def hf(
-        self,
-        time: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.hf(a0 + time, *args)
 
-    def ichf(
-        self,
-        cumulative_hazard_rate: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
-    @overload
-    def rvs(
-        self,
-        size: int,
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: Optional[int] = None,
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Optional[int] = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Optional[int] = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Optional[int] = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]: ...
-
-    @overload
-    def rvs(
-        self,
-        size: int,
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Optional[int] = None,
-    ) -> Union[
-        np.float64 | NDArray[np.float64],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
-        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
-    ]: ...
-
-    @override
-    def rvs(
-        self,
-        size: int,
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets : Optional[int] = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Optional[int] = None,
-    ) -> Union[
-        np.float64 | NDArray[np.float64],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]],
-        tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]],
-        tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]],
-    ]:
+    def rvs(self, size, a0, *args, nb_assets = None, return_event = False, return_entry = False, seed = None):
         a0 = reshape_ar_or_a0("a0", a0)
-        super_rvs = super().rvs(size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
+        super_rvs = super().rvs(
+            size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+        )
         if not return_event and return_entry:
             time, entry = super_rvs
             entry = np.broadcast_to(a0, entry.shape).copy()
@@ -493,68 +213,36 @@ class LeftTruncatedModel(
         else:
             return super_rvs
 
-    @override
-    def ls_integrate(
-        self,
-        func: Callable[[float | np.float64 | NDArray[np.float64]], float | np.float64 | NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        deg: int = 10,
-    ) -> NDArray[np.float64]:
+    def ls_integrate(self, func, a, b, a0, *args, deg = 10):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
 
-    @override
-    def mean(
-        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def mean(self, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().mean(*(a0, *args))
 
-    @override
-    def median(
-        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def median(self, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().median(*(a0, *args))
 
-    @override
-    def var(
-        self, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def var(self, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().var(*(a0, *args))
 
-    @override
-    def moment(
-        self, n: int, a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def moment(self, n: int, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().moment(n, *(a0, *args))
 
-    @override
-    def mrl(
-        self, time: float | NDArray[np.float64], a0: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def mrl(self, time, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().mrl(time, *(a0, *args))
 
-    @override
-    def ppf(
-        self,
-        probability: float | NDArray[np.float64],
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def ppf(self, probability, a0, *args):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().ppf(probability, *(a0, *args))
 
 
-class FrozenAgeReplacementModel(
-    FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
-):
+class FrozenAgeReplacementModel(FrozenParametricLifetimeModel):
     r"""
     Frozen age replacement model.
 
@@ -573,9 +261,9 @@ class FrozenAgeReplacementModel(
     ----------
     unfrozen_model : AgeReplacementModel
         The unfrozen age replacement model.
-    frozen_args : tuple of float or np.ndarray
+    args : tuple of float or np.ndarray
         All the frozen arguments given and necessary to compute model functions.
-    args_nb_assets : int
+    nb_assets : int
         Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
         interest an user.
 
@@ -583,36 +271,19 @@ class FrozenAgeReplacementModel(
     --------
     The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
     """
-
-    unfrozen_model: AgeReplacementModel
-    frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
-
-    @override
-    def __init__(
-        self,
-        model: AgeReplacementModel,
-        args_nb_assets: int,
-        ar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ):
-        super().__init__(model, args_nb_assets, *(ar, *args))
-
-    @override
-    def unfreeze(self) -> AgeReplacementModel:
-        return super().unfreeze()
+    def __init__(self, model, ar, *args):
+        super().__init__(model, *(ar, *args))
 
     @property
-    def ar(self) -> float | NDArray[np.float64]:
-        return self.frozen_args[0]
+    def ar(self):
+        return self.args[0]
 
     @ar.setter
-    def ar(self, value: float | NDArray[np.float64]) -> None:
-        self.frozen_args = (value,) + self.frozen_args[1:]
+    def ar(self, value):
+        self.args = (value,) + self.args[1:]
 
 
-class FrozenLeftTruncatedModel(
-    FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
-):
+class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel):
     r"""
     Frozen left truncated model.
 
@@ -620,8 +291,6 @@ class FrozenLeftTruncatedModel(
     ----------
     model : LeftTruncatedModel
         Any left truncated model.
-    args_nb_assets : int
-        Number of assets given in frozen arguments. It is automatically computed by ``freeze`` function.
     a0 : float or np.ndarray
         Conditional age values to be frozen.
     *args : float or np.ndarray
@@ -632,9 +301,9 @@ class FrozenLeftTruncatedModel(
     ----------
     unfrozen_model : LeftTruncatedModel
         The unfrozen left truncated model.
-    frozen_args : tuple of float or np.ndarray
+    args : tuple of float or np.ndarray
         All the frozen arguments given and necessary to compute model functions.
-    args_nb_assets : int
+    nb_assets : int
         Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
         interest an user.
 
@@ -642,31 +311,16 @@ class FrozenLeftTruncatedModel(
     --------
     The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
     """
-
-    unfrozen_model: LeftTruncatedModel
-    frozen_args: tuple[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
-
-    @override
-    def __init__(
-        self,
-        model: LeftTruncatedModel,
-        args_nb_assets: int,
-        a0: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ):
-        super().__init__(model, args_nb_assets, *(a0, *args))
-
-    @override
-    def unfreeze(self) -> LeftTruncatedModel:
-        return super().unfreeze()
+    def __init__(self, model, a0, *args):
+        super().__init__(model, *(a0, *args))
 
     @property
-    def a0(self) -> float | NDArray[np.float64]:
-        return self.frozen_args[0]
+    def a0(self):
+        return self.args[0]
 
     @a0.setter
-    def a0(self, value: float | NDArray[np.float64]) -> None:
-        self.frozen_args = (value,) + self.frozen_args[1:]
+    def a0(self, value):
+        self.args = (value,) + self.args[1:]
 
 
 A0_TIME_BASE_DOCSTRING = """

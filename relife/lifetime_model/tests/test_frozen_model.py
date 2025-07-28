@@ -137,17 +137,13 @@ class TestFrozenAgeReplacementDistribution:
 
     def test_ichf(self, distribution, probability, ar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(distribution), ar=ar)
-        assert frozen_model.ichf(probability).shape == expected_out_shape(
-            probability=probability, ar=ar
-        )
+        assert frozen_model.ichf(probability).shape == expected_out_shape(probability=probability, ar=ar)
 
     def test_isf(self, distribution, probability, ar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(distribution), ar=ar)
         out_shape = expected_out_shape(probability=probability, ar=ar)
         assert frozen_model.isf(probability).shape == out_shape
-        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(
-            np.broadcast_to(frozen_model.median(), out_shape)
-        )
+        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(np.broadcast_to(frozen_model.median(), out_shape))
 
     def test_moment(self, distribution, ar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(distribution), ar=ar)
@@ -175,14 +171,9 @@ class TestFrozenAgeReplacementDistribution:
             integration_bound_a=integration_bound_a, integration_bound_b=integration_bound_b, ar=ar
         )
 
-        integration = frozen_model.ls_integrate(
-            np.ones_like, integration_bound_a, integration_bound_b, deg=100
-        )
+        integration = frozen_model.ls_integrate(np.ones_like, integration_bound_a, integration_bound_b, deg=100)
         assert integration.shape == out_shape
-        assert integration == approx(
-            frozen_model.cdf(integration_bound_b)
-            - frozen_model.cdf(integration_bound_a)
-        )
+        assert integration == approx(frozen_model.cdf(integration_bound_b) - frozen_model.cdf(integration_bound_a))
         # integral_0^inf x*dF(x)
         integration = frozen_model.ls_integrate(
             lambda x: x, np.zeros_like(integration_bound_a), np.full_like(integration_bound_b, np.inf), deg=100
@@ -194,7 +185,7 @@ class TestFrozenAgeReplacementRegression:
 
     def test_rvs(self, regression, rvs_size, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(ar=ar,  covar=covar, size=rvs_size)
+        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(ar=ar, covar=covar, size=rvs_size)
         assert all(
             arr.shape == expected_out_shape(ar=ar, covar=covar, size=rvs_size)
             for arr in frozen_model.rvs(rvs_size, return_event=True)
@@ -210,53 +201,37 @@ class TestFrozenAgeReplacementRegression:
 
     def test_sf(self, regression, time, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.sf(time).shape == expected_out_shape(
-            time=time, ar=ar, covar=covar
-        )
+        assert frozen_model.sf(time).shape == expected_out_shape(time=time, ar=ar, covar=covar)
 
     def test_hf(self, regression, time, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.hf(time).shape == expected_out_shape(
-            time=time, ar=ar, covar=covar
-        )
+        assert frozen_model.hf(time).shape == expected_out_shape(time=time, ar=ar, covar=covar)
 
     def test_chf(self, regression, time, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.chf(time).shape == expected_out_shape(
-            time=time, ar=ar, covar=covar
-        )
+        assert frozen_model.chf(time).shape == expected_out_shape(time=time, ar=ar, covar=covar)
 
     def test_cdf(self, regression, time, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.cdf(time).shape == expected_out_shape(
-            time=time, ar=ar, covar=covar
-        )
+        assert frozen_model.cdf(time).shape == expected_out_shape(time=time, ar=ar, covar=covar)
 
     def test_pdf(self, regression, time, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.pdf(time).shape == expected_out_shape(
-            time=time, ar=ar, covar=covar
-        )
+        assert frozen_model.pdf(time).shape == expected_out_shape(time=time, ar=ar, covar=covar)
 
     def test_ppf(self, regression, time, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.ppf(time).shape == expected_out_shape(
-            time=time, ar=ar, covar=covar
-        )
+        assert frozen_model.ppf(time).shape == expected_out_shape(time=time, ar=ar, covar=covar)
 
     def test_ichf(self, regression, probability, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
-        assert frozen_model.ichf(probability).shape == expected_out_shape(
-            probability=probability, ar=ar, covar=covar
-        )
+        assert frozen_model.ichf(probability).shape == expected_out_shape(probability=probability, ar=ar, covar=covar)
 
     def test_isf(self, regression, probability, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
         out_shape = expected_out_shape(probability=probability, ar=ar, covar=covar)
         assert frozen_model.isf(probability).shape == out_shape
-        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(
-            np.broadcast_to(frozen_model.median(), out_shape)
-        )
+        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(np.broadcast_to(frozen_model.median(), out_shape))
 
     def test_moment(self, regression, ar, covar, expected_out_shape):
         frozen_model = freeze(AgeReplacementModel(regression), ar=ar, covar=covar)
@@ -283,14 +258,9 @@ class TestFrozenAgeReplacementRegression:
         out_shape = expected_out_shape(
             integration_bound_a=integration_bound_a, integration_bound_b=integration_bound_b, ar=ar, covar=covar
         )
-        integration = frozen_model.ls_integrate(
-            np.ones_like, integration_bound_a, integration_bound_b, deg=100
-        )
+        integration = frozen_model.ls_integrate(np.ones_like, integration_bound_a, integration_bound_b, deg=100)
         assert integration.shape == out_shape
-        assert integration == approx(
-            frozen_model.cdf(integration_bound_b)
-            - frozen_model.cdf(integration_bound_a)
-        )
+        assert integration == approx(frozen_model.cdf(integration_bound_b) - frozen_model.cdf(integration_bound_a))
         # integral_0^inf x*dF(x)
         integration = frozen_model.ls_integrate(
             lambda x: x,
@@ -298,9 +268,7 @@ class TestFrozenAgeReplacementRegression:
             np.full_like(integration_bound_b, np.inf),
             deg=100,
         )
-        assert integration == approx(
-            np.broadcast_to(frozen_model.mean(), out_shape), rel=1e-3
-        )
+        assert integration == approx(np.broadcast_to(frozen_model.mean(), out_shape), rel=1e-3)
 
 
 class TestFrozenLeftTruncatedDistribution:
@@ -347,17 +315,13 @@ class TestFrozenLeftTruncatedDistribution:
 
     def test_ichf(self, distribution, probability, a0, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(distribution), a0=a0)
-        assert frozen_model.ichf(probability).shape == expected_out_shape(
-            probability=probability, a0=a0
-        )
+        assert frozen_model.ichf(probability).shape == expected_out_shape(probability=probability, a0=a0)
 
     def test_isf(self, distribution, probability, a0, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(distribution), a0=a0)
         out_shape = expected_out_shape(probability=probability, a0=a0)
         assert frozen_model.isf(probability).shape == out_shape
-        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(
-            np.broadcast_to(frozen_model.median(), out_shape)
-        )
+        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(np.broadcast_to(frozen_model.median(), out_shape))
 
     def test_moment(self, distribution, a0, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(distribution), a0=a0)
@@ -382,14 +346,9 @@ class TestFrozenLeftTruncatedDistribution:
         out_shape = expected_out_shape(
             integration_bound_a=integration_bound_a, integration_bound_b=integration_bound_b, a0=a0
         )
-        integration = frozen_model.ls_integrate(
-            np.ones_like, integration_bound_a, integration_bound_b, deg=100
-        )
+        integration = frozen_model.ls_integrate(np.ones_like, integration_bound_a, integration_bound_b, deg=100)
         assert integration.shape == out_shape
-        assert integration == approx(
-            frozen_model.cdf(integration_bound_b)
-            - frozen_model.cdf(integration_bound_a)
-        )
+        assert integration == approx(frozen_model.cdf(integration_bound_b) - frozen_model.cdf(integration_bound_a))
         # integral_0^inf x*dF(x)
         integration = frozen_model.ls_integrate(
             lambda x: x, np.zeros_like(integration_bound_a), np.full_like(integration_bound_b, np.inf), deg=100
@@ -405,7 +364,7 @@ class TestLeftTruncatedRegression:
 
     def test_rvs(self, regression, rvs_size, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(a0=a0,  covar=covar, size=rvs_size)
+        assert frozen_model.rvs(rvs_size).shape == expected_out_shape(a0=a0, covar=covar, size=rvs_size)
         assert all(
             arr.shape == expected_out_shape(a0=a0, covar=covar, size=rvs_size)
             for arr in frozen_model.rvs(rvs_size, return_event=True)
@@ -421,53 +380,37 @@ class TestLeftTruncatedRegression:
 
     def test_sf(self, regression, time, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.sf(time).shape == expected_out_shape(
-            time=time, a0=a0, covar=covar
-        )
+        assert frozen_model.sf(time).shape == expected_out_shape(time=time, a0=a0, covar=covar)
 
     def test_hf(self, regression, time, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.hf(time).shape == expected_out_shape(
-            time=time, a0=a0, covar=covar
-        )
+        assert frozen_model.hf(time).shape == expected_out_shape(time=time, a0=a0, covar=covar)
 
     def test_chf(self, regression, time, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.chf(time).shape == expected_out_shape(
-            time=time, a0=a0, covar=covar
-        )
+        assert frozen_model.chf(time).shape == expected_out_shape(time=time, a0=a0, covar=covar)
 
     def test_cdf(self, regression, time, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.cdf(time).shape == expected_out_shape(
-            time=time, a0=a0, covar=covar
-        )
+        assert frozen_model.cdf(time).shape == expected_out_shape(time=time, a0=a0, covar=covar)
 
     def test_pdf(self, regression, time, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.pdf(time).shape == expected_out_shape(
-            time=time, a0=a0, covar=covar
-        )
+        assert frozen_model.pdf(time).shape == expected_out_shape(time=time, a0=a0, covar=covar)
 
     def test_ppf(self, regression, time, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.ppf(time).shape == expected_out_shape(
-            time=time, a0=a0, covar=covar
-        )
+        assert frozen_model.ppf(time).shape == expected_out_shape(time=time, a0=a0, covar=covar)
 
     def test_ichf(self, regression, probability, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
-        assert frozen_model.ichf(probability).shape == expected_out_shape(
-            probability=probability, a0=a0, covar=covar
-        )
+        assert frozen_model.ichf(probability).shape == expected_out_shape(probability=probability, a0=a0, covar=covar)
 
     def test_isf(self, regression, probability, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
         out_shape = expected_out_shape(probability=probability, a0=a0, covar=covar)
         assert frozen_model.isf(probability).shape == out_shape
-        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(
-            np.broadcast_to(frozen_model.median(), out_shape)
-        )
+        assert frozen_model.isf(np.full(out_shape, 0.5)) == approx(np.broadcast_to(frozen_model.median(), out_shape))
 
     def test_moment(self, regression, a0, covar, expected_out_shape):
         frozen_model = freeze(LeftTruncatedModel(regression), a0=a0, covar=covar)
@@ -494,14 +437,9 @@ class TestLeftTruncatedRegression:
         out_shape = expected_out_shape(
             integration_bound_a=integration_bound_a, integration_bound_b=integration_bound_b, a0=a0, covar=covar
         )
-        integration = frozen_model.ls_integrate(
-            np.ones_like, integration_bound_a, integration_bound_b, deg=100
-        )
+        integration = frozen_model.ls_integrate(np.ones_like, integration_bound_a, integration_bound_b, deg=100)
         assert integration.shape == out_shape
-        assert integration == approx(
-            frozen_model.cdf(integration_bound_b)
-            - frozen_model.cdf(integration_bound_a)
-        )
+        assert integration == approx(frozen_model.cdf(integration_bound_b) - frozen_model.cdf(integration_bound_a))
         # integral_0^inf x*dF(x)
         integration = frozen_model.ls_integrate(
             lambda x: x,
@@ -509,8 +447,4 @@ class TestLeftTruncatedRegression:
             np.full_like(integration_bound_b, np.inf),
             deg=100,
         )
-        assert integration == approx(
-            np.broadcast_to(frozen_model.mean(), out_shape), rel=1e-3
-        )
-
-
+        assert integration == approx(np.broadcast_to(frozen_model.mean(), out_shape), rel=1e-3)

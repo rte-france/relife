@@ -13,9 +13,9 @@ from typing_extensions import override
 from relife.lifetime_model import (
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
-    FrozenLifetimeRegression,
-    LifetimeDistribution,
 )
+from ...lifetime_model.distribution import LifetimeDistribution
+from ...lifetime_model.regression import FrozenLifetimeRegression
 from .iterators import (
     CountDataIterator,
     RenewalProcessIterator,

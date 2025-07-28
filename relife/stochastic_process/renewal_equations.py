@@ -7,11 +7,11 @@ from numpy.typing import NDArray
 
 from relife.economic import Discounting, ExponentialDiscounting
 from relife.lifetime_model import (
-    LifetimeDistribution,
-    FrozenLifetimeRegression,
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
 )
+from relife.lifetime_model.distribution import LifetimeDistribution
+from relife.lifetime_model.regression import FrozenLifetimeRegression
 
 
 def renewal_equation_solver(

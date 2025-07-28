@@ -1,2 +1,3 @@
 from .non_homogeneous_poisson_process import NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess
 from .renewal_process import RenewalProcess, RenewalRewardProcess
+from .base import StochasticProcess

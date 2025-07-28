@@ -1,17 +1,315 @@
-from typing import Any, Callable, Literal, Optional, Self, TypeVarTuple, overload
+from abc import ABC, abstractmethod
 
 import numpy as np
-from numpy.typing import NDArray
-from scipy.optimize import newton
+from scipy.optimize import newton, Bounds
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
-from typing_extensions import override
-
-from relife.lifetime_model import LifetimeRegression
+from .regression import LifetimeRegression
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
-from ..data import LifetimeData
-from ..likelihood import LikelihoodFromLifetimes
-from ._base import LifetimeDistribution, ParametricLifetimeModel
+from relife.data import LifetimeData
+from relife.likelihood import LikelihoodFromLifetimes
+from ._base import ParametricLifetimeModel, FittableParametricLifetimeModel
+
+
+class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
+    """
+    Base class for distribution model.
+    """
+
+    def sf(self, time):
+        """
+        The survival function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        return super().sf(time)
+
+    def isf(self, probability):
+        """
+        The inverse survival function.
+
+        Parameters
+        ----------
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given probability value(s).
+        """
+        cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
+        return self.ichf(cumulative_hazard_rate)
+
+    def cdf(self, time):
+        """
+        The cumulative density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        return super().cdf(time)
+
+    def pdf(self, time):
+        """
+        The probability density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        return super().pdf(time)
+
+    def ppf(self, probability):
+        """
+        The percent point function.
+
+        Parameters
+        ----------
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given probability value(s).
+        """
+        return super().ppf(probability)
+
+    def median(self):
+        """
+        The median.
+
+        Returns
+        -------
+        np.float64
+        """
+        return self.ppf(0.5)  # no super here to return np.float64
+
+    @abstractmethod
+    def dhf(self, time):
+        """
+        The derivative of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+
+    @abstractmethod
+    def jac_hf(self, time, *, asarray = False):
+        """
+        The jacobian of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
+
+    @abstractmethod
+    def jac_chf(self, time, *, asarray = False):
+        """
+        The jacobian of the cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
+
+    def jac_sf(self, time, *, asarray = False):
+        """
+        The jacobian of the survival function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
+        jac_chf, sf = self.jac_chf(time, asarray=True), self.sf(time)
+        jac = -jac_chf * sf
+        if not asarray:
+            return np.unstack(jac)
+        return jac
+
+    def jac_cdf(self, time, *, asarray = False):
+        """
+        The jacobian of the cumulative density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
+        jac = -self.jac_sf(time, asarray=True)
+        if not asarray:
+            return np.unstack(jac)
+        return jac
+
+    def jac_pdf(self, time, *, asarray = False):
+        """
+        The jacobian of the probability density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
+        jac_hf, hf = self.jac_hf(time, asarray=True), self.hf(time)
+        jac_sf, sf = self.jac_sf(time, asarray=True), self.sf(time)
+        jac = jac_hf * sf + jac_sf * hf
+        if not asarray:
+            return np.unstack(jac)
+        return jac
+
+    def rvs(self, size, *, nb_assets = None, return_event = False, return_entry= False, seed = None):
+        """
+        Random variable sampling.
+
+        Parameters
+        ----------
+        size : int
+            Size of the generated sample.
+        nb_assets : int, optional
+            If nb_assets is not None, 2d arrays of samples are generated.
+        return_event : bool, default is False
+            If True, returns event indicators along with the sample time values.
+        return_entry : bool, default is False
+            If True, returns corresponding entry values of the sample time values.
+        seed : optional int, default is None
+            Random seed used to fix random sampling.
+
+        Returns
+        -------
+        float, ndarray or tuple of float or ndarray
+            The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
+            the time values followed by event values, entry values or both.
+        """
+        return super().rvs(size, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
+
+    def ls_integrate(self, func, a, b, deg = 10):
+        """
+        Lebesgue-Stieltjes integration.
+
+        Parameters
+        ----------
+        func : callable (in : 1 ndarray , out : 1 ndarray)
+            The callable must have only one ndarray object as argument and one ndarray object as output
+        a : ndarray (maximum number of dimension is 2)
+            Lower bound(s) of integration.
+        b : ndarray (maximum number of dimension is 2)
+            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
+        deg : int, default 10
+            Degree of the polynomials interpolation
+
+        Returns
+        -------
+        np.ndarray
+            Lebesgue-Stieltjes integral of func from `a` to `b`.
+        """
+        return super().ls_integrate(func, a, b, deg=deg)
+
+    def _init_params(self, lifetime_data):
+        if lifetime_data.complete_or_right_censored is not None:
+            param0 = np.ones(self.nb_params, dtype=np.float64)
+            param0[-1] = 1 / np.median(lifetime_data.complete_or_right_censored.lifetime_values)
+            self.params = param0
+        else:
+            self.params = np.zeros(self.nb_params, dtype=np.float64)
+
+    @property
+    def _params_bounds(self):
+        return Bounds(
+            np.full(self.nb_params, np.finfo(float).resolution),
+            np.full(self.nb_params, np.inf),
+        )
+
+    def fit(self, time, event = None, entry = None, departure = None, **options):
+        return super().fit(time, event=event, entry=entry, departure=departure, **options)
 
 
 class Exponential(LifetimeDistribution):
@@ -48,11 +346,11 @@ class Exponential(LifetimeDistribution):
     rate
     """
 
-    def __init__(self, rate: Optional[float] = None):
+    def __init__(self, rate = None):
         super().__init__(rate=rate)
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self):  # optional but better for clarity and type checking
         """Get the current rate value.
 
         Returns
@@ -61,45 +359,39 @@ class Exponential(LifetimeDistribution):
         """
         return self._params.get_param_value("rate")
 
-    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time):
         return self.rate * np.ones_like(time)
 
-    def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def chf(self, time):
         return np.asarray(self.rate) * time
 
-    @override
-    def mean(self) -> np.float64:
+    def mean(self):
+        """
+        The mean of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return 1 / np.asarray(self.rate)
 
-    @override
-    def var(self) -> np.float64:
+    def var(self):
+        """
+        The variance of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return 1 / np.asarray(self.rate) ** 2
 
-    @override
-    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def mrl(self, time):
         return 1 / self.rate * np.ones_like(time)
 
-    @override
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate):
         return cumulative_hazard_rate / np.asarray(self.rate)
 
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_hf(self, time: float | NDArray[np.float64], *, asarray: bool = False) -> np.float64 | NDArray[np.float64]:
+    def jac_hf(self, time, *, asarray = False):
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(np.ones_like(time), axis=0).copy()
         else:
@@ -108,25 +400,7 @@ class Exponential(LifetimeDistribution):
             return np.unstack(jac)
         return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_chf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+    def jac_chf(self, time, *, asarray = False):
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(time, axis=0).copy()
         else:
@@ -135,7 +409,7 @@ class Exponential(LifetimeDistribution):
             return np.unstack(jac)
         return jac
 
-    def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def dhf(self, time):
         if isinstance(time, np.ndarray):
             return np.zeros_like(time)
         return np.asarray(0.0)
@@ -177,11 +451,11 @@ class Weibull(LifetimeDistribution):
     rate
     """
 
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+    def __init__(self, shape = None, rate = None):
         super().__init__(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float:  # optional but better for clarity and type checking
+    def shape(self):  # optional but better for clarity and type checking
         """Get the current shape value.
 
         Returns
@@ -191,7 +465,7 @@ class Weibull(LifetimeDistribution):
         return self._params.get_param_value("shape")
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self):  # optional but better for clarity and type checking
         """Get the current rate value.
 
         Returns
@@ -200,22 +474,33 @@ class Weibull(LifetimeDistribution):
         """
         return self._params.get_param_value("rate")
 
-    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time):
         return self.shape * self.rate * (self.rate * np.asarray(time)) ** (self.shape - 1)
 
-    def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def chf(self, time):
         return (self.rate * np.asarray(time)) ** self.shape
 
-    @override
-    def mean(self) -> np.float64:
+    def mean(self):
+        """
+        The mean of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return gamma(1 + 1 / self.shape) / self.rate
 
-    @override
-    def var(self) -> np.float64:
+    def var(self):
+        """
+        The variance of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
 
-    @override
-    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def mrl(self, time):
         return (
             gamma(1 / self.shape)
             / (self.rate * self.shape * self.sf(time))
@@ -225,29 +510,11 @@ class Weibull(LifetimeDistribution):
             )
         )
 
-    @override
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+
+    def ichf(self, cumulative_hazard_rate):
         return np.asarray(cumulative_hazard_rate) ** (1 / self.shape) / self.rate
 
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_hf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def jac_hf(self, time, *, asarray= False):
         jac = (
             self.rate * (self.rate * time) ** (self.shape - 1) * (1 + self.shape * np.log(self.rate * time)),
             self.shape**2 * (self.rate * time) ** (self.shape - 1),
@@ -256,25 +523,7 @@ class Weibull(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_chf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def jac_chf(self, time, *, asarray= False):
         jac = (
             np.log(self.rate * time) * (self.rate * time) ** self.shape,
             self.shape * time * (self.rate * time) ** (self.shape - 1),
@@ -283,7 +532,7 @@ class Weibull(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def dhf(self, time):
         time = np.asarray(time)
         return self.shape * (self.shape - 1) * self.rate**2 * (self.rate * time) ** (self.shape - 2)
 
@@ -327,11 +576,11 @@ class Gompertz(LifetimeDistribution):
     rate
     """
 
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+    def __init__(self, shape = None, rate = None):
         super().__init__(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float:  # optional but better for clarity and type checking
+    def shape(self):  # optional but better for clarity and type checking
         """Get the current shape value.
 
         Returns
@@ -341,7 +590,7 @@ class Gompertz(LifetimeDistribution):
         return self._params.get_param_value("shape")
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self):  # optional but better for clarity and type checking
         """Get the current rate value.
 
         Returns
@@ -350,48 +599,40 @@ class Gompertz(LifetimeDistribution):
         """
         return self._params.get_param_value("rate")
 
-    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time):
         return self.shape * self.rate * np.exp(self.rate * time)
 
-    def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def chf(self, time):
         return self.shape * np.expm1(self.rate * time)
 
-    @override
-    def mean(self) -> np.float64:
+    def mean(self):
+        """
+        The mean of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return np.exp(self.shape) * exp1(self.shape) / self.rate
 
-    @override
-    def var(self) -> np.float64:
+    def var(self):
+        """
+        The variance of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return polygamma(1, 1) / self.rate**2
 
-    @override
-    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def mrl(self, time):
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
 
-    @override
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate):
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_hf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def jac_hf(self, time, *, asarray= False):
         jac = (
             self.rate * np.exp(self.rate * time),
             self.shape * np.exp(self.rate * time) * (1 + self.rate * time),
@@ -400,25 +641,7 @@ class Gompertz(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_chf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def jac_chf(self, time, *, asarray= False):
         jac = (
             np.expm1(self.rate * time),
             self.shape * time * np.exp(self.rate * time),
@@ -427,11 +650,10 @@ class Gompertz(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def dhf(self, time):
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
-    @override
-    def _init_params(self, lifetime_data : LifetimeData) -> None:
+    def _init_params(self, lifetime_data) -> None:
         param0 = np.empty(self.nb_params, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(lifetime_data.complete_or_right_censored.lifetime_values))
         shape = np.exp(-rate * np.mean(lifetime_data.complete_or_right_censored.lifetime_values))
@@ -479,11 +701,11 @@ class Gamma(LifetimeDistribution):
     rate
     """
 
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+    def __init__(self, shape = None, rate = None):
         super().__init__(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float:  # optional but better for clarity and type checking
+    def shape(self):  # optional but better for clarity and type checking
         """Get the current shape value.
 
         Returns
@@ -493,7 +715,7 @@ class Gamma(LifetimeDistribution):
         return self._params.get_param_value("shape")
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self):  # optional but better for clarity and type checking
         """Get the current rate value.
 
         Returns
@@ -502,51 +724,44 @@ class Gamma(LifetimeDistribution):
         """
         return self._params.get_param_value("rate")
 
-    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time):
         x = self.rate * time
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
 
-    def chf(self, time: float | NDArray[np.float64]) -> float | NDArray[np.float64]:
+    def chf(self, time):
         x = self.rate * time
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
-    @override
-    def mean(self) -> np.float64:
+    def mean(self):
+        """
+        The mean of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return np.asarray(self.shape / self.rate)
 
-    @override
-    def var(self) -> np.float64:
+    def var(self):
+        """
+        The variance of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         return np.asarray(self.shape / (self.rate**2))
 
-    @override
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate):
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
 
-    def _uppergamma(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def _uppergamma(self, x):
         return gammaincc(self.shape, x) * gamma(self.shape)
 
-    def _jac_uppergamma_shape(self, x: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def _jac_uppergamma_shape(self, x):
         return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x, deg=100)
 
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_hf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def jac_hf(self, time, *, asarray= False):
         x = self.rate * time
         y = x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2
         jac = (
@@ -557,25 +772,9 @@ class Gamma(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @overload
     def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_chf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+        self, time, *, asarray= False
+    ):
         x = self.rate * time
         jac = (
             digamma(self.shape) - self._jac_uppergamma_shape(x) / self._uppergamma(x),
@@ -585,11 +784,10 @@ class Gamma(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def dhf(self, time):
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
-    @override
-    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def mrl(self, time):
         return super().mrl(time)
 
 
@@ -632,11 +830,11 @@ class LogLogistic(LifetimeDistribution):
     rate
     """
 
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None):
+    def __init__(self, shape = None, rate = None):
         super().__init__(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float:  # optional but better for clarity and type checking
+    def shape(self):  # optional but better for clarity and type checking
         """Get the current shape value.
 
         Returns
@@ -646,7 +844,7 @@ class LogLogistic(LifetimeDistribution):
         return self._params.get_param_value("shape")
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self):  # optional but better for clarity and type checking
         """Get the current rate value.
 
         Returns
@@ -655,51 +853,44 @@ class LogLogistic(LifetimeDistribution):
         """
         return self._params.get_param_value("rate")
 
-    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time):
         x = self.rate * np.asarray(time)
         return self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape)
 
-    def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def chf(self, time):
         x = self.rate * time
         return np.log(1 + x**self.shape)
 
-    @override
-    def mean(self) -> np.float64:
+    def mean(self):
+        """
+        The mean of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         b = np.pi / self.shape
         if self.shape <= 1:
             raise ValueError(f"Expectancy only defined for shape > 1: shape = {self.shape}")
         return b / (self.rate * np.sin(b))
 
-    @override
-    def var(self) -> np.float64:
+    def var(self):
+        """
+        The variance of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
         b = np.pi / self.shape
         if self.shape <= 2:
             raise ValueError(f"Variance only defined for shape > 2: shape = {self.shape}")
         return (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
 
-    @override
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate):
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_hf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def jac_hf(self, time, *, asarray= False):
         x = self.rate * time
         jac = (
             (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
@@ -710,25 +901,7 @@ class LogLogistic(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        *,
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-    def jac_chf(
-        self, time: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> tuple[np.float64, np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def jac_chf(self, time, *, asarray= False):
         x = self.rate * time
         jac = (
             (x**self.shape / (1 + x**self.shape)) * np.log(self.rate * time),
@@ -738,7 +911,7 @@ class LogLogistic(LifetimeDistribution):
             return np.stack(jac)
         return jac
 
-    def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def dhf(self, time):
         x = self.rate * np.asarray(time)
         return (
             self.shape
@@ -748,15 +921,11 @@ class LogLogistic(LifetimeDistribution):
             / (1 + x**self.shape) ** 2
         )
 
-    @override
-    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def mrl(self, time):
         return super().mrl(time)
 
 
-Args = TypeVarTuple("Args")
-
-
-class EquilibriumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+class EquilibriumDistribution(ParametricLifetimeModel):
     r"""Equilibrium distribution.
 
     The equilibirum distribution is the distrbution computed from a lifetime
@@ -773,60 +942,37 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[float | NDArray[np.
     """
 
     # can't expect baseline to be FrozenParametricLifetimeModel too because it does not have freeze_args
-    def __init__(self, baseline: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]]):
+    def __init__(self, baseline):
         super().__init__()
         self.baseline = baseline
 
-    @property
-    def args_names(self) -> tuple[str, ...]:
-        return self.baseline.args_names
-
-    @override
-    def cdf(
-        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def cdf(self, time, *args):
         return legendre_quadrature(lambda x: self.baseline.sf(x, *args), 0, time) / self.baseline.mean(*args)
 
-    def sf(
-        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def sf(self, time, *args):
         return 1 - self.cdf(time, *args)
 
-    def pdf(
-        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def pdf(self, time, *args):
         return self.baseline.sf(time, *args) / self.baseline.mean(*args)
 
-    def hf(
-        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time, *args):
         return 1 / self.baseline.mrl(time, *args)
 
-    def chf(
-        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def chf(self, time, *args):
         return -np.log(self.sf(time, *args))
 
-    @override
-    def isf(
-        self, probability: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def isf(self, probability, *args):
         return newton(
             lambda x: self.sf(x, *args) - probability,
             self.baseline.isf(probability, *args),
             args=args,
         )
 
-    @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate, *args,):
         return self.isf(np.exp(-cumulative_hazard_rate), *args)
 
 
-class MinimumDistribution(ParametricLifetimeModel[int | NDArray[np.int64], *tuple[float | NDArray[np.float64], ...]]):
+class MinimumDistribution(ParametricLifetimeModel):
     r"""Series structure of n identical and independent components.
 
     The hazard function of the system is given by:
@@ -851,127 +997,59 @@ class MinimumDistribution(ParametricLifetimeModel[int | NDArray[np.int64], *tupl
         model.sf(t, n)
     """
 
-    def __init__(self, baseline: LifetimeDistribution | LifetimeRegression):
+    def __init__(self, baseline):
         super().__init__()
         self.baseline = baseline
 
-    @override
-    def sf(
-        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def sf(self, time, n, *args):
         return super().sf(time)
 
-    @override
-    def pdf(
-        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def pdf(self, time, n, *args):
         return super().pdf(time)
 
-    @override
-    def hf(
-        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def hf(self, time, n, *args):
         return n * self.baseline.hf(time, *args)
 
-    @override
-    def chf(
-        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def chf(self, time, n, *args):
         return n * self.baseline.chf(time, *args)
 
-    @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: float | NDArray[np.float64],
-        n: int | NDArray[np.int64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]:
+    def ichf(self, cumulative_hazard_rate, n, *args,):
         return self.baseline.ichf(cumulative_hazard_rate / n, *args)
 
-    def dhf(
-        self, time: float | NDArray[np.float64], n: int | NDArray[np.int64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def dhf(self, time, n, *args):
         return n * self.baseline.dhf(time, *args)
 
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        n: int | NDArray[np.int64],
-        *args: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+    def jac_chf(self, time, n, *args, asarray= False):
         return n * self.baseline.jac_chf(time, *args, asarray=asarray)
 
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        n: int | NDArray[np.int64],
-        *args: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+    def jac_hf(self, time, n, *args, asarray= False):
         return n * self.baseline.jac_hf(time, *args, asarray=asarray)
 
-    def jac_sf(
-        self,
-        time: float | NDArray[np.float64],
-        n: int | NDArray[np.int64],
-        *args: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+    def jac_sf(self, time, n, *args, asarray= False):
         jac_chf, sf = self.jac_chf(time, n, *args, asarray=True), self.sf(time)
         jac = -jac_chf * sf
         if not asarray:
             return np.unstack(jac)
         return jac
 
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        n: int | NDArray[np.int64],
-        *args: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
+    def jac_cdf(self, time, n, *args, asarray= False):
         jac = -self.jac_sf(time, n, *args, asarray=True)
         if not asarray:
             return np.unstack(jac)
         return jac
 
-    def jac_pdf(
-        self,
-        time: float | NDArray[np.float64],
-        n: int | NDArray[np.int64],
-        *args: float | NDArray[np.float64],
-        asarray: bool = False,
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64 | NDArray[np.float64], ...]:
-        jac_hf, hf = self.jac_hf(time, n, *args, asarray=True), self.hf(time)
-        jac_sf, sf = self.jac_sf(time, n, *args, asarray=True), self.sf(time)
+    def jac_pdf(self, time, n, *args, asarray= False):
+        jac_hf, hf = self.jac_hf(time, n, *args, asarray=True), self.hf(time, n)
+        jac_sf, sf = self.jac_sf(time, n, *args, asarray=True), self.sf(time, n)
         jac = jac_hf * sf + jac_sf * hf
         if not asarray:
             return np.unstack(jac)
         return jac
 
-    @override
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        n: int | NDArray[np.int64],
-        *args: float | NDArray[np.float64],
-        deg: int = 10,
-    ) -> np.float64 | NDArray[np.float64]:
+    def ls_integrate(self, func, a, b, n, *args, deg: int = 10):
         return super().ls_integrate(func, a, b, n, *args, deg=deg)
 
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        n: NDArray[np.int64],
-        *args: NDArray[np.float64],
-        event: Optional[NDArray[np.bool_]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-        **kwargs: Any,
-    ) -> Self:
+    def fit(self, time, n, *args, event = None, entry = None, departure = None, **kwargs,):
         # initialize params structure (number of parameters in params tree)
         if isinstance(self.baseline, LifetimeRegression):
             self.baseline._init_params(args[0], *args[1:])

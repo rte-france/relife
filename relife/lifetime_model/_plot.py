@@ -177,8 +177,6 @@ class PlotTurnbull(PlotNonParametricLifetimeModel):
         return ax
 
 
-
-
 # def count_data_plot(
 #     fname: str,
 #     obj: CountData,

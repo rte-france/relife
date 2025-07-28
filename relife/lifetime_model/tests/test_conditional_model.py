@@ -89,7 +89,9 @@ class TestAgeReplacementDistribution:
 class TestAgeReplacementRegression:
 
     def test_rvs(self, regression, rvs_size, ar, covar, expected_out_shape):
-        assert AgeReplacementModel(regression).rvs(rvs_size, ar, covar).shape == expected_out_shape(ar=ar,  covar=covar, size=rvs_size)
+        assert AgeReplacementModel(regression).rvs(rvs_size, ar, covar).shape == expected_out_shape(
+            ar=ar, covar=covar, size=rvs_size
+        )
         assert all(
             arr.shape == expected_out_shape(ar=ar, covar=covar, size=rvs_size)
             for arr in AgeReplacementModel(regression).rvs(rvs_size, ar, covar, return_event=True)
@@ -274,7 +276,9 @@ class TestLeftTruncatedRegression:
     #     assert frozen_distribution.args_nb_assets == 1
 
     def test_rvs(self, regression, rvs_size, a0, covar, expected_out_shape):
-        assert LeftTruncatedModel(regression).rvs(rvs_size, a0, covar).shape == expected_out_shape(a0=a0,  covar=covar, size=rvs_size)
+        assert LeftTruncatedModel(regression).rvs(rvs_size, a0, covar).shape == expected_out_shape(
+            a0=a0, covar=covar, size=rvs_size
+        )
         assert all(
             arr.shape == expected_out_shape(a0=a0, covar=covar, size=rvs_size)
             for arr in LeftTruncatedModel(regression).rvs(rvs_size, a0, covar, return_event=True)

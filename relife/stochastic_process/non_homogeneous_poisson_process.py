@@ -5,72 +5,58 @@ from typing import (
     Optional,
     Self,
     Sequence,
-    Union,
-    TypeVar,
-    Generic,
+    Union, TypeVarTuple,
 )
 
 import numpy as np
 from numpy.typing import NDArray
-from relife import FrozenParametricModel
-from relife import ParametricModel
+
 from relife.data import NHPPData
-from relife.lifetime_model import (
-    LifetimeDistribution,
-    LifetimeRegression,
-    LeftTruncatedModel,
-    FrozenLifetimeRegression,
-    FrozenLeftTruncatedModel,
-)
+
 from relife.likelihood import LikelihoodFromLifetimes, FittingResults
+from .base import StochasticProcess, FrozenStochasticProcess
+from relife.lifetime_model import FittableParametricLifetimeModel
 
+Args = TypeVarTuple("Args")
 
-M = TypeVar(
-    "M",
-    bound=Union[
-        LifetimeDistribution, LifetimeRegression, LeftTruncatedModel, FrozenLifetimeRegression, FrozenLeftTruncatedModel
-    ],
-)
+class NonHomogeneousPoissonProcess(StochasticProcess[*Args]):
 
-
-class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
-
-    def __init__(self, lifetime_model: M):
+    def __init__(self, lifetime_model: FittableParametricLifetimeModel[*Args]):
         super().__init__()
         self.lifetime_model = lifetime_model
 
     @property
     def fitting_results(self) -> FittingResults:
-        return self.baseline.fitting_results
+        return self.lifetime_model.fitting_results
 
     @fitting_results.setter
     def fitting_results(self, value: FittingResults):
-        self.baseline.fitting_results = value
+        self.lifetime_model.fitting_results = value
 
-    def intensity(self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.baseline.hf(time, *args)
+    def intensity(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
+        return self.lifetime_model.hf(time, *args)
 
     def cumulative_intensity(
-        self, time: float | NDArray[np.float64], *args: float | NDArray[np.float64]
+        self, time: float | NDArray[np.float64], *args: *Args
     ) -> NDArray[np.float64]:
-        return self.baseline.chf(time, *args)
+        return self.lifetime_model.chf(time, *args)
 
-    def freeze(self, **kwargs : float | NDArray[np.float64]):
-        return FrozenNonHomogeneousPoissonProcess(self, )
+    def freeze(self, *args: *Args):
+        return FrozenNonHomogeneousPoissonProcess(self, *args)
 
     def sample(
         self,
         size: int,
         tf: float,
+        *args : *Args,
         t0: float = 0.0,
         nb_assets : Optional[int] = None,
         seed: Optional[int] = None,
-        **kwargs: float | NDArray[np.float64],
     ):
 
         from ._sample import NonHomogeneousPoissonProcessIterable, NonHomogeneousPoissonProcessSample
 
-        frozen_nhpp = freeze(self, **kwargs)
+        frozen_nhpp = self.freeze(*args)
         iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
@@ -80,14 +66,14 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
         self,
         size : int,
         tf: float,
+        *args: *Args,
         t0: float = 0.0,
         nb_assets : Optional[int] = None,
         seed: Optional[int] = None,
-        **kwargs: float | NDArray[np.float64],
     ):
         from ._sample import NonHomogeneousPoissonProcessIterable
 
-        frozen_nhpp = freeze(self, **kwargs)
+        frozen_nhpp = self.freeze(*args)
 
         iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
@@ -137,7 +123,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
         self,
         events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
         ages_at_events: NDArray[np.float64],
-        *args: float | NDArray[np.float64],
+        *args: *Args,
         assets_ids: Optional[Union[Sequence[str], NDArray[np.int64]]] = None,
         first_ages: Optional[NDArray[np.float64]] = None,
         last_ages: Optional[NDArray[np.float64]] = None,
@@ -153,7 +139,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
         )
         lifetime_data = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
-        self.baseline._init_params(lifetime_data, *args)
+        self.lifetime_model._init_params(lifetime_data)
         likelihood = LikelihoodFromLifetimes(self.baseline, lifetime_data)
         fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
         self.params = fitting_results.optimal_params
@@ -161,15 +147,15 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
         return self
 
 
-class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel):
-    def __init__(self, model: NonHomogeneousPoissonProcess[M], *args: float | NDArray[np.float64]):
+class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess[*Args]):
+    def __init__(self, model: NonHomogeneousPoissonProcess[*Args], *args: *Args):
         super().__init__(model, *args)
 
     def intensity(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.unfrozen_model.intensity(time, *self.args_values)
+        return self.unfrozen_model.intensity(time, *self.args)
 
     def cumulative_intensity(self, time: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        return self.unfrozen_model.cumulative_intensity(time, *self.args_values)
+        return self.unfrozen_model.cumulative_intensity(time, *self.args)
 
     def sample(
         self,
@@ -179,12 +165,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel):
         nb_assets : Optional[int] = None,
         seed: Optional[int] = None,
     ):
-        from ._sample import NonHomogeneousPoissonProcessIterable, NonHomogeneousPoissonProcessSample
-
-        iterable = NonHomogeneousPoissonProcessIterable(self, size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
-        struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
-        return NonHomogeneousPoissonProcessSample(t0, tf, struct_array)
+        return self.unfrozen_model.sample(size, tf, *self.args, t0=t0, nb_assets=nb_assets, seed=seed)
 
     def generate_failure_data(
         self,

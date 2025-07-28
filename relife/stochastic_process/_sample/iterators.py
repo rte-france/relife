@@ -10,12 +10,12 @@ from numpy.lib import recfunctions as rfn
 
 from relife.economic import Reward, ExponentialDiscounting
 from relife.lifetime_model import (
-    LifetimeDistribution,
-    FrozenLifetimeRegression,
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
     Exponential,
 )
+from relife.lifetime_model.distribution import LifetimeDistribution
+from relife.lifetime_model.regression import FrozenLifetimeRegression
 
 if TYPE_CHECKING:
     from relife.stochastic_process import RenewalRewardProcess

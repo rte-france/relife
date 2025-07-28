@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING, Generic, Optional, TypedDict, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, Optional, TypedDict, TypeVar, Union, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife import ParametricModel
 from relife.economic import (
     ExponentialDiscounting,
     Reward,
@@ -15,11 +14,13 @@ from relife.economic import (
 from relife.lifetime_model import (
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
-    FrozenLifetimeRegression,
-    LifetimeDistribution,
+    FrozenParametricLifetimeModel,
 )
+from ..lifetime_model.distribution import LifetimeDistribution
+from ..lifetime_model.regression import FrozenLifetimeRegression
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 from relife.stochastic_process.renewal_equations import renewal_equation_solver, delayed_renewal_equation_solver
+from .base import StochasticProcess
 
 if TYPE_CHECKING:
     from relife.economic import Reward
@@ -38,7 +39,9 @@ class LifetimeFitArg(TypedDict):
     args: tuple[NDArray[np.float64], ...]
 
 
-class RenewalProcess(ParametricModel, Generic[M]):
+Args = TypeVarTuple("Args")
+
+class RenewalProcess(StochasticProcess[*Args]):
     # noinspection PyUnresolvedReferences
     """Renewal process.
 
@@ -64,8 +67,8 @@ class RenewalProcess(ParametricModel, Generic[M]):
 
     def __init__(
         self,
-        lifetime_model: M,
-        first_lifetime_model: Optional[M] = None,
+        lifetime_model: FrozenParametricLifetimeModel[*Args],
+        first_lifetime_model: Optional[FrozenParametricLifetimeModel[*Args]] = None,
     ):
         super().__init__()
 
@@ -273,7 +276,7 @@ class RenewalProcess(ParametricModel, Generic[M]):
         return returned_dict
 
 
-class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
+class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
     # noinspection PyUnresolvedReferences
     """Renewal reward process.
 
@@ -308,10 +311,10 @@ class RenewalRewardProcess(RenewalProcess[M], Generic[M, R]):
 
     def __init__(
         self,
-        lifetime_model: M,
+        lifetime_model: FrozenParametricLifetimeModel[*Args],
         reward: R,
         discounting_rate: float = 0.0,
-        first_lifetime_model: Optional[M] = None,
+        first_lifetime_model: Optional[FrozenParametricLifetimeModel[*Args]] = None,
         first_reward: Optional[R] = None,
     ):
         super().__init__(lifetime_model, first_lifetime_model)

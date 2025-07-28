@@ -79,7 +79,8 @@ M = TypeVar("M", bound=Union["LifetimeDistribution", "LifetimeRegression", "Mini
 def approx_hessian(likelihood: L, params: NDArray[np.float64], eps: float = 1e-6) -> NDArray[np.float64]:
 
     def hessian_scheme(model: M):
-        from relife.lifetime_model import Gamma, LifetimeRegression
+        from relife.lifetime_model import Gamma
+        from relife.lifetime_model.regression import LifetimeRegression
 
         if isinstance(model, LifetimeRegression):
             return hessian_scheme(model.baseline)

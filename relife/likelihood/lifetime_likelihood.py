@@ -13,10 +13,10 @@ from ._base import Likelihood
 
 if TYPE_CHECKING:
     from relife.lifetime_model import (
-        LifetimeDistribution,
-        LifetimeRegression,
         MinimumDistribution,
     )
+    from ..lifetime_model.distribution import LifetimeDistribution
+    from ..lifetime_model.regression import LifetimeRegression
 
 
 class LikelihoodFromLifetimes(Likelihood):
@@ -195,7 +195,7 @@ class LikelihoodFromLifetimes(Likelihood):
         minimize_kwargs = {
             "method": options.get("method", "L-BFGS-B"),
             "constraints": options.get("constraints", ()),
-            "bounds": options.get("bounds", getattr(self.model, "_params_bounds", None)),
+            "bounds": options.get("bounds", None),
             "x0": options.get("x0", self.model.params),
         }
         optimizer = minimize(
