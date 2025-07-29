@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Iterator, Optional, TYPE_CHECKING
-from typing_extensions import override
+from typing import TYPE_CHECKING, Iterator, Optional
 
 import numpy as np
-from numpy.typing import NDArray
 from numpy.lib import recfunctions as rfn
+from numpy.typing import NDArray
+from typing_extensions import override
 
-from relife.economic import Reward, ExponentialDiscounting
+from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import (
+    Exponential,
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
-    Exponential,
 )
 from relife.lifetime_model.distribution import LifetimeDistribution
 from relife.lifetime_model.regression import FrozenLifetimeRegression

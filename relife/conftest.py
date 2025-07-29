@@ -3,15 +3,16 @@ import pytest
 from numpy.typing import NDArray
 
 from relife import freeze
-from relife.data import load_power_transformer, load_insulator_string, LifetimeData
+from relife.data import LifetimeData, load_insulator_string, load_power_transformer
 from relife.lifetime_model import (
+    AcceleratedFailureTime,
+    AgeReplacementModel,
     Exponential,
-    Weibull,
-    LogLogistic,
     Gamma,
     Gompertz,
+    LogLogistic,
     ProportionalHazard,
-    AcceleratedFailureTime, AgeReplacementModel,
+    Weibull,
 )
 
 DISTRIBUTION_INSTANCES = [
@@ -38,8 +39,9 @@ REGRESSION_INSTANCES = [
 ]
 
 ########################################################################################################################
-# DATA FIXTURES
+# DATA FIXTURES
 ########################################################################################################################
+
 
 @pytest.fixture
 def power_transformer_data():
@@ -50,9 +52,11 @@ def power_transformer_data():
 def insulator_string_data():
     return load_insulator_string()
 
+
 ########################################################################################################################
-# LIFETIME DATA FIXTURES
+# LIFETIME DATA FIXTURES
 ########################################################################################################################
+
 
 @pytest.fixture
 def lifetime_data_1d():
@@ -69,9 +73,11 @@ def lifetime_data_2d():
     departure = np.array([4, np.inf, 7, 10, np.inf, 12, np.inf], dtype=np.float64)
     return LifetimeData(time, entry=entry, departure=departure)
 
+
 ########################################################################################################################
-# LIFETIME MODEL FIXTURES
+# LIFETIME MODEL FIXTURES
 ########################################################################################################################
+
 
 @pytest.fixture(
     params=DISTRIBUTION_INSTANCES,
@@ -80,6 +86,7 @@ def lifetime_data_2d():
 def distribution(request):
     return request.param
 
+
 @pytest.fixture(
     params=REGRESSION_INSTANCES,
     ids=lambda reg: f"{reg.__class__.__name__}({reg.baseline.__class__.__name__})",
@@ -87,9 +94,11 @@ def distribution(request):
 def regression(request):
     return request.param
 
+
 ########################################################################################################################
-# FROZEN LIFETIME FIXTURES
+# FROZEN LIFETIME FIXTURES
 ########################################################################################################################
+
 
 @pytest.fixture(
     params=REGRESSION_INSTANCES,
@@ -116,12 +125,14 @@ def frozen_ar_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
     return freeze(AgeReplacementModel(request.param), ar=request.param.isf(0.75, covar), covar=covar)
 
+
 ########################################################################################################################
-# LIFETIME MODEL VARIABLES FIXTURES
+# LIFETIME MODEL VARIABLES FIXTURES
 ########################################################################################################################
 
-M = 3 # nb assets
-N = 10 # nb points
+M = 3  # nb assets
+N = 10  # nb points
+
 
 @pytest.fixture(
     params=[
@@ -196,6 +207,7 @@ def integration_bound_a(request):
 def integration_bound_b(request):
     return request.param
 
+
 @pytest.fixture(
     params=[
         np.ones((), dtype=np.float64),
@@ -226,9 +238,11 @@ def a0(request):
 def rvs_size(request):
     return request.param
 
+
 ########################################################################################################################
-# ECONOMIC FIXTURES
+# ECONOMIC FIXTURES
 ########################################################################################################################
+
 
 @pytest.fixture(
     params=[
@@ -242,14 +256,16 @@ def rvs_size(request):
 def cp(request):
     return request.param
 
-# M = 3
+
+# M = 3
 CF_RANGE = [5, 10, 20, 100, 1000]
+
 
 @pytest.fixture(
     params=[
-        np.array(CF_RANGE[0], dtype=np.float64), # ()
+        np.array(CF_RANGE[0], dtype=np.float64),  # ()
         # np.array([CF_RANGE[0]], dtype=np.float64), # (1,)
-        np.array(CF_RANGE[:M], dtype=np.float64), # (M,)
+        np.array(CF_RANGE[:M], dtype=np.float64),  # (M,)
         # np.array(CF_RANGE[:M], dtype=np.float64).reshape(-1, 1), # (M, 1)
     ],
     ids=lambda cf: f"cf:{cf.shape}",
@@ -258,17 +274,15 @@ def cf(request):
     return request.param
 
 
-@pytest.fixture(
-    params=[0., 0.04],
-    ids=lambda rate: f"discounting_rate:{rate}"
-)
+@pytest.fixture(params=[0.0, 0.04], ids=lambda rate: f"discounting_rate:{rate}")
 def discounting_rate(request):
     return request.param
 
 
 ########################################################################################################################
-# FACTORY FIXTURE TO CONTROL IO SHAPES
+# FACTORY FIXTURE TO CONTROL IO SHAPES
 ########################################################################################################################
+
 
 @pytest.fixture
 def expected_out_shape():

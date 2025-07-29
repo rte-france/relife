@@ -1,17 +1,18 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-from scipy.optimize import newton, Bounds
+from scipy.optimize import Bounds, newton
 
-from relife import ParametricModel, FrozenParametricModel
-from ._plot import PlotParametricLifetimeModel
+from relife import FrozenParametricModel, ParametricModel
 from relife.quadrature import (
     check_and_broadcast_bounds,
     legendre_quadrature,
     unweighted_laguerre_quadrature,
 )
-from ..data import LifetimeData
-from ..likelihood import LikelihoodFromLifetimes
+
+from relife.data import LifetimeData
+from relife.likelihood import LikelihoodFromLifetimes
+from ._plot import PlotParametricLifetimeModel
 
 
 class ParametricLifetimeModel(ParametricModel, ABC):
@@ -98,7 +99,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
     def cdf(self, time, *args):
         return 1 - self.sf(time, *args)
 
-    def ppf(self,probability, *args):
+    def ppf(self, probability, *args):
         return self.isf(1 - probability, *args)
 
     def median(self, *args):
@@ -119,7 +120,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    def rvs(self, size, *args, nb_assets = None, return_event = False, return_entry = False, seed = None):
+    def rvs(self, size, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
         rs = np.random.RandomState(seed=seed)
         if nb_assets is not None:
             np_size = (nb_assets, size)
@@ -143,7 +144,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         """Get plot"""
         return PlotParametricLifetimeModel(self)
 
-    def ls_integrate(self, func, a, b, *args, deg = 10):
+    def ls_integrate(self, func, a, b, *args, deg=10):
         def integrand(x):
             #  x.shape == (deg,), (deg, n) or (deg, m, n), ie points of quadratures
             # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
@@ -227,7 +228,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.fitting_results = None
 
     @abstractmethod
-    def _init_params(self, lifetime_data): ...
+    def _init_params(self, time, *args, event=None, entry=None, departure=None): ...
 
     @abstractmethod
     def _params_bounds(self):
@@ -236,18 +237,31 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
             np.full(self.nb_params, np.inf),
         )
 
+    @abstractmethod
+    def dhf(self, time, *args): ...
+
+    @abstractmethod
+    def jac_hf(self, time, *args, asarray=True): ...
+
+    @abstractmethod
+    def jac_chf(self, time, *args, asarray=True): ...
+
+    @abstractmethod
+    def jac_sf(self, time, *args, asarray=True): ...
+
+    @abstractmethod
+    def jac_pdf(self, time, *args, asarray=True): ...
+
     def fit(
         self,
         time,
         *args,
-        event = None,
-        entry = None,
-        departure = None,
+        event=None,
+        entry=None,
+        departure=None,
         **options,
     ):
-        lifetime_data = LifetimeData(
-            time, event=event, entry=entry, departure=departure, args=args
-        )
+        lifetime_data = LifetimeData(time, event=event, entry=entry, departure=departure, args=args)
         self._init_params(lifetime_data)
         likelihood = LikelihoodFromLifetimes(self, lifetime_data)
         if "bounds" not in options:
@@ -261,7 +275,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
 class NonParametricLifetimeModel(ABC):
 
     @abstractmethod
-    def fit(self, time, event = None, entry = None, departure = None): ...
+    def fit(self, time, event=None, entry=None, departure=None): ...
 
 
 class FrozenParametricLifetimeModel(FrozenParametricModel):
@@ -355,6 +369,18 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         return self.unfrozen_model.mrl(time, *self.args)
 
     def moment(self, n: int):
+        """
+        n-th order moment.
+
+        Parameters
+        ----------
+        n : int
+            Order of the moment (at least 1)
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+        """
         return self.unfrozen_model.moment(n, *self.args)
 
     def mean(self):
@@ -395,6 +421,20 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         return self.unfrozen_model.isf(probability, *self.args)
 
     def ichf(self, cumulative_hazard_rate):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are (), (n,) or (m, n).
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given probability value(s).
+        """
         return self.unfrozen_model.ichf(cumulative_hazard_rate, *self.args)
 
     def cdf(self, time):
@@ -414,7 +454,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         """
         return self.unfrozen_model.cdf(time, *self.args)
 
-    def rvs(self, size, return_event = False, return_entry = False, seed = None):
+    def rvs(self, size, return_event=False, return_entry=False, seed=None):
         """
         Random variable sampling.
 
@@ -467,7 +507,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         """
         return self.unfrozen_model.median(*self.args)
 
-    def ls_integrate(self, func, a, b, deg = 10):
+    def ls_integrate(self, func, a, b, deg=10):
         """
         Lebesgue-Stieltjes integration.
 

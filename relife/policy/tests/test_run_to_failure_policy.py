@@ -10,7 +10,7 @@ class TestOneCycleRunToFailure:
         if isinstance(distribution, Exponential):
             pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
         policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
-        qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m,)
+        qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
         assert qa.shape == cf.shape
 
     def test_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
@@ -28,7 +28,7 @@ class TestRunToFailure:
         if isinstance(distribution, Exponential):
             pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
         policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
-        qa = policy.asymptotic_expected_equivalent_annual_cost() # () or (m,)
+        qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
         assert qa.shape == cf.shape
 
     def test_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
@@ -40,6 +40,7 @@ class TestRunToFailure:
         assert timeline.shape == (2000,)
         assert q.shape == qa.shape + timeline.shape
         assert q[..., -1].flatten() == pytest.approx(qa.flatten(), rel=1e-1)
+
 
 # FIXME : does not work because now max ndim in ls_integrate is 2d, here it's 3d -> broadcasting error
 # possible solutions :

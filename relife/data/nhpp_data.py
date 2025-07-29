@@ -36,9 +36,7 @@ class NHPPData:
         if self.ages_at_events.ndim != 1:
             raise ValueError("Invalid array shape for ages. Expected 1d-array")
         if len(self.events_assets_ids) != len(self.ages_at_events):
-            raise ValueError(
-                "Shape of events_assets_ids and ages must be equal. Expected equal length 1d-arrays"
-            )
+            raise ValueError("Shape of events_assets_ids and ages must be equal. Expected equal length 1d-arrays")
         if self.assets_ids is not None:
             if self.assets_ids.ndim != 1:
                 raise ValueError("Invalid array shape for assets_ids. Expected 1d-array")
@@ -104,14 +102,10 @@ class NHPPData:
 
             if self.first_ages is not None:
                 if np.any(ages[self.first_age_index] <= self.first_ages[nb_ages_per_asset != 0]):
-                    raise ValueError(
-                        "Each first_ages value must be lower than all of its corresponding ages values"
-                    )
+                    raise ValueError("Each first_ages value must be lower than all of its corresponding ages values")
             if self.last_ages is not None:
                 if np.any(ages[self.last_age_index] >= self.last_ages[nb_ages_per_asset != 0]):
-                    raise ValueError(
-                        "Each last_ages value must be greater than all of its corresponding ages values"
-                    )
+                    raise ValueError("Each last_ages value must be greater than all of its corresponding ages values")
 
     def to_lifetime_data(self) -> LifetimeData:
         event = np.ones_like(self.ages_at_events, dtype=np.bool_)

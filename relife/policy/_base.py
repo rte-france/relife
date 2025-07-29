@@ -127,7 +127,7 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         # timeline : () or (m, 1)
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
 
-
+# TODO : generic of generic
 class BaseAgeReplacementPolicy(Generic[M, R]):
 
     def __init__(self, stochastic_process: RenewalRewardProcess[M, R]):
@@ -275,7 +275,7 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
 
     def sample(
         self,
-        size : int,
+        size: int,
         tf: float,
         t0: float = 0.0,
         seed: Optional[int] = None,
@@ -303,7 +303,7 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
 
     def generate_lifetime_data(
         self,
-        size : int,
+        size: int,
         tf: float,
         t0: float = 0.0,
         seed: Optional[int] = None,

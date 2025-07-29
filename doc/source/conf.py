@@ -59,7 +59,7 @@ else:
     mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 #########################################################################################
 
-templates_path = ["_templates"] #toto
+templates_path = ["_templates"]  # toto
 exclude_patterns = [
     "_*",
     "user_guide/_*",
@@ -79,8 +79,8 @@ html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 
 html_sidebars = {
-    "installation": [], # removes navigation bar for installation.rst
-    "basic/index": [], # idem
+    "installation": [],  # removes navigation bar for installation.rst
+    "basic/index": [],  # idem
     "developper/index": [],  #  idem
 }
 

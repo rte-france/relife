@@ -1,2 +1,6 @@
-from .data import RenewalProcessSample, RenewalRewardProcessSample, NonHomogeneousPoissonProcessSample
+from .data import (
+    NonHomogeneousPoissonProcessSample,
+    RenewalProcessSample,
+    RenewalRewardProcessSample,
+)
 from .iterables import NonHomogeneousPoissonProcessIterable, RenewalProcessIterable

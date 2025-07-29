@@ -1,244 +1,155 @@
-from _typeshed import Incomplete
-from abc import ABC, abstractmethod
+from abc import ABC
+from typing import (
+    Any,
+    Callable,
+    Literal,
+    Optional,
+    Self,
+    TypeAlias,
+    TypeVarTuple,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
-
-from relife import ParametricModel as ParametricModel
-from relife.lifetime_model import FittableParametricLifetimeModel, FrozenParametricLifetimeModel, LifetimeDistribution
-from typing import Literal, overload, Callable, Self
+from scipy.optimize import Bounds
 from typing_extensions import override
 
+from relife import ParametricModel as ParametricModel
+from relife.lifetime_model import (
+    FittableParametricLifetimeModel,
+    FrozenParametricLifetimeModel,
+)
 from relife.likelihood import FittingResults as FittingResults
 
+_Xs = TypeVarTuple("_Xs")
+_X: TypeAlias = float | NDArray[np.float64]
+_Y: TypeAlias = np.float64 | NDArray[np.float64]
+_B: TypeAlias = np.bool_ | NDArray[np.bool_]
 
-def broadcast_time_covar(
-    time: float | NDArray[np.float64], covar: float | NDArray[np.float64]
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
+def broadcast_time_covar(time: _X, covar: _X) -> tuple[_X, _X]: ...
 def broadcast_time_covar_shapes(
     time_shape: tuple[()] | tuple[int] | tuple[int, int], covar_shape: tuple[()] | tuple[int] | tuple[int, int]
 ) -> tuple[()] | tuple[int] | tuple[int, int]: ...
 
+class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC):
+    fitting_results = Optional[FittingResults]
+    covar_effect: CovarEffect
+    baseline: FittableParametricLifetimeModel[*_Xs]
 
-class LifetimeRegression(
-    FittableParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]],
-    ABC,
-):
-    fitting_results = FittingResults | None
-    covar_effect: Incomplete
-    baseline: Incomplete
     def __init__(
-        self, baseline: LifetimeDistribution | LifetimeRegression, coefficients: tuple[float | None, ...] = (None,)
+        self,
+        baseline: FittableParametricLifetimeModel[*_Xs],
+        coefficients: tuple[Optional[float], ...] = (None,),
     ) -> None: ...
+    def _init_params(
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        *args: *_Xs,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+    ) -> None: ...
+    def _params_bounds(self) -> Bounds: ...
     @property
     def coefficients(self) -> NDArray[np.float64]: ...
     @property
     def nb_coef(self) -> int: ...
     @override
-    def sf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def sf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def isf(
-        self,
-        probability: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def pdf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def cdf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-    def pdf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def isf(self, probability: _X, covar: _X, *args: *_Xs,) -> _Y: ...
     @override
-    def ppf(
-        self,
-        probability: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def cdf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def mrl(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def ppf(self, probability: _X, covar: _X, *args: *_Xs,) -> _Y: ...
     @override
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        deg: int = 10,
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def mrl(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def mean(
-        self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def mean(self, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def var(
-        self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def var(self, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def median(
-        self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @abstractmethod
-    def dhf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def median(self, covar: _X, *args: *_Xs) -> _Y: ...
+    @override
+    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, covar: _X, *args: *_Xs, deg: int = 10,) -> _Y: ...
     @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_sf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_sf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_sf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_cdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_cdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_cdf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_sf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_pdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
     @overload
-    def jac_sf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False],
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True],
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: bool,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...] | np.float64 | NDArray[np.float64]: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_pdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_pdf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets: int | None = None,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: int | None = None,
-    ) -> np.float64 | NDArray[np.float64]: ...
+        covar: _X,
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[False] = False,
+        return_entry: Literal[False] = False,
+        seed: Optional[int] = None,
+    ) -> _Y: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets: int | None = None,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]: ...
+        covar: _X,
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[True] = True,
+        return_entry: Literal[False] = False,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _B]: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets: int | None = None,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
+        covar: _X,
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[False] = False,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _Y]: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets: int | None = None,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]: ...
-    @overload
+        covar: _X,
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[True] = True,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _B, _Y]: ...
     def rvs(
         self,
         size: int,
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        nb_assets: int | None = None,
+        covar: _X,
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: int | None = None,
+        seed: Optional[int] = None,
     ) -> (
-        np.float64
-        | NDArray[np.float64]
-        | tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]
-        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
-        | tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]
+        _Y
+        | tuple[_Y, _Y]
+        | tuple[_Y, _B]
+        | tuple[_Y, _B, _Y]
     ): ...
-    params: Incomplete
     def fit(
         self,
         time: NDArray[np.float64],
@@ -246,192 +157,94 @@ class LifetimeRegression(
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         departure: NDArray[np.float64] | None = None,
-        options: dict = {},
-        **kwargs: NDArray[np.float64],
+        **options: Any,
     ) -> Self: ...
     @override
-    def freeze(self, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]): ...
+    def freeze(self, covar: _X, *args: *_Xs): ...
 
+class ProportionalHazard(LifetimeRegression[*_Xs]):
+    def hf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def chf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    @override
+    def ichf(self, cumulative_hazard_rate: _X, covar: _X, *args: *_Xs,) -> _Y: ...
+    def dhf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    @overload
+    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    @overload
+    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    @overload
+    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    @overload
+    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    @override
+    def moment(self, n: int, covar: _X, *args: *_Xs) -> _Y: ...
 
-class ProportionalHazard(LifetimeRegression):
-    def hf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-    def chf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+class AcceleratedFailureTime(LifetimeRegression[*_Xs]):
+    def hf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def chf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]: ...
-    def dhf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def ichf(self, cumulative_hazard_rate: _X, covar: _X, *args: *_Xs,) -> _Y: ...
+    def dhf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
     @override
-    def moment(
-        self, n: int, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-
-class AcceleratedFailureTime(LifetimeRegression):
-    def hf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-    def chf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-    ) -> np.float64 | NDArray[np.float64]: ...
-    def dhf(
-        self, time: float | NDArray[np.float64], covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[False] = False,
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: float | NDArray[np.float64],
-        covar: float | NDArray[np.float64],
-        *args: float | NDArray[np.float64],
-        asarray: Literal[True] = True,
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @override
-    def moment(
-        self, n: int, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]: ...
-
+    def moment(self, n: int, covar: _X, *args: *_Xs) -> _Y: ...
 
 class CovarEffect(ParametricModel):
-    def __init__(self, coefficients: tuple[float | None, ...] = (None,)) -> None: ...
+    def __init__(self, coefficients: tuple[Optional[None], ...] = (None,)) -> None: ...
     @property
     def nb_coef(self) -> int: ...
-    def g(self, covar: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
+    def g(self, covar: _X) -> _Y: ...
+    @overload
+    def jac_g(self, covar: _X, *, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
+    @overload
+    def jac_g(self, covar: _X, *, asarray: Literal[True] = True) -> _Y: ...
     def jac_g(
-        self, covar: float | NDArray[np.float64], *, asarray: bool = False
-    ) -> np.float64 | NDArray[np.float64] | tuple[np.float64, ...] | tuple[NDArray[np.float64], ...]: ...
+        self, covar: _X, *, asarray: Literal[True] = True
+    ) -> tuple[_Y, ...] | _Y: ...
 
+class FrozenLifetimeRegression(FrozenParametricLifetimeModel[*tuple[_X, *_Xs]]):
+    unfrozen_model: LifetimeRegression[*_Xs]
+    args: tuple[_X, *_Xs]
 
-class FrozenLifetimeRegression(
-    FrozenParametricLifetimeModel[float | NDArray[np.float64], *tuple[float | NDArray[np.float64], ...]]
-):
-    unfrozen_model: LifetimeRegression
-
+    def __init__(self, model: LifetimeRegression[*_Xs], covar: _X, *args: *_Xs) -> None: ...
     @override
-    def __init__(
-        self, model: LifetimeRegression, covar: float | NDArray[np.float64], *args: float | NDArray[np.float64]
-    ) -> None: ...
-    @override
-    def unfreeze(self) -> LifetimeRegression: ...
+    def unfreeze(self) -> LifetimeRegression[*_Xs]: ...
     @property
     def nb_coef(self) -> int: ...
     @property
-    def covar(self) -> float | NDArray[np.float64]: ...
-    args: Incomplete
+    def covar(self) -> _X: ...
+    # noinspection PyUnresolvedReferences
     @covar.setter
-    def covar(self, value: float | NDArray[np.float64]) -> None: ...
-    def dhf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
+    def covar(self, value: _X) -> None: ...
+    def dhf(self, time: _X, *args: *_Xs) -> _Y: ...
     @overload
-    def jac_hf(
-        self, time: float | NDArray[np.float64], asarray: Literal[False] = False
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_hf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(
-        self, time: float | NDArray[np.float64], asarray: Literal[True] = True
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_hf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
+    def jac_hf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(
-        self, time: float | NDArray[np.float64], asarray: Literal[False] = False
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_chf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(
-        self, time: float | NDArray[np.float64], asarray: Literal[True] = True
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_chf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
+    def jac_chf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_sf(
-        self, time: float | NDArray[np.float64], asarray: Literal[False] = False
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_sf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
     @overload
-    def jac_sf(
-        self, time: float | NDArray[np.float64], asarray: Literal[True] = True
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_sf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
+    def jac_sf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_cdf(
-        self, time: float | NDArray[np.float64], asarray: Literal[False]
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
+    def jac_pdf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
     @overload
-    def jac_cdf(
-        self, time: float | NDArray[np.float64], asarray: Literal[True]
-    ) -> np.float64 | NDArray[np.float64]: ...
-    @overload
-    def jac_cdf(
-        self, time: float | NDArray[np.float64], asarray: bool
-    ) -> tuple[np.float64 | NDArray[np.float64], ...] | np.float64 | NDArray[np.float64]: ...
-    @overload
-    def jac_pdf(
-        self, time: float | NDArray[np.float64], asarray: Literal[False] = False
-    ) -> tuple[np.float64 | NDArray[np.float64], ...]: ...
-    @overload
-    def jac_pdf(
-        self, time: float | NDArray[np.float64], asarray: Literal[True] = True
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def jac_pdf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
+    def jac_pdf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...

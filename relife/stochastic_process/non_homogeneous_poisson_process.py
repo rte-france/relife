@@ -5,19 +5,21 @@ from typing import (
     Optional,
     Self,
     Sequence,
-    Union, TypeVarTuple,
+    TypeVarTuple,
+    Union,
 )
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.data import NHPPData
-
-from relife.likelihood import LikelihoodFromLifetimes, FittingResults
-from .base import StochasticProcess, FrozenStochasticProcess
 from relife.lifetime_model import FittableParametricLifetimeModel
+from relife.likelihood import FittingResults, LikelihoodFromLifetimes
+
+from .base import FrozenStochasticProcess, StochasticProcess
 
 Args = TypeVarTuple("Args")
+
 
 class NonHomogeneousPoissonProcess(StochasticProcess[*Args]):
 
@@ -36,9 +38,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess[*Args]):
     def intensity(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         return self.lifetime_model.hf(time, *args)
 
-    def cumulative_intensity(
-        self, time: float | NDArray[np.float64], *args: *Args
-    ) -> NDArray[np.float64]:
+    def cumulative_intensity(self, time: float | NDArray[np.float64], *args: *Args) -> NDArray[np.float64]:
         return self.lifetime_model.chf(time, *args)
 
     def freeze(self, *args: *Args):
@@ -48,13 +48,16 @@ class NonHomogeneousPoissonProcess(StochasticProcess[*Args]):
         self,
         size: int,
         tf: float,
-        *args : *Args,
+        *args: *Args,
         t0: float = 0.0,
-        nb_assets : Optional[int] = None,
+        nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
     ):
 
-        from ._sample import NonHomogeneousPoissonProcessIterable, NonHomogeneousPoissonProcessSample
+        from ._sample import (
+            NonHomogeneousPoissonProcessIterable,
+            NonHomogeneousPoissonProcessSample,
+        )
 
         frozen_nhpp = self.freeze(*args)
         iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
@@ -64,11 +67,11 @@ class NonHomogeneousPoissonProcess(StochasticProcess[*Args]):
 
     def generate_failure_data(
         self,
-        size : int,
+        size: int,
         tf: float,
         *args: *Args,
         t0: float = 0.0,
-        nb_assets : Optional[int] = None,
+        nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
     ):
         from ._sample import NonHomogeneousPoissonProcessIterable
@@ -118,7 +121,6 @@ class NonHomogeneousPoissonProcess(StochasticProcess[*Args]):
             "last_ages": last_ages,
         }
 
-
     def fit(
         self,
         events_assets_ids: Union[Sequence[str], NDArray[np.int64]],
@@ -162,17 +164,19 @@ class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess[*Args]):
         size: int,
         tf: float,
         t0: float = 0.0,
-        nb_assets : Optional[int] = None,
+        nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
     ):
         return self.unfrozen_model.sample(size, tf, *self.args, t0=t0, nb_assets=nb_assets, seed=seed)
 
     def generate_failure_data(
         self,
-        size : int,
+        size: int,
         tf: float,
         t0: float = 0.0,
-        nb_assets : Optional[int] = None,
+        nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
     ):
-        return self.unfrozen_model.generate_failure_data(size, tf, t0=t0, nb_assets=nb_assets, seed=seed, *self.args_values)
+        return self.unfrozen_model.generate_failure_data(
+            size, tf, t0=t0, nb_assets=nb_assets, seed=seed, *self.args_values
+        )

@@ -2,7 +2,7 @@ import numpy as np
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
-from relife.lifetime_model import Weibull, AcceleratedFailureTime, ProportionalHazard
+from relife.lifetime_model import AcceleratedFailureTime, ProportionalHazard, Weibull
 from relife.lifetime_model.regression import CovarEffect
 
 

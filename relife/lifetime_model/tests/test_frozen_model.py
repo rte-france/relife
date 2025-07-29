@@ -1,5 +1,6 @@
-from pytest import approx
 import numpy as np
+from pytest import approx
+
 from relife import freeze
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 

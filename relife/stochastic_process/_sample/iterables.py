@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Iterable,
     Optional,
-    TypeVarTuple, TYPE_CHECKING,
+    TypeVarTuple,
 )
 
 import numpy as np
@@ -14,16 +16,16 @@ from relife.lifetime_model import (
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
 )
+from relife.stochastic_process import NonHomogeneousPoissonProcess
+
 from ...lifetime_model.distribution import LifetimeDistribution
 from ...lifetime_model.regression import FrozenLifetimeRegression
 from .iterators import (
     CountDataIterator,
+    NonHomogeneousPoissonProcessIterator,
     RenewalProcessIterator,
     RenewalRewardProcessIterator,
-    NonHomogeneousPoissonProcessIterator,
 )
-from relife.stochastic_process import NonHomogeneousPoissonProcess
-
 
 if TYPE_CHECKING:
     from relife.stochastic_process import RenewalProcess

@@ -1,6 +1,6 @@
+import numpy as np
 import pytest
 from pytest import approx
-import numpy as np
 
 
 def test_rvs(distribution, rvs_size, expected_out_shape):

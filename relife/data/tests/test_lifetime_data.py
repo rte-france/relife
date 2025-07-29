@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def test_structured_lifetime_data_with_1d(lifetime_data_1d):
     assert np.all(lifetime_data_1d.complete.lifetime_index == np.array([0, 2, 6]).astype(np.int64))
     assert np.all(lifetime_data_1d.complete.lifetime_values == np.array([10, 9, 11]).astype(np.float64).reshape(-1, 1))
@@ -11,6 +12,7 @@ def test_structured_lifetime_data_with_1d(lifetime_data_1d):
     assert np.all(
         lifetime_data_1d.left_truncation.lifetime_values == np.array([3, 5, 3, 1, 9]).astype(np.float64).reshape(-1, 1)
     )
+
 
 def test_structured_lifetime_data_with_2d(lifetime_data_2d):
     assert np.all(lifetime_data_2d.left_censoring.lifetime_index == np.array([1]).astype(np.int64))
@@ -27,5 +29,3 @@ def test_structured_lifetime_data_with_2d(lifetime_data_2d):
     )
 
     assert np.all(lifetime_data_2d.left_truncation.lifetime_values == np.array([3, 5, 3, 1, 9]).reshape(-1, 1))
-
-

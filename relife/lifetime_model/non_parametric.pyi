@@ -1,15 +1,16 @@
+from typing import Literal, Self, overload
+
 import numpy as np
-from ._base import NonParametricLifetimeModel as NonParametricLifetimeModel
 from _typeshed import Incomplete
 from numpy.typing import NDArray as NDArray
+
 from relife.data import LifetimeData as LifetimeData
-from relife.lifetime_model._plot import (
-    PlotECDF as PlotECDF,
-    PlotKaplanMeier as PlotKaplanMeier,
-    PlotNelsonAalen as PlotNelsonAalen,
-    PlotTurnbull as PlotTurnbull,
-)
-from typing import Literal, Self, overload
+from relife.lifetime_model._plot import PlotECDF as PlotECDF
+from relife.lifetime_model._plot import PlotKaplanMeier as PlotKaplanMeier
+from relife.lifetime_model._plot import PlotNelsonAalen as PlotNelsonAalen
+from relife.lifetime_model._plot import PlotTurnbull as PlotTurnbull
+
+from ._base import NonParametricLifetimeModel as NonParametricLifetimeModel
 
 class ECDF(NonParametricLifetimeModel):
     def __init__(self) -> None: ...

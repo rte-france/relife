@@ -1,208 +1,236 @@
-import abc
+from abc import ABC, abstractmethod
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Literal,
+    Optional,
+    Self,
+    TypeAlias,
+    TypeVarTuple,
+    overload, Protocol
+)
+
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from ._plot import PlotParametricLifetimeModel as PlotParametricLifetimeModel
-from abc import ABC, abstractmethod
-from numpy.typing import NDArray
-from relife import FrozenParametricModel as FrozenParametricModel, ParametricModel as ParametricModel
+from relife import FrozenParametricModel as FrozenParametricModel
+from relife import ParametricModel as ParametricModel
 from relife.likelihood import FittingResults as FittingResults
-from typing import Callable, Generic, Literal, Self, TypeVarTuple, overload, Optional, Any
 
-from ..data import LifetimeData
+from ._plot import PlotParametricLifetimeModel
 
-Args = TypeVarTuple("Args")
+_Xs = TypeVarTuple("_Xs")
+_X: TypeAlias = float | np.float64 | NDArray[np.float64]
+_Y: TypeAlias = np.float64 | NDArray[np.float64]
+_B: TypeAlias = np.bool_ | NDArray[np.bool_]
 
-class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Args]):
+class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Xs]):
+    @overload
+    def sf(self, time: _X, *args: *_Xs) -> _Y: ...
     @abstractmethod
-    def sf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
+    def hf(self, time: _X, *args: *_Xs) -> _Y: ...
     @abstractmethod
-    def hf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
+    def chf(self, time: _X, *args: *_Xs) -> _Y: ...
     @abstractmethod
-    def chf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    @abstractmethod
-
-    def pdf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def cdf(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def ppf(self, probability: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def median(self, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def isf(self, probability: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def ichf(
-        self, cumulative_hazard_rate: float | NDArray[np.float64], *args: *Args
-    ) -> np.float64 | NDArray[np.float64]: ...
+    def pdf(self, time: _X, *args: *_Xs) -> _Y: ...
+    def cdf(self, time: _X, *args: *_Xs) -> _Y: ...
+    def ppf(self, probability: _X, *args: *_Xs) -> _Y: ...
+    def median(self, *args: *_Xs) -> _Y: ...
+    def isf(self, probability: _X, *args: *_Xs) -> _Y: ...
+    def ichf(self, cumulative_hazard_rate: _X, *args: *_Xs) -> _Y: ...
+    def moment(self, n: int, *args: *_Xs) -> _Y: ...
+    def mean(self, *args: *_Xs) -> _Y: ...
+    def var(self, *args: *_Xs) -> _Y: ...
+    def mrl(self, time: _X, *args: *_Xs) -> _Y: ...
+    def freeze(self, *args: *_Xs): ...
+    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, *args: *_Xs, deg: int = 10) -> _Y: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *Args,
-        nb_assets: int | None = None,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: int | None = None,
-    ) -> np.float64 | NDArray[np.float64]: ...
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[False] = False,
+        return_entry: Literal[False] = False,
+        seed: Optional[int] = None,
+    ) -> _Y: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *Args,
-        nb_assets: int | None = None,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]: ...
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[True] = True,
+        return_entry: Literal[False] = False,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _B]: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *Args,
-        nb_assets: int | None = None,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[False] = False,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _Y]: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *Args,
-        nb_assets: int | None = None,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]: ...
-    @overload
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[True] = True,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _B, _Y]: ...
     def rvs(
         self,
         size: int,
-        *args: *Args,
-        nb_assets: int | None = None,
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: int | None = None,
+        seed: Optional[int] = None,
     ) -> (
-        np.float64
-        | NDArray[np.float64]
-        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
-        | tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]
-        | tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]
+            _Y
+            | tuple[_Y, _Y]
+            | tuple[_Y, _B]
+            | tuple[_Y, _B, _Y]
     ): ...
     @property
     def plot(self) -> PlotParametricLifetimeModel: ...
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        *args: *Args,
-        deg: int = 10,
-    ) -> np.float64 | NDArray[np.float64]: ...
-    def moment(self, n: int, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def mean(self, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def var(self, *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def mrl(self, time: float | NDArray[np.float64], *args: *Args) -> np.float64 | NDArray[np.float64]: ...
-    def freeze(self, *args: *Args): ...
 
-class FittableParametricLifetimeModel(ParametricLifetimeModel[*Args], ABC):
+class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Xs], ABC):
     fitting_results = Optional[FittingResults]
 
-    def __init__(self, **kwparams: float | None) -> None: ...
-
-    @abstractmethod
-    def _init_params(self, lifetime_data : LifetimeData) -> None: ...
-
+    def __init__(self, **kwparams: Optional[float]) -> None: ...
     @abstractmethod
     def _params_bounds(self) -> Bounds: ...
-
+    @abstractmethod
+    def dhf(self, time: _X, *args: *_Xs) -> _Y: ...
+    @overload
+    def jac_hf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    @overload
+    def jac_hf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    @abstractmethod
+    def jac_hf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    @overload
+    def jac_chf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    @overload
+    def jac_chf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    @abstractmethod
+    def jac_chf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    @overload
+    def jac_sf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    @overload
+    def jac_sf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    @abstractmethod
+    def jac_sf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    @overload
+    def jac_pdf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    @overload
+    def jac_pdf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    @abstractmethod
+    def jac_pdf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    @abstractmethod
+    def _init_params(
+        self,
+        time: NDArray[np.float64],
+        *args: *_Xs,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+    ) -> None: ...
     def fit(
         self,
         time: NDArray[np.float64],
-        *args: *Args,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        departure: NDArray[np.float64] | None = None,
-        **options : Any,
-    ) -> Self: ...
+        *args: *_Xs,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
+        **options: Any,
+    ) -> None: ...
 
-class NonParametricLifetimeModel(ABC, metaclass=abc.ABCMeta):
+
+class NonParametricLifetimeModel(ABC):
     @abstractmethod
     def fit(
         self,
         time: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        departure: NDArray[np.float64] | None = None,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+        departure: Optional[NDArray[np.float64]] = None,
     ) -> Self: ...
 
-class FrozenParametricLifetimeModel(FrozenParametricModel[*Args]):
+class FrozenParametricLifetimeModel(FrozenParametricModel[*_Xs]):
 
-    unfrozen_model : ParametricLifetimeModel[*Args]
+    unfrozen_model: ParametricLifetimeModel[*_Xs]
 
-    def __init__(
-        self, model: ParametricLifetimeModel[*tuple[float | NDArray[np.float64], ...]], *args: *Args
-    ) -> None: ...
-    def hf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def chf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def sf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def pdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def mrl(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def moment(self, n: int) -> np.float64 | NDArray[np.float64]: ...
-    def mean(self) -> np.float64 | NDArray[np.float64]: ...
-    def var(self) -> np.float64 | NDArray[np.float64]: ...
-    def isf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def ichf(self, cumulative_hazard_rate: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def cdf(self, time: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
+    def __init__(self, model: ParametricLifetimeModel[*_Xs], *args: *_Xs) -> None: ...
+    def hf(self, time: _X) -> _Y: ...
+    def chf(self, time: _X) -> _Y: ...
+    def sf(self, time: _X) -> _Y: ...
+    def pdf(self, time: _X) -> _Y: ...
+    def mrl(self, time: _X) -> _Y: ...
+    def moment(self, n: int) -> _Y: ...
+    def mean(self) -> _Y: ...
+    def var(self) -> _Y: ...
+    def isf(self, probability: _X) -> _Y: ...
+    def ichf(self, cumulative_hazard_rate: _X) -> _Y: ...
+    def cdf(self, time: _X) -> _Y: ...
+    def ppf(self, probability: _X) -> _Y: ...
+    def median(self) -> _Y: ...
+    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, deg: int = 10,) -> _Y: ...
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: int | None = None,
-    ) -> np.float64 | NDArray[np.float64]: ...
+        size: int,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[False] = False,
+        return_entry: Literal[False] = False,
+        seed: Optional[int] = None,
+    ) -> _Y: ...
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]: ...
+        size: int,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[True] = True,
+        return_entry: Literal[False] = False,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _B]: ...
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]: ...
+        size: int,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[False] = False,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _Y]: ...
     @overload
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: int | None = None,
-    ) -> tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]: ...
-    @overload
+        size: int,
+        nb_assets: Optional[int] = None,
+        return_event: Literal[True] = True,
+        return_entry: Literal[True] = True,
+        seed: Optional[int] = None,
+    ) -> tuple[_Y, _B, _Y]: ...
     def rvs(
         self,
-        size: int | tuple[int] | tuple[int, int],
+        size: int,
+        *args: *_Xs,
+        nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: int | None = None,
+        seed: Optional[int] = None,
     ) -> (
-        np.float64
-        | NDArray[np.float64]
-        | tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_]]
-        | tuple[np.float64 | NDArray[np.float64], np.float64 | NDArray[np.float64]]
-        | tuple[np.float64 | NDArray[np.float64], np.bool_ | NDArray[np.bool_], np.float64 | NDArray[np.float64]]
+        _Y
+        | tuple[_Y, _Y]
+        | tuple[_Y, _B]
+        | tuple[_Y, _B, _Y]
     ): ...
-    def ppf(self, probability: float | NDArray[np.float64]) -> np.float64 | NDArray[np.float64]: ...
-    def median(self) -> np.float64 | NDArray[np.float64]: ...
-    def ls_integrate(
-        self,
-        func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
-        a: float | NDArray[np.float64],
-        b: float | NDArray[np.float64],
-        deg: int = 10,
-    ) -> np.float64 | NDArray[np.float64]: ...

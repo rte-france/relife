@@ -16,6 +16,7 @@ if TYPE_CHECKING:
         FrozenLeftTruncatedModel,
         LeftTruncatedModel,
     )
+
     from ..lifetime_model.distribution import LifetimeDistribution
     from ..lifetime_model.regression import FrozenLifetimeRegression
 

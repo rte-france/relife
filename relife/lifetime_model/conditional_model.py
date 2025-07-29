@@ -1,4 +1,5 @@
 import numpy as np
+
 from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
 
 
@@ -54,7 +55,12 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_ar_or_a0("ar", ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
-    def ichf(self, cumulative_hazard_rate, ar, *args,):
+    def ichf(
+        self,
+        cumulative_hazard_rate,
+        ar,
+        *args,
+    ):
         ar = reshape_ar_or_a0("ar", ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
@@ -89,7 +95,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    def rvs(self, size, ar, *args, nb_assets = None, return_event = False, return_entry = False, seed = None):
+    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
         ar = reshape_ar_or_a0("ar", ar)
         baseline_rvs = self.baseline.rvs(
             size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
@@ -112,7 +118,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
             event = np.where(time != ar, event, ~event)
             return time, event, entry
 
-    def ls_integrate(self, func, a, b, ar, *args, deg = 10):
+    def ls_integrate(self, func, a, b, ar, *args, deg=10):
         ar = reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
@@ -195,7 +201,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
-    def rvs(self, size, a0, *args, nb_assets = None, return_event = False, return_entry = False, seed = None):
+    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
         a0 = reshape_ar_or_a0("a0", a0)
         super_rvs = super().rvs(
             size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
@@ -213,7 +219,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         else:
             return super_rvs
 
-    def ls_integrate(self, func, a, b, a0, *args, deg = 10):
+    def ls_integrate(self, func, a, b, a0, *args, deg=10):
         a0 = reshape_ar_or_a0("a0", a0)
         return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
 
@@ -271,6 +277,7 @@ class FrozenAgeReplacementModel(FrozenParametricLifetimeModel):
     --------
     The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
     """
+
     def __init__(self, model, ar, *args):
         super().__init__(model, *(ar, *args))
 
@@ -311,6 +318,7 @@ class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel):
     --------
     The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
     """
+
     def __init__(self, model, a0, *args):
         super().__init__(model, *(a0, *args))
 

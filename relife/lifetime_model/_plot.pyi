@@ -1,12 +1,14 @@
+from typing import Generic, TypeVarTuple
+
 import numpy as np
 from _typeshed import Incomplete
 from matplotlib.axes import Axes
 from numpy.typing import NDArray as NDArray
+
 from relife.lifetime_model import (
     NonParametricLifetimeModel as NonParametricLifetimeModel,
-    ParametricLifetimeModel as ParametricLifetimeModel,
 )
-from typing import Generic, TypeVarTuple
+from relife.lifetime_model import ParametricLifetimeModel as ParametricLifetimeModel
 
 ALPHA_CI: float
 

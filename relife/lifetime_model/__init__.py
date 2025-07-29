@@ -1,8 +1,8 @@
 from ._base import (
+    FittableParametricLifetimeModel,
     FrozenParametricLifetimeModel,
     NonParametricLifetimeModel,
     ParametricLifetimeModel,
-    FittableParametricLifetimeModel,
 )
 from .conditional_model import (
     AgeReplacementModel,
@@ -15,10 +15,16 @@ from .distribution import (
     Exponential,
     Gamma,
     Gompertz,
+    LifetimeDistribution,
     LogLogistic,
     MinimumDistribution,
-    Weibull, LifetimeDistribution,
+    Weibull,
 )
 from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
-from .regression import AcceleratedFailureTime, ProportionalHazard, CovarEffect, LifetimeRegression, \
-    FrozenLifetimeRegression
+from .regression import (
+    AcceleratedFailureTime,
+    CovarEffect,
+    FrozenLifetimeRegression,
+    LifetimeRegression,
+    ProportionalHazard,
+)

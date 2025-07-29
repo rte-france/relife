@@ -1,11 +1,11 @@
-from typing import TypeVarTuple, Generic
+from typing import Generic, TypeVarTuple
 
-from relife import ParametricModel, FrozenParametricModel
+from relife import FrozenParametricModel, ParametricModel
 
 Args = TypeVarTuple("Args")
 
-class StochasticProcess(ParametricModel, Generic[*Args]):
-    ...
+
+class StochasticProcess(ParametricModel, Generic[*Args]): ...
 
 
 class FrozenStochasticProcess(FrozenParametricModel[*Args]):

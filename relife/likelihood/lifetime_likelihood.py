@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from relife.lifetime_model import (
         MinimumDistribution,
     )
+
     from ..lifetime_model.distribution import LifetimeDistribution
     from ..lifetime_model.regression import LifetimeRegression
 

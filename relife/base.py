@@ -13,6 +13,7 @@ class ParametricModel:
 
     Any parametric_model core must inherit from `ParametricModel`.
     """
+
     def __init__(self, **kwparams):
         self._params = Parameters(**kwparams)
         self._nested_models = {}
@@ -220,6 +221,7 @@ def _get_nb_assets(*args):
 
     return nb_assets
 
+
 class FrozenParametricModel(ParametricModel):
     def __init__(self, model, *args):
         super().__init__()
@@ -238,13 +240,19 @@ def is_frozen(model):
 
 
 def is_lifetime_model(model):
-    from relife.lifetime_model import ParametricLifetimeModel, NonParametricLifetimeModel
+    from relife.lifetime_model import (
+        NonParametricLifetimeModel,
+        ParametricLifetimeModel,
+    )
+
     return isinstance(model, (ParametricLifetimeModel, NonParametricLifetimeModel))
 
 
 def is_stochastic_process(model):
     from relife.stochastic_process import StochasticProcess
+
     return isinstance(model, StochasticProcess)
+
 
 # see sklearn/base.py : return unfitted ParametricModel
 # def clone(model: ParametricModel) -> ParametricModel: ...

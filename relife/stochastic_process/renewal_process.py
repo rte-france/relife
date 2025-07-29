@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING, Generic, Optional, TypedDict, TypeVar, Union, TypeVarTuple
+from typing import (
+    TYPE_CHECKING,
+    Generic,
+    Optional,
+    TypedDict,
+    TypeVar,
+    TypeVarTuple,
+    Union,
+)
 
 import numpy as np
 from numpy.typing import NDArray
@@ -16,10 +24,14 @@ from relife.lifetime_model import (
     FrozenLeftTruncatedModel,
     FrozenParametricLifetimeModel,
 )
+from relife.stochastic_process.renewal_equations import (
+    delayed_renewal_equation_solver,
+    renewal_equation_solver,
+)
+
 from ..lifetime_model.distribution import LifetimeDistribution
 from ..lifetime_model.regression import FrozenLifetimeRegression
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
-from relife.stochastic_process.renewal_equations import renewal_equation_solver, delayed_renewal_equation_solver
 from .base import StochasticProcess
 
 if TYPE_CHECKING:
@@ -40,6 +52,7 @@ class LifetimeFitArg(TypedDict):
 
 
 Args = TypeVarTuple("Args")
+
 
 class RenewalProcess(StochasticProcess[*Args]):
     # noinspection PyUnresolvedReferences

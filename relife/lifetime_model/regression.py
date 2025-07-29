@@ -5,15 +5,15 @@ Copyright (c) 2022, RTE (https://www.rte-france.com)
 See AUTHORS.txt
 SPDX-License-Identifier: Apache-2.0 (see LICENSE.txt)
 """
-from abc import ABC, abstractmethod
+
+from abc import ABC
 
 import numpy as np
 from scipy.optimize import Bounds
 
+from relife import ParametricModel
+
 from ._base import FittableParametricLifetimeModel, FrozenParametricLifetimeModel
-from .. import ParametricModel
-from ..data import LifetimeData
-from ..likelihood import LikelihoodFromLifetimes
 
 
 def broadcast_time_covar(time, covar):
@@ -51,6 +51,65 @@ def broadcast_time_covar_shapes(time_shape, covar_shape):
             raise ValueError(f"Invalid time or covar shape. Got {time_shape} and {covar_shape}")
 
 
+class CovarEffect(ParametricModel):
+    """
+    Covariates effect.
+
+    Parameters
+    ----------
+    *coefficients : float
+        Coefficients of the covariates effect.
+    """
+
+    def __init__(self, coefficients=(None,)):
+        super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
+
+    @property
+    def nb_coef(self):
+        """
+        The number of coefficients
+
+        Returns
+        -------
+        int
+        """
+        return self.nb_params
+
+    def g(self, covar):
+        """
+        Compute the covariates effect.
+        If covar.shape : () or (nb_coef,) => out.shape : (), float
+        If covar.shape : (m, nb_coef) => out.shape : (m, 1)
+        """
+        arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
+        if arr_covar.ndim > 2:
+            raise ValueError(f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {arr_covar.shape}")
+        covar_nb_coef = arr_covar.size if arr_covar.ndim <= 1 else arr_covar.shape[-1]
+        if covar_nb_coef != self.nb_coef:
+            raise ValueError(
+                f"Invalid covar. Number of covar does not match number of coefficients. Got {self.nb_coef} nb_coef but covar shape is {arr_covar.shape}"
+            )
+        g = np.exp(np.sum(self.params * arr_covar, axis=-1, keepdims=True))  # (m, 1)
+        if arr_covar.ndim <= 1:
+            return np.float64(g.item())
+        return g
+
+    def jac_g(self, covar, *, asarray=False):
+        """
+        Compute the Jacobian of the covariates effect.
+        If covar.shape : () or (nb_coef,) => out.shape : (nb_coef,)
+        If covar.shape : (m, nb_coef) => out.shape : (nb_coef, m, 1)
+        """
+        arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
+        g = self.g(arr_covar)  # () or (m, 1)
+        jac = arr_covar.T.reshape(self.nb_coef, -1, 1) * g  # (nb_coef, m, 1)
+        if arr_covar.ndim <= 1:
+            jac = jac.reshape(self.nb_coef)  # (nb_coef,) or (nb_coef, m, 1)
+        if not asarray:
+            return np.unstack(jac, axis=0)  # tuple
+        return jac  # (nb_coef, m, 1)
+
+
 class LifetimeRegression(FittableParametricLifetimeModel, ABC):
     """
     Base class for regression model.
@@ -62,7 +121,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
     LifetimeRegression does not preserve generic : at the moment, additional args are supposed to be always float | NDArray[np.float64]
     """
 
-    def __init__(self, baseline, coefficients = (None,)):
+    def __init__(self, baseline, coefficients=(None,)):
         super().__init__()
         self.covar_effect = CovarEffect(coefficients)
         self.baseline = baseline
@@ -302,81 +361,13 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         """
         return super().median(*(covar, *args))
 
-    @abstractmethod
-    def dhf(self, time, covar, *args):
-        """
-        The derivative of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        covar : float or np.ndarray
-            Covariates values. float can only be valid if the regression has one coefficients.
-            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-
-    @abstractmethod
-    def jac_hf(self, time, covar, *args, asarray = False):
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        covar : float or np.ndarray
-            Covariates values. float can only be valid if the regression has one coefficients.
-            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-
-    @abstractmethod
-    def jac_chf(self, time, covar, *args, asarray = False):
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        covar : float or np.ndarray
-            Covariates values. float can only be valid if the regression has one coefficients.
-            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-
-    def jac_sf(self, time, covar, *args, asarray = False,):
+    def jac_sf(
+        self,
+        time,
+        covar,
+        *args,
+        asarray=False,
+    ):
         """
         The jacobian of the survival function.
 
@@ -405,7 +396,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             return np.unstack(jac)
         return jac
 
-    def jac_cdf(self, time, covar, *args, asarray = False):
+    def jac_cdf(self, time, covar, *args, asarray=False):
         """
         The jacobian of the cumulative density function.
 
@@ -434,7 +425,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             return np.unstack(jac)
         return jac
 
-    def jac_pdf(self, time, covar, *args, asarray = False):
+    def jac_pdf(self, time, covar, *args, asarray=False):
         """
         The jacobian of the probability density function.
 
@@ -465,20 +456,48 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             return np.unstack(jac)
         return jac
 
-    def rvs(self, size: int, covar, *args, nb_assets = None, return_event = False, return_entry = False, seed = None):
+    def rvs(self, size: int, covar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+        """
+        Random variable sampling.
+
+        Parameters
+        ----------
+        size : int
+            Size of the generated sample.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+        nb_assets : int, optional
+            If nb_assets is not None, 2d arrays of samples are generated.
+        return_event : bool, default is False
+            If True, returns event indicators along with the sample time values.
+        return_entry : bool, default is False
+            If True, returns corresponding entry values of the sample time values.
+        seed : optional int, default is None
+            Random seed used to fix random sampling.
+
+        Returns
+        -------
+        float, ndarray or tuple of float or ndarray
+            The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
+            the time values followed by event values, entry values or both.
+        """
         return super().rvs(
             size, *(covar, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
         )
 
-    def _init_params(self, lifetime_data):
-        self.covar_effect = CovarEffect((None,) * lifetime_data.args[0].shape[-1])  # set new covar_effet -> changes params structure
+    def _init_params(self, time, covar, *args, event=None, entry=None, departure=None):
+        self.covar_effect = CovarEffect(
+            (None,) * covar.shape[-1]
+        )  # changes params structure depending on number of covar
         param0 = np.zeros_like(self.params, dtype=np.float64)
         param0[-self.baseline.params.size :] = self.baseline._init_params(
-            lifetime_data
+            time, *args, event=None, entry=None, departure=None
         )  # recursion in case of PPH(AFT(...))
         self.params = param0
 
-    @property
     def _params_bounds(self):
         lb = np.concatenate(
             (
@@ -499,11 +518,50 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         time,
         covar,
         *args,
-        event = None,
-        entry = None,
-        departure = None,
+        event=None,
+        entry=None,
+        departure=None,
         **options,
     ):
+        """
+        Estimation of parameters.
+
+        Parameters
+        ----------
+        time : ndarray (1d or 2d)
+            Observed lifetime values.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+        event : ndarray of boolean values (1d), default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : ndarray of float (1d), default is None
+            Left truncations applied to lifetime values.
+        departure : ndarray of float (1d), default is None
+            Right truncations applied to lifetime values.
+        **options
+            Extra arguments used by `scipy.minimize`. Default values are:
+                - `method` : `"L-BFGS-B"`
+                - `contraints` : `()`
+                - `tol` : `None`
+                - `callback` : `None`
+                - `options` : `None`
+                - `bounds` : `self.params_bounds`
+                - `x0` : `self.init_params`
+
+        Returns
+        -------
+        Self
+            The current object with the estimated parameters setted inplace.
+
+        Notes
+        -----
+        Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
+        format that allows to pass other information as left-censored or interval-censored values. In this case,
+        `event` is not needed as 2d-array encodes right-censored values by itself.
+        """
         return super().fit(time, *(covar, *args), event=event, entry=entry, departure=departure, **options)
 
     def freeze(self, covar, *args):
@@ -562,19 +620,118 @@ class ProportionalHazard(LifetimeRegression):
     """
 
     def hf(self, time, covar, *args):
+        """
+        The hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
         return self.covar_effect.g(covar) * self.baseline.hf(time, *args)
 
     def chf(self, time, covar, *args):
-        # (m,)
+        """
+        The cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
         return self.covar_effect.g(covar) * self.baseline.chf(time, *args)
 
     def ichf(self, cumulative_hazard_rate, covar, *args):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given cumulative hazard rate(s).
+        """
         return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(covar), *args)
 
     def dhf(self, time, covar, *args):
+        """
+        The derivative of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
         return self.covar_effect.g(covar) * self.baseline.dhf(time, *args)
 
-    def jac_hf(self, time, covar, *args, asarray = False):
+    def jac_hf(self, time, covar, *args, asarray=False):
+        """
+        The jacobian of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
@@ -602,7 +759,30 @@ class ProportionalHazard(LifetimeRegression):
             return np.unstack(jac)
         return jac
 
-    def jac_chf(self, time, covar, *args, asarray = False):
+    def jac_chf(self, time, covar, *args, asarray=False):
+        """
+        The jacobian of the cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
@@ -629,7 +809,7 @@ class ProportionalHazard(LifetimeRegression):
             return np.unstack(jac)
         return jac
 
-    def moment(self, n , covar, *args):
+    def moment(self, n, covar, *args):
         return super().moment(n, *(covar, *args))
 
 
@@ -685,22 +865,121 @@ class AcceleratedFailureTime(LifetimeRegression):
     """
 
     def hf(self, time, covar, *args):
+        """
+        The hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.hf(t0, *args) / self.covar_effect.g(covar)
 
     def chf(self, time, covar, *args):
+        """
+        The cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0, *args)
 
     def ichf(self, cumulative_hazard_rate, covar, *args):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given cumulative hazard rate(s).
+        """
         return self.covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate, *args)
 
     def dhf(self, time, covar, *args):
+        """
+        The derivative of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0, *args) / self.covar_effect.g(covar) ** 2
 
-    def jac_hf(self, time, covar, *args, asarray = False):
+    def jac_hf(self, time, covar, *args, asarray=False):
+        """
+        The jacobian of the hazard function.
 
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
@@ -728,7 +1007,30 @@ class AcceleratedFailureTime(LifetimeRegression):
             return np.unstack(jac)
         return jac
 
-    def jac_chf(self, time, covar, *args, asarray = False):
+    def jac_chf(self, time, covar, *args, asarray=False):
+        """
+        The jacobian of the cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
@@ -758,312 +1060,6 @@ class AcceleratedFailureTime(LifetimeRegression):
 
     def moment(self, n, covar, *args):
         return super().moment(n, *(covar, *args))
-
-
-TIME_BASE_DOCSTRING = """
-{name}.
-
-Parameters
-----------
-time : float or np.ndarray
-    Elapsed time value(s) at which to compute the function.
-    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-covar : float or np.ndarray
-    Covariates values. float can only be valid if the regression has one coefficients. 
-    Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
-*args : float or np.ndarray
-    Additional arguments needed by the model.
-
-Returns
--------
-np.float64 or np.ndarray
-    Function values at each given time(s).
-"""
-
-JAC_BASE_DOCSTRING = """
-{name}.
-
-Parameters
-----------
-time : float or np.ndarray
-    Elapsed time value(s) at which to compute the function.
-    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-covar : float or np.ndarray
-    Covariates values. float can only be valid if the regression has one coefficients. 
-    Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
-*args : float or np.ndarray
-    Additional arguments needed by the model.
-asarray : bool, default is False
-
-Returns
--------
-np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-    The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-    the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-    whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-    tuple when ``asarray`` is False.
-"""
-
-MOMENT_BASE_DOCSTRING = """
-{name}.
-
-Parameters
-----------
-covar : float or np.ndarray
-    Covariates values. float can only be valid if the regression has one coefficients. 
-    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-*args : float or np.ndarray
-    Additional arguments needed by the model.
-
-Returns
--------
-np.float64
-    {name} value.
-"""
-
-ICHF_DOCSTRING = """
-Inverse cumulative hazard function.
-
-Parameters
-----------
-cumulative_hazard_rate : float or np.ndarray
-    Cumulative hazard rate value(s) at which to compute the function.
-    If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-covar : float or np.ndarray
-    Covariates values. float can only be valid if the regression has one coefficients. 
-    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-*args : float or np.ndarray
-    Additional arguments needed by the model.
-
-Returns
--------
-np.float64 or np.ndarray
-    Function values at each given cumulative hazard rate(s).
-"""
-
-
-PROBABILITY_BASE_DOCSTRING = """
-{name}.
-
-Parameters
-----------
-probability : float or np.ndarray
-    Probability value(s) at which to compute the function.
-    If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-covar : float or np.ndarray
-    Covariates values. float can only be valid if the regression has one coefficients. 
-    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-*args : float or np.ndarray
-    Additional arguments needed by the model.
-
-Returns
--------
-np.float64 or np.ndarray
-    Function values at each given probability value(s).
-"""
-
-
-for class_obj in (AcceleratedFailureTime, ProportionalHazard):
-    class_obj.sf.__doc__ = TIME_BASE_DOCSTRING.format(name="The survival function")
-    class_obj.hf.__doc__ = TIME_BASE_DOCSTRING.format(name="The hazard function")
-    class_obj.chf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative hazard function")
-    class_obj.pdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The probability density function")
-    class_obj.cdf.__doc__ = TIME_BASE_DOCSTRING.format(name="The cumulative distribution function")
-    class_obj.mrl.__doc__ = TIME_BASE_DOCSTRING.format(name="The mean residual life function")
-    class_obj.dhf.__doc__ = TIME_BASE_DOCSTRING.format(name="The derivative of the hazard function")
-    class_obj.jac_hf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the hazard function")
-    class_obj.jac_chf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the cumulative hazard function")
-    class_obj.jac_sf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the survival function")
-    class_obj.jac_pdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the probability density function")
-    class_obj.jac_cdf.__doc__ = JAC_BASE_DOCSTRING.format(name="The jacobian of the cumulative distribution function")
-
-    class_obj.ppf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="The percent point function")
-    class_obj.ppf.__doc__ += f"""
-    Notes
-    -----
-    The ``ppf`` is the inverse of :py:meth:`~{class_obj}.cdf`.
-    """
-    class_obj.isf.__doc__ = PROBABILITY_BASE_DOCSTRING.format(name="Inverse survival function")
-
-    class_obj.rvs.__doc__ = """
-    Random variable sampling.
-
-    Parameters
-    ----------
-    size : int, (int,) or (int, int)
-        Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a 
-        2d array of samples is generated. 
-    return_event : bool, default is False
-        If True, returns event indicators along with the sample time values.
-    random_entry : bool, default is False
-        If True, returns corresponding entry values of the sample time values.
-    seed : optional int, default is None
-        Random seed used to fix random sampling.
-
-    Returns
-    -------
-    float, ndarray or tuple of float or ndarray
-        The sample values. If either ``return_event`` or ``random_entry`` is True, returns a tuple containing
-        the time values followed by event values, entry values or both.
-    """
-
-    class_obj.plot.__doc__ = """
-    Provides access to plotting functionality for this distribution.
-    """
-
-    class_obj.ls_integrate.__doc__ = """
-    Lebesgue-Stieltjes integration.
-
-    Parameters
-    ----------
-    func : callable (in : 1 ndarray , out : 1 ndarray)
-        The callable must have only one ndarray object as argument and one ndarray object as output
-    a : ndarray (maximum number of dimension is 2)
-        Lower bound(s) of integration.
-    b : ndarray (maximum number of dimension is 2)
-        Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-    covar : float or np.ndarray
-        Covariates values. float can only be valid if the regression has one coefficients. 
-        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-    *args : float or np.ndarray
-        Additional arguments needed by the model.
-    deg : int, default 10
-        Degree of the polynomials interpolation
-
-    Returns
-    -------
-    np.ndarray
-        Lebesgue-Stieltjes integral of func from `a` to `b`.
-    """
-
-    class_obj.moment.__doc__ = """
-    n-th order moment
-
-    Parameters
-    ----------
-    n : order of the moment, at least 1.
-
-    Returns
-    -------
-    np.float64
-        n-th order moment.
-    """
-    class_obj.mean.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The mean")
-    class_obj.var.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The variance")
-    class_obj.median.__doc__ = MOMENT_BASE_DOCSTRING.format(name="The median")
-
-    class_obj.ichf.__doc__ = """
-    Inverse cumulative hazard function.
-
-    Parameters
-    ----------
-    cumulative_hazard_rate : float or np.ndarray
-        Cumulative hazard rate value(s) at which to compute the function.
-        If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        
-    covar : float or np.ndarray
-        Covariates values. float can only be valid if the regression has one coefficients. 
-        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-    *args : float or np.ndarray
-        Additional arguments needed by the model.
-
-    Returns
-    -------
-    np.float64 or np.ndarray
-        Function values at each given cumulative hazard rate(s).
-    """
-
-    class_obj.fit.__doc__ = """
-    Estimation of parameters.
-
-    Parameters
-    ----------
-    time : ndarray (1d or 2d)
-        Observed lifetime values.
-    covar : float or np.ndarray
-        Covariates values. float can only be valid if the regression has one coefficients. 
-        Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-    *args : float or np.ndarray
-        Additional arguments needed by the model.
-    event : ndarray of boolean values (1d), default is None
-        Boolean indicators tagging lifetime values as right censored or complete.
-    entry : ndarray of float (1d), default is None
-        Left truncations applied to lifetime values.
-    departure : ndarray of float (1d), default is None
-        Right truncations applied to lifetime values.
-    **kwargs
-        Extra arguments used by `scipy.minimize`. Default values are:
-            - `method` : `"L-BFGS-B"`
-            - `contraints` : `()`
-            - `tol` : `None`
-            - `callback` : `None`
-            - `options` : `None`
-            - `bounds` : `self.params_bounds`
-            - `x0` : `self.init_params`
-
-    Returns
-    -------
-    Self
-        The current object with the estimated parameters setted inplace.
-
-    Notes
-    -----
-    Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
-    format that allows to pass other information as left-censored or interval-censored values. In this case,
-    `event` is not needed as 2d-array encodes right-censored values by itself.
-    """
-
-
-class CovarEffect(ParametricModel):
-    """
-    Covariates effect.
-
-    Parameters
-    ----------
-    *coefficients : float
-        Coefficients of the covariates effect.
-    """
-
-    def __init__(self, coefficients = (None,)):
-        super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
-
-    @property
-    def nb_coef(self):
-        return self.nb_params
-
-    def g(self, covar):
-        """
-        Compute the covariates effect.
-        If covar.shape : () or (nb_coef,) => out.shape : (), float
-        If covar.shape : (m, nb_coef) => out.shape : (m, 1)
-        """
-        arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        if arr_covar.ndim > 2:
-            raise ValueError(f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {arr_covar.shape}")
-        covar_nb_coef = arr_covar.size if arr_covar.ndim <= 1 else arr_covar.shape[-1]
-        if covar_nb_coef != self.nb_coef:
-            raise ValueError(
-                f"Invalid covar. Number of covar does not match number of coefficients. Got {self.nb_coef} nb_coef but covar shape is {arr_covar.shape}"
-            )
-        g = np.exp(np.sum(self.params * arr_covar, axis=-1, keepdims=True))  # (m, 1)
-        if arr_covar.ndim <= 1:
-            return np.float64(g.item())
-        return g
-
-    def jac_g(self, covar, *, asarray = False):
-        """
-        Compute the Jacobian of the covariates effect.
-        If covar.shape : () or (nb_coef,) => out.shape : (nb_coef,)
-        If covar.shape : (m, nb_coef) => out.shape : (nb_coef, m, 1)
-        """
-        arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        g = self.g(arr_covar)  # () or (m, 1)
-        jac = arr_covar.T.reshape(self.nb_coef, -1, 1) * g  # (nb_coef, m, 1)
-        if arr_covar.ndim <= 1:
-            jac = jac.reshape(self.nb_coef)  # (nb_coef,) or (nb_coef, m, 1)
-        if not asarray:
-            return np.unstack(jac, axis=0)  # tuple
-        return jac  # (nb_coef, m, 1)
 
 
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
@@ -1107,6 +1103,13 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
 
     @property
     def nb_coef(self):
+        """
+        The number of coefficients
+
+        Returns
+        -------
+        int
+        """
         return self.unfrozen_model.nb_coef
 
     @property
@@ -1118,19 +1121,123 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
         self.args = (value,) + self.args[1:]
 
     def dhf(self, time):
+        """
+        The derivate of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
         return self.unfrozen_model.dhf(time, self.args[0], *self.args[1:])
 
-    def jac_hf(self, time, asarray = False):
+    def jac_hf(self, time, asarray=False):
+        """
+        The jacobian of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
         return self.unfrozen_model.jac_hf(time, self.args[0], *self.args[1:], asarray=asarray)
 
-    def jac_chf(self, time, asarray = False):
+    def jac_chf(self, time, asarray=False):
+        """
+        The jacobian of the cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
         return self.unfrozen_model.jac_chf(time, self.args[0], *self.args[1:], asarray=asarray)
 
-    def jac_sf(self, time, asarray = False):
+    def jac_sf(self, time, asarray=False):
+        """
+        The jacobian of the survival function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
         return self.unfrozen_model.jac_sf(time, self.args[0], *self.args[1:], asarray=asarray)
 
-    def jac_cdf(self, time, asarray = False):
+    def jac_cdf(self, time, asarray=False):
+        """
+        The jacobian of the cumulative density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
         return self.unfrozen_model.jac_cdf(time, self.args[0], *self.args[1:], asarray=asarray)
 
     def jac_pdf(self, time, asarray: bool = False):
+        """
+        The jacobian of the probability density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        asarray : bool, default is False
+
+        Returns
+        -------
+        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
+            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
+            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
+            tuple when ``asarray`` is False.
+        """
         return self.unfrozen_model.jac_pdf(time, self.args[0], *self.args[1:], asarray=asarray)

@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx
 
-from relife.lifetime_model import LeftTruncatedModel, AgeReplacementModel
+from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 
 
 class TestAgeReplacementDistribution:

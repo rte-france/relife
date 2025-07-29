@@ -97,7 +97,6 @@
 #     assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 37.2, 22.2, 22.2, 22.2]))
 
 
-
 #
 # DATA_V0 = {
 #     "assets_ids": np.array(
