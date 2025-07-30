@@ -1,16 +1,4 @@
-from __future__ import annotations
-
 import copy
-from typing import (
-    TYPE_CHECKING,
-    Generic,
-    Optional,
-    TypedDict,
-    TypeVar,
-    TypeVarTuple,
-    Union,
-)
-
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
@@ -19,42 +7,15 @@ from relife.economic import (
     ExponentialDiscounting,
     Reward,
 )
-from relife.lifetime_model import (
-    FrozenAgeReplacementModel,
-    FrozenLeftTruncatedModel,
-    FrozenParametricLifetimeModel,
-)
 from relife.stochastic_process.renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
-
-from ..lifetime_model.distribution import LifetimeDistribution
-from ..lifetime_model.regression import FrozenLifetimeRegression
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 from .base import StochasticProcess
 
-if TYPE_CHECKING:
-    from relife.economic import Reward
 
-M = TypeVar(
-    "M",
-    bound=Union[LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel],
-)
-R = TypeVar("R", bound=Reward)
-
-
-class LifetimeFitArg(TypedDict):
-    time: NDArray[np.float64]
-    event: NDArray[np.bool_]
-    entry: NDArray[np.float64]
-    args: tuple[NDArray[np.float64], ...]
-
-
-Args = TypeVarTuple("Args")
-
-
-class RenewalProcess(StochasticProcess[*Args]):
+class RenewalProcess(StochasticProcess):
     # noinspection PyUnresolvedReferences
     """Renewal process.
 
@@ -78,17 +39,12 @@ class RenewalProcess(StochasticProcess[*Args]):
     params_names
     """
 
-    def __init__(
-        self,
-        lifetime_model: FrozenParametricLifetimeModel[*Args],
-        first_lifetime_model: Optional[FrozenParametricLifetimeModel[*Args]] = None,
-    ):
+    def __init__(self, lifetime_model, first_lifetime_model = None):
         super().__init__()
-
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
 
-    def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
+    def _make_timeline(self, tf, nb_steps):
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
         args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)
@@ -96,7 +52,7 @@ class RenewalProcess(StochasticProcess[*Args]):
             timeline = np.tile(timeline, (args_nb_assets, 1))
         return timeline  # (nb_steps,) or (m, nb_steps)
 
-    def renewal_function(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def renewal_function(self, tf, nb_steps):
         r"""The renewal function.
 
         Parameters
@@ -147,7 +103,7 @@ class RenewalProcess(StochasticProcess[*Args]):
             return timeline[0, :], renewal_function
         return timeline, renewal_function
 
-    def renewal_density(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def renewal_density(self, tf, nb_steps):
         r"""The renewal density.
 
         Parameters
@@ -197,13 +153,7 @@ class RenewalProcess(StochasticProcess[*Args]):
             return timeline[0, :], renewal_density
         return timeline, renewal_density
 
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        seed: Optional[int] = None,
-    ) -> RenewalProcessSample:
+    def sample(self, size, tf, t0= 0.0, seed = None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -230,13 +180,7 @@ class RenewalProcess(StochasticProcess[*Args]):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return RenewalProcessSample(t0, tf, struct_array)
 
-    def generate_failure_data(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        seed: Optional[int] = None,
-    ) -> LifetimeFitArg:
+    def generate_failure_data(self, size, tf, t0 = 0.0, seed= None):
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
@@ -289,7 +233,7 @@ class RenewalProcess(StochasticProcess[*Args]):
         return returned_dict
 
 
-class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
+class RenewalRewardProcess(RenewalProcess):
     # noinspection PyUnresolvedReferences
     """Renewal reward process.
 
@@ -322,28 +266,21 @@ class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
     params_names
     """
 
-    def __init__(
-        self,
-        lifetime_model: FrozenParametricLifetimeModel[*Args],
-        reward: R,
-        discounting_rate: float = 0.0,
-        first_lifetime_model: Optional[FrozenParametricLifetimeModel[*Args]] = None,
-        first_reward: Optional[R] = None,
-    ):
+    def __init__(self, lifetime_model, reward, discounting_rate= 0.0, first_lifetime_model = None, first_reward = None):
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else copy.deepcopy(reward)
         self.discounting = ExponentialDiscounting(discounting_rate)
 
     @property
-    def discounting_rate(self) -> float:
+    def discounting_rate(self):
         """
         The discounting rate value
         """
         return self.discounting.rate
 
     @discounting_rate.setter
-    def discounting_rate(self, value: float) -> None:
+    def discounting_rate(self, value):
         """
         The discounting rate value setter
 
@@ -355,7 +292,7 @@ class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
         self.discounting.rate = value
 
     @override
-    def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
+    def _make_timeline(self, tf, nb_steps):
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
         args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)  # default 1 for LifetimeDistribution case
@@ -365,7 +302,7 @@ class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
             timeline = np.tile(timeline, (self.reward.size, 1))
         return timeline  # (nb_steps,) or (m, nb_steps)
 
-    def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def expected_total_reward(self, tf, nb_steps):
         r"""The expected total reward.
 
         The renewal equation solved to compute the expected reward is:
@@ -442,9 +379,7 @@ class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
             return timeline[0, :], z  # (nb_steps,) and (m, nb_steps)
         return timeline, z  # (nb_steps,) and (nb_steps, )
 
-    def asymptotic_expected_total_reward(
-        self,
-    ) -> NDArray[np.float64]:
+    def asymptotic_expected_total_reward(self):
         r"""Asymptotic expected total reward.
 
         The asymptotic expected total reward is:
@@ -496,9 +431,7 @@ class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
             z = ly1 + z * lf1  # () or (m, 1)
         return np.squeeze(z)  # () or (m,)
 
-    def expected_equivalent_annual_worth(
-        self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def expected_equivalent_annual_worth(self, tf, nb_steps):
         """Expected equivalent annual worth.
 
         Gives the equivalent annual worth of the expected total reward of the
@@ -554,14 +487,7 @@ class RenewalRewardProcess(RenewalProcess[*Args], Generic[R]):
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
     @override
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        maxsample: int = 1e5,
-        seed: Optional[int] = None,
-    ) -> RenewalRewardProcessSample:
+    def sample(self, size, tf, t0 = 0.0, seed = None):
         from ._sample import RenewalProcessIterable
 
         iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)

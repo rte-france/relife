@@ -5,8 +5,6 @@ from typing import (
     Literal,
     Optional,
     Self,
-    TypeAlias,
-    TypeVarTuple,
     overload,
 )
 
@@ -21,11 +19,7 @@ from relife.lifetime_model import (
     FrozenParametricLifetimeModel,
 )
 from relife.likelihood import FittingResults as FittingResults
-
-_Xs = TypeVarTuple("_Xs")
-_X: TypeAlias = float | NDArray[np.float64]
-_Y: TypeAlias = np.float64 | NDArray[np.float64]
-_B: TypeAlias = np.bool_ | NDArray[np.bool_]
+from relife._typing import _X, _Xs, _Y, _B
 
 def broadcast_time_covar(time: _X, covar: _X) -> tuple[_X, _X]: ...
 def broadcast_time_covar_shapes(
@@ -42,7 +36,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC)
         baseline: FittableParametricLifetimeModel[*_Xs],
         coefficients: tuple[Optional[float], ...] = (None,),
     ) -> None: ...
-    def _init_params(
+    def _get_initial_params(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
@@ -50,8 +44,8 @@ class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC)
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-    ) -> None: ...
-    def _params_bounds(self) -> Bounds: ...
+    ) -> NDArray[np.float64]: ...
+    def _get_params_bounds(self) -> Bounds: ...
     @property
     def coefficients(self) -> NDArray[np.float64]: ...
     @property
@@ -159,8 +153,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC)
         departure: NDArray[np.float64] | None = None,
         **options: Any,
     ) -> Self: ...
-    @override
-    def freeze(self, covar: _X, *args: *_Xs): ...
+    def freeze(self, covar: _X, *args: *_Xs) -> FrozenLifetimeRegression[*_Xs]: ...
 
 class ProportionalHazard(LifetimeRegression[*_Xs]):
     def hf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...

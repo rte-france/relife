@@ -6,9 +6,7 @@ from typing import (
     Literal,
     Optional,
     Self,
-    TypeAlias,
-    TypeVarTuple,
-    overload, Protocol
+    overload,
 )
 
 import numpy as np
@@ -20,11 +18,7 @@ from relife import ParametricModel as ParametricModel
 from relife.likelihood import FittingResults as FittingResults
 
 from ._plot import PlotParametricLifetimeModel
-
-_Xs = TypeVarTuple("_Xs")
-_X: TypeAlias = float | np.float64 | NDArray[np.float64]
-_Y: TypeAlias = np.float64 | NDArray[np.float64]
-_B: TypeAlias = np.bool_ | NDArray[np.bool_]
+from relife._typing import _Xs, _X, _Y, _B
 
 class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Xs]):
     @overload
@@ -44,7 +38,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Xs]):
     def mean(self, *args: *_Xs) -> _Y: ...
     def var(self, *args: *_Xs) -> _Y: ...
     def mrl(self, time: _X, *args: *_Xs) -> _Y: ...
-    def freeze(self, *args: *_Xs): ...
     def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, *args: *_Xs, deg: int = 10) -> _Y: ...
     @overload
     def rvs(
@@ -108,8 +101,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Xs], ABC):
 
     def __init__(self, **kwparams: Optional[float]) -> None: ...
     @abstractmethod
-    def _params_bounds(self) -> Bounds: ...
-    @abstractmethod
     def dhf(self, time: _X, *args: *_Xs) -> _Y: ...
     @overload
     def jac_hf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
@@ -136,14 +127,16 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Xs], ABC):
     @abstractmethod
     def jac_pdf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
     @abstractmethod
-    def _init_params(
+    def _get_params_bounds(self) -> Bounds: ...
+    @abstractmethod
+    def _get_initial_params(
         self,
         time: NDArray[np.float64],
         *args: *_Xs,
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-    ) -> None: ...
+    ) -> NDArray[np.float64]: ...
     def fit(
         self,
         time: NDArray[np.float64],

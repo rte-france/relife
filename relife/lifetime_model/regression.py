@@ -307,6 +307,26 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         """
         return super().ls_integrate(func, a, b, *(covar, *args), deg=deg)
 
+    def moment(self, n, covar, *args):
+        """
+        n-th order moment
+
+        Parameters
+        ----------
+        n : int
+            order of the moment, at least 1.
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+        """
+        return super().moment(n, *(covar, *args))
+
     def mean(self, covar, *args):
         """
         The mean.
@@ -488,27 +508,27 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             size, *(covar, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
         )
 
-    def _init_params(self, time, covar, *args, event=None, entry=None, departure=None):
+    def _get_initial_params(self, time, covar, *args, event=None, entry=None, departure=None):
         self.covar_effect = CovarEffect(
             (None,) * covar.shape[-1]
         )  # changes params structure depending on number of covar
         param0 = np.zeros_like(self.params, dtype=np.float64)
-        param0[-self.baseline.params.size :] = self.baseline._init_params(
+        param0[-self.baseline.params.size :] = self.baseline._get_initial_params(
             time, *args, event=None, entry=None, departure=None
         )  # recursion in case of PPH(AFT(...))
-        self.params = param0
+        return param0
 
-    def _params_bounds(self):
+    def _get_params_bounds(self):
         lb = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, -np.inf),
-                self.baseline._params_bounds().lb,  # baseline has _params_bounds according to typing
+                self.baseline._get_params_bounds().lb,  # baseline has _params_bounds according to typing
             )
         )
         ub = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, np.inf),
-                self.baseline._params_bounds().ub,
+                self.baseline._get_params_bounds().ub,
             )
         )
         return Bounds(lb, ub)
@@ -524,7 +544,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         **options,
     ):
         """
-        Estimation of parameters.
+        Estimation of the regression parameters from lifetime data.
 
         Parameters
         ----------
@@ -565,6 +585,21 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         return super().fit(time, *(covar, *args), event=event, entry=entry, departure=departure, **options)
 
     def freeze(self, covar, *args):
+        """
+        Freeze regression covar and other arguments into the object data.
+
+        Parameters
+        ----------
+        covar : float or np.ndarray
+            Covariates values. float can only be valid if the regression has one coefficients.
+            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        FrozenLifetimeRegression
+        """
         return FrozenLifetimeRegression(self, covar, *args)
 
 
@@ -808,9 +843,6 @@ class ProportionalHazard(LifetimeRegression):
         if not asarray:
             return np.unstack(jac)
         return jac
-
-    def moment(self, n, covar, *args):
-        return super().moment(n, *(covar, *args))
 
 
 class AcceleratedFailureTime(LifetimeRegression):
@@ -1058,8 +1090,6 @@ class AcceleratedFailureTime(LifetimeRegression):
             return np.unstack(jac)
         return jac
 
-    def moment(self, n, covar, *args):
-        return super().moment(n, *(covar, *args))
 
 
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
@@ -1068,15 +1098,12 @@ class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
 
     Parameters
     ----------
-    model : LifetimeRegression
+    regression : LifetimeRegression
         Any lifetime regression.
-    args_nb_assets : int
-        Number of assets given in frozen arguments. It is automatically computed by ``freeze`` function.
     covar : float or np.ndarray
         Covariate values to be frozen.
     *args : float or np.ndarray
         Additional arguments needed by the model to be frozen.
-
 
     Attributes
     ----------

@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from relife import freeze
 from relife.data import LifetimeData, load_insulator_string, load_power_transformer
 from relife.lifetime_model import (
     AcceleratedFailureTime,
@@ -106,7 +105,7 @@ def regression(request):
 )
 def frozen_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return freeze(request.param, covar=covar)
+    return request.param.freeze(covar)
 
 
 @pytest.fixture(
@@ -114,7 +113,7 @@ def frozen_regression(request):
     ids=lambda distri: f"FrozenAgeReplacementModel({distri.__class__.__name__})",
 )
 def frozen_ar_distribution(request):
-    return freeze(AgeReplacementModel(request.param), ar=request.param.isf(0.75))
+    return AgeReplacementModel(request.param).freeze(request.param.isf(0.75))
 
 
 @pytest.fixture(
@@ -123,7 +122,7 @@ def frozen_ar_distribution(request):
 )
 def frozen_ar_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return freeze(AgeReplacementModel(request.param), ar=request.param.isf(0.75, covar), covar=covar)
+    return AgeReplacementModel(request.param).freeze(request.param.isf(0.75, covar), covar)
 
 
 ########################################################################################################################

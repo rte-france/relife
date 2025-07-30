@@ -141,7 +141,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
 
     @property
     def plot(self):
-        """Get plot"""
+        """Provides access to plotting functionnalities"""
         return PlotParametricLifetimeModel(self)
 
     def ls_integrate(self, func, a, b, *args, deg=10):
@@ -217,9 +217,6 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             ls = np.squeeze(ls)
         return ls / sf
 
-    def freeze(self, *args):
-        return FrozenParametricLifetimeModel(self, *args)
-
 
 class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
 
@@ -228,10 +225,10 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.fitting_results = None
 
     @abstractmethod
-    def _init_params(self, time, *args, event=None, entry=None, departure=None): ...
+    def _get_initial_params(self, time, *args, event=None, entry=None, departure=None): ...
 
     @abstractmethod
-    def _params_bounds(self):
+    def _get_params_bounds(self):
         return Bounds(
             np.full(self.nb_params, np.finfo(float).resolution),
             np.full(self.nb_params, np.inf),
@@ -262,10 +259,10 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         **options,
     ):
         lifetime_data = LifetimeData(time, event=event, entry=entry, departure=departure, args=args)
-        self._init_params(lifetime_data)
+        self.params = self._get_initial_params(time, *args, event=event, entry=entry, departure=departure)
         likelihood = LikelihoodFromLifetimes(self, lifetime_data)
         if "bounds" not in options:
-            options["bounds"] = self._params_bounds()
+            options["bounds"] = self._get_params_bounds()
         fitting_results = likelihood.maximum_likelihood_estimation(**options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results

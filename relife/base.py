@@ -1,10 +1,7 @@
-from __future__ import annotations
-
 from itertools import chain
-from typing import Any, Optional, Self
+from typing import Self
 
 import numpy as np
-from numpy.typing import NDArray
 
 
 class ParametricModel:
@@ -191,7 +188,7 @@ class Parameters:
     def _update_names_and_values(self):
         """update names and values of current and parent nodes"""
 
-        def items_walk(parameters: Self):
+        def items_walk(parameters : Self):
             yield tuple(parameters._nodemapping.items())
             for leaf in parameters._leaves.values():
                 yield tuple(chain.from_iterable(items_walk(leaf)))
@@ -207,11 +204,7 @@ class Parameters:
 
 
 def _get_nb_assets(*args):
-    def reshape(x):
-        ary = np.asarray(x)
-        return ary.reshape(-1, 1) if ary.ndim <= 1 else x
-
-    args_2d = tuple((reshape(arys) for arys in args))
+    args_2d = tuple((np.atleast_2d(arys) for arys in args))
 
     try:
         broadcast_shape = np.broadcast_shapes(*(ary.shape for ary in args_2d))

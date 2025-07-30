@@ -103,6 +103,21 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         """
         return super().ppf(probability)
 
+    def moment(self, n):
+        """
+        n-th order moment
+
+        Parameters
+        ----------
+        n : int
+            order of the moment, at least 1.
+
+        Returns
+        -------
+        np.float64
+        """
+        return super().moment(n)
+
     def median(self):
         """
         The median.
@@ -235,13 +250,13 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         """
         return super().ls_integrate(func, a, b, deg=deg)
 
-    def _init_params(self, time, event=None, entry=None, departure=None):
+    def _get_initial_params(self, time, event=None, entry=None, departure=None):
         param0 = np.ones(self.nb_params, dtype=np.float64)
         param0[-1] = 1 / np.median(time)
         self.params = param0
+        return param0
 
-    @property
-    def _params_bounds(self):
+    def _get_params_bounds(self):
         return Bounds(
             np.full(self.nb_params, np.finfo(float).resolution),
             np.full(self.nb_params, np.inf),
@@ -249,7 +264,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
 
     def fit(self, time, *, event=None, entry=None, departure=None, **options):
         """
-        Estimation of parameters.
+        Estimation of the distribution parameters from lifetime data.
 
         Parameters
         ----------
@@ -405,6 +420,19 @@ class Exponential(LifetimeDistribution):
         return 1 / self.rate * np.ones_like(time)
 
     def ichf(self, cumulative_hazard_rate):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are (), (n,) or (m, n).
+
+        Returns
+        -------
+            Function values at each given cumulative hazard rate(s).
+        """
         return cumulative_hazard_rate / np.asarray(self.rate)
 
     def jac_hf(self, time, *, asarray=False):
@@ -619,6 +647,19 @@ class Weibull(LifetimeDistribution):
         )
 
     def ichf(self, cumulative_hazard_rate):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are (), (n,) or (m, n).
+
+        Returns
+        -------
+            Function values at each given cumulative hazard rate(s).
+        """
         return np.asarray(cumulative_hazard_rate) ** (1 / self.shape) / self.rate
 
     def jac_hf(self, time, *, asarray=False):
@@ -829,6 +870,19 @@ class Gompertz(LifetimeDistribution):
         return np.exp(z) * exp1(z) / self.rate
 
     def ichf(self, cumulative_hazard_rate):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are (), (n,) or (m, n).
+
+        Returns
+        -------
+            Function values at each given cumulative hazard rate(s).
+        """
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
     def jac_hf(self, time, *, asarray=False):
@@ -902,13 +956,13 @@ class Gompertz(LifetimeDistribution):
         """
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
-    def _init_params(self, time, event=None, entry=None, departure=None):
+    def _get_initial_params(self, time, event=None, entry=None, departure=None):
         param0 = np.empty(self.nb_params, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(time))
         shape = np.exp(-rate * np.mean(time))
         param0[0] = shape
         param0[1] = rate
-        self.params = param0
+        return param0
 
 
 class Gamma(LifetimeDistribution):
@@ -1036,6 +1090,19 @@ class Gamma(LifetimeDistribution):
         return np.asarray(self.shape / (self.rate**2))
 
     def ichf(self, cumulative_hazard_rate):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are (), (n,) or (m, n).
+
+        Returns
+        -------
+            Function values at each given cumulative hazard rate(s).
+        """
         return 1 / self.rate * gammainccinv(self.shape, np.exp(-cumulative_hazard_rate))
 
     def jac_hf(self, time, *, asarray=False):
@@ -1255,6 +1322,19 @@ class LogLogistic(LifetimeDistribution):
         return (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
 
     def ichf(self, cumulative_hazard_rate):
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are (), (n,) or (m, n).
+
+        Returns
+        -------
+            Function values at each given cumulative hazard rate(s).
+        """
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
     def jac_hf(self, time, *, asarray=False):

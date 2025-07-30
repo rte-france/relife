@@ -5,8 +5,6 @@ from typing import (
     Literal,
     Optional,
     Self,
-    TypeAlias,
-    TypeVarTuple,
     overload,
 )
 
@@ -19,11 +17,7 @@ from relife.lifetime_model import LifetimeRegression
 from relife.likelihood import FittingResults
 
 from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
-
-_Xs = TypeVarTuple("_Xs")
-_X: TypeAlias = float | NDArray[np.float64]
-_Y: TypeAlias = np.float64 | NDArray[np.float64]
-_B: TypeAlias = np.bool_ | NDArray[np.bool_]
+from relife._typing import _X, _Xs, _Y, _B
 
 class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     fitting_results: Optional[FittingResults]
@@ -111,8 +105,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         | tuple[_Y, _B]
         | tuple[_Y, _B, _Y]
     ): ...
-    def _init_params(self, time, event=None, entry=None, departure=None) -> None: ...
-    def _params_bounds(self) -> Bounds: ...
+    def _get_initial_params(self, time, event=None, entry=None, departure=None) -> NDArray[np.float64]: ...
+    def _get_params_bounds(self) -> Bounds: ...
     @override
     def fit(
         self,

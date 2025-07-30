@@ -9,7 +9,6 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife import freeze
 from relife.economic import AgeReplacementReward, ExponentialDiscounting
 from relife.lifetime_model import (
     AgeReplacementModel,
@@ -84,11 +83,9 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
         self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
         self._ar = ar if ar is not None else np.nan
         if a0 is not None:
-            lifetime_model: FrozenAgeReplacementModel = freeze(
-                AgeReplacementModel(LeftTruncatedModel(lifetime_model)), a0=a0, ar=self._ar
-            )
+            lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(self._ar, a0)
         else:
-            lifetime_model: FrozenAgeReplacementModel = freeze(AgeReplacementModel(lifetime_model), ar=self._ar)
+            lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(self._ar)
         reward = AgeReplacementReward(cf, cp, ar)
         super().__init__(lifetime_model, reward, discounting_rate, period_before_discounting)
 
@@ -316,14 +313,8 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         first_lifetime_model: Optional[FrozenAgeReplacementModel] = None
         if a0 is not None:
             self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
-            first_lifetime_model: FrozenAgeReplacementModel = freeze(
-                AgeReplacementModel(LeftTruncatedModel(lifetime_model)),
-                a0=a0,
-                ar=ar1 if ar1 is not None else np.nan,
-            )
-        lifetime_model: FrozenAgeReplacementModel = freeze(
-            AgeReplacementModel(lifetime_model), ar=ar if ar is not None else np.nan
-        )
+            first_lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar1 if ar1 is not None else np.nan, a0),
+        lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(ar if ar is not None else np.nan)
         reward = AgeReplacementReward(cf, cp, ar if ar is not None else np.nan)
 
         stochastic_process = RenewalRewardProcess(
@@ -634,7 +625,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 #         ar = np.squeeze(newton(dcost, x0))
 #         self.ar = ar
 #         return ar
-
+# TODO : prendre poisson_process.py::TPolicy_reduced.asymptotic_expected_equivalient_annual_cost
 
 from ._docstring import (
     ASYMPTOTIC_EEAC_DOCSTRING,

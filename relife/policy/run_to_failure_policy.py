@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife import freeze
 from relife.economic import RunToFailureReward
 from relife.stochastic_process import RenewalRewardProcess
 
@@ -54,7 +53,7 @@ class OneCycleRunToFailurePolicy(BaseOneCycleAgeReplacementPolicy):
     ) -> None:
         reward = RunToFailureReward(cf)
         if a0 is not None:
-            lifetime_model = freeze(LeftTruncatedModel(lifetime_model), a0=a0)
+            lifetime_model = LeftTruncatedModel(lifetime_model).freeze(a0)
         super().__init__(lifetime_model, reward, discounting_rate, period_before_discounting)
 
     @property
@@ -114,10 +113,10 @@ class RunToFailurePolicy(BaseAgeReplacementPolicy):
         first_reward: Optional[RunToFailureReward] = None
         if first_lifetime_model is not None:
             if a0 is not None:
-                first_lifetime_model: FrozenLeftTruncatedModel = freeze(LeftTruncatedModel(first_lifetime_model), a0=a0)
+                first_lifetime_model: FrozenLeftTruncatedModel = LeftTruncatedModel(first_lifetime_model).freeze(a0)
             first_reward = RunToFailureReward(cf)
         elif a0 is not None:
-            first_lifetime_model = freeze(LeftTruncatedModel(lifetime_model), a0=a0)
+            first_lifetime_model = LeftTruncatedModel(lifetime_model).freeze(a0)
 
         stochastic_process = RenewalRewardProcess(
             lifetime_model,

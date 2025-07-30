@@ -8,8 +8,16 @@ _X: TypeAlias = float | NDArray[np.float64]
 _Y: TypeAlias = np.float64 | NDArray[np.float64]
 _B: TypeAlias = np.bool_ | NDArray[np.bool_]
 
+# M = TypeVar("M", bound=int)
+# N = TypeVar("N", bound=int)
+# _Shape = TypeVarTuple("_Shape")
+# _Array : TypeAlias = np.ndarray[tuple[*_Shape], np.dtype[np.float64]]
+#
+# _Scalar : TypeVarTuple = np.float64
+# _1DArray : TypeAlias = _Array[M]
+# _2DArray : TypeAlias = _Array[M, N]
 
-class _ParametricLifetimeModelType(Protocol[*_Xs]):
+class _ParametricLifetimeModel(Protocol[*_Xs]):
 
     def hf(self, time: _X, *args : *_Xs) -> _Y: ...
     def chf(self, time: _X, *args : *_Xs) -> _Y: ...
