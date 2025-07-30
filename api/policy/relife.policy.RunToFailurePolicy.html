@@ -405,6 +405,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
@@ -420,7 +421,9 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.freeze.html">freeze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_lifetime_model.html">is_lifetime_model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
@@ -708,17 +711,17 @@ step of the timeline.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.generate_lifetime_data">
-<span class="sig-name descname"><span class="pre">generate_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.generate_lifetime_data" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">generate_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.generate_lifetime_data" title="Link to this definition">#</a></dt>
 <dd><p>Generate lifetime data</p>
 <p>This function will generate lifetime data that can be used to fit a lifetime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
+<dt><strong>size</strong><span class="classifier">int</span></dt><dd><p>The size of the desired sample.</p>
+</dd>
 <dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
 </dd>
 <dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
-</dd>
-<dt><strong>size</strong><span class="classifier">int or tuple of 2 int</span></dt><dd><p>Size of the sample</p>
 </dd>
 <dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
 </dd>
@@ -734,12 +737,14 @@ step of the timeline.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.sample" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.sample" title="Link to this definition">#</a></dt>
 <dd><p>Renewal data sampling.</p>
 <p>This function will sample data and encapsulate them in an object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
+<dt><strong>size</strong><span class="classifier">int</span></dt><dd><p>The size of the desired sample.</p>
+</dd>
 <dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
 </dd>
 <dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>

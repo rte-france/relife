@@ -405,6 +405,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
@@ -420,7 +421,9 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.freeze.html">freeze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_lifetime_model.html">is_lifetime_model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
@@ -529,7 +532,7 @@
 </dd>
 <dt><a class="reference internal" href="#relife.lifetime_model.Weibull.params_names" title="relife.lifetime_model.Weibull.params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params_names</span></code></a></dt><dd><p>Parameters names.</p>
 </dd>
-<dt><a class="reference internal" href="#relife.lifetime_model.Weibull.plot" title="relife.lifetime_model.Weibull.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></dt><dd><p>Provides access to plotting functionality for this distribution.</p>
+<dt><a class="reference internal" href="#relife.lifetime_model.Weibull.plot" title="relife.lifetime_model.Weibull.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></dt><dd><p>Provides access to plotting functionnalities</p>
 </dd>
 <dt><a class="reference internal" href="#relife.lifetime_model.Weibull.shape" title="relife.lifetime_model.Weibull.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Get the current shape value.</p>
 </dd>
@@ -542,16 +545,16 @@
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.cdf" title="relife.lifetime_model.Weibull.cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></a></p></td>
-<td><p>The cumulative distribution function.</p></td>
+<td><p>The cumulative density function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.chf" title="relife.lifetime_model.Weibull.chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></a></p></td>
 <td><p>The cumulative hazard function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.dhf" title="relife.lifetime_model.Weibull.dhf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dhf</span></code></a></p></td>
-<td><p>The derivative of the hazard function.</p></td>
+<td><p>The derivate of the hazard function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.fit" title="relife.lifetime_model.Weibull.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p>Estimation of parameters.</p></td>
+<td><p>Estimation of the distribution parameters from lifetime data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.hf" title="relife.lifetime_model.Weibull.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
 <td><p>The hazard function.</p></td>
@@ -560,10 +563,10 @@
 <td><p>Inverse cumulative hazard function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.isf" title="relife.lifetime_model.Weibull.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
-<td><p>Inverse survival function.</p></td>
+<td><p>The inverse survival function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.jac_cdf" title="relife.lifetime_model.Weibull.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
-<td><p>The jacobian of the cumulative distribution function.</p></td>
+<td><p>The jacobian of the cumulative density function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.jac_chf" title="relife.lifetime_model.Weibull.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative hazard function.</p></td>
@@ -581,7 +584,7 @@
 <td><p>Lebesgue-Stieltjes integration.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.mean" title="relife.lifetime_model.Weibull.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
-<td><p>The mean.</p></td>
+<td><p>The mean of the distribution.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.median" title="relife.lifetime_model.Weibull.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
 <td><p>The median.</p></td>
@@ -605,7 +608,7 @@
 <td><p>The survival function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Weibull.var" title="relife.lifetime_model.Weibull.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
-<td><p>The variance.</p></td>
+<td><p>The variance of the distribution.</p></td>
 </tr>
 </tbody>
 </table>
@@ -613,7 +616,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.cdf">
 <span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Weibull.cdf" title="Link to this definition">#</a></dt>
-<dd><p>The cumulative distribution function.</p>
+<dd><p>The cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -655,7 +658,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.dhf">
 <span class="sig-name descname"><span class="pre">dhf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/distribution.html#Weibull.dhf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Weibull.dhf" title="Link to this definition">#</a></dt>
-<dd><p>The derivative of the hazard function.</p>
+<dd><p>The derivate of the hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -675,8 +678,8 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Weibull.fit" title="Link to this definition">#</a></dt>
-<dd><p>Estimation of parameters.</p>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Weibull.fit" title="Link to this definition">#</a></dt>
+<dd><p>Estimation of the distribution parameters from lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -688,7 +691,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>departure</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Right truncations applied to lifetime values.</p>
 </dd>
-<dt><strong>**kwargs</strong></dt><dd><dl class="simple">
+<dt><strong>**options</strong></dt><dd><dl class="simple">
 <dt>Extra arguments used by <cite>scipy.minimize</cite>. Default values are:</dt><dd><ul class="simple">
 <li><p><cite>method</cite> : <cite>“L-BFGS-B”</cite></p></li>
 <li><p><cite>contraints</cite> : <cite>()</cite></p></li>
@@ -745,14 +748,13 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>cumulative_hazard_rate</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Cumulative hazard rate value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are (), (n,) or (m, n).</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given cumulative hazard rate(s).</p>
-</dd>
+<dt>Function values at each given cumulative hazard rate(s).</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -761,7 +763,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.isf">
 <span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Weibull.isf" title="Link to this definition">#</a></dt>
-<dd><p>Inverse survival function.</p>
+<dd><p>The inverse survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -782,7 +784,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.jac_cdf">
 <span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Weibull.jac_cdf" title="Link to this definition">#</a></dt>
-<dd><p>The jacobian of the cumulative distribution function.</p>
+<dd><p>The jacobian of the cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -933,12 +935,11 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.mean">
 <span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/distribution.html#Weibull.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Weibull.mean" title="Link to this definition">#</a></dt>
-<dd><p>The mean.</p>
+<dd><p>The mean of the distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd><p>The mean value.</p>
-</dd>
+<dt>np.float64</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -951,8 +952,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd><p>The median value.</p>
-</dd>
+<dt>np.float64</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -965,13 +965,13 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>n</strong><span class="classifier">order of the moment, at least 1.</span></dt><dd></dd>
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>order of the moment, at least 1.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64</dt><dd><p>n-th order moment.</p>
-</dd>
+<dt>np.float64</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1070,7 +1070,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.plot">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><a class="headerlink" href="#relife.lifetime_model.Weibull.plot" title="Link to this definition">#</a></dt>
-<dd><p>Provides access to plotting functionality for this distribution.</p>
+<dd><p>Provides access to plotting functionnalities</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1092,8 +1092,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dl>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">ppf</span></code> is the inverse of <code class="xref py py-meth docutils literal notranslate"><span class="pre">cdf()</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1111,17 +1109,18 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.rvs">
-<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Weibull.rvs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Weibull.rvs" title="Link to this definition">#</a></dt>
 <dd><p>Random variable sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>size</strong><span class="classifier">int, (int,) or (int, int)</span></dt><dd><p>Size of the generated sample. If size is <code class="docutils literal notranslate"><span class="pre">n</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>, n samples are generated. If size is <code class="docutils literal notranslate"><span class="pre">(m,n)</span></code>, a 
-2d array of samples is generated.</p>
+<dt><strong>size</strong><span class="classifier">int</span></dt><dd><p>Size of the generated sample.</p>
+</dd>
+<dt><strong>nb_assets</strong><span class="classifier">int, optional</span></dt><dd><p>If nb_assets is not None, 2d arrays of samples are generated.</p>
 </dd>
 <dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time values.</p>
 </dd>
-<dt><strong>random_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
+<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
 </dd>
 <dt><strong>seed</strong><span class="classifier">optional int, default is None</span></dt><dd><p>Random seed used to fix random sampling.</p>
 </dd>
@@ -1129,7 +1128,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float, ndarray or tuple of float or ndarray</dt><dd><p>The sample values. If either <code class="docutils literal notranslate"><span class="pre">return_event</span></code> or <code class="docutils literal notranslate"><span class="pre">random_entry</span></code> is True, returns a tuple containing
+<dt>float, ndarray or tuple of float or ndarray</dt><dd><p>The sample values. If either <code class="docutils literal notranslate"><span class="pre">return_event</span></code> or <code class="docutils literal notranslate"><span class="pre">return_entry</span></code> is True, returns a tuple containing
 the time values followed by event values, entry values or both.</p>
 </dd>
 </dl>
@@ -1174,12 +1173,11 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Weibull.var">
 <span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/distribution.html#Weibull.var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Weibull.var" title="Link to this definition">#</a></dt>
-<dd><p>The variance.</p>
+<dd><p>The variance of the distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd><p>The variance value.</p>
-</dd>
+<dt>np.float64</dt><dd></dd>
 </dl>
 </dd>
 </dl>

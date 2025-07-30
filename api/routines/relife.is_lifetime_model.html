@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>freeze &#8212; ReLife</title>
+    <title>is_lifetime_model &#8212; ReLife</title>
   
   
   
@@ -48,12 +48,12 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/routines/relife.freeze';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/routines/relife.is_lifetime_model';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="ParametricModel" href="../base_class/relife.ParametricModel.html" />
-    <link rel="prev" title="OneCycleRunToFailurePolicy" href="../policy/relife.policy.OneCycleRunToFailurePolicy.html" />
+    <link rel="next" title="is_stochastic_process" href="relife.is_stochastic_process.html" />
+    <link rel="prev" title="is_frozen" href="relife.is_frozen.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -403,6 +403,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
@@ -418,7 +419,9 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">freeze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">is_lifetime_model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
@@ -473,7 +476,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">freeze</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">is_lifetime_model</span></li>
   </ul>
 </nav>
 </div>
@@ -490,47 +493,12 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="freeze">
-<h1>freeze<a class="headerlink" href="#freeze" title="Link to this heading">#</a></h1>
+  <section id="is-lifetime-model">
+<h1>is_lifetime_model<a class="headerlink" href="#is-lifetime-model" title="Link to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="relife.freeze">
-<span class="sig-prename descclassname"><span class="pre">relife.</span></span><span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/_base.html#freeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.freeze" title="Link to this definition">#</a></dt>
-<dd><p>Freeze a parametric model with given arguments.</p>
-<p>This function takes a parametric model instance (lifetime model or stochastic process) and stores the given arguments
-in a new model interface allowing to resquest functions only with <code class="docutils literal notranslate"><span class="pre">time</span></code> argument.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>model: LifetimeRegression, LeftTruncatedModel, AgeReplacementModel or NonHomogeneousPoissonProcess</strong></dt><dd><p>The model to be frozen. It should be one of the supported model types.</p>
-</dd>
-<dt><strong>**kwargs: float or np.ndarray</strong></dt><dd><p>Keyword arguments representing the parameter names and their respective values to be frozen.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>FrozenLifetimeRegression, FrozenLeftTruncatedModel, FrozenAgeReplacementModel or FrozenNonHomogeneousPoissonProcess</dt><dd><p>The frozen version of the input model with immutable provided argument values.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>Raised when the provided arguments do not match the expected argument names
-for the given model, or if the model is not one of the supported types.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">freeze</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span><span class="p">,</span> <span class="n">ProportionalHazard</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">regression</span> <span class="o">=</span> <span class="n">ProportionalHazard</span><span class="p">(</span><span class="n">weibull</span><span class="p">,</span> <span class="n">coefficients</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">frozen_regression</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">regression</span><span class="p">,</span> <span class="n">covar</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">frozen_regression</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">]))</span> <span class="c1"># covar is fixed at 1.5</span>
-</pre></div>
-</div>
-</dd></dl>
+<dt class="sig sig-object py" id="relife.is_lifetime_model">
+<span class="sig-prename descclassname"><span class="pre">relife.</span></span><span class="sig-name descname"><span class="pre">is_lifetime_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/base.html#is_lifetime_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.is_lifetime_model" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </section>
 
@@ -557,7 +525,7 @@ for the given model, or if the model is not one of the supported types.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.freeze"><code class="docutils literal notranslate"><span class="pre">freeze()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.is_lifetime_model"><code class="docutils literal notranslate"><span class="pre">is_lifetime_model()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -565,7 +533,7 @@ for the given model, or if the model is not one of the supported types.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/routines/relife.freeze.rst.txt"
+      <li><a href="../../_sources/api/routines/relife.is_lifetime_model.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

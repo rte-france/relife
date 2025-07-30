@@ -188,6 +188,7 @@ Stochastic processes
 
     RenewalProcess
     RenewalRewardProcess
+    NonHomogeneousPoissonProcess
 
 Economy
 -------
@@ -232,7 +233,10 @@ Routines
     :caption: Routines
     :nosignatures:
 
-    ~freeze
+    ~is_frozen
+    ~is_lifetime_model
+    ~is_stochastic_process
+
 
 Base classes
 ------------

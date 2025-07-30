@@ -418,7 +418,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">freeze</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.economic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunToFailureReward</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span>
 
@@ -427,10 +426,11 @@
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">FrozenLeftTruncatedModel</span><span class="p">,</span>
-        <span class="n">FrozenLifetimeRegression</span><span class="p">,</span>
         <span class="n">LeftTruncatedModel</span><span class="p">,</span>
-        <span class="n">LifetimeDistribution</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.distribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeDistribution</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenLifetimeRegression</span>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy">
@@ -468,7 +468,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">reward</span> <span class="o">=</span> <span class="n">RunToFailureReward</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">),</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span>
+            <span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="p">,</span> <span class="n">period_before_discounting</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -531,10 +531,10 @@
         <span class="n">first_reward</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunToFailureReward</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">FrozenLeftTruncatedModel</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">first_lifetime_model</span><span class="p">),</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span>
+                <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">FrozenLeftTruncatedModel</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">first_lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
             <span class="n">first_reward</span> <span class="o">=</span> <span class="n">RunToFailureReward</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">),</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span>
+            <span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
 
         <span class="n">stochastic_process</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
             <span class="n">lifetime_model</span><span class="p">,</span>

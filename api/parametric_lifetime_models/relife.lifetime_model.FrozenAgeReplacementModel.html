@@ -403,6 +403,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
@@ -418,7 +419,9 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.freeze.html">freeze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_lifetime_model.html">is_lifetime_model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
@@ -494,14 +497,12 @@
 <h1>FrozenAgeReplacementModel<a class="headerlink" href="#frozenagereplacementmodel" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.lifetime_model.FrozenAgeReplacementModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">FrozenAgeReplacementModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_nb_assets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.FrozenAgeReplacementModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">FrozenAgeReplacementModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#FrozenAgeReplacementModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.FrozenAgeReplacementModel" title="Link to this definition">#</a></dt>
 <dd><p>Frozen age replacement model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>model</strong><span class="classifier">AgeReplacementModel</span></dt><dd><p>Any age replacement model.</p>
-</dd>
-<dt><strong>args_nb_assets</strong><span class="classifier">int</span></dt><dd><p>Number of assets given in frozen arguments. It is automatically computed by <code class="docutils literal notranslate"><span class="pre">freeze</span></code> function.</p>
 </dd>
 <dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values to be frozen.</p>
 </dd>
@@ -513,9 +514,9 @@
 <dd class="field-even"><dl class="simple">
 <dt><strong>unfrozen_model</strong><span class="classifier">AgeReplacementModel</span></dt><dd><p>The unfrozen age replacement model.</p>
 </dd>
-<dt><strong>frozen_args</strong><span class="classifier">tuple of float or np.ndarray</span></dt><dd><p>All the frozen arguments given and necessary to compute model functions.</p>
+<dt><strong>args</strong><span class="classifier">tuple of float or np.ndarray</span></dt><dd><p>All the frozen arguments given and necessary to compute model functions.</p>
 </dd>
-<dt><strong>args_nb_assets</strong><span class="classifier">int</span></dt><dd><p>Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
+<dt><strong>nb_assets</strong><span class="classifier">int</span></dt><dd><p>Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
 interest an user.</p>
 </dd>
 </dl>
@@ -529,7 +530,7 @@ interest an user.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.FrozenAgeReplacementModel.cdf" title="relife.lifetime_model.FrozenAgeReplacementModel.cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></a></p></td>
-<td><p>The cumulative distribution function.</p></td>
+<td><p>The cumulative density function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.FrozenAgeReplacementModel.chf" title="relife.lifetime_model.FrozenAgeReplacementModel.chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></a></p></td>
 <td><p>The cumulative hazard function.</p></td>
@@ -541,7 +542,7 @@ interest an user.</p>
 <td><p>Inverse cumulative hazard function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.FrozenAgeReplacementModel.isf" title="relife.lifetime_model.FrozenAgeReplacementModel.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
-<td><p>Inverse survival function.</p></td>
+<td><p>The inverse survival function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.FrozenAgeReplacementModel.ls_integrate" title="relife.lifetime_model.FrozenAgeReplacementModel.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
 <td><p>Lebesgue-Stieltjes integration.</p></td>
@@ -553,7 +554,7 @@ interest an user.</p>
 <td><p>The median.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.FrozenAgeReplacementModel.moment" title="relife.lifetime_model.FrozenAgeReplacementModel.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
-<td><p>n-th order moment</p></td>
+<td><p>n-th order moment.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.FrozenAgeReplacementModel.mrl" title="relife.lifetime_model.FrozenAgeReplacementModel.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
 <td><p>The mean residual life function.</p></td>
@@ -582,7 +583,7 @@ interest an user.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.FrozenAgeReplacementModel.cdf">
 <span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.FrozenAgeReplacementModel.cdf" title="Link to this definition">#</a></dt>
-<dd><p>The cumulative distribution function.</p>
+<dd><p>The cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -650,13 +651,13 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>cumulative_hazard_rate</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Cumulative hazard rate value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are (), (n,) or (m, n).</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given cumulative hazard rate(s).</p>
+<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given probability value(s).</p>
 </dd>
 </dl>
 </dd>
@@ -666,7 +667,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.FrozenAgeReplacementModel.isf">
 <span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.FrozenAgeReplacementModel.isf" title="Link to this definition">#</a></dt>
-<dd><p>Inverse survival function.</p>
+<dd><p>The inverse survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -717,8 +718,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd><p>The mean value.</p>
-</dd>
+<dt>np.float64 or np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -731,8 +731,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd><p>The median value.</p>
-</dd>
+<dt>np.float64 or np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -741,17 +740,17 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.FrozenAgeReplacementModel.moment">
 <span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.FrozenAgeReplacementModel.moment" title="Link to this definition">#</a></dt>
-<dd><p>n-th order moment</p>
+<dd><p>n-th order moment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>n</strong><span class="classifier">order of the moment, at least 1.</span></dt><dd></dd>
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>Order of the moment (at least 1)</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64</dt><dd><p>n-th order moment.</p>
-</dd>
+<dt>np.float64 or np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -866,8 +865,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dl>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">ppf</span></code> is the inverse of <a class="reference internal" href="../base_class/relife.lifetime_model.FrozenParametricLifetimeModel.html#relife.lifetime_model.FrozenParametricLifetimeModel.cdf" title="relife.lifetime_model.FrozenParametricLifetimeModel.cdf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cdf()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -877,12 +874,12 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>size</strong><span class="classifier">int, (int,) or (int, int)</span></dt><dd><p>Size of the generated sample. If size is <code class="docutils literal notranslate"><span class="pre">n</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>, n samples are generated. If size is <code class="docutils literal notranslate"><span class="pre">(m,n)</span></code>, a 
+<dt><strong>size</strong><span class="classifier">int, (int,) or (int, int)</span></dt><dd><p>Size of the generated sample. If size is <code class="docutils literal notranslate"><span class="pre">n</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>, n samples are generated. If size is <code class="docutils literal notranslate"><span class="pre">(m,n)</span></code>, a
 2d array of samples is generated.</p>
 </dd>
 <dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time values.</p>
 </dd>
-<dt><strong>random_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
+<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
 </dd>
 <dt><strong>seed</strong><span class="classifier">optional int, default is None</span></dt><dd><p>Random seed used to fix random sampling.</p>
 </dd>
@@ -890,7 +887,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float, ndarray or tuple of float or ndarray</dt><dd><p>The sample values. If either <code class="docutils literal notranslate"><span class="pre">return_event</span></code> or <code class="docutils literal notranslate"><span class="pre">random_entry</span></code> is True, returns a tuple containing
+<dt>float, ndarray or tuple of float or ndarray</dt><dd><p>The sample values. If either <code class="docutils literal notranslate"><span class="pre">return_event</span></code> or <code class="docutils literal notranslate"><span class="pre">return_entry</span></code> is True, returns a tuple containing
 the time values followed by event values, entry values or both.</p>
 </dd>
 </dl>
@@ -926,8 +923,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd><p>The variance value.</p>
-</dd>
+<dt>np.float64 or np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>

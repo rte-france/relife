@@ -28,6 +28,9 @@ AgeReplacementModel
             ~AgeReplacementModel.chf
         
         
+            ~AgeReplacementModel.freeze
+        
+        
             ~AgeReplacementModel.hf
         
         

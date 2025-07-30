@@ -28,6 +28,9 @@ LeftTruncatedModel
             ~LeftTruncatedModel.chf
         
         
+            ~LeftTruncatedModel.freeze
+        
+        
             ~LeftTruncatedModel.hf
         
         

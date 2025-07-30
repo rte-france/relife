@@ -1,0 +1,6 @@
+﻿is\_stochastic\_process
+=======================
+
+.. currentmodule:: relife
+
+.. autofunction:: is_stochastic_process

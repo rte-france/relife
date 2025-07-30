@@ -403,6 +403,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
@@ -418,7 +419,9 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.freeze.html">freeze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_lifetime_model.html">is_lifetime_model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="current nav bd-sidenav">
@@ -494,7 +497,7 @@
 <h1>ParametricLifetimeModel<a class="headerlink" href="#parametriclifetimemodel" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.lifetime_model.ParametricLifetimeModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">ParametricLifetimeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricLifetimeModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">ParametricLifetimeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwparams</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_base.html#ParametricLifetimeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricLifetimeModel" title="Link to this definition">#</a></dt>
 <dd><p>Base class for lifetime model.</p>
 <p>This class defines the structure for creating lifetime model. It is a blueprint
 for implementing lifetime model expecting a variadic set of arguments.
@@ -517,8 +520,8 @@ class has not been implemented in a derived class.</p>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricLifetimeModel.cdf" title="relife.lifetime_model.ParametricLifetimeModel.cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></a></p></td>
-<td><p>The cumulative distribution function.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></p></td>
 <td><p></p></td>
@@ -565,32 +568,6 @@ class has not been implemented in a derived class.</p>
 </tbody>
 </table>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.ParametricLifetimeModel.cdf">
-<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricLifetimeModel.cdf" title="Link to this definition">#</a></dt>
-<dd><p>The cumulative distribution function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
-</dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,) 
-as only one age of replacement per asset can be given</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.ParametricLifetimeModel.nb_params">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_params</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricLifetimeModel.nb_params" title="Link to this definition">#</a></dt>
@@ -642,7 +619,7 @@ by specifying all parameters values when the core object is initialized.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.ParametricLifetimeModel.plot">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricLifetimeModel.plot" title="Link to this definition">#</a></dt>
-<dd><p>Provides access to plotting functionality for this distribution.</p>
+<dd><p>Provides access to plotting functionnalities</p>
 </dd></dl>
 
 </dd></dl>
@@ -673,7 +650,6 @@ by specifying all parameters values when the core object is initialized.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricLifetimeModel"><code class="docutils literal notranslate"><span class="pre">ParametricLifetimeModel</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricLifetimeModel.cdf"><code class="docutils literal notranslate"><span class="pre">ParametricLifetimeModel.cdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricLifetimeModel.nb_params"><code class="docutils literal notranslate"><span class="pre">ParametricLifetimeModel.nb_params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricLifetimeModel.params"><code class="docutils literal notranslate"><span class="pre">ParametricLifetimeModel.params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricLifetimeModel.params_names"><code class="docutils literal notranslate"><span class="pre">ParametricLifetimeModel.params_names</span></code></a></li>
