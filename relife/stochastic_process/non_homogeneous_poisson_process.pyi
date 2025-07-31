@@ -10,16 +10,28 @@ from relife.likelihood import FittingResults
 
 class NonHomogeneousPoissonProcess(StochasticProcess[*_Xs]):
     lifetime_model: FittableParametricLifetimeModel[*_Xs]
-    fitting_results : Optional[FittingResults]
+    fitting_results: Optional[FittingResults]
     def __init__(self, lifetime_model: FittableParametricLifetimeModel[*_Xs]) -> None: ...
     def intensity(self, time: _X, *args: *_Xs) -> _Y: ...
-    def cumulative_intensity(self, time: _X, *args: *_Xs) ->_Y: ...
+    def cumulative_intensity(self, time: _X, *args: *_Xs) -> _Y: ...
     def freeze(self, *args: *_Xs): ...
     def sample(
-        self, size: int, tf: float, *args: *_Xs, t0: float = 0.0, nb_assets: Optional[int] = None, seed: Optional[int] = None
+        self,
+        size: int,
+        tf: float,
+        *args: *_Xs,
+        t0: float = 0.0,
+        nb_assets: Optional[int] = None,
+        seed: Optional[int] = None,
     ): ...
     def generate_failure_data(
-        self, size: int, tf: float, *args: *_Xs, t0: float = 0.0, nb_assets: Optional[int] = None, seed: Optional[int] = None
+        self,
+        size: int,
+        tf: float,
+        *args: *_Xs,
+        t0: float = 0.0,
+        nb_assets: Optional[int] = None,
+        seed: Optional[int] = None,
     ): ...
     def fit(
         self,
@@ -33,13 +45,15 @@ class NonHomogeneousPoissonProcess(StochasticProcess[*_Xs]):
     ) -> Self: ...
 
 class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess[*_Xs]):
-    unfrozen_model : NonHomogeneousPoissonProcess[*_Xs]
-    args : tuple[*_Xs]
+    unfrozen_model: NonHomogeneousPoissonProcess[*_Xs]
+    args: tuple[*_Xs]
 
     def __init__(self, model: NonHomogeneousPoissonProcess[*_Xs], *args: *_Xs) -> None: ...
     def intensity(self, time: _X) -> _Y: ...
     def cumulative_intensity(self, time: _X) -> _Y: ...
-    def sample(self, size: int, tf: float, t0: float = 0.0, nb_assets: Optional[int] = None, seed: Optional[int] = None): ...
+    def sample(
+        self, size: int, tf: float, t0: float = 0.0, nb_assets: Optional[int] = None, seed: Optional[int] = None
+    ): ...
     def generate_failure_data(
         self, size: int, tf: float, t0: float = 0.0, nb_assets: Optional[int] = None, seed: Optional[int] = None
     ): ...

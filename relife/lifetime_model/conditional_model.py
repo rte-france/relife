@@ -453,6 +453,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_ar_or_a0("ar", ar)
         return FrozenAgeReplacementModel(self, ar, *args)
 
+
 class LeftTruncatedModel(ParametricLifetimeModel):
     # noinspection PyUnresolvedReferences
     r"""Left truncated model.

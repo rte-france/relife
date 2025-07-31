@@ -247,7 +247,7 @@ class NonHomogeneousPoissonProcessIterator(CountDataIterator):
         self.hpp_timeline += self.exponential_dist.rvs(
             self.timeline.shape[1], nb_assets=self.timeline.shape[0], seed=self.seed
         )
-        failure_instant = self.process.unfrozen_model.baseline.ichf(self.hpp_timeline, *self.process.frozen_args)
+        failure_instant = self.process.unfrozen_model.lifetime_model.ichf(self.hpp_timeline, *self.process.args)
         duration = failure_instant - self.failure_instant  # t_i+1 - t_i
         self.failure_instant = failure_instant.copy()  # update t_i <- t_i+1
         self.timeline += duration

@@ -55,11 +55,21 @@ class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC)
     @override
     def pdf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def isf(self, probability: _X, covar: _X, *args: *_Xs,) -> _Y: ...
+    def isf(
+        self,
+        probability: _X,
+        covar: _X,
+        *args: *_Xs,
+    ) -> _Y: ...
     @override
     def cdf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def ppf(self, probability: _X, covar: _X, *args: *_Xs,) -> _Y: ...
+    def ppf(
+        self,
+        probability: _X,
+        covar: _X,
+        *args: *_Xs,
+    ) -> _Y: ...
     @override
     def mrl(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
@@ -69,22 +79,84 @@ class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC)
     @override
     def median(self, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, covar: _X, *args: *_Xs, deg: int = 10,) -> _Y: ...
+    def ls_integrate(
+        self,
+        func: Callable[[_X], _Y],
+        a: _X,
+        b: _X,
+        covar: _X,
+        *args: *_Xs,
+        deg: int = 10,
+    ) -> _Y: ...
     @overload
-    def jac_sf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_sf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_sf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
-    def jac_sf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_sf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
+    def jac_sf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_cdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_cdf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_cdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
-    def jac_cdf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_cdf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
+    def jac_cdf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_pdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_pdf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
-    def jac_pdf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
     def rvs(
         self,
@@ -138,12 +210,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC)
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> (
-        _Y
-        | tuple[_Y, _Y]
-        | tuple[_Y, _B]
-        | tuple[_Y, _B, _Y]
-    ): ...
+    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     def fit(
         self,
         time: NDArray[np.float64],
@@ -159,18 +226,59 @@ class ProportionalHazard(LifetimeRegression[*_Xs]):
     def hf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     def chf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def ichf(self, cumulative_hazard_rate: _X, covar: _X, *args: *_Xs,) -> _Y: ...
+    def ichf(
+        self,
+        cumulative_hazard_rate: _X,
+        covar: _X,
+        *args: *_Xs,
+    ) -> _Y: ...
     def dhf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @overload
-    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_hf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
-    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_chf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
-    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @override
     def moment(self, n: int, covar: _X, *args: *_Xs) -> _Y: ...
 
@@ -178,18 +286,59 @@ class AcceleratedFailureTime(LifetimeRegression[*_Xs]):
     def hf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     def chf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @override
-    def ichf(self, cumulative_hazard_rate: _X, covar: _X, *args: *_Xs,) -> _Y: ...
+    def ichf(
+        self,
+        cumulative_hazard_rate: _X,
+        covar: _X,
+        *args: *_Xs,
+    ) -> _Y: ...
     def dhf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
     @overload
-    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_hf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
-    def jac_hf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_chf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
-    def jac_chf(self, time: _X, covar: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        covar: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @override
     def moment(self, n: int, covar: _X, *args: *_Xs) -> _Y: ...
 
@@ -202,9 +351,7 @@ class CovarEffect(ParametricModel):
     def jac_g(self, covar: _X, *, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
     @overload
     def jac_g(self, covar: _X, *, asarray: Literal[True] = True) -> _Y: ...
-    def jac_g(
-        self, covar: _X, *, asarray: Literal[True] = True
-    ) -> tuple[_Y, ...] | _Y: ...
+    def jac_g(self, covar: _X, *, asarray: Literal[True] = True) -> tuple[_Y, ...] | _Y: ...
 
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel[*tuple[_X, *_Xs]]):
     unfrozen_model: LifetimeRegression[*_Xs]

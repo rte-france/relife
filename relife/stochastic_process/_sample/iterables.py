@@ -16,7 +16,7 @@ from relife.lifetime_model import (
     FrozenAgeReplacementModel,
     FrozenLeftTruncatedModel,
 )
-from relife.stochastic_process import NonHomogeneousPoissonProcess
+from relife.stochastic_process import FrozenNonHomogeneousPoissonProcess
 
 from ...lifetime_model.distribution import LifetimeDistribution
 from ...lifetime_model.regression import FrozenLifetimeRegression
@@ -101,6 +101,8 @@ class RenewalProcessIterable(CountDataIterable):
             self.nb_assets = getattr(process.lifetime_model, "args_nb_assets", 1)
 
     def __iter__(self) -> RenewalProcessIterator:
+        from relife.stochastic_process import RenewalProcess
+
         if isinstance(self.process, RenewalProcess):
             return RenewalProcessIterator(
                 self.process, self.size, self.tf, t0=self.t0, nb_assets=self.nb_assets, seed=self.seed
@@ -114,7 +116,7 @@ class RenewalProcessIterable(CountDataIterable):
 class NonHomogeneousPoissonProcessIterable(CountDataIterable):
     def __init__(
         self,
-        process: NonHomogeneousPoissonProcess,
+        process: FrozenNonHomogeneousPoissonProcess,
         size: int,
         tf: float,
         t0: float = 0.0,
@@ -125,7 +127,7 @@ class NonHomogeneousPoissonProcessIterable(CountDataIterable):
         # TODO : control and broadcast size here !
         self.process = process
         if nb_assets is None:
-            self.nb_assets = getattr(process.lifetime_model, "args_nb_assets", 1)
+            self.nb_assets = getattr(process, "nb_assets", 1)
 
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(

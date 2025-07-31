@@ -1,7 +1,8 @@
 import numpy as np
 from relife.data import NHPPData, LifetimeData
-from relife.likelihood import  LikelihoodFromLifetimes
+from relife.likelihood import LikelihoodFromLifetimes
 from .base import FrozenStochasticProcess, StochasticProcess
+
 
 class NonHomogeneousPoissonProcess(StochasticProcess):
     """
@@ -66,7 +67,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         """
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
-    def sample(self, size, tf, *args, t0 = 0.0, seed = None):
+    def sample(self, size, tf, *args, t0=0.0, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -97,7 +98,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return NonHomogeneousPoissonProcessSample(t0, tf, struct_array)
 
-    def generate_failure_data(self, size, tf, *args, t0= 0.0, seed = None):
+    def generate_failure_data(self, size, tf, *args, t0=0.0, seed=None):
         """Generate failure data
 
         This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
@@ -157,14 +158,23 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         ages_at_events = struct_array[event_index]["age"].copy()
 
         return {
-            "events_assets_ids": events_assets_ids,
             "ages_at_events": ages_at_events,
-            "assets_ids": assets_ids,
+            "events_assets_ids": events_assets_ids,
             "first_ages": first_ages,
             "last_ages": last_ages,
+            "assets_ids": assets_ids,
         }
 
-    def fit(self, ages_at_events, events_assets_ids, assets_ids = None, first_ages = None, last_ages = None, model_args = None, **options):
+    def fit(
+        self,
+        ages_at_events,
+        events_assets_ids,
+        assets_ids=None,
+        first_ages=None,
+        last_ages=None,
+        model_args=None,
+        **options,
+    ):
         """
         Estimation of the process parameters from recurrent failure data.
 
@@ -245,10 +255,8 @@ class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess):
     def cumulative_intensity(self, time):
         return self.unfrozen_model.cumulative_intensity(time, *self.args)
 
-    def sample(self, size, tf, t0 = 0.0, nb_assets = None, seed = None):
+    def sample(self, size, tf, t0=0.0, nb_assets=None, seed=None):
         return self.unfrozen_model.sample(size, tf, *self.args, t0=t0, nb_assets=nb_assets, seed=seed)
 
-    def generate_failure_data(self, size, tf, t0 = 0.0, nb_assets = None, seed = None):
-        return self.unfrozen_model.generate_failure_data(
-            size, tf, t0=t0, nb_assets=nb_assets, seed=seed, *self.args
-        )
+    def generate_failure_data(self, size, tf, t0=0.0, nb_assets=None, seed=None):
+        return self.unfrozen_model.generate_failure_data(size, tf, t0=t0, nb_assets=nb_assets, seed=seed, *self.args)

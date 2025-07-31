@@ -9,7 +9,7 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.economic import AgeReplacementReward, ExponentialDiscounting
+from relife.economic import AgeReplacementReward, ExponentialDiscounting, cost
 from relife.lifetime_model import (
     AgeReplacementModel,
     FrozenAgeReplacementModel,
@@ -20,7 +20,7 @@ from relife.quadrature import legendre_quadrature
 
 from ..lifetime_model.distribution import LifetimeDistribution
 from ..lifetime_model.regression import FrozenLifetimeRegression
-from ..stochastic_process import RenewalRewardProcess
+from ..stochastic_process import RenewalRewardProcess, FrozenNonHomogeneousPoissonProcess
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
 
 
@@ -83,7 +83,9 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy[FrozenAgeRep
         self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
         self._ar = ar if ar is not None else np.nan
         if a0 is not None:
-            lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(self._ar, a0)
+            lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(
+                self._ar, a0
+            )
         else:
             lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(self._ar)
         reward = AgeReplacementReward(cf, cp, ar)
@@ -313,8 +315,12 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         first_lifetime_model: Optional[FrozenAgeReplacementModel] = None
         if a0 is not None:
             self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
-            first_lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar1 if ar1 is not None else np.nan, a0),
-        lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(ar if ar is not None else np.nan)
+            first_lifetime_model: FrozenAgeReplacementModel = (
+                AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar1 if ar1 is not None else np.nan, a0),
+            )
+        lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(
+            ar if ar is not None else np.nan
+        )
         reward = AgeReplacementReward(cf, cp, ar if ar is not None else np.nan)
 
         stochastic_process = RenewalRewardProcess(
@@ -526,106 +532,129 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         return self
 
 
-# class NonHomogeneousPoissonAgeReplacementPolicy(AgeRenewalPolicy):
-#     """
-#     Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..
-#
-#     Attributes
-#     ----------
-#     ar : np.ndarray or None
-#         Optimized replacement age (optimized policy parameter).
-#     cp : np.ndarray
-#         The cost of failure for each asset.
-#     cr : np.ndarray
-#         The cost of repair for each asset.
-#     """
-#
-#     def __init__(
-#         self,
-#         process: NonHomogeneousPoissonProcess[()],
-#         cp: float | NDArray[np.float64],
-#         cr: float | NDArray[np.float64],
-#         *,
-#         discounting_rate: Optional[float] = None,
-#         ar: Optional[float | NDArray[np.float64]] = None,
-#     ) -> None:
-#         super().__init__(process.model, discounting_rate=discounting_rate)
-#         self.ar = ar
-#         self.cp = cp
-#         self.cr = cr
-#         if not isinstance(process, FrozenNonHomogeneousPoissonProcess):
-#             raise ValueError
-#         self._process = process
-#
-#     @property
-#     def underlying_process(self) -> FrozenNonHomogeneousPoissonProcess:
-#         return self._process
-#
-#     @property
-#     def discounting_rate(self):
-#         return self.discounting.rate
-#
-#     def expected_total_cost(
-#         self,
-#         timeline: NDArray[np.float64],
-#         ar: Optional[float | NDArray[np.float64]] = None,
-#     ) -> NDArray[np.float64]:
-#         pass
-#
-#     def asymptotic_expected_total_cost(self, ar: Optional[float | NDArray[np.float64]] = None) -> NDArray[np.float64]:
-#         pass
-#
-#     def expected_equivalent_annual_cost(
-#         self,
-#         timeline: NDArray[np.float64],
-#         ar: Optional[float | NDArray[np.float64]] = None,
-#     ) -> NDArray[np.float64]:
-#         pass
-#
-#     def number_of_replacements(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-#         pass
-#
-#     def expected_number_of_repairs(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-#         pass
-#
-#     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
-#         pass
-#
-#     def optimize(
-#         self,
-#     ) -> NDArray[np.float64]:
-#
-#         x0 = self.model.mean()
-#
-#         if self.discounting.rate != 0:
-#
-#             def dcost(a):
-#                 a = np.atleast_2d(a)
-#                 return (
-#                     (1 - self.discounting.factor(a)) / self.discounting.rate * self.underlying_process.intensity(a)
-#                     - legendre_quadrature(
-#                         lambda t: self.discounting.factor(t) * self.underlying_process.intensity(t),
-#                         np.array(0.0),
-#                         a,
-#                         ndim=2,
-#                     )
-#                     - self.cp / self.cr
-#                 )
-#
-#         else:
-#
-#             def dcost(a):
-#                 a = np.atleast_2d(a)
-#                 return (
-#                     a * self.underlying_process.intensity(a)
-#                     - self.underlying_process.cumulative_intensity(a)
-#                     - self.cp / self.cr
-#                 )
-#
-#         ar = np.squeeze(newton(dcost, x0))
-#         self.ar = ar
-#         return ar
-# TODO : prendre poisson_process.py::TPolicy_reduced.asymptotic_expected_equivalient_annual_cost
+class NonHomogeneousPoissonAgeReplacementPolicy:
+    """
+    Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..
+
+    Attributes
+    ----------
+    ar : np.ndarray or None
+        Optimized replacement age (optimized policy parameter).
+    cp : np.ndarray
+        The cost of failure for each asset.
+    cr : np.ndarray
+        The cost of repair for each asset.
+    """
+
+    def __init__(
+        self,
+        process: FrozenNonHomogeneousPoissonProcess,
+        cr: float | NDArray[np.float64],
+        cp: float | NDArray[np.float64],
+        discounting_rate: float = 0.0,
+        ar: Optional[float | NDArray[np.float64]] = None,
+    ) -> None:
+
+        self.ar = ar if ar is not None else np.nan
+        self.cost = cost(cr=cr, cp=cp)
+        self.discounting = ExponentialDiscounting(discounting_rate)
+        self.process = process
+
+    @property
+    def discounting_rate(self):
+        return self.discounting.rate
+
+    @property
+    def cr(self) -> float | NDArray[np.float64]:
+        """
+        Cost of repair
+
+        Returns
+        -------
+        ndarray
+        """
+        return self.cost["cr"]
+
+    @cr.setter
+    def cr(self, value: float | NDArray[np.float64]) -> None:
+        self.cost["cr"] = value
+
+    @property
+    def cp(self) -> float | NDArray[np.float64]:
+        """
+        Cost of preventive replacements
+
+        Returns
+        -------
+        ndarray
+        """
+        return self.cost["cp"]
+
+    @cp.setter
+    def cp(self, value: float | NDArray[np.float64]) -> None:
+        self.cost["cp"] = value
+
+    @property
+    def ar(self):
+        return np.squeeze(self._ar)
+
+    @ar.setter
+    def ar(self, value):
+        ar = np.asarray(value, dtype=np.float64)
+        shape = () if ar.ndim == 0 else (ar.size, 1)
+        self._ar = ar.reshape(shape)
+
+    def expected_total_cost(
+        self,
+        timeline: NDArray[np.float64],
+        ar: Optional[float | NDArray[np.float64]] = None,
+    ) -> NDArray[np.float64]:
+        pass
+
+    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        if np.any(np.isnan(self.ar)):
+            raise ValueError
+        if self.discounting_rate == 0.0:
+            asymptotic_eeac = (
+                self.cp + self.cr * legendre_quadrature(lambda t: self.process.intensity(t), 0, self._ar)
+            ) / self._ar
+        else:
+            asymptotic_eeac = (
+                self.discounting_rate
+                * (
+                    self.cp * self.discounting.factor(self._ar)
+                    + self.cr
+                    * legendre_quadrature(lambda t: self.discounting.factor(t) * self.process.intensity(t), 0, self._ar)
+                )
+                / (1 - self.discounting.factor(self._ar))
+            )
+        return np.squeeze(asymptotic_eeac)  # () or (m,)
+
+    def optimize(
+        self,
+    ) -> NDArray[np.float64]:
+
+        x0 = self.process.unfreeze().lifetime_model.mean(*self.process.args)
+        x0 = np.broadcast_to(
+            x0, np.broadcast_shapes(self.process.intensity(x0).shape, self.cp.shape, self.cr.shape)
+        ).copy()
+
+        def eq(ar):
+            ar = np.atleast_2d(ar)
+            if self.discounting.rate != 0:
+                return (
+                    (1 - self.discounting.factor(ar)) / self.discounting_rate * self.process.intensity(ar)
+                    - legendre_quadrature(
+                        lambda t: self.discounting.factor(t) * self.process.intensity(t),
+                        np.array(0.0),
+                        ar,
+                    )
+                    - self.cp / self.cr
+                )
+            return ar * self.process.intensity(ar) - self.process.cumulative_intensity(ar) - self.cp / self.cr
+
+        self.ar = np.squeeze(newton(eq, x0))
+        return self
 
 from ._docstring import (
     ASYMPTOTIC_EEAC_DOCSTRING,

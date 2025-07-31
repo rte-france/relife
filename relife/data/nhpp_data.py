@@ -19,10 +19,10 @@ class NHPPData:
 
     def __post_init__(self):
         # convert inputs to arrays
-        self.events_assets_ids = np.asarray(self.events_assets_ids)
+        self.events_assets_ids = np.unique(np.asarray(self.events_assets_ids), return_inverse=True)[1].astype(np.uint32)
         self.ages_at_events = np.asarray(self.ages_at_events, dtype=np.float64)
         if self.assets_ids is not None:
-            self.assets_ids = np.asarray(self.assets_ids)
+            self.assets_ids = np.unique(np.asarray(self.assets_ids), return_inverse=True)[1].astype(np.uint32)
         if self.first_ages is not None:
             self.first_ages = np.asarray(self.first_ages, dtype=np.float64)
         if self.last_ages is not None:
@@ -81,28 +81,31 @@ class NHPPData:
 
         # sort fields
         sort_ind = np.lexsort((self.ages_at_events, self.events_assets_ids))
-        events_assets_ids = self.events_assets_ids[sort_ind]
-        ages = self.ages_at_events[sort_ind]
+        self.events_assets_ids = self.events_assets_ids[sort_ind]
+        self.ages_at_events = self.ages_at_events[sort_ind]
 
         # number of age value per asset id
-        nb_ages_per_asset = np.unique_counts(events_assets_ids).counts
+        nb_ages_per_asset = np.unique_counts(self.events_assets_ids).counts
         # index of the first ages and last ages in ages
-        self.first_age_index = np.where(np.roll(events_assets_ids, 1) != events_assets_ids)[0]
-        self.last_age_index = np.append(self.first_age_index[1:] - 1, len(events_assets_ids) - 1)
+        self.first_age_index = np.where(np.roll(self.events_assets_ids, 1) != self.events_assets_ids)[0]
+        self.last_age_index = np.append(self.first_age_index[1:] - 1, len(self.events_assets_ids) - 1)
 
         if self.assets_ids is not None:
 
             # sort fields
             sort_ind = np.argsort(self.assets_ids)
+            self.assets_ids = self.assets_ids[sort_ind]
             self.first_ages = self.first_ages[sort_ind] if self.first_ages is not None else self.first_ages
             self.last_ages = self.last_ages[sort_ind] if self.last_ages is not None else self.last_ages
-            self.model_args = tuple((arg[sort_ind] for arg in self.model_args)) if self.model_args is not None else self.model_args
+            self.model_args = (
+                tuple((arg[sort_ind] for arg in self.model_args)) if self.model_args is not None else self.model_args
+            )
 
             if self.first_ages is not None:
-                if np.any(ages[self.first_age_index] <= self.first_ages[nb_ages_per_asset != 0]):
+                if np.any(self.ages_at_events[self.first_age_index] <= self.first_ages[nb_ages_per_asset != 0]):
                     raise ValueError("Each first_ages value must be lower than all of its corresponding ages values")
             if self.last_ages is not None:
-                if np.any(ages[self.last_age_index] >= self.last_ages[nb_ages_per_asset != 0]):
+                if np.any(self.ages_at_events[self.last_age_index] >= self.last_ages[nb_ages_per_asset != 0]):
                     raise ValueError("Each last_ages value must be greater than all of its corresponding ages values")
 
     def to_lifetime_data(self):

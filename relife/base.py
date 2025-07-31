@@ -188,7 +188,7 @@ class Parameters:
     def _update_names_and_values(self):
         """update names and values of current and parent nodes"""
 
-        def items_walk(parameters : Self):
+        def items_walk(parameters: Self):
             yield tuple(parameters._nodemapping.items())
             for leaf in parameters._leaves.values():
                 yield tuple(chain.from_iterable(items_walk(leaf)))
@@ -204,6 +204,8 @@ class Parameters:
 
 
 def _get_nb_assets(*args):
+    if not bool(args):
+        return 1
     args_2d = tuple((np.atleast_2d(arys) for arys in args))
 
     try:
@@ -211,7 +213,6 @@ def _get_nb_assets(*args):
         nb_assets = broadcast_shape[0]
     except ValueError:
         raise ValueError("Given args have incompatible shapes")
-
     return nb_assets
 
 

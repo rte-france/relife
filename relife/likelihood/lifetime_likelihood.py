@@ -202,7 +202,11 @@ class LikelihoodFromLifetimes(Likelihood):
         optimizer = minimize(
             self.negative_log,
             minimize_kwargs.pop("x0"),
-            jac=self.jac_negative_log,
+            jac=(
+                self.jac_negative_log
+                if minimize_kwargs["method"] not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
+                else None
+            ),
             **minimize_kwargs,
         )
         optimal_params = np.copy(optimizer.x)

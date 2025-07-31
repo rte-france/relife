@@ -9,7 +9,6 @@ from relife._typing import _ParametricLifetimeModel, _Xs, _X, _Y, _B
 
 def reshape_ar_or_a0(name: str, value: _X) -> NDArray[np.float64]: ...
 
-
 class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
     baseline: _ParametricLifetimeModel[*_Xs]
     def __init__(self, baseline: _ParametricLifetimeModel[*_Xs]) -> None: ...
@@ -87,19 +86,20 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> (
-        _Y
-        | tuple[_Y, _Y]
-        | tuple[_Y, _B]
-        | tuple[_Y, _B, _Y]
-    ): ...
+    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     @override
-    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, ar: _X, *args: *_Xs, deg: int = 10,) -> _Y: ...
+    def ls_integrate(
+        self,
+        func: Callable[[_X], _Y],
+        a: _X,
+        b: _X,
+        ar: _X,
+        *args: *_Xs,
+        deg: int = 10,
+    ) -> _Y: ...
     def freeze(self, ar: _X, *args: *_Xs) -> FrozenAgeReplacementModel[*_Xs]: ...
 
-class LeftTruncatedModel(
-    ParametricLifetimeModel[*tuple[_X, *_Xs]]
-):
+class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
     baseline: _ParametricLifetimeModel[*_Xs]
     def __init__(self, baseline: _ParametricLifetimeModel[*_Xs]) -> None: ...
     def sf(self, time: _X, a0: _X, *args: *_Xs) -> _Y: ...
@@ -176,12 +176,7 @@ class LeftTruncatedModel(
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> (
-        _Y
-        | tuple[_Y, _Y]
-        | tuple[_Y, _B]
-        | tuple[_Y, _B, _Y]
-    ): ...
+    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     @override
     def ls_integrate(
         self,
@@ -219,5 +214,3 @@ class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel[*tuple[_X, *_Xs]]):
     # noinspection PyUnresolvedReferences
     @a0.setter
     def a0(self, value: _X) -> None: ...
-
-

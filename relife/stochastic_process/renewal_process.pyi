@@ -8,17 +8,16 @@ from typing import TypedDict, Optional, TypeAlias, TypeVar
 from typing_extensions import override
 
 _N = TypeVar("_N", bound=int)
-_M : TypeAlias = int
-_TL : TypeAlias = np.ndarray[tuple[_N], np.dtype[np.float64]] | np.ndarray[tuple[_M, _N], np.dtype[np.float64]]
-_C : TypeAlias = np.ndarray[tuple[_N], np.dtype[np.float64]] | np.ndarray[tuple[_M, _N], np.dtype[np.float64]]
-_A_C : TypeAlias = np.float64 | np.ndarray[tuple[_M], np.dtype[np.float64]]
+_M: TypeAlias = int
+_TL: TypeAlias = np.ndarray[tuple[_N], np.dtype[np.float64]] | np.ndarray[tuple[_M, _N], np.dtype[np.float64]]
+_C: TypeAlias = np.ndarray[tuple[_N], np.dtype[np.float64]] | np.ndarray[tuple[_M, _N], np.dtype[np.float64]]
+_A_C: TypeAlias = np.float64 | np.ndarray[tuple[_M], np.dtype[np.float64]]
 
 class LifetimeFitArg(TypedDict):
     time: NDArray[np.float64]
     event: NDArray[np.bool_]
     entry: NDArray[np.float64]
     args: tuple[NDArray[np.float64], ...]
-
 
 class RenewalProcess(StochasticProcess[()]):
     lifetime_model: _ParametricLifetimeModel[()]

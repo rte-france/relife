@@ -1,100 +1,102 @@
-# import numpy as np
-# import pytest
-#
-# @pytest.fixture
-# def nhpp_data_v0():
-#     return {
-#         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-#         "ages": (11, 13, 21, 25, 27),
-#     }
-#
-#
-# @pytest.fixture
-# def nhpp_data_v1():
-#     return {
-#         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-#         "ages": (11, 13, 21, 25, 27),
-#         "assets_ids": ("AB2", "CX13"),
-#         "first_ages": (10, 12),
-#         "last_ages": (35, 60),
-#         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
-#     }
-#
-#
-# @pytest.fixture
-# def nhpp_data_v2():
-#     return {
-#         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-#         "ages": (11, 13, 21, 25, 27),
-#         "assets_ids": ("AB2", "CX13"),
-#         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
-#     }
-#
-#
-# @pytest.fixture
-# def nhpp_data_v3():
-#     return {
-#         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-#         "ages": (11, 13, 21, 25, 27),
-#         "assets_ids": ("AB2", "CX13"),
-#         "first_ages": (10, 12),
-#         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
-#     }
-#
-#
-# @pytest.fixture
-# def nhpp_data_v4():
-#     return {
-#         "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
-#         "ages": (11, 13, 21, 25, 27),
-#         "assets_ids": ("AB2", "CX13"),
-#         "last_ages": (35, 60),
-#         "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
-#     }
+from relife.data import NHPPData
+import numpy as np
+import pytest
 
-# @pytest.mark.skip(reason="no way of currently testing this")
-# def test_nhhp_data_v0(nhpp_data_v0):
-#     time, event, entry, model_args = nhpp_data_factory(**nhpp_data_v0)
-#     assert np.all(time == np.array([11.0, 21.0, 25.0, 13.0, 27.0]))
-#     assert np.all(event == np.array([True, True, True, True, True]))
-#     assert np.all(entry == np.array([0.0, 11.0, 21.0, 0.0, 13.0]))
-#     assert model_args == ()
-#
-# @pytest.mark.skip(reason="no way of currently testing this")
-# def test_nhhp_data_v1(nhpp_data_v1):
-#     time, event, entry, model_args = nhpp_data_factory(**nhpp_data_v1)
-#     assert np.all(time == np.array([11.0, 21.0, 25.0, 35.0, 13.0, 27.0, 60.0]))
-#     assert np.all(event == np.array([True, True, True, False, True, True, False]))
-#     assert np.all(entry == np.array([10.0, 11.0, 21.0, 25.0, 12.0, 13.0, 27.0]))
-#     assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 1.2, 5.5, 5.5, 5.5]))
-#     assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 37.2, 22.2, 22.2, 22.2]))
-#
-# @pytest.mark.skip(reason="no way of currently testing this")
-# def test_nhhp_data_v2(nhpp_data_v2):
-#     time, event, entry, model_args = nhpp_data_factory(**nhpp_data_v2)
-#     assert np.all(time == np.array([11.0, 21.0, 25.0, 13.0, 27.0]))
-#     assert np.all(event == np.array([True, True, True, True, True]))
-#     assert np.all(entry == np.array([0.0, 11.0, 21.0, 0.0, 13.0]))
-#     assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 5.5, 5.5]))
-#     assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 22.2, 22.2]))
-#
-# @pytest.mark.skip(reason="no way of currently testing this")
-# def test_nhhp_data_v3(nhpp_data_v3):
-#     time, event, entry, model_args = nhpp_data_factory(**nhpp_data_v3)
-#     assert np.all(time == np.array([11.0, 21.0, 25.0, 13.0, 27.0]))
-#     assert np.all(event == np.array([True, True, True, True, True]))
-#     assert np.all(entry == np.array([10.0, 11.0, 21.0, 12.0, 13.0]))
-#     assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 5.5, 5.5]))
-#     assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 22.2, 22.2]))
-#
-# @pytest.mark.skip(reason="no way of currently testing this")
-# def test_nhhp_data_v4(nhpp_data_v4):
-#     time, event, entry, model_args = nhpp_data_factory(**nhpp_data_v4)
-#     assert np.all(time == np.array([11.0, 21.0, 25.0, 35.0, 13.0, 27.0, 60.0]))
-#     assert np.all(event == np.array([True, True, True, False, True, True, False]))
-#     assert np.all(entry == np.array([0.0, 11.0, 21.0, 25.0, 0.0, 13.0, 27.0]))
-#     assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 1.2, 5.5, 5.5, 5.5]))
-#     assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 37.2, 22.2, 22.2, 22.2]))
+
+@pytest.fixture
+def nhpp_data_v0():
+    return {
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+    }
+
+
+@pytest.fixture
+def nhpp_data_v1():
+    return {
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "first_ages": (10, 12),
+        "last_ages": (35, 60),
+        "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
+        "assets_ids": ("AB2", "CX13"),
+    }
+
+
+@pytest.fixture
+def nhpp_data_v2():
+    return {
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
+        "assets_ids": ("AB2", "CX13"),
+    }
+
+
+@pytest.fixture
+def nhpp_data_v3():
+    return {
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "assets_ids": ("AB2", "CX13"),
+        "first_ages": (10, 12),
+        "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
+        "ages_at_events": (11, 13, 21, 25, 27),
+    }
+
+
+@pytest.fixture
+def nhpp_data_v4():
+    return {
+        "ages_at_events": (11, 13, 21, 25, 27),
+        "events_assets_ids": ("AB2", "CX13", "AB2", "AB2", "CX13"),
+        "last_ages": (35, 60),
+        "model_args": (np.array([1.2, 5.5]), np.array([37.2, 22.2])),
+        "assets_ids": ("AB2", "CX13"),
+    }
+
+
+def test_nhhp_data_v0(nhpp_data_v0):
+    time, event, entry, model_args = NHPPData(**nhpp_data_v0).to_lifetime_data()
+    assert np.all(time == np.array([11.0, 21.0, 25.0, 13.0, 27.0]))
+    assert np.all(event == np.array([True, True, True, True, True]))
+    assert np.all(entry == np.array([0.0, 11.0, 21.0, 0.0, 13.0]))
+    assert model_args == ()
+
+
+def test_nhhp_data_v1(nhpp_data_v1):
+    time, event, entry, model_args = NHPPData(**nhpp_data_v1).to_lifetime_data()
+    assert np.all(time == np.array([11.0, 21.0, 25.0, 35.0, 13.0, 27.0, 60.0]))
+    assert np.all(event == np.array([True, True, True, False, True, True, False]))
+    assert np.all(entry == np.array([10.0, 11.0, 21.0, 25.0, 12.0, 13.0, 27.0]))
+    assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 1.2, 5.5, 5.5, 5.5]))
+    assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 37.2, 22.2, 22.2, 22.2]))
+
+
+def test_nhhp_data_v2(nhpp_data_v2):
+    time, event, entry, model_args = NHPPData(**nhpp_data_v2).to_lifetime_data()
+    assert np.all(time == np.array([11.0, 21.0, 25.0, 13.0, 27.0]))
+    assert np.all(event == np.array([True, True, True, True, True]))
+    assert np.all(entry == np.array([0.0, 11.0, 21.0, 0.0, 13.0]))
+    assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 5.5, 5.5]))
+    assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 22.2, 22.2]))
+
+
+def test_nhhp_data_v3(nhpp_data_v3):
+    time, event, entry, model_args = NHPPData(**nhpp_data_v3).to_lifetime_data()
+    assert np.all(time == np.array([11.0, 21.0, 25.0, 13.0, 27.0]))
+    assert np.all(event == np.array([True, True, True, True, True]))
+    assert np.all(entry == np.array([10.0, 11.0, 21.0, 12.0, 13.0]))
+    assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 5.5, 5.5]))
+    assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 22.2, 22.2]))
+
+
+def test_nhhp_data_v4(nhpp_data_v4):
+    time, event, entry, model_args = NHPPData(**nhpp_data_v4).to_lifetime_data()
+    assert np.all(time == np.array([11.0, 21.0, 25.0, 35.0, 13.0, 27.0, 60.0]))
+    assert np.all(event == np.array([True, True, True, False, True, True, False]))
+    assert np.all(entry == np.array([0.0, 11.0, 21.0, 25.0, 0.0, 13.0, 27.0]))
+    assert np.all(model_args[0] == np.array([1.2, 1.2, 1.2, 1.2, 5.5, 5.5, 5.5]))
+    assert np.all(model_args[1] == np.array([37.2, 37.2, 37.2, 37.2, 22.2, 22.2, 22.2]))
 
 
 #

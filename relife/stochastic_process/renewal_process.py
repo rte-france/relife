@@ -39,7 +39,7 @@ class RenewalProcess(StochasticProcess):
     params_names
     """
 
-    def __init__(self, lifetime_model, first_lifetime_model = None):
+    def __init__(self, lifetime_model, first_lifetime_model=None):
         super().__init__()
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
@@ -153,7 +153,7 @@ class RenewalProcess(StochasticProcess):
             return timeline[0, :], renewal_density
         return timeline, renewal_density
 
-    def sample(self, size, tf, t0= 0.0, seed = None):
+    def sample(self, size, tf, t0=0.0, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -180,7 +180,7 @@ class RenewalProcess(StochasticProcess):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return RenewalProcessSample(t0, tf, struct_array)
 
-    def generate_failure_data(self, size, tf, t0 = 0.0, seed= None):
+    def generate_failure_data(self, size, tf, t0=0.0, seed=None):
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
@@ -215,7 +215,7 @@ class RenewalProcess(StochasticProcess):
                 raise ValueError(
                     f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
-        iterable = RenewalProcessIterable(self, size, (t0, tf), seed=seed)
+        iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
@@ -266,7 +266,7 @@ class RenewalRewardProcess(RenewalProcess):
     params_names
     """
 
-    def __init__(self, lifetime_model, reward, discounting_rate= 0.0, first_lifetime_model = None, first_reward = None):
+    def __init__(self, lifetime_model, reward, discounting_rate=0.0, first_lifetime_model=None, first_reward=None):
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else copy.deepcopy(reward)
@@ -487,7 +487,7 @@ class RenewalRewardProcess(RenewalProcess):
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
     @override
-    def sample(self, size, tf, t0 = 0.0, seed = None):
+    def sample(self, size, tf, t0=0.0, seed=None):
         from ._sample import RenewalProcessIterable
 
         iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)

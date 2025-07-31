@@ -1091,7 +1091,6 @@ class AcceleratedFailureTime(LifetimeRegression):
         return jac
 
 
-
 class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
     r"""
     Frozen lifetime regression.

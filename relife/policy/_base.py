@@ -127,6 +127,7 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         # timeline : () or (m, 1)
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
 
+
 # TODO : generic of generic
 class BaseAgeReplacementPolicy(Generic[M, R]):
 

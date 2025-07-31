@@ -87,12 +87,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Xs]):
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> (
-            _Y
-            | tuple[_Y, _Y]
-            | tuple[_Y, _B]
-            | tuple[_Y, _B, _Y]
-    ): ...
+    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     @property
     def plot(self) -> PlotParametricLifetimeModel: ...
 
@@ -103,29 +98,89 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Xs], ABC):
     @abstractmethod
     def dhf(self, time: _X, *args: *_Xs) -> _Y: ...
     @overload
-    def jac_hf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
     @abstractmethod
-    def jac_hf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
     @abstractmethod
-    def jac_chf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_sf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_sf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_sf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_sf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
     @abstractmethod
-    def jac_sf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_sf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_pdf(self, time: _X, *args: *_Xs, asarray: Literal[False] = False,) -> tuple[_Y, ...]: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[False] = False,
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_pdf(self, time: _X, *args: *_Xs, asarray: Literal[True] = True,) -> _Y: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: Literal[True] = True,
+    ) -> _Y: ...
     @abstractmethod
-    def jac_pdf(self, time: _X, *args: *_Xs, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        *args: *_Xs,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @abstractmethod
     def _get_params_bounds(self) -> Bounds: ...
     @abstractmethod
@@ -146,7 +201,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Xs], ABC):
         departure: Optional[NDArray[np.float64]] = None,
         **options: Any,
     ) -> None: ...
-
 
 class NonParametricLifetimeModel(ABC):
     @abstractmethod
@@ -176,7 +230,13 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[*_Xs]):
     def cdf(self, time: _X) -> _Y: ...
     def ppf(self, probability: _X) -> _Y: ...
     def median(self) -> _Y: ...
-    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, deg: int = 10,) -> _Y: ...
+    def ls_integrate(
+        self,
+        func: Callable[[_X], _Y],
+        a: _X,
+        b: _X,
+        deg: int = 10,
+    ) -> _Y: ...
     @overload
     def rvs(
         self,
@@ -221,9 +281,4 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[*_Xs]):
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> (
-        _Y
-        | tuple[_Y, _Y]
-        | tuple[_Y, _B]
-        | tuple[_Y, _B, _Y]
-    ): ...
+    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...

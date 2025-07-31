@@ -35,22 +35,73 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @override
     def moment(self, n: int) -> np.float64: ...
     @override
-    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, deg: int = 10,) -> _Y: ...
+    def ls_integrate(
+        self,
+        func: Callable[[_X], _Y],
+        a: _X,
+        b: _X,
+        deg: int = 10,
+    ) -> _Y: ...
     @overload
-    def jac_sf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_sf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_sf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_sf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_sf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_sf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_cdf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_cdf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_cdf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_cdf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_cdf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_cdf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_pdf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_pdf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_pdf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_pdf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
     def rvs(
         self,
@@ -99,12 +150,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[int] = None,
-    ) -> (
-        _Y
-        | tuple[_Y, _Y]
-        | tuple[_Y, _B]
-        | tuple[_Y, _B, _Y]
-    ): ...
+    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     def _get_initial_params(self, time, event=None, entry=None, departure=None) -> NDArray[np.float64]: ...
     def _get_params_bounds(self) -> Bounds: ...
     @override
@@ -137,7 +183,12 @@ class Exponential(LifetimeDistribution):
     def jac_hf(self, time: _X, *, asarray: Literal[False]) -> tuple[_Y, ...]: ...
     @overload
     def jac_hf(self, time: _X, *, asarray: Literal[True]) -> _Y: ...
-    def jac_hf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
     def jac_chf(self, time: _X, *, asarray: Literal[False]) -> tuple[_Y, ...]: ...
     @overload
@@ -162,15 +213,45 @@ class Weibull(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: _X) -> _Y: ...
     def dhf(self, time: _X) -> _Y: ...
     @overload
-    def jac_hf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_hf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_chf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
 
 class Gompertz(LifetimeDistribution):
     def __init__(self, shape: float | None = None, rate: float | None = None) -> None: ...
@@ -190,15 +271,45 @@ class Gompertz(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: _X) -> _Y: ...
     def dhf(self, time: _X) -> _Y: ...
     @overload
-    def jac_hf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_hf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_chf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
 
 class Gamma(LifetimeDistribution):
     def __init__(self, shape: float | None = None, rate: float | None = None) -> None: ...
@@ -220,15 +331,45 @@ class Gamma(LifetimeDistribution):
     def mrl(self, time: _X) -> _Y: ...
     def dhf(self, time: _X) -> _Y: ...
     @overload
-    def jac_hf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_hf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_hf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_hf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
     @overload
-    def jac_chf(self, time: _X, *, asarray: Literal[False],) -> tuple[_Y, ...]: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[False],
+    ) -> tuple[_Y, ...]: ...
     @overload
-    def jac_chf(self, time: _X, *, asarray: Literal[True],) -> _Y: ...
-    def jac_chf(self, time: _X, *, asarray: bool = True,) -> tuple[_Y, ...] | _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: Literal[True],
+    ) -> _Y: ...
+    def jac_chf(
+        self,
+        time: _X,
+        *,
+        asarray: bool = True,
+    ) -> tuple[_Y, ...] | _Y: ...
 
 class LogLogistic(LifetimeDistribution):
     def __init__(self, shape: float | None = None, rate: float | None = None) -> None: ...
@@ -275,7 +416,7 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
     def ichf(self, cumulative_hazard_rate: _X, *args: *_Xs) -> _Y: ...
 
 class MinimumDistribution(ParametricLifetimeModel[*tuple[int | NDArray[np.int64], *_Xs]]):
-    baseline : FittableParametricLifetimeModel[*_Xs]
+    baseline: FittableParametricLifetimeModel[*_Xs]
     fitting_results = Optional[FittingResults]
     def __init__(self, baseline: LifetimeDistribution | LifetimeRegression) -> None: ...
     @override
@@ -287,9 +428,20 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[int | NDArray[np.int64]
     @override
     def chf(self, time: _X, n: int | NDArray[np.int64], *args: *_Xs) -> _Y: ...
     @override
-    def ichf(self, cumulative_hazard_rate: _X, n: int | NDArray[np.int64], *args: *_Xs,) -> _Y: ...
+    def ichf(
+        self,
+        cumulative_hazard_rate: _X,
+        n: int | NDArray[np.int64],
+        *args: *_Xs,
+    ) -> _Y: ...
     def dhf(self, time: _X, n: int | NDArray[np.int64], *args: *_Xs) -> _Y: ...
-    def jac_chf(self, time: _X, n: int | NDArray[np.int64], *args: *_Xs, asarray: bool = False,) -> _Y | tuple[_Y, ...]: ...
+    def jac_chf(
+        self,
+        time: _X,
+        n: int | NDArray[np.int64],
+        *args: *_Xs,
+        asarray: bool = False,
+    ) -> _Y | tuple[_Y, ...]: ...
     def jac_hf(
         self,
         time: _X,
@@ -319,7 +471,15 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[int | NDArray[np.int64]
         asarray: bool = False,
     ) -> _Y | tuple[_Y, ...]: ...
     @override
-    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, n: int | NDArray[np.int64], *args: *_Xs, deg: int = 10,) -> _Y: ...
+    def ls_integrate(
+        self,
+        func: Callable[[_X], _Y],
+        a: _X,
+        b: _X,
+        n: int | NDArray[np.int64],
+        *args: *_Xs,
+        deg: int = 10,
+    ) -> _Y: ...
     def fit(
         self,
         time: NDArray[np.float64],
