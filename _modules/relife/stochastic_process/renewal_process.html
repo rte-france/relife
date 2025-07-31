@@ -454,7 +454,7 @@
 <span class="sd">    params_names</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">first_lifetime_model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">lifetime_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="n">first_lifetime_model</span>
@@ -576,7 +576,7 @@
 
 <div class="viewcode-block" id="RenewalProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
 
 <span class="sd">        This function will sample data and encapsulate them in an object.</span>
@@ -606,7 +606,7 @@
 
 <div class="viewcode-block" id="RenewalProcess.generate_failure_data">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.generate_failure_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate lifetime data</span>
 
 <span class="sd">        This function will generate lifetime data that can be used to fit a lifetime model.</span>
@@ -641,7 +641,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous.&quot;</span>
                 <span class="p">)</span>
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
 
@@ -696,7 +696,7 @@
 <span class="sd">    params_names</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">first_reward</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">first_lifetime_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">first_reward</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="n">first_lifetime_model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span> <span class="o">=</span> <span class="n">first_reward</span> <span class="k">if</span> <span class="n">first_reward</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
@@ -931,7 +931,7 @@
 <div class="viewcode-block" id="RenewalRewardProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.sample">[docs]</a>
     <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcessIterable</span>
 
         <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>

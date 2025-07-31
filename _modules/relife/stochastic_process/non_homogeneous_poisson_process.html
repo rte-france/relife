@@ -413,8 +413,9 @@
   <h1>Source code for relife.stochastic_process.non_homogeneous_poisson_process</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">NHPPData</span><span class="p">,</span> <span class="n">LifetimeData</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood</span><span class="w"> </span><span class="kn">import</span>  <span class="n">LikelihoodFromLifetimes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="n">LikelihoodFromLifetimes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenStochasticProcess</span><span class="p">,</span> <span class="n">StochasticProcess</span>
+
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess">[docs]</a>
@@ -492,7 +493,7 @@
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
 
 <span class="sd">        This function will sample data and encapsulate them in an object.</span>
@@ -526,7 +527,7 @@
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.generate_failure_data">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate failure data</span>
 
 <span class="sd">        This function will generate failure data that can be used to fit a non-homogeneous Poisson process.</span>
@@ -586,17 +587,26 @@
         <span class="n">ages_at_events</span> <span class="o">=</span> <span class="n">struct_array</span><span class="p">[</span><span class="n">event_index</span><span class="p">][</span><span class="s2">&quot;age&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;events_assets_ids&quot;</span><span class="p">:</span> <span class="n">events_assets_ids</span><span class="p">,</span>
             <span class="s2">&quot;ages_at_events&quot;</span><span class="p">:</span> <span class="n">ages_at_events</span><span class="p">,</span>
-            <span class="s2">&quot;assets_ids&quot;</span><span class="p">:</span> <span class="n">assets_ids</span><span class="p">,</span>
+            <span class="s2">&quot;events_assets_ids&quot;</span><span class="p">:</span> <span class="n">events_assets_ids</span><span class="p">,</span>
             <span class="s2">&quot;first_ages&quot;</span><span class="p">:</span> <span class="n">first_ages</span><span class="p">,</span>
             <span class="s2">&quot;last_ages&quot;</span><span class="p">:</span> <span class="n">last_ages</span><span class="p">,</span>
+            <span class="s2">&quot;assets_ids&quot;</span><span class="p">:</span> <span class="n">assets_ids</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.fit">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess.fit">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ages_at_events</span><span class="p">,</span> <span class="n">events_assets_ids</span><span class="p">,</span> <span class="n">assets_ids</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">first_ages</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">last_ages</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_args</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ages_at_events</span><span class="p">,</span>
+        <span class="n">events_assets_ids</span><span class="p">,</span>
+        <span class="n">assets_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">first_ages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">last_ages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">model_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">options</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimation of the process parameters from recurrent failure data.</span>
 
@@ -679,13 +689,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">cumulative_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">cumulative_intensity</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">nb_assets</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">nb_assets</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">generate_failure_data</span><span class="p">(</span>
-            <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span>
-        <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">generate_failure_data</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 </pre></div>
 
                 </article>
