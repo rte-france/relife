@@ -17,12 +17,13 @@ from relife.lifetime_model import (
     LeftTruncatedModel,
 )
 from relife.quadrature import legendre_quadrature
+from relife import is_frozen
 
-from ..lifetime_model.distribution import LifetimeDistribution
-from ..lifetime_model.regression import FrozenLifetimeRegression
-from ..stochastic_process import (
+from relife.lifetime_model.distribution import LifetimeDistribution
+from relife.lifetime_model.regression import FrozenLifetimeRegression
+from relife.stochastic_process import (
     FrozenNonHomogeneousPoissonProcess,
-    RenewalRewardProcess,
+    RenewalRewardProcess, NonHomogeneousPoissonProcess,
 )
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
 
@@ -561,7 +562,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
 
     def __init__(
         self,
-        process: FrozenNonHomogeneousPoissonProcess,
+        process: FrozenNonHomogeneousPoissonProcess | NonHomogeneousPoissonProcess[()],
         cr: float | NDArray[np.float64],
         cp: float | NDArray[np.float64],
         discounting_rate: float = 0.0,
@@ -675,8 +676,10 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
         Self
              Same instance with optimized ``ar``.
         """
-
-        x0 = self.process.unfreeze().lifetime_model.mean(*self.process.args)
+        if is_frozen(self.process):
+            x0 = self.process.unfreeze().lifetime_model.mean(*self.process.args)
+        else: # lifetime_model : LifetimeDistribution
+            x0 = self.process.lifetime_model.mean()
         x0 = np.broadcast_to(
             x0, np.broadcast_shapes(self.process.intensity(x0).shape, self.cp.shape, self.cr.shape)
         ).copy()

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "relife"
-version = "2.1.0"
+version = "2.1.1"
 authors = [
 	{name = "Thomas Guillon", email="thomas.guillon@rte-france.com"},
     {name = "William Grison", email="william.grison@artelys.com"},
