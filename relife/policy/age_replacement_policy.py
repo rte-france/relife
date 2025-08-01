@@ -20,7 +20,10 @@ from relife.quadrature import legendre_quadrature
 
 from ..lifetime_model.distribution import LifetimeDistribution
 from ..lifetime_model.regression import FrozenLifetimeRegression
-from ..stochastic_process import RenewalRewardProcess, FrozenNonHomogeneousPoissonProcess
+from ..stochastic_process import (
+    FrozenNonHomogeneousPoissonProcess,
+    RenewalRewardProcess,
+)
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
 
 
@@ -499,7 +502,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         self,
     ) -> AgeReplacementPolicy:
         """
-        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and, optionally ``ar1``.
+        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and,t optionally ``ar1``.
 
         Returns
         -------
@@ -533,17 +536,33 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
 
 
 class NonHomogeneousPoissonAgeReplacementPolicy:
-    """
-    Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..
+    # noinspection PyUnresolvedReferences
+    r"""Age replacement policy for non-Homogeneous Poisson process.
+
+    Parameters
+    ----------
+    process : non-Homogeneous Poisson process
+        The underlying process. If the process expects covars, it must be frozen before.
+    cr : float or 1darray
+        The cost of repair.
+    cp : float or 1darray
+        The cost of failure.
+    discounting_rate : float, default is 0.
+        The discounting rate value used in the exponential discounting function
+    ar : float or 1darray, optional
+        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
+        and access to the rest of the object interface.
 
     Attributes
     ----------
-    ar : np.ndarray or None
-        Optimized replacement age (optimized policy parameter).
-    cp : np.ndarray
-        The cost of failure for each asset.
-    cr : np.ndarray
-        The cost of repair for each asset.
+    ar
+    cr
+    cp
+    discounting_rate
+
+    Warnings
+    --------
+    This functionnality may not be stable. It is not fully tested and its design may change in future release.
     """
 
     def __init__(
@@ -562,6 +581,13 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
 
     @property
     def discounting_rate(self):
+        """
+        The discounting rate
+
+        Returns
+        -------
+        float
+        """
         return self.discounting.rate
 
     @property
@@ -596,6 +622,13 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
 
     @property
     def ar(self):
+        """
+        Ages of the preventive replacements
+
+        Returns
+        -------
+        ndarray
+        """
         return np.squeeze(self._ar)
 
     @ar.setter
@@ -604,14 +637,21 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
         shape = () if ar.ndim == 0 else (ar.size, 1)
         self._ar = ar.reshape(shape)
 
-    def expected_total_cost(
-        self,
-        timeline: NDArray[np.float64],
-        ar: Optional[float | NDArray[np.float64]] = None,
-    ) -> NDArray[np.float64]:
-        pass
-
     def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+        r"""
+        The asymtotic expected equivalent annual cost
+
+        .. math::
+
+            \lim_{t\to\infty} \text{EEAC}(t)
+
+        where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost
+        """
         if np.any(np.isnan(self.ar)):
             raise ValueError
         if self.discounting_rate == 0.0:
@@ -633,6 +673,14 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
     def optimize(
         self,
     ) -> NDArray[np.float64]:
+        """
+        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s).
+
+        Returns
+        -------
+        Self
+             Same instance with optimized ``ar``.
+        """
 
         x0 = self.process.unfreeze().lifetime_model.mean(*self.process.args)
         x0 = np.broadcast_to(
@@ -655,6 +703,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
 
         self.ar = np.squeeze(newton(eq, x0))
         return self
+
 
 from ._docstring import (
     ASYMPTOTIC_EEAC_DOCSTRING,

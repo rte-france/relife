@@ -98,7 +98,7 @@ class RenewalProcessIterable(CountDataIterable):
         # TODO : control and broadcast size here !
         self.process = process
         if nb_assets is None:
-            self.nb_assets = getattr(process.lifetime_model, "args_nb_assets", 1)
+            self.nb_assets = getattr(process.lifetime_model, "nb_assets", 1)
 
     def __iter__(self) -> RenewalProcessIterator:
         from relife.stochastic_process import RenewalProcess

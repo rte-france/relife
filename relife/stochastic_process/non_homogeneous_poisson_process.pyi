@@ -1,12 +1,13 @@
-from typing import Optional, Sequence, Any, Self
+from typing import Any, Optional, Self, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 
-from .base import StochasticProcess, FrozenStochasticProcess
+from relife._typing import _X, _Y, _Xs
 from relife.lifetime_model import FittableParametricLifetimeModel
-from relife._typing import _Xs, _X, _Y
 from relife.likelihood import FittingResults
+
+from .base import FrozenStochasticProcess, StochasticProcess
 
 class NonHomogeneousPoissonProcess(StochasticProcess[*_Xs]):
     lifetime_model: FittableParametricLifetimeModel[*_Xs]

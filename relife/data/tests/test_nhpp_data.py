@@ -1,6 +1,7 @@
-from relife.data import NHPPData
 import numpy as np
 import pytest
+
+from relife.data import NHPPData
 
 
 @pytest.fixture

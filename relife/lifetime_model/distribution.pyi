@@ -13,11 +13,11 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import override
 
+from relife._typing import _B, _X, _Y, _Xs
 from relife.lifetime_model import LifetimeRegression
 from relife.likelihood import FittingResults
 
 from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
-from relife._typing import _X, _Xs, _Y, _B
 
 class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     fitting_results: Optional[FittingResults]

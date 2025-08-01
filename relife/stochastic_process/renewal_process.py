@@ -1,4 +1,5 @@
 import copy
+
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
@@ -11,6 +12,7 @@ from relife.stochastic_process.renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
+
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 from .base import StochasticProcess
 
@@ -47,7 +49,7 @@ class RenewalProcess(StochasticProcess):
     def _make_timeline(self, tf, nb_steps):
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)
+        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)
         if args_nb_assets > 1:
             timeline = np.tile(timeline, (args_nb_assets, 1))
         return timeline  # (nb_steps,) or (m, nb_steps)
@@ -220,7 +222,7 @@ class RenewalProcess(StochasticProcess):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
         nb_assets = int(np.max(struct_array["asset_id"])) + 1
-        args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "frozen_args", ())))
+        args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ())))
         broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
         tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"]) for arg in broadcasted_args))
 
@@ -295,7 +297,7 @@ class RenewalRewardProcess(RenewalProcess):
     def _make_timeline(self, tf, nb_steps):
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)  # default 1 for LifetimeDistribution case
+        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case
         if args_nb_assets > 1:
             timeline = np.tile(timeline, (args_nb_assets, 1))
         elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m

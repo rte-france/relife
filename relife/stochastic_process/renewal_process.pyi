@@ -1,11 +1,14 @@
+from typing import Optional, TypeAlias, TypedDict, TypeVar
+
 import numpy as np
-from ._sample import RenewalProcessSample, RenewalRewardProcessSample
-from .base import StochasticProcess as StochasticProcess
 from numpy.typing import NDArray as NDArray
+from typing_extensions import override
+
 from relife._typing import _ParametricLifetimeModel
 from relife.economic import ExponentialDiscounting, Reward
-from typing import TypedDict, Optional, TypeAlias, TypeVar
-from typing_extensions import override
+
+from ._sample import RenewalProcessSample, RenewalRewardProcessSample
+from .base import StochasticProcess as StochasticProcess
 
 _N = TypeVar("_N", bound=int)
 _M: TypeAlias = int

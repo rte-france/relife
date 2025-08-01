@@ -15,10 +15,10 @@ from scipy.optimize import Bounds
 
 from relife import FrozenParametricModel as FrozenParametricModel
 from relife import ParametricModel as ParametricModel
+from relife._typing import _B, _X, _Y, _Xs
 from relife.likelihood import FittingResults as FittingResults
 
 from ._plot import PlotParametricLifetimeModel
-from relife._typing import _Xs, _X, _Y, _B
 
 class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Xs]):
     @overload

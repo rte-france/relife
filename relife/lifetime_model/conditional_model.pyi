@@ -1,11 +1,12 @@
-from typing import Callable, Literal, overload, Optional
+from typing import Callable, Literal, Optional, overload
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from ._base import ParametricLifetimeModel, FrozenParametricLifetimeModel
-from relife._typing import _ParametricLifetimeModel, _Xs, _X, _Y, _B
+from relife._typing import _B, _X, _Y, _ParametricLifetimeModel, _Xs
+
+from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
 
 def reshape_ar_or_a0(name: str, value: _X) -> NDArray[np.float64]: ...
 

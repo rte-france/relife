@@ -1,5 +1,6 @@
-from relife import FrozenParametricModel, ParametricModel
 from typing import Generic
+
+from relife import FrozenParametricModel, ParametricModel
 from relife._typing import _Xs
 
 class StochasticProcess(ParametricModel, Generic[*_Xs]): ...

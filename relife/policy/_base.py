@@ -51,7 +51,7 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
     def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)  # default 1 for LifetimeDistribution case
+        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case
         if args_nb_assets > 1:
             timeline = np.tile(timeline, (args_nb_assets, 1))
         elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m

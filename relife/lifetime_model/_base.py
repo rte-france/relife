@@ -4,14 +4,14 @@ import numpy as np
 from scipy.optimize import Bounds, newton
 
 from relife import FrozenParametricModel, ParametricModel
+from relife.data import LifetimeData
+from relife.likelihood import LikelihoodFromLifetimes
 from relife.quadrature import (
     check_and_broadcast_bounds,
     legendre_quadrature,
     unweighted_laguerre_quadrature,
 )
 
-from relife.data import LifetimeData
-from relife.likelihood import LikelihoodFromLifetimes
 from ._plot import PlotParametricLifetimeModel
 
 

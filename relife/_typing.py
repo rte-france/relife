@@ -1,4 +1,12 @@
-from typing import TypeVarTuple, TypeAlias, Protocol, Callable, overload, Optional, Literal
+from typing import (
+    Callable,
+    Literal,
+    Optional,
+    Protocol,
+    TypeAlias,
+    TypeVarTuple,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray

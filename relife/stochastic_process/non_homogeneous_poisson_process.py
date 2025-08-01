@@ -1,6 +1,8 @@
 import numpy as np
-from relife.data import NHPPData, LifetimeData
+
+from relife.data import LifetimeData, NHPPData
 from relife.likelihood import LikelihoodFromLifetimes
+
 from .base import FrozenStochasticProcess, StochasticProcess
 
 
@@ -181,7 +183,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         Parameters
         ----------
         ages_at_events : 1D array of float
-            Array of float containing the ages of each asset when the event occured
+            Array of float containing the ages of each asset when the events occured
         events_assets_ids : sequence of hashable
             Sequence object containing the ids of each assets corresponding to each ages.
         first_ages : 1D array of float, optional

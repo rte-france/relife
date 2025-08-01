@@ -14,12 +14,12 @@ from scipy.optimize import Bounds
 from typing_extensions import override
 
 from relife import ParametricModel as ParametricModel
+from relife._typing import _B, _X, _Y, _Xs
 from relife.lifetime_model import (
     FittableParametricLifetimeModel,
     FrozenParametricLifetimeModel,
 )
 from relife.likelihood import FittingResults as FittingResults
-from relife._typing import _X, _Xs, _Y, _B
 
 def broadcast_time_covar(time: _X, covar: _X) -> tuple[_X, _X]: ...
 def broadcast_time_covar_shapes(
