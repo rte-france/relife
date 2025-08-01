@@ -430,12 +430,13 @@
     <span class="n">LeftTruncatedModel</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.quadrature</span><span class="w"> </span><span class="kn">import</span> <span class="n">legendre_quadrature</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_frozen</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.distribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeDistribution</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenLifetimeRegression</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model.distribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeDistribution</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenLifetimeRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FrozenNonHomogeneousPoissonProcess</span><span class="p">,</span>
-    <span class="n">RenewalRewardProcess</span><span class="p">,</span>
+    <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseAgeReplacementPolicy</span><span class="p">,</span> <span class="n">BaseOneCycleAgeReplacementPolicy</span>
 
@@ -1015,7 +1016,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">process</span><span class="p">:</span> <span class="n">FrozenNonHomogeneousPoissonProcess</span><span class="p">,</span>
+        <span class="n">process</span><span class="p">:</span> <span class="n">FrozenNonHomogeneousPoissonProcess</span> <span class="o">|</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">[()],</span>
         <span class="n">cr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">cp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
@@ -1134,8 +1135,10 @@
 <span class="sd">        Self</span>
 <span class="sd">             Same instance with optimized ``ar``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">unfreeze</span><span class="p">()</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_frozen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">):</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">unfreeze</span><span class="p">()</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># lifetime_model : LifetimeDistribution</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
             <span class="n">x0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
