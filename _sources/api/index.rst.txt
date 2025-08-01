@@ -116,21 +116,12 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.
 Frozen lifetime models share the same properties as lifetime models, but any additional arguments to time are frozen.
 This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
 These models are important in ReLife because other objects expect frozen-like lifetime models: any lifetime model that has only time as a method argument.
-It is specifically the case of policy objects. To freeze a lifetime model, do the following :
-
-.. code-block:: python
-
-    >>> from relife import freeze
-    >>> frozen_model = freeze(<a_lifetime_model>, **kwargs)
-
-``**kwargs`` is an unpacked dictionnary (a set of key-value pairs). Concretelly, a user must passed named arguments,
-eg ``frozen_regression = freeze(regression, covar= ...)``. If the user passes an argument that is not appropriate with
-the lifetime model, a error message will be raised.
-
+It is specifically the case of policy objects. To freeze a lifetime model, just call ``.freeze(*args)`` on the model instance where ``*args`` are
+required additional arguments of the model.
 
 .. note::
 
-    ``LifetimeDistribution`` can't be frozen because it doesn't make sense (time is the only variable needed for these objects)
+    ``LifetimeDistribution`` objects can't be frozen as time is the only variable needed for these objects.
 
 
 .. rubric:: Frozen lifetime regression
@@ -220,6 +211,7 @@ Maintenance policies
     OneCycleAgeReplacementPolicy
     RunToFailurePolicy
     OneCycleRunToFailurePolicy
+    NonHomogeneousPoissonAgeReplacementPolicy
 
 
 Routines

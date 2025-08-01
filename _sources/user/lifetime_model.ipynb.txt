@@ -78,7 +78,7 @@
     {
      "data": {
       "text/plain": [
-       "<relife.lifetime_model.non_parametric.NelsonAalen at 0x770c2b0d5f50>"
+       "<relife.lifetime_model.non_parametric.NelsonAalen at 0x7d88792ab010>"
       ]
      },
      "execution_count": 4,
@@ -359,7 +359,7 @@
     {
      "data": {
       "text/plain": [
-       "<relife.lifetime_model.regression.ProportionalHazard at 0x770bfde18bd0>"
+       "<relife.lifetime_model.regression.ProportionalHazard at 0x7d8876d731d0>"
       ]
      },
      "execution_count": 16,

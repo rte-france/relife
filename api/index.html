@@ -418,6 +418,7 @@
 <li class="toctree-l1"><a class="reference internal" href="policy/relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy/relife.policy.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy/relife.policy.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
@@ -602,17 +603,11 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.</p>
 <p>Frozen lifetime models share the same properties as lifetime models, but any additional arguments to time are frozen.
 This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
 These models are important in ReLife because other objects expect frozen-like lifetime models: any lifetime model that has only time as a method argument.
-It is specifically the case of policy objects. To freeze a lifetime model, do the following :</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">freeze</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">frozen_model</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="o">&lt;</span><span class="n">a_lifetime_model</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> is an unpacked dictionnary (a set of key-value pairs). Concretelly, a user must passed named arguments,
-eg <code class="docutils literal notranslate"><span class="pre">frozen_regression</span> <span class="pre">=</span> <span class="pre">freeze(regression,</span> <span class="pre">covar=</span> <span class="pre">...)</span></code>. If the user passes an argument that is not appropriate with
-the lifetime model, a error message will be raised.</p>
+It is specifically the case of policy objects. To freeze a lifetime model, just call <code class="docutils literal notranslate"><span class="pre">.freeze(*args)</span></code> on the model instance where <code class="docutils literal notranslate"><span class="pre">*args</span></code> are
+required additional arguments of the model.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">LifetimeDistribution</span></code> can’t be frozen because it doesn’t make sense (time is the only variable needed for these objects)</p>
+<p><code class="docutils literal notranslate"><span class="pre">LifetimeDistribution</span></code> objects can’t be frozen as time is the only variable needed for these objects.</p>
 </div>
 <p class="rubric">Frozen lifetime regression</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
@@ -679,7 +674,7 @@ the lifetime model, a error message will be raised.</p>
 <td><p>Renewal reward process.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess" title="relife.stochastic_process.NonHomogeneousPoissonProcess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess</span></code></a></p></td>
-<td><p>The non-homogeneous Poisson process.</p></td>
+<td><p>Non-homogeneous Poisson process.</p></td>
 </tr>
 </tbody>
 </table>
@@ -714,6 +709,9 @@ the lifetime model, a error message will be raised.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="policy/relife.policy.OneCycleRunToFailurePolicy.html#relife.policy.OneCycleRunToFailurePolicy" title="relife.policy.OneCycleRunToFailurePolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy</span></code></a></p></td>
 <td><p>One cyle run-to-failure policy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy" title="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NonHomogeneousPoissonAgeReplacementPolicy</span></code></a></p></td>
+<td><p>Age replacement policy for non-Homogeneous Poisson process.</p></td>
 </tr>
 </tbody>
 </table>

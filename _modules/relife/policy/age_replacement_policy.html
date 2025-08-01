@@ -433,7 +433,10 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.distribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeDistribution</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenLifetimeRegression</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span><span class="p">,</span> <span class="n">FrozenNonHomogeneousPoissonProcess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FrozenNonHomogeneousPoissonProcess</span><span class="p">,</span>
+    <span class="n">RenewalRewardProcess</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseAgeReplacementPolicy</span><span class="p">,</span> <span class="n">BaseOneCycleAgeReplacementPolicy</span>
 
 
@@ -748,9 +751,7 @@
         <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FrozenAgeReplacementModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">a0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">a0</span>  <span class="c1"># None, arr () or (m,) or (m, 1)</span>
-            <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">FrozenAgeReplacementModel</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">))</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">ar1</span> <span class="k">if</span> <span class="n">ar1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">a0</span><span class="p">),</span>
-            <span class="p">)</span>
+            <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">FrozenAgeReplacementModel</span> <span class="o">=</span> <span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">))</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">ar1</span> <span class="k">if</span> <span class="n">ar1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
         <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">FrozenAgeReplacementModel</span> <span class="o">=</span> <span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span>
             <span class="n">ar</span> <span class="k">if</span> <span class="n">ar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
         <span class="p">)</span>
@@ -949,7 +950,7 @@
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgeReplacementPolicy</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and, optionally ``ar1``.</span>
+<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and,t optionally ``ar1``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -984,18 +985,32 @@
 
 
 
+<div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy">
+<a class="viewcode-back" href="../../../api/policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NonHomogeneousPoissonAgeReplacementPolicy</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Implements a Non-Homogeneous Poisson Process (NHPP) age-replacement policy..</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Age replacement policy for non-Homogeneous Poisson process.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    process : non-Homogeneous Poisson process</span>
+<span class="sd">        The underlying process. If the process expects covars, it must be frozen before.</span>
+<span class="sd">    cr : float or 1darray</span>
+<span class="sd">        The cost of repair.</span>
+<span class="sd">    cp : float or 1darray</span>
+<span class="sd">        The cost of failure.</span>
+<span class="sd">    discounting_rate : float, default is 0.</span>
+<span class="sd">        The discounting rate value used in the exponential discounting function</span>
+<span class="sd">    ar : float or 1darray, optional</span>
+<span class="sd">        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values</span>
+<span class="sd">        and access to the rest of the object interface.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ar : np.ndarray or None</span>
-<span class="sd">        Optimized replacement age (optimized policy parameter).</span>
-<span class="sd">    cp : np.ndarray</span>
-<span class="sd">        The cost of failure for each asset.</span>
-<span class="sd">    cr : np.ndarray</span>
-<span class="sd">        The cost of repair for each asset.</span>
+<span class="sd">    ar</span>
+<span class="sd">    cr</span>
+<span class="sd">    cp</span>
+<span class="sd">    discounting_rate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -1014,6 +1029,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The discounting rate</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">rate</span>
 
     <span class="nd">@property</span>
@@ -1048,6 +1070,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ages of the preventive replacements</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ar</span><span class="p">)</span>
 
     <span class="nd">@ar</span><span class="o">.</span><span class="n">setter</span>
@@ -1056,14 +1085,23 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">ar</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">ar</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ar</span> <span class="o">=</span> <span class="n">ar</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_cost</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">timeline</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">pass</span>
-
+<div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The asymtotic expected equivalent annual cost</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \lim_{t\to\infty} \text{EEAC}(t)</span>
+
+<span class="sd">        where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            The asymptotic expected equivalent annual cost</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -1080,11 +1118,22 @@
                 <span class="p">)</span>
                 <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ar</span><span class="p">))</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">asymptotic_eeac</span><span class="p">)</span>  <span class="c1"># () or (m,)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">asymptotic_eeac</span><span class="p">)</span>  <span class="c1"># () or (m,)</span></div>
 
+
+<div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy.optimize">
+<a class="viewcode-back" href="../../../api/policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.optimize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Self</span>
+<span class="sd">             Same instance with optimized ``ar``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">unfreeze</span><span class="p">()</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
@@ -1106,7 +1155,10 @@
             <span class="k">return</span> <span class="n">ar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">cumulative_intensity</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cr</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">newton</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">x0</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">._docstring</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span><span class="p">,</span>
