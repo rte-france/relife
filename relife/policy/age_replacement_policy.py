@@ -318,9 +318,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         first_lifetime_model: Optional[FrozenAgeReplacementModel] = None
         if a0 is not None:
             self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
-            first_lifetime_model: FrozenAgeReplacementModel = (
-                AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar1 if ar1 is not None else np.nan, a0),
-            )
+            first_lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar1 if ar1 is not None else np.nan, a0)
         lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(
             ar if ar is not None else np.nan
         )
@@ -559,10 +557,6 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
     cr
     cp
     discounting_rate
-
-    Warnings
-    --------
-    This functionnality may not be stable. It is not fully tested and its design may change in future release.
     """
 
     def __init__(

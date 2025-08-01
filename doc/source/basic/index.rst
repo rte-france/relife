@@ -43,7 +43,7 @@ Here ``data`` is a `structured array <https://numpy.org/doc/stable/user/basics.
 
 .. code-block:: python
 
-    >>> print(data["event"])
+    >>> print(data["time"])
     [34.3 45.1 53.2 ... 30.  30.  30. ]
     >>> print(data["event"])
     [ True  True  True ... False False False]

@@ -8,7 +8,7 @@ from .base import FrozenStochasticProcess, StochasticProcess
 
 class NonHomogeneousPoissonProcess(StochasticProcess):
     """
-    The non-homogeneous Poisson process.
+    Non-homogeneous Poisson process.
     """
 
     def __init__(self, lifetime_model):

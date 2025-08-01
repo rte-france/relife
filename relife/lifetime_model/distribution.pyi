@@ -401,6 +401,7 @@ class LogLogistic(LifetimeDistribution):
 
 class EquilibriumDistribution(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
     baseline: ParametricLifetimeModel[*tuple[_X, *_Xs]]
+    fitting_results = Optional[FittingResults]
     def __init__(self, baseline: ParametricLifetimeModel[*tuple[_X, *_Xs]]) -> None: ...
     @property
     def args_names(self) -> tuple[str, ...]: ...

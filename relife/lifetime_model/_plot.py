@@ -57,7 +57,7 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         jac_f = getattr(self.model, "jac_" + fname, None)
         y = f(timeline, *args)
         se = None
-        if self.model.fitting_results is not None and jac_f is not None:
+        if getattr(self.model, "fitting_results", None) is not None and jac_f is not None:
             se = zeros_like(timeline)
             se[..., 1:] = self.model.fitting_results.se_estimation_function(
                 jac_f(timeline[..., 1:], *args, asarray=True)
