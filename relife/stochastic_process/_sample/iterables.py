@@ -21,7 +21,7 @@ from relife.stochastic_process import FrozenNonHomogeneousPoissonProcess
 from ...lifetime_model.distribution import LifetimeDistribution
 from ...lifetime_model.regression import FrozenLifetimeRegression
 from .iterators import (
-    CountDataIterator,
+    StochasticDataIterator,
     NonHomogeneousPoissonProcessIterator,
     RenewalProcessIterator,
     RenewalRewardProcessIterator,
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 Args = TypeVarTuple("Args")
 
 
-class CountDataIterable(Iterable[NDArray[np.void]], ABC):
+class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def __init__(
         self,
         size: int,
@@ -48,7 +48,7 @@ class CountDataIterable(Iterable[NDArray[np.void]], ABC):
 
     @abstractmethod
     @override
-    def __iter__(self) -> CountDataIterator: ...
+    def __iter__(self) -> StochasticDataIterator: ...
 
 
 def age_of_renewal_process_sampler(
@@ -77,7 +77,7 @@ def age_of_renewal_process_sampler(
     return np.squeeze(age_process)
 
 
-class RenewalProcessIterable(CountDataIterable):
+class RenewalProcessIterable(StochasticDataIterable):
 
     def __init__(
         self,
@@ -108,7 +108,7 @@ class RenewalProcessIterable(CountDataIterable):
             )
 
 
-class NonHomogeneousPoissonProcessIterable(CountDataIterable):
+class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
     def __init__(
         self,
         process: FrozenNonHomogeneousPoissonProcess,
