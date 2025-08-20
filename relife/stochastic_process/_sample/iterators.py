@@ -29,14 +29,12 @@ class CountDataIterator(Iterator[NDArray[np.void]], ABC):
         tf: float,
         t0: float = 0.0,
         nb_assets: Optional[int] = None,
-        seed: Optional[int] = None,
     ):
         if nb_assets is None:
             np_size = (1, size)
         else:
             np_size = (nb_assets, size)
         self.t0, self.tf = t0, tf
-        self.seed = seed
         # broadcasting of the size must be done before instanciation
         self.timeline = np.zeros(np_size, dtype=np.float64)
 
@@ -108,9 +106,8 @@ class RenewalProcessIterator(CountDataIterator):
         tf: float,
         t0: float = 0.0,
         nb_assets: Optional[int] = None,
-        seed: Optional[int] = None,
     ):
-        super().__init__(size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
+        super().__init__(size, tf, t0=t0, nb_assets=nb_assets)
         self.process = process
 
     @property
@@ -128,7 +125,6 @@ class RenewalProcessIterator(CountDataIterator):
             nb_assets=self.timeline.shape[0],
             return_event=True,
             return_entry=True,
-            seed=self.seed,
         )
         if self.replacement_cycle == 0 and np.any(model_entry != 0):
             # fixed age process
@@ -148,10 +144,6 @@ class RenewalProcessIterator(CountDataIterator):
             entry = np.where(self.mask["just_crossed_t0"], model_entry, 0.0)
         else:
             entry = np.where(self.mask["just_crossed_t0"], time - (self.timeline - self.t0), 0.0)
-
-        # update seed to avoid having the same lifetime rvs
-        if self.seed is not None:
-            self.seed += 1
         self.replacement_cycle += 1
 
         struct_arr = rfn.append_fields(  #  works on structured_array too
@@ -183,9 +175,8 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
         tf: float,
         t0: float = 0.0,
         nb_assets: Optional[int] = None,
-        seed: Optional[int] = None,
     ):
-        super().__init__(process, nb_samples, tf, t0=t0, nb_assets=nb_assets, seed=seed)
+        super().__init__(process, nb_samples, tf, t0=t0, nb_assets=nb_assets)
         self.reward = self.process.reward
         self.discounting = self.process.discounting
 
@@ -213,9 +204,8 @@ class NonHomogeneousPoissonProcessIterator(CountDataIterator):
         t0: float = 0.0,
         nb_assets: Optional[int] = None,
         ar: Optional[float | NDArray[np.float64]] = None,
-        seed: Optional[int] = None,
     ):
-        super().__init__(nb_samples, tf, t0=t0, nb_assets=nb_assets, seed=seed)
+        super().__init__(nb_samples, tf, t0=t0, nb_assets=nb_assets)
         self.process = process
         self.hpp_timeline = np.zeros_like(self.timeline, dtype=np.float64)
         self.failure_instant = np.zeros_like(self.timeline, dtype=np.float64)
@@ -245,7 +235,7 @@ class NonHomogeneousPoissonProcessIterator(CountDataIterator):
 
         # generate new values
         self.hpp_timeline += self.exponential_dist.rvs(
-            self.timeline.shape[1], nb_assets=self.timeline.shape[0], seed=self.seed
+            self.timeline.shape[1], nb_assets=self.timeline.shape[0]
         )
         failure_instant = self.process.unfrozen_model.lifetime_model.ichf(
             self.hpp_timeline, *getattr(self.process, "args", ())
@@ -277,10 +267,6 @@ class NonHomogeneousPoissonProcessIterator(CountDataIterator):
 
         entry = self.entry.copy()  # returned entry
         self.entry = np.where(event, self.age, self.entry)  # keep previous ages as entry for next iteration
-
-        # update seed to avoid having the same rvs result
-        if self.seed is not None:
-            self.seed += 1
 
         struct_arr = rfn.append_fields(  #  works on structured_array too
             self.get_base_structarray(),
