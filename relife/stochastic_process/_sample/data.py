@@ -8,12 +8,12 @@ from numpy.typing import NDArray
 
 
 @dataclass
-class CountDataSample:
+class StochasticDataSample:
     t0: float
     tf: float
     struct_array: NDArray[np.void]
 
-    def select(self, sample_id: Optional[int] = None, asset_id: Optional[int] = None) -> CountDataSample:
+    def select(self, sample_id: Optional[int] = None, asset_id: Optional[int] = None) -> StochasticDataSample:
         mask: NDArray[np.bool_] = np.ones_like(self.struct_array, dtype=np.bool_)
         if sample_id is not None:
             mask = mask & np.isin(self.struct_array["sample_id"], sample_id)
@@ -52,7 +52,7 @@ class CountDataSample:
 
 
 @dataclass
-class RenewalProcessSample(CountDataSample):
+class RenewalProcessSample(StochasticDataSample):
 
     @staticmethod
     def _nb_events(selection: RenewalProcessSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:

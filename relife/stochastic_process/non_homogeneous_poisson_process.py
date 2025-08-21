@@ -69,7 +69,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         """
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
-    def sample(self, size, tf, *args, t0=0.0, seed=None):
+    def sample(self, nb_samples, tf, t0=0.0):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -93,11 +93,9 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
             NonHomogeneousPoissonProcessIterable,
             NonHomogeneousPoissonProcessSample,
         )
-
-        frozen_nhpp = self.freeze(*args)
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, seed=seed)
+        iterable = NonHomogeneousPoissonProcessIterable(self, nb_samples, tf, t0=t0)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
         return NonHomogeneousPoissonProcessSample(t0, tf, struct_array)
 
     def generate_failure_data(self, size, tf, *args, t0=0.0, seed=None):

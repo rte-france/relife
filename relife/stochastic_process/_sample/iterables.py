@@ -41,7 +41,7 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
         t0: float = 0.0,
         nb_assets: Optional[int] = None,
     ):
-        self.size = size
+        self.nb_samples = size
         self.tf = tf
         self.t0 = t0
         self.nb_assets = nb_assets
@@ -84,27 +84,24 @@ class RenewalProcessIterable(StochasticDataIterable):
         process: RenewalProcess[
             LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
         ],
-        size: int,
+        nb_samples: int,
         tf: float,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
     ):
-        super().__init__(size, tf, t0=t0, nb_assets=nb_assets)
+        super().__init__(nb_samples, tf, t0=t0)
         # TODO : control and broadcast size here !
         self.process = process
-        if nb_assets is None:
-            self.nb_assets = getattr(process.lifetime_model, "nb_assets", 1)
 
     def __iter__(self) -> RenewalProcessIterator:
         from relife.stochastic_process import RenewalProcess
 
         if isinstance(self.process, RenewalProcess):
             return RenewalProcessIterator(
-                self.process, self.size, self.tf, t0=self.t0, nb_assets=self.nb_assets
+                self.process, self.nb_samples, self.tf, t0=self.t0
             )
         else:
             return RenewalRewardProcessIterator(
-                self.process, self.size, self.tf, t0=self.t0, nb_assets=self.nb_assets
+                self.process, self.nb_samples, self.tf, t0=self.t0
             )
 
 
@@ -115,15 +112,13 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
         size: int,
         tf: float,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
     ):
-        super().__init__(size, tf, t0=t0, nb_assets=nb_assets)
+        super().__init__(size, tf, t0=t0)
         # TODO : control and broadcast size here !
         self.process = process
-        if nb_assets is None:
-            self.nb_assets = getattr(process, "nb_assets", 1)
+            
 
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(
-            self.process, self.size, self.tf, t0=self.t0, nb_assets=self.nb_assets
+            self.process, self.nb_samples, self.tf, t0=self.t0
         )
