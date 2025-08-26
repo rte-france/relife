@@ -1325,6 +1325,18 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate</span></div>
 
 
+<div class="viewcode-block" id="Gompertz.var">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.Gompertz.html#relife.lifetime_model.Gompertz.var">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The variance of the distribution.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.float64</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">polygamma</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">**</span><span class="mi">2</span></div>
+
 
 <div class="viewcode-block" id="Gompertz.mrl">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.Gompertz.html#relife.lifetime_model.Gompertz.mrl">[docs]</a>
