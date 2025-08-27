@@ -714,9 +714,6 @@
 <span class="sd">    ar : float or 1darray, optional</span>
 <span class="sd">        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values</span>
 <span class="sd">        and access to the rest of the object interface.</span>
-<span class="sd">    ar1 : float, 2D array, optional</span>
-<span class="sd">        Ages of the first preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values</span>
-<span class="sd">        and access to the rest of the object interface.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -745,14 +742,13 @@
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">a0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">ar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">ar1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">a0</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FrozenAgeReplacementModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">a0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">a0</span>  <span class="c1"># None, arr () or (m,) or (m, 1)</span>
-            <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">FrozenAgeReplacementModel</span> <span class="o">=</span> <span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">))</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">ar1</span> <span class="k">if</span> <span class="n">ar1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+            <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">FrozenAgeReplacementModel</span> <span class="o">=</span> <span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">))</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">ar</span> <span class="k">if</span> <span class="n">ar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
         <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">FrozenAgeReplacementModel</span> <span class="o">=</span> <span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span>
             <span class="n">ar</span> <span class="k">if</span> <span class="n">ar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
         <span class="p">)</span>
@@ -765,6 +761,8 @@
             <span class="n">first_lifetime_model</span><span class="o">=</span><span class="n">first_lifetime_model</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">stochastic_process</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ar</span> <span class="o">=</span> <span class="n">ar</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -951,12 +949,12 @@
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgeReplacementPolicy</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and,t optionally ``ar1``.</span>
+<span class="sd">        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Self</span>
-<span class="sd">             Same instance with optimized ``ar`` (optionnaly ``ar1``).</span>
+<span class="sd">             Same instance with optimized ``ar``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cp</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># ()</span>
         <span class="n">discounting</span> <span class="o">=</span> <span class="n">ExponentialDiscounting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
