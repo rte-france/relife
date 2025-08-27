@@ -841,6 +841,15 @@ class Gompertz(LifetimeDistribution):
         """
         return np.exp(self.shape) * exp1(self.shape) / self.rate
 
+    def var(self):
+        """
+        The variance of the distribution.
+
+        Returns
+        -------
+        np.float64
+        """
+        return super().var()
 
     def mrl(self, time):
         """
