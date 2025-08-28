@@ -413,8 +413,8 @@
   <h1>Source code for relife.lifetime_model.conditional_model</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">,</span> <span class="n">ParametricLifetimeModel</span>
-
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">,</span> <span class="n">ParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_nb_assets</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">reshape_ar_or_a0</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># in shape : (), (m,) or (m, 1)</span>
@@ -765,6 +765,8 @@
 <span class="sd">        If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_nb_assets</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="n">baseline_rvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
         <span class="p">)</span>
@@ -1163,6 +1165,8 @@
 <span class="sd">            the time values followed by event values, entry values or both.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_nb_assets</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="n">super_rvs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
         <span class="p">)</span>
