@@ -1,7 +1,7 @@
 import numpy as np
 
-from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
-
+from relife.lifetime_model import FrozenParametricLifetimeModel, ParametricLifetimeModel
+from relife import get_nb_assets
 
 def reshape_ar_or_a0(name: str, value):
     value = np.asarray(value)  # in shape : (), (m,) or (m, 1)
@@ -318,6 +318,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
         """
         ar = reshape_ar_or_a0("ar", ar)
+        if nb_assets is None:
+            nb_assets = get_nb_assets(ar, *args)
         baseline_rvs = self.baseline.rvs(
             size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
         )
@@ -674,6 +676,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             the time values followed by event values, entry values or both.
         """
         a0 = reshape_ar_or_a0("a0", a0)
+        if nb_assets is None:
+            nb_assets = get_nb_assets(a0, *args)
         super_rvs = super().rvs(
             size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
         )
