@@ -203,7 +203,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             return np.unstack(jac)
         return jac
 
-    def rvs(self, size, *, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(self, size, *, nb_assets=None, return_event=False, return_entry=False, random_state=None):
         """
         Random variable sampling.
 
@@ -217,8 +217,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        seed : optional int, default is None
-            Random seed used to fix random sampling.
+        random_state : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
         -------
@@ -226,7 +226,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
             the time values followed by event values, entry values or both.
         """
-        return super().rvs(size, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
+        return super().rvs(size, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, random_state=random_state)
 
     def ls_integrate(self, func, a, b, deg=10):
         """

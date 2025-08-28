@@ -120,13 +120,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    def rvs(self, size, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
-        rs = np.random.RandomState(seed=seed)
+    def rvs(self, size, *args, nb_assets=None, return_event=False, return_entry=False, random_state=None):
+        rng = np.random.default_rng(random_state)
         if nb_assets is not None:
             np_size = (nb_assets, size)
         else:
             np_size = size
-        probability = rs.uniform(size=np_size)
+        probability = rng.uniform(size=np_size)
         time = self.isf(probability, *args)
         event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
         entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
@@ -451,7 +451,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         """
         return self.unfrozen_model.cdf(time, *self.args)
 
-    def rvs(self, size, return_event=False, return_entry=False, seed=None):
+    def rvs(self, size, return_event=False, return_entry=False, random_state=None):
         """
         Random variable sampling.
 
@@ -464,8 +464,8 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        seed : optional int, default is None
-            Random seed used to fix random sampling.
+        random_state : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
         -------
@@ -474,7 +474,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
             the time values followed by event values, entry values or both.
         """
         return self.unfrozen_model.rvs(
-            size, *self.args, return_event=return_event, return_entry=return_entry, seed=seed
+            size, *self.args, return_event=return_event, return_entry=return_entry, random_state=random_state
         )
 
     def ppf(self, probability):

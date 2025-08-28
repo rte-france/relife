@@ -5,7 +5,7 @@ from typing import (
     Protocol,
     TypeAlias,
     TypeVarTuple,
-    overload,
+    overload, Union,
 )
 
 import numpy as np
@@ -57,7 +57,7 @@ class _ParametricLifetimeModel(Protocol[*_Xs]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
     ) -> _Y: ...
     @overload
     def rvs(
@@ -67,7 +67,7 @@ class _ParametricLifetimeModel(Protocol[*_Xs]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
     ) -> tuple[_Y, _B]: ...
     @overload
     def rvs(
@@ -77,7 +77,7 @@ class _ParametricLifetimeModel(Protocol[*_Xs]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
     ) -> tuple[_Y, _Y]: ...
     @overload
     def rvs(
@@ -87,7 +87,7 @@ class _ParametricLifetimeModel(Protocol[*_Xs]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
     ) -> tuple[_Y, _B, _Y]: ...
     def rvs(
         self,
@@ -96,5 +96,5 @@ class _ParametricLifetimeModel(Protocol[*_Xs]):
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
     ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
