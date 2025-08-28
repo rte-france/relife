@@ -1,4 +1,4 @@
-from typing import Callable, Literal, Optional, overload
+from typing import Callable, Literal, Optional, overload, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -43,7 +43,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> _Y: ...
     @overload
     def rvs(
@@ -54,7 +54,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _B]: ...
     @overload
     def rvs(
@@ -65,7 +65,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _Y]: ...
     @overload
     def rvs(
@@ -76,7 +76,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _B, _Y]: ...
     def rvs(
         self,
@@ -86,7 +86,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     @override
     def ls_integrate(
@@ -133,7 +133,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> _Y: ...
     @overload
     def rvs(
@@ -144,7 +144,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _B]: ...
     @overload
     def rvs(
@@ -155,7 +155,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _Y]: ...
     @overload
     def rvs(
@@ -166,7 +166,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _B, _Y]: ...
     def rvs(
         self,
@@ -176,7 +176,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[int] = None,
+        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     @override
     def ls_integrate(
