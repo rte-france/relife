@@ -132,7 +132,6 @@ def frozen_ar_regression(request):
 M = 3  # nb assets
 N = 10  # nb points
 
-
 @pytest.fixture(
     params=[
         np.float64(1),
@@ -233,10 +232,20 @@ def a0(request):
     return request.param
 
 
-@pytest.fixture(params=[1, N, (N,), (M, 1), (M, N)], ids=lambda size: f"size:{size}")
+@pytest.fixture(
+    params=[1, N],
+    ids=lambda size: f"size:{size}",
+)
 def rvs_size(request):
     return request.param
 
+
+@pytest.fixture(
+    params=[None, M],
+    ids=lambda nb_assets: f"nb_assets:{nb_assets}",
+)
+def rvs_nb_assets(request):
+    return request.param
 
 ########################################################################################################################
 # ECONOMIC FIXTURES

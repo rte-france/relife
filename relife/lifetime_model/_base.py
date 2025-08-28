@@ -127,6 +127,8 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         else:
             np_size = size
         probability = rng.uniform(size=np_size)
+        if np_size == 1:
+            probability = np.squeeze(probability)
         time = self.isf(probability, *args)
         event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
         entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
@@ -451,7 +453,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         """
         return self.unfrozen_model.cdf(time, *self.args)
 
-    def rvs(self, size, return_event=False, return_entry=False, random_state=None):
+    def rvs(self, size, nb_assets=None, return_event=False, return_entry=False, random_state=None):
         """
         Random variable sampling.
 
@@ -460,6 +462,8 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         size : int, (int,) or (int, int)
             Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a
             2d array of samples is generated.
+        nb_assets : int, optional
+            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -474,7 +478,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
             the time values followed by event values, entry values or both.
         """
         return self.unfrozen_model.rvs(
-            size, *self.args, return_event=return_event, return_entry=return_entry, random_state=random_state
+            size, *self.args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, random_state=random_state
         )
 
     def ppf(self, probability):

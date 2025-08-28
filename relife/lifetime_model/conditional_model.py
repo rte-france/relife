@@ -320,6 +320,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_ar_or_a0("ar", ar)
         if nb_assets is None:
             nb_assets = get_nb_assets(ar, *args)
+            if nb_assets == 1:
+                nb_assets = None
         baseline_rvs = self.baseline.rvs(
             size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, random_state=random_state
         )
@@ -678,6 +680,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_ar_or_a0("a0", a0)
         if nb_assets is None:
             nb_assets = get_nb_assets(a0, *args)
+            if nb_assets == 1:
+                nb_assets = None
         super_rvs = super().rvs(
             size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, random_state=random_state
         )
