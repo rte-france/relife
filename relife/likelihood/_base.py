@@ -127,12 +127,12 @@ class FittingResults:
                 self.nb_obversations
             )  # (p, 2)
 
-    def se_estimation_function(self, jac_f: np.ndarray) -> np.float64 | NDArray[np.float64]:
+    def se_estimation_function(self, jac_f: NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         """Standard error estimation function.
 
         Parameters
         ----------
-        jac_f : 1D array
+        jac_f : 1D, 2D or 3D array
             The Jacobian of a function f with respect to params.
 
         Returns
@@ -149,7 +149,13 @@ class FittingResults:
         # jac_f : (p,), (p, n) or (p, m, n)
         # self.var : (p, p)
         if self.covariance_matrix is not None:
-            return np.sqrt(np.einsum("p...,pp,p...", jac_f, self.covariance_matrix, jac_f))  # (), (n,) or (m, n)
+            if jac_f.ndim == 1: # jac_f : (p,)
+                return np.sqrt(np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f))  # ()
+            if jac_f.ndim == 2: # jac_f : (p, n)
+                return np.sqrt(np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f))  # (n,)
+            if jac_f.ndim == 3: # jac_f : (p, m, n) if regression with more than one asset
+                return np.sqrt(np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f)) # (m,n)
+            raise ValueError("Invalid jac_f ndim")
         raise ValueError("Can't compute if var is None")
 
     def __str__(self) -> str:

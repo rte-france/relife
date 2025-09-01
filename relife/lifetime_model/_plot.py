@@ -51,7 +51,7 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         end_time = kwargs.pop("end_time", None)
         if end_time is None:
             end_time = np.squeeze(self.model.isf(1e-3, *args))  # () or (m,)
-        timeline = np.linspace(0, end_time, 200, dtype=np.float64)  # (200,) or (200, m)
+        timeline = np.linspace(0, end_time, 200, dtype=np.float64)  # (200,) or (m, 200)
         timeline = np.transpose(timeline)  # (200,) (m, 200)
         f = getattr(self.model, fname)
         jac_f = getattr(self.model, "jac_" + fname, None)
