@@ -451,7 +451,8 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         """
         return self.unfrozen_model.cdf(time, *self.args)
 
-    def rvs(self, size, return_event=False, return_entry=False, seed=None):
+
+    def rvs(self, size, return_event=False, return_entry=False, seed=None, nb_assets=None):
         """
         Random variable sampling.
 
@@ -466,6 +467,8 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
             If True, returns corresponding entry values of the sample time values.
         seed : optional int, default is None
             Random seed used to fix random sampling.
+        nb_assets : int, optional
+            If nb_assets is not None, 2d arrays of samples are generated.
 
         Returns
         -------
@@ -474,7 +477,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
             the time values followed by event values, entry values or both.
         """
         return self.unfrozen_model.rvs(
-            size, *self.args, return_event=return_event, return_entry=return_entry, seed=seed
+            size, *self.args, return_event=return_event, return_entry=return_entry, seed=seed, nb_assets=nb_assets
         )
 
     def ppf(self, probability):

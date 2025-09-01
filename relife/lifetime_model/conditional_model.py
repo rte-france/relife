@@ -285,7 +285,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None, **kwargs):
         """
         Random variable sampling.
 
@@ -318,26 +318,33 @@ class AgeReplacementModel(ParametricLifetimeModel):
         If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
         """
         ar = reshape_ar_or_a0("ar", ar)
+        
+        # FIX: Pass kwargs to the baseline.rvs() call for structural integrity
         baseline_rvs = self.baseline.rvs(
-            size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+            size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed, **kwargs
         )
+        
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
-        time = np.minimum(time, ar)  # it may change time shape by broadcasting
+        
+        # This logic is correct, but we ensure it's robust
+        is_replacement = time >= ar
+        time = np.minimum(time, ar)
+
         if not return_event and not return_entry:
             return time
-        elif return_event and not return_entry:
-            event = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            event = np.where(time != ar, event, ~event)
-            return time, event
+        
+        # Reconstruct the tuple carefully, preserving original event info where applicable
+        if return_event and not return_entry:
+            original_event = baseline_rvs[1]
+            event = np.where(is_replacement, False, original_event)
+            return time, np.broadcast_to(event, time.shape)
         elif not return_event and return_entry:
-            entry = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            return time, entry
-        else:
-            event, entry = baseline_rvs[1:]
-            event = np.broadcast_to(event, time.shape).copy()
-            entry = np.broadcast_to(entry, time.shape).copy()
-            event = np.where(time != ar, event, ~event)
-            return time, event, entry
+            entry = baseline_rvs[1]
+            return time, np.broadcast_to(entry, time.shape)
+        else:  # Both True
+            original_event, entry = baseline_rvs[1:]
+            event = np.where(is_replacement, False, original_event)
+            return time, np.broadcast_to(event, time.shape), np.broadcast_to(entry, time.shape)
 
     def ls_integrate(self, func, a, b, ar, *args, deg=10):
         """
@@ -645,7 +652,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
-    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, seed=None, **kwargs):
         """
         Random variable sampling.
 
@@ -674,21 +681,77 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             the time values followed by event values, entry values or both.
         """
         a0 = reshape_ar_or_a0("a0", a0)
-        super_rvs = super().rvs(
-            size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+        
+        # FIX 1: Pass kwargs to the baseline.rvs() call for structural integrity
+        baseline_rvs = self.baseline.rvs(
+            size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed, **kwargs
         )
-        if not return_event and return_entry:
-            time, entry = super_rvs
-            entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
-            return time, entry
-        elif return_event and return_entry:
-            time, event, entry = super_rvs
-            entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
-            return time, event, entry
+        
+        if not return_event and not return_entry:
+            time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
+            return time + a0
+
+        # Handle the case where baseline_rvs is a tuple
+        if isinstance(baseline_rvs, tuple):
+            time = baseline_rvs[0]
+            original_time = time.copy()  # Keep a copy of the original time for event logic adjustment
+            time = time + a0
+            
+            if return_event and return_entry:
+                # Preserve both event and entry information correctly
+                if len(baseline_rvs) == 3:
+                    event, entry = baseline_rvs[1:]
+                else:
+                    # If only one additional element, assume it's event if return_event is True
+                    event = baseline_rvs[1]
+                    entry = np.zeros_like(time)
+                
+                # SPECIAL FIX: Adjust event logic for AgeReplacementModel baseline
+                # When combining LeftTruncatedModel(AgeReplacementModel):
+                # - Assets have already reached age a0
+                # - They should be replaced when their total age reaches ar
+                # - So they should be replaced when additional time t satisfies: a0 + t >= ar => t >= ar - a0
+                # - But AgeReplacementModel sets event=False when t >= ar (on its own time scale)
+                # - We need to adjust this to set event=False when t >= ar - a0
+                
+                # Check if baseline is an AgeReplacementModel by checking if it has an 'ar' attribute
+                if hasattr(self.baseline, 'ar') or (hasattr(self.baseline, 'unfrozen_model') and hasattr(self.baseline.unfrozen_model, 'ar')):
+                    # Get the replacement age from the baseline
+                    if hasattr(self.baseline, 'ar'):
+                        ar = self.baseline.ar
+                    else:  # FrozenAgeReplacementModel case
+                        ar = self.baseline.unfrozen_model.ar
+                    
+                    # Adjust event logic: set event=False when original_time >= (ar - a0)
+                    # But we need to be careful about broadcasting
+                    effective_replacement_time = ar - a0
+                    is_replacement = original_time >= effective_replacement_time
+                    event = np.where(is_replacement, False, event)
+                
+                entry = np.broadcast_to(a0, entry.shape).copy()
+                return time, event, entry
+            elif return_event:
+                event = baseline_rvs[1]
+                
+                # SPECIAL FIX: Adjust event logic for AgeReplacementModel baseline
+                if hasattr(self.baseline, 'ar') or (hasattr(self.baseline, 'unfrozen_model') and hasattr(self.baseline.unfrozen_model, 'ar')):
+                    if hasattr(self.baseline, 'ar'):
+                        ar = self.baseline.ar
+                    else:  # FrozenAgeReplacementModel case
+                        ar = self.baseline.unfrozen_model.ar
+                    
+                    effective_replacement_time = ar - a0
+                    is_replacement = original_time >= effective_replacement_time
+                    event = np.where(is_replacement, False, event)
+                
+                return time, event
+            elif return_entry:
+                entry = baseline_rvs[1] if len(baseline_rvs) == 2 else np.zeros_like(time)
+                entry = np.broadcast_to(a0, entry.shape).copy()
+                return time, entry
         else:
-            return super_rvs
+            # This case shouldn't happen if return_event or return_entry is True, but just in case
+            return baseline_rvs + a0
 
     def ls_integrate(self, func, a, b, a0, *args, deg=10):
         """
