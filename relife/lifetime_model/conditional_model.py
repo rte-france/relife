@@ -331,16 +331,21 @@ class AgeReplacementModel(ParametricLifetimeModel):
             return time
         elif return_event and not return_entry:
             event = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            event = np.where(time != ar, event, ~event)
+            event = np.where(time == ar, False, event)
             return time, event
         elif not return_event and return_entry:
-            entry = np.broadcast_to(baseline_rvs[1], time.shape).copy()
+            if isinstance(baseline_rvs, tuple) and len(baseline_rvs) > 2:
+                # baseline_rvs is (time, event, entry)
+                entry = np.broadcast_to(baseline_rvs[2], time.shape).copy()
+            else:
+                # baseline_rvs is (time, entry) or just time
+                entry = np.broadcast_to(baseline_rvs[1], time.shape).copy() if isinstance(baseline_rvs, tuple) else np.zeros_like(time)
             return time, entry
         else:
             event, entry = baseline_rvs[1:]
             event = np.broadcast_to(event, time.shape).copy()
             entry = np.broadcast_to(entry, time.shape).copy()
-            event = np.where(time != ar, event, ~event)
+            event = np.where(time == ar, False, event)
             return time, event, entry
 
     def ls_integrate(self, func, a, b, ar, *args, deg=10):
@@ -688,12 +693,24 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         if not return_event and return_entry:
             time, entry = super_rvs
             entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
+            time = time + a0  #  not residual age
             return time, entry
         elif return_event and return_entry:
             time, event, entry = super_rvs
             entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
+            original_time = time.copy()
+            time = time + a0  #  not residual age
+            
+            # Special handling for AgeReplacementModel baseline
+            # When final time equals replacement age, it should be a replacement (event=False)
+            from .conditional_model import AgeReplacementModel
+            if hasattr(self.baseline, 'unfrozen_model') and isinstance(self.baseline.unfrozen_model, AgeReplacementModel):
+                # Get the replacement age from the baseline model
+                if hasattr(self.baseline, 'ar'):
+                    ar = self.baseline.ar
+                    # If final time equals replacement age, it's a replacement
+                    event = np.where(time == ar, False, event)
+            
             return time, event, entry
         else:
             return super_rvs
