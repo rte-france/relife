@@ -3,6 +3,7 @@ import numpy as np
 from relife.lifetime_model import FrozenParametricLifetimeModel, ParametricLifetimeModel
 from relife import get_nb_assets
 
+
 def reshape_ar_or_a0(name: str, value):
     value = np.asarray(value)  # in shape : (), (m,) or (m, 1)
     if value.ndim > 2 or (value.ndim == 2 and value.shape[-1] != 1):
@@ -323,7 +324,12 @@ class AgeReplacementModel(ParametricLifetimeModel):
             if nb_assets == 1:
                 nb_assets = None
         baseline_rvs = self.baseline.rvs(
-            size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, random_state=random_state
+            size,
+            *args,
+            nb_assets=nb_assets,
+            return_event=return_event,
+            return_entry=return_entry,
+            random_state=random_state,
         )
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
         time = np.minimum(time, ar)  # it may change time shape by broadcasting
@@ -683,20 +689,34 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             if nb_assets == 1:
                 nb_assets = None
         super_rvs = super().rvs(
-            size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, random_state=random_state
+            size,
+            *(a0, *args),
+            nb_assets=nb_assets,
+            return_event=return_event,
+            return_entry=return_entry,
+            random_state=random_state,
         )
-        if not return_event and return_entry:
-            time, entry = super_rvs
+        time = super_rvs[0] if isinstance(super_rvs, tuple) else super_rvs
+        complete_ages = time + a0
+        output = [time,] # at least time in output
+        if return_event:
+            event = super_rvs[1] # event always at index 1
+            # reconstruct event for AgeReplacementModel c omposition as super skips this info
+            if isinstance(self.baseline, AgeReplacementModel):
+                ar = reshape_ar_or_a0("ar", args[0])
+                event = np.where(complete_ages < ar, event, ~event)
+            if isinstance(self.baseline, FrozenAgeReplacementModel):
+                ar = reshape_ar_or_a0("ar", self.baseline.args[0])
+                event = np.where(complete_ages < ar, event, ~event)
+            output.append(event)
+        if return_entry:
+            output[0] = complete_ages # don't return residual ages
+            entry = super_rvs[-1] # entry always at last index
             entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
-            return time, entry
-        elif return_event and return_entry:
-            time, event, entry = super_rvs
-            entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
-            return time, event, entry
-        else:
-            return super_rvs
+            output.append(entry)
+        if len(output) > 1:
+            return tuple(output) # return tuple, not list
+        return output[0]
 
     def ls_integrate(self, func, a, b, a0, *args, deg=10):
         """
