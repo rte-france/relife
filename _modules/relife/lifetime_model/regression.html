@@ -889,7 +889,7 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Random variable sampling.</span>
 
@@ -908,8 +908,8 @@
 <span class="sd">            If True, returns event indicators along with the sample time values.</span>
 <span class="sd">        return_entry : bool, default is False</span>
 <span class="sd">            If True, returns corresponding entry values of the sample time values.</span>
-<span class="sd">        random_state : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span>
-<span class="sd">            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</span>
+<span class="sd">        seed : optional int, default is None</span>
+<span class="sd">            Random seed used to fix random sampling.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -918,7 +918,7 @@
 <span class="sd">            the time values followed by event values, entry values or both.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
-            <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+            <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_initial_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

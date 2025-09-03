@@ -535,15 +535,13 @@
             <span class="n">x0</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">np_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">np_size</span> <span class="o">=</span> <span class="n">size</span>
-        <span class="n">probability</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">np_size</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">np_size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">probability</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">probability</span><span class="p">)</span>
+        <span class="n">probability</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">np_size</span><span class="p">)</span>
         <span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -909,7 +907,7 @@
 
 <div class="viewcode-block" id="FrozenParametricLifetimeModel.rvs">
 <a class="viewcode-back" href="../../../api/base_class/relife.lifetime_model.FrozenParametricLifetimeModel.html#relife.lifetime_model.FrozenParametricLifetimeModel.rvs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Random variable sampling.</span>
 
@@ -918,14 +916,12 @@
 <span class="sd">        size : int, (int,) or (int, int)</span>
 <span class="sd">            Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a</span>
 <span class="sd">            2d array of samples is generated.</span>
-<span class="sd">        nb_assets : int, optional</span>
-<span class="sd">            If nb_assets is not None, 2d arrays of samples are generated.</span>
 <span class="sd">        return_event : bool, default is False</span>
 <span class="sd">            If True, returns event indicators along with the sample time values.</span>
 <span class="sd">        return_entry : bool, default is False</span>
 <span class="sd">            If True, returns corresponding entry values of the sample time values.</span>
-<span class="sd">        random_state : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span>
-<span class="sd">            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</span>
+<span class="sd">        seed : optional int, default is None</span>
+<span class="sd">            Random seed used to fix random sampling.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -934,7 +930,7 @@
 <span class="sd">            the time values followed by event values, entry values or both.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
-            <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+            <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
         <span class="p">)</span></div>
 
 

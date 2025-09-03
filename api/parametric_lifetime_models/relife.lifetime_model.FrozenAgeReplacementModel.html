@@ -870,7 +870,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.FrozenAgeReplacementModel.rvs">
-<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.FrozenAgeReplacementModel.rvs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.FrozenAgeReplacementModel.rvs" title="Link to this definition">#</a></dt>
 <dd><p>Random variable sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -878,13 +878,11 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt><strong>size</strong><span class="classifier">int, (int,) or (int, int)</span></dt><dd><p>Size of the generated sample. If size is <code class="docutils literal notranslate"><span class="pre">n</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>, n samples are generated. If size is <code class="docutils literal notranslate"><span class="pre">(m,n)</span></code>, a
 2d array of samples is generated.</p>
 </dd>
-<dt><strong>nb_assets</strong><span class="classifier">int, optional</span></dt><dd><p>If nb_assets is not None, 2d arrays of samples are generated.</p>
-</dd>
 <dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time values.</p>
 </dd>
 <dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
 </dd>
-<dt><strong>random_state</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</p>
+<dt><strong>seed</strong><span class="classifier">optional int, default is None</span></dt><dd><p>Random seed used to fix random sampling.</p>
 </dd>
 </dl>
 </dd>
