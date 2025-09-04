@@ -110,7 +110,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> _Y: ...
     @overload
     def rvs(
@@ -120,7 +120,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _B]: ...
     @overload
     def rvs(
@@ -130,7 +130,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _Y]: ...
     @overload
     def rvs(
@@ -140,7 +140,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> tuple[_Y, _B, _Y]: ...
     def rvs(
         self,
@@ -149,7 +149,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        random_state: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
     ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
     def _get_initial_params(self, time, event=None, entry=None, departure=None) -> NDArray[np.float64]: ...
     def _get_params_bounds(self) -> Bounds: ...

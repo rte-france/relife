@@ -476,7 +476,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             return np.unstack(jac)
         return jac
 
-    def rvs(self, size: int, covar, *args, nb_assets=None, return_event=False, return_entry=False, random_state=None):
+    def rvs(self, size: int, covar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
         """
         Random variable sampling.
 
@@ -495,7 +495,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        random_state : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
             If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
@@ -505,7 +505,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             the time values followed by event values, entry values or both.
         """
         return super().rvs(
-            size, *(covar, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, random_state=random_state
+            size, *(covar, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
         )
 
     def _get_initial_params(self, time, covar, *args, event=None, entry=None, departure=None):

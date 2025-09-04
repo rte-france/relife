@@ -286,7 +286,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, random_state=None):
+    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
         """
         Random variable sampling.
 
@@ -305,7 +305,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        random_state : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
             If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
@@ -329,7 +329,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
             nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
-            random_state=random_state,
+            seed=seed,
         )
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
         time = np.minimum(time, ar)  # it may change time shape by broadcasting
@@ -655,7 +655,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_ar_or_a0("a0", a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
-    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, random_state=None):
+    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
         """
         Random variable sampling.
 
@@ -674,7 +674,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        random_state : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
             If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
@@ -694,7 +694,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
-            random_state=random_state,
+            seed=seed,
         )
         time = super_rvs[0] if isinstance(super_rvs, tuple) else super_rvs
         complete_ages = time + a0
