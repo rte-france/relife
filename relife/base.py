@@ -203,7 +203,7 @@ class Parameters:
             self._parent._update_names_and_values()
 
 
-def _get_nb_assets(*args):
+def get_nb_assets(*args):
     if not bool(args):
         return 1
     args_2d = tuple((np.atleast_2d(arys) for arys in args))
@@ -221,7 +221,7 @@ class FrozenParametricModel(ParametricModel):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("You try to freeze a model with unsetted parameters. Set params first")
-        self.nb_assets = _get_nb_assets(*args)
+        self.nb_assets = get_nb_assets(*args)
         self.args = args
         self.unfrozen_model = model
 

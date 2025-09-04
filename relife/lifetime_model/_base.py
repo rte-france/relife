@@ -121,12 +121,14 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         )
 
     def rvs(self, size, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
-        rs = np.random.RandomState(seed=seed)
+        rng = np.random.default_rng(seed)
         if nb_assets is not None:
             np_size = (nb_assets, size)
         else:
             np_size = size
-        probability = rs.uniform(size=np_size)
+        probability = rng.uniform(size=np_size)
+        if np_size == 1:
+            probability = np.squeeze(probability)
         time = self.isf(probability, *args)
         event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
         entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
@@ -451,7 +453,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         """
         return self.unfrozen_model.cdf(time, *self.args)
 
-    def rvs(self, size, return_event=False, return_entry=False, seed=None):
+    def rvs(self, size, nb_assets=None, return_event=False, return_entry=False, seed=None):
         """
         Random variable sampling.
 
@@ -460,12 +462,14 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
         size : int, (int,) or (int, int)
             Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a
             2d array of samples is generated.
+        nb_assets : int, optional
+            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        seed : optional int, default is None
-            Random seed used to fix random sampling.
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
         -------
@@ -474,7 +478,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel):
             the time values followed by event values, entry values or both.
         """
         return self.unfrozen_model.rvs(
-            size, *self.args, return_event=return_event, return_entry=return_entry, seed=seed
+            size, *self.args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
         )
 
     def ppf(self, probability):

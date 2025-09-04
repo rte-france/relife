@@ -1,6 +1,7 @@
 import numpy as np
 
-from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
+from relife.lifetime_model import FrozenParametricLifetimeModel, ParametricLifetimeModel
+from relife import get_nb_assets
 
 
 def reshape_ar_or_a0(name: str, value):
@@ -304,8 +305,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        seed : optional int, default is None
-            Random seed used to fix random sampling.
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
         -------
@@ -318,8 +319,17 @@ class AgeReplacementModel(ParametricLifetimeModel):
         If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
         """
         ar = reshape_ar_or_a0("ar", ar)
+        if nb_assets is None:
+            nb_assets = get_nb_assets(ar, *args)
+            if nb_assets == 1:
+                nb_assets = None
         baseline_rvs = self.baseline.rvs(
-            size, *args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+            size,
+            *args,
+            nb_assets=nb_assets,
+            return_event=return_event,
+            return_entry=return_entry,
+            seed=seed,
         )
         time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
         time = np.minimum(time, ar)  # it may change time shape by broadcasting
@@ -664,8 +674,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        seed : optional int, default is None
-            Random seed used to fix random sampling.
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
         -------
@@ -674,21 +684,39 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             the time values followed by event values, entry values or both.
         """
         a0 = reshape_ar_or_a0("a0", a0)
+        if nb_assets is None:
+            nb_assets = get_nb_assets(a0, *args)
+            if nb_assets == 1:
+                nb_assets = None
         super_rvs = super().rvs(
-            size, *(a0, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+            size,
+            *(a0, *args),
+            nb_assets=nb_assets,
+            return_event=return_event,
+            return_entry=return_entry,
+            seed=seed,
         )
-        if not return_event and return_entry:
-            time, entry = super_rvs
+        time = super_rvs[0] if isinstance(super_rvs, tuple) else super_rvs
+        complete_ages = time + a0
+        output = [time,] # at least time in output
+        if return_event:
+            event = super_rvs[1] # event always at index 1
+            # reconstruct event for AgeReplacementModel c omposition as super skips this info
+            if isinstance(self.baseline, AgeReplacementModel):
+                ar = reshape_ar_or_a0("ar", args[0])
+                event = np.where(complete_ages < ar, event, ~event)
+            if isinstance(self.baseline, FrozenAgeReplacementModel):
+                ar = reshape_ar_or_a0("ar", self.baseline.args[0])
+                event = np.where(complete_ages < ar, event, ~event)
+            output.append(event)
+        if return_entry:
+            output[0] = complete_ages # don't return residual ages
+            entry = super_rvs[-1] # entry always at last index
             entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
-            return time, entry
-        elif return_event and return_entry:
-            time, event, entry = super_rvs
-            entry = np.broadcast_to(a0, entry.shape).copy()
-            time = time + a0  #  not residual age
-            return time, event, entry
-        else:
-            return super_rvs
+            output.append(entry)
+        if len(output) > 1:
+            return tuple(output) # return tuple, not list
+        return output[0]
 
     def ls_integrate(self, func, a, b, a0, *args, deg=10):
         """

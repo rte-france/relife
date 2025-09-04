@@ -281,9 +281,6 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
         and access to the rest of the object interface.
-    ar1 : float, 2D array, optional
-        Ages of the first preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
-        and access to the rest of the object interface.
 
     Attributes
     ----------
@@ -312,14 +309,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         discounting_rate: float = 0.0,
         a0: Optional[float | NDArray[np.float64]] = None,
         ar: Optional[float | NDArray[np.float64]] = None,
-        ar1: Optional[float | NDArray[np.float64]] = None,
     ) -> None:
 
         self.a0 = None
         first_lifetime_model: Optional[FrozenAgeReplacementModel] = None
         if a0 is not None:
             self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
-            first_lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar1 if ar1 is not None else np.nan, a0)
+            first_lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar if ar is not None else np.nan, a0)
         lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(
             ar if ar is not None else np.nan
         )
@@ -332,6 +328,8 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
             first_lifetime_model=first_lifetime_model,
         )
         super().__init__(stochastic_process)
+        if ar is not None:
+            self.ar = ar
 
     @property
     def ar(self) -> float | NDArray[np.float64]:
@@ -501,12 +499,12 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         self,
     ) -> AgeReplacementPolicy:
         """
-        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s) and,t optionally ``ar1``.
+        Computes the optimal age(s) of replacement and updates the internal ``ar`` value(s).
 
         Returns
         -------
         Self
-             Same instance with optimized ``ar`` (optionnaly ``ar1``).
+             Same instance with optimized ``ar``.
         """
         x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # ()
         discounting = ExponentialDiscounting(self.stochastic_process.discounting_rate)

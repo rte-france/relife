@@ -1,12 +1,12 @@
 [build-system] # see setuptools quickstart
-requires = ["setuptools >= 59.6.0"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 # to build and publish see https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
 [project]
 name = "relife"
-version = "2.1.1"
+version = "2.1.2"
 authors = [
 	{name = "Thomas Guillon", email="thomas.guillon@rte-france.com"},
     {name = "William Grison", email="william.grison@artelys.com"},
@@ -31,7 +31,6 @@ Homepage = "https://github.com/rte-france/relife"
 Documentation = "http://opensource.rte-france.com/relife/"
 Issues = "https://github.com/rte-france/relife/issues"
 
-
 [tool.setuptools.packages.find] # project structure is "flat layout"
 where = ["."] # current directory for flat layout
 include = ["relife*"]  # ["*"] by default
@@ -39,7 +38,6 @@ include = ["relife*"]  # ["*"] by default
 [project.optional-dependencies]
 dev = [
     "pytest >= 8.3.0",
-
     "nox >= 2024.10.0",
     "isort >= 6.0.0",
     "black >= 25.1.0",

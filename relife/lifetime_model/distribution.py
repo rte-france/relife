@@ -217,8 +217,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
             If True, returns corresponding entry values of the sample time values.
-        seed : optional int, default is None
-            Random seed used to fix random sampling.
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
 
         Returns
         -------
@@ -849,7 +849,7 @@ class Gompertz(LifetimeDistribution):
         -------
         np.float64
         """
-        return polygamma(1, 1) / self.rate**2
+        return super().var()
 
     def mrl(self, time):
         """
