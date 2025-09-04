@@ -41,16 +41,7 @@ Add the ``upstream`` remote to synchronize your local repo to the ReLife repo.
 Development workflow
 ^^^^^^^^^^^^^^^^^^^^
 
-The development is done a specific branch called ``develop/<relife-version>``. Synchronize your ``develop/<relife-version>`` branch
-with ``upstream/develop/<relife-version>`` to be sure that your local code is up-to-date.
-
-.. code-block::
-
-    $ git checkout develop/<relife-version>
-    $ git fetch upstream
-    $ git merge upstream/develop/<relife-version>
-
-From this development branch, open a new branch to develop your feature
+The development is done a specific branch called ``develop/<relife-version>``. From this development branch, open a new branch to develop your feature :
 
 .. code-block::
 
@@ -63,11 +54,14 @@ Modify, stag and commit changes. Where you're done, push the changes to your for
 
     $ git push origin my-new-feature
 
-To be sure that didn't miss any updates on `develop/<relife-version>`, regularly ``pull`` and ``merge``. Assuming you're on ``my-new-feature`` :
+To be sure that you didn't miss any updates on `develop/<relife-version>`, regularly ``merge`` the ``upstream``.
 
 .. code-block::
 
-    $ git fetch upstream develop/<relife-version>:develop/<relife-version>
+    $ git checkout develop/<relife-version>
+    $ git fetch upstream
+    $ git merge upstream/develop/<relife-version>
+    $ git checkout my-new-feature
     $ git merge develop/<relife-version>
 
 
