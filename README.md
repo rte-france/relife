@@ -19,13 +19,17 @@ Some explanations might be missing until we finish it properly, so do not hesita
 ## Installation (PyPi)
 
 ```bash
-pip install relife
+$ pip install relife
 ```
 **Developer installation**
-This 
 
+```bash
+$ pip install ".[dev]"
 ```
-pip install ".[dev]" # optionaly use the editable mode : pip install -e ".[dev]"
+Optionally, use the editable mode :
+
+```bash
+$ pip install -e ".[dev]"
 ```
 
 ## Installation (from source)
