@@ -2,6 +2,15 @@
   <img src="doc/source/_static/small_relife.gif" />
 </p>
 
+<h2 align="center">
+An open-source Python library for asset management
+<h2 align="center">
+
+<p align="center">
+  <img src="doc/source/_static/workflow.png" />
+</p>
+
+
 ## Documentation
 
 It is available at https://rte-france.github.io/relife/.
@@ -12,17 +21,14 @@ Some explanations might be missing until we finish it properly, so do not hesita
 ```bash
 pip install relife
 ```
-**Developper installation**
-
-Just change the pip installation command by (notice the usage of the editable mode) :
+**Developer installation**
+This 
 
 ```
-pip install -e ".[dev]"
+pip install ".[dev]" # optionaly use the editable mode : pip install -e ".[dev]"
 ```
 
-## Installation (source)
-
-To install the current codebase 
+## Installation (from source)
 
 ```bash
 git clone https://github.com/rte-france/relife.git
@@ -44,5 +50,6 @@ pip install .
 
 ## Credits
 
-The documentation uses [pydata-sphinx-theme](https://github.com/pydata/pydata-sphinx-theme) project. Original license
+- The documentation uses [pydata-sphinx-theme](https://github.com/pydata/pydata-sphinx-theme) project. Original license
 is [here](doc/LICENSE.txt)
+- Some parts of the documentation are highly inspired by [Scikit-learn](https://scikit-learn.org/stable/), [Scipy](https://scipy.org/) and [NumPy](https://numpy.org/)
