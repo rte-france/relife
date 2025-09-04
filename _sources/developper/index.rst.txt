@@ -62,6 +62,23 @@ Modify, stag and commit changes. Where you're done, push the changes to your for
     $ git push origin my-new-feature
 
 
+Please follow and use these standard acronyms to start your commit messages :
+
+.. code-block::
+
+    BUG: bug fix
+    DEP: deprecate something, or remove a deprecated object
+    DEV: development tool or utility
+    DOC: documentation
+    ENH: enhancement
+    MAINT: maintenance commit (refactoring, typos, etc.)
+    REV: revert an earlier commit
+    STY: style fix (PEP8, reformat, etc.)
+    TYP : typing
+    TEST: addition or modification of tests
+    REL: related to releasing ReLife
+
+
 Opening a pull request
 ^^^^^^^^^^^^^^^^^^^^^^
 
