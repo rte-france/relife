@@ -415,148 +415,11 @@
 <h1>For developpers<a class="headerlink" href="#for-developpers" title="Link to this heading">#</a></h1>
 <nav class="contents local" id="contents">
 <ul class="simple">
-<li><p><a class="reference internal" href="#how-to-contribute" id="id2">How to contribute</a></p>
-<ul>
-<li><p><a class="reference internal" href="#local-repository-set-up" id="id3">Local repository set up</a></p></li>
-<li><p><a class="reference internal" href="#development-workflow" id="id4">Development workflow</a></p></li>
-<li><p><a class="reference internal" href="#opening-a-pull-request" id="id5">Opening a pull request</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#about-conception" id="id6">About conception</a></p></li>
-<li><p><a class="reference internal" href="#documentation-style" id="id7">Documentation style</a></p>
-<ul>
-<li><p><a class="reference internal" href="#build-the-doc-locally" id="id8">Build the doc locally</a></p></li>
-<li><p><a class="reference internal" href="#note-of-numpy-style" id="id9">Note of Numpy style</a></p></li>
-</ul>
-</li>
+<li><p><a class="reference internal" href="#documentation-style" id="id2">Documentation style</a></p></li>
 </ul>
 </nav>
-<section id="how-to-contribute">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">How to contribute</a><a class="headerlink" href="#how-to-contribute" title="Link to this heading">#</a></h2>
-<p>This section gives you intructions and guidelines to help you contribute to ReLife.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The content of this section is under continuous improvement as the project gathers more contributors. It is highly inspired by <a class="reference external" href="https://scikit-learn.org/dev/developers/contributing.html#ways-to-contribute">Scikit-Learn</a> and <a class="reference external" href="https://scipy.github.io/devdocs/dev/index.html">Scipy</a> contributing documentation.
-We highly encourage new comers to read these documentations if ours do not answer their questions.</p>
-</div>
-<section id="local-repository-set-up">
-<h3><a class="toc-backref" href="#id3" role="doc-backlink">Local repository set up</a><a class="headerlink" href="#local-repository-set-up" title="Link to this heading">#</a></h3>
-<p>Clone ReLife repository.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:YourLogin/rte-france/relife.git
-$ cd relife
-</pre></div>
-</div>
-<p>We highly encourage you to use a python virtual environment. In your environment, intall ReLife in editable mode from the source with the developpers dependencies.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install -e &quot;.[dev]&quot;
-</pre></div>
-</div>
-<p>Add the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> remote to synchronize your local repo to the ReLife repo.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git remote add upstream git@github.com:rte-france/relife.git
-</pre></div>
-</div>
-</section>
-<section id="development-workflow">
-<h3><a class="toc-backref" href="#id4" role="doc-backlink">Development workflow</a><a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h3>
-<p>Synchronize your <code class="docutils literal notranslate"><span class="pre">main</span></code>, and development branch with <code class="docutils literal notranslate"><span class="pre">upstream/main</span></code> to be sure that your local source code is up-to-date.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout main
-$ git fetch upstream
-$ git merge upstream/main
-</pre></div>
-</div>
-<p>Develop your feature on</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout -b my-new-feature
-</pre></div>
-</div>
-<p>Modify, stag and commit changes. Where you’re done, push the changes to your forked repo</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git push origin my-new-feature
-</pre></div>
-</div>
-<p>Please follow and use these standard acronyms to start your commit messages :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BUG</span><span class="p">:</span> <span class="n">bug</span> <span class="n">fix</span>
-<span class="n">DEP</span><span class="p">:</span> <span class="n">deprecate</span> <span class="n">something</span><span class="p">,</span> <span class="ow">or</span> <span class="n">remove</span> <span class="n">a</span> <span class="n">deprecated</span> <span class="nb">object</span>
-<span class="n">DEV</span><span class="p">:</span> <span class="n">development</span> <span class="n">tool</span> <span class="ow">or</span> <span class="n">utility</span>
-<span class="n">DOC</span><span class="p">:</span> <span class="n">documentation</span>
-<span class="n">ENH</span><span class="p">:</span> <span class="n">enhancement</span>
-<span class="n">MAINT</span><span class="p">:</span> <span class="n">maintenance</span> <span class="n">commit</span> <span class="p">(</span><span class="n">refactoring</span><span class="p">,</span> <span class="n">typos</span><span class="p">,</span> <span class="n">etc</span><span class="o">.</span><span class="p">)</span>
-<span class="n">REV</span><span class="p">:</span> <span class="n">revert</span> <span class="n">an</span> <span class="n">earlier</span> <span class="n">commit</span>
-<span class="n">STY</span><span class="p">:</span> <span class="n">style</span> <span class="n">fix</span> <span class="p">(</span><span class="n">PEP8</span><span class="p">,</span> <span class="n">reformat</span><span class="p">,</span> <span class="n">etc</span><span class="o">.</span><span class="p">)</span>
-<span class="n">TYP</span> <span class="p">:</span> <span class="n">typing</span>
-<span class="n">TEST</span><span class="p">:</span> <span class="n">addition</span> <span class="ow">or</span> <span class="n">modification</span> <span class="n">of</span> <span class="n">tests</span>
-<span class="n">REL</span><span class="p">:</span> <span class="n">related</span> <span class="n">to</span> <span class="n">releasing</span> <span class="n">ReLife</span>
-</pre></div>
-</div>
-</section>
-<section id="opening-a-pull-request">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">Opening a pull request</a><a class="headerlink" href="#opening-a-pull-request" title="Link to this heading">#</a></h3>
-<p>Before a PR can be merged, it needs to be approved by 1 core developer.
-An incomplete contribution – where you expect to do more work before receiving
-a full review – should be marked as a <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request">draft pull request</a>
-and changed to “ready for review” when it matures.</p>
-<p>In order to ease the reviewing process, we recommend that your contribution
-complies with the following rules before marking a PR as “ready for review”. The
-<strong>bolded</strong> ones are especially important:</p>
-<p>1. <strong>Give your pull request a helpful title</strong> that summarizes what your
-contribution does. This title will often become the commit message once
-merged so it should summarize your contribution for posterity. In some
-cases “Fix &lt;ISSUE TITLE&gt;” is enough. “Fix #&lt;ISSUE NUMBER&gt;” is never a
-good title.</p>
-<p>2. <strong>Do not include unecessary/unjustified commits</strong> that don’t have direct relations
-with the issue. Do not include unecessary lines rewrittings or modifications of code style
-unless it is clearly motivated. Also, remove personal comments in your code.</p>
-<p>3. <strong>Make sure to address the whole issue</strong>. Don’t propose code that resolves the issue partly. If case
-you have any doubt, discuss it directly in the corresponding issue post.</p>
-<p>4. <strong>Make sure your code passes the tests</strong>. The whole test suite can be run
-with <code class="docutils literal notranslate"><span class="pre">pytest</span></code>, but it is usually not recommended since it takes a long
-time. It is often enough to only run the test related to your changes:
-for example, if you changed something in <code class="docutils literal notranslate"><span class="pre">relife/lifetime_model/conditional_model.py</span></code>, running the following commands will usually be enough:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">relife/lifetime_model/tests/test_conditional_model.py</span></code> to run the tests specific to the file</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">relife/lifetime_model</span></code> to test the whole <code class="docutils literal notranslate"><span class="pre">relife.lifetime_model</span></code> module</p></li>
-</ul>
-</div></blockquote>
-<p>5. <strong>Make sure your code is properly commented and documented</strong>, and <strong>make
-sure the documentation renders properly</strong>. To build the documentation, please
-refer to our Documentation style guidelines. Run Sphinx locally before.</p>
-<p>6. Typing your code is not necessary but make sure it is clear enough. The typing is handled by
-the core team of ReLife. More specifically, it is a work in progress that will be done through
-stubfiles gradually.</p>
-</section>
-</section>
-<section id="about-conception">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">About conception</a><a class="headerlink" href="#about-conception" title="Link to this heading">#</a></h2>
-<p>If you want to adress conception problem, you’re welcome. <strong>But these issues must be carefully motivated and well justified</strong>. More precisely, we
-won’t accept any modifications that would be too subjective, e.g. <em>because you think it is more readable</em>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>We are aware that overall ReLife code base <em>design</em> can be improved. Especially, we are currently having a special care on typing and are <em>stubifying</em> the code base.
-This work is done in addition to feature enhancements and progress at its own pace. It will be tested against mypy and it complements development principles that we study.
-At the end, we expect this static type checking will get the overall code base quality in the right direction.</p>
-</div>
-</section>
 <section id="documentation-style">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Documentation style</a><a class="headerlink" href="#documentation-style" title="Link to this heading">#</a></h2>
-<section id="build-the-doc-locally">
-<h3><a class="toc-backref" href="#id8" role="doc-backlink">Build the doc locally</a><a class="headerlink" href="#build-the-doc-locally" title="Link to this heading">#</a></h3>
-<p>To build the documentation locally run the following commands :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd doc
-$ make html
-</pre></div>
-</div>
-<p>To run a local documentation server and consult your documentation version :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd doc
-$ python -m http.server -d build/html/
-</pre></div>
-</div>
-<p>Then go to <a class="reference external" href="http://localhost:8000">http://localhost:8000</a></p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Using Sphinx for the first time is frustrating. It is easy to get tons of errors as they are cumulative. Read the Sphinx
-documentation carefully and <strong>be carefull</strong> about unwanted blank lines or missing spaces in reST directives.</p>
-</div>
-</section>
-<section id="note-of-numpy-style">
-<h3><a class="toc-backref" href="#id9" role="doc-backlink">Note of Numpy style</a><a class="headerlink" href="#note-of-numpy-style" title="Link to this heading">#</a></h3>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Documentation style</a><a class="headerlink" href="#documentation-style" title="Link to this heading">#</a></h2>
 <p>The following documentation is built with <a class="reference external" href="https://pydata-sphinx-theme.readthedocs.io/en/stable/">PyData Sphinx Theme</a> and uses the
 NumPy documentation style. Here are important points to have in mind if you want to <strong>contribute to the documentation</strong> :</p>
 <ul class="simple">
@@ -564,7 +427,6 @@ NumPy documentation style. Here are important points to have in mind if you want
 <li><p>Classes documentation .rst files are generated using <a class="reference external" href="https://jinja.palletsprojects.com/en/stable/">Jinja2</a> template engine. The template is written in <code class="docutils literal notranslate"><span class="pre">class_template.rst</span></code> of the <code class="docutils literal notranslate"><span class="pre">doc/source/_templates</span></code>. A guide to Jinja2 templating is given in <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html">Sphinx autosummary documentation</a>. Basically, one can catch usefull variables like <code class="docutils literal notranslate"><span class="pre">methods</span></code> and create nice autosummary tables inside an <code class="docutils literal notranslate"><span class="pre">autoclass</span></code>. We chose this style because it creates very clean and comprehension interface documentation of the class.</p></li>
 <li><p>Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are <strong>inherited</strong>. One must reference them manually in the object class under the <code class="docutils literal notranslate"><span class="pre">Attributes</span></code> field of the docstring.  As it is mentionned in <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a>, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug… ignore or disable it at the statement level.</p></li>
 </ul>
-</section>
 </section>
 </section>
 
@@ -591,18 +453,7 @@ NumPy documentation style. Here are important points to have in mind if you want
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-contribute">How to contribute</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#local-repository-set-up">Local repository set up</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#development-workflow">Development workflow</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a pull request</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#about-conception">About conception</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-style">Documentation style</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-doc-locally">Build the doc locally</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#note-of-numpy-style">Note of Numpy style</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-style">Documentation style</a></li>
 </ul>
   </nav></div>
 

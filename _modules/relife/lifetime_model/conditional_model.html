@@ -413,7 +413,8 @@
   <h1>Source code for relife.lifetime_model.conditional_model</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">,</span> <span class="n">ParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">,</span> <span class="n">ParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_nb_assets</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">reshape_ar_or_a0</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -751,8 +752,8 @@
 <span class="sd">            If True, returns event indicators along with the sample time values.</span>
 <span class="sd">        return_entry : bool, default is False</span>
 <span class="sd">            If True, returns corresponding entry values of the sample time values.</span>
-<span class="sd">        seed : optional int, default is None</span>
-<span class="sd">            Random seed used to fix random sampling.</span>
+<span class="sd">        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span>
+<span class="sd">            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -765,8 +766,17 @@
 <span class="sd">        If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_nb_assets</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nb_assets</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">nb_assets</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">baseline_rvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
-            <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
+            <span class="n">size</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+            <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span>
+            <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span>
+            <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">baseline_rvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline_rvs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">baseline_rvs</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>  <span class="c1"># it may change time shape by broadcasting</span>
@@ -1153,8 +1163,8 @@
 <span class="sd">            If True, returns event indicators along with the sample time values.</span>
 <span class="sd">        return_entry : bool, default is False</span>
 <span class="sd">            If True, returns corresponding entry values of the sample time values.</span>
-<span class="sd">        seed : optional int, default is None</span>
-<span class="sd">            Random seed used to fix random sampling.</span>
+<span class="sd">        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span>
+<span class="sd">            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1163,21 +1173,39 @@
 <span class="sd">            the time values followed by event values, entry values or both.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_nb_assets</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nb_assets</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">nb_assets</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">super_rvs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
-            <span class="n">size</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
+            <span class="n">size</span><span class="p">,</span>
+            <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+            <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span>
+            <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span>
+            <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_event</span> <span class="ow">and</span> <span class="n">return_entry</span><span class="p">:</span>
-            <span class="n">time</span><span class="p">,</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">super_rvs</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">super_rvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">super_rvs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">super_rvs</span>
+        <span class="n">complete_ages</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="n">a0</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">time</span><span class="p">,]</span> <span class="c1"># at least time in output</span>
+        <span class="k">if</span> <span class="n">return_event</span><span class="p">:</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="n">super_rvs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># event always at index 1</span>
+            <span class="c1"># reconstruct event for AgeReplacementModel c omposition as super skips this info</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">AgeReplacementModel</span><span class="p">):</span>
+                <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">FrozenAgeReplacementModel</span><span class="p">):</span>
+                <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_entry</span><span class="p">:</span>
+            <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">complete_ages</span> <span class="c1"># don&#39;t return residual ages</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">super_rvs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># entry always at last index</span>
             <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="n">a0</span>  <span class="c1">#  not residual age</span>
-            <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">entry</span>
-        <span class="k">elif</span> <span class="n">return_event</span> <span class="ow">and</span> <span class="n">return_entry</span><span class="p">:</span>
-            <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">super_rvs</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="n">a0</span>  <span class="c1">#  not residual age</span>
-            <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">super_rvs</span></div>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="c1"># return tuple, not list</span>
+        <span class="k">return</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="LeftTruncatedModel.ls_integrate">
