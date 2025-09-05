@@ -42,7 +42,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
         # Assets timeline restarts at 0 when a replacement is done.
         # Used to identify the current age of the asset
-        self.asset_timeline = np.zeros(np_size, dtype=np.float64)
+        self.asset_age = np.zeros(np_size, dtype=np.float64)
 
         # Full timeline never restarts
         # Used to identify the observation window
@@ -168,7 +168,7 @@ class RenewalProcessIterator(StochasticDataIterator):
     
 
     def sample_step(self):
-
+        
         # Generate new values with ages = 0
         time, event, entry = self.lifetime_model.rvs(
             size=self.timeline.shape[1],
@@ -256,7 +256,7 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         event = event.reshape(self.timeline.shape)
         entry = entry.reshape(self.timeline.shape)
 
-        # TODO : delete when bug fixed for event in LeftTrunated(AgeReplacement(Distrib))
+        # TODO : delete when bug fixed for event in LeftTruncated(AgeReplacement(Distrib))
         # Only works when ar is the last args of the model
         event = (time != np.broadcast_to(args[0],self.asset_timeline.shape)) if len(broadcasted_args) > 0 else event
 
