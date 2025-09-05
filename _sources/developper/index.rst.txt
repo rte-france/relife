@@ -41,18 +41,11 @@ Add the ``upstream`` remote to synchronize your local repo to the ReLife repo.
 Development workflow
 ^^^^^^^^^^^^^^^^^^^^
 
-Synchronize your ``main``, and development branch with ``upstream/main`` to be sure that your local source code is up-to-date.
+The development is done a specific branch called ``develop/<relife-version>``. From this development branch, open a new branch to develop your feature :
 
 .. code-block::
 
-    $ git checkout main
-    $ git fetch upstream
-    $ git merge upstream/main
-
-Develop your feature on
-
-.. code-block::
-
+    $ git checkout develop/<relife-version>
     $ git checkout -b my-new-feature
 
 Modify, stag and commit changes. Where you're done, push the changes to your forked repo
@@ -60,6 +53,16 @@ Modify, stag and commit changes. Where you're done, push the changes to your for
 .. code-block::
 
     $ git push origin my-new-feature
+
+To be sure that you didn't miss any updates on `develop/<relife-version>`, regularly ``merge`` the ``upstream``.
+
+.. code-block::
+
+    $ git checkout develop/<relife-version>
+    $ git fetch upstream
+    $ git merge upstream/develop/<relife-version>
+    $ git checkout my-new-feature
+    $ git merge develop/<relife-version>
 
 
 Please follow and use these standard acronyms to start your commit messages :
@@ -82,6 +85,7 @@ Please follow and use these standard acronyms to start your commit messages :
 Opening a pull request
 ^^^^^^^^^^^^^^^^^^^^^^
 
+If you want to submit your work, open a pull request to merge your ``origin/my-new-feature`` branch to ``upstream/develop/<relife-version>``.
 Before a PR can be merged, it needs to be approved by 1 core developer.
 An incomplete contribution -- where you expect to do more work before receiving
 a full review -- should be marked as a `draft pull request
