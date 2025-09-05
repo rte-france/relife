@@ -457,21 +457,18 @@ $ cd relife
 </section>
 <section id="development-workflow">
 <h3><a class="toc-backref" href="#id4" role="doc-backlink">Development workflow</a><a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h3>
-<p>The development is done a specific branch called <code class="docutils literal notranslate"><span class="pre">develop/&lt;relife-version&gt;</span></code>. From this development branch, open a new branch to develop your feature :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout develop/&lt;relife-version&gt;
-$ git checkout -b my-new-feature
+<p>Synchronize your <code class="docutils literal notranslate"><span class="pre">main</span></code>, and development branch with <code class="docutils literal notranslate"><span class="pre">upstream/main</span></code> to be sure that your local source code is up-to-date.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout main
+$ git fetch upstream
+$ git merge upstream/main
+</pre></div>
+</div>
+<p>Develop your feature on</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout -b my-new-feature
 </pre></div>
 </div>
 <p>Modify, stag and commit changes. Where you’re done, push the changes to your forked repo</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git push origin my-new-feature
-</pre></div>
-</div>
-<p>To be sure that you didn’t miss any updates on <cite>develop/&lt;relife-version&gt;</cite>, regularly <code class="docutils literal notranslate"><span class="pre">merge</span></code> the <code class="docutils literal notranslate"><span class="pre">upstream</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout develop/&lt;relife-version&gt;
-$ git fetch upstream
-$ git merge upstream/develop/&lt;relife-version&gt;
-$ git checkout my-new-feature
-$ git merge develop/&lt;relife-version&gt;
 </pre></div>
 </div>
 <p>Please follow and use these standard acronyms to start your commit messages :</p>
@@ -491,8 +488,7 @@ $ git merge develop/&lt;relife-version&gt;
 </section>
 <section id="opening-a-pull-request">
 <h3><a class="toc-backref" href="#id5" role="doc-backlink">Opening a pull request</a><a class="headerlink" href="#opening-a-pull-request" title="Link to this heading">#</a></h3>
-<p>If you want to submit your work, open a pull request to merge your <code class="docutils literal notranslate"><span class="pre">origin/my-new-feature</span></code> branch to <code class="docutils literal notranslate"><span class="pre">upstream/develop/&lt;relife-version&gt;</span></code>.
-Before a PR can be merged, it needs to be approved by 1 core developer.
+<p>Before a PR can be merged, it needs to be approved by 1 core developer.
 An incomplete contribution – where you expect to do more work before receiving
 a full review – should be marked as a <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request">draft pull request</a>
 and changed to “ready for review” when it matures.</p>
