@@ -65,7 +65,9 @@ def age_of_renewal_process_sampler(
 
     while np.any(timeline < t):
         if replacement_cycle == 0 and first_lifetime_model is not None:
-            time, entry = first_lifetime_model.rvs((nb_assets, nb_samples), return_entry=True)
+            time, entry = first_lifetime_model.rvs(
+                (nb_assets, nb_samples), return_entry=True
+            )
         else:
             time, entry = lifetime_model.rvs((nb_assets, nb_samples), return_entry=True)
         replacement_cycle += 1
@@ -78,11 +80,13 @@ def age_of_renewal_process_sampler(
 
 
 class RenewalProcessIterable(StochasticDataIterable):
-
     def __init__(
         self,
         process: RenewalProcess[
-            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
+            LifetimeDistribution
+            | FrozenLifetimeRegression
+            | FrozenAgeReplacementModel
+            | FrozenLeftTruncatedModel
         ],
         nb_samples: int,
         tf: float,
@@ -116,7 +120,6 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
         super().__init__(size, tf, t0=t0)
         # TODO : control and broadcast size here !
         self.process = process
-            
 
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(
