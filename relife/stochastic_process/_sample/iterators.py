@@ -43,6 +43,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         tf: float,
         t0: float = 0.0,
         nb_assets: int = None,
+        seed=None,
     ):
         self.nb_assets = nb_assets
         if nb_assets is None:
@@ -57,6 +58,8 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         np_size = (self.nb_assets * self.nb_samples,)
 
         self.t0, self.tf = t0, tf
+
+        self.seed = np.random.default_rng(seed)
 
         # broadcasting of the size must be done before instanciation
         # Timeline for sampling always starts at 0, independant of the observation window
@@ -202,9 +205,7 @@ class RenewalProcessIterator(StochasticDataIterator):
 
         # Generate new values with ages = 0
         time, event, entry = lifetime_model.rvs(
-            size=1,
-            return_event=True,
-            return_entry=True,
+            size=1, return_event=True, return_entry=True, seed=self.seed
         )
 
         time = time.reshape(self.timeline.shape)
@@ -261,9 +262,7 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         ).freeze(ages, *args)
 
         time, event, entry = truncated_lifetime_model.rvs(
-            size=1,
-            return_event=True,
-            return_entry=True,
+            size=1, return_event=True, return_entry=True, seed=self.seed
         )
 
         time = time.reshape(self.timeline.shape)

@@ -34,17 +34,12 @@ Args = TypeVarTuple("Args")
 
 
 class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
-    def __init__(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        nb_assets: Optional[int] = None,
-    ):
+    def __init__(self, process, size: int, tf: float, t0: float = 0.0, seed=None):
+        self.process = process
         self.nb_samples = size
         self.tf = tf
         self.t0 = t0
-        self.nb_assets = nb_assets
+        self.seed = seed
 
     @abstractmethod
     @override
@@ -91,21 +86,21 @@ class RenewalProcessIterable(StochasticDataIterable):
         nb_samples: int,
         tf: float,
         t0: float = 0.0,
+        seed=None,
     ):
-        super().__init__(nb_samples, tf, t0=t0)
+        super().__init__(process, nb_samples, tf, t0=t0, seed=seed)
         # TODO : control and broadcast size here !
-        self.process = process
 
     def __iter__(self) -> RenewalProcessIterator:
         from relife.stochastic_process import RenewalProcess
 
         if isinstance(self.process, RenewalProcess):
             return RenewalProcessIterator(
-                self.process, self.nb_samples, self.tf, t0=self.t0
+                self.process, self.nb_samples, self.tf, t0=self.t0, seed=self.seed
             )
         else:
             return RenewalRewardProcessIterator(
-                self.process, self.nb_samples, self.tf, t0=self.t0
+                self.process, self.nb_samples, self.tf, t0=self.t0, seed=self.seed
             )
 
 
@@ -116,12 +111,12 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
         size: int,
         tf: float,
         t0: float = 0.0,
+        seed=None,
     ):
-        super().__init__(size, tf, t0=t0)
-        # TODO : control and broadcast size here !
-        self.process = process
+        super().__init__(process, size, tf, t0=t0, seed=seed)
+        # TODO : control and broadcast size here !s
 
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(
-            self.process, self.nb_samples, self.tf, t0=self.t0
+            self.process, self.nb_samples, self.tf, t0=self.t0, seed=self.seed
         )

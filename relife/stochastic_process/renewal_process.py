@@ -155,7 +155,7 @@ class RenewalProcess(StochasticProcess):
             return timeline[0, :], renewal_density
         return timeline, renewal_density
 
-    def sample(self, nb_samples, tf, t0=0.0):
+    def sample(self, nb_samples, tf, t0=0.0, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -177,7 +177,7 @@ class RenewalProcess(StochasticProcess):
 
         from ._sample import RenewalProcessIterable
 
-        iterable = RenewalProcessIterable(self, nb_samples, tf, t0=t0)
+        iterable = RenewalProcessIterable(self, nb_samples, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
         return RenewalProcessSample(t0, tf, struct_array)
