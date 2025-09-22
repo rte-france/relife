@@ -36,7 +36,7 @@ class Likelihood(ABC):
     def maximum_likelihood_estimation(self, **kwargs: Any) -> FittingResults: ...
 
 
-L = TypeVar("L", bound="LikelihoodFromLifetimes")  # maybe other likelihood in the future
+L = TypeVar("L", bound="DefaultLikelihood")  # maybe other likelihood in the future
 
 
 def hessian_cs(

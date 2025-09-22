@@ -4,7 +4,6 @@ import numpy as np
 from _typeshed import Incomplete
 from numpy.typing import NDArray as NDArray
 
-from relife.data import LifetimeData as LifetimeData
 from relife.lifetime_model._plot import PlotECDF as PlotECDF
 from relife.lifetime_model._plot import PlotKaplanMeier as PlotKaplanMeier
 from relife.lifetime_model._plot import PlotNelsonAalen as PlotNelsonAalen

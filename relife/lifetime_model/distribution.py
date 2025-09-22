@@ -4,8 +4,8 @@ import numpy as np
 from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
 
-from relife.data import LifetimeData
-from relife.likelihood import LikelihoodFromLifetimes
+from relife.likelihood._base import Likelihood
+from relife.likelihood.default_likelihood import DefaultLikelihood
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
@@ -297,7 +297,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         format that allows to pass other information as left-censored or interval-censored values. In this case,
         `event` is not needed as 2d-array encodes right-censored values by itself.
         """
-        return super().fit(time, event=event, entry=entry, departure=departure, **options)
+        return super().fit(time, event=event, entry=entry, departure=departure,**options)
 
 
 class Exponential(LifetimeDistribution):
@@ -1569,8 +1569,7 @@ class MinimumDistribution(ParametricLifetimeModel):
         # initialize params structure (number of parameters in params tree)
         if isinstance(self.baseline, LifetimeRegression):
             self.baseline._init_params(args[0], *args[1:])
-        lifetime_data: LifetimeData = LifetimeData(time, event=event, entry=entry, departure=departure, args=(n, *args))
-        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
+        likelihood = DefaultLikelihood(self, time, event, entry)
         fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
