@@ -1,3 +1,4 @@
+import inspect
 from itertools import chain
 from typing import Self
 
@@ -6,9 +7,9 @@ import numpy as np
 
 class ParametricModel:
     """
-    Base class to create a parametric_model core.
+    Base class to create a parametric_model.
 
-    Any parametric_model core must inherit from `ParametricModel`.
+    Any parametric model must inherit from `ParametricModel`.
     """
 
     def __init__(self, **kwparams):
@@ -23,16 +24,13 @@ class ParametricModel:
         Returns
         -------
         ndarray
-            Parameters values of the core
+            Parameters values
 
         Notes
         -----
         If parameter values are not set, they are encoded as `np.nan` value.
-
-        Parameters can be by manually setting`params` through its setter, fitting the core if `fit` exists or
-        by specifying all parameters values when the core object is initialized.
         """
-        return np.array(self._params.get_values())
+        return np.array(self._params.all_values)
 
     @params.setter
     def params(self, new_params):
@@ -42,7 +40,7 @@ class ParametricModel:
             )
         if new_params.ndim > 1:
             raise ValueError(f"Expected params values to be 1d array. Got {new_params.ndim} ndim")
-        self._params.set_values(tuple(v.item() for v in new_params))
+        self._params.set_all_values(tuple(v.item() for v in new_params))
 
     @property
     def params_names(self):
@@ -58,7 +56,7 @@ class ParametricModel:
         -----
         Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
-        return self._params.get_names()
+        return self._params.all_names
 
     @property
     def nb_params(self):
@@ -73,42 +71,21 @@ class ParametricModel:
         """
         return self._params.size
 
-    def _set_nested_model(self, name, model):
-        """Compose with new ``ParametricModel`` instance(s).
-
-        This method acts like function. When you set a nested model instance, the followings happen :
-        - each new parameters are added to the current ``Parameters`` instance
-        - each new `ParametricModel` instance is accessible as a standard attribute
-
-        Parameters
-        ----------
-        name : str
-            model name
-        model : ParametricModel
-            model instance
-        """
-        self._nested_models[name] = model
-        self._params.set_leaf(f"{name}.params", getattr(model, "_params"))
-
     def __getattr__(self, name):
-        class_name = type(self).__name__
         if name in self.__dict__:
             return self.__dict__[name]
-        if name in super().__getattribute__("_params").get_names():
-            return super().__getattribute__("_params").get_param_value(name)
         if name in super().__getattribute__("_nested_models"):
             return super().__getattribute__("_nested_models").get(name)
-        raise AttributeError(f"{class_name} has no attribute named {name}")
+        raise AttributeError(f"{type(self).__name__} has no attribute named {name}")
 
     def __setattr__(self, name, value):
-        if name in ("_params", "_nested_models"):
+        if isinstance(value, ParametricModel):
+            self._nested_models[name] = value
+            self._params.set_leaf(f"{name}.params", getattr(value, "_params"))
+        elif name.startswith("_"):
             super().__setattr__(name, value)
-        elif name in self._params.get_names():
-            self._params.set_param_value(name, value)
-        elif isinstance(value, ParametricModel):
-            self._set_nested_model(name, value)
-        else:  # just set a new attribute
-            super().__setattr__(name, value)
+        else:
+            raise AttributeError(f"Attribute called {name} can't be set")
 
 
 # MAYBE, custom array container can replace it : https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
@@ -122,46 +99,24 @@ class Parameters:
     def __init__(self, **kwargs):
         self._parent = None
         self._leaves = {}
-        self._nodemapping = {}
-        self._values = ()
-        self._names = ()
+        self._mapping = {}
+        self._all_values = ()
+        self._all_names = ()
         if bool(kwargs):
-            self.set_node(kwargs)
+            self._mapping = {k: v if v is not None else np.nan for k, v in kwargs.items()}
+            self._update_tree()  # update _names and _values
 
-    def get_names(self):
-        return self._names
+    @property
+    def all_names(self):
+        return self._all_names
 
-    def get_values(self):
-        return self._values
-
-    def get_leaf(self, name: str):
-        try:
-            return self._leaves[name]
-        except KeyError:
-            raise ValueError(f"Parameters object does not have leaf parameters called {name} in its scope")
-
-    def get_param_value(self, name):
-        try:
-            return self._nodemapping[name]
-        except KeyError:
-            raise ValueError(f"Parameters object does not have parameter name called {name} in its scope")
-
-    def set_param_value(self, name, value):
-        if name not in self._nodemapping:
-            raise ValueError(f"Parameters object does not have parameter name called {name} in its scope")
-        self._nodemapping[name] = value
-        self._update_names_and_values()
+    @property
+    def all_values(self):
+        return self._all_values
 
     @property
     def size(self):
-        return len(self._values)
-
-    def set_node(self, mapping):
-        """
-        set node dict
-        """
-        self._nodemapping = {k: v if v is not None else np.nan for k, v in mapping.items()}
-        self._update_names_and_values()  # update _names and _values
+        return len(self._all_values)
 
     def set_leaf(self, leaf_name, leaf):
         """
@@ -170,37 +125,46 @@ class Parameters:
         if leaf_name not in self._leaves:
             leaf._parent = self
         self._leaves[leaf_name] = leaf
-        self._update_names_and_values()  # update _names and _values
+        self._update_tree()  # update _names and _values
 
-    def set_values(self, values):
+    def set_all_values(self, values):
         """set values of all tree"""
         if len(values) != self.size:
             raise ValueError(f"Expected {self.size} values but got {len(values)}")
-        pos = len(self._nodemapping)
-        self._nodemapping.update(zip(self._nodemapping.keys(), (np.nan if v is None else v for v in values[:pos])))
-        self._values = tuple((np.nan if v is None else v for v in values))
+        pos = len(self._mapping)
+        self._mapping.update(zip(self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])))
+        self._all_values = tuple((np.nan if v is None else v for v in values))
         for leaf in self._leaves.values():
-            leaf.set_values(values[pos : pos + leaf.size])
+            leaf.set_all_values(values[pos: pos + leaf.size])
             pos += leaf.size
         if self._parent is not None:
-            self._parent._update_names_and_values()
+            self._parent._update_tree()
 
-    def _update_names_and_values(self):
+    def __getitem__(self, name):
+        try:
+            return self._mapping[name]
+        except KeyError:
+            raise ValueError(f"Parameter {name} does not exist")
+
+    def _update_tree(self):
         """update names and values of current and parent nodes"""
 
         def items_walk(parameters: Self):
-            yield tuple(parameters._nodemapping.items())
+            yield tuple(parameters._mapping.items())
             for leaf in parameters._leaves.values():
                 yield tuple(chain.from_iterable(items_walk(leaf)))
 
         generator = chain.from_iterable(items_walk(self))
         try:
-            self._names, self._values = zip(*generator)
+            _k, _v = zip(*generator)
+            self._all_names = _k
+            self._all_values = _v
+            # self._allnames, self._allvalues = zip(*generator)
         except StopIteration:
             pass
         # recursively update parent
         if self._parent is not None:
-            self._parent._update_names_and_values()
+            self._parent._update_tree()
 
 
 def get_nb_assets(*args):
@@ -216,17 +180,49 @@ def get_nb_assets(*args):
     return nb_assets
 
 
-class FrozenParametricModel(ParametricModel):
+class FrozenParametricModel:
     def __init__(self, model, *args):
         super().__init__()
         if np.any(np.isnan(model.params)):
-            raise ValueError("You try to freeze a model with unsetted parameters. Set params first")
-        self.nb_assets = get_nb_assets(*args)
-        self.args = args
-        self.unfrozen_model = model
+            raise ValueError("Can't freeze a model with NaN params. Set params first")
+        self._nb_assets = get_nb_assets(*args)
+        self._args = args
+        self._unfrozen_model = model
+
+    @property
+    def nb_assets(self):
+        return self._nb_assets
+
+    @property
+    def args(self):
+        return self._args
+
+    @args.setter
+    def args(self, value):
+        self._args = value
 
     def unfreeze(self):
-        return self.unfrozen_model
+        return self._unfrozen_model
+
+    def __setattr__(self, name, value):
+        if name.startswith("_"):
+            super().__setattr__(name, value)
+        else:
+            raise AttributeError(f"Attribute called {name} can't be set")
+
+    def __getattr__(self, name):
+        frozen_type = self._unfrozen_model.__class__.__name__
+        if name == "fit":
+            raise AttributeError(f"Frozen model can't be fit")
+        try:
+            attr = getattr(self._unfrozen_model, name)
+        except AttributeError:
+            raise AttributeError(f"Frozen {frozen_type} has no attribute {name}")
+        def wrapper(*args, **kwargs):
+            return attr(*(*args, self.args), **kwargs)
+        if inspect.ismethod(attr):
+            return wrapper
+        return attr
 
 
 def is_frozen(model):

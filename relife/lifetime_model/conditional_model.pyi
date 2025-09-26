@@ -6,7 +6,8 @@ from typing_extensions import override
 
 from relife._typing import _B, _X, _Y, _ParametricLifetimeModel, _Xs
 
-from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel
+from relife import FrozenParametricModel
+from ._base import ParametricLifetimeModel
 
 def reshape_ar_or_a0(name: str, value: _X) -> NDArray[np.float64]: ...
 
@@ -98,7 +99,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         *args: *_Xs,
         deg: int = 10,
     ) -> _Y: ...
-    def freeze(self, ar: _X, *args: *_Xs) -> FrozenAgeReplacementModel[*_Xs]: ...
+    def freeze(self, ar: _X, *args: *_Xs) -> FrozenParametricModel[*tuple[_X, _Xs]]: ...
 
 class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
     baseline: _ParametricLifetimeModel[*_Xs]
@@ -188,30 +189,4 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_X, *_Xs]]):
         *args: *_Xs,
         deg: int = 10,
     ) -> _Y: ...
-    def freeze(self, a0: _X, *args: *_Xs) -> FrozenLeftTruncatedModel[*_Xs]: ...
-
-class FrozenAgeReplacementModel(FrozenParametricLifetimeModel[*tuple[_X, *_Xs]]):
-    unfrozen_model: AgeReplacementModel[*_Xs]
-    args: tuple[_X, *_Xs]
-    @override
-    def __init__(self, model: AgeReplacementModel[*_Xs], ar: _X, *args: *_Xs) -> None: ...
-    @override
-    def unfreeze(self) -> AgeReplacementModel[*_Xs]: ...
-    @property
-    def ar(self) -> _X: ...
-    # noinspection PyUnresolvedReferences
-    @ar.setter
-    def ar(self, value: _X) -> None: ...
-
-class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel[*tuple[_X, *_Xs]]):
-    unfrozen_model: LeftTruncatedModel[*_Xs]
-    args: tuple[_X, *_Xs]
-    @override
-    def __init__(self, model: LeftTruncatedModel[*_Xs], a0: _X, *args: *_Xs) -> None: ...
-    @override
-    def unfreeze(self) -> LeftTruncatedModel[*_Xs]: ...
-    @property
-    def a0(self) -> _X: ...
-    # noinspection PyUnresolvedReferences
-    @a0.setter
-    def a0(self, value: _X) -> None: ...
+    def freeze(self, a0: _X, *args: *_Xs) -> FrozenParametricModel[*tuple[_X, _Xs]]: ...

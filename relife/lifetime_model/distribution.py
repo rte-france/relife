@@ -345,7 +345,7 @@ class Exponential(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -556,7 +556,7 @@ class Weibull(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -566,7 +566,7 @@ class Weibull(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -785,7 +785,7 @@ class Gompertz(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -795,7 +795,7 @@ class Gompertz(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -1021,7 +1021,7 @@ class Gamma(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -1031,7 +1031,7 @@ class Gamma(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -1247,7 +1247,7 @@ class LogLogistic(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -1257,7 +1257,7 @@ class LogLogistic(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """

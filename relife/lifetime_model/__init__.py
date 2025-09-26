@@ -6,8 +6,6 @@ from ._base import (
 )
 from .conditional_model import (
     AgeReplacementModel,
-    FrozenAgeReplacementModel,
-    FrozenLeftTruncatedModel,
     LeftTruncatedModel,
 )
 from .distribution import (
@@ -24,7 +22,6 @@ from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
 from .regression import (
     AcceleratedFailureTime,
     CovarEffect,
-    FrozenLifetimeRegression,
     LifetimeRegression,
     ProportionalHazard,
 )

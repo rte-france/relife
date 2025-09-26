@@ -1,8 +1,7 @@
 import numpy as np
 
-from relife.lifetime_model import FrozenParametricLifetimeModel, ParametricLifetimeModel
-from relife import get_nb_assets
-
+from relife import is_frozen, get_nb_assets, FrozenParametricModel
+from relife.lifetime_model import ParametricLifetimeModel
 
 def reshape_ar_or_a0(name: str, value):
     value = np.asarray(value)  # in shape : (), (m,) or (m, 1)
@@ -458,10 +457,10 @@ class AgeReplacementModel(ParametricLifetimeModel):
 
         Returns
         -------
-        FrozenAgeReplacementModel
+        FrozenParametricModel
         """
         ar = reshape_ar_or_a0("ar", ar)
-        return FrozenAgeReplacementModel(self, ar, *args)
+        return FrozenParametricModel(self, ar, *args)
 
 
 class LeftTruncatedModel(ParametricLifetimeModel):
@@ -705,7 +704,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             if isinstance(self.baseline, AgeReplacementModel):
                 ar = reshape_ar_or_a0("ar", args[0])
                 event = np.where(complete_ages < ar, event, ~event)
-            if isinstance(self.baseline, FrozenAgeReplacementModel):
+            if is_frozen(self.baseline):
                 ar = reshape_ar_or_a0("ar", self.baseline.args[0])
                 event = np.where(complete_ages < ar, event, ~event)
             output.append(event)
@@ -892,85 +891,4 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         FrozenLeftTruncatedModel
         """
         a0 = reshape_ar_or_a0("a0", a0)
-        return FrozenLeftTruncatedModel(self, a0, *args)
-
-
-class FrozenAgeReplacementModel(FrozenParametricLifetimeModel):
-    r"""
-    Frozen age replacement model.
-
-    Parameters
-    ----------
-    model : AgeReplacementModel
-        Any age replacement model.
-    ar : float or np.ndarray
-        Age of replacement values to be frozen.
-    *args : float or np.ndarray
-        Additional arguments needed by the model to be frozen.
-
-    Attributes
-    ----------
-    unfrozen_model : AgeReplacementModel
-        The unfrozen age replacement model.
-    args : tuple of float or np.ndarray
-        All the frozen arguments given and necessary to compute model functions.
-    nb_assets : int
-        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
-        interest an user.
-
-    Warnings
-    --------
-    The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
-    """
-
-    def __init__(self, model, ar, *args):
-        super().__init__(model, *(ar, *args))
-
-    @property
-    def ar(self):
-        return self.args[0]
-
-    @ar.setter
-    def ar(self, value):
-        self.args = (value,) + self.args[1:]
-
-
-class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel):
-    r"""
-    Frozen left truncated model.
-
-    Parameters
-    ----------
-    model : LeftTruncatedModel
-        Any left truncated model.
-    a0 : float or np.ndarray
-        Conditional age values to be frozen.
-    *args : float or np.ndarray
-        Additional arguments needed by the model to be frozen.
-
-
-    Attributes
-    ----------
-    unfrozen_model : LeftTruncatedModel
-        The unfrozen left truncated model.
-    args : tuple of float or np.ndarray
-        All the frozen arguments given and necessary to compute model functions.
-    nb_assets : int
-        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
-        interest an user.
-
-    Warnings
-    --------
-    The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
-    """
-
-    def __init__(self, model, a0, *args):
-        super().__init__(model, *(a0, *args))
-
-    @property
-    def a0(self):
-        return self.args[0]
-
-    @a0.setter
-    def a0(self, value):
-        self.args = (value,) + self.args[1:]
+        return FrozenParametricModel(self, a0, *args)

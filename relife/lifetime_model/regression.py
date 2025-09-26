@@ -11,9 +11,9 @@ from abc import ABC
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife import ParametricModel
+from relife import ParametricModel, FrozenParametricModel
 
-from ._base import FittableParametricLifetimeModel, FrozenParametricLifetimeModel
+from ._base import FittableParametricLifetimeModel
 
 
 def broadcast_time_covar(time, covar):
@@ -125,7 +125,6 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         super().__init__()
         self.covar_effect = CovarEffect(coefficients)
         self.baseline = baseline
-        self.fitting_results = None
 
     @property
     def coefficients(self):
@@ -598,9 +597,9 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
 
         Returns
         -------
-        FrozenLifetimeRegression
+        FrozenLifetimeModel
         """
-        return FrozenLifetimeRegression(self, covar, *args)
+        return FrozenParametricModel(self, covar, *args)
 
 
 class ProportionalHazard(LifetimeRegression):
@@ -1089,181 +1088,3 @@ class AcceleratedFailureTime(LifetimeRegression):
         if not asarray:
             return np.unstack(jac)
         return jac
-
-
-class FrozenLifetimeRegression(FrozenParametricLifetimeModel):
-    r"""
-    Frozen lifetime regression.
-
-    Parameters
-    ----------
-    regression : LifetimeRegression
-        Any lifetime regression.
-    covar : float or np.ndarray
-        Covariate values to be frozen.
-    *args : float or np.ndarray
-        Additional arguments needed by the model to be frozen.
-
-    Attributes
-    ----------
-    unfrozen_model : LifetimeRegression
-        The unfrozen regression model.
-    args : tuple of float or np.ndarray
-        All the frozen arguments given and necessary to compute model functions.
-    nb_assets : int
-        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
-        interest an user.
-
-    Warnings
-    --------
-    This class is documented for the purpose of clarity and mainly address contributors or advance users. Actually, the
-    recommanded way to instanciate a ``FrozenLifetimeRegression`` is use to ``freeze`` factory function.
-
-    """
-
-    def __init__(self, regression, covar, *args):
-        super().__init__(regression, *(covar, *args))
-
-    def unfreeze(self) -> LifetimeRegression:
-        return self.unfrozen_model
-
-    @property
-    def nb_coef(self):
-        """
-        The number of coefficients
-
-        Returns
-        -------
-        int
-        """
-        return self.unfrozen_model.nb_coef
-
-    @property
-    def covar(self):
-        return self.args[0]
-
-    @covar.setter
-    def covar(self, value):
-        self.args = (value,) + self.args[1:]
-
-    def dhf(self, time):
-        """
-        The derivate of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return self.unfrozen_model.dhf(time, self.args[0], *self.args[1:])
-
-    def jac_hf(self, time, asarray=False):
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-        return self.unfrozen_model.jac_hf(time, self.args[0], *self.args[1:], asarray=asarray)
-
-    def jac_chf(self, time, asarray=False):
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-        return self.unfrozen_model.jac_chf(time, self.args[0], *self.args[1:], asarray=asarray)
-
-    def jac_sf(self, time, asarray=False):
-        """
-        The jacobian of the survival function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-        return self.unfrozen_model.jac_sf(time, self.args[0], *self.args[1:], asarray=asarray)
-
-    def jac_cdf(self, time, asarray=False):
-        """
-        The jacobian of the cumulative density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-        return self.unfrozen_model.jac_cdf(time, self.args[0], *self.args[1:], asarray=asarray)
-
-    def jac_pdf(self, time, asarray: bool = False):
-        """
-        The jacobian of the probability density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-        return self.unfrozen_model.jac_pdf(time, self.args[0], *self.args[1:], asarray=asarray)
