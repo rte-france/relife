@@ -1,11 +1,11 @@
 from typing import Generic
 
 from relife import FrozenParametricModel, ParametricModel
-from relife._typing import _Xs
+from relife._typing import _AdditionalArgs
 
-class StochasticProcess(ParametricModel, Generic[*_Xs]): ...
+class StochasticProcess(ParametricModel, Generic[*_AdditionalArgs]): ...
 
-class FrozenStochasticProcess(FrozenParametricModel[*_Xs]):
-    model: StochasticProcess[*_Xs]
-    args: tuple[*_Xs]
-    def __init__(self, model: StochasticProcess[*_Xs], *args: *_Xs) -> None: ...
+class FrozenStochasticProcess(FrozenParametricModel[*_AdditionalArgs]):
+    model: StochasticProcess[*_AdditionalArgs]
+    args: tuple[*_AdditionalArgs]
+    def __init__(self, model: StochasticProcess[*_AdditionalArgs], *args: *_AdditionalArgs) -> None: ...

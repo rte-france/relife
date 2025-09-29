@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 from scipy.optimize import newton
 from typing_extensions import override
 
+from relife import is_frozen
 from relife.economic import AgeReplacementReward, ExponentialDiscounting, cost
 from relife.lifetime_model import (
     AgeReplacementModel,
@@ -16,15 +17,15 @@ from relife.lifetime_model import (
     FrozenLeftTruncatedModel,
     LeftTruncatedModel,
 )
-from relife.quadrature import legendre_quadrature
-from relife import is_frozen
-
 from relife.lifetime_model.distribution import LifetimeDistribution
 from relife.lifetime_model.regression import FrozenLifetimeRegression
+from relife.quadrature import legendre_quadrature
 from relife.stochastic_process import (
     FrozenNonHomogeneousPoissonProcess,
-    RenewalRewardProcess, NonHomogeneousPoissonProcess,
+    NonHomogeneousPoissonProcess,
+    RenewalRewardProcess,
 )
+
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
 
 
@@ -315,7 +316,9 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy[FrozenAgeReplacementModel, A
         first_lifetime_model: Optional[FrozenAgeReplacementModel] = None
         if a0 is not None:
             self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
-            first_lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze(ar if ar is not None else np.nan, a0)
+            first_lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(
+                LeftTruncatedModel(lifetime_model)
+            ).freeze(ar if ar is not None else np.nan, a0)
         lifetime_model: FrozenAgeReplacementModel = AgeReplacementModel(lifetime_model).freeze(
             ar if ar is not None else np.nan
         )
@@ -676,7 +679,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
         """
         if is_frozen(self.process):
             x0 = self.process.unfreeze().lifetime_model.mean(*self.process.args)
-        else: # lifetime_model : LifetimeDistribution
+        else:  # lifetime_model : LifetimeDistribution
             x0 = self.process.lifetime_model.mean()
         x0 = np.broadcast_to(
             x0, np.broadcast_shapes(self.process.intensity(x0).shape, self.cp.shape, self.cr.shape)

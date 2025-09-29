@@ -11,12 +11,12 @@ from abc import ABC
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife import ParametricModel, FrozenParametricModel
+from relife import FrozenParametricModel, ParametricModel
 
 from ._base import FittableParametricLifetimeModel
 
 
-def broadcast_time_covar(time, covar):
+def _broadcast_time_covar(time, covar):
     time = np.atleast_2d(np.asarray(time))  #  (m, n)
     covar = np.atleast_2d(np.asarray(covar))  #  (m, nb_coef)
     match (time.shape[0], covar.shape[0]):
@@ -29,7 +29,7 @@ def broadcast_time_covar(time, covar):
     return time, covar
 
 
-def broadcast_time_covar_shapes(time_shape, covar_shape):
+def _broadcast_time_covar_shapes(time_shape, covar_shape):
     # time_shape : (), (n,) or (m, n)
     # covar_shape : (), (nb_coef,) or (m, nb_coef)
     match [time_shape, covar_shape]:
@@ -769,8 +769,8 @@ class ProportionalHazard(LifetimeRegression):
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
@@ -820,8 +820,8 @@ class ProportionalHazard(LifetimeRegression):
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
@@ -1013,8 +1013,8 @@ class AcceleratedFailureTime(LifetimeRegression):
         """
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
@@ -1065,8 +1065,8 @@ class AcceleratedFailureTime(LifetimeRegression):
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
-        time, covar = broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
+        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)

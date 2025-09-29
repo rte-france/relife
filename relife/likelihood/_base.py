@@ -149,12 +149,12 @@ class FittingResults:
         # jac_f : (p,), (p, n) or (p, m, n)
         # self.var : (p, p)
         if self.covariance_matrix is not None:
-            if jac_f.ndim == 1: # jac_f : (p,)
+            if jac_f.ndim == 1:  # jac_f : (p,)
                 return np.sqrt(np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f))  # ()
-            if jac_f.ndim == 2: # jac_f : (p, n)
+            if jac_f.ndim == 2:  # jac_f : (p, n)
                 return np.sqrt(np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f))  # (n,)
-            if jac_f.ndim == 3: # jac_f : (p, m, n) if regression with more than one asset
-                return np.sqrt(np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f)) # (m,n)
+            if jac_f.ndim == 3:  # jac_f : (p, m, n) if regression with more than one asset
+                return np.sqrt(np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f))  # (m,n)
             raise ValueError("Invalid jac_f ndim")
         raise ValueError("Can't compute if var is None")
 

@@ -132,6 +132,7 @@ def frozen_ar_regression(request):
 M = 3  # nb assets
 N = 10  # nb points
 
+
 @pytest.fixture(
     params=[
         np.float64(1),
@@ -246,6 +247,7 @@ def rvs_size(request):
 )
 def rvs_nb_assets(request):
     return request.param
+
 
 ########################################################################################################################
 # ECONOMIC FIXTURES

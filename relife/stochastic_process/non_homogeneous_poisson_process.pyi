@@ -3,24 +3,24 @@ from typing import Any, Optional, Self, Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._typing import _X, _Y, _Xs
+from relife._typing import _AdditionalArgs, _IntOrFloatValues, _NumpyFloatValues
 from relife.lifetime_model import FittableParametricLifetimeModel
 from relife.likelihood import FittingResults
 
 from .base import FrozenStochasticProcess, StochasticProcess
 
-class NonHomogeneousPoissonProcess(StochasticProcess[*_Xs]):
-    lifetime_model: FittableParametricLifetimeModel[*_Xs]
+class NonHomogeneousPoissonProcess(StochasticProcess[*_AdditionalArgs]):
+    lifetime_model: FittableParametricLifetimeModel[*_AdditionalArgs]
     fitting_results: Optional[FittingResults]
-    def __init__(self, lifetime_model: FittableParametricLifetimeModel[*_Xs]) -> None: ...
-    def intensity(self, time: _X, *args: *_Xs) -> _Y: ...
-    def cumulative_intensity(self, time: _X, *args: *_Xs) -> _Y: ...
-    def freeze(self, *args: *_Xs): ...
+    def __init__(self, lifetime_model: FittableParametricLifetimeModel[*_AdditionalArgs]) -> None: ...
+    def intensity(self, time: _IntOrFloatValues, *args: *_AdditionalArgs) -> _NumpyFloatValues: ...
+    def cumulative_intensity(self, time: _IntOrFloatValues, *args: *_AdditionalArgs) -> _NumpyFloatValues: ...
+    def freeze(self, *args: *_AdditionalArgs): ...
     def sample(
         self,
         size: int,
         tf: float,
-        *args: *_Xs,
+        *args: *_AdditionalArgs,
         t0: float = 0.0,
         nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
@@ -29,7 +29,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess[*_Xs]):
         self,
         size: int,
         tf: float,
-        *args: *_Xs,
+        *args: *_AdditionalArgs,
         t0: float = 0.0,
         nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
@@ -40,18 +40,18 @@ class NonHomogeneousPoissonProcess(StochasticProcess[*_Xs]):
         events_assets_ids: Sequence[str] | NDArray[np.int64],
         first_ages: Optional[NDArray[np.float64]] = None,
         last_ages: Optional[NDArray[np.float64]] = None,
-        model_args: Optional[tuple[*_Xs]] = None,
+        model_args: Optional[tuple[*_AdditionalArgs]] = None,
         assets_ids: Optional[Sequence[str] | NDArray[np.int64]] = None,
         **options: Any,
     ) -> Self: ...
 
-class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess[*_Xs]):
-    unfrozen_model: NonHomogeneousPoissonProcess[*_Xs]
-    args: tuple[*_Xs]
+class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess[*_AdditionalArgs]):
+    unfrozen_model: NonHomogeneousPoissonProcess[*_AdditionalArgs]
+    args: tuple[*_AdditionalArgs]
 
-    def __init__(self, model: NonHomogeneousPoissonProcess[*_Xs], *args: *_Xs) -> None: ...
-    def intensity(self, time: _X) -> _Y: ...
-    def cumulative_intensity(self, time: _X) -> _Y: ...
+    def __init__(self, model: NonHomogeneousPoissonProcess[*_AdditionalArgs], *args: *_AdditionalArgs) -> None: ...
+    def intensity(self, time: _IntOrFloatValues) -> _NumpyFloatValues: ...
+    def cumulative_intensity(self, time: _IntOrFloatValues) -> _NumpyFloatValues: ...
     def sample(
         self, size: int, tf: float, t0: float = 0.0, nb_assets: Optional[int] = None, seed: Optional[int] = None
     ): ...

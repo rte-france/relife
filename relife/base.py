@@ -5,6 +5,85 @@ from typing import Self
 import numpy as np
 
 
+# MAYBE, custom array container can replace it : https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
+class _Parameters:
+    """
+    Dict-like tree structured parameters.
+
+    Every ``ParametricModel`` are composed of a ``Parameters`` instance.
+    """
+
+    def __init__(self, **kwargs):
+        self.parent = None
+        self._leaves = {}
+        self._mapping = {}
+        self._all_values = ()
+        self._all_names = ()
+        if bool(kwargs):
+            self._mapping = {k: v if v is not None else np.nan for k, v in kwargs.items()}
+            self.update_tree()  # update _names and _values
+
+    @property
+    def all_names(self):
+        return self._all_names
+
+    @property
+    def all_values(self):
+        return self._all_values
+
+    @property
+    def size(self):
+        return len(self.all_values)
+
+    def set_leaf(self, leaf_name, leaf):
+        """
+        set a leaf or new leaf
+        """
+        if leaf_name not in self._leaves:
+            leaf.parent = self
+        self._leaves[leaf_name] = leaf
+        self.update_tree()  # update _names and _values
+
+    def set_all_values(self, values):
+        """set values of all tree"""
+        if len(values) != self.size:
+            raise ValueError(f"Expected {self.size} values but got {len(values)}")
+        pos = len(self._mapping)
+        self._mapping.update(zip(self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])))
+        self._all_values = tuple((np.nan if v is None else v for v in values))
+        for leaf in self._leaves.values():
+            leaf.set_all_values(values[pos : pos + leaf.size])
+            pos += leaf.size
+        if self.parent is not None:
+            self.parent.update_tree()
+
+    def __getitem__(self, name):
+        try:
+            return self._mapping[name]
+        except KeyError:
+            raise ValueError(f"Parameter {name} does not exist")
+
+    def update_tree(self):
+        """update names and values of current and parent nodes"""
+
+        def items_walk(parameters: Self):
+            yield tuple(parameters._mapping.items())
+            for leaf in parameters._leaves.values():
+                yield tuple(chain.from_iterable(items_walk(leaf)))
+
+        generator = chain.from_iterable(items_walk(self))
+        try:
+            _k, _v = zip(*generator)
+            self._all_names = _k
+            self._all_values = _v
+            # self._allnames, self._allvalues = zip(*generator)
+        except StopIteration:
+            pass
+        # recursively update parent
+        if self.parent is not None:
+            self.parent.update_tree()
+
+
 class ParametricModel:
     """
     Base class to create a parametric_model.
@@ -13,7 +92,7 @@ class ParametricModel:
     """
 
     def __init__(self, **kwparams):
-        self._params = Parameters(**kwparams)
+        self._params = _Parameters(**kwparams)
         self._nested_models = {}
 
     @property
@@ -88,98 +167,6 @@ class ParametricModel:
             raise AttributeError(f"Attribute called {name} can't be set")
 
 
-# MAYBE, custom array container can replace it : https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
-class Parameters:
-    """
-    Dict-like tree structured parameters.
-
-    Every ``ParametricModel`` are composed of a ``Parameters`` instance.
-    """
-
-    def __init__(self, **kwargs):
-        self._parent = None
-        self._leaves = {}
-        self._mapping = {}
-        self._all_values = ()
-        self._all_names = ()
-        if bool(kwargs):
-            self._mapping = {k: v if v is not None else np.nan for k, v in kwargs.items()}
-            self._update_tree()  # update _names and _values
-
-    @property
-    def all_names(self):
-        return self._all_names
-
-    @property
-    def all_values(self):
-        return self._all_values
-
-    @property
-    def size(self):
-        return len(self._all_values)
-
-    def set_leaf(self, leaf_name, leaf):
-        """
-        set a leaf or new leaf
-        """
-        if leaf_name not in self._leaves:
-            leaf._parent = self
-        self._leaves[leaf_name] = leaf
-        self._update_tree()  # update _names and _values
-
-    def set_all_values(self, values):
-        """set values of all tree"""
-        if len(values) != self.size:
-            raise ValueError(f"Expected {self.size} values but got {len(values)}")
-        pos = len(self._mapping)
-        self._mapping.update(zip(self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])))
-        self._all_values = tuple((np.nan if v is None else v for v in values))
-        for leaf in self._leaves.values():
-            leaf.set_all_values(values[pos: pos + leaf.size])
-            pos += leaf.size
-        if self._parent is not None:
-            self._parent._update_tree()
-
-    def __getitem__(self, name):
-        try:
-            return self._mapping[name]
-        except KeyError:
-            raise ValueError(f"Parameter {name} does not exist")
-
-    def _update_tree(self):
-        """update names and values of current and parent nodes"""
-
-        def items_walk(parameters: Self):
-            yield tuple(parameters._mapping.items())
-            for leaf in parameters._leaves.values():
-                yield tuple(chain.from_iterable(items_walk(leaf)))
-
-        generator = chain.from_iterable(items_walk(self))
-        try:
-            _k, _v = zip(*generator)
-            self._all_names = _k
-            self._all_values = _v
-            # self._allnames, self._allvalues = zip(*generator)
-        except StopIteration:
-            pass
-        # recursively update parent
-        if self._parent is not None:
-            self._parent._update_tree()
-
-
-def get_nb_assets(*args):
-    if not bool(args):
-        return 1
-    args_2d = tuple((np.atleast_2d(arys) for arys in args))
-
-    try:
-        broadcast_shape = np.broadcast_shapes(*(ary.shape for ary in args_2d))
-        nb_assets = broadcast_shape[0]
-    except ValueError:
-        raise ValueError("Given args have incompatible shapes")
-    return nb_assets
-
-
 class FrozenParametricModel:
     def __init__(self, model, *args):
         super().__init__()
@@ -199,6 +186,8 @@ class FrozenParametricModel:
 
     @args.setter
     def args(self, value):
+        if not isinstance(value, tuple):
+            value = tuple(value)
         self._args = value
 
     def unfreeze(self):
@@ -218,11 +207,26 @@ class FrozenParametricModel:
             attr = getattr(self._unfrozen_model, name)
         except AttributeError:
             raise AttributeError(f"Frozen {frozen_type} has no attribute {name}")
+
         def wrapper(*args, **kwargs):
-            return attr(*(*args, self.args), **kwargs)
+            return attr(*(*args, *self.args), **kwargs)
+
         if inspect.ismethod(attr):
             return wrapper
         return attr
+
+
+def get_nb_assets(*args):
+    if not bool(args):
+        return 1
+    args_2d = tuple((np.atleast_2d(arys) for arys in args))
+
+    try:
+        broadcast_shape = np.broadcast_shapes(*(ary.shape for ary in args_2d))
+        nb_assets = broadcast_shape[0]
+    except ValueError:
+        raise ValueError("Given args have incompatible shapes")
+    return nb_assets
 
 
 def is_frozen(model):

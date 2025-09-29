@@ -6,7 +6,8 @@ from typing import (
     Literal,
     Optional,
     Self,
-    overload, Union,
+    Union,
+    overload,
 )
 
 import numpy as np
@@ -15,181 +16,200 @@ from scipy.optimize import Bounds
 
 from relife import FrozenParametricModel as FrozenParametricModel
 from relife import ParametricModel as ParametricModel
-from relife._typing import _B, _X, _Y, _Xs
+from relife._typing import (
+    _AdditionalIntOrFloatValues,
+    _BooleanValues,
+    _IntOrFloatValues,
+    _NumpyFloatValues,
+)
 from relife.likelihood import FittingResults as FittingResults
 
 from ._plot import PlotParametricLifetimeModel
 
-class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Xs]):
-    @overload
-    def sf(self, time: _X, *args: *_Xs) -> _Y: ...
+class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_AdditionalIntOrFloatValues]):
     @abstractmethod
-    def hf(self, time: _X, *args: *_Xs) -> _Y: ...
+    def sf(self, time: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
     @abstractmethod
-    def chf(self, time: _X, *args: *_Xs) -> _Y: ...
+    def hf(self, time: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
     @abstractmethod
-    def pdf(self, time: _X, *args: *_Xs) -> _Y: ...
-    def cdf(self, time: _X, *args: *_Xs) -> _Y: ...
-    def ppf(self, probability: _X, *args: *_Xs) -> _Y: ...
-    def median(self, *args: *_Xs) -> _Y: ...
-    def isf(self, probability: _X, *args: *_Xs) -> _Y: ...
-    def ichf(self, cumulative_hazard_rate: _X, *args: *_Xs) -> _Y: ...
-    def moment(self, n: int, *args: *_Xs) -> _Y: ...
-    def mean(self, *args: *_Xs) -> _Y: ...
-    def var(self, *args: *_Xs) -> _Y: ...
-    def mrl(self, time: _X, *args: *_Xs) -> _Y: ...
-    def ls_integrate(self, func: Callable[[_X], _Y], a: _X, b: _X, *args: *_Xs, deg: int = 10) -> _Y: ...
+    def chf(self, time: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    @abstractmethod
+    def pdf(self, time: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def cdf(self, time: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def ppf(self, probability: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def median(self, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def isf(self, probability: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def ichf(
+        self, cumulative_hazard_rate: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues
+    ) -> _NumpyFloatValues: ...
+    def moment(self, n: int, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def mean(self, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def var(self, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def mrl(self, time: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def ls_integrate(
+        self,
+        func: Callable[[_IntOrFloatValues], _NumpyFloatValues],
+        a: _IntOrFloatValues,
+        b: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
+        deg: int = 10,
+    ) -> _NumpyFloatValues: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *_Xs,
+        *args: *_AdditionalIntOrFloatValues,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> _Y: ...
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+    ) -> _NumpyFloatValues: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *_Xs,
+        *args: *_AdditionalIntOrFloatValues,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _B]: ...
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+    ) -> tuple[_NumpyFloatValues, _BooleanValues]: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *_Xs,
+        *args: *_AdditionalIntOrFloatValues,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _Y]: ...
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+    ) -> tuple[_NumpyFloatValues, _NumpyFloatValues]: ...
     @overload
     def rvs(
         self,
         size: int,
-        *args: *_Xs,
+        *args: *_AdditionalIntOrFloatValues,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _B, _Y]: ...
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+    ) -> tuple[_NumpyFloatValues, _BooleanValues, _NumpyFloatValues]: ...
     def rvs(
         self,
         size: int,
-        *args: *_Xs,
+        *args: *_AdditionalIntOrFloatValues,
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
+        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+    ) -> (
+        _NumpyFloatValues
+        | tuple[_NumpyFloatValues, _NumpyFloatValues]
+        | tuple[_NumpyFloatValues, _BooleanValues]
+        | tuple[_NumpyFloatValues, _BooleanValues, _NumpyFloatValues]
+    ): ...
     @property
     def plot(self) -> PlotParametricLifetimeModel: ...
 
-class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Xs], ABC):
+class FittableParametricLifetimeModel(ParametricLifetimeModel[*_AdditionalIntOrFloatValues], ABC):
     _fitting_results = Optional[FittingResults]
 
     def __init__(self, **kwparams: Optional[float]) -> None: ...
     @property
     def fitting_results(self) -> Optional[FittingResults]: ...
     @abstractmethod
-    def dhf(self, time: _X, *args: *_Xs) -> _Y: ...
+    def dhf(self, time: _IntOrFloatValues, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
     @overload
     def jac_hf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_NumpyFloatValues, ...]: ...
     @overload
     def jac_hf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _NumpyFloatValues: ...
     @abstractmethod
     def jac_hf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
     @overload
     def jac_chf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_NumpyFloatValues, ...]: ...
     @overload
     def jac_chf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _NumpyFloatValues: ...
     @abstractmethod
     def jac_chf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
     @overload
     def jac_sf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_NumpyFloatValues, ...]: ...
     @overload
     def jac_sf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _NumpyFloatValues: ...
     @abstractmethod
     def jac_sf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
     @overload
     def jac_pdf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_NumpyFloatValues, ...]: ...
     @overload
     def jac_pdf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _NumpyFloatValues: ...
     @abstractmethod
     def jac_pdf(
         self,
-        time: _X,
-        *args: *_Xs,
+        time: _IntOrFloatValues,
+        *args: *_AdditionalIntOrFloatValues,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
     @abstractmethod
     def _get_params_bounds(self) -> Bounds: ...
     @abstractmethod
     def _get_initial_params(
         self,
         time: NDArray[np.float64],
-        *args: *_Xs,
+        *args: *_AdditionalIntOrFloatValues,
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
@@ -197,7 +217,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Xs], ABC):
     def fit(
         self,
         time: NDArray[np.float64],
-        *args: *_Xs,
+        *args: *_AdditionalIntOrFloatValues,
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
@@ -213,74 +233,3 @@ class NonParametricLifetimeModel(ABC):
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self: ...
-
-class FrozenParametricLifetimeModel(FrozenParametricModel[*_Xs]):
-
-    unfrozen_model: ParametricLifetimeModel[*_Xs]
-
-    def __init__(self, model: ParametricLifetimeModel[*_Xs], *args: *_Xs) -> None: ...
-    def hf(self, time: _X) -> _Y: ...
-    def chf(self, time: _X) -> _Y: ...
-    def sf(self, time: _X) -> _Y: ...
-    def pdf(self, time: _X) -> _Y: ...
-    def mrl(self, time: _X) -> _Y: ...
-    def moment(self, n: int) -> _Y: ...
-    def mean(self) -> _Y: ...
-    def var(self) -> _Y: ...
-    def isf(self, probability: _X) -> _Y: ...
-    def ichf(self, cumulative_hazard_rate: _X) -> _Y: ...
-    def cdf(self, time: _X) -> _Y: ...
-    def ppf(self, probability: _X) -> _Y: ...
-    def median(self) -> _Y: ...
-    def ls_integrate(
-        self,
-        func: Callable[[_X], _Y],
-        a: _X,
-        b: _X,
-        deg: int = 10,
-    ) -> _Y: ...
-    @overload
-    def rvs(
-        self,
-        size: int,
-        nb_assets: Optional[int] = None,
-        return_event: Literal[False] = False,
-        return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> _Y: ...
-    @overload
-    def rvs(
-        self,
-        size: int,
-        nb_assets: Optional[int] = None,
-        return_event: Literal[True] = True,
-        return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _B]: ...
-    @overload
-    def rvs(
-        self,
-        size: int,
-        nb_assets: Optional[int] = None,
-        return_event: Literal[False] = False,
-        return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _Y]: ...
-    @overload
-    def rvs(
-        self,
-        size: int,
-        nb_assets: Optional[int] = None,
-        return_event: Literal[True] = True,
-        return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _B, _Y]: ...
-    def rvs(
-        self,
-        size: int,
-        *args: *_Xs,
-        nb_assets: Optional[int] = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...

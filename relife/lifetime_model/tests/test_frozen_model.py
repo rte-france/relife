@@ -3,6 +3,7 @@ from pytest import approx
 
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 
+
 def expected_shape(**kwargs):
     def shape_contrib(**_kwargs):
         yield ()  # yield at least (), in case kwargs is empty
@@ -35,7 +36,9 @@ class TestFrozenRegression:
 
     def test_rvs(self, regression, covar, rvs_size, rvs_nb_assets):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
+        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
+            rvs_size, nb_assets=rvs_nb_assets, covar=covar
+        )
         assert all(
             arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
             for arr in frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True)
@@ -124,7 +127,9 @@ class TestFrozenAgeReplacementDistribution:
     def test_rvs(self, distribution, ar, rvs_size, rvs_nb_assets):
         frozen_model = AgeReplacementModel(distribution).freeze(ar)
 
-        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar)
+        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
+            rvs_size, nb_assets=rvs_nb_assets, ar=ar
+        )
         assert all(
             arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar)
             for arr in frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True)
@@ -212,7 +217,9 @@ class TestFrozenAgeReplacementRegression:
 
     def test_rvs(self, regression, ar, covar, rvs_size, rvs_nb_assets):
         frozen_model = AgeReplacementModel(regression).freeze(ar, covar)
-        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar, covar=covar)
+        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
+            rvs_size, nb_assets=rvs_nb_assets, ar=ar, covar=covar
+        )
         assert all(
             arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar, covar=covar)
             for arr in frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True)
@@ -302,7 +309,9 @@ class TestFrozenLeftTruncatedDistribution:
 
     def test_rvs(self, distribution, a0, rvs_size, rvs_nb_assets):
         frozen_model = LeftTruncatedModel(distribution).freeze(a0)
-        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0)
+        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
+            rvs_size, nb_assets=rvs_nb_assets, a0=a0
+        )
         assert all(
             arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0)
             for arr in frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True)
@@ -391,7 +400,9 @@ class TestLeftTruncatedRegression:
 
     def test_rvs(self, regression, a0, covar, rvs_size, rvs_nb_assets):
         frozen_model = LeftTruncatedModel(regression).freeze(a0, covar)
-        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0, covar=covar)
+        assert frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
+            rvs_size, nb_assets=rvs_nb_assets, a0=a0, covar=covar
+        )
         assert all(
             arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0, covar=covar)
             for arr in frozen_model.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True)

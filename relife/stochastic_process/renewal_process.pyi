@@ -4,9 +4,9 @@ import numpy as np
 from numpy.typing import NDArray as NDArray
 from typing_extensions import override
 
-from relife._typing import _ParametricLifetimeModel
 from relife.economic import ExponentialDiscounting, Reward
 
+from ..lifetime_model._types import _ParametricLifetimeModel
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 from .base import StochasticProcess as StochasticProcess
 
