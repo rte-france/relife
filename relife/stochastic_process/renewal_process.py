@@ -13,8 +13,8 @@ from relife.stochastic_process.renewal_equations import (
     renewal_equation_solver,
 )
 
+from ._base import StochasticProcess
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
-from .base import StochasticProcess
 
 
 class RenewalProcess(StochasticProcess):

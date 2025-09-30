@@ -1,4 +1,4 @@
-from .base import StochasticProcess
+from ._base import StochasticProcess
 from .non_homogeneous_poisson_process import (
     FrozenNonHomogeneousPoissonProcess,
     NonHomogeneousPoissonProcess,

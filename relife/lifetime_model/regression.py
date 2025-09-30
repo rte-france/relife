@@ -11,9 +11,11 @@ from abc import ABC
 import numpy as np
 from scipy.optimize import Bounds
 
-from relife import FrozenParametricModel, ParametricModel
+from relife.base import FrozenParametricModel, ParametricModel
 
 from ._base import FittableParametricLifetimeModel
+
+__all__ = ["LifetimeRegression", "AcceleratedFailureTime", "ProportionalHazard"]
 
 
 def _broadcast_time_covar(time, covar):
@@ -51,7 +53,7 @@ def _broadcast_time_covar_shapes(time_shape, covar_shape):
             raise ValueError(f"Invalid time or covar shape. Got {time_shape} and {covar_shape}")
 
 
-class CovarEffect(ParametricModel):
+class _CovarEffect(ParametricModel):
     """
     Covariates effect.
 
@@ -123,7 +125,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
 
     def __init__(self, baseline, coefficients=(None,)):
         super().__init__()
-        self.covar_effect = CovarEffect(coefficients)
+        self.covar_effect = _CovarEffect(coefficients)
         self.baseline = baseline
 
     @property
@@ -508,7 +510,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         )
 
     def _get_initial_params(self, time, covar, *args, event=None, entry=None, departure=None):
-        self.covar_effect = CovarEffect(
+        self.covar_effect = _CovarEffect(
             (None,) * covar.shape[-1]
         )  # changes params structure depending on number of covar
         param0 = np.zeros_like(self.params, dtype=np.float64)
@@ -631,7 +633,7 @@ class ProportionalHazard(LifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : CovarEffect
+    covar_effect : _CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
@@ -874,7 +876,7 @@ class AcceleratedFailureTime(LifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : CovarEffect
+    covar_effect : _CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.

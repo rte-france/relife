@@ -1,46 +1,48 @@
 from __future__ import annotations
 
 from typing import (
-    TYPE_CHECKING,
     Callable,
     Optional,
+    Union,
     overload,
 )
 
 import numpy as np
 from numpy.typing import NDArray
 
+__all__ = ["legendre_quadrature", "laguerre_quadrature", "unweighted_laguerre_quadrature", "broadcast_bounds"]
+
 
 @overload
-def check_and_broadcast_bounds(
+def broadcast_bounds(
     a: float | NDArray[np.float64],
     b: None = None,
 ) -> NDArray[np.float64]: ...
 
 
 @overload
-def check_and_broadcast_bounds(
+def broadcast_bounds(
     a: float | NDArray[np.float64],
     b: float | NDArray[np.float64],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
 
 
-def check_and_broadcast_bounds(
+def _control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    arr = np.asarray(bound, dtype=np.float64)
+    if np.any(arr < 0):
+        raise ValueError("Bound values of the integral can't be lower than 0")
+    if arr.ndim > 2:
+        raise ValueError("Bound the integral can't have more than 2 dimensions")
+    return arr
+
+
+def broadcast_bounds(
     a: float | NDArray[np.float64],
     b: Optional[float | NDArray[np.float64]] = None,
-) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
-
-    def control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        arr = np.asarray(bound, dtype=np.float64)
-        if np.any(arr < 0):
-            raise ValueError("Bound values of the integral can't be lower than 0")
-        if arr.ndim > 2:
-            raise ValueError("Bound the integral can't have more than 2 dimensions")
-        return arr
-
-    a = control_shape(a)
+) -> Union[NDArray[np.float64], tuple[NDArray[np.float64], NDArray[np.float64]]]:
+    a = _control_shape(a)
     if b is not None:
-        b = control_shape(b)
+        b = _control_shape(b)
         try:
             a, b = np.broadcast_arrays(a, b)
             return a.copy(), b.copy()
@@ -63,7 +65,7 @@ def legendre_quadrature(
 
     a, b shapes can be either 0d (float like), 1d or 2d
     """
-    arr_a, arr_b = check_and_broadcast_bounds(a, b)  # () or (n,) or (m, n)
+    arr_a, arr_b = broadcast_bounds(a, b)  # () or (n,) or (m, n)
     quad = np.polynomial.legendre.leggauss(deg)  # (deg,)
     x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
     w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
@@ -100,7 +102,7 @@ def laguerre_quadrature(
     It must handle at least 3 dimensions.
     a can be zero with ndim <= 2.
     """
-    arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
+    arr_a = broadcast_bounds(a)  # () or (n,) or (m, n)
     quad = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
     w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
@@ -135,7 +137,7 @@ def unweighted_laguerre_quadrature(
     """
 
     quad = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
+    arr_a = broadcast_bounds(a)  # () or (n,) or (m, n)
     x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
     w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 

@@ -7,8 +7,8 @@ from typing_extensions import override
 from relife.economic import ExponentialDiscounting, Reward
 
 from ..lifetime_model._types import _ParametricLifetimeModel
+from ._base import StochasticProcess as StochasticProcess
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
-from .base import StochasticProcess as StochasticProcess
 
 _N = TypeVar("_N", bound=int)
 _M: TypeAlias = int

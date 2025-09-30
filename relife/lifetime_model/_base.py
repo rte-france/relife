@@ -3,16 +3,18 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import Bounds, newton
 
-from relife import FrozenParametricModel, ParametricModel
+from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import LifetimeData
 from relife.likelihood import LikelihoodFromLifetimes
 from relife.quadrature import (
-    check_and_broadcast_bounds,
+    broadcast_bounds,
     legendre_quadrature,
     unweighted_laguerre_quadrature,
 )
 
 from ._plot import PlotParametricLifetimeModel
+
+__all__ = ["ParametricLifetimeModel", "FittableParametricLifetimeModel", "NonParametricLifetimeModel"]
 
 
 class ParametricLifetimeModel(ParametricModel, ABC):
@@ -172,7 +174,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             return fx * pdf
 
-        arr_a, arr_b = check_and_broadcast_bounds(a, b)  # (), (n,) or (m, n)
+        arr_a, arr_b = broadcast_bounds(a, b)  # (), (n,) or (m, n)
         if np.any(arr_a > arr_b):
             raise ValueError("Bound values a must be lower than values of b")
 
@@ -281,255 +283,11 @@ class NonParametricLifetimeModel(ABC):
     def fit(self, time, event=None, entry=None, departure=None): ...
 
 
-class FrozenParametricLifetimeModel(FrozenParametricModel):
-
-    def __init__(self, model, *args):
-        super().__init__(model, *args)
-
-    def hf(self, time):
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return self.unfrozen_model.hf(time, *self.args)
-
-    def chf(self, time):
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return self.unfrozen_model.chf(time, *self.args)
-
-    def sf(self, time):
-        """
-        The survival function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return self.unfrozen_model.sf(time, *self.args)
-
-    def pdf(self, time):
-        """
-        The probability density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return self.unfrozen_model.pdf(time, *self.args)
-
-    def mrl(self, time):
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return self.unfrozen_model.mrl(time, *self.args)
-
-    def moment(self, n: int):
-        """
-        n-th order moment.
-
-        Parameters
-        ----------
-        n : int
-            Order of the moment (at least 1)
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
-        return self.unfrozen_model.moment(n, *self.args)
-
-    def mean(self):
-        """
-        The mean.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
-        return self.unfrozen_model.moment(1, *self.args)
-
-    def var(self):
-        """
-        The variance.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
-        return self.unfrozen_model.moment(2, *self.args) - self.unfrozen_model.moment(1, *self.args) ** 2
-
-    def isf(self, probability):
-        """
-        The inverse survival function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
-        return self.unfrozen_model.isf(probability, *self.args)
-
-    def ichf(self, cumulative_hazard_rate):
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are (), (n,) or (m, n).
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
-        return self.unfrozen_model.ichf(cumulative_hazard_rate, *self.args)
-
-    def cdf(self, time):
-        """
-        The cumulative density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return self.unfrozen_model.cdf(time, *self.args)
-
-    def rvs(self, size, nb_assets=None, return_event=False, return_entry=False, seed=None):
-        """
-        Random variable sampling.
-
-        Parameters
-        ----------
-        size : int, (int,) or (int, int)
-            Size of the generated sample. If size is ``n`` or ``(n,)``, n samples are generated. If size is ``(m,n)``, a
-            2d array of samples is generated.
-        nb_assets : int, optional
-            If nb_assets is not None, 2d arrays of samples are generated.
-        return_event : bool, default is False
-            If True, returns event indicators along with the sample time values.
-        return_entry : bool, default is False
-            If True, returns corresponding entry values of the sample time values.
-        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
-            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
-
-        Returns
-        -------
-        float, ndarray or tuple of float or ndarray
-            The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
-            the time values followed by event values, entry values or both.
-        """
-        return self.unfrozen_model.rvs(
-            size, *self.args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
-        )
-
-    def ppf(self, probability):
-        """
-        The percent point function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
-        return self.unfrozen_model.ppf(probability, *self.args)
-
-    def median(self):
-        """
-        The median.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
-        return self.unfrozen_model.median(*self.args)
-
-    def ls_integrate(self, func, a, b, deg=10):
-        """
-        Lebesgue-Stieltjes integration.
-
-        Parameters
-        ----------
-        func : callable (in : 1 ndarray , out : 1 ndarray)
-            The callable must have only one ndarray object as argument and one ndarray object as output
-        a : ndarray (maximum number of dimension is 2)
-            Lower bound(s) of integration.
-        b : ndarray (maximum number of dimension is 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-        deg : int, default 10
-            Degree of the polynomials interpolation
-
-        Returns
-        -------
-        np.ndarray
-            Lebesgue-Stieltjes integral of func from `a` to `b`.
-        """
-        return self.unfrozen_model.ls_integrate(func, a, b, *self.args, deg=deg)
+def is_lifetime_model(model):
+    if isinstance(model, ParametricModel):
+        return isinstance(model, ParametricLifetimeModel)
+    if isinstance(model, FrozenParametricModel):
+        return isinstance(model._unfrozen_model, ParametricLifetimeModel)
+    if isinstance(model, NonParametricLifetimeModel):
+        return True
+    return False

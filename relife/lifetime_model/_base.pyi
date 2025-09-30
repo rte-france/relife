@@ -14,17 +14,23 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 
-from relife import FrozenParametricModel as FrozenParametricModel
-from relife import ParametricModel as ParametricModel
-from relife._typing import (
+from relife._io_types import (
     _AdditionalIntOrFloatValues,
     _BooleanValues,
     _IntOrFloatValues,
     _NumpyFloatValues,
 )
-from relife.likelihood import FittingResults as FittingResults
+from relife.base import FrozenParametricModel, ParametricModel
+from relife.likelihood import FittingResults
 
 from ._plot import PlotParametricLifetimeModel
+
+__all__ = [
+    "ParametricLifetimeModel",
+    "FittableParametricLifetimeModel",
+    "NonParametricLifetimeModel",
+    "is_lifetime_model",
+]
 
 class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_AdditionalIntOrFloatValues]):
     @abstractmethod
@@ -233,3 +239,5 @@ class NonParametricLifetimeModel(ABC):
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
     ) -> Self: ...
+
+def is_lifetime_model(model: Union[ParametricModel, NonParametricLifetimeModel, FrozenParametricModel]) -> bool: ...

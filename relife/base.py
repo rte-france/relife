@@ -4,6 +4,8 @@ from typing import Self
 
 import numpy as np
 
+__all__ = ["get_nb_assets", "is_frozen", "ParametricModel", "FrozenParametricModel"]
+
 
 # MAYBE, custom array container can replace it : https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
 class _Parameters:
@@ -167,14 +169,14 @@ class ParametricModel:
             raise AttributeError(f"Attribute called {name} can't be set")
 
 
-class FrozenParametricModel:
+class FrozenParametricModel(ParametricModel):
     def __init__(self, model, *args):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
         self._nb_assets = get_nb_assets(*args)
         self._args = args
-        self._unfrozen_model = model
+        self._unfrozen_model = model # not in _nested_models
 
     @property
     def nb_assets(self):
@@ -231,21 +233,6 @@ def get_nb_assets(*args):
 
 def is_frozen(model):
     return isinstance(model, FrozenParametricModel)
-
-
-def is_lifetime_model(model):
-    from relife.lifetime_model import (
-        NonParametricLifetimeModel,
-        ParametricLifetimeModel,
-    )
-
-    return isinstance(model, (ParametricLifetimeModel, NonParametricLifetimeModel))
-
-
-def is_stochastic_process(model):
-    from relife.stochastic_process import StochasticProcess
-
-    return isinstance(model, StochasticProcess)
 
 
 # see sklearn/base.py : return unfitted ParametricModel

@@ -3,7 +3,8 @@ import numpy as np
 from relife.data import LifetimeData, NHPPData
 from relife.likelihood import LikelihoodFromLifetimes
 
-from .base import FrozenStochasticProcess, StochasticProcess
+from ._base import StochasticProcess
+from ..base import FrozenParametricModel
 
 
 class NonHomogeneousPoissonProcess(StochasticProcess):
@@ -65,9 +66,9 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
 
         Returns
         -------
-        FrozenNonHomogeneousPoissonProcess
+        FrozenParametricModel
         """
-        return FrozenNonHomogeneousPoissonProcess(self, *args)
+        return FrozenParametricModel(self, *args)
 
     def sample(self, size, tf, *args, t0=0.0, seed=None):
         """Renewal data sampling.
@@ -247,18 +248,3 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
-
-
-class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess):
-
-    def intensity(self, time):
-        return self.unfrozen_model.intensity(time, *self.args)
-
-    def cumulative_intensity(self, time):
-        return self.unfrozen_model.cumulative_intensity(time, *self.args)
-
-    def sample(self, size, tf, t0=0.0, nb_assets=None, seed=None):
-        return self.unfrozen_model.sample(size, tf, *self.args, t0=t0, nb_assets=nb_assets, seed=seed)
-
-    def generate_failure_data(self, size, tf, t0=0.0, nb_assets=None, seed=None):
-        return self.unfrozen_model.generate_failure_data(size, tf, t0=t0, nb_assets=nb_assets, seed=seed, *self.args)

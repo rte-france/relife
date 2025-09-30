@@ -1,7 +1,10 @@
 import numpy as np
 
-from relife import FrozenParametricModel, get_nb_assets, is_frozen
+from relife import get_nb_assets, is_frozen
+from relife.base import FrozenParametricModel
 from relife.lifetime_model import ParametricLifetimeModel
+
+__all__ = ["AgeReplacementModel", "LeftTruncatedModel"]
 
 
 def _reshape_ar_or_a0(name, value):

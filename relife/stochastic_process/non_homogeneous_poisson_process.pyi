@@ -3,11 +3,11 @@ from typing import Any, Optional, Self, Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from relife._typing import _AdditionalArgs, _IntOrFloatValues, _NumpyFloatValues
+from relife._io_types import _AdditionalArgs, _IntOrFloatValues, _NumpyFloatValues
 from relife.lifetime_model import FittableParametricLifetimeModel
 from relife.likelihood import FittingResults
 
-from .base import FrozenStochasticProcess, StochasticProcess
+from ._base import FrozenStochasticProcess, StochasticProcess
 
 class NonHomogeneousPoissonProcess(StochasticProcess[*_AdditionalArgs]):
     lifetime_model: FittableParametricLifetimeModel[*_AdditionalArgs]
