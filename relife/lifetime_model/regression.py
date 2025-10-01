@@ -511,7 +511,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
 
     def _get_initial_params(self, time, covar, *args, event=None, entry=None, departure=None):
         self.covar_effect = _CovarEffect(
-            (None,) * covar.shape[-1]
+            (None,) * covar.shape[-1]  # TODO : np.asarray(covar).shape
         )  # changes params structure depending on number of covar
         param0 = np.zeros_like(self.params, dtype=np.float64)
         param0[-self.baseline.params.size :] = self.baseline._get_initial_params(

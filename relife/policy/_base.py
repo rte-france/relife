@@ -5,17 +5,13 @@ from typing import Generic, Optional, TypedDict, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
+from relife.base import FrozenParametricModel
 from relife.economic import ExponentialDiscounting, Reward, cost
-from relife.lifetime_model import (
-    FrozenAgeReplacementModel,
-    FrozenLeftTruncatedModel,
-)
 from relife.lifetime_model.distribution import LifetimeDistribution
-from relife.lifetime_model.regression import FrozenLifetimeRegression
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process._sample.data import RenewalRewardProcessSample
 
-M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
+M = TypeVar("M", LifetimeDistribution, FrozenParametricModel[ParametricLifetimeModel[]])
 R = TypeVar("R", bound=Reward)
 
 

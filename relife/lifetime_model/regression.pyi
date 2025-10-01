@@ -6,7 +6,7 @@ from typing import (
     Optional,
     Self,
     Union,
-    overload, TypeAlias,
+    overload,
 )
 
 import numpy as np
@@ -14,379 +14,357 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife._io_types import (
-    _AdditionalIntOrFloatValues,
-    _BooleanValues,
-    _IntOrFloatValues,
-    _NumpyFloatValues,
+from relife._typing import (
+    _Any_Number,
+    _Any_Numpy_Bool,
+    _Any_Numpy_Number,
+    _NumpyArray_OfBool,
+    _NumpyArray_OfNumber,
 )
-from relife.base import ParametricModel
+from relife.base import FrozenParametricModel, ParametricModel
 
 from ._base import FittableParametricLifetimeModel
-from ._type import _FrozenParametricLifetimeModel_Proto
 
 __all__ = ["LifetimeRegression", "AcceleratedFailureTime", "ProportionalHazard"]
 
-_Covar: TypeAlias = _IntOrFloatValues
-
-def _broadcast_time_covar(
-    time: _IntOrFloatValues, covar: _Covar
-) -> tuple[_IntOrFloatValues, _IntOrFloatValues]: ...
+def _broadcast_time_covar(time: _Any_Number, covar: _Any_Number) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
 def _broadcast_time_covar_shapes(
     time_shape: tuple[()] | tuple[int] | tuple[int, int], covar_shape: tuple[()] | tuple[int] | tuple[int, int]
 ) -> tuple[()] | tuple[int] | tuple[int, int]: ...
 
-class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_Covar, *_AdditionalIntOrFloatValues]], ABC):
+# a FittableParametricLifetimeModel with at least 1 arg (_Any_Real) and 0 or more args (_IntOrFloat)
+class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]], ABC):
     covar_effect: _CovarEffect
-    baseline: FittableParametricLifetimeModel[*_AdditionalIntOrFloatValues]
+    baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]
 
     def __init__(
         self,
-        baseline: FittableParametricLifetimeModel[*_AdditionalIntOrFloatValues],
+        baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]],
         coefficients: tuple[Optional[float], ...] = (None,),
     ) -> None: ...
-    def _get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        *args: *_AdditionalIntOrFloatValues,
-        event: Optional[NDArray[np.bool_]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-    ) -> NDArray[np.float64]: ...
-    def _get_params_bounds(self) -> Bounds: ...
     @property
     def coefficients(self) -> NDArray[np.float64]: ...
     @property
     def nb_coef(self) -> int: ...
     @override
-    def sf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+    def sf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def pdf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+    def pdf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
     def isf(
         self,
-        probability: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
-    ) -> _NumpyFloatValues: ...
+        probability: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
+    ) -> _Any_Numpy_Number: ...
     @override
-    def cdf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+    def cdf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
     def ppf(
         self,
-        probability: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
-    ) -> _NumpyFloatValues: ...
+        probability: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
+    ) -> _Any_Numpy_Number: ...
     @override
-    def mrl(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+    def mrl(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def mean(self, covar: _Covar, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def mean(self, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def var(self, covar: _Covar, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def var(self, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def median(self, covar: _Covar, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def median(self, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
     def ls_integrate(
         self,
-        func: Callable[[_IntOrFloatValues], _NumpyFloatValues],
-        a: _IntOrFloatValues,
-        b: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        func: Callable[[_Any_Number], _Any_Numpy_Number],
+        a: _Any_Number,
+        b: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         deg: int = 10,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     @overload
     def jac_sf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_NumpyFloatValues, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_sf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_sf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_cdf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_NumpyFloatValues, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_cdf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_cdf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_pdf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_NumpyFloatValues, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_pdf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_pdf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        covar: _Any_Number,
+        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
         seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        covar: _Any_Number,
+        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
         seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
-    ) -> tuple[_NumpyFloatValues, _BooleanValues]: ...
+    ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool]: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        covar: _Any_Number,
+        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
         seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
-    ) -> tuple[_NumpyFloatValues, _NumpyFloatValues]: ...
+    ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        covar: _Any_Number,
+        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
         seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
-    ) -> tuple[_NumpyFloatValues, _BooleanValues, _NumpyFloatValues]: ...
+    ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]: ...
     def rvs(
         self,
         size: int,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        covar: _Any_Number,
+        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
     ) -> (
-        _NumpyFloatValues
-        | tuple[_NumpyFloatValues, _NumpyFloatValues]
-        | tuple[_NumpyFloatValues, _BooleanValues]
-        | tuple[_NumpyFloatValues, _BooleanValues, _NumpyFloatValues]
+        _Any_Numpy_Number
+        | tuple[_Any_Numpy_Number, _Any_Numpy_Number]
+        | tuple[_Any_Numpy_Number, _Any_Numpy_Bool]
+        | tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]
     ): ...
-    def fit(
+    def _get_params_bounds(self) -> Bounds: ...
+    def _get_initial_params(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
+        *args: _Any_Number,
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
-        **options: Any,
+    ) -> NDArray[np.float64]: ...
+    def fit(
+        self,
+        time: _NumpyArray_OfNumber,
+        covar: _Any_Number,
+        *args: _Any_Number,
+        event: Optional[_NumpyArray_OfBool] = None,
+        entry: Optional[_NumpyArray_OfNumber] = None,
+        departure: Optional[_NumpyArray_OfNumber] = None,
+        optimizer_options: Optional[dict[str, Any]] = None,
     ) -> Self: ...
     def freeze(
-        self, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _FrozenParametricLifetimeModel_Proto[*tuple[_Covar, _AdditionalIntOrFloatValues]]: ...
+        self, covar: _Any_Number, *args: _Any_Number
+    ) -> FrozenParametricModel[FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]]: ...
 
-class ProportionalHazard(LifetimeRegression[*_AdditionalIntOrFloatValues]):
-    def hf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
-    def chf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+class ProportionalHazard(LifetimeRegression):
+    def hf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def chf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
     def ichf(
         self,
-        cumulative_hazard_rate: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
-    ) -> _NumpyFloatValues: ...
-    def dhf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+        cumulative_hazard_rate: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
+    ) -> _Any_Numpy_Number: ...
+    def dhf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_NumpyFloatValues, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_hf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_chf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_NumpyFloatValues, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_chf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, covar: _Covar, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def moment(self, n: int, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
 
-class AcceleratedFailureTime(LifetimeRegression[*_AdditionalIntOrFloatValues]):
-    def hf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
-    def chf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+class AcceleratedFailureTime(LifetimeRegression):
+    def hf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def chf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
     def ichf(
         self,
-        cumulative_hazard_rate: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
-    ) -> _NumpyFloatValues: ...
-    def dhf(
-        self, time: _IntOrFloatValues, covar: _Covar, *args: *_AdditionalIntOrFloatValues
-    ) -> _NumpyFloatValues: ...
+        cumulative_hazard_rate: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
+    ) -> _Any_Numpy_Number: ...
+    def dhf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_NumpyFloatValues, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_hf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_chf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_NumpyFloatValues, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_chf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _NumpyFloatValues: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self,
-        time: _IntOrFloatValues,
-        covar: _Covar,
-        *args: *_AdditionalIntOrFloatValues,
+        time: _Any_Number,
+        covar: _Any_Number,
+        *args: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, covar: _Covar, *args: *_AdditionalIntOrFloatValues) -> _NumpyFloatValues: ...
+    def moment(self, n: int, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
 
 class _CovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[Optional[None], ...] = (None,)) -> None: ...
     @property
     def nb_coef(self) -> int: ...
-    def g(self, covar: _Covar) -> _NumpyFloatValues: ...
+    def g(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
-    def jac_g(self, covar: _Covar, *, asarray: Literal[False] = False) -> tuple[_NumpyFloatValues, ...]: ...
+    def jac_g(self, covar: _Any_Number, *, asarray: Literal[False] = False) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
-    def jac_g(self, covar: _Covar, *, asarray: Literal[True] = True) -> _NumpyFloatValues: ...
+    def jac_g(self, covar: _Any_Number, *, asarray: Literal[True] = True) -> _Any_Numpy_Number: ...
     def jac_g(
-        self, covar: _Covar, *, asarray: Literal[True] = True
-    ) -> tuple[_NumpyFloatValues, ...] | _NumpyFloatValues: ...
+        self, covar: _Any_Number, *, asarray: Literal[True] = True
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...

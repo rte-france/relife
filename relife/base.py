@@ -169,14 +169,29 @@ class ParametricModel:
             raise AttributeError(f"Attribute called {name} can't be set")
 
 
-class FrozenParametricModel(ParametricModel):
+class FrozenParametricModel:
     def __init__(self, model, *args):
-        super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
         self._nb_assets = get_nb_assets(*args)
         self._args = args
-        self._unfrozen_model = model # not in _nested_models
+        self._unfrozen_model = model  # not in _nested_models
+
+    @property
+    def params(self):
+        return self._unfrozen_model.params
+
+    @params.setter
+    def params(self, new_params):
+        self._unfrozen_model.params = new_params
+
+    @property
+    def params_names(self):
+        return self._unfrozen_model.params_names
+
+    @property
+    def nb_params(self):
+        return self._unfrozen_model.nb_params
 
     @property
     def nb_assets(self):

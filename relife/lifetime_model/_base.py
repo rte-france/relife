@@ -264,14 +264,16 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         event=None,
         entry=None,
         departure=None,
-        **options,
+        optimizer_options=None,
     ):
         lifetime_data = LifetimeData(time, event=event, entry=entry, departure=departure, args=args)
         self.params = self._get_initial_params(time, *args, event=event, entry=entry, departure=departure)
         likelihood = LikelihoodFromLifetimes(self, lifetime_data)
-        if "bounds" not in options:
-            options["bounds"] = self._get_params_bounds()
-        fitting_results = likelihood.maximum_likelihood_estimation(**options)
+        if optimizer_options is None:
+            optimizer_options = {}
+        if "bounds" not in optimizer_options:
+            optimizer_options["bounds"] = self._get_params_bounds()
+        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self._fitting_results = fitting_results
         return self

@@ -3,8 +3,8 @@ import numpy as np
 from relife.data import LifetimeData, NHPPData
 from relife.likelihood import LikelihoodFromLifetimes
 
-from ._base import StochasticProcess
 from ..base import FrozenParametricModel
+from ._base import StochasticProcess
 
 
 class NonHomogeneousPoissonProcess(StochasticProcess):

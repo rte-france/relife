@@ -273,7 +273,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             np.full(self.nb_params, np.inf),
         )
 
-    def fit(self, time, *, event=None, entry=None, departure=None, **options):
+    def fit(self, time, event=None, entry=None, departure=None, **options):
         """
         Estimation of the distribution parameters from lifetime data.
 
@@ -1484,7 +1484,7 @@ class EquilibriumDistribution(ParametricLifetimeModel):
         return self.isf(np.exp(-cumulative_hazard_rate), *args)
 
 
-class MinimumDistribution(ParametricLifetimeModel):
+class MinimumDistribution(FittableParametricLifetimeModel):
     r"""Series structure of n identical and independent components.
 
     The hazard function of the system is given by:
@@ -1567,6 +1567,12 @@ class MinimumDistribution(ParametricLifetimeModel):
     def ls_integrate(self, func, a, b, n, *args, deg: int = 10):
         return super().ls_integrate(func, a, b, n, *args, deg=deg)
 
+    def _get_params_bounds(self):
+        return self.baseline._get_params_bounds()
+
+    def _get_initial_params(self, time, n, *args, event=None, entry=None, departure=None):
+        return self.baseline._get_initial_params(time, *args, event=None, entry=None, departure=None)
+
     def fit(
         self,
         time,
@@ -1575,14 +1581,8 @@ class MinimumDistribution(ParametricLifetimeModel):
         event=None,
         entry=None,
         departure=None,
-        **kwargs,
+        optimizer_options=None,
     ):
-        # initialize params structure (number of parameters in params tree)
-        if isinstance(self.baseline, LifetimeRegression):
-            self.baseline._init_params(args[0], *args[1:])
-        lifetime_data: LifetimeData = LifetimeData(time, event=event, entry=entry, departure=departure, args=(n, *args))
-        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
-        fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
-        self.params = fitting_results.optimal_params
-        self.fitting_results = fitting_results
-        return self
+        return super().fit(
+            time, *(n, *args), event=event, entry=entry, departure=departure, optimizer_options=optimizer_options
+        )
