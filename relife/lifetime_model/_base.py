@@ -226,11 +226,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
 
     def __init__(self, **kwparams):
         super().__init__(**kwparams)
-        self._fitting_results = None
-
-    @property
-    def fitting_results(self):
-        return self._fitting_results
+        self.fitting_results = None
 
     @abstractmethod
     def _get_initial_params(self, time, *args, event=None, entry=None, departure=None): ...
@@ -275,7 +271,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
             optimizer_options["bounds"] = self._get_params_bounds()
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
-        self._fitting_results = fitting_results
+        self.fitting_results = fitting_results
         return self
 
 

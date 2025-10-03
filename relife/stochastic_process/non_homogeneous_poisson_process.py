@@ -3,11 +3,10 @@ import numpy as np
 from relife.data import LifetimeData, NHPPData
 from relife.likelihood import LikelihoodFromLifetimes
 
-from ..base import FrozenParametricModel
-from ._base import StochasticProcess
+from relife.base import ParametricModel, FrozenParametricModel
 
 
-class NonHomogeneousPoissonProcess(StochasticProcess):
+class NonHomogeneousPoissonProcess(ParametricModel):
     """
     Non-homogeneous Poisson process.
     """
@@ -175,7 +174,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         assets_ids=None,
         first_ages=None,
         last_ages=None,
-        model_args=None,
+        lifetime_model_args=None,
         **options,
     ):
         """
@@ -193,7 +192,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         last_ages : 1D array of float, optional
             Array of float containing the ages of each asset at the end of the observation period. If set, ``assets_ids`` is needed and its length
             must equal the size of ``last_ages``.
-        model_args : tuple of np.ndarray, optional
+        lifetime_model_args : tuple of np.ndarray, optional
             Additional arguments needed by the model. If set, ``assets_ids`` is needed.
             For 1D array, the size must equal the length of ``assets_ids``. For 2D array (e.g. covar of regression),
             the length of first axis must equal the length of ``assets_ids``.
@@ -236,7 +235,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
             events_assets_ids,
             first_ages=first_ages,
             last_ages=last_ages,
-            model_args=model_args,
+            model_args=lifetime_model_args,
             assets_ids=assets_ids,
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()

@@ -6,8 +6,8 @@ import numpy as np
 
 __all__ = ["get_nb_assets", "is_frozen", "ParametricModel", "FrozenParametricModel"]
 
-
-# MAYBE, custom array container can replace it : https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
+# MAYBE, custom array container can be used here
+# https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
 class _Parameters:
     """
     Dict-like tree structured parameters.
@@ -95,7 +95,7 @@ class ParametricModel:
 
     def __init__(self, **kwparams):
         self._params = _Parameters(**kwparams)
-        self._nested_models = {}
+        self._baseline_models = {}
 
     @property
     def params(self):
@@ -155,43 +155,25 @@ class ParametricModel:
     def __getattr__(self, name):
         if name in self.__dict__:
             return self.__dict__[name]
-        if name in super().__getattribute__("_nested_models"):
-            return super().__getattribute__("_nested_models").get(name)
+        if name in super().__getattribute__("_baseline_models"):
+            return super().__getattribute__("_baseline_models").get(name)
         raise AttributeError(f"{type(self).__name__} has no attribute named {name}")
 
     def __setattr__(self, name, value):
+        # automatically add params of new baseline model
         if isinstance(value, ParametricModel):
-            self._nested_models[name] = value
+            self._baseline_models[name] = value
             self._params.set_leaf(f"{name}.params", getattr(value, "_params"))
-        elif name.startswith("_"):
-            super().__setattr__(name, value)
-        else:
-            raise AttributeError(f"Attribute called {name} can't be set")
+        super().__setattr__(name, value)
 
-
-class FrozenParametricModel:
+class FrozenParametricModel(ParametricModel):
     def __init__(self, model, *args):
+        super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
+        self.unfrozen_model = model  # setted as a baseline model
         self._nb_assets = get_nb_assets(*args)
         self._args = args
-        self._unfrozen_model = model  # not in _nested_models
-
-    @property
-    def params(self):
-        return self._unfrozen_model.params
-
-    @params.setter
-    def params(self, new_params):
-        self._unfrozen_model.params = new_params
-
-    @property
-    def params_names(self):
-        return self._unfrozen_model.params_names
-
-    @property
-    def nb_params(self):
-        return self._unfrozen_model.nb_params
 
     @property
     def nb_assets(self):
@@ -208,20 +190,14 @@ class FrozenParametricModel:
         self._args = value
 
     def unfreeze(self):
-        return self._unfrozen_model
-
-    def __setattr__(self, name, value):
-        if name.startswith("_"):
-            super().__setattr__(name, value)
-        else:
-            raise AttributeError(f"Attribute called {name} can't be set")
+        return self.unfrozen_model
 
     def __getattr__(self, name):
-        frozen_type = self._unfrozen_model.__class__.__name__
+        frozen_type = self.unfrozen_model.__class__.__name__
         if name == "fit":
             raise AttributeError(f"Frozen model can't be fit")
         try:
-            attr = getattr(self._unfrozen_model, name)
+            attr = getattr(self.unfrozen_model, name)
         except AttributeError:
             raise AttributeError(f"Frozen {frozen_type} has no attribute {name}")
 

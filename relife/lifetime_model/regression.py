@@ -585,7 +585,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         """
         return super().fit(time, *(covar, *args), event=event, entry=entry, departure=departure, **options)
 
-    def freeze(self, covar, *args):
+    def freeze_args(self, covar, *args):
         """
         Freeze regression covar and other arguments into the object data.
 
@@ -599,7 +599,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
 
         Returns
         -------
-        FrozenLifetimeModel
+        FrozenParametricModel
         """
         return FrozenParametricModel(self, covar, *args)
 

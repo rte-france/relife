@@ -109,11 +109,10 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
     def plot(self) -> PlotParametricLifetimeModel: ...
 
 class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Any_Number_Ts], ABC):
-    _fitting_results = Optional[FittingResults]
+    fitting_results = Optional[FittingResults]
 
     def __init__(self, **kwparams: Optional[float]) -> None: ...
-    @property
-    def fitting_results(self) -> Optional[FittingResults]: ...
+
     @abstractmethod
     def dhf(self, time: _Any_Number, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
     @overload

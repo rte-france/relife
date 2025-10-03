@@ -1,25 +1,6 @@
-from __future__ import annotations
-
-from typing import Callable, Optional
-
 import numpy as np
-from numpy.typing import NDArray
 
-from relife.economic import Discounting, ExponentialDiscounting
-from relife.lifetime_model import (
-    FrozenAgeReplacementModel,
-    FrozenLeftTruncatedModel,
-)
-from relife.lifetime_model.distribution import LifetimeDistribution
-from relife.lifetime_model.regression import FrozenLifetimeRegression
-
-
-def renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel,
-    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    discounting: Optional[Discounting] = None,
-) -> NDArray[np.float64]:
+def renewal_equation_solver(timeline, lifetime_model, evaluated_func, discounting = None):
 
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
@@ -45,15 +26,7 @@ def renewal_equation_solver(
     return z
 
 
-def delayed_renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    z: NDArray[np.float64],
-    first_lifetime_model: (
-        LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
-    ),
-    evaluated_func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    discounting: Optional[ExponentialDiscounting] = None,
-) -> NDArray[np.float64]:
+def delayed_renewal_equation_solver(timeline, z, first_lifetime_model, evaluated_func, discounting = None):
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
     f1 = first_lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)

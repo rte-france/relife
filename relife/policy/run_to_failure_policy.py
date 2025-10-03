@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,13 +8,6 @@ from relife.lifetime_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
-
-if TYPE_CHECKING:
-    from relife.lifetime_model import FrozenLeftTruncatedModel
-
-    from ..lifetime_model.distribution import LifetimeDistribution
-    from ..lifetime_model.regression import FrozenLifetimeRegression
-
 
 class OneCycleRunToFailurePolicy(BaseOneCycleAgeReplacementPolicy):
     # noinspection PyUnresolvedReferences
@@ -43,7 +34,7 @@ class OneCycleRunToFailurePolicy(BaseOneCycleAgeReplacementPolicy):
 
     def __init__(
         self,
-        lifetime_model: LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel,
+        lifetime_model,
         cf: float | NDArray[np.float64],
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
@@ -51,7 +42,7 @@ class OneCycleRunToFailurePolicy(BaseOneCycleAgeReplacementPolicy):
     ) -> None:
         reward = RunToFailureReward(cf)
         if a0 is not None:
-            lifetime_model = LeftTruncatedModel(lifetime_model).freeze(a0)
+            lifetime_model = LeftTruncatedModel(lifetime_model).freeze_args(a0)
         super().__init__(lifetime_model, reward, discounting_rate, period_before_discounting)
 
     @property
@@ -91,30 +82,23 @@ class RunToFailurePolicy(BaseAgeReplacementPolicy):
         the Engineering and Informational Sciences, 22(1), 53-74.
     """
 
-    lifetime_model: LifetimeDistribution | FrozenLifetimeRegression
-    first_lifetime_model: Optional[LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel]
-    reward: RunToFailureReward
-    first_reward: Optional[RunToFailureReward]
-
     def __init__(
         self,
-        lifetime_model: LifetimeDistribution | FrozenLifetimeRegression,
-        cf: float | NDArray[np.float64],
-        discounting_rate: float = 0.0,
-        first_lifetime_model: Optional[
-            LifetimeDistribution | FrozenLifetimeRegression | FrozenLeftTruncatedModel
-        ] = None,
-        a0: Optional[float | NDArray[np.float64]] = None,
+        lifetime_model,
+        cf,
+        discounting_rate = 0.0,
+        first_lifetime_model = None,
+        a0 = None,
     ) -> None:
 
         reward = RunToFailureReward(cf)
-        first_reward: Optional[RunToFailureReward] = None
+        first_reward = None
         if first_lifetime_model is not None:
             if a0 is not None:
-                first_lifetime_model: FrozenLeftTruncatedModel = LeftTruncatedModel(first_lifetime_model).freeze(a0)
+                first_lifetime_model = LeftTruncatedModel(first_lifetime_model).freeze_args(a0)
             first_reward = RunToFailureReward(cf)
         elif a0 is not None:
-            first_lifetime_model = LeftTruncatedModel(lifetime_model).freeze(a0)
+            first_lifetime_model = LeftTruncatedModel(lifetime_model).freeze_args(a0)
 
         stochastic_process = RenewalRewardProcess(
             lifetime_model,
@@ -134,27 +118,9 @@ class RunToFailurePolicy(BaseAgeReplacementPolicy):
         -------
         ndarray
         """
-        return self.reward.cf
+        return self.stochastic_process.reward.cf
 
     @cf.setter
-    def cf(self, value: float | NDArray[np.float64]) -> None:
+    def cf(self, value):
         self.stochastic_process.reward.cf = value
         self.stochastic_process.first_reward.cf = value
-
-
-from ._docstring import (
-    ASYMPTOTIC_EEAC_DOCSTRING,
-    ASYMPTOTIC_ETC_DOCSTRING,
-    EEAC_DOCSTRING,
-    ETC_DOCSTRING,
-)
-
-OneCycleRunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
-OneCycleRunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
-OneCycleRunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
-OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING
-
-RunToFailurePolicy.expected_total_cost.__doc__ = ETC_DOCSTRING
-RunToFailurePolicy.expected_equivalent_annual_cost.__doc__ = EEAC_DOCSTRING
-RunToFailurePolicy.asymptotic_expected_total_cost.__doc__ = ASYMPTOTIC_ETC_DOCSTRING
-RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost.__doc__ = ASYMPTOTIC_EEAC_DOCSTRING

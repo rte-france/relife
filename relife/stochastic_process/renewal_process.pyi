@@ -5,11 +5,10 @@ from numpy.typing import NDArray as NDArray
 from typing_extensions import override
 
 from relife._typing import _Any_Number
-from relife.base import FrozenParametricModel
+from relife.base import FrozenParametricModel, ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import ParametricLifetimeModel
 
-from ._base import StochasticProcess as StochasticProcess
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 
 class LifetimeFitArg(TypedDict):
@@ -19,7 +18,6 @@ class LifetimeFitArg(TypedDict):
     args: tuple[NDArray[np.float64], ...]
 
 # any ParametricLifetimeModel with no args (LifetimeDistribution : OK) OR any Frozen-ParametricLifetimeModel with at least one arg
-
 _FrozenLike_ParametricLifetimeModel: TypeAlias = Union[
     ParametricLifetimeModel[()],
     FrozenParametricModel[ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any_Number, ...]]]],
@@ -28,9 +26,11 @@ _Timeline: TypeAlias = NDArray[np.float64]
 _Expected_Values: TypeAlias = NDArray[np.float64]
 _Asymptotic_Expected_Values: TypeAlias = Union[np.float64, NDArray[np.float64]]
 
-class RenewalProcess(StochasticProcess):
+class RenewalProcess(ParametricModel):
+
     lifetime_model: _FrozenLike_ParametricLifetimeModel
     first_lifetime_model: Optional[_FrozenLike_ParametricLifetimeModel]
+
     def __init__(
         self,
         lifetime_model: _FrozenLike_ParametricLifetimeModel,

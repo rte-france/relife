@@ -13,11 +13,11 @@ from relife.stochastic_process.renewal_equations import (
     renewal_equation_solver,
 )
 
-from ._base import StochasticProcess
+from relife.base import ParametricModel
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 
 
-class RenewalProcess(StochasticProcess):
+class RenewalProcess(ParametricModel):
     # noinspection PyUnresolvedReferences
     """Renewal process.
 

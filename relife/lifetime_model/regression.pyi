@@ -222,6 +222,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         entry: Optional[NDArray[np.float64]] = None,
         departure: Optional[NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]: ...
+    @override
     def fit(
         self,
         time: _NumpyArray_OfNumber,
@@ -232,7 +233,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         departure: Optional[_NumpyArray_OfNumber] = None,
         optimizer_options: Optional[dict[str, Any]] = None,
     ) -> Self: ...
-    def freeze(
+    def freeze_args(
         self, covar: _Any_Number, *args: _Any_Number
     ) -> FrozenParametricModel[FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]]: ...
 

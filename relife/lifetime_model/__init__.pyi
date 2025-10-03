@@ -40,6 +40,8 @@ __all__ = [
     "LifetimeRegression",
     "ProportionalHazard",
     "AcceleratedFailureTime",
+    "AgeReplacementModel",
+    "LeftTruncatedModel",
     "ECDF",
     "KaplanMeier",
     "NelsonAalen",

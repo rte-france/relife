@@ -447,7 +447,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = _reshape_ar_or_a0("ar", ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
-    def freeze(self, ar, *args):
+    def freeze_args(self, ar, *args):
         """
         Freeze age replacement values and other arguments into the object data.
 
@@ -880,7 +880,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = _reshape_ar_or_a0("a0", a0)
         return super().ppf(probability, *(a0, *args))
 
-    def freeze(self, a0, *args):
+    def freeze_args(self, a0, *args):
         """
         Freeze conditional age values and other arguments into the object data.
 

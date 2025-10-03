@@ -1512,7 +1512,6 @@ class MinimumDistribution(FittableParametricLifetimeModel):
     def __init__(self, baseline):
         super().__init__()
         self.baseline = baseline
-        self.fitting_results = None
 
     def sf(self, time, n, *args):
         return super().sf(time)

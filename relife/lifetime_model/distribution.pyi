@@ -444,7 +444,8 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[_Any_Number, ...]])
     @override
     def ichf(self, cumulative_hazard_rate: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
 
-class MinimumDistribution(ParametricLifetimeModel[_Any_Integer, *tuple[_Any_Number, ...]]):
+class MinimumDistribution(FittableParametricLifetimeModel[_Any_Integer, *tuple[_Any_Number, ...]]):
+
     baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]
     def __init__(self, baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]) -> None: ...
     @override
@@ -508,6 +509,20 @@ class MinimumDistribution(ParametricLifetimeModel[_Any_Integer, *tuple[_Any_Numb
         *args: _Any_Number,
         deg: int = 10,
     ) -> _Any_Numpy_Number: ...
+
+    def _get_initial_params(
+        self,
+        time: _NumpyArray_OfNumber,
+        n: _Any_Integer,
+        *args: _Any_Number,
+        event: Optional[_NumpyArray_OfBool] = None,
+        entry: Optional[_NumpyArray_OfNumber] = None,
+        departure: Optional[_NumpyArray_OfNumber] = None,
+    ) -> NDArray[np.float64]: ...
+
+    def _get_params_bounds(self) -> Bounds: ...
+
+    @override
     def fit(
         self,
         time: _NumpyArray_OfNumber,
