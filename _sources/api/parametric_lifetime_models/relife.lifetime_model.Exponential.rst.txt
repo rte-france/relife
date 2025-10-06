@@ -34,6 +34,9 @@ Exponential
             ~Exponential.fit
         
         
+            ~Exponential.fit_with_old_likelihood
+        
+        
             ~Exponential.hf
         
         

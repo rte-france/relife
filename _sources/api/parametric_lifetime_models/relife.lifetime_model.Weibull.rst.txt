@@ -34,6 +34,9 @@ Weibull
             ~Weibull.fit
         
         
+            ~Weibull.fit_with_old_likelihood
+        
+        
             ~Weibull.hf
         
         
