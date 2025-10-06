@@ -27,7 +27,7 @@ class DefaultLikelihood(Likelihood):
         time: NDArray[np.float64],
         event: NDArray[np.bool_],
         entry: NDArray[np.float64],
-        args,
+        args=(),
     ):
         sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
         if len(set(sizes)) != 1:
@@ -43,18 +43,31 @@ class DefaultLikelihood(Likelihood):
         self.nb_samples = len(time)
 
     def _time_contrib(self, time: NDArray[np.float64]) -> np.float64:
-        return np.sum(self.model.chf(time, *self.args))
+        return np.sum(
+            self.model.chf(time, *self.args),
+            dtype=np.float64,
+        )
 
     def _event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_]
     ) -> np.float64:
-        return -np.sum(event * np.log(self.model.hf(time, *self.args)))
+        return -np.sum(
+            event * np.log(self.model.hf(time, *self.args)),
+            dtype=np.float64,
+        )
 
     def _entry_contrib(self, entry: NDArray[np.float64]) -> np.float64:
-        return -np.sum(self.model.chf(entry, *self.args))
+        return -np.sum(
+            self.model.chf(entry, *self.args),
+            dtype=np.float64,
+        )
 
     def _jac_time_contrib(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return np.sum(self.model.jac_chf(time, *self.args), axis=1)
+        return np.sum(
+            self.model.jac_chf(time, *self.args),
+            axis=1,
+            dtype=np.float64,
+        )
 
     def _jac_event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_]
@@ -63,10 +76,15 @@ class DefaultLikelihood(Likelihood):
             event
             * (self.model.jac_hf(time, *self.args) / self.model.hf(time, *self.args)),
             axis=1,
+            dtype=np.float64,
         )
 
     def _jac_entry_contrib(self, entry: NDArray[np.float64]) -> NDArray[np.float64]:
-        return -np.sum(self.model.jac_chf(entry, *self.args), axis=1)
+        return -np.sum(
+            self.model.jac_chf(entry, *self.args),
+            axis=1,
+            dtype=np.float64,
+        )
 
     def negative_log(
         self,
