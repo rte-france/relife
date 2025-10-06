@@ -407,177 +407,6 @@ class NewKaplanMeier(NonParametricLifetimeModel):
         return PlotKaplanMeier(self)
 
 
-class NewKaplanMeier(NonParametricLifetimeModel):
-    r"""Kaplan-Meier estimator.
-
-    Compute the non-parametric Kaplan-Meier estimator (also known as the product
-    limit estimator) of the survival function from lifetime data.
-
-    Notes
-    -----
-    For a given time instant :math:`t` and :math:`n` total observations, this
-    estimator is defined as:
-
-    .. math::
-
-        \hat{S}(t) = \prod_{i: t_i \leq t} \left( 1 - \frac{d_i}{n_i}\right)
-
-    where :math:`d_i` is the number of failures until :math:`t_i` and
-    :math:`n_i` is the number of assets at risk just prior to :math:`t_i`.
-
-    The variance estimation is obtained by:
-
-    .. math::
-
-        \widehat{Var}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{i: t_i \leq t}
-        \frac{d_i}{n_i(n_i - d_i)}
-
-    which is often referred to as Greenwood's formula.
-
-    References
-    ----------
-    .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
-        data. John Wiley & Sons.
-
-    .. [2] Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
-        incomplete observations. Journal of the American statistical
-        association, 53(282), 457-481.
-
-    """
-
-    def __init__(self):
-        self._sf: Optional[np.void] = None
-
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        event: Optional[NDArray[np.float64]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-    ) -> Self:
-        """
-        Compute the non-parametric estimations with respect to lifetime data.
-
-        Parameters
-        ----------
-        time : ndarray (1d or 2d)
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
-        inplace : boolean, default is True
-            If true, estimations are stored in the object
-        """
-
-        lifetime_data = LifetimeData(
-            time,
-            event=event,
-            entry=entry,
-            departure=departure,
-        )
-
-        if lifetime_data.left_censoring is not None:
-            raise ValueError("KaplanMeier does not take left censored lifetimes")
-        timeline, unique_indices, counts = np.unique(
-            time,
-            return_inverse=True,
-            return_counts=True,
-        )
-        death_set = np.zeros_like(timeline, int)  # death at each timeline step
-        complete_observation_indic = np.zeros_like(
-            time
-        )  # just creating an array to fill it next line
-        complete_observation_indic[event] = 1
-        np.add.at(death_set, unique_indices, complete_observation_indic)
-        x_in = np.histogram(
-            np.concatenate(
-                (
-                    entry.flatten(),
-                    np.array(
-                        [
-                            0
-                            for _ in range(
-                                len(
-                                    lifetime_data.complete_or_right_censored.lifetime_values
-                                )
-                                - len(lifetime_data.left_truncation.lifetime_values)
-                            )
-                        ]
-                    ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
-                )
-            ),
-            np.insert(timeline, 0, 0),
-        )[0]
-        x_out = np.insert(counts[:-1], 0, 0)
-        at_risk_assets = np.cumsum(x_in - x_out)
-        s = np.cumprod(1 - death_set / at_risk_assets)
-        sf = np.insert(s, 0, 1)
-
-        with np.errstate(divide="ignore"):
-            var = s**2 * np.cumsum(
-                np.where(
-                    at_risk_assets > death_set,
-                    death_set / (at_risk_assets * (at_risk_assets - death_set)),
-                    0,
-                )
-            )
-        se = np.sqrt(np.insert(var, 0, 0))
-        timeline = np.insert(timeline, 0, 0)
-
-        dtype = np.dtype(
-            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
-        )
-        self._sf = np.empty((timeline.size,), dtype=dtype)
-        self._sf["timeline"] = timeline
-        self._sf["estimation"] = sf
-        self._sf["se"] = se
-        return self
-
-    @overload
-    def sf(
-        self, se: Literal[False] = False
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
-
-    @overload
-    def sf(
-        self, se: Literal[True] = True
-    ) -> Optional[
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-    ]: ...
-
-    def sf(
-        self, se: bool = False
-    ) -> (
-        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
-        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
-    ):
-        """
-        The survival function estimation
-
-        Parameters
-        ----------
-        se : bool, default is False
-            If true, the estimated standard errors are returned too.
-
-        Returns
-        -------
-        tuple of 2 or 3 ndarrays
-            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
-        """
-        if self._sf is None:
-            return None
-        if se:
-            return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
-        return self._sf["timeline"], self._sf["estimation"]
-
-    @property
-    def plot(self) -> PlotKaplanMeier:
-        return PlotKaplanMeier(self)
-
-
 class KaplanMeier(NonParametricLifetimeModel):
     r"""Kaplan-Meier estimator.
 
@@ -747,6 +576,135 @@ class KaplanMeier(NonParametricLifetimeModel):
     @property
     def plot(self) -> PlotKaplanMeier:
         return PlotKaplanMeier(self)
+
+
+class NewNelsonAalen(NonParametricLifetimeModel):
+    r"""Kaplan-Meier estimator.
+
+    Compute the non-parametric Kaplan-Meier estimator (also known as the product
+    limit estimator) of the survival function from lifetime data.
+
+    Notes
+    -----
+    For a given time instant :math:`t` and :math:`n` total observations, this
+    estimator is defined as:
+
+    .. math::
+
+        \hat{S}(t) = \prod_{i: t_i \leq t} \left( 1 - \frac{d_i}{n_i}\right)
+
+    where :math:`d_i` is the number of failures until :math:`t_i` and
+    :math:`n_i` is the number of assets at risk just prior to :math:`t_i`.
+
+    The variance estimation is obtained by:
+
+    .. math::
+
+        \widehat{Var}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{i: t_i \leq t}
+        \frac{d_i}{n_i(n_i - d_i)}
+
+    which is often referred to as Greenwood's formula.
+
+    References
+    ----------
+    .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
+        data. John Wiley & Sons.
+
+    .. [2] Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
+        incomplete observations. Journal of the American statistical
+        association, 53(282), 457-481.
+
+    """
+
+    def __init__(self):
+        self._sf: Optional[np.void] = None
+
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        event: Optional[NDArray[np.float64]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+    ):
+        """
+        Compute the non-parametric estimations with respect to lifetime data.
+
+        Parameters
+        ----------
+        time : ndarray (1d or 2d)
+            Observed lifetime values.
+        event : ndarray of boolean values (1d), default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : ndarray of float (1d), default is None
+            Left truncations applied to lifetime values.
+        """
+
+        if event is None:
+            event = np.ones_like(time).astype(bool)
+
+        if entry is None:
+            entry = np.zeros_like(time)
+
+        timeline = np.unique(time)
+
+        n = (
+            (timeline <= time.reshape(-1, 1)) * (timeline >= entry.reshape(-1, 1))
+        ).sum(axis=0)
+
+        d = ((time.reshape(-1, 1) == timeline) * event.reshape(-1, 1)).sum(axis=0)
+
+        chf = (d / n).cumsum()
+
+        with np.errstate(divide="ignore"):
+            var = (d / n**2).cumsum()
+
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        )
+        self._sf = np.empty((timeline.size + 1,), dtype=dtype)
+        self._sf["timeline"] = np.insert(timeline, 0, 0)
+        self._sf["estimation"] = np.insert(chf, 0, 1)
+        self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
+
+    @overload
+    def chf(
+        self, se: Literal[False] = False
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+
+    @overload
+    def chf(
+        self, se: Literal[True] = True
+    ) -> Optional[
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+    ]: ...
+
+    def chf(
+        self, se: bool = False
+    ) -> (
+        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
+        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
+    ):
+        """
+        The cumulative hazard function estimation
+
+        Parameters
+        ----------
+        se : bool, default is False
+            If true, the estimated standard errors are returned too.
+
+        Returns
+        -------
+        tuple of 2 or 3 ndarrays
+            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        """
+        if self._chf is None:
+            return None
+        if se:
+            return self._chf["timeline"], self._chf["estimation"], self._chf["se"]
+        return self._chf["timeline"], self._chf["estimation"]
+
+    @property
+    def plot(self) -> PlotNelsonAalen:
+        return PlotNelsonAalen(self)
 
 
 class NelsonAalen(NonParametricLifetimeModel):
