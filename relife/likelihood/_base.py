@@ -36,7 +36,9 @@ class Likelihood(ABC):
     def maximum_likelihood_estimation(self, **kwargs: Any) -> FittingResults: ...
 
 
-L = TypeVar("L", bound="LikelihoodFromLifetimes")  # maybe other likelihood in the future
+L = TypeVar(
+    "L", bound="LikelihoodFromLifetimes"
+)  # maybe other likelihood in the future
 
 
 def hessian_cs(
@@ -44,14 +46,15 @@ def hessian_cs(
     params: NDArray[np.float64],
     eps: float = 1e-6,
 ) -> NDArray[np.float64]:
-
     size = params.size
     hess = np.empty((size, size))
     u = eps * 1j * np.eye(size)
     complex_params = params.astype(np.complex64)  # change params to complex
     for i in range(size):
         for j in range(i, size):
-            hess[i, j] = np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
+            hess[i, j] = (
+                np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
+            )
             if i != j:
                 hess[j, i] = hess[i, j]
     return hess
@@ -73,11 +76,15 @@ def hessian_2point(
     return hess
 
 
-M = TypeVar("M", bound=Union["LifetimeDistribution", "LifetimeRegression", "MinimumDistribution"])
+M = TypeVar(
+    "M",
+    bound=Union["LifetimeDistribution", "LifetimeRegression", "MinimumDistribution"],
+)
 
 
-def approx_hessian(likelihood: L, params: NDArray[np.float64], eps: float = 1e-6) -> NDArray[np.float64]:
-
+def approx_hessian(
+    likelihood: L, params: NDArray[np.float64], eps: float = 1e-6
+) -> NDArray[np.float64]:
     def hessian_scheme(model: M):
         from relife.lifetime_model import Gamma
         from relife.lifetime_model.regression import LifetimeRegression
@@ -96,8 +103,12 @@ class FittingResults:
     """Fitting results of the parametric_model core."""
 
     nb_obversations: int  #: Number of observations (samples)
-    optimal_params: NDArray[np.float64] = field(repr=False)  #: Optimal parameters values
-    neg_log_likelihood: np.float64 = field(repr=False)  #: Negative log likelihood value at optimal parameters values
+    optimal_params: NDArray[np.float64] = field(
+        repr=False
+    )  #: Optimal parameters values
+    neg_log_likelihood: np.float64 = field(
+        repr=False
+    )  #: Negative log likelihood value at optimal parameters values
 
     covariance_matrix: Optional[NDArray[np.floating[Any]]] = field(
         repr=False, default=None
@@ -105,7 +116,9 @@ class FittingResults:
 
     nb_params: int = field(init=False, repr=False)  #: Number of parameters.
     AIC: float = field(init=False)  #: Akaike Information Criterion.
-    AICc: float = field(init=False)  #: Akaike Information Criterion with a correction for small sample sizes.
+    AICc: float = field(
+        init=False
+    )  #: Akaike Information Criterion with a correction for small sample sizes.
     BIC: float = field(init=False)  #: Bayesian Information Criterion.
     se: Optional[NDArray[np.float64]] = field(
         init=False, repr=False
@@ -115,19 +128,24 @@ class FittingResults:
     def __post_init__(self):
         nb_params = self.optimal_params.size
         self.AIC = float(2 * nb_params + 2 * self.neg_log_likelihood)
-        self.AICc = float(self.AIC + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1))
-        self.BIC = float(np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood)
+        self.AICc = float(
+            self.AIC
+            + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1)
+        )
+        self.BIC = float(
+            np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
+        )
 
         self.se = None
         if self.covariance_matrix is not None:
             self.se = np.sqrt(np.diag(self.covariance_matrix))
-            self.IC = self.optimal_params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se.reshape(
-                -1, 1
-            ) / np.sqrt(
-                self.nb_obversations
-            )  # (p, 2)
+            self.IC = self.optimal_params.reshape(-1, 1) + stats.norm.ppf(
+                (0.05, 0.95)
+            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_obversations)  # (p, 2)
 
-    def se_estimation_function(self, jac_f: NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def se_estimation_function(
+        self, jac_f: NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         """Standard error estimation function.
 
         Parameters
@@ -150,17 +168,30 @@ class FittingResults:
         # self.var : (p, p)
         if self.covariance_matrix is not None:
             if jac_f.ndim == 1:  # jac_f : (p,)
-                return np.sqrt(np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f))  # ()
+                return np.sqrt(
+                    np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f)
+                )  # ()
             if jac_f.ndim == 2:  # jac_f : (p, n)
-                return np.sqrt(np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f))  # (n,)
-            if jac_f.ndim == 3:  # jac_f : (p, m, n) if regression with more than one asset
-                return np.sqrt(np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f))  # (m,n)
+                return np.sqrt(
+                    np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f)
+                )  # (n,)
+            if (
+                jac_f.ndim == 3
+            ):  # jac_f : (p, m, n) if regression with more than one asset
+                return np.sqrt(
+                    np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f)
+                )  # (m,n)
             raise ValueError("Invalid jac_f ndim")
         raise ValueError("Can't compute if var is None")
 
     def __str__(self) -> str:
         """Returns a string representation of FittingResults with fields in a single column."""
-        fields = [("fitted params", self.optimal_params), ("AIC", self.AIC), ("AICc", self.AICc), ("BIC", self.BIC)]
+        fields = [
+            ("fitted params", self.optimal_params),
+            ("AIC", self.AIC),
+            ("AICc", self.AICc),
+            ("BIC", self.BIC),
+        ]
         # Find the maximum field name length for alignment
         max_name_length = max(len(name) for name, _ in fields)
         lines = []

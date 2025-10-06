@@ -52,7 +52,9 @@ class LikelihoodFromLifetimes(Likelihood):
             )  # (m, 1)
         )  # ()
 
-    def _right_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[np.float64]:
+    def _right_censored_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[np.float64]:
         if lifetime_data.complete_or_right_censored is None:
             return None
         return np.sum(
@@ -63,7 +65,9 @@ class LikelihoodFromLifetimes(Likelihood):
             dtype=np.float64,  # (m, 1)
         )  # ()
 
-    def _left_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[np.float64]:
+    def _left_censored_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[np.float64]:
         if lifetime_data.left_censoring is None:
             return None
         return -np.sum(
@@ -77,7 +81,9 @@ class LikelihoodFromLifetimes(Likelihood):
             )  # (m, 1)
         )  # ()
 
-    def _left_truncations_contribs(self, lifetime_data: LifetimeData) -> Optional[np.float64]:
+    def _left_truncations_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[np.float64]:
         if lifetime_data.left_truncation is None:
             return None
         return -np.sum(
@@ -88,7 +94,9 @@ class LikelihoodFromLifetimes(Likelihood):
             dtype=np.float64,
         )  # ()
 
-    def _jac_complete_contribs(self, lifetime_data: LifetimeData) -> Optional[NDArray[np.float64]]:
+    def _jac_complete_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[NDArray[np.float64]]:
         if lifetime_data.complete is None:
             return None
         return -np.sum(
@@ -104,7 +112,9 @@ class LikelihoodFromLifetimes(Likelihood):
             axis=(1, 2),
         )  # (p,)
 
-    def _jac_right_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[NDArray[np.float64]]:
+    def _jac_right_censored_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[NDArray[np.float64]]:
         if lifetime_data.complete_or_right_censored is None:
             return None
         return np.sum(
@@ -116,7 +126,9 @@ class LikelihoodFromLifetimes(Likelihood):
             axis=(1, 2),
         )  # (p,)
 
-    def _jac_left_censored_contribs(self, lifetime_data: LifetimeData) -> Optional[NDArray[np.float64]]:
+    def _jac_left_censored_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[NDArray[np.float64]]:
         if lifetime_data.left_censoring is None:
             return None
         return -np.sum(
@@ -134,7 +146,9 @@ class LikelihoodFromLifetimes(Likelihood):
             axis=(1, 2),
         )  # (p,)
 
-    def _jac_left_truncations_contribs(self, lifetime_data: LifetimeData) -> Optional[NDArray[np.float64]]:
+    def _jac_left_truncations_contribs(
+        self, lifetime_data: LifetimeData
+    ) -> Optional[NDArray[np.float64]]:
         if lifetime_data.left_truncation is None:
             return None
         return -np.sum(
@@ -204,17 +218,23 @@ class LikelihoodFromLifetimes(Likelihood):
             minimize_kwargs.pop("x0"),
             jac=(
                 self.jac_negative_log
-                if minimize_kwargs["method"] not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
+                if minimize_kwargs["method"]
+                not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
                 else None
             ),
             **minimize_kwargs,
         )
         optimal_params = np.copy(optimizer.x)
-        neg_log_likelihood = np.copy(optimizer.fun)  # neg_log_likelihood value at optimal
+        neg_log_likelihood = np.copy(
+            optimizer.fun
+        )  # neg_log_likelihood value at optimal
         hessian = approx_hessian(self, optimal_params)
         covariance_matrix = np.linalg.inv(hessian)
         return FittingResults(
-            self.data.nb_samples, optimal_params, neg_log_likelihood, covariance_matrix=covariance_matrix
+            self.data.nb_samples,
+            optimal_params,
+            neg_log_likelihood,
+            covariance_matrix=covariance_matrix,
         )
 
 
