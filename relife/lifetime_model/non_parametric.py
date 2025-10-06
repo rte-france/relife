@@ -353,6 +353,7 @@ class NewKaplanMeier(NonParametricLifetimeModel):
 
         with np.errstate(divide="ignore"):
             var = (sf**2) * (d / (n * (n - d))).cumsum()
+            var = np.where(n > d, var, 0)
 
         dtype = np.dtype(
             [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
