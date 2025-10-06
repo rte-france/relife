@@ -5,7 +5,7 @@ from scipy.optimize import Bounds, newton
 
 from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import LifetimeData
-from relife.likelihood import LikelihoodFromLifetimes
+from relife.likelihood.default_likelihood import DefaultLikelihood
 from relife.quadrature import (
     broadcast_bounds,
     legendre_quadrature,
@@ -262,9 +262,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         departure=None,
         optimizer_options=None,
     ):
-        lifetime_data = LifetimeData(time, event=event, entry=entry, departure=departure, args=args)
         self.params = self._get_initial_params(time, *args, event=event, entry=entry, departure=departure)
-        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
+        likelihood = DefaultLikelihood(self, time, event, entry, args)
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
