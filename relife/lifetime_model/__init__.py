@@ -2,7 +2,6 @@ from ._base import (
     FittableParametricLifetimeModel,
     NonParametricLifetimeModel,
     ParametricLifetimeModel,
-    is_lifetime_model,
 )
 from .conditional_model import (
     AgeReplacementModel,

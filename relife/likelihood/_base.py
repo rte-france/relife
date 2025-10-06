@@ -9,7 +9,7 @@ from numpy.typing import NDArray
 from scipy import stats
 from scipy.optimize import approx_fprime
 
-from relife import ParametricModel
+from relife.base import ParametricModel
 
 
 class Likelihood(ABC):

@@ -278,13 +278,3 @@ class NonParametricLifetimeModel(ABC):
 
     @abstractmethod
     def fit(self, time, event=None, entry=None, departure=None): ...
-
-
-def is_lifetime_model(model):
-    if isinstance(model, ParametricModel):
-        return isinstance(model, ParametricLifetimeModel)
-    if isinstance(model, FrozenParametricModel):
-        return isinstance(model._unfrozen_model, ParametricLifetimeModel)
-    if isinstance(model, NonParametricLifetimeModel):
-        return True
-    return False

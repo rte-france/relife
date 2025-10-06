@@ -6,6 +6,7 @@ import numpy as np
 
 __all__ = ["get_nb_assets", "is_frozen", "ParametricModel", "FrozenParametricModel"]
 
+
 # MAYBE, custom array container can be used here
 # https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
 class _Parameters:
@@ -160,11 +161,12 @@ class ParametricModel:
         raise AttributeError(f"{type(self).__name__} has no attribute named {name}")
 
     def __setattr__(self, name, value):
-        # automatically add params of new baseline model
+        # automatically add params of new baseline model
         if isinstance(value, ParametricModel):
             self._baseline_models[name] = value
             self._params.set_leaf(f"{name}.params", getattr(value, "_params"))
         super().__setattr__(name, value)
+
 
 class FrozenParametricModel(ParametricModel):
     def __init__(self, model, *args):
@@ -173,7 +175,7 @@ class FrozenParametricModel(ParametricModel):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
         self.unfrozen_model = model  # setted as a baseline model
         self._nb_assets = get_nb_assets(*args)
-        self._args = args
+        self._args = list(args)
 
     @property
     def nb_assets(self):
@@ -185,8 +187,10 @@ class FrozenParametricModel(ParametricModel):
 
     @args.setter
     def args(self, value):
-        if not isinstance(value, tuple):
-            value = tuple(value)
+        try:
+            value = list(value)
+        except TypeError:
+            raise ValueError
         self._args = value
 
     def unfreeze(self):

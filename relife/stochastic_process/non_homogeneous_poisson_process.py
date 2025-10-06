@@ -1,9 +1,8 @@
 import numpy as np
 
+from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import LifetimeData, NHPPData
 from relife.likelihood import LikelihoodFromLifetimes
-
-from relife.base import ParametricModel, FrozenParametricModel
 
 
 class NonHomogeneousPoissonProcess(ParametricModel):

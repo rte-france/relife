@@ -1,6 +1,6 @@
 import numpy as np
-from relife.economic import ExponentialDiscounting
 
+from relife.economic import ExponentialDiscounting
 
 
 class BaseOneCycleAgeReplacementPolicy:
@@ -172,7 +172,10 @@ class BaseOneCycleAgeReplacementPolicy:
             timeline = np.tile(timeline, (self.reward.size, 1))
         # timeline : () or (m, 1)
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
+
+
 ""
+
 
 class BaseAgeReplacementPolicy:
 
@@ -317,7 +320,7 @@ class BaseAgeReplacementPolicy:
         """
         return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()  # () or (m, 1)
 
-    def sample(self, size, tf, t0 = 0.0, seed=None):
+    def sample(self, size, tf, t0=0.0, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -339,7 +342,7 @@ class BaseAgeReplacementPolicy:
 
         return self.stochastic_process.sample(tf, t0, size, seed)
 
-    def generate_lifetime_data(self, size, tf, t0= 0.0, seed= None):
+    def generate_lifetime_data(self, size, tf, t0=0.0, seed=None):
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.

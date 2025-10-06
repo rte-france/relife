@@ -3,11 +3,10 @@ from typing import Any, Optional, Self, Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.base import ParametricModel
 from relife._typing import _Any_Number, _Any_Numpy_Number
+from relife.base import ParametricModel
 from relife.lifetime_model import FittableParametricLifetimeModel
 from relife.likelihood import FittingResults
-
 
 class NonHomogeneousPoissonProcess(ParametricModel):
     lifetime_model: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]

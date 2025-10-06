@@ -12,14 +12,6 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.lifetime_model import (
-    FrozenAgeReplacementModel,
-    FrozenLeftTruncatedModel,
-)
-from relife.stochastic_process import FrozenNonHomogeneousPoissonProcess
-
-from ...lifetime_model.distribution import LifetimeDistribution
-from ...lifetime_model.regression import FrozenLifetimeRegression
 from .iterators import (
     CountDataIterator,
     NonHomogeneousPoissonProcessIterator,
@@ -85,9 +77,7 @@ class RenewalProcessIterable(CountDataIterable):
 
     def __init__(
         self,
-        process: RenewalProcess[
-            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel
-        ],
+        process,
         size: int,
         tf: float,
         t0: float = 0.0,
@@ -116,7 +106,7 @@ class RenewalProcessIterable(CountDataIterable):
 class NonHomogeneousPoissonProcessIterable(CountDataIterable):
     def __init__(
         self,
-        process: FrozenNonHomogeneousPoissonProcess,
+        process,
         size: int,
         tf: float,
         t0: float = 0.0,

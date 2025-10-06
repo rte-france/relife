@@ -9,6 +9,7 @@ from relife.stochastic_process import RenewalRewardProcess
 
 from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
 
+
 class OneCycleRunToFailurePolicy(BaseOneCycleAgeReplacementPolicy):
     # noinspection PyUnresolvedReferences
     r"""One cyle run-to-failure policy.
@@ -86,9 +87,9 @@ class RunToFailurePolicy(BaseAgeReplacementPolicy):
         self,
         lifetime_model,
         cf,
-        discounting_rate = 0.0,
-        first_lifetime_model = None,
-        a0 = None,
+        discounting_rate=0.0,
+        first_lifetime_model=None,
+        a0=None,
     ) -> None:
 
         reward = RunToFailureReward(cf)

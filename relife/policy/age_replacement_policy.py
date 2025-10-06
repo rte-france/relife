@@ -5,8 +5,8 @@ import numpy as np
 from scipy.optimize import newton
 
 from relife import is_frozen
-from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.economic import AgeReplacementReward, ExponentialDiscounting, cost
+from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadrature import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
 
@@ -56,13 +56,11 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy):
         220(1), 21-29
     """
 
-    def __init__(self, lifetime_model, cf, cp, discounting_rate = 0.0, period_before_discounting = 1.0, a0 = None, ar = None):
+    def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, a0=None, ar=None):
         self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
         self._ar = ar if ar is not None else np.nan
         if a0 is not None:
-            lifetime_model = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze_args(
-                self._ar, a0
-            )
+            lifetime_model = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze_args(self._ar, a0)
         else:
             lifetime_model = AgeReplacementModel(lifetime_model).freeze_args(self._ar)
         reward = AgeReplacementReward(cf, cp, ar)
@@ -109,7 +107,8 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy):
         else:
             a0 = self.a0
         time_before_replacement = np.maximum(value - a0, 0)
-        self.lifetime_model.ar = time_before_replacement
+        # lifetime_model is FrozenParametricModel[AgeReplacementModel]
+        self.lifetime_model.args[0] = time_before_replacement
         self.reward.ar = time_before_replacement
 
     def tr(self):
@@ -120,7 +119,7 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy):
         -------
         ndarray
         """
-        return np.squeeze(self.lifetime_model.ar)
+        return np.squeeze(self.lifetime_model.args[0])
 
     def expected_total_cost(self, tf, nb_steps):
         if np.any(np.isnan(self.ar)):
@@ -190,7 +189,7 @@ class OneCycleAgeReplacementPolicy(BaseOneCycleAgeReplacementPolicy):
         """
 
         x0 = np.minimum(self.cp / (self.cf - self.cp), 1)  # ()
-        if self.a0 is not None: # don't use LeftTruncatedModel here
+        if self.a0 is not None:  # don't use LeftTruncatedModel here
             # FrozenAgeReplacementModel(LeftTruncatedModel(...))
             hf = self.lifetime_model.unfrozen_model.baseline.baseline.hf
         else:
@@ -256,18 +255,16 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         Reliability, 1000-1008.
     """
 
-    def __init__(self, lifetime_model, cf, cp, discounting_rate = 0.0, a0 = None, ar = None):
+    def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, a0=None, ar=None):
 
         self.a0 = None
         first_lifetime_model = None
         if a0 is not None:
             self.a0 = np.float64(a0) if isinstance(a0, (float, int)) else a0  # None, arr () or (m,) or (m, 1)
-            first_lifetime_model = AgeReplacementModel(
-                LeftTruncatedModel(lifetime_model)
-            ).freeze_args(ar if ar is not None else np.nan, a0)
-        lifetime_model = AgeReplacementModel(lifetime_model).freeze_args(
-            ar if ar is not None else np.nan
-        )
+            first_lifetime_model = AgeReplacementModel(LeftTruncatedModel(lifetime_model)).freeze_args(
+                ar if ar is not None else np.nan, a0
+            )
+        lifetime_model = AgeReplacementModel(lifetime_model).freeze_args(ar if ar is not None else np.nan)
         reward = AgeReplacementReward(cf, cp, ar if ar is not None else np.nan)
 
         stochastic_process = RenewalRewardProcess(
@@ -278,7 +275,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
         super().__init__(stochastic_process)
         if ar is not None:
-            self.ar = ar
+            self.ar = ar  # setter is called
 
     @property
     def ar(self):
@@ -289,7 +286,8 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         -------
         ndarray
         """
-        return np.squeeze(self.stochastic_process.lifetime_model.ar)  # may be (m, 1) so squeeze it
+        # lifetime_model : FrozenParametricModel[AgeReplacementModel]
+        return np.squeeze(self.stochastic_process.lifetime_model.args[0])  # may be (m, 1) so squeeze it
 
     @ar.setter
     def ar(self, value):
@@ -297,7 +295,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         if self.a0 is not None:
             value = np.broadcast_to(value, self.a0.shape).copy()
 
-        self.stochastic_process.lifetime_model.ar = value
+        self.stochastic_process.lifetime_model.args[0] = value
         self.stochastic_process.reward.ar = value
 
         if self.a0 is not None:
@@ -473,7 +471,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
             asymptotic_eeac = np.nan
         return asymptotic_eeac  # () or (m,)
 
-    def annual_number_of_replacements(self, nb_years, upon_failure = False, total = True):
+    def annual_number_of_replacements(self, nb_years, upon_failure=False, total=True):
         """
         The expected number of annual replacements.
 
@@ -571,7 +569,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
     discounting_rate
     """
 
-    def __init__(self, process, cr, cp, discounting_rate = 0.0, ar = None):
+    def __init__(self, process, cr, cp, discounting_rate=0.0, ar=None):
 
         self.ar = ar if ar is not None else np.nan
         self.cost = cost(cr=cr, cp=cp)
