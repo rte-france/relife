@@ -36,7 +36,12 @@ def args_reshape(
 ) -> tuple[NDArray[np.float64], ...]:
     args_list: list[NDArray[np.float64]] = [np.asarray(arg) for arg in args]
     for i, arg in enumerate(args_list):
-        args_list[i] = array_reshape(arg)
+        if arg.ndim > 2:
+            raise ValueError(
+                f"Invalid arg shape, got {arg.shape} shape at position {i}"
+            )
+        if arg.ndim < 2:
+            args_list[i] = arg.reshape(-1, 1)
     return tuple(args_list)
 
 
@@ -75,8 +80,8 @@ class IntervalLikelihood(Likelihood):
     ) -> np.float64:
         interval_censored = time_inf > time_sup
 
-        interval_censored_contrib = -interval_censored * np.log(
-            self.model.cdf(time_sup, *args) - self.model.cdf(time_inf, *args)
+        interval_censored_contrib = interval_censored * (
+            -np.log(self.model.cdf(time_sup, *args) - self.model.cdf(time_inf, *args))
         )
 
         other_contribs = (1 - interval_censored) * self.model.chf(time_sup, *args)
@@ -108,15 +113,27 @@ class IntervalLikelihood(Likelihood):
         interval_censored = time_inf > time_sup
 
         interval_censored_contrib = (
-            -interval_censored
+            interval_censored
             * (
-                self.model.jac_cdf(time_sup, *args)
-                - self.model.jac_cdf(time_inf, *args)
+                self.model.jac_sf(
+                    time_sup,
+                    *args,
+                    asarray=True,
+                )
+                - self.model.jac_sf(
+                    time_inf,
+                    *args,
+                    asarray=True,
+                )
             )
             / (self.model.cdf(time_sup, *args) - self.model.cdf(time_inf, *args))
         )
 
-        other_contribs = (1 - interval_censored) * self.model.jac_chf(time_sup, *args)
+        other_contribs = (1 - interval_censored) * self.model.jac_chf(
+            time_sup,
+            *args,
+            asarray=True,
+        )
 
         return np.sum(
             interval_censored_contrib + other_contribs,
@@ -131,7 +148,18 @@ class IntervalLikelihood(Likelihood):
 
         return -np.sum(
             event
-            * (self.model.jac_hf(time_sup, *args) / self.model.hf(time_sup, *args)),
+            * (
+                self.model.jac_hf(
+                    time_sup,
+                    *args,
+                    asarray=True,
+                )
+                / self.model.hf(
+                    time_sup,
+                    *args,
+                    asarray=True,
+                )
+            ),
             axis=(1, 2),
             dtype=np.float64,
         )
@@ -140,7 +168,11 @@ class IntervalLikelihood(Likelihood):
         self, entry: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
         return -np.sum(
-            self.model.jac_chf(entry, *args),
+            self.model.jac_chf(
+                entry,
+                *args,
+                asarray=True,
+            ),
             axis=(1, 2),
             dtype=np.float64,
         )

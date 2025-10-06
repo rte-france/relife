@@ -36,7 +36,12 @@ def args_reshape(
 ) -> tuple[NDArray[np.float64], ...]:
     args_list: list[NDArray[np.float64]] = [np.asarray(arg) for arg in args]
     for i, arg in enumerate(args_list):
-        args_list[i] = array_reshape(arg)
+        if arg.ndim > 2:
+            raise ValueError(
+                f"Invalid arg shape, got {arg.shape} shape at position {i}"
+            )
+        if arg.ndim < 2:
+            args_list[i] = arg.reshape(-1, 1)
     return tuple(args_list)
 
 
@@ -98,7 +103,11 @@ class DefaultLikelihood(Likelihood):
         self, time: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
         return np.sum(
-            self.model.jac_chf(time, *args),
+            self.model.jac_chf(
+                time,
+                *args,
+                asarray=True,
+            ),
             axis=(1, 2),
             dtype=np.float64,
         )
@@ -107,7 +116,15 @@ class DefaultLikelihood(Likelihood):
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> NDArray[np.float64]:
         return -np.sum(
-            event * (self.model.jac_hf(time, *args) / self.model.hf(time, *args)),
+            event
+            * (
+                self.model.jac_hf(
+                    time,
+                    *args,
+                    asarray=True,
+                )
+                / self.model.hf(time, *args)
+            ),
             axis=(1, 2),
             dtype=np.float64,
         )
@@ -116,7 +133,11 @@ class DefaultLikelihood(Likelihood):
         self, entry: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
         return -np.sum(
-            self.model.jac_chf(entry, *args),
+            self.model.jac_chf(
+                entry,
+                *args,
+                asarray=True,
+            ),
             axis=(1, 2),
             dtype=np.float64,
         )
