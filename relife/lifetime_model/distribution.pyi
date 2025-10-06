@@ -509,7 +509,6 @@ class MinimumDistribution(FittableParametricLifetimeModel[_Any_Integer, *tuple[_
         *args: _Any_Number,
         deg: int = 10,
     ) -> _Any_Numpy_Number: ...
-
     def _get_initial_params(
         self,
         time: _NumpyArray_OfNumber,
@@ -519,9 +518,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[_Any_Integer, *tuple[_
         entry: Optional[_NumpyArray_OfNumber] = None,
         departure: Optional[_NumpyArray_OfNumber] = None,
     ) -> NDArray[np.float64]: ...
-
     def _get_params_bounds(self) -> Bounds: ...
-
     @override
     def fit(
         self,

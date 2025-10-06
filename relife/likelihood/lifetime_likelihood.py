@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray

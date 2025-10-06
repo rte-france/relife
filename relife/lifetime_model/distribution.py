@@ -4,12 +4,9 @@ import numpy as np
 from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 
-from relife.data import LifetimeData
-from relife.likelihood import LikelihoodFromLifetimes
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
-from .regression import LifetimeRegression
 
 __all__ = [
     "LifetimeDistribution",
@@ -1543,7 +1540,7 @@ class MinimumDistribution(FittableParametricLifetimeModel):
         return n * self.baseline.jac_hf(time, *args, asarray=asarray)
 
     def jac_sf(self, time, n, *args, asarray=False):
-        jac_chf, sf = self.jac_chf(time, n, *args, asarray=True), self.sf(time)
+        jac_chf, sf = self.jac_chf(time, n, *args, asarray=True), self.sf(time, n, *args)
         jac = -jac_chf * sf
         if not asarray:
             return np.unstack(jac)

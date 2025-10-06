@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
+from relife.base import ParametricModel
 from relife.economic import (
     ExponentialDiscounting,
     Reward,
@@ -13,7 +14,6 @@ from relife.stochastic_process.renewal_equations import (
     renewal_equation_solver,
 )
 
-from relife.base import ParametricModel
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 
 
@@ -206,13 +206,15 @@ class RenewalProcess(ParametricModel):
         from ._sample import RenewalProcessIterable
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
-            from relife.lifetime_model import FrozenLeftTruncatedModel
+            from relife import is_frozen
+            from relife.lifetime_model import LeftTruncatedModel
 
-            if (
-                isinstance(self.first_lifetime_model, FrozenLeftTruncatedModel)
-                and self.first_lifetime_model.unfreeze() == self.lifetime_model
-            ):
-                pass
+            if is_frozen(self.first_lifetime_model):
+                if (
+                    isinstance(self.first_lifetime_model.unfrozen_model, LeftTruncatedModel)
+                    and self.first_lifetime_model.unfrozen_model.baseline == self.lifetime_model
+                ):
+                    pass
             else:
                 raise ValueError(
                     f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
@@ -473,7 +475,7 @@ class RenewalRewardProcess(RenewalProcess):
             return timeline[0, :], eeac  # (nb_steps,) and (m, nb_steps)
         return timeline, eeac  # (nb_steps,) and (nb_steps)
 
-    def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
+    def asymptotic_expected_equivalent_annual_worth(self):
         """Asymptotic expected equivalent annual worth.
 
         Returns

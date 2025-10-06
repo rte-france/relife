@@ -1,6 +1,7 @@
 import numpy as np
 
-def renewal_equation_solver(timeline, lifetime_model, evaluated_func, discounting = None):
+
+def renewal_equation_solver(timeline, lifetime_model, evaluated_func, discounting=None):
 
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
@@ -26,7 +27,7 @@ def renewal_equation_solver(timeline, lifetime_model, evaluated_func, discountin
     return z
 
 
-def delayed_renewal_equation_solver(timeline, z, first_lifetime_model, evaluated_func, discounting = None):
+def delayed_renewal_equation_solver(timeline, z, first_lifetime_model, evaluated_func, discounting=None):
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
     f1 = first_lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)

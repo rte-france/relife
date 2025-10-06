@@ -2,7 +2,6 @@ from ._base import (
     FittableParametricLifetimeModel,
     NonParametricLifetimeModel,
     ParametricLifetimeModel,
-    is_lifetime_model,
 )
 from .conditional_model import (
     AgeReplacementModel,
@@ -46,5 +45,4 @@ __all__ = [
     "KaplanMeier",
     "NelsonAalen",
     "Turnbull",
-    "is_lifetime_model",
 ]

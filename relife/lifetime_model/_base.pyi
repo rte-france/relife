@@ -112,7 +112,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Any_Number_Ts], 
     fitting_results = Optional[FittingResults]
 
     def __init__(self, **kwparams: Optional[float]) -> None: ...
-
     @abstractmethod
     def dhf(self, time: _Any_Number, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
     @overload
@@ -229,5 +228,3 @@ class NonParametricLifetimeModel(ABC):
         entry: Optional[_NumpyArray_OfNumber] = None,
         departure: Optional[_NumpyArray_OfNumber] = None,
     ) -> Self: ...
-
-def is_lifetime_model(model: Union[ParametricModel, NonParametricLifetimeModel, FrozenParametricModel]) -> bool: ...

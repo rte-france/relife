@@ -4,14 +4,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.data import LifetimeData
-from relife.lifetime_model._plot import (
+
+from ._base import NonParametricLifetimeModel
+from ._plot import (
     PlotECDF,
     PlotKaplanMeier,
     PlotNelsonAalen,
     PlotTurnbull,
 )
-
-from ._base import NonParametricLifetimeModel
 
 
 class ECDF(NonParametricLifetimeModel):
