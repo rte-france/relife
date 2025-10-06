@@ -20,69 +20,137 @@ if TYPE_CHECKING:
     from ..lifetime_model.regression import LifetimeRegression
 
 
+def time_reshape(time: NDArray[np.float64]) -> NDArray[np.float64]:
+    # Check time shape
+    if time.ndim > 2 or (time.ndim == 2 and time.shape[-1] not in (1, 2)):
+        raise ValueError(
+            f"Invalid time shape, got {time.shape} be time must be (m,), (m, 1) or (m,2)"
+        )
+    if time.ndim < 2:
+        time = time.reshape(-1, 1)  # time is (m, 1) or (m, 2)
+    return time
+
+
+def event_reshape(
+    event: Optional[NDArray[np.bool_]] = None,
+) -> Optional[NDArray[np.bool_]]:
+    if event is not None:
+        if event.ndim > 2 or (event.ndim == 2 and event.shape[-1] != 1):
+            raise ValueError(
+                f"Invalid event shape, got {event.shape} be event must be (m,) or (m, 1)"
+            )
+        if event.ndim < 2:
+            event = event.reshape(-1, 1)
+        return event
+    return None
+
+
+def entry_reshape(
+    entry: Optional[NDArray[np.float64]] = None,
+) -> Optional[NDArray[np.float64]]:
+    if entry is not None:
+        if entry.ndim > 2 or (entry.ndim == 2 and entry.shape[-1] != 1):
+            raise ValueError(
+                f"Invalid entry shape, got {entry.shape} be entry must be (m,) or (m, 1)"
+            )
+        if entry.ndim < 2:
+            entry = entry.reshape(-1, 1)
+        return entry
+    return None
+
+
+def args_reshape(
+    args: tuple[float | NDArray[np.float64], ...] = (),
+) -> tuple[NDArray[np.float64], ...]:
+    args_list: list[NDArray[np.float64]] = [np.asarray(arg) for arg in args]
+    for i, arg in enumerate(args_list):
+        if arg.ndim > 2:
+            raise ValueError(
+                f"Invalid arg shape, got {arg.shape} shape at position {i}"
+            )
+        if arg.ndim < 2:
+            args_list[i] = arg.reshape(-1, 1)
+    return tuple(args_list)
+
+
 class DefaultLikelihood(Likelihood):
     def __init__(
         self,
         model: Union[LifetimeDistribution, LifetimeRegression, MinimumDistribution],
         time: NDArray[np.float64],
-        event: NDArray[np.bool_],
-        entry: NDArray[np.float64],
-        args=(),
+        *args,
+        event: NDArray[np.bool_] = None,
+        entry: NDArray[np.float64] = None,
     ):
-        sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
+        self.model = model
+        self.time = time_reshape(time)
+        self.event = (
+            event_reshape(event)
+            if (event is not None)
+            else np.ones_like(self.time).astype(bool)
+        )
+        self.entry = (
+            entry_reshape(entry)
+            if (entry is not None)
+            else np.zeros_like(self.time, dtype=np.float64)
+        )
+        self.args = args_reshape(args)
+        self.nb_samples = len(time)
+
+        sizes = [
+            len(x)
+            for x in (self.time, self.event, self.entry, *self.args)
+            if x is not None
+        ]
         if len(set(sizes)) != 1:
             raise ValueError(
                 f"All lifetime data must have the same number of values. Fields length are different. Got {set(sizes)}"
             )
 
-        self.model = model
-        self.time = time
-        self.event = event
-        self.entry = entry
-        self.args = args
-        self.nb_samples = len(time)
-
-    def _time_contrib(self, time: NDArray[np.float64]) -> np.float64:
+    def _time_contrib(self, time: NDArray[np.float64], *args) -> np.float64:
         return np.sum(
-            self.model.chf(time, *self.args),
+            self.model.chf(time, *args),
             dtype=np.float64,
         )
 
     def _event_contrib(
-        self, time: NDArray[np.float64], event: NDArray[np.bool_]
+        self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> np.float64:
         return -np.sum(
-            event * np.log(self.model.hf(time, *self.args)),
+            event * np.log(self.model.hf(time, *args)),
             dtype=np.float64,
         )
 
-    def _entry_contrib(self, entry: NDArray[np.float64]) -> np.float64:
+    def _entry_contrib(self, entry: NDArray[np.float64], *args) -> np.float64:
         return -np.sum(
-            self.model.chf(entry, *self.args),
+            self.model.chf(entry, *args),
             dtype=np.float64,
         )
 
-    def _jac_time_contrib(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def _jac_time_contrib(
+        self, time: NDArray[np.float64], *args
+    ) -> NDArray[np.float64]:
         return np.sum(
-            self.model.jac_chf(time, *self.args),
-            axis=1,
+            self.model.jac_chf(time, *args),
+            axis=(1, 2),
             dtype=np.float64,
         )
 
     def _jac_event_contrib(
-        self, time: NDArray[np.float64], event: NDArray[np.bool_]
+        self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> NDArray[np.float64]:
         return -np.sum(
-            event
-            * (self.model.jac_hf(time, *self.args) / self.model.hf(time, *self.args)),
-            axis=1,
+            event * (self.model.jac_hf(time, *args) / self.model.hf(time, *args)),
+            axis=(1, 2),
             dtype=np.float64,
         )
 
-    def _jac_entry_contrib(self, entry: NDArray[np.float64]) -> NDArray[np.float64]:
+    def _jac_entry_contrib(
+        self, entry: NDArray[np.float64], *args
+    ) -> NDArray[np.float64]:
         return -np.sum(
-            self.model.jac_chf(entry, *self.args),
-            axis=1,
+            self.model.jac_chf(entry, *args),
+            axis=(1, 2),
             dtype=np.float64,
         )
 
@@ -93,9 +161,9 @@ class DefaultLikelihood(Likelihood):
         model_params = np.copy(self.model.params)
         self.model.params = params  # changes model params
         contributions = (
-            self._time_contrib(self.time),
-            self._event_contrib(self.time, self.event),
-            self._entry_contrib(self.entry),
+            self._time_contrib(self.time, *self.args),
+            self._event_contrib(self.time, self.event, *self.args),
+            self._entry_contrib(self.entry, *self.args),
         )
         self.model.params = model_params  # reset model params (negative_log must not change model params)
         return sum(x for x in contributions if x is not None)  # ()
@@ -122,9 +190,9 @@ class DefaultLikelihood(Likelihood):
         model_params = np.copy(self.model.params)
         self.model.params = params  # changes model params
         jac_contributions = (
-            self._jac_time_contrib(self.time),
-            self._jac_event_contrib(self.time, self.event),
-            self._jac_entry_contrib(self.entry),
+            self._jac_time_contrib(self.time, *self.args),
+            self._jac_event_contrib(self.time, self.event, *self.args),
+            self._jac_entry_contrib(self.entry, *self.args),
         )
         self.model.params = model_params  # reset model params (jac_negative_log must not change model params)
         return sum(x for x in jac_contributions if x is not None)  # (p,)
@@ -153,7 +221,7 @@ class DefaultLikelihood(Likelihood):
             optimizer.fun
         )  # neg_log_likelihood value at optimal
         hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.inv(hessian)
+        covariance_matrix = np.linalg.pinv(hessian)
         return FittingResults(
             self.nb_samples,
             optimal_params,
