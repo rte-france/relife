@@ -9,7 +9,7 @@ from relife.economic import (
     ExponentialDiscounting,
     Reward,
 )
-from relife.stochastic_process.renewal_equations import (
+from relife.stochastic_process._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
@@ -270,11 +270,11 @@ class RenewalRewardProcess(RenewalProcess):
     params_names
     """
 
-    def __init__(self, lifetime_model, reward, discounting_rate=0.0, first_lifetime_model=None, first_reward=None):
+    def __init__(self, lifetime_model, reward, discounting, first_lifetime_model=None, first_reward=None):
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else copy.deepcopy(reward)
-        self.discounting = ExponentialDiscounting(discounting_rate)
+        self.discounting = discounting
 
     @property
     def discounting_rate(self):
@@ -296,7 +296,7 @@ class RenewalRewardProcess(RenewalProcess):
         self.discounting.rate = value
 
     @override
-    def _make_timeline(self, tf, nb_steps):
+    def _make_timeline(self, tf, nb_steps = None):
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
         args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case

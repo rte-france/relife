@@ -7,10 +7,10 @@ from relife.economic import RunToFailureReward
 from relife.lifetime_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
 
-from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
+from ._base import BaseAgeReplacementPolicy, _OneCycleExpectedCosts
 
 
-class OneCycleRunToFailurePolicy(BaseOneCycleAgeReplacementPolicy):
+class OneCycleRunToFailurePolicy(_OneCycleExpectedCosts):
     # noinspection PyUnresolvedReferences
     r"""One cyle run-to-failure policy.
 

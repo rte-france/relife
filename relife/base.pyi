@@ -41,7 +41,7 @@ class ParametricModel:
     def nb_params(self) -> int: ...
 
 _ParametricModel_T_co = TypeVar("_ParametricModel_T_co", bound=ParametricModel, covariant=True)
-_Frozen_Args: TypeAlias = tuple[_Any_Number, ...]
+_Frozen_Args: TypeAlias = list[_Any_Number]
 
 # covariance matters :
 # if func(model : FrozenParametricModel[ParametricModel]), then because of covariance
@@ -50,7 +50,7 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T_co]):
     _nb_assets: int
     _args: _Frozen_Args
     unfrozen_model: _ParametricModel_T_co
-    def __init__(self, model: _ParametricModel_T_co, *args: *_Frozen_Args) -> None: ...
+    def __init__(self, model: _ParametricModel_T_co, *args: _Any_Number) -> None: ...
     def unfreeze(self) -> _ParametricModel_T_co: ...
     @property
     def nb_assets(self) -> int: ...

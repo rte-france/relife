@@ -216,7 +216,7 @@ class FrozenParametricModel(ParametricModel):
 def get_nb_assets(*args):
     if not bool(args):
         return 1
-    args_2d = tuple((np.atleast_2d(arys) for arys in args))
+    args_2d = tuple((np.atleast_2d(arys) for arys in args if arys is not None))
 
     try:
         broadcast_shape = np.broadcast_shapes(*(ary.shape for ary in args_2d))

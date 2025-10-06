@@ -1,4 +1,4 @@
-from ._base import BaseAgeReplacementPolicy, BaseOneCycleAgeReplacementPolicy
+from ._base import BaseAgeReplacementPolicy, _OneCycleExpectedCosts
 from .age_replacement_policy import (
     AgeReplacementPolicy,
     NonHomogeneousPoissonAgeReplacementPolicy,
