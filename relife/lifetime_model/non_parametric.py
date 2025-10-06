@@ -26,8 +26,6 @@ class NewECDF(NonParametricLifetimeModel):
     def fit(
         self,
         time: NDArray[np.float64],
-        event: Optional[NDArray[np.float64]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
     ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
@@ -55,7 +53,7 @@ class NewECDF(NonParametricLifetimeModel):
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         self._cdf["estimation"] = cdf
         self._sf["estimation"] = 1 - cdf
-        se = np.sqrt(*(1 - cdf) / len(time))
+        se = np.sqrt((1 - cdf) / len(time))
         self._sf["se"] = se
         self._cdf["se"] = se
         return self
@@ -193,7 +191,7 @@ class ECDF(NonParametricLifetimeModel):
         self._cdf["estimation"] = cdf
         self._sf["estimation"] = 1 - cdf
         se = np.sqrt(
-            *(1 - cdf) / len(lifetime_data.complete_or_right_censored.lifetime_values)
+            (1 - cdf) / len(lifetime_data.complete_or_right_censored.lifetime_values)
         )
         self._sf["se"] = se
         self._cdf["se"] = se
@@ -351,7 +349,6 @@ class NewKaplanMeier(NonParametricLifetimeModel):
         ).sum(axis=0)
 
         d = ((time.reshape(-1, 1) == timeline) * event.reshape(-1, 1)).sum(axis=0)
-
         sf = (1 - d / n).cumprod()
 
         with np.errstate(divide="ignore"):
@@ -579,10 +576,10 @@ class KaplanMeier(NonParametricLifetimeModel):
 
 
 class NewNelsonAalen(NonParametricLifetimeModel):
-    r"""Kaplan-Meier estimator.
+    r"""Nelson-Aalen estimator.
 
-    Compute the non-parametric Kaplan-Meier estimator (also known as the product
-    limit estimator) of the survival function from lifetime data.
+    Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
+    function from lifetime data.
 
     Notes
     -----
@@ -591,7 +588,7 @@ class NewNelsonAalen(NonParametricLifetimeModel):
 
     .. math::
 
-        \hat{S}(t) = \prod_{i: t_i \leq t} \left( 1 - \frac{d_i}{n_i}\right)
+        \hat{H}(t) = \sum_{i: t_i \leq t} \frac{d_i}{n_i}
 
     where :math:`d_i` is the number of failures until :math:`t_i` and
     :math:`n_i` is the number of assets at risk just prior to :math:`t_i`.
@@ -600,24 +597,24 @@ class NewNelsonAalen(NonParametricLifetimeModel):
 
     .. math::
 
-        \widehat{Var}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{i: t_i \leq t}
-        \frac{d_i}{n_i(n_i - d_i)}
+        \widehat{Var}[\hat{H}(t)] = \sum_{i: t_i \leq t} \frac{d_i}{n_i^2}
 
-    which is often referred to as Greenwood's formula.
+    Note that the alternative survivor function estimate:
+
+    .. math::
+
+        \tilde{S}(t) = \exp{(-\hat{H}(t))}
+
+    is sometimes suggested for the continuous-time case.
 
     References
     ----------
     .. [1] Lawless, J. F. (2011). Statistical models and methods for lifetime
         data. John Wiley & Sons.
-
-    .. [2] Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from
-        incomplete observations. Journal of the American statistical
-        association, 53(282), 457-481.
-
     """
 
     def __init__(self):
-        self._sf: Optional[np.void] = None
+        self._chf: Optional[np.void] = None
 
     def fit(
         self,
@@ -660,10 +657,10 @@ class NewNelsonAalen(NonParametricLifetimeModel):
         dtype = np.dtype(
             [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
         )
-        self._sf = np.empty((timeline.size + 1,), dtype=dtype)
-        self._sf["timeline"] = np.insert(timeline, 0, 0)
-        self._sf["estimation"] = np.insert(chf, 0, 1)
-        self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
+        self._chf = np.empty((timeline.size + 1,), dtype=dtype)
+        self._chf["timeline"] = np.insert(timeline, 0, 0)
+        self._chf["estimation"] = np.insert(chf, 0, 0)
+        self._chf["se"] = np.insert(np.sqrt(var), 0, 0)
 
     @overload
     def chf(
