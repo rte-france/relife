@@ -157,7 +157,6 @@ class IntervalLikelihood(Likelihood):
                 / self.model.hf(
                     time_sup,
                     *args,
-                    asarray=True,
                 )
             ),
             axis=(1, 2),
