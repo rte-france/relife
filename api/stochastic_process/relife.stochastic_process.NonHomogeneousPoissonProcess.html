@@ -381,11 +381,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html">FrozenLifetimeRegression</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.FrozenLeftTruncatedModel.html">FrozenLeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.FrozenAgeReplacementModel.html">FrozenAgeReplacementModel</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -421,14 +416,10 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.ParametricModel.html">ParametricModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.FrozenParametricLifetimeModel.html">FrozenParametricLifetimeModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
@@ -549,7 +540,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.stochastic_process.NonHomogeneousPoissonProcess.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ages_at_events</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_assets_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assets_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_ages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_ages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.fit" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ages_at_events</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_assets_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assets_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_ages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_ages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lifetime_model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.fit" title="Link to this definition">#</a></dt>
 <dd><p>Estimation of the process parameters from recurrent failure data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -564,7 +555,7 @@ must equal the size of <code class="docutils literal notranslate"><span class="p
 <dt><strong>last_ages</strong><span class="classifier">1D array of float, optional</span></dt><dd><p>Array of float containing the ages of each asset at the end of the observation period. If set, <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is needed and its length
 must equal the size of <code class="docutils literal notranslate"><span class="pre">last_ages</span></code>.</p>
 </dd>
-<dt><strong>model_args</strong><span class="classifier">tuple of np.ndarray, optional</span></dt><dd><p>Additional arguments needed by the model. If set, <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is needed.
+<dt><strong>lifetime_model_args</strong><span class="classifier">tuple of np.ndarray, optional</span></dt><dd><p>Additional arguments needed by the model. If set, <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is needed.
 For 1D array, the size must equal the length of <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code>. For 2D array (e.g. covar of regression),
 the length of first axis must equal the length of <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code>.</p>
 </dd>
@@ -618,7 +609,7 @@ containing the unique ids corresponding to each values contained in <code class=
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>FrozenNonHomogeneousPoissonProcess</dt><dd></dd>
+<dt>FrozenParametricModel</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -694,15 +685,13 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd><p>Parameters values of the core</p>
+<dt>ndarray</dt><dd><p>Parameters values</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <p>If parameter values are not set, they are encoded as <cite>np.nan</cite> value.</p>
-<p>Parameters can be by manually setting`params` through its setter, fitting the core if <cite>fit</cite> exists or
-by specifying all parameters values when the core object is initialized.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -723,7 +712,7 @@ by specifying all parameters values when the core object is initialized.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.stochastic_process.NonHomogeneousPoissonProcess.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.sample" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.sample" title="Link to this definition">#</a></dt>
 <dd><p>Renewal data sampling.</p>
 <p>This function will sample data and encapsulate them in an object.</p>
 <dl class="field-list simple">

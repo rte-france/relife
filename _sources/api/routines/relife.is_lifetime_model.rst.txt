@@ -1,6 +1,0 @@
-﻿is\_lifetime\_model
-===================
-
-.. currentmodule:: relife
-
-.. autofunction:: is_lifetime_model

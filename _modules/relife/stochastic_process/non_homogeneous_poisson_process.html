@@ -413,15 +413,14 @@
   <h1>Source code for relife.stochastic_process.non_homogeneous_poisson_process</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricModel</span><span class="p">,</span> <span class="n">ParametricModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeData</span><span class="p">,</span> <span class="n">NHPPData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="n">LikelihoodFromLifetimes</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenStochasticProcess</span><span class="p">,</span> <span class="n">StochasticProcess</span>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">NonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">StochasticProcess</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Non-homogeneous Poisson process.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -488,14 +487,14 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        FrozenNonHomogeneousPoissonProcess</span>
+<span class="sd">        FrozenParametricModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FrozenNonHomogeneousPoissonProcess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
 
 <span class="sd">        This function will sample data and encapsulate them in an object.</span>
@@ -519,9 +518,11 @@
             <span class="n">NonHomogeneousPoissonProcessIterable</span><span class="p">,</span>
             <span class="n">NonHomogeneousPoissonProcessSample</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">)</span>
+
+        <span class="n">frozen_nhpp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcessIterable</span><span class="p">(</span><span class="n">frozen_nhpp</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">NonHomogeneousPoissonProcessSample</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
 
 
@@ -604,7 +605,7 @@
         <span class="n">assets_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">first_ages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">last_ages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lifetime_model_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">options</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -622,7 +623,7 @@
 <span class="sd">        last_ages : 1D array of float, optional</span>
 <span class="sd">            Array of float containing the ages of each asset at the end of the observation period. If set, ``assets_ids`` is needed and its length</span>
 <span class="sd">            must equal the size of ``last_ages``.</span>
-<span class="sd">        model_args : tuple of np.ndarray, optional</span>
+<span class="sd">        lifetime_model_args : tuple of np.ndarray, optional</span>
 <span class="sd">            Additional arguments needed by the model. If set, ``assets_ids`` is needed.</span>
 <span class="sd">            For 1D array, the size must equal the length of ``assets_ids``. For 2D array (e.g. covar of regression),</span>
 <span class="sd">            the length of first axis must equal the length of ``assets_ids``.</span>
@@ -665,7 +666,7 @@
             <span class="n">events_assets_ids</span><span class="p">,</span>
             <span class="n">first_ages</span><span class="o">=</span><span class="n">first_ages</span><span class="p">,</span>
             <span class="n">last_ages</span><span class="o">=</span><span class="n">last_ages</span><span class="p">,</span>
-            <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span><span class="p">,</span>
+            <span class="n">model_args</span><span class="o">=</span><span class="n">lifetime_model_args</span><span class="p">,</span>
             <span class="n">assets_ids</span><span class="o">=</span><span class="n">assets_ids</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">nhpp_data</span><span class="o">.</span><span class="n">to_lifetime_data</span><span class="p">()</span>
@@ -679,21 +680,6 @@
         <span class="k">return</span> <span class="bp">self</span></div>
 </div>
 
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">FrozenNonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">FrozenStochasticProcess</span><span class="p">):</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">intensity</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">cumulative_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">cumulative_intensity</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">generate_failure_data</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 </pre></div>
 
                 </article>

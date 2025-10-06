@@ -34,7 +34,7 @@ ProportionalHazard
             ~ProportionalHazard.fit
         
         
-            ~ProportionalHazard.freeze
+            ~ProportionalHazard.freeze_args
         
         
             ~ProportionalHazard.hf

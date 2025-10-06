@@ -424,12 +424,14 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricModel</span><span class="p">,</span> <span class="n">ParametricModel</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FittableParametricLifetimeModel</span><span class="p">,</span> <span class="n">FrozenParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FittableParametricLifetimeModel</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;LifetimeRegression&quot;</span><span class="p">,</span> <span class="s2">&quot;AcceleratedFailureTime&quot;</span><span class="p">,</span> <span class="s2">&quot;ProportionalHazard&quot;</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
     <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>  <span class="c1">#  (m, n)</span>
     <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">))</span>  <span class="c1">#  (m, nb_coef)</span>
     <span class="k">match</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
@@ -442,7 +444,7 @@
     <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time_shape</span><span class="p">,</span> <span class="n">covar_shape</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time_shape</span><span class="p">,</span> <span class="n">covar_shape</span><span class="p">):</span>
     <span class="c1"># time_shape : (), (n,) or (m, n)</span>
     <span class="c1"># covar_shape : (), (nb_coef,) or (m, nb_coef)</span>
     <span class="k">match</span> <span class="p">[</span><span class="n">time_shape</span><span class="p">,</span> <span class="n">covar_shape</span><span class="p">]:</span>
@@ -464,7 +466,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid time or covar shape. Got </span><span class="si">{</span><span class="n">time_shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">covar_shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">CovarEffect</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_CovarEffect</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Covariates effect.</span>
 
@@ -536,9 +538,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">coefficients</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,)):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">CovarEffect</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">_CovarEffect</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -922,8 +923,8 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_initial_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">CovarEffect</span><span class="p">(</span>
-            <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">_CovarEffect</span><span class="p">(</span>
+            <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># TODO : np.asarray(covar).shape</span>
         <span class="p">)</span>  <span class="c1"># changes params structure depending on number of covar</span>
         <span class="n">param0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="n">param0</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_get_initial_params</span><span class="p">(</span>
@@ -997,7 +998,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="n">departure</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Freeze regression covar and other arguments into the object data.</span>
 
@@ -1011,9 +1012,9 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        FrozenLifetimeRegression</span>
+<span class="sd">        FrozenParametricModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FrozenLifetimeRegression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ProportionalHazard">
@@ -1047,7 +1048,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    baseline : FittableParametricLifetimeModel</span>
 <span class="sd">        The regression baseline model (lifetime model).</span>
-<span class="sd">    covar_effect : CovarEffect</span>
+<span class="sd">    covar_effect : _CovarEffect</span>
 <span class="sd">        The regression covariate effect.</span>
 <span class="sd">    fitting_results : FittingResults, default is None</span>
 <span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
@@ -1199,8 +1200,8 @@
 
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
-        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">jac_g</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, 1)</span>
@@ -1253,8 +1254,8 @@
 
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
-        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">jac_g</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, 1)</span>
@@ -1311,7 +1312,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    baseline : FittableParametricLifetimeModel</span>
 <span class="sd">        The regression baseline model (lifetime model).</span>
-<span class="sd">    covar_effect : CovarEffect</span>
+<span class="sd">    covar_effect : _CovarEffect</span>
 <span class="sd">        The regression covariate effect.</span>
 <span class="sd">    fitting_results : FittingResults, default is None</span>
 <span class="sd">        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</span>
@@ -1464,8 +1465,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
-        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">jac_g</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, 1)</span>
@@ -1519,8 +1520,8 @@
 
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
-        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">jac_g</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, 1)</span>
@@ -1542,205 +1543,6 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="FrozenLifetimeRegression">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html#relife.lifetime_model.FrozenLifetimeRegression">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">FrozenLifetimeRegression</span><span class="p">(</span><span class="n">FrozenParametricLifetimeModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Frozen lifetime regression.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    regression : LifetimeRegression</span>
-<span class="sd">        Any lifetime regression.</span>
-<span class="sd">    covar : float or np.ndarray</span>
-<span class="sd">        Covariate values to be frozen.</span>
-<span class="sd">    *args : float or np.ndarray</span>
-<span class="sd">        Additional arguments needed by the model to be frozen.</span>
-
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    unfrozen_model : LifetimeRegression</span>
-<span class="sd">        The unfrozen regression model.</span>
-<span class="sd">    args : tuple of float or np.ndarray</span>
-<span class="sd">        All the frozen arguments given and necessary to compute model functions.</span>
-<span class="sd">    nb_assets : int</span>
-<span class="sd">        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not</span>
-<span class="sd">        interest an user.</span>
-
-<span class="sd">    Warnings</span>
-<span class="sd">    --------</span>
-<span class="sd">    This class is documented for the purpose of clarity and mainly address contributors or advance users. Actually, the</span>
-<span class="sd">    recommanded way to instanciate a ``FrozenLifetimeRegression`` is use to ``freeze`` factory function.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">regression</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">regression</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">unfreeze</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LifetimeRegression</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">nb_coef</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The number of coefficients</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        int</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">nb_coef</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">covar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="nd">@covar</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">covar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-<div class="viewcode-block" id="FrozenLifetimeRegression.dhf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html#relife.lifetime_model.FrozenLifetimeRegression.dhf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The derivate of the hazard function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : float or np.ndarray</span>
-<span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.float64 or np.ndarray</span>
-<span class="sd">            Function values at each given time(s).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div>
-
-
-<div class="viewcode-block" id="FrozenLifetimeRegression.jac_hf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html#relife.lifetime_model.FrozenLifetimeRegression.jac_hf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The jacobian of the hazard function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : float or np.ndarray</span>
-<span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
-<span class="sd">        asarray : bool, default is False</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.float64, np.ndarray or tuple of np.float64 or np.ndarray</span>
-<span class="sd">            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing</span>
-<span class="sd">            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray</span>
-<span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
-<span class="sd">            tuple when ``asarray`` is False.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">asarray</span><span class="o">=</span><span class="n">asarray</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FrozenLifetimeRegression.jac_chf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html#relife.lifetime_model.FrozenLifetimeRegression.jac_chf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The jacobian of the cumulative hazard function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : float or np.ndarray</span>
-<span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
-<span class="sd">        asarray : bool, default is False</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.float64, np.ndarray or tuple of np.float64 or np.ndarray</span>
-<span class="sd">            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing</span>
-<span class="sd">            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray</span>
-<span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
-<span class="sd">            tuple when ``asarray`` is False.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">asarray</span><span class="o">=</span><span class="n">asarray</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FrozenLifetimeRegression.jac_sf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html#relife.lifetime_model.FrozenLifetimeRegression.jac_sf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The jacobian of the survival function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : float or np.ndarray</span>
-<span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
-<span class="sd">        asarray : bool, default is False</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.float64, np.ndarray or tuple of np.float64 or np.ndarray</span>
-<span class="sd">            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing</span>
-<span class="sd">            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray</span>
-<span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
-<span class="sd">            tuple when ``asarray`` is False.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">jac_sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">asarray</span><span class="o">=</span><span class="n">asarray</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FrozenLifetimeRegression.jac_cdf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html#relife.lifetime_model.FrozenLifetimeRegression.jac_cdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The jacobian of the cumulative density function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : float or np.ndarray</span>
-<span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
-<span class="sd">        asarray : bool, default is False</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.float64, np.ndarray or tuple of np.float64 or np.ndarray</span>
-<span class="sd">            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing</span>
-<span class="sd">            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray</span>
-<span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
-<span class="sd">            tuple when ``asarray`` is False.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">jac_cdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">asarray</span><span class="o">=</span><span class="n">asarray</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FrozenLifetimeRegression.jac_pdf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html#relife.lifetime_model.FrozenLifetimeRegression.jac_pdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The jacobian of the probability density function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        time : float or np.ndarray</span>
-<span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
-<span class="sd">        asarray : bool, default is False</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.float64, np.ndarray or tuple of np.float64 or np.ndarray</span>
-<span class="sd">            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing</span>
-<span class="sd">            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray</span>
-<span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
-<span class="sd">            tuple when ``asarray`` is False.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="o">.</span><span class="n">jac_pdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">asarray</span><span class="o">=</span><span class="n">asarray</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

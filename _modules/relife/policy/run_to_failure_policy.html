@@ -411,23 +411,16 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.policy.run_to_failure_policy</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.economic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunToFailureReward</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseAgeReplacementPolicy</span><span class="p">,</span> <span class="n">BaseOneCycleAgeReplacementPolicy</span>
-
-<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenLeftTruncatedModel</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.distribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeDistribution</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">..lifetime_model.regression</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenLifetimeRegression</span>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy">
@@ -457,7 +450,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">LifetimeDistribution</span> <span class="o">|</span> <span class="n">FrozenLifetimeRegression</span> <span class="o">|</span> <span class="n">FrozenLeftTruncatedModel</span><span class="p">,</span>
+        <span class="n">lifetime_model</span><span class="p">,</span>
         <span class="n">cf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">period_before_discounting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -465,7 +458,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">reward</span> <span class="o">=</span> <span class="n">RunToFailureReward</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
+            <span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze_args</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="p">,</span> <span class="n">period_before_discounting</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -508,30 +501,23 @@
 <span class="sd">        the Engineering and Informational Sciences, 22(1), 53-74.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">LifetimeDistribution</span> <span class="o">|</span> <span class="n">FrozenLifetimeRegression</span>
-    <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LifetimeDistribution</span> <span class="o">|</span> <span class="n">FrozenLifetimeRegression</span> <span class="o">|</span> <span class="n">FrozenLeftTruncatedModel</span><span class="p">]</span>
-    <span class="n">reward</span><span class="p">:</span> <span class="n">RunToFailureReward</span>
-    <span class="n">first_reward</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunToFailureReward</span><span class="p">]</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">LifetimeDistribution</span> <span class="o">|</span> <span class="n">FrozenLifetimeRegression</span><span class="p">,</span>
-        <span class="n">cf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-            <span class="n">LifetimeDistribution</span> <span class="o">|</span> <span class="n">FrozenLifetimeRegression</span> <span class="o">|</span> <span class="n">FrozenLeftTruncatedModel</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">lifetime_model</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">first_lifetime_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">a0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 
         <span class="n">reward</span> <span class="o">=</span> <span class="n">RunToFailureReward</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
-        <span class="n">first_reward</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunToFailureReward</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">first_reward</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">FrozenLeftTruncatedModel</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">first_lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
+                <span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">first_lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze_args</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
             <span class="n">first_reward</span> <span class="o">=</span> <span class="n">RunToFailureReward</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
+            <span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze_args</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
 
         <span class="n">stochastic_process</span> <span class="o">=</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
             <span class="n">lifetime_model</span><span class="p">,</span>
@@ -551,31 +537,13 @@
 <span class="sd">        -------</span>
 <span class="sd">        ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">cf</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">cf</span>
 
     <span class="nd">@cf</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stochastic_process</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">cf</span> <span class="o">=</span> <span class="n">value</span></div>
 
-
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">._docstring</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span><span class="p">,</span>
-    <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span><span class="p">,</span>
-    <span class="n">EEAC_DOCSTRING</span><span class="p">,</span>
-    <span class="n">ETC_DOCSTRING</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
-<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
-<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
-<span class="n">OneCycleRunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span>
-
-<span class="n">RunToFailurePolicy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ETC_DOCSTRING</span>
-<span class="n">RunToFailurePolicy</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">EEAC_DOCSTRING</span>
-<span class="n">RunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_total_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_ETC_DOCSTRING</span>
-<span class="n">RunToFailurePolicy</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">ASYMPTOTIC_EEAC_DOCSTRING</span>
 </pre></div>
 
                 </article>

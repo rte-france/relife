@@ -383,11 +383,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.FrozenLifetimeRegression.html">FrozenLifetimeRegression</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.FrozenLeftTruncatedModel.html">FrozenLeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.FrozenAgeReplacementModel.html">FrozenAgeReplacementModel</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -423,14 +418,10 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.ParametricModel.html">ParametricModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.FrozenParametricLifetimeModel.html">FrozenParametricLifetimeModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
@@ -540,19 +531,19 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected equivalent annual cost.</p></td>
+<td><p>The asymtotic expected equivalent annual cost</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost" title="relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_cost</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected total cost.</p></td>
+<td><p>The asymtotic expected total cost</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the expected equivalent annual cost  over a given timeline.</p></td>
+<td><p>The expected equivalent annual cost.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_nb_replacements" title="relife.policy.RunToFailurePolicy.expected_nb_replacements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_nb_replacements</span></code></a></p></td>
 <td><p>The expected number of replacements.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_total_cost" title="relife.policy.RunToFailurePolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
-<td><p>Calculate the expected total cost  over a given timeline.</p></td>
+<td><p>The expected total cost.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.generate_lifetime_data" title="relife.policy.RunToFailurePolicy.generate_lifetime_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_lifetime_data</span></code></a></p></td>
 <td><p>Generate lifetime data</p></td>
@@ -566,16 +557,14 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
 <span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected equivalent annual cost.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The asymptotic expected total cost is:</p>
+<dd><p>The asymtotic expected equivalent annual cost</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} \text{EEAC}(t)\]</div>
 <p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost()</span></code></a> for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected equivalent annual cost.</p>
+<dt>ndarray</dt><dd><p>The asymptotic expected equivalent annual cost</p>
 </dd>
 </dl>
 </dd>
@@ -585,16 +574,14 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost">
 <span class="sig-name descname"><span class="pre">asymptotic_expected_total_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected total cost.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The asymptotic expected total cost is:</p>
+<dd><p>The asymtotic expected total cost</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} z(t)\]</div>
 <p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected total cost.</p>
+<dt>ndarray</dt><dd><p>The asymptotic expected total cost values</p>
 </dd>
 </dl>
 </dd>
@@ -617,9 +604,7 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost">
 <span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected equivalent annual cost  over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The expected equivalent annual cost <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is given by:</p>
+<dd><p>The expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[\text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
 <p>where :</p>
@@ -631,13 +616,16 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>timeline: np.ndarray</strong></dt><dd><p>Values of the timeline over which the expected equivalent annual cost is to be calculated.</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected equivalent annual cost will be computed up until this calendar time.</p>
+</dd>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The expected equivalent annual cost.</p>
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
+step of the timeline.</p>
 </dd>
 </dl>
 </dd>
@@ -682,9 +670,8 @@ step of the timeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_total_cost">
 <span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected total cost  over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<p>The expected total cost <span class="math notranslate nohighlight">\(z(t)\)</span> is computed by solving the renewal equation and is given by:</p>
+<dd><p>The expected total cost.</p>
+<p>It is computed by solving the renewal equation and is given by:</p>
 <div class="math notranslate nohighlight">
 \[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
 <p>where :</p>
@@ -697,13 +684,16 @@ step of the timeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>timeline: np.ndarray</strong></dt><dd><p>Values of the timeline over which the expected total cost is to be calculated.</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected total cost will be computed up until this calendar time.</p>
+</dd>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected total cost</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The expected total cost.</p>
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
+step of the timeline.</p>
 </dd>
 </dl>
 </dd>

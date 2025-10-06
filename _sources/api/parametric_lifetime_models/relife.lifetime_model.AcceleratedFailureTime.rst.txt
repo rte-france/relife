@@ -34,7 +34,7 @@ AcceleratedFailureTime
             ~AcceleratedFailureTime.fit
         
         
-            ~AcceleratedFailureTime.freeze
+            ~AcceleratedFailureTime.freeze_args
         
         
             ~AcceleratedFailureTime.hf

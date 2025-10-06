@@ -383,11 +383,6 @@
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.FrozenLifetimeRegression.html">FrozenLifetimeRegression</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.FrozenLeftTruncatedModel.html">FrozenLeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.FrozenAgeReplacementModel.html">FrozenAgeReplacementModel</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -423,14 +418,10 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_stochastic_process.html">is_stochastic_process</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.ParametricModel.html">ParametricModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.FrozenParametricLifetimeModel.html">FrozenParametricLifetimeModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
@@ -526,7 +517,7 @@ hazard function <a class="reference internal" href="#r21ad2c257af0-1" id="id1">[
 <dd class="field-even"><dl class="simple">
 <dt><strong>baseline</strong><span class="classifier">FittableParametricLifetimeModel</span></dt><dd><p>The regression baseline model (lifetime model).</p>
 </dd>
-<dt><strong>covar_effect</strong><span class="classifier">CovarEffect</span></dt><dd><p>The regression covariate effect.</p>
+<dt><strong>covar_effect</strong><span class="classifier">_CovarEffect</span></dt><dd><p>The regression covariate effect.</p>
 </dd>
 <dt><strong>fitting_results</strong><span class="classifier">FittingResults, default is None</span></dt><dd><p>An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</p>
 </dd>
@@ -573,7 +564,7 @@ analysis of failure time data. John Wiley &amp; Sons.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.fit" title="relife.lifetime_model.AcceleratedFailureTime.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
 <td><p>Estimation of the regression parameters from lifetime data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.freeze" title="relife.lifetime_model.AcceleratedFailureTime.freeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.freeze_args" title="relife.lifetime_model.AcceleratedFailureTime.freeze_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze_args</span></code></a></p></td>
 <td><p>Freeze regression covar and other arguments into the object data.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="relife.lifetime_model.AcceleratedFailureTime.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
@@ -773,8 +764,8 @@ format that allows to pass other information as left-censored or interval-censor
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.freeze">
-<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.freeze" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.freeze_args">
+<span class="sig-name descname"><span class="pre">freeze_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.freeze_args" title="Link to this definition">#</a></dt>
 <dd><p>Freeze regression covar and other arguments into the object data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -788,7 +779,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>FrozenLifetimeRegression</dt><dd></dd>
+<dt>FrozenParametricModel</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1181,15 +1172,13 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd><p>Parameters values of the core</p>
+<dt>ndarray</dt><dd><p>Parameters values</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <p>If parameter values are not set, they are encoded as <cite>np.nan</cite> value.</p>
-<p>Parameters can be by manually setting`params` through its setter, fitting the core if <cite>fit</cite> exists or
-by specifying all parameters values when the core object is initialized.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1381,7 +1370,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.coefficients</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.dhf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.dhf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.fit"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.fit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.freeze"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.freeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.freeze_args"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.freeze_args()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.hf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.hf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.ichf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.ichf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.isf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.isf()</span></code></a></li>
