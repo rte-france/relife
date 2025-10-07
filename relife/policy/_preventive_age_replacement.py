@@ -3,13 +3,12 @@ import warnings
 import numpy as np
 from scipy.optimize import newton
 
-from relife import is_frozen
+from relife.utils import is_frozen, get_args_nb_assets
 from relife.economic import AgeReplacementReward, ExponentialDiscounting, cost
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.quadrature import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
 from ._base import _OneCycleExpectedCosts
-from ..base import get_nb_assets
 
 
 def _reshape_policy_data(value, nb_assets):
@@ -64,11 +63,11 @@ class OneCycleAgeReplacementPolicy:
 
     def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, a0=None, ar=None):
         self.lifetime_model = lifetime_model
-        self._nb_assets = get_nb_assets(cf, cp, a0, ar)
-        self._cf = cf
-        self._cp = cp
-        self._a0 = a0
-        self._ar = ar
+        self._nb_assets = get_args_nb_assets(cf, cp, a0, ar, *getattr(lifetime_model, "args", ()))
+        self._cf = _reshape_policy_data(cf, self._nb_assets)
+        self._cp = _reshape_policy_data(cp, self._nb_assets)
+        self._a0 = _reshape_policy_data(a0, self._nb_assets) if a0 is not None else a0
+        self._ar = _reshape_policy_data(ar, self._nb_assets) if ar is not None else ar
         self._tr = None
         self.discounting_rate = discounting_rate
         self.period_before_discounting = period_before_discounting
@@ -93,26 +92,24 @@ class OneCycleAgeReplacementPolicy:
 
     @property
     def cf(self):
+        # _cf is (m, 1) but exposed cf is (m,)
         return np.squeeze(self._cf)
 
     @property
     def cp(self):
+        # _cp is (m, 1) but exposed cp is (m,)
         return np.squeeze(self._cf)
 
     @property
     def a0(self):
+        # _a0 is (m, 1) but exposed a0 is (m,)
         if self._a0 is None:
             return self._a0
         return np.squeeze(self._a0)
 
     @property
-    def tr(self):
-        if self.a0 is not None:
-            return self._tr
-        return self.ar
-
-    @property
     def ar(self):
+        # _ar is (m, 1) but exposed ar is (m,)
         if self._ar is None:
             return self._ar
         return np.squeeze(self._ar)
@@ -123,6 +120,12 @@ class OneCycleAgeReplacementPolicy:
         self._ar = value
         if self.a0 is not None:
             self._tr = np.maximum(value - self._a0, 0)
+
+    @property
+    def tr(self):
+        if self.a0 is not None:
+            return self._tr
+        return self.ar
 
     def expected_total_cost(self, tf, nb_steps):
         if self.ar is None:
@@ -193,8 +196,7 @@ class OneCycleAgeReplacementPolicy:
 
         discounting = ExponentialDiscounting(self.discounting_rate)
 
-        x0 = np.minimum(self._cp / (self._cf - self._cp), 1)  # ()
-        x0 = np.broadcast_to(x0, self.lifetime_model.hf(x0).shape).copy()  # () or (m, 1)
+        x0 = np.minimum(self._cp / (self._cf - self._cp), 1)  # () or (m, 1)
 
         def eq(a):  # () or (m, 1)
             return (
@@ -251,7 +253,7 @@ class AgeReplacementPolicy:
     def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, a0=None, ar=None):
 
         self.lifetime_model = lifetime_model
-        self._nb_assets = get_nb_assets(cf, cp, a0, ar)
+        self._nb_assets = get_args_nb_assets(cf, cp, a0, ar, *getattr(lifetime_model, "args", ()))
         self._cf = _reshape_policy_data(cf, self._nb_assets)
         self._cp = _reshape_policy_data(cp, self._nb_assets)
         self._a0 = _reshape_policy_data(a0, self._nb_assets) if a0 is not None else a0
@@ -261,6 +263,7 @@ class AgeReplacementPolicy:
 
     @property
     def cf(self):
+
         return np.squeeze(self._cf)
 
     @property
@@ -481,11 +484,8 @@ class AgeReplacementPolicy:
         Self
              Same instance with optimized ``ar``.
         """
-          # ()
         discounting = ExponentialDiscounting(self.discounting_rate)
-
         x0 = np.minimum(self._cp / (self._cf - self._cp), 1)
-        x0 = np.broadcast_to(x0, self.lifetime_model.hf(x0).shape).copy()  # () or (m, 1)
 
         def eq(a):  # () or (m, 1)
             f = legendre_quadrature(
@@ -500,8 +500,7 @@ class AgeReplacementPolicy:
             )
             return discounting.factor(a) * ((self._cf - self._cp) * (self.lifetime_model.hf(a) * f - g) - self._cp) / f**2
 
-        self.ar = np.squeeze(newton(eq, x0))  # () or (m,) setter is called
-
+        self.ar = np.squeeze(newton(eq, x0))
         return self
 
 

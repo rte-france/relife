@@ -153,3 +153,25 @@ def unweighted_laguerre_quadrature(
     return np.sum(
         w * fvalues * np.exp(x), axis=-shifted_x.ndim
     )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
+
+
+
+class NumericalQuadrature:
+    def __init__(self, func, a, b = None):
+        self.func = func
+        self.a = a
+        self.b = b
+
+    def unweighted_laguerre(self, deg):
+        pass
+
+    def laguerre(self, deg):
+        pass
+
+    def legendre(self, deg):
+        if self.b is None:
+            raise ValueError
+
+    def lebesgue_stieltjes(self, deg):
+        if self.b is None:
+            raise ValueError

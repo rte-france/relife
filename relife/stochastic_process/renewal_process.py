@@ -206,7 +206,7 @@ class RenewalProcess(ParametricModel):
         from ._sample import RenewalProcessIterable
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
-            from relife import is_frozen
+            from ..utils._model_checks import is_frozen
             from relife.lifetime_model import LeftTruncatedModel
 
             if is_frozen(self.first_lifetime_model):

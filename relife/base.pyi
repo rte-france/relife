@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from relife._typing import _Any_Number
 
-__all__ = ["ParametricModel", "FrozenParametricModel", "get_nb_assets", "is_frozen"]
+__all__ = ["ParametricModel", "FrozenParametricModel"]
 
 class _Parameters:
     parent: Optional[Self]

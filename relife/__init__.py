@@ -1,8 +1,6 @@
 # only expose base routines, ParametricModel and FrozenParametricModel must be imported from relife.base explicitly
-from .base import (
-    get_nb_assets,
-    is_frozen,
-)
+from .utils._array_api import get_args_nb_assets
+from .utils._model_checks import is_frozen
 
 _submodules = [
     "data",

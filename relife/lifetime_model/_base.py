@@ -9,7 +9,7 @@ from relife.likelihood import LikelihoodFromLifetimes
 from relife.quadrature import (
     broadcast_bounds,
     legendre_quadrature,
-    unweighted_laguerre_quadrature,
+    unweighted_laguerre_quadrature, NumericalQuadrature,
 )
 
 from ._plot import PlotParametricLifetimeModel
@@ -174,7 +174,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             return fx * pdf
 
-        arr_a, arr_b = broadcast_bounds(a, b)  # (), (n,) or (m, n)
+        arr_a, arr_b = np.broadcast_arrays(a, b)  # (), (n,) or (m, n)
         if np.any(arr_a > arr_b):
             raise ValueError("Bound values a must be lower than values of b")
 

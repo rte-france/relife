@@ -1,6 +1,6 @@
 import numpy as np
 
-from .age_replacement_policy import AgeReplacementPolicy, OneCycleAgeReplacementPolicy
+from ._preventive_age_replacement import AgeReplacementPolicy, OneCycleAgeReplacementPolicy
 from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 

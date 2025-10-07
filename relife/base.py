@@ -1,11 +1,11 @@
 import inspect
 from itertools import chain
 from typing import Self
+from relife.utils import get_args_nb_assets
 
 import numpy as np
 
-__all__ = ["get_nb_assets", "is_frozen", "ParametricModel", "FrozenParametricModel"]
-
+__all__ = ["ParametricModel", "FrozenParametricModel"]
 
 # MAYBE, custom array container can be used here
 # https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
@@ -174,7 +174,7 @@ class FrozenParametricModel(ParametricModel):
         if np.any(np.isnan(model.params)):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
         self.unfrozen_model = model  # setted as a baseline model
-        self._nb_assets = get_nb_assets(*args)
+        self._nb_assets = get_args_nb_assets(*args)
         self._args = list(args)
 
     @property
@@ -211,24 +211,6 @@ class FrozenParametricModel(ParametricModel):
         if inspect.ismethod(attr):
             return wrapper
         return attr
-
-
-def get_nb_assets(*args):
-    if not bool(args):
-        return 1
-    args_2d = tuple((np.atleast_2d(arys) for arys in args if arys is not None))
-
-    try:
-        broadcast_shape = np.broadcast_shapes(*(ary.shape for ary in args_2d))
-        nb_assets = broadcast_shape[0]
-    except ValueError:
-        raise ValueError("Given args have incompatible shapes")
-    return nb_assets
-
-
-def is_frozen(model):
-    return isinstance(model, FrozenParametricModel)
-
 
 # see sklearn/base.py : return unfitted ParametricModel
 # def clone(model: ParametricModel) -> ParametricModel: ...
