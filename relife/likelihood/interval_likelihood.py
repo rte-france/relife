@@ -79,10 +79,10 @@ class IntervalLikelihood(Likelihood):
         self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
     ) -> np.float64:
         interval_censored = time_sup > time_inf
-
         interval_censored_contrib = np.sum(
             -np.log(
-                self.model.cdf(time_sup[interval_censored], *args)
+                10**-10
+                + self.model.cdf(time_sup[interval_censored], *args)
                 - self.model.cdf(time_inf[interval_censored], *args)
             ),
             dtype=np.float64,
@@ -127,7 +127,8 @@ class IntervalLikelihood(Likelihood):
                 asarray=True,
             )
         ) / (
-            self.model.cdf(time_sup[interval_censored], *args)
+            10**-10
+            + self.model.cdf(time_sup[interval_censored], *args)
             - self.model.cdf(time_inf[interval_censored], *args)
         )
 
@@ -173,9 +174,12 @@ class IntervalLikelihood(Likelihood):
     def _jac_entry_contrib(
         self, entry: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
+        entry_truncated = entry[(entry > 0).squeeze()]
+        args_truncated = (arg[(entry > 0).squeeze()] for arg in args)
+
         jac = self.model.jac_chf(
-            entry[entry > 0],  # filter entry==0 to avoid numerical error in jac_chf
-            *args,
+            entry_truncated,  # filter entry==0 to avoid numerical error in jac_chf
+            *args_truncated,
             asarray=True,
         )
 

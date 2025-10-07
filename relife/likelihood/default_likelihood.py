@@ -88,8 +88,9 @@ class DefaultLikelihood(Likelihood):
     def _event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> np.float64:
+        event_args = (arg[event.squeeze()] for arg in args)
         return -np.sum(
-            np.log(self.model.hf(time[event], *args)),
+            np.log(self.model.hf(time[event], *event_args)),
             dtype=np.float64,
         )
 
@@ -119,9 +120,10 @@ class DefaultLikelihood(Likelihood):
     def _jac_event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> NDArray[np.float64]:
+        event_args = (arg[event.squeeze()] for arg in args)
         jac = -self.model.jac_hf(
             time[event],
-            *args,
+            *event_args,
             asarray=True,
         ) / self.model.hf(time[event], *args)
 
