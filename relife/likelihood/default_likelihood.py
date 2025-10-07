@@ -102,43 +102,57 @@ class DefaultLikelihood(Likelihood):
     def _jac_time_contrib(
         self, time: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
+        jac = self.model.jac_chf(
+            time,
+            *args,
+            asarray=True,
+        )
+
+        # Sum all contribs
+        # Axis 0 is the parameters
         return np.sum(
-            self.model.jac_chf(
-                time,
-                *args,
-                asarray=True,
-            ),
-            axis=(1, 2),
+            jac,
+            axis=tuple(range(1, jac.ndim)),
             dtype=np.float64,
         )
 
     def _jac_event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> NDArray[np.float64]:
-        return -np.sum(
-            event
-            * (
-                self.model.jac_hf(
-                    time,
-                    *args,
-                    asarray=True,
-                )
-                / self.model.hf(time, *args)
-            ),
-            axis=(1, 2),
+        jac = event * (
+            -self.model.jac_hf(
+                time,
+                *args,
+                asarray=True,
+            )
+            / self.model.hf(time, *args)
+        )
+
+        # Sum all contribs
+        # Axis 0 is the parameters
+        return np.sum(
+            jac,
+            axis=tuple(range(1, jac.ndim)),
             dtype=np.float64,
         )
 
     def _jac_entry_contrib(
         self, entry: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
-        return -np.sum(
-            self.model.jac_chf(
-                entry,
-                *args,
-                asarray=True,
-            ),
-            axis=(1, 2),
+        entry_truncated = entry[(entry > 0).squeeze()]
+        args_truncated = (arg[(entry > 0).squeeze()] for arg in args)
+
+        jac = -self.model.jac_chf(
+            entry_truncated,  # filter entry==0 to avoid numerical error in jac_chf
+            *args_truncated,
+            asarray=True,
+        )
+
+        # Sum all contribs
+        # Axis 0 is the parameters
+        return np.sum(
+            jac,
+            axis=tuple(range(1, jac.ndim)),
             dtype=np.float64,
         )
 

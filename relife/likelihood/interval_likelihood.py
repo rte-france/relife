@@ -168,11 +168,11 @@ class IntervalLikelihood(Likelihood):
     ) -> NDArray[np.float64]:
         return -np.sum(
             self.model.jac_chf(
-                entry,
+                entry[entry > 0],  # filter entry==0 to avoid numerical error in jac_chf
                 *args,
                 asarray=True,
             ),
-            axis=(1, 2),
+            axis=1,
             dtype=np.float64,
         )
 
