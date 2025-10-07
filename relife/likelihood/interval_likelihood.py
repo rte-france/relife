@@ -78,18 +78,21 @@ class IntervalLikelihood(Likelihood):
     def _time_contrib(
         self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
     ) -> np.float64:
-        interval_censored = time_inf > time_sup
+        interval_censored = time_sup > time_inf
 
-        interval_censored_contrib = interval_censored * (
-            -np.log(self.model.cdf(time_sup, *args) - self.model.cdf(time_inf, *args))
-        )
-
-        other_contribs = (1 - interval_censored) * self.model.chf(time_sup, *args)
-
-        return np.sum(
-            interval_censored_contrib + other_contribs,
+        interval_censored_contrib = np.sum(
+            -np.log(
+                self.model.cdf(time_sup[interval_censored], *args)
+                - self.model.cdf(time_inf[interval_censored], *args)
+            ),
             dtype=np.float64,
         )
+
+        other_contribs = np.sum(
+            self.model.chf(time_sup[~interval_censored], *args), dtype=np.float64
+        )
+
+        return interval_censored_contrib + other_contribs
 
     def _event_contrib(
         self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
@@ -97,7 +100,7 @@ class IntervalLikelihood(Likelihood):
         event = time_inf == time_sup
 
         return -np.sum(
-            event * np.log(self.model.hf(time_sup, *args)),
+            np.log(self.model.hf(time_sup[event], *args)),
             dtype=np.float64,
         )
 
@@ -110,69 +113,75 @@ class IntervalLikelihood(Likelihood):
     def _jac_time_contrib(
         self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
-        interval_censored = time_inf > time_sup
+        interval_censored = time_sup > time_inf
 
-        interval_censored_contrib = (
-            interval_censored
-            * (
-                self.model.jac_sf(
-                    time_sup,
-                    *args,
-                    asarray=True,
-                )
-                - self.model.jac_sf(
-                    time_inf,
-                    *args,
-                    asarray=True,
-                )
+        jac_interval_censored = (
+            self.model.jac_sf(
+                time_sup[interval_censored],
+                *args,
+                asarray=True,
             )
-            / (self.model.cdf(time_sup, *args) - self.model.cdf(time_inf, *args))
+            - self.model.jac_sf(
+                time_inf[interval_censored],
+                *args,
+                asarray=True,
+            )
+        ) / (
+            self.model.cdf(time_sup[interval_censored], *args)
+            - self.model.cdf(time_inf[interval_censored], *args)
         )
 
-        other_contribs = (1 - interval_censored) * self.model.jac_chf(
-            time_sup,
+        interval_censored_contribs = np.sum(
+            jac_interval_censored,
+            axis=tuple(range(1, jac_interval_censored.ndim)),
+            dtype=np.float64,
+        )
+
+        jac_other = self.model.jac_chf(
+            time_sup[~interval_censored],
             *args,
             asarray=True,
         )
-
-        return np.sum(
-            interval_censored_contrib + other_contribs,
-            axis=(1, 2),
+        other_contribs = np.sum(
+            jac_other,
+            axis=tuple(range(1, jac_other.ndim)),
             dtype=np.float64,
         )
+
+        return interval_censored_contribs + other_contribs
 
     def _jac_event_contrib(
         self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
         event = time_inf == time_sup
 
-        return -np.sum(
-            event
-            * (
-                self.model.jac_hf(
-                    time_sup,
-                    *args,
-                    asarray=True,
-                )
-                / self.model.hf(
-                    time_sup,
-                    *args,
-                )
-            ),
-            axis=(1, 2),
+        jac = -self.model.jac_hf(
+            time_sup[event],
+            *args,
+            asarray=True,
+        ) / self.model.hf(
+            time_sup[event],
+            *args,
+        )
+
+        return np.sum(
+            jac,
+            axis=tuple(range(1, jac.ndim)),
             dtype=np.float64,
         )
 
     def _jac_entry_contrib(
         self, entry: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
+        jac = self.model.jac_chf(
+            entry[entry > 0],  # filter entry==0 to avoid numerical error in jac_chf
+            *args,
+            asarray=True,
+        )
+
         return -np.sum(
-            self.model.jac_chf(
-                entry[entry > 0],  # filter entry==0 to avoid numerical error in jac_chf
-                *args,
-                asarray=True,
-            ),
-            axis=1,
+            jac,
+            axis=tuple(range(1, jac.ndim)),
             dtype=np.float64,
         )
 

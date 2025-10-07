@@ -7,6 +7,7 @@ from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import LifetimeData
 from relife.likelihood.default_likelihood import DefaultLikelihood
 from relife.likelihood.lifetime_likelihood import LikelihoodFromLifetimes
+from relife.likelihood.interval_likelihood import IntervalLikelihood
 from relife.quadrature import (
     broadcast_bounds,
     legendre_quadrature,
@@ -293,13 +294,33 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         *args,
         event=None,
         entry=None,
-        departure=None,
         optimizer_options=None,
     ):
         self.params = self._get_initial_params(
-            time, *args, event=event, entry=entry, departure=departure
+            time, *args, event=event, entry=entry
         )
         likelihood = DefaultLikelihood(self, time, *args, event=event, entry=entry)
+        if optimizer_options is None:
+            optimizer_options = {}
+        if "bounds" not in optimizer_options:
+            optimizer_options["bounds"] = self._get_params_bounds()
+        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+        self.params = fitting_results.optimal_params
+        self.fitting_results = fitting_results
+        return self
+    
+    def fit_interval_censored_data(
+        self,
+        time_inf,
+        time_sup,
+        *args,
+        entry=None,
+        optimizer_options=None,
+    ):
+        self.params = self._get_initial_params(
+            time_sup, *args, entry=entry
+        ) # TODO
+        likelihood = IntervalLikelihood(self, time_inf, time_sup, *args, entry=entry)
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:

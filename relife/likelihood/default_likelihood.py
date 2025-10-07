@@ -89,7 +89,7 @@ class DefaultLikelihood(Likelihood):
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> np.float64:
         return -np.sum(
-            event * np.log(self.model.hf(time, *args)),
+            np.log(self.model.hf(time[event], *args)),
             dtype=np.float64,
         )
 
@@ -119,14 +119,11 @@ class DefaultLikelihood(Likelihood):
     def _jac_event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> NDArray[np.float64]:
-        jac = event * (
-            -self.model.jac_hf(
-                time,
-                *args,
-                asarray=True,
-            )
-            / self.model.hf(time, *args)
-        )
+        jac = -self.model.jac_hf(
+            time[event],
+            *args,
+            asarray=True,
+        ) / self.model.hf(time[event], *args)
 
         # Sum all contribs
         # Axis 0 is the parameters
