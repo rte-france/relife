@@ -3,23 +3,15 @@ import warnings
 import numpy as np
 from scipy.optimize import newton
 
-from relife.utils import is_frozen, get_args_nb_assets
+from relife.utils import is_frozen, to_relife_shape
 from relife.economic import AgeReplacementReward, ExponentialDiscounting, cost
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
-from relife.quadrature import legendre_quadrature
+from relife.utils.quadrature import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
 from ._base import _OneCycleExpectedCosts
 
 
-def _reshape_policy_data(value, nb_assets):
-    value = np.squeeze(np.asarray(value))
-    if nb_assets > 1:
-        value = np.broadcast_to(value, (nb_assets, 1)).copy()
-    return value
-
-
 class OneCycleAgeReplacementPolicy:
-    # noinspection PyUnresolvedReferences
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
@@ -42,17 +34,6 @@ class OneCycleAgeReplacementPolicy:
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
         and access to the rest of the object interface.
 
-    Attributes
-    ----------
-    a0 : float or 1darray, optional
-        Current ages of the assets. If it is given, left truncations of ``a0`` will
-        be take into account for the first cycle.
-    ar
-    cf
-    cp
-    tr
-
-
     References
     ----------
     .. [1] Coolen-Schrijner, P., & Coolen, F. P. A. (2006). On optimality
@@ -63,11 +44,10 @@ class OneCycleAgeReplacementPolicy:
 
     def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, a0=None, ar=None):
         self.lifetime_model = lifetime_model
-        self._nb_assets = get_args_nb_assets(cf, cp, a0, ar, *getattr(lifetime_model, "args", ()))
-        self._cf = _reshape_policy_data(cf, self._nb_assets)
-        self._cp = _reshape_policy_data(cp, self._nb_assets)
-        self._a0 = _reshape_policy_data(a0, self._nb_assets) if a0 is not None else a0
-        self._ar = _reshape_policy_data(ar, self._nb_assets) if ar is not None else ar
+        self._cf = to_relife_shape(cf)
+        self._cp = to_relife_shape(cp)
+        self._a0 = to_relife_shape(a0) if a0 is not None else a0
+        self._ar = to_relife_shape(ar) if ar is not None else ar
         self._tr = None
         self.discounting_rate = discounting_rate
         self.period_before_discounting = period_before_discounting
@@ -92,16 +72,34 @@ class OneCycleAgeReplacementPolicy:
 
     @property
     def cf(self):
+        """Costs of failure.
+
+        Returns
+        -------
+        np.ndarray
+        """
         # _cf is (m, 1) but exposed cf is (m,)
         return np.squeeze(self._cf)
 
     @property
     def cp(self):
+        """Costs of preventive replacements.
+
+        Returns
+        -------
+        np.ndarray
+        """
         # _cp is (m, 1) but exposed cp is (m,)
         return np.squeeze(self._cf)
 
     @property
     def a0(self):
+        """Current ages of the assets.
+
+        Returns
+        -------
+        np.ndarray
+        """
         # _a0 is (m, 1) but exposed a0 is (m,)
         if self._a0 is None:
             return self._a0
@@ -109,6 +107,12 @@ class OneCycleAgeReplacementPolicy:
 
     @property
     def ar(self):
+        """Preventive ages of replacement.
+
+        Returns
+        -------
+        np.ndarray
+        """
         # _ar is (m, 1) but exposed ar is (m,)
         if self._ar is None:
             return self._ar
@@ -116,28 +120,95 @@ class OneCycleAgeReplacementPolicy:
 
     @ar.setter
     def ar(self, value):
-        value = _reshape_policy_data(value, self._nb_assets)
+        value = to_relife_shape(value)
         self._ar = value
         if self.a0 is not None:
             self._tr = np.maximum(value - self._a0, 0)
 
     @property
     def tr(self):
+        """Times before the replacement.
+
+        Returns
+        -------
+        np.ndarray
+        """
         if self.a0 is not None:
             return self._tr
         return self.ar
 
     def expected_total_cost(self, tf, nb_steps):
+        r"""
+        Calculate the expected total cost over a given timeline.
+
+        It takes into account ``discounting_rate`` attribute value.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected equivalent annual cost
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
+            step of the timeline.
+
+        .. warning::
+
+            This method requires the ``ar`` attribute to be set either at initialization
+            or with the ``optimize`` method.
+        """
         if self.ar is None:
             raise ValueError
         return self._expected_costs.expected_total_cost(tf, nb_steps)  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
 
     def asymptotic_expected_total_cost(self):
+        r"""
+        Calculate the asymptotic expected total cost.
+
+        It takes into account ``discounting_rate`` attribute value.
+
+        Returns
+        -------
+        np.ndarray
+            The asymptotic expected total cost.
+
+        .. warning::
+
+            This method requires the ``ar`` attribute to be set either at initialization
+            or with the ``optimize`` method.
+        """
         if self.ar is None:
             raise ValueError
         return self._expected_costs.asymptotic_expected_total_cost()  # () or (m, nb_steps)
 
     def expected_equivalent_annual_cost(self, tf, nb_steps):
+        r"""
+        Calculate the expected equivalent annual cost over a given timeline.
+
+        It takes into account ``discounting_rate`` attribute value.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected equivalent annual cost
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
+            step of the timeline.
+
+        .. warning::
+
+            This method requires the ``ar`` attribute to be set either at initialization
+            or with the ``optimize`` method.
+        """
         if self.ar is None:
             raise ValueError
         # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
@@ -161,6 +232,21 @@ class OneCycleAgeReplacementPolicy:
         return timeline, eeac  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self):
+        r"""
+        Calculate the asymptotic expected equivalent annual cost.
+
+        It takes into account ``discounting_rate`` attribute value.
+
+        Returns
+        -------
+        np.ndarray
+            The asymptotic expected total cost.
+
+        .. warning::
+
+            This method requires the ``ar`` attribute to be set either at initialization
+            or with the ``optimize`` method.
+        """
         if self.ar is None:
             raise ValueError
         # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
@@ -210,7 +296,6 @@ class OneCycleAgeReplacementPolicy:
 
 
 class AgeReplacementPolicy:
-    # noinspection PyUnresolvedReferences
     r"""Age replacement policy.
 
     Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`
@@ -233,16 +318,6 @@ class AgeReplacementPolicy:
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
         and access to the rest of the object interface.
 
-    Attributes
-    ----------
-    a0 : float or 1darray, optional
-        Current ages of the assets. If it is given, left truncations of ``a0`` will
-        be take into account for the first cycle.
-    ar
-    tr1
-    cf
-    cp
-
     References
     ----------
     .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
@@ -253,44 +328,72 @@ class AgeReplacementPolicy:
     def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, a0=None, ar=None):
 
         self.lifetime_model = lifetime_model
-        self._nb_assets = get_args_nb_assets(cf, cp, a0, ar, *getattr(lifetime_model, "args", ()))
-        self._cf = _reshape_policy_data(cf, self._nb_assets)
-        self._cp = _reshape_policy_data(cp, self._nb_assets)
-        self._a0 = _reshape_policy_data(a0, self._nb_assets) if a0 is not None else a0
-        self._ar = _reshape_policy_data(ar, self._nb_assets) if ar is not None else ar
+        self._cf = to_relife_shape(cf)
+        self._cp = to_relife_shape(cp)
+        self._a0 = to_relife_shape(a0) if a0 is not None else a0
+        self._ar = to_relife_shape(ar) if ar is not None else ar
         self._tr1 = None
         self.discounting_rate = discounting_rate
 
     @property
     def cf(self):
+        """Costs of failure.
 
+        Returns
+        -------
+        np.ndarray
+        """
         return np.squeeze(self._cf)
 
     @property
     def cp(self):
+        """Costs of preventive replacement.
+
+        Returns
+        -------
+        np.ndarray
+        """
         return np.squeeze(self._cf)
 
     @property
     def a0(self):
+        """Current ages of the assets.
+
+        Returns
+        -------
+        np.ndarray
+        """
         if self._a0 is None:
             return self._a0
         return np.squeeze(self._a0)
 
     @property
     def tr1(self):
+        """Times before the first replacements.
+
+        Returns
+        -------
+        np.ndarray
+        """
         if self.a0 is not None:
             return self._tr1
         return self.ar
 
     @property
     def ar(self):
+        """Preventive ages of replacement.
+
+        Returns
+        -------
+        np.ndarray
+        """
         if self._ar is None:
             return self._ar
         return np.squeeze(self._ar)
 
     @ar.setter
     def ar(self, value):
-        value = _reshape_policy_data(value, self._nb_assets)
+        value = to_relife_shape(value)
         self._ar = value
         if self.a0 is not None:
             self._tr1 = np.maximum(value - self._a0, 0)
@@ -502,6 +605,29 @@ class AgeReplacementPolicy:
 
         self.ar = np.squeeze(newton(eq, x0))
         return self
+
+    def generate_failure_data(self, size, tf, t0=0.0, seed=None):
+        """Generate failure data
+
+        This function will generate failure data that can be used to fit a lifetime model.
+
+        Parameters
+        ----------
+        size : int
+            The size of the desired sample.
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        seed : int, optional
+            Random seed, by default None.
+
+        Returns
+        -------
+        A dict of time, event, entry and args (covariates)
+
+        """
+        return self._stochastic_process.generate_failure_data(tf, t0, size, seed)
 
 
 class NonHomogeneousPoissonAgeReplacementPolicy:

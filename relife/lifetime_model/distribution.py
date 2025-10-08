@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 
-from relife.quadrature import laguerre_quadrature, legendre_quadrature
+from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
 

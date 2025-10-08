@@ -3,19 +3,17 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import Bounds, newton
 
-from relife.base import FrozenParametricModel, ParametricModel
+from relife.base import ParametricModel
 from relife.data import LifetimeData
 from relife.likelihood import LikelihoodFromLifetimes
-from relife.quadrature import (
-    broadcast_bounds,
+from relife.utils.quadrature import (
     legendre_quadrature,
-    unweighted_laguerre_quadrature, NumericalQuadrature,
+    unweighted_laguerre_quadrature,
 )
 
 from ._plot import PlotParametricLifetimeModel
 
 __all__ = ["ParametricLifetimeModel", "FittableParametricLifetimeModel", "NonParametricLifetimeModel"]
-
 
 class ParametricLifetimeModel(ParametricModel, ABC):
     r"""Base class for lifetime model.
