@@ -1,18 +1,16 @@
 import copy
 
 import numpy as np
-from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.base import ParametricModel
-from relife.economic import (
-    ExponentialDiscounting,
-    Reward,
-)
+from relife.economic import Reward, ExponentialDiscounting
+from relife.lifetime_model import LeftTruncatedModel
 from relife.stochastic_process._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
+from relife.utils import is_frozen
 
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 
@@ -206,9 +204,6 @@ class RenewalProcess(ParametricModel):
         from ._sample import RenewalProcessIterable
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
-            from ..utils._model_checks import is_frozen
-            from relife.lifetime_model import LeftTruncatedModel
-
             if is_frozen(self.first_lifetime_model):
                 if (
                     isinstance(self.first_lifetime_model.unfrozen_model, LeftTruncatedModel)
@@ -270,11 +265,11 @@ class RenewalRewardProcess(RenewalProcess):
     params_names
     """
 
-    def __init__(self, lifetime_model, reward, discounting, first_lifetime_model=None, first_reward=None):
+    def __init__(self, lifetime_model, reward, discounting_rate=0., first_lifetime_model=None, first_reward=None):
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else copy.deepcopy(reward)
-        self.discounting = discounting
+        self.discounting = ExponentialDiscounting(discounting_rate)
 
     @property
     def discounting_rate(self):
@@ -296,7 +291,7 @@ class RenewalRewardProcess(RenewalProcess):
         self.discounting.rate = value
 
     @override
-    def _make_timeline(self, tf, nb_steps = None):
+    def _make_timeline(self, tf, nb_steps=None):
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
         args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case
@@ -472,8 +467,8 @@ class RenewalRewardProcess(RenewalProcess):
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
         if timeline.ndim == 2:
-            return timeline[0, :], eeac  # (nb_steps,) and (m, nb_steps)
-        return timeline, eeac  # (nb_steps,) and (nb_steps)
+            return timeline[0, :], np.squeeze(eeac)  # (nb_steps,) and (m, nb_steps)
+        return timeline, np.squeeze(eeac)  # (nb_steps,) and (nb_steps)
 
     def asymptotic_expected_equivalent_annual_worth(self):
         """Asymptotic expected equivalent annual worth.

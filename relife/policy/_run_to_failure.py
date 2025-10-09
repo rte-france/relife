@@ -1,11 +1,23 @@
 import numpy as np
 
-from relife.utils import to_relife_shape
-from relife.economic import RunToFailureReward, ExponentialDiscounting
+from relife.economic import RunToFailureReward
 from relife.lifetime_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
+from relife.utils import reshape_1d_arg, is_lifetime_model
 
 from ._base import _OneCycleExpectedCosts
+
+def run_to_failure_policy(model, costs, one_cycle=False, **kwargs):
+    if is_lifetime_model(model):
+        try:
+            cf = costs["cf"]
+        except KeyError:
+            raise ValueError("costs must contain 'cf'")
+        if one_cycle:
+            return OneCycleRunToFailurePolicy(model, cf, **kwargs)
+        return RunToFailurePolicy(model, cf, **kwargs)
+    else:
+        raise ValueError("can't create a preventive age replacement policy from given model")
 
 class OneCycleRunToFailurePolicy:
     r"""One cyle run-to-failure policy.
@@ -23,10 +35,10 @@ class OneCycleRunToFailurePolicy:
         be take into account for the first cycle.
     """
 
-    def __init__(self, lifetime_model, cf, discounting_rate = 0.0, period_before_discounting = 1.0, a0 = None):
+    def __init__(self, lifetime_model, cf, discounting_rate=0.0, period_before_discounting=1.0, a0=None):
         self.lifetime_model = lifetime_model
-        self._cf = to_relife_shape(cf)
-        self._a0 = to_relife_shape(a0) if a0 is not None else a0
+        self._cf = reshape_1d_arg(cf)
+        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
         self.discounting_rate = discounting_rate
         self.period_before_discounting = period_before_discounting
 
@@ -59,19 +71,19 @@ class OneCycleRunToFailurePolicy:
             return _OneCycleExpectedCosts(
                 self.lifetime_model,
                 RunToFailureReward(self.cf),
-                ExponentialDiscounting(self.discounting_rate),
-                self.period_before_discounting
+                discounting_rate=self.discounting_rate,
+                period_before_discounting=self.period_before_discounting,
             )
         return _OneCycleExpectedCosts(
             LeftTruncatedModel(self.lifetime_model).freeze_args(self.a0),
-        RunToFailureReward(self.cf),
-        ExponentialDiscounting(self.discounting_rate),
-        self.period_before_discounting
+            RunToFailureReward(self.cf),
+            discounting_rate=self.discounting_rate,
+            period_before_discounting=self.period_before_discounting,
         )
 
-    def expected_total_cost(self, tf, nb_steps):
+    def expected_net_present_value(self, tf, nb_steps):
         r"""
-        Calculate the expected total cost over a given timeline.
+        Calculate the expected net present value over a given timeline.
 
         It takes into account ``discounting_rate`` attribute value.
 
@@ -93,11 +105,11 @@ class OneCycleRunToFailurePolicy:
             This method requires the ``ar`` attribute to be set either at initialization
             or with the ``optimize`` method.
         """
-        return self._expected_costs.expected_total_cost(tf, nb_steps)
+        return self._expected_costs.expected_net_present_value(tf, nb_steps)
 
-    def asymptotic_expected_total_cost(self):
+    def asymptotic_expected_net_present_value(self):
         r"""
-        Calculate the asymptotic expected total cost.
+        Calculate the asymptotic net present value.
 
         It takes into account ``discounting_rate`` attribute value.
 
@@ -111,7 +123,7 @@ class OneCycleRunToFailurePolicy:
             This method requires the ``ar`` attribute to be set either at initialization
             or with the ``optimize`` method.
         """
-        return self._expected_costs.asymptotic_expected_total_cost()
+        return self._expected_costs.asymptotic_expected_net_present_value()
 
     def expected_equivalent_annual_cost(self, tf, nb_steps):
         r"""
@@ -188,8 +200,8 @@ class RunToFailurePolicy:
         a0=None,
     ):
         self.lifetime_model = lifetime_model
-        self._cf = to_relife_shape(cf)
-        self._a0 = to_relife_shape(a0) if a0 is not None else a0
+        self._cf = reshape_1d_arg(cf)
+        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
         self.discounting_rate = discounting_rate
 
     @property
@@ -222,18 +234,18 @@ class RunToFailurePolicy:
             return RenewalRewardProcess(
                 self.lifetime_model,
                 RunToFailureReward(self.cf),
-                ExponentialDiscounting(self.discounting_rate),
+                discounting_rate=self.discounting_rate,
             )
         return RenewalRewardProcess(
             self.lifetime_model,
             RunToFailureReward(self.cf),
-            ExponentialDiscounting(self.discounting_rate),
-            first_lifetime_model=LeftTruncatedModel(self.lifetime_model).freeze_args(self.a0)
+            discounting_rate=self.discounting_rate,
+            first_lifetime_model=LeftTruncatedModel(self.lifetime_model).freeze_args(self.a0),
         )
 
-    def expected_total_cost(self, tf, nb_steps):
+    def expected_net_present_value(self, tf, nb_steps):
         r"""
-        The expected total cost.
+        The expected net present value.
 
         It is computed by solving the renewal equation and is given by:
 
@@ -258,12 +270,12 @@ class RunToFailurePolicy:
         Returns
         -------
         tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
+            A tuple containing the timeline used to compute the expected net present value and its corresponding values at each
             step of the timeline.
         """
         return self._stochastic_process.expected_total_reward(tf, nb_steps)
 
-    def asymptotic_expected_total_cost(self):
+    def asymptotic_net_present_value(self):
         r"""
         The asymtotic expected total cost
 
@@ -271,7 +283,7 @@ class RunToFailurePolicy:
 
             \lim_{t\to\infty} z(t)
 
-        where :math:`z(t)` is the expected total cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_total_cost` for more details.
+        where :math:`z(t)` is the expected total cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_net_present_value` for more details.
 
         Returns
         -------
@@ -291,7 +303,7 @@ class RunToFailurePolicy:
         where :
 
         - :math:`t` is the time
-        - :math:`z(t)` is the expected_total_cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_total_cost` for more details.`.
+        - :math:`z(t)` is the expected_net_present_value at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_net_present_value` for more details.`.
         - :math:`\delta` is the discounting rate.
 
         Parameters
@@ -325,3 +337,25 @@ class RunToFailurePolicy:
             The asymptotic expected equivalent annual cost
         """
         return self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
+
+    def sample(self, size, tf, t0=0.0, seed=None):
+        """Renewal data sampling.
+
+        This function will sample data and encapsulate them in an object.
+
+        Parameters
+        ----------
+        size : int
+            The size of the desired sample.
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        size : int or tuple of 2 int
+            Size of the sample
+        seed : int, optional
+            Random seed, by default None.
+
+        """
+
+        return self._stochastic_process.sample(tf, t0, size, seed)

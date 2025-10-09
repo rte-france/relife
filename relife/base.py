@@ -1,11 +1,11 @@
 import inspect
 from itertools import chain
 from typing import Self
-from relife.utils import get_args_nb_assets
 
 import numpy as np
 
 __all__ = ["ParametricModel", "FrozenParametricModel"]
+
 
 # MAYBE, custom array container can be used here
 # https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
@@ -174,12 +174,7 @@ class FrozenParametricModel(ParametricModel):
         if np.any(np.isnan(model.params)):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
         self.unfrozen_model = model  # setted as a baseline model
-        self._nb_assets = get_args_nb_assets(*args)
         self._args = list(args)
-
-    @property
-    def nb_assets(self):
-        return self._nb_assets
 
     @property
     def args(self):
@@ -211,6 +206,7 @@ class FrozenParametricModel(ParametricModel):
         if inspect.ismethod(attr):
             return wrapper
         return attr
+
 
 # see sklearn/base.py : return unfitted ParametricModel
 # def clone(model: ParametricModel) -> ParametricModel: ...

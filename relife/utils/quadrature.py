@@ -155,9 +155,8 @@ def unweighted_laguerre_quadrature(
     )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
-
 class NumericalQuadrature:
-    def __init__(self, func, a, b = None):
+    def __init__(self, func, a, b=None):
         self.func = func
         self.a = a
         self.b = b
