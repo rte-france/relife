@@ -34,12 +34,6 @@ Gompertz
             ~Gompertz.fit
         
         
-            ~Gompertz.fit_interval_censored_data
-        
-        
-            ~Gompertz.fit_with_old_likelihood
-        
-        
             ~Gompertz.hf
         
         

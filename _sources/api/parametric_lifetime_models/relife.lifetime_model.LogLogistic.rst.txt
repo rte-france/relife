@@ -34,12 +34,6 @@ LogLogistic
             ~LogLogistic.fit
         
         
-            ~LogLogistic.fit_interval_censored_data
-        
-        
-            ~LogLogistic.fit_with_old_likelihood
-        
-        
             ~LogLogistic.hf
         
         

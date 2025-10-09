@@ -24,7 +24,4 @@ NonParametricLifetimeModel
         
             ~NonParametricLifetimeModel.fit
         
-        
-            ~NonParametricLifetimeModel.fit_interval_censored_data
-        
     

@@ -34,12 +34,6 @@ Gamma
             ~Gamma.fit
         
         
-            ~Gamma.fit_interval_censored_data
-        
-        
-            ~Gamma.fit_with_old_likelihood
-        
-        
             ~Gamma.hf
         
         

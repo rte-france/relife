@@ -424,10 +424,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseAgeReplacementPolicy.html">BaseAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseOneCycleAgeReplacementPolicy.html">BaseOneCycleAgeReplacementPolicy</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -491,7 +487,7 @@
 <h1>AgeReplacementPolicy<a class="headerlink" href="#agereplacementpolicy" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">AgeReplacementPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/age_replacement_policy.html#AgeReplacementPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">AgeReplacementPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy" title="Link to this definition">#</a></dt>
 <dd><p>Age replacement policy.</p>
 <p>Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age <span class="math notranslate nohighlight">\(a_r\)</span>
 with costs <span class="math notranslate nohighlight">\(c_p\)</span> or upon failure with costs <span class="math notranslate nohighlight">\(c_f\)</span> if earlier <a class="reference internal" href="#r3175f102d60d-1" id="id1">[1]</a>.</p>
@@ -514,21 +510,6 @@ and access to the rest of the object interface.</p>
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>a0</strong><span class="classifier">float or 1darray, optional</span></dt><dd><p>Current ages of the assets. If it is given, left truncations of <code class="docutils literal notranslate"><span class="pre">a0</span></code> will
-be take into account for the first cycle.</p>
-</dd>
-<dt><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.ar" title="relife.policy.AgeReplacementPolicy.ar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ar</span></code></a></dt><dd><p>Ages of the preventive replacements</p>
-</dd>
-<dt><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.first_cycle_tr" title="relife.policy.AgeReplacementPolicy.first_cycle_tr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_cycle_tr</span></code></a></dt><dd><p>Time before the first replacement</p>
-</dd>
-<dt><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.cf" title="relife.policy.AgeReplacementPolicy.cf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cf</span></code></a></dt><dd><p>Cost of failures</p>
-</dd>
-<dt><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.cp" title="relife.policy.AgeReplacementPolicy.cp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cp</span></code></a></dt><dd><p>Cost of preventive replacements</p>
-</dd>
-</dl>
-</dd>
 </dl>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
@@ -548,33 +529,43 @@ Reliability, 1000-1008.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>The asymtotic expected equivalent annual cost</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_total_cost" title="relife.policy.AgeReplacementPolicy.asymptotic_expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_cost</span></code></a></p></td>
-<td><p>The asymtotic expected total cost</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_net_present_value" title="relife.policy.AgeReplacementPolicy.asymptotic_expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_net_present_value</span></code></a></p></td>
+<td><p>The asymtotic expected net present value</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>The expected equivalent annual cost.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_nb_replacements" title="relife.policy.AgeReplacementPolicy.expected_nb_replacements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_nb_replacements</span></code></a></p></td>
-<td><p>The expected number of replacements.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_net_present_value</span></code></a></p></td>
+<td><p>The expected net present value.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
-<td><p>The expected total cost.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.generate_failure_data" title="relife.policy.AgeReplacementPolicy.generate_failure_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_failure_data</span></code></a></p></td>
+<td><p>Generate failure data</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.generate_lifetime_data" title="relife.policy.AgeReplacementPolicy.generate_lifetime_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_lifetime_data</span></code></a></p></td>
-<td><p>Generate lifetime data</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.optimize" title="relife.policy.AgeReplacementPolicy.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.optimize" title="relife.policy.AgeReplacementPolicy.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a></p></td>
 <td><p>Computes the optimal age(s) of replacement and updates the internal <code class="docutils literal notranslate"><span class="pre">ar</span></code> value(s).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.sample" title="relife.policy.AgeReplacementPolicy.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.AgeReplacementPolicy.sample" title="relife.policy.AgeReplacementPolicy.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
 <td><p>Renewal data sampling.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.a0">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">a0</span></span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.a0" title="Link to this definition">#</a></dt>
+<dd><p>Current ages of the assets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>np.ndarray</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.annual_number_of_replacements">
-<span class="sig-name descname"><span class="pre">annual_number_of_replacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upon_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/age_replacement_policy.html#AgeReplacementPolicy.annual_number_of_replacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.annual_number_of_replacements" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">annual_number_of_replacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upon_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.annual_number_of_replacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.annual_number_of_replacements" title="Link to this definition">#</a></dt>
 <dd><p>The expected number of annual replacements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -593,11 +584,11 @@ Reliability, 1000-1008.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.ar">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ar</span></span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.ar" title="Link to this definition">#</a></dt>
-<dd><p>Ages of the preventive replacements</p>
+<dd><p>Preventive ages of replacement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd></dd>
+<dt>np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -605,7 +596,7 @@ Reliability, 1000-1008.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/age_replacement_policy.html#AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected equivalent annual cost</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} \text{EEAC}(t)\]</div>
@@ -621,12 +612,12 @@ Reliability, 1000-1008.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.asymptotic_expected_total_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_total_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/age_replacement_policy.html#AgeReplacementPolicy.asymptotic_expected_total_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>The asymtotic expected total cost</p>
+<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.asymptotic_expected_net_present_value">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
+<dd><p>The asymtotic expected net present value</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} z(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.</p>
+<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_net_present_value()</span></code></a> for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -640,11 +631,11 @@ Reliability, 1000-1008.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.cf">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cf</span></span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.cf" title="Link to this definition">#</a></dt>
-<dd><p>Cost of failures</p>
+<dd><p>Costs of failure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd></dd>
+<dt>np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -653,11 +644,11 @@ Reliability, 1000-1008.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.cp">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cp</span></span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.cp" title="Link to this definition">#</a></dt>
-<dd><p>Cost of preventive replacements</p>
+<dd><p>Costs of preventive replacement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd></dd>
+<dt>np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -665,14 +656,14 @@ Reliability, 1000-1008.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/age_replacement_policy.html#AgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[\text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
 <p>where :</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
-<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_total_cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.`.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_net_present_value at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_net_present_value()</span></code></a> for more details.`.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
 </ul>
 <dl class="field-list simple">
@@ -695,44 +686,9 @@ step of the timeline.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.expected_nb_replacements">
-<span class="sig-name descname"><span class="pre">expected_nb_replacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.expected_nb_replacements" title="Link to this definition">#</a></dt>
-<dd><p>The expected number of replacements.</p>
-<p>It is computed  by solving the renewal equation:</p>
-<div class="math notranslate nohighlight">
-\[m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)\]</div>
-<p>where:</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(m\)</span> is the renewal function,</p></li>
-<li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
-lifetime model,</p></li>
-<li><p><span class="math notranslate nohighlight">\(F_1\)</span> is the cumulative distribution function of the underlying
-lifetime model for the fist renewal in the case of a delayed renewal
-process.</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected number of replacements will be computed up until this calendar time.</p>
-</dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected number of replacements</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected number of replacements and its corresponding values at each
-step of the timeline.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.expected_total_cost">
-<span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/age_replacement_policy.html#AgeReplacementPolicy.expected_total_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>The expected total cost.</p>
+<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.expected_net_present_value">
+<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
+<dd><p>The expected net present value.</p>
 <p>It is computed by solving the renewal equation and is given by:</p>
 <div class="math notranslate nohighlight">
 \[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
@@ -762,24 +718,11 @@ step of the timeline.</p>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.first_cycle_tr">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">first_cycle_tr</span></span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.first_cycle_tr" title="Link to this definition">#</a></dt>
-<dd><p>Time before the first replacement</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.generate_lifetime_data">
-<span class="sig-name descname"><span class="pre">generate_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.generate_lifetime_data" title="Link to this definition">#</a></dt>
-<dd><p>Generate lifetime data</p>
-<p>This function will generate lifetime data that can be used to fit a lifetime model.</p>
+<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.generate_failure_data">
+<span class="sig-name descname"><span class="pre">generate_failure_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.generate_failure_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.generate_failure_data" title="Link to this definition">#</a></dt>
+<dd><p>Generate failure data</p>
+<p>This function will generate failure data that can be used to fit a lifetime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -803,7 +746,7 @@ step of the timeline.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.optimize">
-<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/age_replacement_policy.html#AgeReplacementPolicy.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.optimize" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.optimize" title="Link to this definition">#</a></dt>
 <dd><p>Computes the optimal age(s) of replacement and updates the internal <code class="docutils literal notranslate"><span class="pre">ar</span></code> value(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -817,7 +760,7 @@ step of the timeline.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.sample" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#AgeReplacementPolicy.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.sample" title="Link to this definition">#</a></dt>
 <dd><p>Renewal data sampling.</p>
 <p>This function will sample data and encapsulate them in an object.</p>
 <dl class="field-list simple">
@@ -833,6 +776,19 @@ step of the timeline.</p>
 </dd>
 <dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
 </dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.tr1">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tr1</span></span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.tr1" title="Link to this definition">#</a></dt>
+<dd><p>Times before the first replacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>np.ndarray</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -866,19 +822,19 @@ step of the timeline.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.a0"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.a0</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.annual_number_of_replacements"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.annual_number_of_replacements()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.ar"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.ar</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_total_cost"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.asymptotic_expected_total_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.asymptotic_expected_net_present_value"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.asymptotic_expected_net_present_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.cf"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.cf</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.cp"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.cp</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.expected_nb_replacements"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.expected_nb_replacements()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.expected_total_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.first_cycle_tr"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.first_cycle_tr</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.generate_lifetime_data"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.generate_lifetime_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.expected_net_present_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.generate_failure_data"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.generate_failure_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.optimize"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.optimize()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.sample"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.sample()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.AgeReplacementPolicy.tr1"><code class="docutils literal notranslate"><span class="pre">AgeReplacementPolicy.tr1</span></code></a></li>
 </ul>
 </li>
 </ul>

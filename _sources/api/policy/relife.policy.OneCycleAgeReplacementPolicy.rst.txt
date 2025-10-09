@@ -25,18 +25,15 @@ OneCycleAgeReplacementPolicy
             ~OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
         
         
-            ~OneCycleAgeReplacementPolicy.asymptotic_expected_total_cost
+            ~OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value
         
         
             ~OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost
         
         
-            ~OneCycleAgeReplacementPolicy.expected_total_cost
+            ~OneCycleAgeReplacementPolicy.expected_net_present_value
         
         
             ~OneCycleAgeReplacementPolicy.optimize
-        
-        
-            ~OneCycleAgeReplacementPolicy.tr
         
     
