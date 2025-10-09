@@ -270,7 +270,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             np.full(self.nb_params, np.inf),
         )
 
-    def fit(self, time, event=None, entry=None, departure=None, **options):
+    def fit(self, time, event=None, entry=None, **options):
         """
         Estimation of the distribution parameters from lifetime data.
 
@@ -282,8 +282,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : ndarray of float (1d), default is None
             Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
         **options
             Extra arguments used by `scipy.minimize`. Default values are:
                 - `method` : `"L-BFGS-B"`
@@ -305,7 +303,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         format that allows to pass other information as left-censored or interval-censored values. In this case,
         `event` is not needed as 2d-array encodes right-censored values by itself.
         """
-        return super().fit(time, event=event, entry=entry, departure=departure, **options)
+        return super().fit(time, event=event, entry=entry, **options)
 
 
 class Exponential(LifetimeDistribution):
