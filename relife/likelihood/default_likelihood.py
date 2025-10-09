@@ -88,7 +88,7 @@ class DefaultLikelihood(Likelihood):
     def _event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> np.float64:
-        event_args = (arg[event.squeeze()] for arg in args)
+        event_args = tuple(arg[event.squeeze()] for arg in args)
         return -np.sum(
             np.log(self.model.hf(time[event], *event_args)),
             dtype=np.float64,
@@ -120,12 +120,12 @@ class DefaultLikelihood(Likelihood):
     def _jac_event_contrib(
         self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
     ) -> NDArray[np.float64]:
-        event_args = (arg[event.squeeze()] for arg in args)
+        event_args = tuple(arg[event.squeeze()] for arg in args)
         jac = -self.model.jac_hf(
             time[event],
             *event_args,
             asarray=True,
-        ) / self.model.hf(time[event], *args)
+        ) / self.model.hf(time[event], *event_args)
 
         # Sum all contribs
         # Axis 0 is the parameters
@@ -139,7 +139,7 @@ class DefaultLikelihood(Likelihood):
         self, entry: NDArray[np.float64], *args
     ) -> NDArray[np.float64]:
         entry_truncated = entry[(entry > 0).squeeze()]
-        args_truncated = (arg[(entry > 0).squeeze()] for arg in args)
+        args_truncated = tuple(arg[(entry > 0).squeeze()] for arg in args)
 
         jac = -self.model.jac_chf(
             entry_truncated,  # filter entry==0 to avoid numerical error in jac_chf
