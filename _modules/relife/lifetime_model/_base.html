@@ -712,9 +712,7 @@
         <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">optimizer_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_initial_params</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_initial_params</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">)</span>
         <span class="n">likelihood</span> <span class="o">=</span> <span class="n">DefaultLikelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">optimizer_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">optimizer_options</span> <span class="o">=</span> <span class="p">{}</span>
@@ -724,7 +722,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">fitting_results</span><span class="o">.</span><span class="n">optimal_params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">fitting_results</span>
         <span class="k">return</span> <span class="bp">self</span>
-    
+
     <span class="k">def</span><span class="w"> </span><span class="nf">fit_interval_censored_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_inf</span><span class="p">,</span>
@@ -733,9 +731,7 @@
         <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">optimizer_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_initial_params</span><span class="p">(</span>
-            <span class="n">time_sup</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span>
-        <span class="p">)</span> <span class="c1"># TODO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_initial_params</span><span class="p">(</span><span class="n">time_sup</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">)</span>  <span class="c1"># TODO</span>
         <span class="n">likelihood</span> <span class="o">=</span> <span class="n">IntervalLikelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">optimizer_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">optimizer_options</span> <span class="o">=</span> <span class="p">{}</span>
@@ -753,7 +749,7 @@
         <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">departure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">optimizer_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">optimizer_options</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_initial_params</span><span class="p">(</span>
             <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="n">departure</span>
@@ -774,7 +770,12 @@
 <a class="viewcode-back" href="../../../api/base_class/relife.lifetime_model.NonParametricLifetimeModel.html#relife.lifetime_model.NonParametricLifetimeModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NonParametricLifetimeModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="o">...</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_interval_censored_data</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">optimizer_options</span>
+    <span class="p">):</span> <span class="o">...</span></div>
 
 </pre></div>
 

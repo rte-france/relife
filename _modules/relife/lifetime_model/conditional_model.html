@@ -421,9 +421,13 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_reshape_ar_or_a0</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># in shape : (), (m,) or (m, 1)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="p">)</span>  <span class="c1"># in shape : (), (m,) or (m, 1)</span>
     <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Incorrect </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> shape. Got </span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">. Expected (), (m,) or (m, 1)&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Incorrect </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> shape. Got </span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">. Expected (), (m,) or (m, 1)&quot;</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">value</span>  <span class="c1"># out shape: () or (m, 1)</span>
@@ -675,9 +679,9 @@
             <span class="n">time</span><span class="p">,</span> <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>
             <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>  <span class="c1"># (m, 1) or (m, n)</span>
             <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">ub</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>  <span class="c1"># (m, 1) or (m, n)</span>
-        <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">-</span> <span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span>
-        <span class="p">)</span>  <span class="c1"># () or (n,) or (m, n)</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">-</span> <span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">10</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># () or (n,) or (m, n)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span></div>
 
@@ -736,7 +740,16 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.rvs">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.rvs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Random variable sampling.</span>
 
@@ -830,7 +843,9 @@
         <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
         <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">integration</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">b</span> <span class="o">==</span> <span class="n">ar</span><span class="p">,</span> <span class="n">func</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">integration</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">b</span> <span class="o">==</span> <span class="n">ar</span><span class="p">,</span> <span class="n">func</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mi">0</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AgeReplacementModel.moment">
@@ -1142,12 +1157,26 @@
 <span class="sd">            Function values at each given cumulative hazard rate(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="n">a0</span></div>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span>
+                <span class="n">cumulative_hazard_rate</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span>
+            <span class="p">)</span>
+            <span class="o">-</span> <span class="n">a0</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LeftTruncatedModel.rvs">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.rvs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Random variable sampling.</span>
 

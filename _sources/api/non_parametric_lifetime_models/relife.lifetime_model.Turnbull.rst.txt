@@ -25,6 +25,9 @@ Turnbull
             ~Turnbull.fit
         
         
+            ~Turnbull.fit_interval_censored_data
+        
+        
             ~Turnbull.sf
         
     
