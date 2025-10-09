@@ -66,6 +66,7 @@ class DefaultLikelihood(Likelihood):
             if (entry is not None)
             else np.zeros_like(self.time, dtype=np.float64)
         )
+
         self.args = args_reshape(args)
         self.nb_samples = len(time)
 
@@ -79,6 +80,11 @@ class DefaultLikelihood(Likelihood):
                 f"All lifetime data must have the same number of values. Fields length are different. Got {set(sizes)}"
             )
 
+        self.time_with_event = self.time[self.event.squeeze()]
+        self.entry = self.entry[(self.entry > 0).squeeze()]
+        self.event_args = tuple(arg[self.event.squeeze()] for arg in self.args)
+        self.entry_args = tuple(arg[(self.entry > 0).squeeze()] for arg in self.args)
+
     def _time_contrib(self, time: NDArray[np.float64], *args) -> np.float64:
         return np.sum(
             self.model.chf(time, *args),
@@ -86,17 +92,20 @@ class DefaultLikelihood(Likelihood):
         )
 
     def _event_contrib(
-        self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
+        self, time_with_event: NDArray[np.float64], *event_args
     ) -> np.float64:
-        event_args = tuple(arg[event.squeeze()] for arg in args)
+        if len(time_with_event) == 0:
+            return None
         return -np.sum(
-            np.log(self.model.hf(time[event], *event_args)),
+            np.log(self.model.hf(time_with_event, *event_args)),
             dtype=np.float64,
         )
 
-    def _entry_contrib(self, entry: NDArray[np.float64], *args) -> np.float64:
+    def _entry_contrib(self, entry: NDArray[np.float64], *entry_args) -> np.float64:
+        if len(entry) == 0:
+            return None
         return -np.sum(
-            self.model.chf(entry, *args),
+            self.model.chf(entry, *entry_args),
             dtype=np.float64,
         )
 
@@ -118,14 +127,15 @@ class DefaultLikelihood(Likelihood):
         )
 
     def _jac_event_contrib(
-        self, time: NDArray[np.float64], event: NDArray[np.bool_], *args
+        self, time_with_event: NDArray[np.float64], *event_args
     ) -> NDArray[np.float64]:
-        event_args = tuple(arg[event.squeeze()] for arg in args)
+        if len(time_with_event) == 0:
+            return None
         jac = -self.model.jac_hf(
-            time[event],
+            time_with_event,
             *event_args,
             asarray=True,
-        ) / self.model.hf(time[event], *event_args)
+        ) / self.model.hf(time_with_event, *event_args)
 
         # Sum all contribs
         # Axis 0 is the parameters
@@ -136,14 +146,14 @@ class DefaultLikelihood(Likelihood):
         )
 
     def _jac_entry_contrib(
-        self, entry: NDArray[np.float64], *args
+        self, entry: NDArray[np.float64], *entry_args
     ) -> NDArray[np.float64]:
-        entry_truncated = entry[(entry > 0).squeeze()]
-        args_truncated = tuple(arg[(entry > 0).squeeze()] for arg in args)
+        if len(entry) == 0:
+            return None
 
         jac = -self.model.jac_chf(
-            entry_truncated,  # filter entry==0 to avoid numerical error in jac_chf
-            *args_truncated,
+            entry,  # filter entry==0 to avoid numerical error in jac_chf
+            *entry_args,
             asarray=True,
         )
 
@@ -163,8 +173,8 @@ class DefaultLikelihood(Likelihood):
         self.model.params = params  # changes model params
         contributions = (
             self._time_contrib(self.time, *self.args),
-            self._event_contrib(self.time, self.event, *self.args),
-            self._entry_contrib(self.entry, *self.args),
+            self._event_contrib(self.time_with_event, *self.event_args),
+            self._entry_contrib(self.entry, *self.entry_args),
         )
         self.model.params = model_params  # reset model params (negative_log must not change model params)
         return sum(x for x in contributions if x is not None)  # ()
@@ -192,8 +202,8 @@ class DefaultLikelihood(Likelihood):
         self.model.params = params  # changes model params
         jac_contributions = (
             self._jac_time_contrib(self.time, *self.args),
-            self._jac_event_contrib(self.time, self.event, *self.args),
-            self._jac_entry_contrib(self.entry, *self.args),
+            self._jac_event_contrib(self.time_with_event, *self.event_args),
+            self._jac_entry_contrib(self.entry, *self.entry_args),
         )
         self.model.params = model_params  # reset model params (jac_negative_log must not change model params)
         return sum(x for x in jac_contributions if x is not None)  # (p,)
