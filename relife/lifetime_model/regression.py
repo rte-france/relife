@@ -27,7 +27,9 @@ def _broadcast_time_covar(time, covar):
         case (_, 1):
             covar = np.repeat(covar, time.shape[0], axis=0)
         case (m1, m2) if m1 != m2:
-            raise ValueError(f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets")
+            raise ValueError(
+                f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets"
+            )
     return time, covar
 
 
@@ -45,12 +47,16 @@ def _broadcast_time_covar_shapes(time_shape, covar_shape):
             return m, n
         case [(mt, n), (mc, _)] if mt != mc:
             if mt != 1 and mc != 1:
-                raise ValueError(f"Invalid time and covar : time got {mt} nb assets but covar got {mc} nb assets")
+                raise ValueError(
+                    f"Invalid time and covar : time got {mt} nb assets but covar got {mc} nb assets"
+                )
             return max(mt, mc), n
         case [(mt, n), (mc, _)] if mt == mc:
             return mt, n
         case _:
-            raise ValueError(f"Invalid time or covar shape. Got {time_shape} and {covar_shape}")
+            raise ValueError(
+                f"Invalid time or covar shape. Got {time_shape} and {covar_shape}"
+            )
 
 
 class _CovarEffect(ParametricModel):
@@ -85,7 +91,9 @@ class _CovarEffect(ParametricModel):
         """
         arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         if arr_covar.ndim > 2:
-            raise ValueError(f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {arr_covar.shape}")
+            raise ValueError(
+                f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {arr_covar.shape}"
+            )
         covar_nb_coef = arr_covar.size if arr_covar.ndim <= 1 else arr_covar.shape[-1]
         if covar_nb_coef != self.nb_coef:
             raise ValueError(
@@ -412,7 +420,9 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
             tuple when ``asarray`` is False.
         """
-        jac = -self.jac_chf(time, covar, *args, asarray=True) * self.sf(time, covar, *args)
+        jac = -self.jac_chf(time, covar, *args, asarray=True) * self.sf(
+            time, covar, *args
+        )
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -470,14 +480,23 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
             tuple when ``asarray`` is False.
         """
-        jac = self.jac_hf(time, covar, *args, asarray=True) * self.sf(time, covar, *args) + self.jac_sf(
-            time, covar, *args, asarray=True
-        ) * self.hf(time, covar, *args)
+        jac = self.jac_hf(time, covar, *args, asarray=True) * self.sf(
+            time, covar, *args
+        ) + self.jac_sf(time, covar, *args, asarray=True) * self.hf(time, covar, *args)
         if not asarray:
             return np.unstack(jac)
         return jac
 
-    def rvs(self, size: int, covar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size: int,
+        covar,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         """
         Random variable sampling.
 
@@ -506,10 +525,17 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
             the time values followed by event values, entry values or both.
         """
         return super().rvs(
-            size, *(covar, *args), nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+            size,
+            *(covar, *args),
+            nb_assets=nb_assets,
+            return_event=return_event,
+            return_entry=return_entry,
+            seed=seed,
         )
 
-    def _get_initial_params(self, time, covar, *args, event=None, entry=None, departure=None):
+    def _get_initial_params(
+        self, time, covar, *args, event=None, entry=None, departure=None
+    ):
         self.covar_effect = _CovarEffect(
             (None,) * covar.shape[-1]  # TODO : np.asarray(covar).shape
         )  # changes params structure depending on number of covar
@@ -538,10 +564,9 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         self,
         time,
         covar,
-        *args,
         event=None,
         entry=None,
-        **options,
+        **optimizer_options,
     ):
         """
         Estimation of the regression parameters from lifetime data.
@@ -553,8 +578,6 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         covar : float or np.ndarray
             Covariates values. float can only be valid if the regression has one coefficients.
             Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
         event : ndarray of boolean values (1d), default is None
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : ndarray of float (1d), default is None
@@ -580,7 +603,17 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         format that allows to pass other information as left-censored or interval-censored values. In this case,
         `event` is not needed as 2d-array encodes right-censored values by itself.
         """
-        return super().fit(time, *(covar, *args), event=event, entry=entry, **options)
+        return super().fit(time, covar, event=event, entry=entry, **optimizer_options)
+
+    def fit_interval_censored_data(
+        self,
+        time_inf,
+        time_sup,
+        covar,
+        entry=None,
+        **optimizer_options,
+    ):
+        return super().fit(time_inf, time_sup, covar, entry=entry, **optimizer_options)
 
     def freeze_args(self, covar, *args):
         """
@@ -717,7 +750,9 @@ class ProportionalHazard(LifetimeRegression):
         np.float64 or np.ndarray
             Function values at each given cumulative hazard rate(s).
         """
-        return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(covar), *args)
+        return self.baseline.ichf(
+            cumulative_hazard_rate / self.covar_effect.g(covar), *args
+        )
 
     def dhf(self, time, covar, *args):
         """
@@ -768,7 +803,9 @@ class ProportionalHazard(LifetimeRegression):
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        out_shape = _broadcast_time_covar_shapes(
+            time.shape, covar.shape
+        )  # (), (n,) or (m, n)
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
@@ -777,7 +814,9 @@ class ProportionalHazard(LifetimeRegression):
         baseline_hf = self.baseline.hf(time, *args)  # (m, n)
         # p == baseline.nb_params
         baseline_jac_hf = self.baseline.jac_hf(time, *args, asarray=True)  # (p, m, n)
-        jac_g = np.repeat(jac_g, baseline_hf.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
+        jac_g = np.repeat(
+            jac_g, baseline_hf.shape[-1], axis=-1
+        )  # (nb_coef, m, n) necessary to concatenate
 
         jac = np.concatenate(
             (
@@ -819,7 +858,9 @@ class ProportionalHazard(LifetimeRegression):
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        out_shape = _broadcast_time_covar_shapes(
+            time.shape, covar.shape
+        )  # (), (n,) or (m, n)
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
@@ -827,7 +868,9 @@ class ProportionalHazard(LifetimeRegression):
         baseline_chf = self.baseline.chf(time, *args)  # (m, n)
         #  p == baseline.nb_params
         baseline_jac_chf = self.baseline.jac_chf(time, *args, asarray=True)  # (p, m, n)
-        jac_g = np.repeat(jac_g, baseline_chf.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
+        jac_g = np.repeat(
+            jac_g, baseline_chf.shape[-1], axis=-1
+        )  # (nb_coef, m, n) necessary to concatenate
 
         jac = np.concatenate(
             (
@@ -961,7 +1004,9 @@ class AcceleratedFailureTime(LifetimeRegression):
         np.float64 or np.ndarray
             Function values at each given cumulative hazard rate(s).
         """
-        return self.covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate, *args)
+        return self.covar_effect.g(covar) * self.baseline.ichf(
+            cumulative_hazard_rate, *args
+        )
 
     def dhf(self, time, covar, *args):
         """
@@ -1012,7 +1057,9 @@ class AcceleratedFailureTime(LifetimeRegression):
         """
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        out_shape = _broadcast_time_covar_shapes(
+            time.shape, covar.shape
+        )  # (), (n,) or (m, n)
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
@@ -1026,7 +1073,11 @@ class AcceleratedFailureTime(LifetimeRegression):
 
         jac = np.concatenate(
             (
-                -jac_g / g**2 * (baseline_hf_t0 + t0 * baseline_dhf_t0),  # (nb_coef, m, n) necessary to concatenate
+                -jac_g
+                / g**2
+                * (
+                    baseline_hf_t0 + t0 * baseline_dhf_t0
+                ),  # (nb_coef, m, n) necessary to concatenate
                 baseline_jac_hf_t0 / g,  # (p, m, n)
             ),
             axis=0,
@@ -1064,16 +1115,22 @@ class AcceleratedFailureTime(LifetimeRegression):
 
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(time.shape, covar.shape)  # (), (n,) or (m, n)
+        out_shape = _broadcast_time_covar_shapes(
+            time.shape, covar.shape
+        )  # (), (n,) or (m, n)
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
         jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
         t0 = time / g  #  (m, n)
         # p == baseline.nb_params
-        baseline_jac_chf_t0 = self.baseline.jac_chf(t0, *args, asarray=True)  # (p, m, n)
+        baseline_jac_chf_t0 = self.baseline.jac_chf(
+            t0, *args, asarray=True
+        )  # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0, *args)  #  (m, n)
-        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
+        jac_g = np.repeat(
+            jac_g, baseline_hf_t0.shape[-1], axis=-1
+        )  # (nb_coef, m, n) necessary to concatenate
 
         jac = np.concatenate(
             (

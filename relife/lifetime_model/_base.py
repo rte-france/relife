@@ -296,9 +296,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         entry=None,
         optimizer_options=None,
     ):
-        self.params = self._get_initial_params(
-            time, *args, event=event, entry=entry
-        )
+        self.params = self._get_initial_params(time, *args, event=event, entry=entry)
         likelihood = DefaultLikelihood(self, time, *args, event=event, entry=entry)
         if optimizer_options is None:
             optimizer_options = {}
@@ -308,7 +306,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
-    
+
     def fit_interval_censored_data(
         self,
         time_inf,
@@ -317,9 +315,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         entry=None,
         optimizer_options=None,
     ):
-        self.params = self._get_initial_params(
-            time_sup, *args, entry=entry
-        ) # TODO
+        self.params = self._get_initial_params(time_sup, *args, entry=entry)  # TODO
         likelihood = IntervalLikelihood(self, time_inf, time_sup, *args, entry=entry)
         if optimizer_options is None:
             optimizer_options = {}
@@ -337,7 +333,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         event=None,
         entry=None,
         departure=None,
-        optimizer_options=None,
+        **optimizer_options,
     ):
         self.params = self._get_initial_params(
             time, *args, event=event, entry=entry, departure=departure
@@ -356,4 +352,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
 
 class NonParametricLifetimeModel(ABC):
     @abstractmethod
-    def fit(self, time, event=None, entry=None, departure=None): ...
+    def fit(self, time, event=None, entry=None): ...
+
+    @abstractmethod
+    def fit_interval_censored_data(
+        self, time_inf, time_sup, *args, entry=None, **optimizer_options
+    ): ...

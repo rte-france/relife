@@ -27,13 +27,18 @@ from ._base import FittableParametricLifetimeModel
 
 __all__ = ["LifetimeRegression", "AcceleratedFailureTime", "ProportionalHazard"]
 
-def _broadcast_time_covar(time: _Any_Number, covar: _Any_Number) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
+def _broadcast_time_covar(
+    time: _Any_Number, covar: _Any_Number
+) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
 def _broadcast_time_covar_shapes(
-    time_shape: tuple[()] | tuple[int] | tuple[int, int], covar_shape: tuple[()] | tuple[int] | tuple[int, int]
+    time_shape: tuple[()] | tuple[int] | tuple[int, int],
+    covar_shape: tuple[()] | tuple[int] | tuple[int, int],
 ) -> tuple[()] | tuple[int] | tuple[int, int]: ...
 
 # a FittableParametricLifetimeModel with at least 1 arg (_Any_Real) and 0 or more args (_IntOrFloat)
-class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]], ABC):
+class LifetimeRegression(
+    FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]], ABC
+):
     covar_effect: _CovarEffect
     baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]
 
@@ -47,9 +52,13 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
     @property
     def nb_coef(self) -> int: ...
     @override
-    def sf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def sf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def pdf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def pdf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def isf(
         self,
@@ -58,7 +67,9 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         *args: _Any_Number,
     ) -> _Any_Numpy_Number: ...
     @override
-    def cdf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def cdf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def ppf(
         self,
@@ -67,7 +78,9 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         *args: _Any_Number,
     ) -> _Any_Numpy_Number: ...
     @override
-    def mrl(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def mrl(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def mean(self, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
@@ -162,7 +175,11 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> _Any_Numpy_Number: ...
     @overload
     def rvs(
@@ -173,7 +190,11 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool]: ...
     @overload
     def rvs(
@@ -184,7 +205,11 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
     @overload
     def rvs(
@@ -195,7 +220,11 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]: ...
     def rvs(
         self,
@@ -205,7 +234,11 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> (
         _Any_Numpy_Number
         | tuple[_Any_Numpy_Number, _Any_Numpy_Number]
@@ -235,11 +268,17 @@ class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number, *tuple[_An
     ) -> Self: ...
     def freeze_args(
         self, covar: _Any_Number, *args: _Any_Number
-    ) -> FrozenParametricModel[FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]]: ...
+    ) -> FrozenParametricModel[
+        FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]
+    ]: ...
 
 class ProportionalHazard(LifetimeRegression):
-    def hf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def chf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def hf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def chf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def ichf(
         self,
@@ -247,7 +286,9 @@ class ProportionalHazard(LifetimeRegression):
         covar: _Any_Number,
         *args: _Any_Number,
     ) -> _Any_Numpy_Number: ...
-    def dhf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def dhf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
@@ -295,11 +336,17 @@ class ProportionalHazard(LifetimeRegression):
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def moment(
+        self, n: int, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
 
 class AcceleratedFailureTime(LifetimeRegression):
-    def hf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def chf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def hf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def chf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def ichf(
         self,
@@ -307,7 +354,9 @@ class AcceleratedFailureTime(LifetimeRegression):
         covar: _Any_Number,
         *args: _Any_Number,
     ) -> _Any_Numpy_Number: ...
-    def dhf(self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def dhf(
+        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
@@ -355,7 +404,9 @@ class AcceleratedFailureTime(LifetimeRegression):
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def moment(
+        self, n: int, covar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
 
 class _CovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[Optional[None], ...] = (None,)) -> None: ...
@@ -363,9 +414,13 @@ class _CovarEffect(ParametricModel):
     def nb_coef(self) -> int: ...
     def g(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
-    def jac_g(self, covar: _Any_Number, *, asarray: Literal[False] = False) -> tuple[_Any_Numpy_Number, ...]: ...
+    def jac_g(
+        self, covar: _Any_Number, *, asarray: Literal[False] = False
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
-    def jac_g(self, covar: _Any_Number, *, asarray: Literal[True] = True) -> _Any_Numpy_Number: ...
+    def jac_g(
+        self, covar: _Any_Number, *, asarray: Literal[True] = True
+    ) -> _Any_Numpy_Number: ...
     def jac_g(
         self, covar: _Any_Number, *, asarray: Literal[True] = True
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...

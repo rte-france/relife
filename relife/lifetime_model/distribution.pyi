@@ -125,7 +125,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> _Any_Numpy_Number: ...
     @overload
     def rvs(
@@ -135,7 +139,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool]: ...
     @overload
     def rvs(
@@ -145,7 +153,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
     @overload
     def rvs(
@@ -155,7 +167,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]: ...
     def rvs(
         self,
@@ -164,7 +180,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> (
         _Any_Numpy_Number
         | tuple[_Any_Numpy_Number, _Any_Numpy_Number]
@@ -205,9 +225,13 @@ class Exponential(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: _Any_Number) -> _Any_Numpy_Number: ...
     def dhf(self, time: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
-    def jac_hf(self, time: _Any_Number, *, asarray: Literal[False]) -> tuple[_Any_Numpy_Number, ...]: ...
+    def jac_hf(
+        self, time: _Any_Number, *, asarray: Literal[False]
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
-    def jac_hf(self, time: _Any_Number, *, asarray: Literal[True]) -> _Any_Numpy_Number: ...
+    def jac_hf(
+        self, time: _Any_Number, *, asarray: Literal[True]
+    ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self,
         time: _Any_Number,
@@ -215,15 +239,21 @@ class Exponential(LifetimeDistribution):
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
-    def jac_chf(self, time: _Any_Number, *, asarray: Literal[False]) -> tuple[_Any_Numpy_Number, ...]: ...
+    def jac_chf(
+        self, time: _Any_Number, *, asarray: Literal[False]
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
-    def jac_chf(self, time: _Any_Number, *, asarray: Literal[True]) -> _Any_Numpy_Number: ...
+    def jac_chf(
+        self, time: _Any_Number, *, asarray: Literal[True]
+    ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self, time: _Any_Number, *, asarray: bool = True
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
 
 class Weibull(LifetimeDistribution):
-    def __init__(self, shape: Optional[float] = None, rate: Optional[float] = None) -> None: ...
+    def __init__(
+        self, shape: Optional[float] = None, rate: Optional[float] = None
+    ) -> None: ...
     @property
     def shape(self) -> float: ...
     @property
@@ -281,7 +311,9 @@ class Weibull(LifetimeDistribution):
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
 
 class Gompertz(LifetimeDistribution):
-    def __init__(self, shape: float | None = None, rate: float | None = None) -> None: ...
+    def __init__(
+        self, shape: float | None = None, rate: float | None = None
+    ) -> None: ...
     @property
     def shape(self) -> float: ...
     @property
@@ -339,7 +371,9 @@ class Gompertz(LifetimeDistribution):
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
 
 class Gamma(LifetimeDistribution):
-    def __init__(self, shape: float | None = None, rate: float | None = None) -> None: ...
+    def __init__(
+        self, shape: float | None = None, rate: float | None = None
+    ) -> None: ...
     def _uppergamma(self, x: _Any_Number) -> _Any_Numpy_Number: ...
     def _jac_uppergamma_shape(self, x: _Any_Number) -> _Any_Numpy_Number: ...
     @property
@@ -399,7 +433,9 @@ class Gamma(LifetimeDistribution):
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
 
 class LogLogistic(LifetimeDistribution):
-    def __init__(self, shape: float | None = None, rate: float | None = None) -> None: ...
+    def __init__(
+        self, shape: float | None = None, rate: float | None = None
+    ) -> None: ...
     @property
     def shape(self) -> float: ...
     @property
@@ -416,23 +452,33 @@ class LogLogistic(LifetimeDistribution):
     def mrl(self, time: _Any_Number) -> _Any_Numpy_Number: ...
     def dhf(self, time: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
-    def jac_hf(self, time: _Any_Number, *, asarray: Literal[False]) -> tuple[_Any_Numpy_Number, ...]: ...
+    def jac_hf(
+        self, time: _Any_Number, *, asarray: Literal[False]
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
-    def jac_hf(self, time: _Any_Number, *, asarray: Literal[True]) -> _Any_Numpy_Number: ...
+    def jac_hf(
+        self, time: _Any_Number, *, asarray: Literal[True]
+    ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self, time: _Any_Number, *, asarray: bool = True
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
-    def jac_chf(self, time: _Any_Number, *, asarray: Literal[False]) -> tuple[_Any_Numpy_Number, ...]: ...
+    def jac_chf(
+        self, time: _Any_Number, *, asarray: Literal[False]
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
-    def jac_chf(self, time: _Any_Number, *, asarray: Literal[True]) -> _Any_Numpy_Number: ...
+    def jac_chf(
+        self, time: _Any_Number, *, asarray: Literal[True]
+    ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self, time: _Any_Number, *, asarray: bool = True
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
 
 class EquilibriumDistribution(ParametricLifetimeModel[*tuple[_Any_Number, ...]]):
     baseline: ParametricLifetimeModel[*tuple[_Any_Number, ...]]
-    def __init__(self, baseline: ParametricLifetimeModel[*tuple[_Any_Number, ...]]) -> None: ...
+    def __init__(
+        self, baseline: ParametricLifetimeModel[*tuple[_Any_Number, ...]]
+    ) -> None: ...
     @override
     def cdf(self, time: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     def sf(self, time: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
@@ -440,22 +486,37 @@ class EquilibriumDistribution(ParametricLifetimeModel[*tuple[_Any_Number, ...]])
     def hf(self, time: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     def chf(self, time: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def isf(self, probability: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def isf(
+        self, probability: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def ichf(self, cumulative_hazard_rate: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def ichf(
+        self, cumulative_hazard_rate: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
 
-class MinimumDistribution(FittableParametricLifetimeModel[_Any_Integer, *tuple[_Any_Number, ...]]):
-
+class MinimumDistribution(
+    FittableParametricLifetimeModel[_Any_Integer, *tuple[_Any_Number, ...]]
+):
     baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]
-    def __init__(self, baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]) -> None: ...
+    def __init__(
+        self, baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]
+    ) -> None: ...
     @override
-    def sf(self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def sf(
+        self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def pdf(self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def pdf(
+        self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def hf(self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def hf(
+        self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def chf(self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def chf(
+        self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def ichf(
         self,
@@ -463,7 +524,9 @@ class MinimumDistribution(FittableParametricLifetimeModel[_Any_Integer, *tuple[_
         n: _Any_Integer,
         *args: _Any_Number,
     ) -> _Any_Numpy_Number: ...
-    def dhf(self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def dhf(
+        self, time: _Any_Number, n: _Any_Integer, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self,
         time: _Any_Number,

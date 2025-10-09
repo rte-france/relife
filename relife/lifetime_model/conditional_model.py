@@ -8,9 +8,13 @@ __all__ = ["AgeReplacementModel", "LeftTruncatedModel"]
 
 
 def _reshape_ar_or_a0(name, value):
-    value = np.float64(value) if isinstance(value, (float, int)) else np.asarray(value)  # in shape : (), (m,) or (m, 1)
+    value = (
+        np.float64(value) if isinstance(value, (float, int)) else np.asarray(value)
+    )  # in shape : (), (m,) or (m, 1)
     if value.ndim > 2 or (value.ndim == 2 and value.shape[-1] != 1):
-        raise ValueError(f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)")
+        raise ValueError(
+            f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)"
+        )
     if value.ndim == 1:
         value = value.reshape(-1, 1)
     return value  # out shape: () or (m, 1)
@@ -237,9 +241,9 @@ class AgeReplacementModel(ParametricLifetimeModel):
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
             ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
-        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
-            time, ar, *args
-        )  # () or (n,) or (m, n)
+        mu = self.ls_integrate(
+            lambda x: x - time, time, ub, ar, *args, deg=10
+        ) / self.sf(time, ar, *args)  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
@@ -289,7 +293,16 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = _reshape_ar_or_a0("ar", ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size,
+        ar,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         """
         Random variable sampling.
 
@@ -380,7 +393,9 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = _reshape_ar_or_a0("ar", ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
-        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+        return integration + np.where(
+            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
+        )
 
     def moment(self, n, ar, *args):
         """
@@ -656,9 +671,23 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             Function values at each given cumulative hazard rate(s).
         """
         a0 = _reshape_ar_or_a0("a0", a0)
-        return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
+        return (
+            self.baseline.ichf(
+                cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
+            )
+            - a0
+        )
 
-    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size,
+        a0,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         """
         Random variable sampling.
 
