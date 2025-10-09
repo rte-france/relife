@@ -954,7 +954,6 @@
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">departure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">options</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -973,8 +972,6 @@
 <span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
 <span class="sd">        entry : ndarray of float (1d), default is None</span>
 <span class="sd">            Left truncations applied to lifetime values.</span>
-<span class="sd">        departure : ndarray of float (1d), default is None</span>
-<span class="sd">            Right truncations applied to lifetime values.</span>
 <span class="sd">        **options</span>
 <span class="sd">            Extra arguments used by `scipy.minimize`. Default values are:</span>
 <span class="sd">                - `method` : `&quot;L-BFGS-B&quot;`</span>
@@ -996,7 +993,7 @@
 <span class="sd">        format that allows to pass other information as left-censored or interval-censored values. In this case,</span>
 <span class="sd">        `event` is not needed as 2d-array encodes right-censored values by itself.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="n">departure</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">freeze_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
