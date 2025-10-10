@@ -378,7 +378,7 @@ class AgeReplacementPolicy:
         """
         if self._a0 is None:
             return self._a0
-        return self._a0.flatten()
+        return np.zeros_like()
 
     @property
     def tr1(self):
@@ -422,7 +422,7 @@ class AgeReplacementPolicy:
                 discounting_rate=self.discounting_rate,
             )
         return RenewalRewardProcess(
-            AgeReplacementModel(self.lifetime_model).freeze_args(self.ar, self.a0),
+            AgeReplacementModel(self.lifetime_model).freeze_args(self.ar),
             AgeReplacementReward(self.cf, self.cp, self.ar),
             discounting_rate=self.discounting_rate,
             first_lifetime_model=AgeReplacementModel(LeftTruncatedModel(self.lifetime_model)).freeze_args(
@@ -431,7 +431,7 @@ class AgeReplacementPolicy:
             first_reward=AgeReplacementReward(self.cf, self.cp, self.tr1),
         )
 
-    def expected_net_present_value(self, tf, nb_steps=None):
+    def expected_net_present_value(self, tf, nb_steps, total_sum=False):
         r"""
         The expected net present value.
 
@@ -457,6 +457,8 @@ class AgeReplacementPolicy:
             Time horizon. The expected total cost will be computed up until this calendar time.
         nb_steps : int
             The number of steps used to compute the expected total cost
+        total_sum : bool, default False
+            If True, returns the sum of every net present values.
 
         Returns
         -------
@@ -466,11 +468,12 @@ class AgeReplacementPolicy:
         """
         if self.ar is None:
             raise ValueError
-        return self._stochastic_process.expected_total_reward(
-            tf, nb_steps
-        )  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
+        timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
+        if total_sum and npv.ndim == 2:
+            npv = np.sum(npv, axis=0)
+        return timeline, npv
 
-    def asymptotic_expected_net_present_value(self):
+    def asymptotic_expected_net_present_value(self, total_sum=False):
         r"""
         The asymtotic expected net present value
 
@@ -480,14 +483,23 @@ class AgeReplacementPolicy:
 
         where :math:`z(t)` is the expected total cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_net_present_value` for more details.
 
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic net present values.
+
         Returns
         -------
         ndarray
             The asymptotic expected total cost values
         """
-        return self._stochastic_process.asymptotic_expected_total_reward()  # () or (m,)
 
-    def expected_equivalent_annual_cost(self, tf, nb_steps):
+        timeline, asymptotic_npv = self._stochastic_process.asymptotic_expected_total_reward()  # () or (m,)
+        if total_sum:
+            return timeline, np.sum(asymptotic_npv)
+        return timeline, asymptotic_npv
+
+    def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
         r"""
         The expected equivalent annual cost.
 
@@ -504,9 +516,11 @@ class AgeReplacementPolicy:
         Parameters
         ----------
         tf : float
-            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
-        nb_steps : int
+            Stop value of the timeline.
+        nb_steps : int, default None
             The number of steps used to compute the expected equivalent annual cost
+        total_sum : bool, default False
+            If True, returns the sum of every expected equivalent annual cost.
 
         Returns
         -------
@@ -523,9 +537,11 @@ class AgeReplacementPolicy:
             eeac[np.where(np.atleast_1d(self.tr1) == 0)] = np.nan
         if eeac.ndim == 1 and self.ar == np.inf:
             eeac.fill(np.nan)
+        if total_sum and eeac.ndim == 2:
+            eeac = np.sum(eeac, axis=0)
         return timeline, eeac  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
 
-    def asymptotic_expected_equivalent_annual_cost(self):
+    def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
         r"""
         The asymtotic expected equivalent annual cost
 
@@ -534,6 +550,11 @@ class AgeReplacementPolicy:
             \lim_{t\to\infty} \text{EEAC}(t)
 
         where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_equivalent_annual_cost` for more details.
+
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic expected equivalent annual cost.
 
         Returns
         -------
@@ -549,6 +570,8 @@ class AgeReplacementPolicy:
             asymptotic_eeac[np.where(np.atleast_1d(self.tr1) == 0)] = np.nan
         if asymptotic_eeac.ndim == 0 and self.tr1 == 0:
             asymptotic_eeac = np.nan
+        if total_sum:
+            asymptotic_eeac = np.sum(asymptotic_eeac)
         return asymptotic_eeac  # () or (m,)
 
     def annual_number_of_replacements(self, nb_years, upon_failure=False, total=True):

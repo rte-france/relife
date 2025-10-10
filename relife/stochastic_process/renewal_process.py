@@ -47,10 +47,7 @@ class RenewalProcess(ParametricModel):
     def _make_timeline(self, tf, nb_steps):
         # tile is necessary to ensure broadcasting of the operations
         timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        return timeline  # (nb_steps,) or (m, nb_steps)
+        return np.atleast_2d(timeline)  # (1, nb_steps)
 
     def renewal_function(self, tf, nb_steps):
         r"""The renewal function.
@@ -290,17 +287,6 @@ class RenewalRewardProcess(RenewalProcess):
         """
         self.discounting.rate = value
 
-    @override
-    def _make_timeline(self, tf, nb_steps=None):
-        # tile is necessary to ensure broadcasting of the operations
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
-            timeline = np.tile(timeline, (self.reward.size, 1))
-        return timeline  # (nb_steps,) or (m, nb_steps)
-
     def expected_total_reward(self, tf, nb_steps):
         r"""The expected total reward.
 
@@ -374,9 +360,7 @@ class RenewalRewardProcess(RenewalProcess):
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
-        if timeline.ndim == 2:
-            return timeline[0, :], z  # (nb_steps,) and (m, nb_steps)
-        return timeline, z  # (nb_steps,) and (nb_steps, )
+        return np.squeeze(timeline), z  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_reward(self):
         r"""Asymptotic expected total reward.
