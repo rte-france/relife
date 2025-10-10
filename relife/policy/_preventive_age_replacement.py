@@ -11,7 +11,6 @@ from relife.utils.quadrature import legendre_quadrature
 
 from ._base import _OneCycleExpectedCosts
 
-
 def age_replacement_policy(model, costs, one_cycle=False, **kwargs):
     if is_non_homogeneous_poisson_process(model):
         try:
@@ -37,6 +36,9 @@ class OneCycleAgeReplacementPolicy:
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
     with costs :math:`c_f` if earlier.
+
+    The object's methods require the ``ar`` attribute to be set either at initialization
+    or with the ``optimize`` method. Otherwise, an error will be raised.
 
     Parameters
     ----------
@@ -176,11 +178,6 @@ class OneCycleAgeReplacementPolicy:
         tuple of two ndarrays
             A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
             step of the timeline.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
         """
         if self.ar is None:
             raise ValueError
@@ -226,11 +223,6 @@ class OneCycleAgeReplacementPolicy:
         tuple of two ndarrays
             A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
             step of the timeline.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
         """
         if self.ar is None:
             raise ValueError
@@ -264,11 +256,6 @@ class OneCycleAgeReplacementPolicy:
         -------
         np.ndarray
             The asymptotic expected total cost.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
         """
         if self.ar is None:
             raise ValueError
@@ -323,6 +310,9 @@ class AgeReplacementPolicy:
 
     Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`
     with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.
+
+    The object's methods require the ``ar`` attribute to be set either at initialization
+    or with the ``optimize`` method. Otherwise, an error will be raised.
 
     Parameters
     ----------
@@ -457,6 +447,9 @@ class AgeReplacementPolicy:
         - :math:`X_i \sim F` are :math:`n` random variable lifetimes, *i.i.d.*, of cumulative distribution :math:`F`.
         - :math:`Z_t` is the random variable reward at each time :math:`t`.
         - :math:`\delta` is the discounting rate.
+
+        This method requires the ``ar`` attribute to be set either at initialization
+        or with the ``optimize`` method. Otherwise, an error will be raised.
 
         Parameters
         ----------

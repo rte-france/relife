@@ -109,33 +109,6 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.
     # sf is np.float64, ie. a scalar
     >>> sf = left_truncated_weibull.sf(10., a0=20.)
 
-.. rubric:: Frozen parametric lifetime models
-
-.. currentmodule:: relife.lifetime_model
-
-Frozen lifetime models share the same properties as lifetime models, but any additional arguments to time are frozen.
-This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
-These models are important in ReLife because other objects expect frozen-like lifetime models: any lifetime model that has only time as a method argument.
-It is specifically the case of policy objects. To freeze a lifetime model, just call ``.freeze(*args)`` on the model instance where ``*args`` are
-required additional arguments of the model.
-
-.. note::
-
-    ``LifetimeDistribution`` objects can't be frozen as time is the only variable needed for these objects.
-
-
-.. rubric:: Frozen lifetime regression
-
-.. autosummary::
-    :toctree: parametric_lifetime_models
-    :template: class_template.rst
-    :nosignatures:
-
-    FrozenLifetimeRegression
-    FrozenLeftTruncatedModel
-    FrozenAgeReplacementModel
-
-
 Non parametric lifetime models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -150,20 +123,20 @@ Non parametric lifetime models
     ECDF
     Turnbull
 
-Built-in dataset
-----------------
+Frozen models
+-------------
 
-.. currentmodule:: relife.data
+.. rubric:: Frozen parametric lifetime models
 
-.. autosummary::
-    :toctree: data
-    :template: function_template.rst
-    :caption: Built-in datasets
-    :nosignatures:
+Frozen lifetime models share the same properties as lifetime models, but any additional arguments to time are frozen.
+This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
+These models are important in ReLife because other objects expect frozen-like lifetime models.
+It is specifically the case of policy objects. To freeze a lifetime model, just call ``.freeze_args(*args)`` on the model instance where ``*args`` are
+additional arguments required by the model.
 
-    ~load_circuit_breaker
-    ~load_insulator_string
-    ~load_power_transformer
+.. note::
+
+    ``LifetimeDistribution`` objects can't be frozen as time is the only variable.
 
 
 Stochastic processes
@@ -181,6 +154,37 @@ Stochastic processes
     RenewalRewardProcess
     NonHomogeneousPoissonProcess
 
+Maintenance policies
+--------------------
+
+.. currentmodule:: relife.policy
+
+These are the prefered functions to instanciate a maintenance policy object. There are basic factories that parse
+the given model type and cost stucture and return the corresponding maintenance policy object.
+
+.. autosummary::
+    :toctree: policy
+    :caption: Maintenance policies
+    :template: function_template.rst
+    :nosignatures:
+
+    age_replacement_policy
+    run_to_failure_policy
+
+These are the lower-level constructors of each maintenance policies implemented in ReLife. You can use them in addition
+to the above functions.
+
+.. autosummary::
+    :toctree: policy
+    :template: class_template.rst
+    :nosignatures:
+
+    AgeReplacementPolicy
+    OneCycleAgeReplacementPolicy
+    RunToFailurePolicy
+    OneCycleRunToFailurePolicy
+    NonHomogeneousPoissonAgeReplacementPolicy
+
 Economy
 -------
 
@@ -194,40 +198,42 @@ Economy
 
     RunToFailureReward
     AgeReplacementReward
+    ExponentialDiscounting
 
-Maintenance policies
---------------------
+Built-in dataset
+----------------
 
-
-.. currentmodule:: relife.policy
+.. currentmodule:: relife.data
 
 .. autosummary::
-    :toctree: policy
-    :template: class_template.rst
-    :caption: Maintenance policies
+    :toctree: data
+    :template: function_template.rst
+    :caption: Built-in datasets
     :nosignatures:
 
-    AgeReplacementPolicy
-    OneCycleAgeReplacementPolicy
-    RunToFailurePolicy
-    OneCycleRunToFailurePolicy
-    NonHomogeneousPoissonAgeReplacementPolicy
+    ~load_circuit_breaker
+    ~load_insulator_string
+    ~load_power_transformer
 
+Utils
+-----
 
-Routines
---------
+Various utilities to help with development.
 
-.. currentmodule:: relife
+.. currentmodule:: relife.utils
 
 .. autosummary::
     :toctree: routines
     :template: function_template.rst
-    :caption: Routines
+    :caption: Utils
     :nosignatures:
 
+    ~get_args_nb_assets
     ~is_frozen
     ~is_lifetime_model
-    ~is_stochastic_process
+    ~is_non_homogeneous_poisson_process
+    ~filter_nonetype_args
+    ~reshape_1d_arg
 
 
 Base classes
@@ -236,11 +242,11 @@ Base classes
 .. warning::
 
     The interfaces presented below might interest you only if you want to understand how ReLife is implemented (contributions, suggestions, spotted errors, etc.)
-    Otherwise, you can skip this part of the API
+    Otherwise, you can skip this part of the API. It presents base constructors for all estimators.
 
 .. rubric:: Parametric models
 
-.. currentmodule:: relife
+.. currentmodule:: relife.base
 
 .. autosummary::
     :toctree: base_class
@@ -249,18 +255,13 @@ Base classes
     :nosignatures:
 
     ParametricModel
-    ~lifetime_model.ParametricLifetimeModel
-    ~lifetime_model.FrozenParametricLifetimeModel
-    ~lifetime_model.NonParametricLifetimeModel
 
-.. rubric:: Policies
-
-.. currentmodule:: relife.policy
+.. currentmodule:: relife
 
 .. autosummary::
     :toctree: base_class
     :template: class_template.rst
     :nosignatures:
 
-    BaseAgeReplacementPolicy
-    BaseOneCycleAgeReplacementPolicy
+    ~lifetime_model.ParametricLifetimeModel
+    ~lifetime_model.NonParametricLifetimeModel
