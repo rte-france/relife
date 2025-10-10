@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Turnbull &#8212; ReLife</title>
+    <title>is_non_homogeneous_poisson_process &#8212; ReLife</title>
   
   
   
@@ -48,12 +48,12 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/routines/relife.utils.is_non_homogeneous_poisson_process';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="RenewalProcess" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html" />
-    <link rel="prev" title="ECDF" href="relife.lifetime_model.ECDF.html" />
+    <link rel="next" title="filter_nonetype_args" href="relife.utils.filter_nonetype_args.html" />
+    <link rel="prev" title="is_lifetime_model" href="relife.utils.is_lifetime_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -382,11 +382,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ECDF.html">ECDF</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Turnbull</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html">Turnbull</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
@@ -419,13 +419,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_non_homogeneous_poisson_process.html">is_non_homogeneous_poisson_process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.filter_nonetype_args.html">filter_nonetype_args</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.utils.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">is_non_homogeneous_poisson_process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.utils.filter_nonetype_args.html">filter_nonetype_args</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
@@ -477,7 +477,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Turnbull</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">is_non_homogeneous_poisson_process</span></li>
   </ul>
 </nav>
 </div>
@@ -494,61 +494,12 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="turnbull">
-<h1>Turnbull<a class="headerlink" href="#turnbull" title="Link to this heading">#</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="relife.lifetime_model.Turnbull">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">Turnbull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowmem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#Turnbull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Turnbull" title="Link to this definition">#</a></dt>
-<dd><p>Turnbull estimator.</p>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Turnbull.fit" title="relife.lifetime_model.Turnbull.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p>Compute the non-parametric estimations with respect to lifetime data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Turnbull.sf" title="relife.lifetime_model.Turnbull.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
-<td><p>The survival function estimation</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.Turnbull.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#Turnbull.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Turnbull.fit" title="Link to this definition">#</a></dt>
-<dd><p>Compute the non-parametric estimations with respect to lifetime data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">ndarray (1d or 2d)</span></dt><dd><p>Observed lifetime values.</p>
-</dd>
-<dt><strong>event</strong><span class="classifier">ndarray of boolean values (1d), default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
-</dd>
-<dt><strong>entry</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
-</dd>
-<dt><strong>departure</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Right truncations applied to lifetime values.</p>
-</dd>
-<dt><strong>inplace</strong><span class="classifier">boolean, default is True</span></dt><dd><p>If true, estimations are stored in the object</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.Turnbull.sf">
-<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#Turnbull.sf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Turnbull.sf" title="Link to this definition">#</a></dt>
-<dd><p>The survival function estimation</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>tuple of 2 ndarrays</dt><dd><p>A tuple containing the timeline and the estimated values</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
+  <section id="is-non-homogeneous-poisson-process">
+<h1>is_non_homogeneous_poisson_process<a class="headerlink" href="#is-non-homogeneous-poisson-process" title="Link to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="relife.utils.is_non_homogeneous_poisson_process">
+<span class="sig-prename descclassname"><span class="pre">relife.utils.</span></span><span class="sig-name descname"><span class="pre">is_non_homogeneous_poisson_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/utils/_model_checks.html#is_non_homogeneous_poisson_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.utils.is_non_homogeneous_poisson_process" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </section>
 
@@ -575,11 +526,7 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Turnbull"><code class="docutils literal notranslate"><span class="pre">Turnbull</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Turnbull.fit"><code class="docutils literal notranslate"><span class="pre">Turnbull.fit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Turnbull.sf"><code class="docutils literal notranslate"><span class="pre">Turnbull.sf()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.utils.is_non_homogeneous_poisson_process"><code class="docutils literal notranslate"><span class="pre">is_non_homogeneous_poisson_process()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -587,7 +534,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.rst.txt"
+      <li><a href="../../_sources/api/routines/relife.utils.is_non_homogeneous_poisson_process.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

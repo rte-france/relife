@@ -420,6 +420,8 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_OneCycleExpectedCosts</span>
 
+<div class="viewcode-block" id="run_to_failure_policy">
+<a class="viewcode-back" href="../../../api/policy/relife.policy.run_to_failure_policy.html#relife.policy.run_to_failure_policy">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_to_failure_policy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">costs</span><span class="p">,</span> <span class="n">one_cycle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">is_lifetime_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -430,7 +432,8 @@
             <span class="k">return</span> <span class="n">OneCycleRunToFailurePolicy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">RunToFailurePolicy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;can&#39;t create a preventive age replacement policy from given model&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;can&#39;t create a preventive age replacement policy from given model&quot;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy">
 <a class="viewcode-back" href="../../../api/policy/relife.policy.OneCycleRunToFailurePolicy.html#relife.policy.OneCycleRunToFailurePolicy">[docs]</a>
