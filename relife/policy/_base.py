@@ -28,29 +28,6 @@ class _OneCycleExpectedCosts:
         self.lifetime_model = lifetime_model
 
     def expected_net_present_value(self, tf, nb_steps):
-        r"""
-        Calculate the expected net present value over a given timeline.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the expected equivalent annual cost
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected net present value and its corresponding values at each
-            step of the timeline.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
-        """
         timeline = _make_timeline(tf, nb_steps)
         etc = self.lifetime_model.ls_integrate(
             lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
@@ -63,21 +40,6 @@ class _OneCycleExpectedCosts:
         return timeline, etc  # (nb_steps,) and (nb_steps,)
 
     def asymptotic_expected_net_present_value(self):
-        r"""
-        Calculate the asymptotic expected net present value.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Returns
-        -------
-        np.ndarray
-            The asymptotic expected net present value.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
-        """
         # reward partial expectation
         return np.squeeze(
             self.lifetime_model.ls_integrate(
@@ -115,48 +77,10 @@ class _OneCycleExpectedCosts:
         return timeline, np.squeeze(integral)  # (nb_steps,) and (nb_steps,)
 
     def expected_equivalent_annual_cost(self, tf, nb_steps):
-        r"""
-        Calculate the expected equivalent annual cost over a given timeline.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the expected equivalent annual cost
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected net present value and its corresponding values at each
-            step of the timeline.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
-        """
         timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
         return self._expected_equivalent_annual_cost(timeline)  # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self):
-        r"""
-        Calculate the asymptotic expected equivalent annual cost.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Returns
-        -------
-        np.ndarray
-            The asymptotic expected net present value.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
-        """
         timeline = np.atleast_2d(np.array(np.inf)) # (1, 1) to ensure broadcasting
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
 
@@ -208,30 +132,28 @@ class ReplacementPolicy(ABC):
         r"""
         The expected net present value.
 
-        It is computed by solving the renewal equation and is given by:
-
         .. math::
 
-            z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
+            \text{NPV}(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
 
         where :
 
         - :math:`t` is the time
-        - :math:`X_i \sim F` are :math:`n` random variable lifetimes, *i.i.d.*, of cumulative distribution :math:`F`.
-        - :math:`Z_t` is the random variable reward at each time :math:`t`.
-        - :math:`\delta` is the discounting rate.
+        - :math:`X_1 \sim F` is lifetime of the first cycle
+        - :math:`Z_t` are the random rewards
+        - :math:`\delta` is the discounting rate
 
-        This method requires the ``ar`` attribute to be set either at initialization
-        or with the ``optimize`` method. Otherwise, an error will be raised.
+        It is computed by solving the renewal equation.
 
         Parameters
         ----------
         tf : float
-            Time horizon. The expected total cost will be computed up until this calendar time.
+            The final time.
         nb_steps : int
-            The number of steps used to compute the expected total cost
+            The number of steps used to discretized the time.
         total_sum : bool, default False
-            If True, returns the sum of every net present values.
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
@@ -243,23 +165,22 @@ class ReplacementPolicy(ABC):
     @abstractmethod
     def asymptotic_expected_net_present_value(self, total_sum=False):
         r"""
-        The asymtotic expected net present value
+        The asymtotic expected net present value.
 
         .. math::
 
-            \lim_{t\to\infty} z(t)
-
-        where :math:`z(t)` is the expected total cost at :math:`t`.
+            \lim_{t\to\infty} \text{NPV}(t)
 
         Parameters
         ----------
         total_sum : bool, default False
-            If True, returns the sum of every asymptotic net present values.
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
         ndarray
-            The asymptotic expected total cost values
+            The asymptotic expected net present value.
         """
 
     @abstractmethod
@@ -269,22 +190,23 @@ class ReplacementPolicy(ABC):
 
         .. math::
 
-            \text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
+            \text{EEAC}(t) = \dfrac{\delta \text{NPV}(t)}{1 - e^{-\delta t}}
 
         where :
 
-        - :math:`t` is the time
-        - :math:`z(t)` is the expected_net_present_value at :math:`t`.
+        - :math:`t` is the time.
+        - :math:`\text{NPV}(t)` is the net present value at time :math:`t`.
         - :math:`\delta` is the discounting rate.
 
         Parameters
         ----------
         tf : float
-            Stop value of the timeline.
-        nb_steps : int, default None
-            The number of steps used to compute the expected equivalent annual cost
+            The final time.
+        nb_steps : int
+            The number of steps used to discretized the time.
         total_sum : bool, default False
-            If True, returns the sum of every expected equivalent annual cost.
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
@@ -296,20 +218,20 @@ class ReplacementPolicy(ABC):
     @abstractmethod
     def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
         r"""
-        The asymtotic expected equivalent annual cost
+        The asymtotic expected equivalent annual cost.
 
         .. math::
 
             \lim_{t\to\infty} \text{EEAC}(t)
 
-        where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`.
         Parameters
         ----------
         total_sum : bool, default False
-            If True, returns the sum of every asymptotic expected equivalent annual cost.
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
         ndarray
-            The asymptotic expected equivalent annual cost
+            The asymptotic expected equivalent annual cost.
         """

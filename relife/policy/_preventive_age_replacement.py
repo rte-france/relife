@@ -34,11 +34,12 @@ def age_replacement_policy(model, costs, one_cycle=False, **kwargs):
 class OneCycleAgeReplacementPolicy(ReplacementPolicy):
     r"""One-cyle age replacement policy.
 
-    The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
-    with costs :math:`c_f` if earlier.
+    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced
+    upon failure with cost :math:`c_f`. ``OneCycleAgeReplacementPolicy`` differs from ``AgeReplacementPolicy``
+    because only one cycle of replacement is considered.
 
-    The object's methods require the ``ar`` attribute to be set either at initialization
-    or with the ``optimize`` method. Otherwise, an error will be raised.
+    The object's methods require the ``ar`` attribute to be set either at the instanciation
+    or by calling the ``optimize`` method. Otherwise, an error will be raised.
 
     Parameters
     ----------
@@ -227,11 +228,12 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
 class AgeReplacementPolicy(ReplacementPolicy):
     r"""Age replacement policy.
 
-    Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`
-    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.
+    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced
+    upon failure with cost :math:`c_f`. ``AgeReplacementPolicy`` differs from ``OneCycleAgeReplacementPolicy``
+    because a infinite cycle of replacement is considered.
 
-    The object's methods require the ``ar`` attribute to be set either at initialization
-    or with the ``optimize`` method. Otherwise, an error will be raised.
+    The object's methods require the ``ar`` attribute to be set either at the instanciation
+    or by calling the ``optimize`` method. Otherwise, an error will be raised.
 
     Parameters
     ----------
