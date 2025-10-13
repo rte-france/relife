@@ -70,8 +70,9 @@ class OneCycleAgeReplacementPolicy:
         self._cf = reshape_1d_arg(cf)
         self._cp = reshape_1d_arg(cp)
         self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
-        self._tr = None # must be set before _ar
-        self._ar = reshape_1d_arg(ar) if ar is not None else ar
+        self._tr = None
+        # call public setter here to set _tr too
+        self.ar = reshape_1d_arg(ar) if ar is not None else ar
         self.discounting_rate = discounting_rate
         self.period_before_discounting = period_before_discounting
 
@@ -143,10 +144,13 @@ class OneCycleAgeReplacementPolicy:
 
     @ar.setter
     def ar(self, value):
-        value = reshape_1d_arg(value)
-        self._ar = value
-        if self.a0 is not None:
-            self._tr = np.maximum(value - self._a0, 0)
+        if value is not None:
+            value = reshape_1d_arg(value)
+            self._ar = value
+            if self.a0 is not None:
+                self._tr = np.maximum(value - self._a0, 0)
+        else:
+            self._ar = None
 
     @property
     def tr(self):
@@ -344,8 +348,9 @@ class AgeReplacementPolicy:
         self._cf = reshape_1d_arg(cf)
         self._cp = reshape_1d_arg(cp)
         self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
-        self._tr1 = None # must be set before _ar
-        self._ar = reshape_1d_arg(ar) if ar is not None else ar
+        self._tr1 = None
+        # call public setter here to set _tr1 too
+        self.ar = reshape_1d_arg(ar) if ar is not None else ar
         self.discounting_rate = discounting_rate
 
     @property
@@ -378,7 +383,7 @@ class AgeReplacementPolicy:
         """
         if self._a0 is None:
             return self._a0
-        return np.zeros_like()
+        return self._a0.flatten()
 
     @property
     def tr1(self):
@@ -406,10 +411,13 @@ class AgeReplacementPolicy:
 
     @ar.setter
     def ar(self, value):
-        value = reshape_1d_arg(value)
-        self._ar = value
-        if self.a0 is not None:
-            self._tr1 = np.maximum(value - self._a0, 0)
+        if value is not None:
+            value = reshape_1d_arg(value)
+            self._ar = value
+            if self.a0 is not None:
+                self._tr1 = np.maximum(value - self._a0, 0)
+        else:
+            self._ar = None
 
     @property
     def _stochastic_process(self):

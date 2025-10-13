@@ -1,4 +1,5 @@
 import numpy as np
+from jedi.inference.recursion import total_function_execution_limit
 
 from relife.economic import RunToFailureReward
 from relife.lifetime_model import LeftTruncatedModel
@@ -7,12 +8,8 @@ from relife.utils import reshape_1d_arg, is_lifetime_model
 
 from ._base import _OneCycleExpectedCosts
 
-def run_to_failure_policy(model, costs, one_cycle=False, **kwargs):
+def run_to_failure_policy(model, cf, one_cycle=False, **kwargs):
     if is_lifetime_model(model):
-        try:
-            cf = costs["cf"]
-        except KeyError:
-            raise ValueError("costs must contain 'cf'")
         if one_cycle:
             return OneCycleRunToFailurePolicy(model, cf, **kwargs)
         return RunToFailurePolicy(model, cf, **kwargs)
@@ -81,7 +78,7 @@ class OneCycleRunToFailurePolicy:
             period_before_discounting=self.period_before_discounting,
         )
 
-    def expected_net_present_value(self, tf, nb_steps):
+    def expected_net_present_value(self, tf, nb_steps, total_sum=False):
         r"""
         Calculate the expected net present value over a given timeline.
 
@@ -93,39 +90,42 @@ class OneCycleRunToFailurePolicy:
             Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
         nb_steps : int
             The number of steps used to compute the expected equivalent annual cost
+        total_sum : bool, default False
+            If True, returns the sum of every expected equivalent annual cost.
 
         Returns
         -------
         tuple of two ndarrays
             A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
             step of the timeline.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
         """
-        return self._expected_costs.expected_net_present_value(tf, nb_steps)
+        timeline, npv = self._expected_costs.expected_net_present_value(tf, nb_steps)
+        if total_sum and npv.ndim == 2:
+            return timeline, np.sum(npv, axis=0)
+        return timeline, npv
 
-    def asymptotic_expected_net_present_value(self):
+    def asymptotic_expected_net_present_value(self, total_sum=False):
         r"""
         Calculate the asymptotic net present value.
 
         It takes into account ``discounting_rate`` attribute value.
 
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic net present value.
+
         Returns
         -------
         np.ndarray
             The asymptotic expected total cost.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
         """
-        return self._expected_costs.asymptotic_expected_net_present_value()
+        asymptotic_npv = self._expected_costs.asymptotic_expected_net_present_value()
+        if total_sum:
+            return np.sum(asymptotic_npv)
+        return asymptotic_npv
 
-    def expected_equivalent_annual_cost(self, tf, nb_steps):
+    def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
         r"""
         Calculate the expected equivalent annual cost over a given timeline.
 
@@ -137,37 +137,40 @@ class OneCycleRunToFailurePolicy:
             Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
         nb_steps : int
             The number of steps used to compute the expected equivalent annual cost
+        total_sum : bool, default False
+            If True, returns the sum of every expected equivalent annual cost.
 
         Returns
         -------
         tuple of two ndarrays
             A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
             step of the timeline.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
         """
-        return self._expected_costs.expected_equivalent_annual_cost(tf, nb_steps)
+        timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(tf, nb_steps)
+        if total_sum and eeac.ndim == 2:
+            return timeline, np.sum(eeac, axis=0)
+        return timeline, eeac
 
-    def asymptotic_expected_equivalent_annual_cost(self):
+    def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
         r"""
         Calculate the asymptotic expected equivalent annual cost.
 
         It takes into account ``discounting_rate`` attribute value.
 
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic expected equivalent annual cost.
+
         Returns
         -------
         np.ndarray
             The asymptotic expected total cost.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
         """
-        return self._expected_costs.asymptotic_expected_equivalent_annual_cost()
+        asymptotic_eeac = self._expected_costs.asymptotic_expected_equivalent_annual_cost()
+        if total_sum:
+            return np.sum(asymptotic_eeac)
+        return asymptotic_eeac
 
 
 class RunToFailurePolicy:
@@ -243,7 +246,7 @@ class RunToFailurePolicy:
             first_lifetime_model=LeftTruncatedModel(self.lifetime_model).freeze_args(self.a0),
         )
 
-    def expected_net_present_value(self, tf, nb_steps):
+    def expected_net_present_value(self, tf, nb_steps, total_sum=False):
         r"""
         The expected net present value.
 
@@ -266,6 +269,8 @@ class RunToFailurePolicy:
             Time horizon. The expected total cost will be computed up until this calendar time.
         nb_steps : int
             The number of steps used to compute the expected total cost
+        total_sum : bool, default False
+            If True, returns the sum of every expected net present value.
 
         Returns
         -------
@@ -273,9 +278,12 @@ class RunToFailurePolicy:
             A tuple containing the timeline used to compute the expected net present value and its corresponding values at each
             step of the timeline.
         """
-        return self._stochastic_process.expected_total_reward(tf, nb_steps)
+        timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
+        if total_sum and npv.ndim == 2:
+            npv = np.sum(npv, axis=0)
+        return timeline, npv
 
-    def asymptotic_net_present_value(self):
+    def asymptotic_net_present_value(self, total_sum=False):
         r"""
         The asymtotic expected total cost
 
@@ -285,14 +293,22 @@ class RunToFailurePolicy:
 
         where :math:`z(t)` is the expected total cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_net_present_value` for more details.
 
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic net present value.
+
         Returns
         -------
         ndarray
             The asymptotic expected total cost values
         """
-        return self._stochastic_process.asymptotic_expected_total_reward()
+        asymptotic_npv = self._stochastic_process.asymptotic_expected_total_reward()
+        if total_sum:
+            return np.sum(asymptotic_npv)
+        return asymptotic_npv
 
-    def expected_equivalent_annual_cost(self, tf, nb_steps):
+    def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
         r"""
         The expected equivalent annual cost.
 
@@ -312,6 +328,8 @@ class RunToFailurePolicy:
             Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
         nb_steps : int
             The number of steps used to compute the expected equivalent annual cost
+        total_sum : bool, default False
+            If True, returns the sum of every expected equivalent annual cost.
 
         Returns
         -------
@@ -319,9 +337,12 @@ class RunToFailurePolicy:
             A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
             step of the timeline.
         """
-        return self._stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)
+        timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)
+        if total_sum and eeac.ndim == 2:
+            eeac  = np.sum(eeac, axis=0)
+        return timeline, eeac
 
-    def asymptotic_expected_equivalent_annual_cost(self):
+    def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
         r"""
         The asymtotic expected equivalent annual cost
 
@@ -331,12 +352,20 @@ class RunToFailurePolicy:
 
         where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_equivalent_annual_cost` for more details.
 
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic expected equivalent annual cost.
+
         Returns
         -------
         ndarray
             The asymptotic expected equivalent annual cost
         """
-        return self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
+        asymptotic_eeac = self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
+        if total_sum:
+            return np.sum(asymptotic_eeac)
+        return asymptotic_eeac
 
     def sample(self, size, tf, t0=0.0, seed=None):
         """Renewal data sampling.
