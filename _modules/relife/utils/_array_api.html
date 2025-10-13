@@ -432,6 +432,11 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten_if_possible</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">value</span>
+
 <span class="c1"># def to_relife_shape_2d_arg(arg):</span>
 <span class="c1">#     &quot;&quot;&quot;</span>
 <span class="c1">#     Reshapes given arg that can be 2d max to either () or (nb_assets, n)</span>

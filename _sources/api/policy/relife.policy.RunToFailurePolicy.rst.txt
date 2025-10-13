@@ -25,7 +25,7 @@ RunToFailurePolicy
             ~RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost
         
         
-            ~RunToFailurePolicy.asymptotic_net_present_value
+            ~RunToFailurePolicy.asymptotic_expected_net_present_value
         
         
             ~RunToFailurePolicy.expected_equivalent_annual_cost

@@ -615,16 +615,16 @@ Reliability, 1000-1008.</p>
 <dd><p>The asymtotic expected equivalent annual cost</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} \text{EEAC}(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost()</span></code></a> for more details.</p>
+<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>.
+Parameters
+———-
+total_sum : bool, default False</p>
+<blockquote>
+<div><p>If True, returns the sum of every asymptotic expected equivalent annual cost.</p>
+</div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the sum of every asymptotic expected equivalent annual cost.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
 <dt>ndarray</dt><dd><p>The asymptotic expected equivalent annual cost</p>
 </dd>
 </dl>
@@ -638,7 +638,7 @@ Reliability, 1000-1008.</p>
 <dd><p>The asymtotic expected net present value</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} z(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_net_present_value()</span></code></a> for more details.</p>
+<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -658,7 +658,7 @@ Reliability, 1000-1008.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.policy.AgeReplacementPolicy.cf">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cf</span></span><a class="headerlink" href="#relife.policy.AgeReplacementPolicy.cf" title="Link to this definition">#</a></dt>
-<dd><p>Costs of failure.</p>
+<dd><p>Cost of failure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -690,7 +690,7 @@ Reliability, 1000-1008.</p>
 <p>where :</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
-<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_net_present_value at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_net_present_value()</span></code></a> for more details.`.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_net_present_value at <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
 </ul>
 <dl class="field-list simple">

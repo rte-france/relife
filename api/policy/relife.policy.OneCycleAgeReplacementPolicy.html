@@ -540,16 +540,16 @@ Mechanical Engineers, Part O: Journal of Risk and Reliability,
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected equivalent annual cost.</p></td>
+<td><p>The asymtotic expected equivalent annual cost</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value" title="relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_net_present_value</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected net present value.</p></td>
+<td><p>The asymtotic expected net present value</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the expected equivalent annual cost over a given timeline.</p></td>
+<td><p>The expected equivalent annual cost.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value" title="relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_net_present_value</span></code></a></p></td>
-<td><p>Calculate the expected total cost over a given timeline.</p></td>
+<td><p>The expected net present value.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.OneCycleAgeReplacementPolicy.optimize" title="relife.policy.OneCycleAgeReplacementPolicy.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a></p></td>
 <td><p>Computes the optimal age(s) of replacement and updates the internal <code class="docutils literal notranslate"><span class="pre">ar</span></code> value(s) and, optionally <code class="docutils literal notranslate"><span class="pre">ar1</span></code>.</p></td>
@@ -586,12 +586,20 @@ Mechanical Engineers, Part O: Journal of Risk and Reliability,
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
 <span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected equivalent annual cost.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
+<dd><p>The asymtotic expected equivalent annual cost</p>
+<div class="math notranslate nohighlight">
+\[\lim_{t\to\infty} \text{EEAC}(t)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>.
+Parameters
+———-
+total_sum : bool, default False</p>
+<blockquote>
+<div><p>If True, returns the sum of every asymptotic expected equivalent annual cost.</p>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected total cost.</p>
+<dt>ndarray</dt><dd><p>The asymptotic expected equivalent annual cost</p>
 </dd>
 </dl>
 </dd>
@@ -601,19 +609,22 @@ Mechanical Engineers, Part O: Journal of Risk and Reliability,
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value">
 <span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected net present value.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<dl class="field-list">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd><p>The asymtotic expected net present value</p>
+<div class="math notranslate nohighlight">
+\[\lim_{t\to\infty} z(t)\]</div>
+<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected net present value.</p>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the sum of every asymptotic net present values.</p>
 </dd>
 </dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This method requires the <code class="docutils literal notranslate"><span class="pre">ar</span></code> attribute to be set either at initialization
-or with the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> method.</p>
-</div>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray</dt><dd><p>The asymptotic expected total cost values</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -621,7 +632,7 @@ or with the <code class="docutils literal notranslate"><span class="pre">optimiz
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.cf">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cf</span></span><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.cf" title="Link to this definition">#</a></dt>
-<dd><p>Costs of failure.</p>
+<dd><p>Cost of failure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -647,20 +658,29 @@ or with the <code class="docutils literal notranslate"><span class="pre">optimiz
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost">
 <span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected equivalent annual cost over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
+<dd><p>The expected equivalent annual cost.</p>
+<div class="math notranslate nohighlight">
+\[\text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
+<p>where :</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
+<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_net_present_value at <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected equivalent annual cost will be computed up until this calendar time.</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Stop value of the timeline.</p>
 </dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
+<dt><strong>nb_steps</strong><span class="classifier">int, default None</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
+</dd>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the sum of every expected equivalent annual cost.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
 step of the timeline.</p>
 </dd>
 </dl>
@@ -671,14 +691,27 @@ step of the timeline.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value">
 <span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected total cost over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
+<dd><p>The expected net present value.</p>
+<p>It is computed by solving the renewal equation and is given by:</p>
+<div class="math notranslate nohighlight">
+\[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
+<p>where :</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
+<li><p><span class="math notranslate nohighlight">\(X_i \sim F\)</span> are <span class="math notranslate nohighlight">\(n\)</span> random variable lifetimes, <em>i.i.d.</em>, of cumulative distribution <span class="math notranslate nohighlight">\(F\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(Z_t\)</span> is the random variable reward at each time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
+</ul>
+<p>This method requires the <code class="docutils literal notranslate"><span class="pre">ar</span></code> attribute to be set either at initialization
+or with the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> method. Otherwise, an error will be raised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected equivalent annual cost will be computed up until this calendar time.</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected total cost will be computed up until this calendar time.</p>
 </dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected total cost</p>
+</dd>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the sum of every net present values.</p>
 </dd>
 </dl>
 </dd>

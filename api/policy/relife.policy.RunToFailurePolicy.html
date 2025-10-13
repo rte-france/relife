@@ -532,8 +532,8 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>The asymtotic expected equivalent annual cost</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_net_present_value" title="relife.policy.RunToFailurePolicy.asymptotic_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_net_present_value</span></code></a></p></td>
-<td><p>The asymtotic expected total cost</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value" title="relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_net_present_value</span></code></a></p></td>
+<td><p>The asymtotic expected net present value</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>The expected equivalent annual cost.</p></td>
@@ -562,11 +562,17 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected equivalent annual cost</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} \text{EEAC}(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost()</span></code></a> for more details.</p>
+<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>.
+Parameters
+———-
+total_sum : bool, default False</p>
+<blockquote>
+<div><p>If True, returns the sum of every asymptotic expected equivalent annual cost.</p>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -578,15 +584,21 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_net_present_value">
-<span class="sig-name descname"><span class="pre">asymptotic_net_present_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.asymptotic_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_net_present_value" title="Link to this definition">#</a></dt>
-<dd><p>The asymtotic expected total cost</p>
+<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
+<dd><p>The asymtotic expected net present value</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} z(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_net_present_value()</span></code></a> for more details.</p>
+<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the sum of every asymptotic net present values.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt>ndarray</dt><dd><p>The asymptotic expected total cost values</p>
 </dd>
 </dl>
@@ -609,22 +621,24 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[\text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
 <p>where :</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
-<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_net_present_value at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_net_present_value" title="relife.policy.AgeReplacementPolicy.expected_net_present_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_net_present_value()</span></code></a> for more details.`.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_net_present_value at <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected equivalent annual cost will be computed up until this calendar time.</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Stop value of the timeline.</p>
 </dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
+<dt><strong>nb_steps</strong><span class="classifier">int, default None</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
+</dd>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the sum of every expected equivalent annual cost.</p>
 </dd>
 </dl>
 </dd>
@@ -640,7 +654,7 @@ step of the timeline.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_net_present_value">
-<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
 <dd><p>The expected net present value.</p>
 <p>It is computed by solving the renewal equation and is given by:</p>
 <div class="math notranslate nohighlight">
@@ -652,6 +666,8 @@ step of the timeline.</p>
 <li><p><span class="math notranslate nohighlight">\(Z_t\)</span> is the random variable reward at each time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
 </ul>
+<p>This method requires the <code class="docutils literal notranslate"><span class="pre">ar</span></code> attribute to be set either at initialization
+or with the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> method. Otherwise, an error will be raised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -659,11 +675,13 @@ step of the timeline.</p>
 </dd>
 <dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected total cost</p>
 </dd>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the sum of every net present values.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected net present value and its corresponding values at each
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
 step of the timeline.</p>
 </dd>
 </dl>
@@ -724,7 +742,7 @@ step of the timeline.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.a0"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.a0</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.asymptotic_net_present_value"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.asymptotic_net_present_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.asymptotic_expected_net_present_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.cf"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.cf</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.expected_equivalent_annual_cost()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.expected_net_present_value"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.expected_net_present_value()</span></code></a></li>
