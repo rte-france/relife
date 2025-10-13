@@ -452,11 +452,12 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">OneCycleAgeReplacementPolicy</span><span class="p">(</span><span class="n">ReplacementPolicy</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One-cyle age replacement policy.</span>
 
-<span class="sd">    The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure</span>
-<span class="sd">    with costs :math:`c_f` if earlier.</span>
+<span class="sd">    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced</span>
+<span class="sd">    upon failure with cost :math:`c_f`. ``OneCycleAgeReplacementPolicy`` differs from ``AgeReplacementPolicy``</span>
+<span class="sd">    because only one cycle of replacement is considered.</span>
 
-<span class="sd">    The object&#39;s methods require the ``ar`` attribute to be set either at initialization</span>
-<span class="sd">    or with the ``optimize`` method. Otherwise, an error will be raised.</span>
+<span class="sd">    The object&#39;s methods require the ``ar`` attribute to be set either at the instanciation</span>
+<span class="sd">    or by calling the ``optimize`` method. Otherwise, an error will be raised.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -663,11 +664,12 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">AgeReplacementPolicy</span><span class="p">(</span><span class="n">ReplacementPolicy</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Age replacement policy.</span>
 
-<span class="sd">    Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`</span>
-<span class="sd">    with costs :math:`c_p` or upon failure with costs :math:`c_f` if earlier [1]_.</span>
+<span class="sd">    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced</span>
+<span class="sd">    upon failure with cost :math:`c_f`. ``AgeReplacementPolicy`` differs from ``OneCycleAgeReplacementPolicy``</span>
+<span class="sd">    because a infinite cycle of replacement is considered.</span>
 
-<span class="sd">    The object&#39;s methods require the ``ar`` attribute to be set either at initialization</span>
-<span class="sd">    or with the ``optimize`` method. Otherwise, an error will be raised.</span>
+<span class="sd">    The object&#39;s methods require the ``ar`` attribute to be set either at the instanciation</span>
+<span class="sd">    or by calling the ``optimize`` method. Otherwise, an error will be raised.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
