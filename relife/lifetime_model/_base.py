@@ -153,7 +153,10 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             x = np.asarray(x)
             fx = func(x)
-            if fx.shape[-len(x.shape) :] != x.shape:
+
+            try:
+                np.broadcast_shapes(fx.shape[-len(x.shape) :], x.shape)
+            except ValueError:
                 raise ValueError(
                     f"""
                     func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).

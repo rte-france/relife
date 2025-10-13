@@ -9,7 +9,9 @@ def renewal_equation_solver(timeline, lifetime_model, evaluated_func, discountin
     fm = lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
     y = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps)
 
-    if y.shape != f.shape:
+    try:
+        np.broadcast_shapes(y.shape, f.shape)
+    except ValueError:
         raise ValueError("Invalid shape between model and evaluated_func")
 
     if discounting is not None:

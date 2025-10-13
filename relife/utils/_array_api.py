@@ -16,6 +16,11 @@ def reshape_1d_arg(arg):
     return arg
 
 
+def flatten_if_possible(value):
+    if value.ndim != 0:
+        return value.flatten()
+    return value
+
 # def to_relife_shape_2d_arg(arg):
 #     """
 #     Reshapes given arg that can be 2d max to either () or (nb_assets, n)

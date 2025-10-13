@@ -3,13 +3,13 @@ import warnings
 import numpy as np
 from scipy.optimize import newton
 
-from relife.economic import AgeReplacementReward, ExponentialDiscounting, cost
+from relife.economic import AgeReplacementReward, ExponentialDiscounting
 from relife.lifetime_model import AgeReplacementModel, LeftTruncatedModel
 from relife.stochastic_process import RenewalRewardProcess
-from relife.utils import is_frozen, reshape_1d_arg, is_non_homogeneous_poisson_process, is_lifetime_model
+from relife.utils import is_frozen, reshape_1d_arg, is_non_homogeneous_poisson_process, is_lifetime_model, flatten_if_possible
 from relife.utils.quadrature import legendre_quadrature
 
-from ._base import _OneCycleExpectedCosts
+from ._base import _OneCycleExpectedCosts, ReplacementPolicy
 
 def age_replacement_policy(model, costs, one_cycle=False, **kwargs):
     if is_non_homogeneous_poisson_process(model):
@@ -31,7 +31,7 @@ def age_replacement_policy(model, costs, one_cycle=False, **kwargs):
     else:
         raise ValueError("can't create a preventive age replacement policy from given model")
 
-class OneCycleAgeReplacementPolicy:
+class OneCycleAgeReplacementPolicy(ReplacementPolicy):
     r"""One-cyle age replacement policy.
 
     The asset is disposed at a fixed age :math:`a_r` with costs :math:`c_p` or upon failure
@@ -66,14 +66,9 @@ class OneCycleAgeReplacementPolicy:
     """
 
     def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, a0=None, ar=None):
-        self.lifetime_model = lifetime_model
-        self._cf = reshape_1d_arg(cf)
-        self._cp = reshape_1d_arg(cp)
-        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
-        self._tr = None
-        # call public setter here to set _tr too
-        self.ar = reshape_1d_arg(ar) if ar is not None else ar
-        self.discounting_rate = discounting_rate
+        super().__init__(lifetime_model, cf, discounting_rate=discounting_rate, a0=a0)
+        self.cp = cp
+        self.ar = ar
         self.period_before_discounting = period_before_discounting
 
     @property
@@ -95,17 +90,6 @@ class OneCycleAgeReplacementPolicy:
         )
 
     @property
-    def cf(self):
-        """Costs of failure.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        # _cf is (m, 1) but exposed cf is (m,)
-        return self._cf.flatten()
-
-    @property
     def cp(self):
         """Costs of preventive replacements.
 
@@ -114,20 +98,11 @@ class OneCycleAgeReplacementPolicy:
         np.ndarray
         """
         # _cp is (m, 1) but exposed cp is (m,)
-        return self._cp.flatten()
+        return flatten_if_possible(self._cp)
 
-    @property
-    def a0(self):
-        """Current ages of the assets.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        # _a0 is (m, 1) but exposed a0 is (m,)
-        if self._a0 is None:
-            return self._a0
-        return self._a0.flatten()
+    @cp.setter
+    def cp(self, value):
+        self._cp = reshape_1d_arg(value)
 
     @property
     def ar(self):
@@ -140,13 +115,14 @@ class OneCycleAgeReplacementPolicy:
         # _ar is (m, 1) but exposed ar is (m,)
         if self._ar is None:
             return self._ar
-        return self._ar.flatten()
+        return flatten_if_possible(self._ar)
 
     @ar.setter
     def ar(self, value):
         if value is not None:
             value = reshape_1d_arg(value)
             self._ar = value
+            self._tr = None
             if self.a0 is not None:
                 self._tr = np.maximum(value - self._a0, 0)
         else:
@@ -161,28 +137,10 @@ class OneCycleAgeReplacementPolicy:
         np.ndarray
         """
         if self.a0 is not None:
-            return self._tr
+            return flatten_if_possible(self._tr)
         return self.ar
 
     def expected_net_present_value(self, tf, nb_steps):
-        r"""
-        Calculate the expected total cost over a given timeline.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the expected equivalent annual cost
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
-            step of the timeline.
-        """
         if self.ar is None:
             raise ValueError
         return self._expected_costs.expected_net_present_value(
@@ -190,44 +148,11 @@ class OneCycleAgeReplacementPolicy:
         )  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
 
     def asymptotic_expected_net_present_value(self):
-        r"""
-        Calculate the asymptotic expected net present value.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Returns
-        -------
-        np.ndarray
-            The asymptotic expected net present value.
-
-        .. warning::
-
-            This method requires the ``ar`` attribute to be set either at initialization
-            or with the ``optimize`` method.
-        """
         if self.ar is None:
             raise ValueError
         return self._expected_costs.asymptotic_expected_net_present_value()  # () or (m, nb_steps)
 
     def expected_equivalent_annual_cost(self, tf, nb_steps):
-        r"""
-        Calculate the expected equivalent annual cost over a given timeline.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the expected equivalent annual cost
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
-            step of the timeline.
-        """
         if self.ar is None:
             raise ValueError
         # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
@@ -251,16 +176,6 @@ class OneCycleAgeReplacementPolicy:
         return timeline, eeac  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self):
-        r"""
-        Calculate the asymptotic expected equivalent annual cost.
-
-        It takes into account ``discounting_rate`` attribute value.
-
-        Returns
-        -------
-        np.ndarray
-            The asymptotic expected total cost.
-        """
         if self.ar is None:
             raise ValueError
         # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
@@ -309,7 +224,7 @@ class OneCycleAgeReplacementPolicy:
         return self
 
 
-class AgeReplacementPolicy:
+class AgeReplacementPolicy(ReplacementPolicy):
     r"""Age replacement policy.
 
     Behind the scene, a renewal reward stochastic process is used where assets are replaced at a fixed age :math:`a_r`
@@ -343,25 +258,9 @@ class AgeReplacementPolicy:
     """
 
     def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, a0=None, ar=None):
-
-        self.lifetime_model = lifetime_model
-        self._cf = reshape_1d_arg(cf)
-        self._cp = reshape_1d_arg(cp)
-        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
-        self._tr1 = None
-        # call public setter here to set _tr1 too
-        self.ar = reshape_1d_arg(ar) if ar is not None else ar
-        self.discounting_rate = discounting_rate
-
-    @property
-    def cf(self):
-        """Costs of failure.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        return self._cf.flatten()
+        super().__init__(lifetime_model, cf, discounting_rate=discounting_rate, a0=a0)
+        self.cp = cp
+        self.ar = ar
 
     @property
     def cp(self):
@@ -371,19 +270,11 @@ class AgeReplacementPolicy:
         -------
         np.ndarray
         """
-        return self._cp.flatten()
+        return flatten_if_possible(self._cp)
 
-    @property
-    def a0(self):
-        """Current ages of the assets.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        if self._a0 is None:
-            return self._a0
-        return self._a0.flatten()
+    @cp.setter
+    def cp(self, value):
+        self._cp = reshape_1d_arg(value)
 
     @property
     def tr1(self):
@@ -394,7 +285,7 @@ class AgeReplacementPolicy:
         np.ndarray
         """
         if self.a0 is not None:
-            return self._tr1.flatten()
+            return flatten_if_possible(self._tr1)
         return self.ar
 
     @property
@@ -407,13 +298,14 @@ class AgeReplacementPolicy:
         """
         if self._ar is None:
             return self._ar
-        return self._ar.flatten()
+        return flatten_if_possible(self._ar)
 
     @ar.setter
     def ar(self, value):
         if value is not None:
             value = reshape_1d_arg(value)
             self._ar = value
+            self._tr1 = None
             if self.a0 is not None:
                 self._tr1 = np.maximum(value - self._a0, 0)
         else:
@@ -440,40 +332,6 @@ class AgeReplacementPolicy:
         )
 
     def expected_net_present_value(self, tf, nb_steps, total_sum=False):
-        r"""
-        The expected net present value.
-
-        It is computed by solving the renewal equation and is given by:
-
-        .. math::
-
-            z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
-
-        where :
-
-        - :math:`t` is the time
-        - :math:`X_i \sim F` are :math:`n` random variable lifetimes, *i.i.d.*, of cumulative distribution :math:`F`.
-        - :math:`Z_t` is the random variable reward at each time :math:`t`.
-        - :math:`\delta` is the discounting rate.
-
-        This method requires the ``ar`` attribute to be set either at initialization
-        or with the ``optimize`` method. Otherwise, an error will be raised.
-
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The expected total cost will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the expected total cost
-        total_sum : bool, default False
-            If True, returns the sum of every net present values.
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
-            step of the timeline.
-        """
         if self.ar is None:
             raise ValueError
         timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
@@ -482,60 +340,12 @@ class AgeReplacementPolicy:
         return timeline, npv
 
     def asymptotic_expected_net_present_value(self, total_sum=False):
-        r"""
-        The asymtotic expected net present value
-
-        .. math::
-
-            \lim_{t\to\infty} z(t)
-
-        where :math:`z(t)` is the expected total cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_net_present_value` for more details.
-
-        Parameters
-        ----------
-        total_sum : bool, default False
-            If True, returns the sum of every asymptotic net present values.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected total cost values
-        """
-
         timeline, asymptotic_npv = self._stochastic_process.asymptotic_expected_total_reward()  # () or (m,)
         if total_sum:
             return timeline, np.sum(asymptotic_npv)
         return timeline, asymptotic_npv
 
     def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
-        r"""
-        The expected equivalent annual cost.
-
-        .. math::
-
-            \text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
-
-        where :
-
-        - :math:`t` is the time
-        - :math:`z(t)` is the expected_net_present_value at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_net_present_value` for more details.`.
-        - :math:`\delta` is the discounting rate.
-
-        Parameters
-        ----------
-        tf : float
-            Stop value of the timeline.
-        nb_steps : int, default None
-            The number of steps used to compute the expected equivalent annual cost
-        total_sum : bool, default False
-            If True, returns the sum of every expected equivalent annual cost.
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
-            step of the timeline.
-        """
         timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)
         if np.any(self.tr1 == 0):
             warnings.warn(
@@ -550,25 +360,6 @@ class AgeReplacementPolicy:
         return timeline, eeac  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
-        r"""
-        The asymtotic expected equivalent annual cost
-
-        .. math::
-
-            \lim_{t\to\infty} \text{EEAC}(t)
-
-        where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_equivalent_annual_cost` for more details.
-
-        Parameters
-        ----------
-        total_sum : bool, default False
-            If True, returns the sum of every asymptotic expected equivalent annual cost.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected equivalent annual cost
-        """
         asymptotic_eeac = self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
         if np.any(self.tr1 == 0):
             warnings.warn(

@@ -1,6 +1,14 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 
 from relife.economic import ExponentialDiscounting
+from relife.utils import reshape_1d_arg, flatten_if_possible
+
+
+def _make_timeline(tf, nb_steps):
+    timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
 
 
 class _OneCycleExpectedCosts:
@@ -19,17 +27,7 @@ class _OneCycleExpectedCosts:
         self.period_before_discounting = period_before_discounting
         self.lifetime_model = lifetime_model
 
-    def _make_timeline(self, tf: float, nb_steps: int):
-        # tile is necessary to ensure broadcasting of the operations
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
-            timeline = np.tile(timeline, (self.reward.size, 1))
-        return timeline  # (nb_steps,) or (m, nb_steps)
-
-    def expected_net_present_value(self, tf: float, nb_steps: int):
+    def expected_net_present_value(self, tf, nb_steps):
         r"""
         Calculate the expected net present value over a given timeline.
 
@@ -53,7 +51,7 @@ class _OneCycleExpectedCosts:
             This method requires the ``ar`` attribute to be set either at initialization
             or with the ``optimize`` method.
         """
-        timeline = self._make_timeline(tf, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)
         etc = self.lifetime_model.ls_integrate(
             lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
             np.zeros_like(timeline),
@@ -140,7 +138,7 @@ class _OneCycleExpectedCosts:
             This method requires the ``ar`` attribute to be set either at initialization
             or with the ``optimize`` method.
         """
-        timeline = self._make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
         return self._expected_equivalent_annual_cost(timeline)  # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self):
@@ -159,11 +157,159 @@ class _OneCycleExpectedCosts:
             This method requires the ``ar`` attribute to be set either at initialization
             or with the ``optimize`` method.
         """
-        timeline = np.array(np.inf)
-        args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)  #  default 1 for LifetimeDistribution case
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
-            timeline = np.tile(timeline, (self.reward.size, 1))
-        # timeline : () or (m, 1)
+        timeline = np.atleast_2d(np.array(np.inf)) # (1, 1) to ensure broadcasting
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
+
+
+class ReplacementPolicy(ABC):
+
+    def __init__(
+        self,
+        lifetime_model,
+        cf,
+        discounting_rate=0.0,
+        a0=None,
+    ):
+        self.lifetime_model = lifetime_model
+        self.cf = cf
+        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
+        self.discounting_rate = discounting_rate
+
+    @property
+    def cf(self):
+        """Cost of failure.
+
+        Returns
+        -------
+        np.ndarray
+        """
+        # _cf is (m, 1) but exposed cf is (m,)
+        return flatten_if_possible(self._cf)
+
+    @cf.setter
+    def cf(self, value):
+        self._cf = reshape_1d_arg(value)
+
+    @property
+    def a0(self):
+        """Current ages of the assets.
+
+        Returns
+        -------
+        np.ndarray
+        """
+        # _a0 is (m, 1) but exposed cf is (m,)
+        if self._a0 is None:
+            return self._a0
+        return flatten_if_possible(self._a0)
+
+    @abstractmethod
+    def expected_net_present_value(self, tf, nb_steps, total_sum=False):
+        r"""
+        The expected net present value.
+
+        It is computed by solving the renewal equation and is given by:
+
+        .. math::
+
+            z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
+
+        where :
+
+        - :math:`t` is the time
+        - :math:`X_i \sim F` are :math:`n` random variable lifetimes, *i.i.d.*, of cumulative distribution :math:`F`.
+        - :math:`Z_t` is the random variable reward at each time :math:`t`.
+        - :math:`\delta` is the discounting rate.
+
+        This method requires the ``ar`` attribute to be set either at initialization
+        or with the ``optimize`` method. Otherwise, an error will be raised.
+
+        Parameters
+        ----------
+        tf : float
+            Time horizon. The expected total cost will be computed up until this calendar time.
+        nb_steps : int
+            The number of steps used to compute the expected total cost
+        total_sum : bool, default False
+            If True, returns the sum of every net present values.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
+            step of the timeline.
+        """
+
+    @abstractmethod
+    def asymptotic_expected_net_present_value(self, total_sum=False):
+        r"""
+        The asymtotic expected net present value
+
+        .. math::
+
+            \lim_{t\to\infty} z(t)
+
+        where :math:`z(t)` is the expected total cost at :math:`t`.
+
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic net present values.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected total cost values
+        """
+
+    @abstractmethod
+    def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
+        r"""
+        The expected equivalent annual cost.
+
+        .. math::
+
+            \text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
+
+        where :
+
+        - :math:`t` is the time
+        - :math:`z(t)` is the expected_net_present_value at :math:`t`.
+        - :math:`\delta` is the discounting rate.
+
+        Parameters
+        ----------
+        tf : float
+            Stop value of the timeline.
+        nb_steps : int, default None
+            The number of steps used to compute the expected equivalent annual cost
+        total_sum : bool, default False
+            If True, returns the sum of every expected equivalent annual cost.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
+            step of the timeline.
+        """
+
+    @abstractmethod
+    def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
+        r"""
+        The asymtotic expected equivalent annual cost
+
+        .. math::
+
+            \lim_{t\to\infty} \text{EEAC}(t)
+
+        where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`.
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the sum of every asymptotic expected equivalent annual cost.
+
+        Returns
+        -------
+        ndarray
+            The asymptotic expected equivalent annual cost
+        """

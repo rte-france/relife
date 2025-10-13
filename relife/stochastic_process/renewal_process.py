@@ -1,7 +1,6 @@
 import copy
 
 import numpy as np
-from typing_extensions import override
 
 from relife.base import ParametricModel
 from relife.economic import Reward, ExponentialDiscounting
@@ -13,6 +12,10 @@ from relife.stochastic_process._renewal_equations import (
 from relife.utils import is_frozen
 
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
+
+def _make_timeline(tf, nb_steps):
+    timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
 
 
 class RenewalProcess(ParametricModel):
@@ -43,11 +46,6 @@ class RenewalProcess(ParametricModel):
         super().__init__()
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
-
-    def _make_timeline(self, tf, nb_steps):
-        # tile is necessary to ensure broadcasting of the operations
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        return np.atleast_2d(timeline)  # (1, nb_steps)
 
     def renewal_function(self, tf, nb_steps):
         r"""The renewal function.
@@ -90,15 +88,13 @@ class RenewalProcess(ParametricModel):
             Sons.
         """
 
-        timeline = self._make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
         renewal_function = renewal_equation_solver(
             timeline,
             self.lifetime_model,
             self.lifetime_model.cdf if self.first_lifetime_model is None else self.first_lifetime_model.cdf,
         )
-        if timeline.ndim == 2:
-            return timeline[0, :], renewal_function
-        return timeline, renewal_function
+        return np.squeeze(timeline), np.squeeze(renewal_function)
 
     def renewal_density(self, tf, nb_steps):
         r"""The renewal density.
@@ -140,15 +136,13 @@ class RenewalProcess(ParametricModel):
             Theory: Models, Statistical Methods, and Applications. John Wiley &
             Sons.
         """
-        timeline = self._make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         renewal_density = renewal_equation_solver(
             timeline,
             self.lifetime_model,
             self.lifetime_model.pdf if self.first_lifetime_model is None else self.first_lifetime_model.pdf,
         )
-        if timeline.ndim == 2:
-            return timeline[0, :], renewal_density
-        return timeline, renewal_density
+        return np.squeeze(timeline), np.squeeze(renewal_density)
 
     def sample(self, size, tf, t0=0.0, seed=None):
         """Renewal data sampling.
@@ -335,7 +329,7 @@ class RenewalRewardProcess(RenewalProcess):
             A tuple containing the timeline used to compute the expected total reward and its corresponding values at each
             step of the timeline.
         """
-        timeline = self._make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         z = renewal_equation_solver(
             timeline,
             self.lifetime_model,
@@ -360,7 +354,7 @@ class RenewalRewardProcess(RenewalProcess):
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
-        return np.squeeze(timeline), z  # (nb_steps,), (nb_steps,) or (m, nb_steps)
+        return np.squeeze(timeline), np.squeeze(z)  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_reward(self):
         r"""Asymptotic expected total reward.
@@ -450,9 +444,7 @@ class RenewalRewardProcess(RenewalProcess):
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
-        if timeline.ndim == 2:
-            return timeline[0, :], np.squeeze(eeac)  # (nb_steps,) and (m, nb_steps)
-        return timeline, np.squeeze(eeac)  # (nb_steps,) and (nb_steps)
+        return np.squeeze(timeline), np.squeeze(eeac)  # (nb_steps,) and (nb_steps) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_worth(self):
         """Asymptotic expected equivalent annual worth.
@@ -469,7 +461,6 @@ class RenewalRewardProcess(RenewalProcess):
             )  # () or (m,)
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
-    @override
     def sample(self, size, tf, t0=0.0, seed=None):
         from ._sample import RenewalProcessIterable
 
