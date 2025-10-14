@@ -54,20 +54,18 @@ class IntervalLikelihood(Likelihood):
         *args,
         entry: NDArray[np.float64] = None,
     ):
-        self.model = model
-        self.time_inf = array_reshape(time_inf)
-        self.time_sup = array_reshape(time_sup)
-        self.entry = (
+        time_inf = array_reshape(time_inf)
+        time_sup = array_reshape(time_sup)
+        entry = (
             array_reshape(entry)
             if (entry is not None)
-            else np.zeros_like(self.time_inf, dtype=np.float64)
+            else np.zeros_like(time_inf, dtype=np.float64)
         )
-        self.args = args_reshape(args)
-        self.nb_samples = len(time_inf)
+        args = args_reshape(args)
 
         sizes = [
             len(x)
-            for x in (self.time_inf, self.time_sup, self.entry, *self.args)
+            for x in (time_inf, time_sup, entry, *args)
             if x is not None
         ]
         if len(set(sizes)) != 1:
@@ -75,94 +73,89 @@ class IntervalLikelihood(Likelihood):
                 f"All lifetime data must have the same number of values. Fields length are different. Got {set(sizes)}"
             )
 
-    def _time_contrib(
-        self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
-    ) -> np.float64:
-        interval_censored = time_sup > time_inf
-        interval_censored_contrib = np.sum(
+        self.model = model
+        self.nb_samples = len(time_inf)
+
+        exact_times_index = (time_inf == time_sup).squeeze()
+
+        self.time_exact = time_sup[exact_times_index]
+        self.time_inf = time_inf[~exact_times_index]
+        self.time_sup = time_sup[~exact_times_index]
+
+        self.entry = entry[(entry > 0).squeeze()]
+
+        self.args = args
+        self.args_with_time_exact = tuple(arg[exact_times_index] for arg in args)
+        self.args_with_interval_censoring = tuple(
+            arg[~exact_times_index] for arg in args
+        )
+        self.args_with_entry = tuple(arg[(entry > 0).squeeze()] for arg in args)
+
+    def _interval_censored_contrib(self) -> np.float64:
+        if len(self.time_sup) == 0:
+            return None
+        return np.sum(
             -np.log(
                 10**-10
-                + self.model.cdf(time_sup[interval_censored], *args)
-                - self.model.cdf(time_inf[interval_censored], *args)
+                + self.model.cdf(self.time_sup, *self.args_with_interval_censoring)
+                - self.model.cdf(self.time_inf, *self.args_with_interval_censoring)
             ),
             dtype=np.float64,
         )
 
-        other_contribs = np.sum(
-            self.model.chf(time_sup[~interval_censored], *args), dtype=np.float64
-        )
-
-        return interval_censored_contrib + other_contribs
-
-    def _event_contrib(
-        self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
-    ) -> np.float64:
-        event = time_inf == time_sup
-
+    def _event_contrib(self) -> np.float64:
+        if len(self.time_exact == 0):
+            return None
         return -np.sum(
-            np.log(self.model.hf(time_sup[event], *args)),
+            np.log(self.model.pdf(self.time_exact, *self.args_with_time_exact)),
             dtype=np.float64,
         )
 
-    def _entry_contrib(self, entry: NDArray[np.float64], *args) -> np.float64:
+    def _entry_contrib(self) -> np.float64:
+        if len(self.entry) == 0:
+            return None
         return -np.sum(
-            self.model.chf(entry, *args),
+            self.model.chf(self.entry, *self.args_with_entry),
             dtype=np.float64,
         )
 
-    def _jac_time_contrib(
-        self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
-    ) -> NDArray[np.float64]:
-        interval_censored = time_sup > time_inf
+    def _jac_interval_censored_contrib(self) -> NDArray[np.float64]:
+        if len(self.time_sup) == 0:
+            return None
 
         jac_interval_censored = (
             self.model.jac_sf(
-                time_sup[interval_censored],
-                *args,
+                self.time_sup,
+                *self.args_with_interval_censoring,
                 asarray=True,
             )
             - self.model.jac_sf(
-                time_inf[interval_censored],
-                *args,
+                self.time_inf,
+                *self.args_with_interval_censoring,
                 asarray=True,
             )
         ) / (
             10**-10
-            + self.model.cdf(time_sup[interval_censored], *args)
-            - self.model.cdf(time_inf[interval_censored], *args)
+            + self.model.cdf(self.time_sup, *self.args_with_interval_censoring)
+            - self.model.cdf(self.time_inf, *self.args_with_interval_censoring)
         )
 
-        interval_censored_contribs = np.sum(
+        return np.sum(
             jac_interval_censored,
             axis=tuple(range(1, jac_interval_censored.ndim)),
             dtype=np.float64,
         )
 
-        jac_other = self.model.jac_chf(
-            time_sup[~interval_censored],
-            *args,
+    def _jac_event_contrib(self) -> NDArray[np.float64]:
+        if len(self.time_exact == 0):
+            return None
+        jac = -self.model.jac_pdf(
+            self.time_exact,
+            *self.args_with_time_exact,
             asarray=True,
-        )
-        other_contribs = np.sum(
-            jac_other,
-            axis=tuple(range(1, jac_other.ndim)),
-            dtype=np.float64,
-        )
-
-        return interval_censored_contribs + other_contribs
-
-    def _jac_event_contrib(
-        self, time_inf: NDArray[np.float64], time_sup: NDArray[np.float64], *args
-    ) -> NDArray[np.float64]:
-        event = time_inf == time_sup
-
-        jac = -self.model.jac_hf(
-            time_sup[event],
-            *args,
-            asarray=True,
-        ) / self.model.hf(
-            time_sup[event],
-            *args,
+        ) / self.model.pdf(
+            self.time_exact,
+            *self.args_with_time_exact,
         )
 
         return np.sum(
@@ -171,15 +164,12 @@ class IntervalLikelihood(Likelihood):
             dtype=np.float64,
         )
 
-    def _jac_entry_contrib(
-        self, entry: NDArray[np.float64], *args
-    ) -> NDArray[np.float64]:
-        entry_truncated = entry[(entry > 0).squeeze()]
-        args_truncated = (arg[(entry > 0).squeeze()] for arg in args)
-
+    def _jac_entry_contrib(self) -> NDArray[np.float64]:
+        if len(self.entry) == 0:
+            return None
         jac = self.model.jac_chf(
-            entry_truncated,  # filter entry==0 to avoid numerical error in jac_chf
-            *args_truncated,
+            self.entry,  # filter entry==0 to avoid numerical error in jac_chf
+            *self.args_with_entry,
             asarray=True,
         )
 
@@ -196,9 +186,9 @@ class IntervalLikelihood(Likelihood):
         model_params = np.copy(self.model.params)
         self.model.params = params  # changes model params
         contributions = (
-            self._time_contrib(self.time_inf, self.time_sup, *self.args),
-            self._event_contrib(self.time_inf, self.time_sup, *self.args),
-            self._entry_contrib(self.entry, *self.args),
+            self._interval_censored_contrib(),
+            self._event_contrib(),
+            self._entry_contrib(),
         )
         self.model.params = model_params  # reset model params (negative_log must not change model params)
         return sum(x for x in contributions if x is not None)  # ()
@@ -225,9 +215,9 @@ class IntervalLikelihood(Likelihood):
         model_params = np.copy(self.model.params)
         self.model.params = params  # changes model params
         jac_contributions = (
-            self._jac_time_contrib(self.time_inf, self.time_sup, *self.args),
-            self._jac_event_contrib(self.time_inf, self.time_sup, *self.args),
-            self._jac_entry_contrib(self.entry, *self.args),
+            self._jac_interval_censored_contrib(),
+            self._jac_event_contrib(),
+            self._jac_entry_contrib(),
         )
         self.model.params = model_params  # reset model params (jac_negative_log must not change model params)
         return sum(x for x in jac_contributions if x is not None)  # (p,)

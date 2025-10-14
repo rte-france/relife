@@ -613,7 +613,7 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         entry=None,
         **optimizer_options,
     ):
-        return super().fit(time_inf, time_sup, covar, entry=entry, **optimizer_options)
+        return super().fit_interval_censored_data(time_inf, time_sup, covar, entry=entry, **optimizer_options)
 
     def freeze_args(self, covar, *args):
         """

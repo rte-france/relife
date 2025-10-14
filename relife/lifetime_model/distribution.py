@@ -320,7 +320,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         entry=None,
         **optimizer_options,
     ):
-        return super().fit(time_inf, time_sup, entry=entry, **optimizer_options)
+        return super().fit_interval_censored_data(time_inf, time_sup, entry=entry, **optimizer_options)
 
 
 class Exponential(LifetimeDistribution):
