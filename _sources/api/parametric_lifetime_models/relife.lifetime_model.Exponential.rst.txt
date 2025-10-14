@@ -34,6 +34,12 @@ Exponential
             ~Exponential.fit
         
         
+            ~Exponential.fit_interval_censored_data
+        
+        
+            ~Exponential.fit_with_old_likelihood
+        
+        
             ~Exponential.hf
         
         
