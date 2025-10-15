@@ -16,6 +16,10 @@ class Likelihood(ABC):
     model: ParametricModel
     data: Any
 
+    def __init__(self, model, data):
+        self.model = model
+        self.data = data
+
     @abstractmethod
     def negative_log(self, params: NDArray[np.float64]) -> np.float64:
         """

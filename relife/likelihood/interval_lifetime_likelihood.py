@@ -67,7 +67,8 @@ class IntervalLifetimeLikelihood(Likelihood):
                 f"All lifetime data must have the same number of values. Fields length are different. Got {set(sizes)}"
             )
 
-        self.model = model
+        data = {"time": time, "event": event, "entry": entry, "args": args}
+        super().__init__(model, data)
         self.nb_samples = len(time_inf)
 
         exact_times_index = (time_inf == time_sup).squeeze()

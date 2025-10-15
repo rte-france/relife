@@ -73,7 +73,9 @@ class DefaultLifetimeLikelihood(Likelihood):
 
         # Init values
 
-        self.model = model
+        data = {"time": time, "event": event, "entry": entry, "args": args}
+        super().__init__(model, data)
+
         self.nb_samples = len(time)
 
         self.time = time
