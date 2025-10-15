@@ -81,7 +81,7 @@ def legendre_quadrature(
     v = p * w  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     try:
-        np.broadcast_shapes(fvalues.shape[-len(u.shape):], u.shape)
+        np.broadcast_shapes(fvalues.shape[-len(u.shape) :], u.shape)
     except ValueError:
         raise ValueError(
             f"""

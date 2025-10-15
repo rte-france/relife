@@ -1,5 +1,6 @@
 from relife.economic import AgeReplacementReward, RunToFailureReward
 
+
 def test_run_to_failure_reward(time, cf, expected_out_shape):
     reward = RunToFailureReward(cf)
     assert reward.conditional_expectation(time).shape == expected_out_shape(time=time, cf=cf)

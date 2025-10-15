@@ -1,4 +1,9 @@
-from ._array_api import filter_nonetype_args, get_args_nb_assets, reshape_1d_arg, flatten_if_possible
+from ._array_api import (
+    filter_nonetype_args,
+    flatten_if_possible,
+    get_args_nb_assets,
+    reshape_1d_arg,
+)
 from ._model_checks import (
     is_frozen,
     is_lifetime_model,

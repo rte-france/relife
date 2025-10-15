@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
-from relife.utils import reshape_1d_arg
+
 import numpy as np
+
+from relife.utils import reshape_1d_arg
+
 
 class Reward(ABC):
     @abstractmethod
@@ -23,6 +26,7 @@ class Reward(ABC):
         ndarray
             Random drawing of a reward with respect to time.
         """
+
 
 class RunToFailureReward(Reward):
     r"""Run-to-failure reward.
@@ -85,7 +89,7 @@ class Discounting(ABC):
 
 
 class ExponentialDiscounting(Discounting):
-    def __init__(self, rate = 0.0):
+    def __init__(self, rate=0.0):
         self.rate = rate
 
     def factor(self, timeline):

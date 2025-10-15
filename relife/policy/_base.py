@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from relife.economic import ExponentialDiscounting
-from relife.utils import reshape_1d_arg, flatten_if_possible
 
 
 def _make_timeline(tf, nb_steps):
@@ -17,8 +16,8 @@ class _OneCycleExpectedCosts:
         self,
         lifetime_model,
         reward,
-        discounting_rate = 0.,
-        period_before_discounting = 1.0,
+        discounting_rate=0.0,
+        period_before_discounting=1.0,
     ) -> None:
         self.reward = reward
         self.discounting = ExponentialDiscounting(discounting_rate)
@@ -81,7 +80,7 @@ class _OneCycleExpectedCosts:
         return self._expected_equivalent_annual_cost(timeline)  # (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_cost(self):
-        timeline = np.atleast_2d(np.array(np.inf)) # (1, 1) to ensure broadcasting
+        timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
 
 
@@ -89,58 +88,32 @@ class ReplacementPolicy(ABC):
 
     def __init__(
         self,
-        lifetime_model,
-        cf,
+        baseline_model,
+        cost_structure,
         discounting_rate=0.0,
-        a0=None,
     ):
-        self.lifetime_model = lifetime_model
-        self.cf = cf
-        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
+        self.baseline_model = baseline_model
         self.discounting_rate = discounting_rate
-
-    @property
-    def cf(self):
-        """Cost of failure.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        # _cf is (m, 1) but exposed cf is (m,)
-        return flatten_if_possible(self._cf)
-
-    @cf.setter
-    def cf(self, value):
-        self._cf = reshape_1d_arg(value)
-
-    @property
-    def a0(self):
-        """Current ages of the assets.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        # _a0 is (m, 1) but exposed cf is (m,)
-        if self._a0 is None:
-            return self._a0
-        return flatten_if_possible(self._a0)
+        self._cost_structure = cost_structure  # hidden, contains reshaped cost arrays
 
     @abstractmethod
     def expected_net_present_value(self, tf, nb_steps, total_sum=False):
         r"""
         The expected net present value.
 
+        The net present value is commonly computed with a time discrete formula.
+        It has a continuous variation where cash flows are time dependant.
+        From a random perspective, one can compute its expected value called :math:`z(t)`.
+
         .. math::
 
-            \text{NPV}(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
+            z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
 
         where :
 
         - :math:`t` is the time
-        - :math:`X_1 \sim F` is lifetime of the first cycle
-        - :math:`Z_t` are the random rewards
+        - :math:`X_1 \sim F` is the random lifetime of the first asset
+        - :math:`Z_t` are the random costs at each time :math:`t`
         - :math:`\delta` is the discounting rate
 
         It is computed by solving the renewal equation.
@@ -158,18 +131,13 @@ class ReplacementPolicy(ABC):
         Returns
         -------
         tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
-            step of the timeline.
+            A tuple containing the timeline and the computed values.
         """
 
     @abstractmethod
     def asymptotic_expected_net_present_value(self, total_sum=False):
         r"""
-        The asymtotic expected net present value.
-
-        .. math::
-
-            \lim_{t\to\infty} \text{NPV}(t)
+        The asymtotic expected net present value :math:`\lim_{t\to\infty} z(t)`.
 
         Parameters
         ----------
@@ -180,7 +148,7 @@ class ReplacementPolicy(ABC):
         Returns
         -------
         ndarray
-            The asymptotic expected net present value.
+            The asymptotic expected values.
         """
 
     @abstractmethod
@@ -188,14 +156,18 @@ class ReplacementPolicy(ABC):
         r"""
         The expected equivalent annual cost.
 
+        The equivalent annual cost corresponds to the value of the constant cash flow that
+        leads to the same net present value. It is generally used to compare investment projects of unequal lifespans.
+        It has a continuous variation and from a random perspective, one can compute its expected value called :math:`q(t)`.
+
         .. math::
 
-            \text{EEAC}(t) = \dfrac{\delta \text{NPV}(t)}{1 - e^{-\delta t}}
+            q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
 
         where :
 
         - :math:`t` is the time.
-        - :math:`\text{NPV}(t)` is the net present value at time :math:`t`.
+        - :math:`z(t)` is the expected net present value at time :math:`t`.
         - :math:`\delta` is the discounting rate.
 
         Parameters
@@ -211,18 +183,13 @@ class ReplacementPolicy(ABC):
         Returns
         -------
         tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
-            step of the timeline.
+            A tuple containing the timeline and the computed values.
         """
 
     @abstractmethod
     def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
         r"""
-        The asymtotic expected equivalent annual cost.
-
-        .. math::
-
-            \lim_{t\to\infty} \text{EEAC}(t)
+        The asymtotic expected equivalent annual cost, :math:`\lim_{t\to\infty} q(t)`.
 
         Parameters
         ----------
@@ -233,5 +200,5 @@ class ReplacementPolicy(ABC):
         Returns
         -------
         ndarray
-            The asymptotic expected equivalent annual cost.
+            The asymptotic expected values.
         """
