@@ -35,10 +35,16 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
     @abstractmethod
     def pdf(self, time: _Any_Number, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
     def cdf(self, time: _Any_Number, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
-    def ppf(self, probability: _Any_Number, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
+    def ppf(
+        self, probability: _Any_Number, *args: *_Any_Number_Ts
+    ) -> _Any_Numpy_Number: ...
     def median(self, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
-    def isf(self, probability: _Any_Number, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
-    def ichf(self, cumulative_hazard_rate: _Any_Number, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
+    def isf(
+        self, probability: _Any_Number, *args: *_Any_Number_Ts
+    ) -> _Any_Numpy_Number: ...
+    def ichf(
+        self, cumulative_hazard_rate: _Any_Number, *args: *_Any_Number_Ts
+    ) -> _Any_Numpy_Number: ...
     def moment(self, n: int, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
     def mean(self, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
     def var(self, *args: *_Any_Number_Ts) -> _Any_Numpy_Number: ...
@@ -59,7 +65,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> _Any_Numpy_Number: ...
     @overload
     def rvs(
@@ -69,7 +79,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool]: ...
     @overload
     def rvs(
@@ -79,7 +93,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
     @overload
     def rvs(
@@ -89,7 +107,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]: ...
     def rvs(
         self,
@@ -98,7 +120,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> (
         _Any_Numpy_Number
         | tuple[_Any_Numpy_Number, _Any_Numpy_Number]

@@ -17,7 +17,7 @@ from .distribution import (
     MinimumDistribution,
     Weibull,
 )
-from .non_parametric import ECDF, KaplanMeier, NelsonAalen, Turnbull
+from .non_parametric import ECDF, KaplanMeier, NelsonAalen
 from .regression import (
     AcceleratedFailureTime,
     LifetimeRegression,

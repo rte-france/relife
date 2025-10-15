@@ -20,27 +20,49 @@ _Base_Parametric_Lifetime_Model: TypeAlias = Union[
 ]
 
 # a AgeReplacementModel with at least 1 arg (_Any_Real) and 0 or more args (_IntOrFloat)
-class AgeReplacementModel(ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]):
+class AgeReplacementModel(
+    ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]
+):
     # here baseline can be freeze because ParametricLifetimeModel[()] is acceptable
     baseline: _Base_Parametric_Lifetime_Model
     def __init__(self, baseline: _Base_Parametric_Lifetime_Model) -> None: ...
-    def sf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def hf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def chf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def cdf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def pdf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def sf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def hf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def chf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def cdf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def pdf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def isf(self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def isf(
+        self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def ichf(self, cumulative_hazard_rate: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def ichf(
+        self, cumulative_hazard_rate: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def ppf(self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def ppf(
+        self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def median(self, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def mrl(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def mrl(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def moment(
+        self, n: int, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def mean(self, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
@@ -54,7 +76,11 @@ class AgeReplacementModel(ParametricLifetimeModel[_Any_Number, *tuple[_Any_Numbe
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> _Any_Numpy_Number: ...
     @overload
     def rvs(
@@ -65,7 +91,11 @@ class AgeReplacementModel(ParametricLifetimeModel[_Any_Number, *tuple[_Any_Numbe
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool]: ...
     @overload
     def rvs(
@@ -76,7 +106,11 @@ class AgeReplacementModel(ParametricLifetimeModel[_Any_Number, *tuple[_Any_Numbe
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
     @overload
     def rvs(
@@ -87,7 +121,11 @@ class AgeReplacementModel(ParametricLifetimeModel[_Any_Number, *tuple[_Any_Numbe
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]: ...
     def rvs(
         self,
@@ -97,7 +135,11 @@ class AgeReplacementModel(ParametricLifetimeModel[_Any_Number, *tuple[_Any_Numbe
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> (
         _Any_Numpy_Number
         | tuple[_Any_Numpy_Number, _Any_Numpy_Number]
@@ -116,28 +158,52 @@ class AgeReplacementModel(ParametricLifetimeModel[_Any_Number, *tuple[_Any_Numbe
     ) -> _Any_Numpy_Number: ...
     def freeze_args(
         self, ar: _Any_Number, *args: _Any_Number
-    ) -> FrozenParametricModel[ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]]: ...
+    ) -> FrozenParametricModel[
+        ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]
+    ]: ...
 
-class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any_Number, ...]]]):
+class LeftTruncatedModel(
+    ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any_Number, ...]]]
+):
     baseline: _Base_Parametric_Lifetime_Model
     def __init__(self, baseline: _Base_Parametric_Lifetime_Model) -> None: ...
-    def sf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def hf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def chf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def cdf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
-    def pdf(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def sf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def hf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def chf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def cdf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
+    def pdf(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def isf(self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def isf(
+        self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def ichf(self, cumulative_hazard_rate: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def ichf(
+        self, cumulative_hazard_rate: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def ppf(self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def ppf(
+        self, probability: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
     def median(self, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def mrl(self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def mrl(
+        self, time: _Any_Number, ar: _Any_Number, *args: _Any_Number
+    ) -> _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, ar: _Any_Number, *args: _Any_Number) -> NDArray[np.float64]: ...
+    def moment(
+        self, n: int, ar: _Any_Number, *args: _Any_Number
+    ) -> NDArray[np.float64]: ...
     @override
     def mean(self, ar: _Any_Number, *args: _Any_Number) -> NDArray[np.float64]: ...
     @override
@@ -151,7 +217,11 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> _Any_Numpy_Number: ...
     @overload
     def rvs(
@@ -162,7 +232,11 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool]: ...
     @overload
     def rvs(
@@ -173,7 +247,11 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
     @overload
     def rvs(
@@ -184,7 +262,11 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]: ...
     def rvs(
         self,
@@ -194,7 +276,11 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None,
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
     ) -> (
         _Any_Numpy_Number
         | tuple[_Any_Numpy_Number, _Any_Numpy_Number]
@@ -213,4 +299,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[_Any_Number, *tuple[_Any
     ) -> _Any_Numpy_Number: ...
     def freeze_args(
         self, ar: _Any_Number, *args: _Any_Number
-    ) -> FrozenParametricModel[ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]]: ...
+    ) -> FrozenParametricModel[
+        ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]
+    ]: ...
