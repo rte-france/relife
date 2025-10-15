@@ -25,19 +25,13 @@ RunToFailurePolicy
             ~RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost
         
         
-            ~RunToFailurePolicy.asymptotic_expected_total_cost
+            ~RunToFailurePolicy.asymptotic_expected_net_present_value
         
         
             ~RunToFailurePolicy.expected_equivalent_annual_cost
         
         
-            ~RunToFailurePolicy.expected_nb_replacements
-        
-        
-            ~RunToFailurePolicy.expected_total_cost
-        
-        
-            ~RunToFailurePolicy.generate_lifetime_data
+            ~RunToFailurePolicy.expected_net_present_value
         
         
             ~RunToFailurePolicy.sample

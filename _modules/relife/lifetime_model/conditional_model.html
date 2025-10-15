@@ -413,25 +413,11 @@
   <h1>Source code for relife.lifetime_model.conditional_model</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_nb_assets</span><span class="p">,</span> <span class="n">is_frozen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_args_nb_assets</span><span class="p">,</span> <span class="n">is_frozen</span><span class="p">,</span> <span class="n">reshape_1d_arg</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AgeReplacementModel&quot;</span><span class="p">,</span> <span class="s2">&quot;LeftTruncatedModel&quot;</span><span class="p">]</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_reshape_ar_or_a0</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="p">)</span>  <span class="c1"># in shape : (), (m,) or (m, 1)</span>
-    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Incorrect </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> shape. Got </span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">. Expected (), (m,) or (m, 1)&quot;</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">value</span>  <span class="c1"># out shape: () or (m, 1)</span>
-
 
 <div class="viewcode-block" id="AgeReplacementModel">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel">[docs]</a>
@@ -483,7 +469,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span></div>
 
 
@@ -509,7 +495,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span></div>
 
 
@@ -535,7 +521,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -561,7 +547,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span></div>
 
 
@@ -587,7 +573,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given probability value(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">ar</span><span class="p">)</span></div>
 
 
@@ -619,7 +605,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given cumulative hazard rate(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">ar</span><span class="p">)</span></div>
 
 
@@ -645,7 +631,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
 
 
@@ -671,7 +657,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
         <span class="c1"># ar.shape == (m, 1)</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">time</span> <span class="o">&gt;=</span> <span class="n">ar</span>  <span class="c1"># (m, 1) or (m, n)</span>
@@ -708,7 +694,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given probability value(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">isf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">probability</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -734,7 +720,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -781,9 +767,9 @@
 <span class="sd">        -----</span>
 <span class="sd">        If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_nb_assets</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_args_nb_assets</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">nb_assets</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">nb_assets</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">baseline_rvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
@@ -840,7 +826,7 @@
 <span class="sd">        np.ndarray</span>
 <span class="sd">            Lebesgue-Stieltjes integral of func from `a` to `b`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
         <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">integration</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
@@ -867,7 +853,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="n">n</span><span class="p">,</span>
             <span class="mi">0</span><span class="p">,</span>
@@ -896,7 +882,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -918,7 +904,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
 
 
@@ -940,7 +926,6 @@
 <span class="sd">        -------</span>
 <span class="sd">        FrozenParametricModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 </div>
 
@@ -998,7 +983,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -1024,7 +1009,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -1051,7 +1036,7 @@
 <span class="sd">            Function values at each given probability value(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cumulative_hazard_rate</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">probability</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>  <span class="c1"># avoid division by zero</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -1077,7 +1062,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">a0</span> <span class="o">+</span> <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -1103,7 +1088,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -1129,7 +1114,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">a0</span> <span class="o">+</span> <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -1156,13 +1141,8 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given cumulative hazard rate(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span>
-                <span class="n">cumulative_hazard_rate</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span>
-            <span class="p">)</span>
-            <span class="o">-</span> <span class="n">a0</span>
-        <span class="p">)</span></div>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="n">a0</span></div>
 
 
 <div class="viewcode-block" id="LeftTruncatedModel.rvs">
@@ -1204,9 +1184,9 @@
 <span class="sd">            The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing</span>
 <span class="sd">            the time values followed by event values, entry values or both.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_nb_assets</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_args_nb_assets</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">nb_assets</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">nb_assets</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">super_rvs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
@@ -1226,10 +1206,10 @@
             <span class="n">event</span> <span class="o">=</span> <span class="n">super_rvs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># event always at index 1</span>
             <span class="c1"># reconstruct event for AgeReplacementModel c omposition as super skips this info</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">AgeReplacementModel</span><span class="p">):</span>
-                <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">is_frozen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">):</span>
-                <span class="n">ar</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
             <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">return_entry</span><span class="p">:</span>
@@ -1269,7 +1249,7 @@
 <span class="sd">        np.ndarray</span>
 <span class="sd">            Lebesgue-Stieltjes integral of func from `a` to `b`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span></div>
 
 
@@ -1291,7 +1271,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -1313,7 +1293,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -1335,7 +1315,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -1359,7 +1339,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -1385,7 +1365,7 @@
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mrl</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -1416,7 +1396,7 @@
 <span class="sd">        The ``ppf`` is the inverse of :py:meth:`~LeftTruncatedModel.cdf`.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
 
 
@@ -1438,7 +1418,6 @@
 <span class="sd">        -------</span>
 <span class="sd">        FrozenLeftTruncatedModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a0</span> <span class="o">=</span> <span class="n">_reshape_ar_or_a0</span><span class="p">(</span><span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 </div>
 

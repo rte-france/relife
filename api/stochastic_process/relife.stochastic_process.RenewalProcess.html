@@ -55,7 +55,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="RenewalRewardProcess" href="relife.stochastic_process.RenewalRewardProcess.html" />
-    <link rel="prev" title="load_power_transformer" href="../data/relife.data.load_power_transformer.html" />
+    <link rel="prev" title="ECDF" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -389,24 +389,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_circuit_breaker.html">load_circuit_breaker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">RenewalProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.RunToFailureReward.html">RunToFailureReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.age_replacement_policy.html">age_replacement_policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.run_to_failure_policy.html">run_to_failure_policy</a></li>
+</ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
@@ -414,18 +407,34 @@
 <li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.RunToFailureReward.html">RunToFailureReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.ExponentialDiscounting.html">ExponentialDiscounting</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_circuit_breaker.html">load_circuit_breaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_non_homogeneous_poisson_process.html">is_non_homogeneous_poisson_process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.filter_nonetype_args.html">filter_nonetype_args</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseAgeReplacementPolicy.html">BaseAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseOneCycleAgeReplacementPolicy.html">BaseOneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -610,37 +619,35 @@
 <dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.renewal_density">
 <span class="sig-name descname"><span class="pre">renewal_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/renewal_process.html#RenewalProcess.renewal_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.renewal_density" title="Link to this definition">#</a></dt>
 <dd><p>The renewal density.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The renewal density will be computed up until this calendar time.</p>
-</dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the renewal density.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the renewal density and its corresponding values at each
-step of the timeline.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The renewal density is the derivative of the renewal function with
+<p>The renewal density corresponds to the derivative of the renewal function with
 respect to time. It is computed by solving the renewal equation:</p>
 <div class="math notranslate nohighlight">
 \[\mu(t) = f_1(t) + \int_0^t \mu(t-x) \mathrm{d}F(x)\]</div>
 <p>where:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(\mu\)</span> is the renewal function,</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mu\)</span> is the renewal function.</p></li>
 <li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
-lifetime model,</p></li>
+lifetime model.</p></li>
 <li><p><span class="math notranslate nohighlight">\(f_1\)</span> is the probability density function of the underlying
 lifetime model for the fist renewal in the case of a delayed renewal
 process.</p></li>
 </ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>The final time.</p>
+</dd>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to discretized the time.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline and the computed values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r28d98d3984e7-1" role="doc-biblioentry">
@@ -656,37 +663,35 @@ Sons.</p>
 <dt class="sig sig-object py" id="relife.stochastic_process.RenewalProcess.renewal_function">
 <span class="sig-name descname"><span class="pre">renewal_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/renewal_process.html#RenewalProcess.renewal_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.RenewalProcess.renewal_function" title="Link to this definition">#</a></dt>
 <dd><p>The renewal function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The renewal function will be computed up until this calendar time.</p>
-</dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the renewal function.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the renewal function and its corresponding values at each
-step of the timeline.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The expected total number of renewals is computed  by solving the
+<p>The renewal function gives the expected total number of renewals. It is computed  by solving the
 renewal equation:</p>
 <div class="math notranslate nohighlight">
 \[m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)\]</div>
 <p>where:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(m\)</span> is the renewal function,</p></li>
+<li><p><span class="math notranslate nohighlight">\(m\)</span> is the renewal function.</p></li>
 <li><p><span class="math notranslate nohighlight">\(F\)</span> is the cumulative distribution function of the underlying
-lifetime model,</p></li>
+lifetime model.</p></li>
 <li><p><span class="math notranslate nohighlight">\(F_1\)</span> is the cumulative distribution function of the underlying
 lifetime model for the fist renewal in the case of a delayed renewal
 process.</p></li>
 </ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>The final time.</p>
+</dd>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to discretized the time.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline and the computed values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rb52daa1f953d-1" role="doc-biblioentry">

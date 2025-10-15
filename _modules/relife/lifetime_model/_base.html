@@ -416,18 +416,18 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span><span class="p">,</span> <span class="n">newton</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricModel</span><span class="p">,</span> <span class="n">ParametricModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils.quadrature</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">legendre_quadrature</span><span class="p">,</span>
+    <span class="n">unweighted_laguerre_quadrature</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood.default_lifetime_likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DefaultLifetimeLikelihood</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood.interval_lifetime_likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">IntervalLifetimeLikelihood</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.quadrature</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">broadcast_bounds</span><span class="p">,</span>
-    <span class="n">legendre_quadrature</span><span class="p">,</span>
-    <span class="n">unweighted_laguerre_quadrature</span><span class="p">,</span>
-<span class="p">)</span>
+
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">._plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotParametricLifetimeModel</span>
 
@@ -593,7 +593,10 @@
             <span class="c1"># fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="n">fx</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">fx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">:]</span> <span class="o">!=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="n">fx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">:],</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">                    func can&#39;t squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).</span>
@@ -617,7 +620,7 @@
             <span class="c1"># (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
             <span class="k">return</span> <span class="n">fx</span> <span class="o">*</span> <span class="n">pdf</span>
 
-        <span class="n">arr_a</span><span class="p">,</span> <span class="n">arr_b</span> <span class="o">=</span> <span class="n">broadcast_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">arr_a</span><span class="p">,</span> <span class="n">arr_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">arr_a</span> <span class="o">&gt;</span> <span class="n">arr_b</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Bound values a must be lower than values of b&quot;</span><span class="p">)</span>
 

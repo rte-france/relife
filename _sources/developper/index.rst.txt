@@ -163,7 +163,7 @@ Then go to `http://localhost:8000 <http://localhost:8000>`_
 .. warning::
 
     Using Sphinx for the first time is frustrating. It is easy to get tons of errors as they are cumulative. Read the Sphinx
-    documentation carefully and **be carefull** about unwanted blank lines or missing spaces in reST directives.
+    documentation and **be carefull** about unwanted blank lines or missing spaces in reST directives.
 
 Note of Numpy style
 ^^^^^^^^^^^^^^^^^^^
