@@ -4,11 +4,10 @@ import numpy as np
 from scipy.optimize import Bounds, newton
 
 from relife.base import FrozenParametricModel, ParametricModel
-from relife.data import LifetimeData
-from relife.relife.likelihood.default_lifetime_likelihood import (
+from relife.likelihood.default_lifetime_likelihood import (
     DefaultLifetimeLikelihood,
 )
-from relife.relife.likelihood.interval_lifetime_likelihood import (
+from relife.likelihood.interval_lifetime_likelihood import (
     IntervalLifetimeLikelihood,
 )
 from relife.quadrature import (

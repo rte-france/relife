@@ -3,8 +3,6 @@ from typing import Literal, Optional, Self, overload
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.data import LifetimeData
-
 from ._base import NonParametricLifetimeModel
 from ._plot import (
     PlotECDF,

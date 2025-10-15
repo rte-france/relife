@@ -6,8 +6,6 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-from relife.data import LifetimeData
-
 from . import FittingResults, approx_hessian
 from ._base import Likelihood
 
