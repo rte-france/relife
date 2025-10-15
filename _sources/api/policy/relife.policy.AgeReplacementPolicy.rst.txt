@@ -28,19 +28,16 @@ AgeReplacementPolicy
             ~AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
         
         
-            ~AgeReplacementPolicy.asymptotic_expected_total_cost
+            ~AgeReplacementPolicy.asymptotic_expected_net_present_value
         
         
             ~AgeReplacementPolicy.expected_equivalent_annual_cost
         
         
-            ~AgeReplacementPolicy.expected_nb_replacements
+            ~AgeReplacementPolicy.expected_net_present_value
         
         
-            ~AgeReplacementPolicy.expected_total_cost
-        
-        
-            ~AgeReplacementPolicy.generate_lifetime_data
+            ~AgeReplacementPolicy.generate_failure_data
         
         
             ~AgeReplacementPolicy.optimize

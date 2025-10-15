@@ -416,6 +416,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeData</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonParametricLifetimeModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">._plot</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">PlotECDF</span><span class="p">,</span>
@@ -441,6 +443,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="o">/</span><span class="p">,</span>
+        <span class="n">event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">entry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
@@ -453,13 +459,19 @@
 <span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
 <span class="sd">        entry : ndarray of float (1d), default is None</span>
 <span class="sd">            Left truncations applied to lifetime values.</span>
+<span class="sd">        departure : ndarray of float (1d), default is None</span>
+<span class="sd">            Right truncations applied to lifetime values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">timeline</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">LifetimeData</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span>
+            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
+            <span class="n">departure</span><span class="o">=</span><span class="n">departure</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">timeline</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
-            <span class="p">[(</span><span class="s2">&quot;timeline&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;estimation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
-        <span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s2">&quot;timeline&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;estimation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
 
@@ -468,23 +480,19 @@
         <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">cdf</span>
-        <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cdf</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+        <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cdf</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">se</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">se</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span>
-        <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span>
-    <span class="p">]:</span> <span class="o">...</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="ECDF.sf">
 <a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.sf">[docs]</a>
@@ -515,16 +523,12 @@
 
 
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span>
-        <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span>
-    <span class="p">]:</span> <span class="o">...</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="ECDF.cdf">
 <a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.cdf">[docs]</a>
@@ -610,7 +614,8 @@
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">entry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
 
@@ -622,47 +627,80 @@
 <span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
 <span class="sd">        entry : ndarray of float (1d), default is None</span>
 <span class="sd">            Left truncations applied to lifetime values.</span>
+<span class="sd">        departure : ndarray of float (1d), default is None</span>
+<span class="sd">            Right truncations applied to lifetime values.</span>
+<span class="sd">        inplace : boolean, default is True</span>
+<span class="sd">            If true, estimations are stored in the object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">LifetimeData</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span>
+            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
+            <span class="n">departure</span><span class="o">=</span><span class="n">departure</span><span class="p">,</span>
+        <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
-
-        <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
-
-        <span class="n">n</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="n">timeline</span> <span class="o">&lt;=</span> <span class="n">time</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">timeline</span> <span class="o">&gt;=</span> <span class="n">entry</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-        <span class="n">d</span> <span class="o">=</span> <span class="p">((</span><span class="n">time</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">timeline</span><span class="p">)</span> <span class="o">*</span> <span class="n">event</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">sf</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">cumprod</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_censoring</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;KaplanMeier does not take left censored lifetimes&quot;</span><span class="p">)</span>
+        <span class="n">timeline</span><span class="p">,</span> <span class="n">unique_indices</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span>
+            <span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">,</span>
+            <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">death_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>  <span class="c1"># death at each timeline step</span>
+        <span class="n">complete_observation_indic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span>
+            <span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span>
+        <span class="p">)</span>  <span class="c1"># just creating an array to fill it next line</span>
+        <span class="n">complete_observation_indic</span><span class="p">[</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete</span><span class="o">.</span><span class="n">lifetime_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">death_set</span><span class="p">,</span> <span class="n">unique_indices</span><span class="p">,</span> <span class="n">complete_observation_indic</span><span class="p">)</span>
+        <span class="n">x_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_truncation</span><span class="o">.</span><span class="n">lifetime_values</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="mi">0</span>
+                            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                                <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">)</span>
+                                <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_truncation</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">)</span>
+                            <span class="p">)</span>
+                        <span class="p">]</span>
+                    <span class="p">),</span>  <span class="c1"># TODO : remplacer ça par self.entry en définissant self.entry plus haut?</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">x_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">counts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">at_risk_assets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">x_in</span> <span class="o">-</span> <span class="n">x_out</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">death_set</span> <span class="o">/</span> <span class="n">at_risk_assets</span><span class="p">)</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="p">(</span><span class="n">sf</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">d</span><span class="p">)))</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;</span> <span class="n">d</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">s</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                    <span class="n">at_risk_assets</span> <span class="o">&gt;</span> <span class="n">death_set</span><span class="p">,</span>
+                    <span class="n">death_set</span> <span class="o">/</span> <span class="p">(</span><span class="n">at_risk_assets</span> <span class="o">*</span> <span class="p">(</span><span class="n">at_risk_assets</span> <span class="o">-</span> <span class="n">death_set</span><span class="p">)),</span>
+                    <span class="mi">0</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
-            <span class="p">[(</span><span class="s2">&quot;timeline&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;estimation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">sf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s2">&quot;timeline&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;estimation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timeline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">se</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
 
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span>
-        <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span>
-    <span class="p">]:</span> <span class="o">...</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="KaplanMeier.sf">
 <a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier.sf">[docs]</a>
@@ -739,7 +777,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="NelsonAalen.fit">
 <a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen.fit">[docs]</a>
@@ -748,7 +786,8 @@
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">entry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
 
@@ -760,47 +799,73 @@
 <span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
 <span class="sd">        entry : ndarray of float (1d), default is None</span>
 <span class="sd">            Left truncations applied to lifetime values.</span>
+<span class="sd">        departure : ndarray of float (1d), default is None</span>
+<span class="sd">            Right truncations applied to lifetime values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
-
-        <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
-
-        <span class="n">n</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="n">timeline</span> <span class="o">&lt;=</span> <span class="n">time</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">timeline</span> <span class="o">&gt;=</span> <span class="n">entry</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-        <span class="n">d</span> <span class="o">=</span> <span class="p">((</span><span class="n">time</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">timeline</span><span class="p">)</span> <span class="o">*</span> <span class="n">event</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-        <span class="n">chf</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-
-        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
-
-        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
-            <span class="p">[(</span><span class="s2">&quot;timeline&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;estimation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
+        <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">LifetimeData</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span>
+            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
+            <span class="n">departure</span><span class="o">=</span><span class="n">departure</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">chf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+        <span class="k">if</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_censoring</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NelsonAalen does not accept left censored or interval censored lifetimes&quot;</span><span class="p">)</span>
+
+        <span class="n">timeline</span><span class="p">,</span> <span class="n">unique_indices</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span>
+            <span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">,</span>
+            <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">death_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>  <span class="c1"># death at each timeline step</span>
+
+        <span class="n">complete_observation_indic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span>
+            <span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span>
+        <span class="p">)</span>  <span class="c1"># just creating an array to fill it next line</span>
+        <span class="n">complete_observation_indic</span><span class="p">[</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete</span><span class="o">.</span><span class="n">lifetime_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">death_set</span><span class="p">,</span> <span class="n">unique_indices</span><span class="p">,</span> <span class="n">complete_observation_indic</span><span class="p">)</span>
+        <span class="n">x_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_truncation</span><span class="o">.</span><span class="n">lifetime_values</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="mi">0</span>
+                            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                                <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete_or_right_censored</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">)</span>
+                                <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_truncation</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">)</span>
+                            <span class="p">)</span>
+                        <span class="p">]</span>
+                    <span class="p">),</span>  <span class="c1"># TODO : remplacer ça par self.entry en définissant self.entry plus haut?</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">x_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">counts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">at_risk_assets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">x_in</span> <span class="o">-</span> <span class="n">x_out</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">death_set</span> <span class="o">/</span> <span class="n">at_risk_assets</span><span class="p">)</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">death_set</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">at_risk_assets</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">at_risk_assets</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">chf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">se</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">timeline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s2">&quot;timeline&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;estimation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timeline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">chf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span><span class="p">[</span><span class="s2">&quot;se&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">se</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
 
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span>
-        <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span>
-    <span class="p">]:</span> <span class="o">...</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="NelsonAalen.chf">
 <a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen.chf">[docs]</a>
@@ -836,227 +901,215 @@
 
 
 
-<span class="c1"># class Turnbull(NonParametricLifetimeModel):</span>
-<span class="c1">#     &quot;&quot;&quot;Turnbull estimator.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Turnbull">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html#relife.lifetime_model.Turnbull">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Turnbull</span><span class="p">(</span><span class="n">NonParametricLifetimeModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turnbull estimator.&quot;&quot;&quot;</span>
 
-<span class="c1">#     def __init__(</span>
-<span class="c1">#         self,</span>
-<span class="c1">#         tol: Optional[float] = 1e-4,</span>
-<span class="c1">#         lowmem: Optional[bool] = False,</span>
-<span class="c1">#     ):</span>
-<span class="c1">#         super().__init__()</span>
-<span class="c1">#         self.tol = tol</span>
-<span class="c1">#         self.lowmem = lowmem</span>
-<span class="c1">#         self._sf: Optional[NDArray[np.void]] = None</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
+        <span class="n">lowmem</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lowmem</span> <span class="o">=</span> <span class="n">lowmem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
-<span class="c1">#     def fit(</span>
-<span class="c1">#         self,</span>
-<span class="c1">#         time: NDArray[np.float64],</span>
-<span class="c1">#         event: Optional[NDArray[np.float64]] = None,</span>
-<span class="c1">#         entry: Optional[NDArray[np.float64]] = None,</span>
-<span class="c1">#         departure: Optional[NDArray[np.float64]] = None,</span>
-<span class="c1">#         inplace: bool = False,</span>
-<span class="c1">#     ) -&gt; Self:</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         Compute the non-parametric estimations with respect to lifetime data.</span>
+<div class="viewcode-block" id="Turnbull.fit">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html#relife.lifetime_model.Turnbull.fit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="n">event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">entry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">departure</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
 
-<span class="c1">#         Parameters</span>
-<span class="c1">#         ----------</span>
-<span class="c1">#         time : ndarray (1d or 2d)</span>
-<span class="c1">#             Observed lifetime values.</span>
-<span class="c1">#         event : ndarray of boolean values (1d), default is None</span>
-<span class="c1">#             Boolean indicators tagging lifetime values as right censored or complete.</span>
-<span class="c1">#         entry : ndarray of float (1d), default is None</span>
-<span class="c1">#             Left truncations applied to lifetime values.</span>
-<span class="c1">#         departure : ndarray of float (1d), default is None</span>
-<span class="c1">#             Right truncations applied to lifetime values.</span>
-<span class="c1">#         inplace : boolean, default is True</span>
-<span class="c1">#             If true, estimations are stored in the object</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : ndarray (1d or 2d)</span>
+<span class="sd">            Observed lifetime values.</span>
+<span class="sd">        event : ndarray of boolean values (1d), default is None</span>
+<span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
+<span class="sd">        entry : ndarray of float (1d), default is None</span>
+<span class="sd">            Left truncations applied to lifetime values.</span>
+<span class="sd">        departure : ndarray of float (1d), default is None</span>
+<span class="sd">            Right truncations applied to lifetime values.</span>
+<span class="sd">        inplace : boolean, default is True</span>
+<span class="sd">            If true, estimations are stored in the object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-<span class="c1">#         lifetime_data = LifetimeData(</span>
-<span class="c1">#             time,</span>
-<span class="c1">#             event=event,</span>
-<span class="c1">#             entry=entry,</span>
-<span class="c1">#             departure=departure,</span>
-<span class="c1">#         )</span>
+        <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">LifetimeData</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span>
+            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
+            <span class="n">departure</span><span class="o">=</span><span class="n">departure</span><span class="p">,</span>
+        <span class="p">)</span>
 
-<span class="c1">#         timeline_temp = np.unique(</span>
-<span class="c1">#             np.insert(lifetime_data.interval_censoring.lifetime_values.flatten(), 0, 0)</span>
-<span class="c1">#         )</span>
-<span class="c1">#         timeline_len = len(timeline_temp)</span>
-<span class="c1">#         if not self.lowmem:</span>
-<span class="c1">#             event_occurence = (</span>
-<span class="c1">#                 np.greater_equal.outer(</span>
-<span class="c1">#                     timeline_temp[:-1],</span>
-<span class="c1">#                     lifetime_data.interval_censoring.lifetime_values[</span>
-<span class="c1">#                         :, 0</span>
-<span class="c1">#                     ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]</span>
-<span class="c1">#                 )</span>
-<span class="c1">#                 * np.less_equal.outer(</span>
-<span class="c1">#                     timeline_temp[1:],</span>
-<span class="c1">#                     lifetime_data.interval_censoring.lifetime_values[:, 1],</span>
-<span class="c1">#                 )</span>
-<span class="c1">#             ).T</span>
+        <span class="n">timeline_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">interval_censoring</span><span class="o">.</span><span class="n">lifetime_values</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">timeline_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">timeline_temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowmem</span><span class="p">:</span>
+            <span class="n">event_occurence</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">greater_equal</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span>
+                    <span class="n">timeline_temp</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">lifetime_data</span><span class="o">.</span><span class="n">interval_censoring</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">[</span>
+                        <span class="p">:,</span> <span class="mi">0</span>
+                    <span class="p">],</span>  <span class="c1"># or self.observed_lifetimes.interval_censored.values.T[0][i]</span>
+                <span class="p">)</span>
+                <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">less_equal</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span>
+                    <span class="n">timeline_temp</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                    <span class="n">lifetime_data</span><span class="o">.</span><span class="n">interval_censoring</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
-<span class="c1">#             s = self._estimate_with_high_memory(</span>
-<span class="c1">#                 lifetime_data,</span>
-<span class="c1">#                 timeline_len,</span>
-<span class="c1">#                 event_occurence,</span>
-<span class="c1">#                 timeline_temp,</span>
-<span class="c1">#             )</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_with_high_memory</span><span class="p">(</span>
+                <span class="n">lifetime_data</span><span class="p">,</span>
+                <span class="n">timeline_len</span><span class="p">,</span>
+                <span class="n">event_occurence</span><span class="p">,</span>
+                <span class="n">timeline_temp</span><span class="p">,</span>
+            <span class="p">)</span>
 
-<span class="c1">#         else:</span>
-<span class="c1">#             len_censored_data = len(lifetime_data.interval_censoring.lifetime_values)</span>
-<span class="c1">#             event_occurence = []</span>
-<span class="c1">#             for i in range(len_censored_data):</span>
-<span class="c1">#                 event_occurence.append(</span>
-<span class="c1">#                     np.where(</span>
-<span class="c1">#                         (</span>
-<span class="c1">#                             lifetime_data.interval_censoring.lifetime_values[:, 0][i]</span>
-<span class="c1">#                             &lt;= timeline_temp[:-1]</span>
-<span class="c1">#                         )</span>
-<span class="c1">#                         &amp; (</span>
-<span class="c1">#                             timeline_temp[1:]</span>
-<span class="c1">#                             &lt;= lifetime_data.interval_censoring.lifetime_values[:, 1][i]</span>
-<span class="c1">#                         )</span>
-<span class="c1">#                     )[0][[0, -1]]</span>
-<span class="c1">#                 )</span>
-<span class="c1">#             event_occurence = np.array(event_occurence)</span>
-<span class="c1">#             s = self._estimate_with_low_memory(</span>
-<span class="c1">#                 lifetime_data,</span>
-<span class="c1">#                 timeline_temp,</span>
-<span class="c1">#                 timeline_len,</span>
-<span class="c1">#                 event_occurence,</span>
-<span class="c1">#                 len_censored_data,</span>
-<span class="c1">#             )</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">len_censored_data</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">interval_censoring</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">)</span>
+            <span class="n">event_occurence</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">len_censored_data</span><span class="p">):</span>
+                <span class="n">event_occurence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">lifetime_data</span><span class="o">.</span><span class="n">interval_censoring</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">timeline_temp</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="o">&amp;</span> <span class="p">(</span><span class="n">timeline_temp</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">&lt;=</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">interval_censoring</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+                    <span class="p">)[</span><span class="mi">0</span><span class="p">][[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="p">)</span>
+            <span class="n">event_occurence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">event_occurence</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_with_low_memory</span><span class="p">(</span>
+                <span class="n">lifetime_data</span><span class="p">,</span>
+                <span class="n">timeline_temp</span><span class="p">,</span>
+                <span class="n">timeline_len</span><span class="p">,</span>
+                <span class="n">event_occurence</span><span class="p">,</span>
+                <span class="n">len_censored_data</span><span class="p">,</span>
+            <span class="p">)</span>
 
-<span class="c1">#         ind_del = np.where(timeline_temp == np.inf)</span>
-<span class="c1">#         sf = np.delete(s, ind_del)</span>
-<span class="c1">#         timeline = np.delete(timeline_temp, ind_del)</span>
-<span class="c1">#         dtype = np.dtype([(&quot;timeline&quot;, np.float64), (&quot;estimation&quot;, np.float64)])</span>
-<span class="c1">#         self._sf = np.empty((timeline.size,), dtype=dtype)</span>
-<span class="c1">#         self._sf[&quot;timeline&quot;] = timeline</span>
-<span class="c1">#         self._sf[&quot;estimation&quot;] = sf</span>
-<span class="c1">#         return self</span>
+        <span class="n">ind_del</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">timeline_temp</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">ind_del</span><span class="p">)</span>
+        <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">timeline_temp</span><span class="p">,</span> <span class="n">ind_del</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s2">&quot;timeline&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;estimation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">timeline</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timeline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sf</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
-<span class="c1">#     def sf(self) -&gt; Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]:</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         The survival function estimation</span>
 
-<span class="c1">#         Returns</span>
-<span class="c1">#         -------</span>
-<span class="c1">#         tuple of 2 ndarrays</span>
-<span class="c1">#             A tuple containing the timeline and the estimated values</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         if self._sf is None:</span>
-<span class="c1">#             return None</span>
-<span class="c1">#         return self._sf[&quot;timeline&quot;], self._sf[&quot;estimation&quot;]</span>
+<div class="viewcode-block" id="Turnbull.sf">
+<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html#relife.lifetime_model.Turnbull.sf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The survival function estimation</span>
 
-<span class="c1">#     def _estimate_with_low_memory(</span>
-<span class="c1">#         self,</span>
-<span class="c1">#         lifetime_data: LifetimeData,</span>
-<span class="c1">#         timeline_temp,</span>
-<span class="c1">#         timeline_len,</span>
-<span class="c1">#         event_occurence,</span>
-<span class="c1">#         len_censored_data,</span>
-<span class="c1">#     ):</span>
-<span class="c1">#         d_tilde = np.histogram(</span>
-<span class="c1">#             np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),</span>
-<span class="c1">#             bins=range(timeline_len + 1),</span>
-<span class="c1">#         )[0][1:]</span>
-<span class="c1">#         s = np.linspace(1, 0, timeline_len)</span>
-<span class="c1">#         res = 1</span>
-<span class="c1">#         count = 1</span>
-<span class="c1">#         while res &gt; self.tol:</span>
-<span class="c1">#             p = -np.diff(</span>
-<span class="c1">#                 s</span>
-<span class="c1">#             )  # écart entre les points de S (survival function) =&gt; proba of an event occuring at</span>
-<span class="c1">#             if np.sum(p == 0) &gt; 0:</span>
-<span class="c1">#                 p = np.where(</span>
-<span class="c1">#                     p == 0,</span>
-<span class="c1">#                     1e-5 / np.sum(p == 0),</span>
-<span class="c1">#                     p - 1e-5 / ((timeline_len - 1) - np.sum(p == 0)),</span>
-<span class="c1">#                 )  # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of 2 ndarrays</span>
+<span class="sd">            A tuple containing the timeline and the estimated values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;timeline&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span><span class="p">[</span><span class="s2">&quot;estimation&quot;</span><span class="p">]</span></div>
 
-<span class="c1">#             x = [</span>
-<span class="c1">#                 p[event_occurence[i, 0] : (event_occurence[i, 1] + 1)]</span>
-<span class="c1">#                 for i in range(event_occurence.shape[0])</span>
-<span class="c1">#             ]</span>
-<span class="c1">#             d = np.repeat(0, timeline_len - 1)</span>
-<span class="c1">#             for i in range(len_censored_data):</span>
-<span class="c1">#                 d = np.add(</span>
-<span class="c1">#                     d,</span>
-<span class="c1">#                     np.append(</span>
-<span class="c1">#                         np.insert(</span>
-<span class="c1">#                             x[i] / x[i].sum(), 0, np.repeat(0, event_occurence[i][0])</span>
-<span class="c1">#                         ),</span>
-<span class="c1">#                         np.repeat(0, timeline_len - event_occurence[i][1] - 2),</span>
-<span class="c1">#                     ),</span>
-<span class="c1">#                 )</span>
-<span class="c1">#             d += d_tilde</span>
-<span class="c1">#             y = np.cumsum(d[::-1])[::-1]</span>
-<span class="c1">#             _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()</span>
 
-<span class="c1">#             y -= len(_unsorted_entry) - np.searchsorted(</span>
-<span class="c1">#                 np.sort(_unsorted_entry), timeline_temp[1:]</span>
-<span class="c1">#             )</span>
-<span class="c1">#             s_updated = np.array(np.cumprod(1 - d / y))</span>
-<span class="c1">#             s_updated = np.insert(s_updated, 0, 1)</span>
-<span class="c1">#             res = max(abs(s - s_updated))</span>
-<span class="c1">#             s = s_updated</span>
-<span class="c1">#             count += 1</span>
-<span class="c1">#         return s</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_with_low_memory</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lifetime_data</span><span class="p">:</span> <span class="n">LifetimeData</span><span class="p">,</span>
+        <span class="n">timeline_temp</span><span class="p">,</span>
+        <span class="n">timeline_len</span><span class="p">,</span>
+        <span class="n">event_occurence</span><span class="p">,</span>
+        <span class="n">len_censored_data</span><span class="p">,</span>
+    <span class="p">):</span>
 
-<span class="c1">#     def _estimate_with_high_memory(</span>
-<span class="c1">#         self,</span>
-<span class="c1">#         lifetime_data: LifetimeData,</span>
-<span class="c1">#         timeline_len,</span>
-<span class="c1">#         event_occurence,</span>
-<span class="c1">#         timeline_temp,</span>
-<span class="c1">#     ):</span>
-<span class="c1">#         d_tilde = np.histogram(</span>
-<span class="c1">#             np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),</span>
-<span class="c1">#             bins=range(timeline_len + 1),</span>
-<span class="c1">#         )[0][1:]</span>
-<span class="c1">#         s = np.linspace(1, 0, timeline_len)</span>
-<span class="c1">#         res = 1</span>
-<span class="c1">#         count = 1</span>
+        <span class="n">d_tilde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">timeline_temp</span><span class="p">,</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">),</span>
+            <span class="n">bins</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">timeline_len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">timeline_len</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">res</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>  <span class="c1"># écart entre les points de S (survival function) =&gt; proba of an event occuring at</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                    <span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="mf">1e-5</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">p</span> <span class="o">-</span> <span class="mf">1e-5</span> <span class="o">/</span> <span class="p">((</span><span class="n">timeline_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="p">)</span>  <span class="c1"># remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)</span>
 
-<span class="c1">#         while res &gt; self.tol:</span>
-<span class="c1">#             p = -np.diff(</span>
-<span class="c1">#                 s</span>
-<span class="c1">#             )  # écart entre les points de S (survival function) =&gt; proba of an event occuring at</span>
-<span class="c1">#             if np.sum(p == 0) &gt; 0:</span>
-<span class="c1">#                 p = np.where(</span>
-<span class="c1">#                     p == 0,</span>
-<span class="c1">#                     1e-5 / np.sum(p == 0),</span>
-<span class="c1">#                     p - 1e-5 / ((timeline_len - 1) - np.sum(p == 0)),</span>
-<span class="c1">#                 )  # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="n">event_occurence</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="p">(</span><span class="n">event_occurence</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">event_occurence</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">timeline_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">len_censored_data</span><span class="p">):</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">d</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">event_occurence</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">timeline_len</span> <span class="o">-</span> <span class="n">event_occurence</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="n">d</span> <span class="o">+=</span> <span class="n">d_tilde</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">d</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">_unsorted_entry</span> <span class="o">=</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_truncation</span><span class="o">.</span><span class="n">lifetime_values</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 
-<span class="c1">#             if np.any(event_occurence):</span>
-<span class="c1">#                 event_occurence_proba = event_occurence * p.T</span>
-<span class="c1">#                 d = (event_occurence_proba.T / event_occurence_proba.sum(axis=1)).T.sum(</span>
-<span class="c1">#                     axis=0</span>
-<span class="c1">#                 )</span>
-<span class="c1">#                 d += d_tilde</span>
-<span class="c1">#             else:</span>
-<span class="c1">#                 d = d_tilde</span>
-<span class="c1">#             y = np.cumsum(d[::-1])[::-1]</span>
-<span class="c1">#             _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()</span>
-<span class="c1">#             y -= len(_unsorted_entry) - np.searchsorted(</span>
-<span class="c1">#                 np.sort(_unsorted_entry), timeline_temp[1:]</span>
-<span class="c1">#             )</span>
-<span class="c1">#             s_updated = np.array(np.cumprod(1 - d / y))</span>
-<span class="c1">#             s_updated = np.insert(s_updated, 0, 1)</span>
-<span class="c1">#             res = max(abs(s - s_updated))</span>
-<span class="c1">#             s = s_updated</span>
-<span class="c1">#             count += 1</span>
-<span class="c1">#         return s</span>
+            <span class="n">y</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_unsorted_entry</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">_unsorted_entry</span><span class="p">),</span> <span class="n">timeline_temp</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">s_updated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span> <span class="o">/</span> <span class="n">y</span><span class="p">))</span>
+            <span class="n">s_updated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">s_updated</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="n">s_updated</span><span class="p">))</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s_updated</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">s</span>
 
-<span class="c1">#     @property</span>
-<span class="c1">#     def plot(self) -&gt; PlotTurnbull:</span>
-<span class="c1">#         return PlotTurnbull(self)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_with_high_memory</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lifetime_data</span><span class="p">:</span> <span class="n">LifetimeData</span><span class="p">,</span>
+        <span class="n">timeline_len</span><span class="p">,</span>
+        <span class="n">event_occurence</span><span class="p">,</span>
+        <span class="n">timeline_temp</span><span class="p">,</span>
+    <span class="p">):</span>
+
+        <span class="n">d_tilde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">timeline_temp</span><span class="p">,</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">complete</span><span class="o">.</span><span class="n">lifetime_values</span><span class="p">),</span>
+            <span class="n">bins</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">timeline_len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">timeline_len</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">while</span> <span class="n">res</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>  <span class="c1"># écart entre les points de S (survival function) =&gt; proba of an event occuring at</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                    <span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="mf">1e-5</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">p</span> <span class="o">-</span> <span class="mf">1e-5</span> <span class="o">/</span> <span class="p">((</span><span class="n">timeline_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="p">)</span>  <span class="c1"># remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">event_occurence</span><span class="p">):</span>
+                <span class="n">event_occurence_proba</span> <span class="o">=</span> <span class="n">event_occurence</span> <span class="o">*</span> <span class="n">p</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">event_occurence_proba</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">event_occurence_proba</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">d</span> <span class="o">+=</span> <span class="n">d_tilde</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">d_tilde</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">d</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">_unsorted_entry</span> <span class="o">=</span> <span class="n">lifetime_data</span><span class="o">.</span><span class="n">left_truncation</span><span class="o">.</span><span class="n">lifetime_values</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="n">y</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_unsorted_entry</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">_unsorted_entry</span><span class="p">),</span> <span class="n">timeline_temp</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">s_updated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumprod</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span> <span class="o">/</span> <span class="n">y</span><span class="p">))</span>
+            <span class="n">s_updated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">s_updated</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="n">s_updated</span><span class="p">))</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s_updated</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlotTurnbull</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PlotTurnbull</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
 </pre></div>
 
                 </article>

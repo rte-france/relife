@@ -25,9 +25,6 @@ KaplanMeier
             ~KaplanMeier.fit
         
         
-            ~KaplanMeier.fit_interval_censored_data
-        
-        
             ~KaplanMeier.sf
         
     

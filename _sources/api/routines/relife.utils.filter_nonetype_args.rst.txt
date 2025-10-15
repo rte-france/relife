@@ -1,0 +1,6 @@
+﻿filter\_nonetype\_args
+======================
+
+.. currentmodule:: relife.utils
+
+.. autofunction:: filter_nonetype_args

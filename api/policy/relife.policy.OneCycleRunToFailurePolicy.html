@@ -48,6 +48,8 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/policy/relife.policy.OneCycleRunToFailurePolicy';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -386,12 +388,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_circuit_breaker.html">load_circuit_breaker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html">Turnbull</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
@@ -399,12 +396,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.RunToFailureReward.html">RunToFailureReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="relife.policy.age_replacement_policy.html">age_replacement_policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.policy.run_to_failure_policy.html">run_to_failure_policy</a></li>
+</ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="relife.policy.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
@@ -412,18 +408,34 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">OneCycleRunToFailurePolicy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.RunToFailureReward.html">RunToFailureReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.ExponentialDiscounting.html">ExponentialDiscounting</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_circuit_breaker.html">load_circuit_breaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_frozen.html">is_frozen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_non_homogeneous_poisson_process.html">is_non_homogeneous_poisson_process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.filter_nonetype_args.html">filter_nonetype_args</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseAgeReplacementPolicy.html">BaseAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseOneCycleAgeReplacementPolicy.html">BaseOneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -488,7 +500,7 @@
 <h1>OneCycleRunToFailurePolicy<a class="headerlink" href="#onecycleruntofailurepolicy" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">OneCycleRunToFailurePolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period_before_discounting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/run_to_failure_policy.html#OneCycleRunToFailurePolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">OneCycleRunToFailurePolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_ages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period_before_discounting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#OneCycleRunToFailurePolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy" title="Link to this definition">#</a></dt>
 <dd><p>One cyle run-to-failure policy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -499,14 +511,9 @@
 </dd>
 <dt><strong>discounting_rate</strong><span class="classifier">float, default is 0.</span></dt><dd><p>The discounting rate value used in the exponential discounting function</p>
 </dd>
-<dt><strong>a0</strong><span class="classifier">float or 1darray, optional</span></dt><dd><p>Current ages of the assets, by default 0 for each asset. If it is given, left truncations of <code class="docutils literal notranslate"><span class="pre">a0</span></code> will
+<dt><strong>current_ages</strong><span class="classifier">float or 1darray, optional</span></dt><dd><p>Current ages of the assets, by default 0 for each asset. If it is given, left truncations of <code class="docutils literal notranslate"><span class="pre">a0</span></code> will
 be take into account for the first cycle.</p>
 </dd>
-</dl>
-</dd>
-<dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>cf</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -514,114 +521,158 @@ be take into account for the first cycle.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected equivalent annual cost.</p></td>
+<td><p>The asymtotic expected equivalent annual cost, <span class="math notranslate nohighlight">\(\lim_{t\to\infty} q(t)\)</span>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_total_cost" title="relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_cost</span></code></a></p></td>
-<td><p>Calculate the asymptotic expected total cost.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value" title="relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_net_present_value</span></code></a></p></td>
+<td><p>The asymtotic expected net present value <span class="math notranslate nohighlight">\(\lim_{t\to\infty} z(t)\)</span>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost" title="relife.policy.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>Calculate the expected equivalent annual cost over a given timeline.</p></td>
+<td><p>The expected equivalent annual cost.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.OneCycleRunToFailurePolicy.expected_total_cost" title="relife.policy.OneCycleRunToFailurePolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
-<td><p>Calculate the expected total cost over a given timeline.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.OneCycleRunToFailurePolicy.expected_net_present_value" title="relife.policy.OneCycleRunToFailurePolicy.expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_net_present_value</span></code></a></p></td>
+<td><p>The expected net present value.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected equivalent annual cost.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<dl class="field-list">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<dd><p>The asymtotic expected equivalent annual cost, <span class="math notranslate nohighlight">\(\lim_{t\to\infty} q(t)\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected total cost.</p>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the total sum over the first axis of the result. If the policy data encodes several
+assets, this option allows to return the sum result on the flit rather than calling <code class="docutils literal notranslate"><span class="pre">np.sum</span></code> afterwards.</p>
 </dd>
 </dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This method requires the <code class="docutils literal notranslate"><span class="pre">ar</span></code> attribute to be set either at initialization
-or with the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> method.</p>
-</div>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray</dt><dd><p>The asymptotic expected values.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_total_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_total_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the asymptotic expected total cost.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<dl class="field-list">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
+<dd><p>The asymtotic expected net present value <span class="math notranslate nohighlight">\(\lim_{t\to\infty} z(t)\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>The asymptotic expected total cost.</p>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the total sum over the first axis of the result. If the policy data encodes several
+assets, this option allows to return the sum result on the flit rather than calling <code class="docutils literal notranslate"><span class="pre">np.sum</span></code> afterwards.</p>
 </dd>
 </dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This method requires the <code class="docutils literal notranslate"><span class="pre">ar</span></code> attribute to be set either at initialization
-or with the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> method.</p>
-</div>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray</dt><dd><p>The asymptotic expected values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.cf">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cf</span></span><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.cf" title="Link to this definition">#</a></dt>
+<dd><p>Cost of failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>np.ndarray</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.current_ages">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_ages</span></span><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.current_ages" title="Link to this definition">#</a></dt>
+<dd><p>Current ages of the assets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>np.ndarray</dt><dd></dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected equivalent annual cost over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<dl class="field-list">
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#OneCycleRunToFailurePolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<dd><p>The expected equivalent annual cost.</p>
+<p>The equivalent annual cost corresponds to the value of the constant cash flow that
+leads to the same net present value. It is generally used to compare investment projects of unequal lifespans.
+It has a continuous variation and from a random perspective, one can compute its expected value called <span class="math notranslate nohighlight">\(q(t)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
+<p>where :</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(t\)</span> is the time.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected net present value at time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected equivalent annual cost will be computed up until this calendar time.</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>The final time.</p>
 </dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to discretized the time.</p>
+</dd>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the total sum over the first axis of the result. If the policy data encodes several
+assets, this option allows to return the sum result on the flit rather than calling <code class="docutils literal notranslate"><span class="pre">np.sum</span></code> afterwards.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
-step of the timeline.</p>
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline and the computed values.</p>
 </dd>
 </dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This method requires the <code class="docutils literal notranslate"><span class="pre">ar</span></code> attribute to be set either at initialization
-or with the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> method.</p>
-</div>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.expected_total_cost">
-<span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.expected_total_cost" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the expected total cost over a given timeline.</p>
-<p>It takes into account <code class="docutils literal notranslate"><span class="pre">discounting_rate</span></code> attribute value.</p>
-<dl class="field-list">
+<dt class="sig sig-object py" id="relife.policy.OneCycleRunToFailurePolicy.expected_net_present_value">
+<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#OneCycleRunToFailurePolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleRunToFailurePolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
+<dd><p>The expected net present value.</p>
+<p>The net present value is commonly computed with a time discrete formula.
+It has a continuous variation where cash flows are time dependant.
+From a random perspective, one can compute its expected value called <span class="math notranslate nohighlight">\(z(t)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
+<p>where :</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
+<li><p><span class="math notranslate nohighlight">\(X_1 \sim F\)</span> is the random lifetime of the first asset</p></li>
+<li><p><span class="math notranslate nohighlight">\(Z_t\)</span> are the random costs at each time <span class="math notranslate nohighlight">\(t\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate</p></li>
+</ul>
+<p>It is computed by solving the renewal equation.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time horizon. The expected equivalent annual cost will be computed up until this calendar time.</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>The final time.</p>
 </dd>
-<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to compute the expected equivalent annual cost</p>
+<dt><strong>nb_steps</strong><span class="classifier">int</span></dt><dd><p>The number of steps used to discretized the time.</p>
+</dd>
+<dt><strong>total_sum</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, returns the total sum over the first axis of the result. If the policy data encodes several
+assets, this option allows to return the sum result on the flit rather than calling <code class="docutils literal notranslate"><span class="pre">np.sum</span></code> afterwards.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
-step of the timeline.</p>
+<dt>tuple of two ndarrays</dt><dd><p>A tuple containing the timeline and the computed values.</p>
 </dd>
 </dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This method requires the <code class="docutils literal notranslate"><span class="pre">ar</span></code> attribute to be set either at initialization
-or with the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> method.</p>
-</div>
 </dd>
 </dl>
 </dd></dl>
@@ -655,9 +706,11 @@ or with the <code class="docutils literal notranslate"><span class="pre">optimiz
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_total_cost"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.asymptotic_expected_total_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.cf"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.cf</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.current_ages"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.current_ages</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.expected_total_cost"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.expected_total_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleRunToFailurePolicy.expected_net_present_value"><code class="docutils literal notranslate"><span class="pre">OneCycleRunToFailurePolicy.expected_net_present_value()</span></code></a></li>
 </ul>
 </li>
 </ul>
