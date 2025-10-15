@@ -3,8 +3,6 @@ from typing import Literal, Optional, Self, overload
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.data import LifetimeData
-
 from ._base import NonParametricLifetimeModel
 from ._plot import (
     PlotECDF,
@@ -26,10 +24,6 @@ class ECDF(NonParametricLifetimeModel):
     def fit(
         self,
         time: NDArray[np.float64],
-        /,
-        event: Optional[NDArray[np.float64]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
     ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
@@ -42,19 +36,13 @@ class ECDF(NonParametricLifetimeModel):
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : ndarray of float (1d), default is None
             Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
         """
-        lifetime_data = LifetimeData(
-            time,
-            event=event,
-            entry=entry,
-            departure=departure,
-        )
-        timeline, counts = np.unique(lifetime_data.complete_or_right_censored.lifetime_values, return_counts=True)
+        timeline, counts = np.unique(time, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
 
-        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        )
         self._sf = np.empty((timeline.size,), dtype=dtype)
         self._cdf = np.empty((timeline.size,), dtype=dtype)
 
@@ -63,18 +51,22 @@ class ECDF(NonParametricLifetimeModel):
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         self._cdf["estimation"] = cdf
         self._sf["estimation"] = 1 - cdf
-        se = np.sqrt(*(1 - cdf) / len(lifetime_data.complete_or_right_censored.lifetime_values))
+        se = np.sqrt((1 - cdf) / len(time))
         self._sf["se"] = se
         self._cdf["se"] = se
         return self
 
     @overload
-    def sf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+    def sf(
+        self, se: Literal[False] = False
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
 
     @overload
     def sf(
         self, se: Literal[True] = True
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+    ) -> Optional[
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+    ]: ...
 
     def sf(
         self, se: bool = False
@@ -102,12 +94,16 @@ class ECDF(NonParametricLifetimeModel):
         return self._sf["timeline"], self._sf["estimation"]
 
     @overload
-    def cdf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+    def cdf(
+        self, se: Literal[False] = False
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
 
     @overload
     def cdf(
         self, se: Literal[True] = True
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+    ) -> Optional[
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+    ]: ...
 
     def cdf(
         self, se: bool = False
@@ -185,8 +181,7 @@ class KaplanMeier(NonParametricLifetimeModel):
         time: NDArray[np.float64],
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-    ) -> Self:
+    ):
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
@@ -198,79 +193,46 @@ class KaplanMeier(NonParametricLifetimeModel):
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : ndarray of float (1d), default is None
             Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
-        inplace : boolean, default is True
-            If true, estimations are stored in the object
         """
 
-        lifetime_data = LifetimeData(
-            time,
-            event=event,
-            entry=entry,
-            departure=departure,
-        )
+        if event is None:
+            event = np.ones_like(time).astype(bool)
 
-        if lifetime_data.left_censoring is not None:
-            raise ValueError("KaplanMeier does not take left censored lifetimes")
-        timeline, unique_indices, counts = np.unique(
-            lifetime_data.complete_or_right_censored.lifetime_values,
-            return_inverse=True,
-            return_counts=True,
-        )
-        death_set = np.zeros_like(timeline, int)  # death at each timeline step
-        complete_observation_indic = np.zeros_like(
-            lifetime_data.complete_or_right_censored.lifetime_values
-        )  # just creating an array to fill it next line
-        complete_observation_indic[lifetime_data.complete.lifetime_index] = 1
-        np.add.at(death_set, unique_indices, complete_observation_indic)
-        x_in = np.histogram(
-            np.concatenate(
-                (
-                    lifetime_data.left_truncation.lifetime_values.flatten(),
-                    np.array(
-                        [
-                            0
-                            for _ in range(
-                                len(lifetime_data.complete_or_right_censored.lifetime_values)
-                                - len(lifetime_data.left_truncation.lifetime_values)
-                            )
-                        ]
-                    ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
-                )
-            ),
-            np.insert(timeline, 0, 0),
-        )[0]
-        x_out = np.insert(counts[:-1], 0, 0)
-        at_risk_assets = np.cumsum(x_in - x_out)
-        s = np.cumprod(1 - death_set / at_risk_assets)
-        sf = np.insert(s, 0, 1)
+        if entry is None:
+            entry = np.zeros_like(time)
+
+        timeline = np.unique(time)
+
+        n = (
+            (timeline <= time.reshape(-1, 1)) * (timeline >= entry.reshape(-1, 1))
+        ).sum(axis=0)
+
+        d = ((time.reshape(-1, 1) == timeline) * event.reshape(-1, 1)).sum(axis=0)
+        sf = (1 - d / n).cumprod()
 
         with np.errstate(divide="ignore"):
-            var = s**2 * np.cumsum(
-                np.where(
-                    at_risk_assets > death_set,
-                    death_set / (at_risk_assets * (at_risk_assets - death_set)),
-                    0,
-                )
-            )
-        se = np.sqrt(np.insert(var, 0, 0))
-        timeline = np.insert(timeline, 0, 0)
+            var = (sf**2) * (d / (n * (n - d))).cumsum()
+            var = np.where(n > d, var, 0)
 
-        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
-        self._sf = np.empty((timeline.size,), dtype=dtype)
-        self._sf["timeline"] = timeline
-        self._sf["estimation"] = sf
-        self._sf["se"] = se
-        return self
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        )
+        self._sf = np.empty((timeline.size + 1,), dtype=dtype)
+        self._sf["timeline"] = np.insert(timeline, 0, 0)
+        self._sf["estimation"] = np.insert(sf, 0, 1)
+        self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
 
     @overload
-    def sf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+    def sf(
+        self, se: Literal[False] = False
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
 
     @overload
     def sf(
         self, se: Literal[True] = True
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+    ) -> Optional[
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+    ]: ...
 
     def sf(
         self, se: bool = False
@@ -341,15 +303,14 @@ class NelsonAalen(NonParametricLifetimeModel):
     """
 
     def __init__(self):
-        self._chf: Optional[NDArray[np.void]] = None
+        self._chf: Optional[np.void] = None
 
     def fit(
         self,
         time: NDArray[np.float64],
         event: Optional[NDArray[np.float64]] = None,
         entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-    ) -> Self:
+    ):
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
@@ -361,72 +322,46 @@ class NelsonAalen(NonParametricLifetimeModel):
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : ndarray of float (1d), default is None
             Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
         """
 
-        lifetime_data = LifetimeData(
-            time,
-            event=event,
-            entry=entry,
-            departure=departure,
+        if event is None:
+            event = np.ones_like(time).astype(bool)
+
+        if entry is None:
+            entry = np.zeros_like(time)
+
+        timeline = np.unique(time)
+
+        n = (
+            (timeline <= time.reshape(-1, 1)) * (timeline >= entry.reshape(-1, 1))
+        ).sum(axis=0)
+
+        d = ((time.reshape(-1, 1) == timeline) * event.reshape(-1, 1)).sum(axis=0)
+
+        chf = (d / n).cumsum()
+
+        with np.errstate(divide="ignore"):
+            var = (d / n**2).cumsum()
+
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
         )
-
-        if lifetime_data.left_censoring is not None:
-            raise ValueError("NelsonAalen does not accept left censored or interval censored lifetimes")
-
-        timeline, unique_indices, counts = np.unique(
-            lifetime_data.complete_or_right_censored.lifetime_values,
-            return_inverse=True,
-            return_counts=True,
-        )
-        death_set = np.zeros_like(timeline, dtype=np.int64)  # death at each timeline step
-
-        complete_observation_indic = np.zeros_like(
-            lifetime_data.complete_or_right_censored.lifetime_values
-        )  # just creating an array to fill it next line
-        complete_observation_indic[lifetime_data.complete.lifetime_index] = 1
-
-        np.add.at(death_set, unique_indices, complete_observation_indic)
-        x_in = np.histogram(
-            np.concatenate(
-                (
-                    lifetime_data.left_truncation.lifetime_values.flatten(),
-                    np.array(
-                        [
-                            0
-                            for _ in range(
-                                len(lifetime_data.complete_or_right_censored.lifetime_values)
-                                - len(lifetime_data.left_truncation.lifetime_values)
-                            )
-                        ]
-                    ),  # TODO : remplacer ça par self.entry en définissant self.entry plus haut?
-                )
-            ),
-            np.insert(timeline, 0, 0),
-        )[0]
-        x_out = np.insert(counts[:-1], 0, 0)
-        at_risk_assets = np.cumsum(x_in - x_out)
-        s = np.cumsum(death_set / at_risk_assets)
-        var = np.cumsum(death_set / np.where(at_risk_assets == 0, 1, at_risk_assets**2))
-        chf = np.insert(s, 0, 0)
-        se = np.sqrt(np.insert(var, 0, 0))
-        timeline = np.insert(timeline, 0, 0)
-
-        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
-        self._chf = np.empty((timeline.size,), dtype=dtype)
-        self._chf["timeline"] = timeline
-        self._chf["estimation"] = chf
-        self._chf["se"] = se
-        return self
+        self._chf = np.empty((timeline.size + 1,), dtype=dtype)
+        self._chf["timeline"] = np.insert(timeline, 0, 0)
+        self._chf["estimation"] = np.insert(chf, 0, 0)
+        self._chf["se"] = np.insert(np.sqrt(var), 0, 0)
 
     @overload
-    def chf(self, se: Literal[False] = False) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
+    def chf(
+        self, se: Literal[False] = False
+    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
 
     @overload
     def chf(
         self, se: Literal[True] = True
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]: ...
+    ) -> Optional[
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+    ]: ...
 
     def chf(
         self, se: bool = False
@@ -458,203 +393,224 @@ class NelsonAalen(NonParametricLifetimeModel):
         return PlotNelsonAalen(self)
 
 
-class Turnbull(NonParametricLifetimeModel):
-    """Turnbull estimator."""
+# class Turnbull(NonParametricLifetimeModel):
+#     """Turnbull estimator."""
 
-    def __init__(
-        self,
-        tol: Optional[float] = 1e-4,
-        lowmem: Optional[bool] = False,
-    ):
-        super().__init__()
-        self.tol = tol
-        self.lowmem = lowmem
-        self._sf: Optional[NDArray[np.void]] = None
+#     def __init__(
+#         self,
+#         tol: Optional[float] = 1e-4,
+#         lowmem: Optional[bool] = False,
+#     ):
+#         super().__init__()
+#         self.tol = tol
+#         self.lowmem = lowmem
+#         self._sf: Optional[NDArray[np.void]] = None
 
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        event: Optional[NDArray[np.float64]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-        inplace: bool = False,
-    ) -> Self:
-        """
-        Compute the non-parametric estimations with respect to lifetime data.
+#     def fit(
+#         self,
+#         time: NDArray[np.float64],
+#         event: Optional[NDArray[np.float64]] = None,
+#         entry: Optional[NDArray[np.float64]] = None,
+#         departure: Optional[NDArray[np.float64]] = None,
+#         inplace: bool = False,
+#     ) -> Self:
+#         """
+#         Compute the non-parametric estimations with respect to lifetime data.
 
-        Parameters
-        ----------
-        time : ndarray (1d or 2d)
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
-        inplace : boolean, default is True
-            If true, estimations are stored in the object
-        """
+#         Parameters
+#         ----------
+#         time : ndarray (1d or 2d)
+#             Observed lifetime values.
+#         event : ndarray of boolean values (1d), default is None
+#             Boolean indicators tagging lifetime values as right censored or complete.
+#         entry : ndarray of float (1d), default is None
+#             Left truncations applied to lifetime values.
+#         departure : ndarray of float (1d), default is None
+#             Right truncations applied to lifetime values.
+#         inplace : boolean, default is True
+#             If true, estimations are stored in the object
+#         """
 
-        lifetime_data = LifetimeData(
-            time,
-            event=event,
-            entry=entry,
-            departure=departure,
-        )
+#         lifetime_data = LifetimeData(
+#             time,
+#             event=event,
+#             entry=entry,
+#             departure=departure,
+#         )
 
-        timeline_temp = np.unique(np.insert(lifetime_data.interval_censoring.lifetime_values.flatten(), 0, 0))
-        timeline_len = len(timeline_temp)
-        if not self.lowmem:
-            event_occurence = (
-                np.greater_equal.outer(
-                    timeline_temp[:-1],
-                    lifetime_data.interval_censoring.lifetime_values[
-                        :, 0
-                    ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
-                )
-                * np.less_equal.outer(
-                    timeline_temp[1:],
-                    lifetime_data.interval_censoring.lifetime_values[:, 1],
-                )
-            ).T
+#         timeline_temp = np.unique(
+#             np.insert(lifetime_data.interval_censoring.lifetime_values.flatten(), 0, 0)
+#         )
+#         timeline_len = len(timeline_temp)
+#         if not self.lowmem:
+#             event_occurence = (
+#                 np.greater_equal.outer(
+#                     timeline_temp[:-1],
+#                     lifetime_data.interval_censoring.lifetime_values[
+#                         :, 0
+#                     ],  # or self.observed_lifetimes.interval_censored.values.T[0][i]
+#                 )
+#                 * np.less_equal.outer(
+#                     timeline_temp[1:],
+#                     lifetime_data.interval_censoring.lifetime_values[:, 1],
+#                 )
+#             ).T
 
-            s = self._estimate_with_high_memory(
-                lifetime_data,
-                timeline_len,
-                event_occurence,
-                timeline_temp,
-            )
+#             s = self._estimate_with_high_memory(
+#                 lifetime_data,
+#                 timeline_len,
+#                 event_occurence,
+#                 timeline_temp,
+#             )
 
-        else:
-            len_censored_data = len(lifetime_data.interval_censoring.lifetime_values)
-            event_occurence = []
-            for i in range(len_censored_data):
-                event_occurence.append(
-                    np.where(
-                        (lifetime_data.interval_censoring.lifetime_values[:, 0][i] <= timeline_temp[:-1])
-                        & (timeline_temp[1:] <= lifetime_data.interval_censoring.lifetime_values[:, 1][i])
-                    )[0][[0, -1]]
-                )
-            event_occurence = np.array(event_occurence)
-            s = self._estimate_with_low_memory(
-                lifetime_data,
-                timeline_temp,
-                timeline_len,
-                event_occurence,
-                len_censored_data,
-            )
+#         else:
+#             len_censored_data = len(lifetime_data.interval_censoring.lifetime_values)
+#             event_occurence = []
+#             for i in range(len_censored_data):
+#                 event_occurence.append(
+#                     np.where(
+#                         (
+#                             lifetime_data.interval_censoring.lifetime_values[:, 0][i]
+#                             <= timeline_temp[:-1]
+#                         )
+#                         & (
+#                             timeline_temp[1:]
+#                             <= lifetime_data.interval_censoring.lifetime_values[:, 1][i]
+#                         )
+#                     )[0][[0, -1]]
+#                 )
+#             event_occurence = np.array(event_occurence)
+#             s = self._estimate_with_low_memory(
+#                 lifetime_data,
+#                 timeline_temp,
+#                 timeline_len,
+#                 event_occurence,
+#                 len_censored_data,
+#             )
 
-        ind_del = np.where(timeline_temp == np.inf)
-        sf = np.delete(s, ind_del)
-        timeline = np.delete(timeline_temp, ind_del)
-        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64)])
-        self._sf = np.empty((timeline.size,), dtype=dtype)
-        self._sf["timeline"] = timeline
-        self._sf["estimation"] = sf
-        return self
+#         ind_del = np.where(timeline_temp == np.inf)
+#         sf = np.delete(s, ind_del)
+#         timeline = np.delete(timeline_temp, ind_del)
+#         dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64)])
+#         self._sf = np.empty((timeline.size,), dtype=dtype)
+#         self._sf["timeline"] = timeline
+#         self._sf["estimation"] = sf
+#         return self
 
-    def sf(self) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]:
-        """
-        The survival function estimation
+#     def sf(self) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]:
+#         """
+#         The survival function estimation
 
-        Returns
-        -------
-        tuple of 2 ndarrays
-            A tuple containing the timeline and the estimated values
-        """
-        if self._sf is None:
-            return None
-        return self._sf["timeline"], self._sf["estimation"]
+#         Returns
+#         -------
+#         tuple of 2 ndarrays
+#             A tuple containing the timeline and the estimated values
+#         """
+#         if self._sf is None:
+#             return None
+#         return self._sf["timeline"], self._sf["estimation"]
 
-    def _estimate_with_low_memory(
-        self,
-        lifetime_data: LifetimeData,
-        timeline_temp,
-        timeline_len,
-        event_occurence,
-        len_censored_data,
-    ):
+#     def _estimate_with_low_memory(
+#         self,
+#         lifetime_data: LifetimeData,
+#         timeline_temp,
+#         timeline_len,
+#         event_occurence,
+#         len_censored_data,
+#     ):
+#         d_tilde = np.histogram(
+#             np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),
+#             bins=range(timeline_len + 1),
+#         )[0][1:]
+#         s = np.linspace(1, 0, timeline_len)
+#         res = 1
+#         count = 1
+#         while res > self.tol:
+#             p = -np.diff(
+#                 s
+#             )  # écart entre les points de S (survival function) => proba of an event occuring at
+#             if np.sum(p == 0) > 0:
+#                 p = np.where(
+#                     p == 0,
+#                     1e-5 / np.sum(p == 0),
+#                     p - 1e-5 / ((timeline_len - 1) - np.sum(p == 0)),
+#                 )  # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)
 
-        d_tilde = np.histogram(
-            np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),
-            bins=range(timeline_len + 1),
-        )[0][1:]
-        s = np.linspace(1, 0, timeline_len)
-        res = 1
-        count = 1
-        while res > self.tol:
-            p = -np.diff(s)  # écart entre les points de S (survival function) => proba of an event occuring at
-            if np.sum(p == 0) > 0:
-                p = np.where(
-                    p == 0,
-                    1e-5 / np.sum(p == 0),
-                    p - 1e-5 / ((timeline_len - 1) - np.sum(p == 0)),
-                )  # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)
+#             x = [
+#                 p[event_occurence[i, 0] : (event_occurence[i, 1] + 1)]
+#                 for i in range(event_occurence.shape[0])
+#             ]
+#             d = np.repeat(0, timeline_len - 1)
+#             for i in range(len_censored_data):
+#                 d = np.add(
+#                     d,
+#                     np.append(
+#                         np.insert(
+#                             x[i] / x[i].sum(), 0, np.repeat(0, event_occurence[i][0])
+#                         ),
+#                         np.repeat(0, timeline_len - event_occurence[i][1] - 2),
+#                     ),
+#                 )
+#             d += d_tilde
+#             y = np.cumsum(d[::-1])[::-1]
+#             _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()
 
-            x = [p[event_occurence[i, 0] : (event_occurence[i, 1] + 1)] for i in range(event_occurence.shape[0])]
-            d = np.repeat(0, timeline_len - 1)
-            for i in range(len_censored_data):
-                d = np.add(
-                    d,
-                    np.append(
-                        np.insert(x[i] / x[i].sum(), 0, np.repeat(0, event_occurence[i][0])),
-                        np.repeat(0, timeline_len - event_occurence[i][1] - 2),
-                    ),
-                )
-            d += d_tilde
-            y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()
+#             y -= len(_unsorted_entry) - np.searchsorted(
+#                 np.sort(_unsorted_entry), timeline_temp[1:]
+#             )
+#             s_updated = np.array(np.cumprod(1 - d / y))
+#             s_updated = np.insert(s_updated, 0, 1)
+#             res = max(abs(s - s_updated))
+#             s = s_updated
+#             count += 1
+#         return s
 
-            y -= len(_unsorted_entry) - np.searchsorted(np.sort(_unsorted_entry), timeline_temp[1:])
-            s_updated = np.array(np.cumprod(1 - d / y))
-            s_updated = np.insert(s_updated, 0, 1)
-            res = max(abs(s - s_updated))
-            s = s_updated
-            count += 1
-        return s
+#     def _estimate_with_high_memory(
+#         self,
+#         lifetime_data: LifetimeData,
+#         timeline_len,
+#         event_occurence,
+#         timeline_temp,
+#     ):
+#         d_tilde = np.histogram(
+#             np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),
+#             bins=range(timeline_len + 1),
+#         )[0][1:]
+#         s = np.linspace(1, 0, timeline_len)
+#         res = 1
+#         count = 1
 
-    def _estimate_with_high_memory(
-        self,
-        lifetime_data: LifetimeData,
-        timeline_len,
-        event_occurence,
-        timeline_temp,
-    ):
+#         while res > self.tol:
+#             p = -np.diff(
+#                 s
+#             )  # écart entre les points de S (survival function) => proba of an event occuring at
+#             if np.sum(p == 0) > 0:
+#                 p = np.where(
+#                     p == 0,
+#                     1e-5 / np.sum(p == 0),
+#                     p - 1e-5 / ((timeline_len - 1) - np.sum(p == 0)),
+#                 )  # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)
 
-        d_tilde = np.histogram(
-            np.searchsorted(timeline_temp, lifetime_data.complete.lifetime_values),
-            bins=range(timeline_len + 1),
-        )[0][1:]
-        s = np.linspace(1, 0, timeline_len)
-        res = 1
-        count = 1
+#             if np.any(event_occurence):
+#                 event_occurence_proba = event_occurence * p.T
+#                 d = (event_occurence_proba.T / event_occurence_proba.sum(axis=1)).T.sum(
+#                     axis=0
+#                 )
+#                 d += d_tilde
+#             else:
+#                 d = d_tilde
+#             y = np.cumsum(d[::-1])[::-1]
+#             _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()
+#             y -= len(_unsorted_entry) - np.searchsorted(
+#                 np.sort(_unsorted_entry), timeline_temp[1:]
+#             )
+#             s_updated = np.array(np.cumprod(1 - d / y))
+#             s_updated = np.insert(s_updated, 0, 1)
+#             res = max(abs(s - s_updated))
+#             s = s_updated
+#             count += 1
+#         return s
 
-        while res > self.tol:
-            p = -np.diff(s)  # écart entre les points de S (survival function) => proba of an event occuring at
-            if np.sum(p == 0) > 0:
-                p = np.where(
-                    p == 0,
-                    1e-5 / np.sum(p == 0),
-                    p - 1e-5 / ((timeline_len - 1) - np.sum(p == 0)),
-                )  # remplace 0 par 1e-5 (et enlève cette quantité des autres proba pr sommer à 1)
-
-            if np.any(event_occurence):
-                event_occurence_proba = event_occurence * p.T
-                d = (event_occurence_proba.T / event_occurence_proba.sum(axis=1)).T.sum(axis=0)
-                d += d_tilde
-            else:
-                d = d_tilde
-            y = np.cumsum(d[::-1])[::-1]
-            _unsorted_entry = lifetime_data.left_truncation.lifetime_values.flatten()
-            y -= len(_unsorted_entry) - np.searchsorted(np.sort(_unsorted_entry), timeline_temp[1:])
-            s_updated = np.array(np.cumprod(1 - d / y))
-            s_updated = np.insert(s_updated, 0, 1)
-            res = max(abs(s - s_updated))
-            s = s_updated
-            count += 1
-        return s
-
-    @property
-    def plot(self) -> PlotTurnbull:
-        return PlotTurnbull(self)
+#     @property
+#     def plot(self) -> PlotTurnbull:
+#         return PlotTurnbull(self)

@@ -40,7 +40,12 @@ class PlotNonParametricLifetimeModel:
     model: Incomplete
     def __init__(self, model: NonParametricLifetimeModel) -> None: ...
     def plot(
-        self, fname: str, plot_se: bool = True, ci_bounds=(0.0, 1.0), drawstyle: str = "steps-post", **kwargs
+        self,
+        fname: str,
+        plot_se: bool = True,
+        ci_bounds=(0.0, 1.0),
+        drawstyle: str = "steps-post",
+        **kwargs,
     ) -> Axes: ...
 
 class PlotECDF(PlotNonParametricLifetimeModel):

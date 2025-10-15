@@ -3,17 +3,26 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import Bounds, newton
 
-from relife.base import ParametricModel
-from relife.data import LifetimeData
-from relife.likelihood import LikelihoodFromLifetimes
 from relife.utils.quadrature import (
     legendre_quadrature,
-    unweighted_laguerre_quadrature,
+    unweighted_laguerre_quadrature
 )
+from relife.base import ParametricModel
+from relife.likelihood.default_lifetime_likelihood import (
+    DefaultLifetimeLikelihood,
+)
+from relife.likelihood.interval_lifetime_likelihood import (
+    IntervalLifetimeLikelihood,
+)
+
 
 from ._plot import PlotParametricLifetimeModel
 
-__all__ = ["ParametricLifetimeModel", "FittableParametricLifetimeModel", "NonParametricLifetimeModel"]
+__all__ = [
+    "ParametricLifetimeModel",
+    "FittableParametricLifetimeModel",
+    "NonParametricLifetimeModel",
+]
 
 
 class ParametricLifetimeModel(ParametricModel, ABC):
@@ -121,7 +130,15 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    def rvs(self, size, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         rng = np.random.default_rng(seed)
         if nb_assets is not None:
             np_size = (nb_assets, size)
@@ -131,8 +148,16 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         if np_size == 1:
             probability = np.squeeze(probability)
         time = self.isf(probability, *args)
-        event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
-        entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
+        event = (
+            np.ones_like(time, dtype=np.bool_)
+            if isinstance(time, np.ndarray)
+            else np.bool_(True)
+        )
+        entry = (
+            np.zeros_like(time, dtype=np.float64)
+            if isinstance(time, np.ndarray)
+            else np.float64(0)
+        )
         if not return_event and not return_entry:
             return time
         elif return_event and not return_entry:
@@ -163,9 +188,13 @@ class ParametricLifetimeModel(ParametricModel, ABC):
                     Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
                     """
                 )
-            if x.ndim == 3:  # reshape because model.pdf is tested only for input ndim <= 2
+            if (
+                x.ndim == 3
+            ):  # reshape because model.pdf is tested only for input ndim <= 2
                 xdeg, m, n = x.shape
-                x = np.rollaxis(x, 1).reshape(m, -1)  # (m, deg*n), roll on m because axis 0 must align with m of args
+                x = np.rollaxis(x, 1).reshape(
+                    m, -1
+                )  # (m, deg*n), roll on m because axis 0 must align with m of args
                 pdf = self.pdf(x, *args)  # (m, deg*n)
                 pdf = np.rollaxis(pdf.reshape(m, xdeg, n), 1, 0)  #  (deg, m, n)
             else:  # ndim == 1 | 2
@@ -180,11 +209,19 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         if np.any(arr_a > arr_b):
             raise ValueError("Bound values a must be lower than values of b")
 
-        bound_b = self.isf(1e-4, *args)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+        bound_b = self.isf(
+            1e-4, *args
+        )  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
         broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
-        arr_a = broadcasted_arrs[0].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        arr_b = broadcasted_arrs[1].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        bound_b = broadcasted_arrs[2].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_a = broadcasted_arrs[
+            0
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_b = broadcasted_arrs[
+            1
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        bound_b = broadcasted_arrs[
+            2
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
         is_inf = np.isinf(arr_b)  # () or (n,) or (m, n)
         arr_b = np.where(is_inf, bound_b, arr_b)
         integration = legendre_quadrature(
@@ -225,13 +262,14 @@ class ParametricLifetimeModel(ParametricModel, ABC):
 
 
 class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
-
     def __init__(self, **kwparams):
         super().__init__(**kwparams)
         self.fitting_results = None
 
     @abstractmethod
-    def _get_initial_params(self, time, *args, event=None, entry=None, departure=None): ...
+    def _get_initial_params(
+        self, time, *args, event=None, entry=None, departure=None
+    ): ...
 
     @abstractmethod
     def _get_params_bounds(self):
@@ -261,12 +299,33 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         *args,
         event=None,
         entry=None,
-        departure=None,
         optimizer_options=None,
     ):
-        lifetime_data = LifetimeData(time, event=event, entry=entry, departure=departure, args=args)
-        self.params = self._get_initial_params(time, *args, event=event, entry=entry, departure=departure)
-        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
+        self.params = self._get_initial_params(time, *args, event=event, entry=entry)
+        likelihood = DefaultLifetimeLikelihood(
+            self, time, *args, event=event, entry=entry
+        )
+        if optimizer_options is None:
+            optimizer_options = {}
+        if "bounds" not in optimizer_options:
+            optimizer_options["bounds"] = self._get_params_bounds()
+        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+        self.params = fitting_results.optimal_params
+        self.fitting_results = fitting_results
+        return self
+
+    def fit_from_interval_censored_data(
+        self,
+        time_inf,
+        time_sup,
+        *args,
+        entry=None,
+        optimizer_options=None,
+    ):
+        self.params = self._get_initial_params(time_sup, *args, entry=entry)  # TODO
+        likelihood = IntervalLifetimeLikelihood(
+            self, time_inf, time_sup, *args, entry=entry
+        )
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
@@ -278,6 +337,10 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
 
 
 class NonParametricLifetimeModel(ABC):
+    @abstractmethod
+    def fit(self, time, event=None, entry=None): ...
 
     @abstractmethod
-    def fit(self, time, event=None, entry=None, departure=None): ...
+    def fit_interval_censored_data(
+        self, time_inf, time_sup, *args, entry=None, **optimizer_options
+    ): ...

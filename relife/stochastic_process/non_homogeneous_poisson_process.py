@@ -1,8 +1,8 @@
 import numpy as np
 
 from relife.base import FrozenParametricModel, ParametricModel
-from relife.data import LifetimeData, NHPPData
-from relife.likelihood import LikelihoodFromLifetimes
+from relife.data import NHPPData
+from relife.likelihood import DefaultLifetimeLikelihood
 
 
 class NonHomogeneousPoissonProcess(ParametricModel):
@@ -240,8 +240,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         time, event, entry, args = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
         self.lifetime_model._get_initial_params(time, *args, event=event, entry=entry)
-        lifetime_data = LifetimeData(time, event=event, entry=entry, args=args)
-        likelihood = LikelihoodFromLifetimes(self.lifetime_model, lifetime_data)
+        likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event,entry=entry)
         fitting_results = likelihood.maximum_likelihood_estimation(**options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results

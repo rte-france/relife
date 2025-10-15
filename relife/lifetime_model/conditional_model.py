@@ -6,7 +6,6 @@ from relife.utils import get_args_nb_assets, is_frozen, reshape_1d_arg
 
 __all__ = ["AgeReplacementModel", "LeftTruncatedModel"]
 
-
 class AgeReplacementModel(ParametricLifetimeModel):
     # noinspection PyUnresolvedReferences
     r"""
@@ -228,9 +227,9 @@ class AgeReplacementModel(ParametricLifetimeModel):
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
             ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
-        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
-            time, ar, *args
-        )  # () or (n,) or (m, n)
+        mu = self.ls_integrate(
+            lambda x: x - time, time, ub, ar, *args, deg=10
+        ) / self.sf(time, ar, *args)  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
@@ -280,7 +279,16 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size,
+        ar,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         """
         Random variable sampling.
 
@@ -371,7 +379,9 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
-        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+        return integration + np.where(
+            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
+        )
 
     def moment(self, n, ar, *args):
         """
@@ -648,7 +658,16 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
-    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size,
+        a0,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         """
         Random variable sampling.
 
