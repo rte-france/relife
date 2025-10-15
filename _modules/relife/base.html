@@ -417,7 +417,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ParametricModel&quot;</span><span class="p">,</span> <span class="s2">&quot;FrozenParametricModel&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get_nb_assets&quot;</span><span class="p">,</span> <span class="s2">&quot;is_frozen&quot;</span><span class="p">,</span> <span class="s2">&quot;ParametricModel&quot;</span><span class="p">,</span> <span class="s2">&quot;FrozenParametricModel&quot;</span><span class="p">]</span>
 
 
 <span class="c1"># MAYBE, custom array container can be used here</span>
@@ -500,8 +500,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">update_tree</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="ParametricModel">
-<a class="viewcode-back" href="../../api/base_class/relife.base.ParametricModel.html#relife.base.ParametricModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParametricModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class to create a parametric_model.</span>
@@ -580,8 +578,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ParametricModel</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_models</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">set_leaf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.params&quot;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;_params&quot;</span><span class="p">))</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
-
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">FrozenParametricModel</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
@@ -590,7 +587,12 @@
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">params</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t freeze a model with NaN params. Set params first&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_model</span> <span class="o">=</span> <span class="n">model</span>  <span class="c1"># setted as a baseline model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nb_assets</span> <span class="o">=</span> <span class="n">get_nb_assets</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nb_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nb_assets</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -622,6 +624,26 @@
         <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">ismethod</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">wrapper</span>
         <span class="k">return</span> <span class="n">attr</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_nb_assets</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">args_2d</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">arys</span><span class="p">)</span> <span class="k">for</span> <span class="n">arys</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">broadcast_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">ary</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">ary</span> <span class="ow">in</span> <span class="n">args_2d</span><span class="p">))</span>
+        <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">broadcast_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given args have incompatible shapes&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nb_assets</span>
+
+
+<div class="viewcode-block" id="is_frozen">
+<a class="viewcode-back" href="../../api/routines/relife.is_frozen.html#relife.is_frozen">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_frozen</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">FrozenParametricModel</span><span class="p">)</span></div>
+
 
 
 <span class="c1"># see sklearn/base.py : return unfitted ParametricModel</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>RunToFailurePolicy &#8212; ReLife</title>
+    <title>BaseAgeReplacementPolicy &#8212; ReLife</title>
   
   
   
@@ -50,12 +50,12 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/policy/relife.policy.RunToFailurePolicy';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/base_class/relife.policy.BaseAgeReplacementPolicy';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="OneCycleRunToFailurePolicy" href="relife.policy.OneCycleRunToFailurePolicy.html" />
-    <link rel="prev" title="OneCycleAgeReplacementPolicy" href="relife.policy.OneCycleAgeReplacementPolicy.html" />
+    <link rel="next" title="BaseOneCycleAgeReplacementPolicy" href="relife.policy.BaseOneCycleAgeReplacementPolicy.html" />
+    <link rel="prev" title="NonParametricLifetimeModel" href="relife.lifetime_model.NonParametricLifetimeModel.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -407,12 +407,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.policy.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">RunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.policy.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Routines</span></p>
 <ul class="nav bd-sidenav">
@@ -420,12 +420,12 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseAgeReplacementPolicy.html">BaseAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.policy.BaseOneCycleAgeReplacementPolicy.html">BaseOneCycleAgeReplacementPolicy</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">BaseAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.policy.BaseOneCycleAgeReplacementPolicy.html">BaseOneCycleAgeReplacementPolicy</a></li>
 </ul>
 </div>
 </nav></div>
@@ -469,7 +469,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RunToFailurePolicy</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">BaseAgeReplacementPolicy</span></li>
   </ul>
 </nav>
 </div>
@@ -486,80 +486,45 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="runtofailurepolicy">
-<h1>RunToFailurePolicy<a class="headerlink" href="#runtofailurepolicy" title="Link to this heading">#</a></h1>
+  <section id="baseagereplacementpolicy">
+<h1>BaseAgeReplacementPolicy<a class="headerlink" href="#baseagereplacementpolicy" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">RunToFailurePolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_lifetime_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/run_to_failure_policy.html#RunToFailurePolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy" title="Link to this definition">#</a></dt>
-<dd><p>Run-to-failure renewal policy.</p>
-<p>Renewal reward stochastic_process where assets are replaced on failure with costs
-<span class="math notranslate nohighlight">\(c_f\)</span>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>lifetime_model</strong><span class="classifier">any lifetime distribution or frozen lifetime model</span></dt><dd><p>A lifetime model representing the durations between events.</p>
-</dd>
-<dt><strong>cf</strong><span class="classifier">float or 1darray</span></dt><dd><p>Costs of failures</p>
-</dd>
-<dt><strong>discounting_rate</strong><span class="classifier">float, default is 0.</span></dt><dd><p>The discounting rate value used in the exponential discounting function</p>
-</dd>
-<dt><strong>first_lifetime_model</strong><span class="classifier">any lifetime distribution or frozen lifetime model, optional</span></dt><dd><p>A lifetime model for the first renewal (delayed renewal process). It is None by default</p>
-</dd>
-<dt><strong>a0</strong><span class="classifier">float or 1darray, optional</span></dt><dd><p>Current ages of the assets, by default 0 for each asset. If it is given, left truncations of <code class="docutils literal notranslate"><span class="pre">a0</span></code> will
-be take into account for the first cycle.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><a class="reference internal" href="#relife.policy.RunToFailurePolicy.cf" title="relife.policy.RunToFailurePolicy.cf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cf</span></code></a></dt><dd><p>Cost of failures</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">References</p>
-<div role="list" class="citation-list">
-<div class="citation" id="r122774d8dfd5-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<p>Van der Weide, J. A. M., &amp; Van Noortwijk, J. M. (2008). Renewal
-theory with exponential and hyperbolic discounting. Probability in
-the Engineering and Informational Sciences, 22(1), 53-74.</p>
-</div>
-</div>
-<p class="rubric">Methods</p>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">BaseAgeReplacementPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stochastic_process</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy" title="Link to this definition">#</a></dt>
+<dd><p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>The asymtotic expected equivalent annual cost</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost" title="relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_cost</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_total_cost" title="relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_total_cost</span></code></a></p></td>
 <td><p>The asymtotic expected total cost</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>The expected equivalent annual cost.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_nb_replacements" title="relife.policy.RunToFailurePolicy.expected_nb_replacements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_nb_replacements</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements" title="relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_nb_replacements</span></code></a></p></td>
 <td><p>The expected number of replacements.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_total_cost" title="relife.policy.RunToFailurePolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost" title="relife.policy.BaseAgeReplacementPolicy.expected_total_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_total_cost</span></code></a></p></td>
 <td><p>The expected total cost.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.generate_lifetime_data" title="relife.policy.RunToFailurePolicy.generate_lifetime_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_lifetime_data</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data" title="relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_lifetime_data</span></code></a></p></td>
 <td><p>Generate lifetime data</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.sample" title="relife.policy.RunToFailurePolicy.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.BaseAgeReplacementPolicy.sample" title="relife.policy.BaseAgeReplacementPolicy.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
 <td><p>Renewal data sampling.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected equivalent annual cost</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} \text{EEAC}(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost()</span></code></a> for more details.</p>
+<p>where <span class="math notranslate nohighlight">\(\text{EEAC}(t)\)</span> is the expected equivalent annual cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost" title="relife.policy.AgeReplacementPolicy.expected_equivalent_annual_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost()</span></code></a> for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -571,12 +536,12 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_total_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_total_cost">
+<span class="sig-name descname"><span class="pre">asymptotic_expected_total_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.asymptotic_expected_total_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_total_cost" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected total cost</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} z(t)\]</div>
-<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.</p>
+<p>where <span class="math notranslate nohighlight">\(z(t)\)</span> is the expected total cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -587,29 +552,16 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.cf">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cf</span></span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.cf" title="Link to this definition">#</a></dt>
-<dd><p>Cost of failures</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ndarray</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost">
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[\text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
 <p>where :</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(t\)</span> is the time</p></li>
-<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_total_cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.`.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z(t)\)</span> is the expected_total_cost at <span class="math notranslate nohighlight">\(t\)</span>. See <a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.expected_total_cost" title="relife.policy.AgeReplacementPolicy.expected_total_cost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_total_cost()</span></code></a> for more details.`.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\delta\)</span> is the discounting rate.</p></li>
 </ul>
 <dl class="field-list simple">
@@ -632,8 +584,8 @@ step of the timeline.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_nb_replacements">
-<span class="sig-name descname"><span class="pre">expected_nb_replacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_nb_replacements" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements">
+<span class="sig-name descname"><span class="pre">expected_nb_replacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.expected_nb_replacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements" title="Link to this definition">#</a></dt>
 <dd><p>The expected number of replacements.</p>
 <p>It is computed  by solving the renewal equation:</p>
 <div class="math notranslate nohighlight">
@@ -667,8 +619,8 @@ step of the timeline.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_total_cost">
-<span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_total_cost" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.expected_total_cost">
+<span class="sig-name descname"><span class="pre">expected_total_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.expected_total_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost" title="Link to this definition">#</a></dt>
 <dd><p>The expected total cost.</p>
 <p>It is computed by solving the renewal equation and is given by:</p>
 <div class="math notranslate nohighlight">
@@ -700,8 +652,8 @@ step of the timeline.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.generate_lifetime_data">
-<span class="sig-name descname"><span class="pre">generate_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.generate_lifetime_data" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data">
+<span class="sig-name descname"><span class="pre">generate_lifetime_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.generate_lifetime_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data" title="Link to this definition">#</a></dt>
 <dd><p>Generate lifetime data</p>
 <p>This function will generate lifetime data that can be used to fit a lifetime model.</p>
 <dl class="field-list simple">
@@ -726,8 +678,8 @@ step of the timeline.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.RunToFailurePolicy.sample" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.policy.BaseAgeReplacementPolicy.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_base.html#BaseAgeReplacementPolicy.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.BaseAgeReplacementPolicy.sample" title="Link to this definition">#</a></dt>
 <dd><p>Renewal data sampling.</p>
 <p>This function will sample data and encapsulate them in an object.</p>
 <dl class="field-list simple">
@@ -775,15 +727,14 @@ step of the timeline.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_total_cost"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.asymptotic_expected_total_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.cf"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.cf</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.expected_equivalent_annual_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.expected_nb_replacements"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.expected_nb_replacements()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.expected_total_cost"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.expected_total_cost()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.generate_lifetime_data"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.generate_lifetime_data()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.RunToFailurePolicy.sample"><code class="docutils literal notranslate"><span class="pre">RunToFailurePolicy.sample()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.asymptotic_expected_total_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.asymptotic_expected_total_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_equivalent_annual_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_nb_replacements"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_nb_replacements()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.expected_total_cost"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.expected_total_cost()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.generate_lifetime_data"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.generate_lifetime_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.BaseAgeReplacementPolicy.sample"><code class="docutils literal notranslate"><span class="pre">BaseAgeReplacementPolicy.sample()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -793,7 +744,7 @@ step of the timeline.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/policy/relife.policy.RunToFailurePolicy.rst.txt"
+      <li><a href="../../_sources/api/base_class/relife.policy.BaseAgeReplacementPolicy.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

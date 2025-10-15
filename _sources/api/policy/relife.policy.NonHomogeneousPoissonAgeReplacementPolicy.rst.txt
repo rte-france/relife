@@ -25,15 +25,6 @@ NonHomogeneousPoissonAgeReplacementPolicy
             ~NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost
         
         
-            ~NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_net_present_value
-        
-        
-            ~NonHomogeneousPoissonAgeReplacementPolicy.expected_equivalent_annual_cost
-        
-        
-            ~NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value
-        
-        
             ~NonHomogeneousPoissonAgeReplacementPolicy.optimize
         
     

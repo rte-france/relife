@@ -25,12 +25,12 @@ OneCycleRunToFailurePolicy
             ~OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost
         
         
-            ~OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value
+            ~OneCycleRunToFailurePolicy.asymptotic_expected_total_cost
         
         
             ~OneCycleRunToFailurePolicy.expected_equivalent_annual_cost
         
         
-            ~OneCycleRunToFailurePolicy.expected_net_present_value
+            ~OneCycleRunToFailurePolicy.expected_total_cost
         
     

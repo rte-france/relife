@@ -589,7 +589,7 @@ asymptotic expected equivalent annual cost with optimal ar : 0.22
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nb_years</span><span class="o">=</span><span class="mi">100</span>
-<span class="n">timeline</span><span class="p">,</span> <span class="n">total_cost</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">expected_net_present_value</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_steps</span><span class="o">=</span><span class="n">nb_years</span><span class="p">)</span>
+<span class="n">timeline</span><span class="p">,</span> <span class="n">total_cost</span> <span class="o">=</span> <span class="n">ar_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_steps</span><span class="o">=</span><span class="n">nb_years</span><span class="p">)</span>
 <span class="n">total_cost_per_year</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">total_cost</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -656,7 +656,7 @@ asymptotic expected equivalent annual cost with optimal ar : 0.22
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ar</span> <span class="o">=</span> <span class="mi">25</span>
 <span class="n">sub_opti_ar_policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="o">=</span><span class="n">cp</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">)</span>
 
-<span class="n">timeline</span><span class="p">,</span> <span class="n">total_cost</span> <span class="o">=</span> <span class="n">sub_opti_ar_policy</span><span class="o">.</span><span class="n">expected_net_present_value</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_steps</span><span class="o">=</span><span class="n">nb_years</span><span class="p">)</span>
+<span class="n">timeline</span><span class="p">,</span> <span class="n">total_cost</span> <span class="o">=</span> <span class="n">sub_opti_ar_policy</span><span class="o">.</span><span class="n">expected_total_cost</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">nb_steps</span><span class="o">=</span><span class="n">nb_years</span><span class="p">)</span>
 <span class="n">total_cost_per_year</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">total_cost</span><span class="p">,</span> <span class="n">prepend</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
