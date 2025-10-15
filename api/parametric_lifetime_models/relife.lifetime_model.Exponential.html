@@ -388,7 +388,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.Turnbull.html">Turnbull</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
 <ul class="nav bd-sidenav">
@@ -546,64 +545,61 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.fit" title="relife.lifetime_model.Exponential.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
 <td><p>Estimation of the distribution parameters from lifetime data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_interval_censored_data</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_data</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_with_old_likelihood</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.hf" title="relife.lifetime_model.Exponential.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.hf" title="relife.lifetime_model.Exponential.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
 <td><p>The hazard function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.ichf" title="relife.lifetime_model.Exponential.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.ichf" title="relife.lifetime_model.Exponential.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
 <td><p>Inverse cumulative hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.isf" title="relife.lifetime_model.Exponential.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.isf" title="relife.lifetime_model.Exponential.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
 <td><p>The inverse survival function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_cdf" title="relife.lifetime_model.Exponential.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_cdf" title="relife.lifetime_model.Exponential.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative density function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_chf" title="relife.lifetime_model.Exponential.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_chf" title="relife.lifetime_model.Exponential.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative hazard function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_hf" title="relife.lifetime_model.Exponential.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_hf" title="relife.lifetime_model.Exponential.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
 <td><p>The jacobian of the hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_pdf" title="relife.lifetime_model.Exponential.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_pdf" title="relife.lifetime_model.Exponential.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
 <td><p>The jacobian of the probability density function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_sf" title="relife.lifetime_model.Exponential.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.jac_sf" title="relife.lifetime_model.Exponential.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
 <td><p>The jacobian of the survival function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.ls_integrate" title="relife.lifetime_model.Exponential.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.ls_integrate" title="relife.lifetime_model.Exponential.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
 <td><p>Lebesgue-Stieltjes integration.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.mean" title="relife.lifetime_model.Exponential.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.mean" title="relife.lifetime_model.Exponential.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
 <td><p>The mean of the distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.median" title="relife.lifetime_model.Exponential.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.median" title="relife.lifetime_model.Exponential.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
 <td><p>The median.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.moment" title="relife.lifetime_model.Exponential.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.moment" title="relife.lifetime_model.Exponential.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
 <td><p>n-th order moment</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.mrl" title="relife.lifetime_model.Exponential.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.mrl" title="relife.lifetime_model.Exponential.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
 <td><p>The mean residual life function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.pdf" title="relife.lifetime_model.Exponential.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.pdf" title="relife.lifetime_model.Exponential.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
 <td><p>The probability density function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.ppf" title="relife.lifetime_model.Exponential.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.ppf" title="relife.lifetime_model.Exponential.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
 <td><p>The percent point function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.rvs" title="relife.lifetime_model.Exponential.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.rvs" title="relife.lifetime_model.Exponential.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
 <td><p>Random variable sampling.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.sf" title="relife.lifetime_model.Exponential.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.sf" title="relife.lifetime_model.Exponential.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
 <td><p>The survival function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.var" title="relife.lifetime_model.Exponential.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.var" title="relife.lifetime_model.Exponential.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
 <td><p>The variance of the distribution.</p></td>
 </tr>
 </tbody>

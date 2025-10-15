@@ -1018,7 +1018,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">optimizer_options</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit_interval_censored_data</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_from_interval_censored_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_inf</span><span class="p">,</span>
         <span class="n">time_sup</span><span class="p">,</span>
@@ -1026,7 +1026,9 @@
         <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">optimizer_options</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_interval_censored_data</span><span class="p">(</span><span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">optimizer_options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_from_interval_censored_data</span><span class="p">(</span>
+            <span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">optimizer_options</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">freeze_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

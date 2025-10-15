@@ -34,10 +34,7 @@ ProportionalHazard
             ~ProportionalHazard.fit
         
         
-            ~ProportionalHazard.fit_interval_censored_data
-        
-        
-            ~ProportionalHazard.fit_with_old_likelihood
+            ~ProportionalHazard.fit_from_interval_censored_data
         
         
             ~ProportionalHazard.freeze_args

@@ -34,10 +34,7 @@ AcceleratedFailureTime
             ~AcceleratedFailureTime.fit
         
         
-            ~AcceleratedFailureTime.fit_interval_censored_data
-        
-        
-            ~AcceleratedFailureTime.fit_with_old_likelihood
+            ~AcceleratedFailureTime.fit_from_interval_censored_data
         
         
             ~AcceleratedFailureTime.freeze_args

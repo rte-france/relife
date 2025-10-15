@@ -34,10 +34,7 @@ Weibull
             ~Weibull.fit
         
         
-            ~Weibull.fit_interval_censored_data
-        
-        
-            ~Weibull.fit_with_old_likelihood
+            ~Weibull.fit_from_interval_censored_data
         
         
             ~Weibull.hf
