@@ -45,59 +45,65 @@ def args_reshape(
     return tuple(args_list)
 
 
-class DefaultLikelihood(Likelihood):
+class IntervalLifetimeLikelihood(Likelihood):
     def __init__(
         self,
         model: Union[LifetimeDistribution, LifetimeRegression, MinimumDistribution],
-        time: NDArray[np.float64],
+        time_inf: NDArray[np.float64],
+        time_sup: NDArray[np.float64],
         *args,
-        event: NDArray[np.bool_] = None,
         entry: NDArray[np.float64] = None,
     ):
-        time = array_reshape(time)
-        event = (
-            array_reshape(event)
-            if (event is not None)
-            else np.ones_like(time).astype(bool)
-        )
+        time_inf = array_reshape(time_inf)
+        time_sup = array_reshape(time_sup)
         entry = (
             array_reshape(entry)
             if (entry is not None)
-            else np.zeros_like(time, dtype=np.float64)
+            else np.zeros_like(time_inf, dtype=np.float64)
         )
         args = args_reshape(args)
 
-        sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
+        sizes = [len(x) for x in (time_inf, time_sup, entry, *args) if x is not None]
         if len(set(sizes)) != 1:
             raise ValueError(
                 f"All lifetime data must have the same number of values. Fields length are different. Got {set(sizes)}"
             )
 
-        # Init values
-
         self.model = model
-        self.nb_samples = len(time)
+        self.nb_samples = len(time_inf)
 
-        self.time = time
-        self.time_with_event = time[event.squeeze()]
+        exact_times_index = (time_inf == time_sup).squeeze()
+
+        self.time_exact = time_sup[exact_times_index]
+        self.time_inf = time_inf[~exact_times_index]
+        self.time_sup = time_sup[~exact_times_index]
 
         self.entry = entry[(entry > 0).squeeze()]
 
         self.args = args
-        self.args_with_event = tuple(arg[event.squeeze()] for arg in args)
+        self.args_with_time_exact = tuple(arg[exact_times_index] for arg in args)
+        self.args_with_interval_censoring = tuple(
+            arg[~exact_times_index] for arg in args
+        )
         self.args_with_entry = tuple(arg[(entry > 0).squeeze()] for arg in args)
 
-    def _time_contrib(self) -> np.float64:
+    def _interval_censored_contrib(self) -> np.float64:
+        if len(self.time_sup) == 0:
+            return None
         return np.sum(
-            self.model.chf(self.time, *self.args),
+            -np.log(
+                10**-10
+                + self.model.cdf(self.time_sup, *self.args_with_interval_censoring)
+                - self.model.cdf(self.time_inf, *self.args_with_interval_censoring)
+            ),
             dtype=np.float64,
         )
 
     def _event_contrib(self) -> np.float64:
-        if len(self.time_with_event) == 0:
+        if len(self.time_exact == 0):
             return None
         return -np.sum(
-            np.log(self.model.hf(self.time_with_event, *self.args_with_event)),
+            np.log(self.model.pdf(self.time_exact, *self.args_with_time_exact)),
             dtype=np.float64,
         )
 
@@ -109,32 +115,45 @@ class DefaultLikelihood(Likelihood):
             dtype=np.float64,
         )
 
-    def _jac_time_contrib(self) -> NDArray[np.float64]:
-        jac = self.model.jac_chf(
-            self.time,
-            *self.args,
-            asarray=True,
+    def _jac_interval_censored_contrib(self) -> NDArray[np.float64]:
+        if len(self.time_sup) == 0:
+            return None
+
+        jac_interval_censored = (
+            self.model.jac_sf(
+                self.time_sup,
+                *self.args_with_interval_censoring,
+                asarray=True,
+            )
+            - self.model.jac_sf(
+                self.time_inf,
+                *self.args_with_interval_censoring,
+                asarray=True,
+            )
+        ) / (
+            10**-10
+            + self.model.cdf(self.time_sup, *self.args_with_interval_censoring)
+            - self.model.cdf(self.time_inf, *self.args_with_interval_censoring)
         )
 
-        # Sum all contribs
-        # Axis 0 is the parameters
         return np.sum(
-            jac,
-            axis=tuple(range(1, jac.ndim)),
+            jac_interval_censored,
+            axis=tuple(range(1, jac_interval_censored.ndim)),
             dtype=np.float64,
         )
 
     def _jac_event_contrib(self) -> NDArray[np.float64]:
-        if len(self.time_with_event) == 0:
+        if len(self.time_exact == 0):
             return None
-        jac = -self.model.jac_hf(
-            self.time_with_event,
-            *self.args_with_event,
+        jac = -self.model.jac_pdf(
+            self.time_exact,
+            *self.args_with_time_exact,
             asarray=True,
-        ) / self.model.hf(self.time_with_event, *self.args_with_event)
+        ) / self.model.pdf(
+            self.time_exact,
+            *self.args_with_time_exact,
+        )
 
-        # Sum all contribs
-        # Axis 0 is the parameters
         return np.sum(
             jac,
             axis=tuple(range(1, jac.ndim)),
@@ -144,16 +163,13 @@ class DefaultLikelihood(Likelihood):
     def _jac_entry_contrib(self) -> NDArray[np.float64]:
         if len(self.entry) == 0:
             return None
-
-        jac = -self.model.jac_chf(
+        jac = self.model.jac_chf(
             self.entry,  # filter entry==0 to avoid numerical error in jac_chf
             *self.args_with_entry,
             asarray=True,
         )
 
-        # Sum all contribs
-        # Axis 0 is the parameters
-        return np.sum(
+        return -np.sum(
             jac,
             axis=tuple(range(1, jac.ndim)),
             dtype=np.float64,
@@ -166,7 +182,7 @@ class DefaultLikelihood(Likelihood):
         model_params = np.copy(self.model.params)
         self.model.params = params  # changes model params
         contributions = (
-            self._time_contrib(),
+            self._interval_censored_contrib(),
             self._event_contrib(),
             self._entry_contrib(),
         )
@@ -195,7 +211,7 @@ class DefaultLikelihood(Likelihood):
         model_params = np.copy(self.model.params)
         self.model.params = params  # changes model params
         jac_contributions = (
-            self._jac_time_contrib(),
+            self._jac_interval_censored_contrib(),
             self._jac_event_contrib(),
             self._jac_entry_contrib(),
         )

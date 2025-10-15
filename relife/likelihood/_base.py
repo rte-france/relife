@@ -37,7 +37,7 @@ class Likelihood(ABC):
 
 
 L = TypeVar(
-    "L", bound="LikelihoodFromLifetimes"
+    "L", bound=Union["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
 )  # maybe other likelihood in the future
 
 

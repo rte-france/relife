@@ -1,12 +1,12 @@
 import numpy as np
 
 from relife.data import LifetimeData
-from relife.likelihood import DefaultLikelihood
+from relife.likelihood import DefaultLifetimeLikelihood
 
 
 class TestLikelihoodDistribution:
     def test_negative_log(self, distribution, power_transformer_data):
-        likelihood = DefaultLikelihood(
+        likelihood = DefaultLifetimeLikelihood(
             distribution,
             power_transformer_data["time"],
             event=power_transformer_data["event"],
@@ -15,7 +15,7 @@ class TestLikelihoodDistribution:
         assert likelihood.negative_log(distribution.params).shape == ()
 
     def test_jac_negative_log(self, distribution, power_transformer_data):
-        likelihood = DefaultLikelihood(
+        likelihood = DefaultLifetimeLikelihood(
             distribution,
             power_transformer_data["time"],
             event=power_transformer_data["event"],
@@ -34,7 +34,7 @@ class TestLikelihoodRegression:
                 insulator_string_data["pH2SO4"],
             )
         )
-        likelihood = DefaultLikelihood(
+        likelihood = DefaultLifetimeLikelihood(
             regression,
             insulator_string_data["time"],
             covar,
@@ -50,7 +50,7 @@ class TestLikelihoodRegression:
                 insulator_string_data["pH2SO4"],
             )
         )
-        likelihood = DefaultLikelihood(
+        likelihood = DefaultLifetimeLikelihood(
             regression,
             insulator_string_data["time"],
             covar,
