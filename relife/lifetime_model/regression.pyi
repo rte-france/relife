@@ -27,6 +27,9 @@ from ._base import FittableParametricLifetimeModel
 
 __all__ = ["LifetimeRegression", "AcceleratedFailureTime", "ProportionalHazard"]
 
+from .distribution import LifetimeDistribution
+
+
 def _broadcast_time_covar(
     time: _Any_Number, covar: _Any_Number
 ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
@@ -35,58 +38,34 @@ def _broadcast_time_covar_shapes(
     covar_shape: tuple[()] | tuple[int] | tuple[int, int],
 ) -> tuple[()] | tuple[int] | tuple[int, int]: ...
 
-# a FittableParametricLifetimeModel with at least 1 arg (_Any_Real) and 0 or more args (_IntOrFloat)
-class LifetimeRegression(
-    FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]], ABC
-):
+# a FittableParametricLifetimeModel with one covar (_Any_Number)
+class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number], ABC):
     covar_effect: _CovarEffect
-    baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]]
+    baseline: LifetimeDistribution
 
-    def __init__(
-        self,
-        baseline: FittableParametricLifetimeModel[*tuple[_Any_Number, ...]],
-        coefficients: tuple[Optional[float], ...] = (None,),
-    ) -> None: ...
+    def __init__(self, baseline: LifetimeDistribution, coefficients: tuple[Optional[float], ...] = (None,),) -> None: ...
     @property
     def coefficients(self) -> NDArray[np.float64]: ...
     @property
     def nb_coef(self) -> int: ...
     @override
-    def sf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def sf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def pdf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def pdf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def isf(
-        self,
-        probability: _Any_Number,
-        covar: _Any_Number,
-        *args: _Any_Number,
-    ) -> _Any_Numpy_Number: ...
+    def isf(self, probability: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def cdf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def cdf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def ppf(
-        self,
-        probability: _Any_Number,
-        covar: _Any_Number,
-        *args: _Any_Number,
-    ) -> _Any_Numpy_Number: ...
+    def ppf(self, probability: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def mrl(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def mrl(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def mean(self, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def mean(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def var(self, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def var(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def median(self, covar: _Any_Number, *args: _Any_Number) -> _Any_Numpy_Number: ...
+    def median(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
     def ls_integrate(
         self,
@@ -94,7 +73,6 @@ class LifetimeRegression(
         a: _Any_Number,
         b: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         deg: int = 10,
     ) -> _Any_Numpy_Number: ...
     @overload
@@ -102,7 +80,6 @@ class LifetimeRegression(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[False] = False,
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
@@ -110,14 +87,12 @@ class LifetimeRegression(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[True] = True,
     ) -> _Any_Numpy_Number: ...
     def jac_sf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
@@ -125,7 +100,6 @@ class LifetimeRegression(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[False] = False,
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
@@ -133,14 +107,12 @@ class LifetimeRegression(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[True] = True,
     ) -> _Any_Numpy_Number: ...
     def jac_cdf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
@@ -148,7 +120,6 @@ class LifetimeRegression(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[False] = False,
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
@@ -156,14 +127,12 @@ class LifetimeRegression(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[True] = True,
     ) -> _Any_Numpy_Number: ...
     def jac_pdf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
@@ -171,7 +140,6 @@ class LifetimeRegression(
         self,
         size: int,
         covar: _Any_Number,
-        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
@@ -186,7 +154,6 @@ class LifetimeRegression(
         self,
         size: int,
         covar: _Any_Number,
-        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
@@ -201,7 +168,6 @@ class LifetimeRegression(
         self,
         size: int,
         covar: _Any_Number,
-        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
@@ -216,7 +182,6 @@ class LifetimeRegression(
         self,
         size: int,
         covar: _Any_Number,
-        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
@@ -230,7 +195,6 @@ class LifetimeRegression(
         self,
         size: int,
         covar: _Any_Number,
-        *args: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
@@ -250,51 +214,44 @@ class LifetimeRegression(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        *args: _Any_Number,
         event: Optional[NDArray[np.bool_]] = None,
         entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
     ) -> NDArray[np.float64]: ...
     @override
     def fit(
         self,
         time: _NumpyArray_OfNumber,
         covar: _Any_Number,
-        *args: _Any_Number,
         event: Optional[_NumpyArray_OfBool] = None,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
         optimizer_options: Optional[dict[str, Any]] = None,
     ) -> Self: ...
-    def freeze_args(
-        self, covar: _Any_Number, *args: _Any_Number
+    @override
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time: _NumpyArray_OfNumber,
+        covar: _Any_Number,
+        event: Optional[_NumpyArray_OfBool] = None,
+        entry: Optional[_NumpyArray_OfNumber] = None,
+        optimizer_options: Optional[dict[str, Any]] = None,
+    ) -> Self: ...
+    def freeze(
+        self, covar: _Any_Number
     ) -> FrozenParametricModel[
         FittableParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]
     ]: ...
 
 class ProportionalHazard(LifetimeRegression):
-    def hf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
-    def chf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def hf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def chf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: _Any_Number,
-        covar: _Any_Number,
-        *args: _Any_Number,
-    ) -> _Any_Numpy_Number: ...
-    def dhf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def ichf(self, cumulative_hazard_rate: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def dhf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[False] = False,
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
@@ -302,14 +259,12 @@ class ProportionalHazard(LifetimeRegression):
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[True] = True,
     ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
@@ -317,7 +272,6 @@ class ProportionalHazard(LifetimeRegression):
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[False] = False,
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
@@ -325,44 +279,28 @@ class ProportionalHazard(LifetimeRegression):
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[True] = True,
     ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(
-        self, n: int, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def moment(self, n: int, covar: _Any_Number) -> _Any_Numpy_Number: ...
 
 class AcceleratedFailureTime(LifetimeRegression):
-    def hf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
-    def chf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def hf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def chf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: _Any_Number,
-        covar: _Any_Number,
-        *args: _Any_Number,
-    ) -> _Any_Numpy_Number: ...
-    def dhf(
-        self, time: _Any_Number, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def ichf(self, cumulative_hazard_rate: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def dhf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[False] = False,
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
@@ -370,14 +308,12 @@ class AcceleratedFailureTime(LifetimeRegression):
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[True] = True,
     ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
@@ -385,7 +321,6 @@ class AcceleratedFailureTime(LifetimeRegression):
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[False] = False,
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
@@ -393,20 +328,16 @@ class AcceleratedFailureTime(LifetimeRegression):
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: Literal[True] = True,
     ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self,
         time: _Any_Number,
         covar: _Any_Number,
-        *args: _Any_Number,
         asarray: bool = True,
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(
-        self, n: int, covar: _Any_Number, *args: _Any_Number
-    ) -> _Any_Numpy_Number: ...
+    def moment(self, n: int, covar: _Any_Number) -> _Any_Numpy_Number: ...
 
 class _CovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[Optional[None], ...] = (None,)) -> None: ...
@@ -415,12 +346,12 @@ class _CovarEffect(ParametricModel):
     def g(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
     def jac_g(
-        self, covar: _Any_Number, *, asarray: Literal[False] = False
+        self, covar: _Any_Number, asarray: Literal[False] = False
     ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_g(
-        self, covar: _Any_Number, *, asarray: Literal[True] = True
+        self, covar: _Any_Number, asarray: Literal[True] = True
     ) -> _Any_Numpy_Number: ...
     def jac_g(
-        self, covar: _Any_Number, *, asarray: Literal[True] = True
+        self, covar: _Any_Number, asarray: Literal[True] = True
     ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...

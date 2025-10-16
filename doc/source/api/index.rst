@@ -2,7 +2,18 @@ API
 ===
 
 This section provides comprehensive details about the exposed ReLife API.
-ReLife is structured into different modules, each with a clear and specific role. We divided the API documentation close to the same logic.
+ReLife is structured into different modules, each with a clear and specific role.
+We divided the API documentation close to the same logic.
+
+.. currentmodule:: relife
+
+.. autosummary::
+    :toctree: base_class
+    :template: class_template.rst
+    :caption: Base classes
+    :nosignatures:
+
+    ParametricModel
 
 Lifetime models
 ---------------
@@ -12,17 +23,8 @@ Parametric lifetime models
 
 .. currentmodule:: relife.lifetime_model
 
-Lifetime models are objects whose exposed interface can answer basic probility functions of the survival analysis. In
-object-oriented programming, one must not see them as a group of probability functions solely : it also encapsulates
-data like parameters, other nested models, etc.
-
-Lifetime models are imported like this :
-
-.. code-block:: python
-
-    from relife.lifetime_model import <model_constructor>
-
-Here is an exhaustive list of all lifetime model constructors that can be used in Relife :
+Lifetime models are objects that answer to basic probility functions of the survival analysis.
+They are imported from the
 
 .. rubric:: Lifetime distributions
 
@@ -38,20 +40,6 @@ Here is an exhaustive list of all lifetime model constructors that can be used i
     Gamma
     LogLogistic
 
-Here is a quick example that instanciates a ``Weibull`` distribution and computes the survival function.
-
-.. code-block:: python
-
-    >>> import numpy as np
-    >>> from relife.lifetime_model import Weibull
-    >>> weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
-    # sf is np.float64, ie. a scalar
-    >>> sf = weibull.sf(10.)
-    # sf is np.array of shape (2,), 2 points for 1 asset
-    >>> sf_1d = weibull.sf(np.array([10., 20.]))
-    # sf is np.array of (2, 3), 3 points for 2 assets
-    >>> sf_2d = weibull.sf(np.array([[10., 20., 30.], [30., 40., 50.]]))
-
 .. rubric:: Lifetime regression
 
 .. autosummary::
@@ -61,32 +49,6 @@ Here is a quick example that instanciates a ``Weibull`` distribution and compute
 
     ProportionalHazard
     AcceleratedFailureTime
-
-Here is a quick example that instanciates a ``ProportionalHazard`` regression from the same ``Weibull`` distribution (see above).
-The regression has 3 coefficients.
-
-.. code-block:: python
-
-    >>> import numpy as np
-    >>> from relife.lifetime_model import Weibull
-    >>> from relife.lifetime_model import ProportionalHazard
-
-    >>> weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
-    # 3 coefficients
-    >>> regression = ProportionalHazard(weibull, coefficients=(0.2, 0.01, 0.4))
-
-    # 1 value per covar
-    >>> covar = np.array([3., 59., 9.3])
-    # sf is np.float64, ie. a scalar
-    >>> sf = regression.sf(10., covar)
-
-    # 2 values per covar, meaning two assets
-    >>> covar_2d = np.array([[3., 59., 9.3], [2., 64., 5.6]])
-    # sf is np.array of shape (2, 1), 1 point for 2 assets
-    >>> sf_2d = regression.sf(10., covar_2d)
-
-Note that the example above uses Numpy broadcasting. It is a core functionnality of ReLife. For more explanations and pratical
-examples about broadcasting in ReLife, please read Broadcasting in ReLife.
 
 .. rubric:: Conditional lifetime models
 
@@ -98,16 +60,14 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.
     LeftTruncatedModel
     AgeReplacementModel
 
-.. code-block:: python
+.. rubric:: Base class
 
-    >>> import numpy as np
-    >>> from relife.lifetime_model import LeftTruncatedModel, Weibull
-    >>> from relife.lifetime_model import ProportionalHazard
+.. autosummary::
+    :toctree: base_class
+    :template: class_template.rst
+    :nosignatures:
 
-    >>> left_truncated_weibull = LeftTruncated(Weibull(3.47, 0.01))
-
-    # sf is np.float64, ie. a scalar
-    >>> sf = left_truncated_weibull.sf(10., a0=20.)
+    ParametricLifetimeModel
 
 Non parametric lifetime models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,23 +81,6 @@ Non parametric lifetime models
     KaplanMeier
     NelsonAalen
     ECDF
-    Turnbull
-
-Frozen models
--------------
-
-.. rubric:: Frozen parametric lifetime models
-
-Frozen lifetime models share the same properties as lifetime models, but any additional arguments to time are frozen.
-This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
-These models are important in ReLife because other objects expect frozen-like lifetime models.
-It is specifically the case of policy objects. To freeze a lifetime model, just call ``.freeze_args(*args)`` on the model instance where ``*args`` are
-additional arguments required by the model.
-
-.. note::
-
-    ``LifetimeDistribution`` objects can't be frozen as time is the only variable.
-
 
 Stochastic processes
 --------------------
@@ -159,9 +102,6 @@ Maintenance policies
 
 .. currentmodule:: relife.policy
 
-These are the prefered functions to instanciate a maintenance policy object. There are basic factories that parse
-the given model type and cost stucture and return the corresponding maintenance policy object.
-
 .. autosummary::
     :toctree: policy
     :caption: Maintenance policies
@@ -170,9 +110,6 @@ the given model type and cost stucture and return the corresponding maintenance 
 
     age_replacement_policy
     run_to_failure_policy
-
-These are the lower-level constructors of each maintenance policies implemented in ReLife. You can use them in addition
-to the above functions.
 
 .. autosummary::
     :toctree: policy

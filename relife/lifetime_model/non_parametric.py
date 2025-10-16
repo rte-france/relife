@@ -1,41 +1,29 @@
-from typing import Literal, Optional, Self, overload
-
 import numpy as np
-from numpy.typing import NDArray
 
-from ._base import NonParametricLifetimeModel
 from ._plot import (
     PlotECDF,
     PlotKaplanMeier,
     PlotNelsonAalen,
-    PlotTurnbull,
 )
 
 
-class ECDF(NonParametricLifetimeModel):
+class ECDF:
     """
     Empirical Cumulative Distribution Function.
     """
 
     def __init__(self):
-        self._sf: Optional[NDArray[np.void]] = None
-        self._cdf: Optional[NDArray[np.void]] = None
+        self._sf = None
+        self._cdf = None
 
-    def fit(
-        self,
-        time: NDArray[np.float64],
-    ) -> Self:
+    def fit(self, time):
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
+        time : ndarray
             Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
         """
         timeline, counts = np.unique(time, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
@@ -56,24 +44,7 @@ class ECDF(NonParametricLifetimeModel):
         self._cdf["se"] = se
         return self
 
-    @overload
-    def sf(
-        self, se: Literal[False] = False
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
-
-    @overload
-    def sf(
-        self, se: Literal[True] = True
-    ) -> Optional[
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-    ]: ...
-
-    def sf(
-        self, se: bool = False
-    ) -> (
-        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
-        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
-    ):
+    def sf(self, se = False):
         """
         The survival functions estimated values
 
@@ -93,24 +64,7 @@ class ECDF(NonParametricLifetimeModel):
             return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
         return self._sf["timeline"], self._sf["estimation"]
 
-    @overload
-    def cdf(
-        self, se: Literal[False] = False
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
-
-    @overload
-    def cdf(
-        self, se: Literal[True] = True
-    ) -> Optional[
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-    ]: ...
-
-    def cdf(
-        self, se: bool = False
-    ) -> (
-        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
-        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
-    ):
+    def cdf(self, se = False):
         """
         The cumulative distribution function estimated values
 
@@ -131,11 +85,11 @@ class ECDF(NonParametricLifetimeModel):
         return self._cdf["timeline"], self._cdf["estimation"]
 
     @property
-    def plot(self) -> PlotECDF:
+    def plot(self):
         return PlotECDF(self)
 
 
-class KaplanMeier(NonParametricLifetimeModel):
+class KaplanMeier:
     r"""Kaplan-Meier estimator.
 
     Compute the non-parametric Kaplan-Meier estimator (also known as the product
@@ -174,20 +128,15 @@ class KaplanMeier(NonParametricLifetimeModel):
     """
 
     def __init__(self):
-        self._sf: Optional[np.void] = None
+        self._sf = None
 
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        event: Optional[NDArray[np.float64]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-    ):
+    def fit(self, time, event = None, entry = None):
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
+        time : ndarray
             Observed lifetime values.
         event : ndarray of boolean values (1d), default is None
             Boolean indicators tagging lifetime values as right censored or complete.
@@ -222,24 +171,7 @@ class KaplanMeier(NonParametricLifetimeModel):
         self._sf["estimation"] = np.insert(sf, 0, 1)
         self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
 
-    @overload
-    def sf(
-        self, se: Literal[False] = False
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
-
-    @overload
-    def sf(
-        self, se: Literal[True] = True
-    ) -> Optional[
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-    ]: ...
-
-    def sf(
-        self, se: bool = False
-    ) -> (
-        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
-        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
-    ):
+    def sf(self, se = False):
         """
         The survival function estimation
 
@@ -260,11 +192,11 @@ class KaplanMeier(NonParametricLifetimeModel):
         return self._sf["timeline"], self._sf["estimation"]
 
     @property
-    def plot(self) -> PlotKaplanMeier:
+    def plot(self):
         return PlotKaplanMeier(self)
 
 
-class NelsonAalen(NonParametricLifetimeModel):
+class NelsonAalen:
     r"""Nelson-Aalen estimator.
 
     Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
@@ -303,20 +235,15 @@ class NelsonAalen(NonParametricLifetimeModel):
     """
 
     def __init__(self):
-        self._chf: Optional[np.void] = None
+        self._chf = None
 
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        event: Optional[NDArray[np.float64]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-    ):
+    def fit(self, time, event = None, entry = None):
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
+        time : ndarray
             Observed lifetime values.
         event : ndarray of boolean values (1d), default is None
             Boolean indicators tagging lifetime values as right censored or complete.
@@ -351,24 +278,7 @@ class NelsonAalen(NonParametricLifetimeModel):
         self._chf["estimation"] = np.insert(chf, 0, 0)
         self._chf["se"] = np.insert(np.sqrt(var), 0, 0)
 
-    @overload
-    def chf(
-        self, se: Literal[False] = False
-    ) -> Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]: ...
-
-    @overload
-    def chf(
-        self, se: Literal[True] = True
-    ) -> Optional[
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-    ]: ...
-
-    def chf(
-        self, se: bool = False
-    ) -> (
-        Optional[tuple[NDArray[np.float64], NDArray[np.float64]]]
-        | Optional[tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]
-    ):
+    def chf(self, se = False):
         """
         The cumulative hazard function estimation
 
@@ -389,7 +299,7 @@ class NelsonAalen(NonParametricLifetimeModel):
         return self._chf["timeline"], self._chf["estimation"]
 
     @property
-    def plot(self) -> PlotNelsonAalen:
+    def plot(self):
         return PlotNelsonAalen(self)
 
 

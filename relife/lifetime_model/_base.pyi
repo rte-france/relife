@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Generic, Literal, Optional, Self, Union, overload
+from typing import Any, Callable, Generic, Literal, Optional, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -13,7 +13,7 @@ from relife._typing import (
     _NumpyArray_OfBool,
     _NumpyArray_OfNumber,
 )
-from relife.base import FrozenParametricModel, ParametricModel
+from relife.base import ParametricModel
 from relife.likelihood import FittingResults
 
 from ._plot import PlotParametricLifetimeModel
@@ -21,8 +21,6 @@ from ._plot import PlotParametricLifetimeModel
 __all__ = [
     "ParametricLifetimeModel",
     "FittableParametricLifetimeModel",
-    "NonParametricLifetimeModel",
-    "is_lifetime_model",
 ]
 
 class ParametricLifetimeModel(ParametricModel, ABC, Generic[*_Any_Number_Ts]):
@@ -233,7 +231,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Any_Number_Ts], 
         *args: *_Any_Number_Ts,
         event: Optional[_NumpyArray_OfBool] = None,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
     ) -> NDArray[np.float64]: ...
     def fit(
         self,
@@ -241,16 +238,13 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*_Any_Number_Ts], 
         *args: *_Any_Number_Ts,
         event: Optional[_NumpyArray_OfBool] = None,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
         optimizer_options: Optional[dict[str, Any]] = None,
     ) -> None: ...
-
-class NonParametricLifetimeModel(ABC):
-    @abstractmethod
-    def fit(
+    def fit_from_interval_censored_lifetimes(
         self,
-        time: _Any_Numpy_Number,
-        event: Optional[_NumpyArray_OfBool] = None,
+        time_inf: _NumpyArray_OfNumber,
+        time_sup: _NumpyArray_OfNumber,
+        *args: *_Any_Number_Ts,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
-    ) -> Self: ...
+        optimizer_options: Optional[dict[str, Any]] = None,
+    ) -> None: ...

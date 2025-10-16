@@ -196,7 +196,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         time: _NumpyArray_OfNumber,
         event: Optional[_NumpyArray_OfBool] = None,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
     ) -> NDArray[np.float64]: ...
     def _get_params_bounds(self) -> Bounds: ...
     @override
@@ -205,7 +204,14 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         time: _NumpyArray_OfNumber,
         event: Optional[_NumpyArray_OfBool] = None,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
+        optimizer_options: Optional[dict[str, Any]] = None,
+    ) -> Self: ...
+    @override
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time_inf: _NumpyArray_OfNumber,
+        time_sup: _NumpyArray_OfNumber,
+        entry: Optional[_NumpyArray_OfNumber] = None,
         optimizer_options: Optional[dict[str, Any]] = None,
     ) -> Self: ...
 
@@ -579,7 +585,6 @@ class MinimumDistribution(
         *args: _Any_Number,
         event: Optional[_NumpyArray_OfBool] = None,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
     ) -> NDArray[np.float64]: ...
     def _get_params_bounds(self) -> Bounds: ...
     @override
@@ -590,6 +595,15 @@ class MinimumDistribution(
         *args: _Any_Number,
         event: Optional[_NumpyArray_OfBool] = None,
         entry: Optional[_NumpyArray_OfNumber] = None,
-        departure: Optional[_NumpyArray_OfNumber] = None,
+        optimizer_options: Optional[dict[str, Any]] = None,
+    ) -> Self: ...
+    @override
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time_inf: _NumpyArray_OfNumber,
+        time_sup: _NumpyArray_OfNumber,
+        n: _Any_Integer,
+        *args: _Any_Number,
+        entry: Optional[_NumpyArray_OfNumber] = None,
         optimizer_options: Optional[dict[str, Any]] = None,
     ) -> Self: ...

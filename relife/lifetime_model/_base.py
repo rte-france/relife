@@ -8,20 +8,14 @@ from relife.utils.quadrature import (
     unweighted_laguerre_quadrature
 )
 from relife.base import ParametricModel
-from relife.likelihood.default_lifetime_likelihood import (
-    DefaultLifetimeLikelihood,
-)
-from relife.likelihood.interval_lifetime_likelihood import (
-    IntervalLifetimeLikelihood,
-)
-
+from relife.likelihood import DefaultLifetimeLikelihood
+from ..likelihood import IntervalLifetimeLikelihood
 
 from ._plot import PlotParametricLifetimeModel
 
 __all__ = [
     "ParametricLifetimeModel",
     "FittableParametricLifetimeModel",
-    "NonParametricLifetimeModel",
 ]
 
 
@@ -267,9 +261,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.fitting_results = None
 
     @abstractmethod
-    def _get_initial_params(
-        self, time, *args, event=None, entry=None, departure=None
-    ): ...
+    def _get_initial_params(self, time, *args, event=None, entry=None): ...
 
     @abstractmethod
     def _get_params_bounds(self):
@@ -314,7 +306,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.fitting_results = fitting_results
         return self
 
-    def fit_from_interval_censored_data(
+    def fit_from_interval_censored_lifetimes(
         self,
         time_inf,
         time_sup,
@@ -334,13 +326,3 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
-
-
-class NonParametricLifetimeModel(ABC):
-    @abstractmethod
-    def fit(self, time, event=None, entry=None): ...
-
-    @abstractmethod
-    def fit_interval_censored_data(
-        self, time_inf, time_sup, *args, entry=None, **optimizer_options
-    ): ...
