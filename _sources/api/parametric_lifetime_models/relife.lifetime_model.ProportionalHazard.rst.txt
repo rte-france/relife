@@ -34,10 +34,10 @@ ProportionalHazard
             ~ProportionalHazard.fit
         
         
-            ~ProportionalHazard.fit_from_interval_censored_data
+            ~ProportionalHazard.fit_from_interval_censored_lifetimes
         
         
-            ~ProportionalHazard.freeze_args
+            ~ProportionalHazard.freeze
         
         
             ~ProportionalHazard.hf

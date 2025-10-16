@@ -383,6 +383,9 @@
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -434,7 +437,6 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -559,7 +561,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.fit" title="relife.lifetime_model.Gamma.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
 <td><p>Estimation of the distribution parameters from lifetime data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_data</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_lifetimes</span></code></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.hf" title="relife.lifetime_model.Gamma.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
@@ -684,7 +686,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Gamma.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Gamma.fit" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Gamma.fit" title="Link to this definition">#</a></dt>
 <dd><p>Estimation of the distribution parameters from lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -695,7 +697,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>entry</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
 </dd>
-<dt><strong>**options</strong></dt><dd><dl class="simple">
+<dt><strong>optimizer_options</strong><span class="classifier">dict, default is None</span></dt><dd><dl class="simple">
 <dt>Extra arguments used by <cite>scipy.minimize</cite>. Default values are:</dt><dd><ul class="simple">
 <li><p><cite>method</cite> : <cite>“L-BFGS-B”</cite></p></li>
 <li><p><cite>contraints</cite> : <cite>()</cite></p></li>

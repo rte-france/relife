@@ -28,9 +28,6 @@ ECDF
             ~ECDF.fit
         
         
-            ~ECDF.fit_interval_censored_data
-        
-        
             ~ECDF.sf
         
     

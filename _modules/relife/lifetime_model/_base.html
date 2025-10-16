@@ -421,20 +421,14 @@
     <span class="n">unweighted_laguerre_quadrature</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood.default_lifetime_likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DefaultLifetimeLikelihood</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood.interval_lifetime_likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">IntervalLifetimeLikelihood</span><span class="p">,</span>
-<span class="p">)</span>
-
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultLifetimeLikelihood</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntervalLifetimeLikelihood</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">._plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotParametricLifetimeModel</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;ParametricLifetimeModel&quot;</span><span class="p">,</span>
     <span class="s2">&quot;FittableParametricLifetimeModel&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;NonParametricLifetimeModel&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -683,9 +677,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_initial_params</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_initial_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="o">...</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_params_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -730,7 +722,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">fitting_results</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit_from_interval_censored_data</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_from_interval_censored_lifetimes</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_inf</span><span class="p">,</span>
         <span class="n">time_sup</span><span class="p">,</span>
@@ -750,19 +742,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">fitting_results</span><span class="o">.</span><span class="n">optimal_params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">fitting_results</span>
         <span class="k">return</span> <span class="bp">self</span>
-
-
-<div class="viewcode-block" id="NonParametricLifetimeModel">
-<a class="viewcode-back" href="../../../api/base_class/relife.lifetime_model.NonParametricLifetimeModel.html#relife.lifetime_model.NonParametricLifetimeModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">NonParametricLifetimeModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="o">...</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit_interval_censored_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">optimizer_options</span>
-    <span class="p">):</span> <span class="o">...</span></div>
-
 </pre></div>
 
                 </article>

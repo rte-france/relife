@@ -383,6 +383,9 @@
 <li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -434,7 +437,6 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -495,19 +497,19 @@
   <section id="api">
 <h1>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h1>
 <p>This section provides comprehensive details about the exposed ReLife API.
-ReLife is structured into different modules, each with a clear and specific role. We divided the API documentation close to the same logic.</p>
+ReLife is structured into different modules, each with a clear and specific role.
+We divided the API documentation close to the same logic.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+</tbody>
+</table>
+</div>
 <section id="lifetime-models">
 <h2>Lifetime models<a class="headerlink" href="#lifetime-models" title="Link to this heading">#</a></h2>
 <section id="parametric-lifetime-models">
 <h3>Parametric lifetime models<a class="headerlink" href="#parametric-lifetime-models" title="Link to this heading">#</a></h3>
-<p>Lifetime models are objects whose exposed interface can answer basic probility functions of the survival analysis. In
-object-oriented programming, one must not see them as a group of probability functions solely : it also encapsulates
-data like parameters, other nested models, etc.</p>
-<p>Lifetime models are imported like this :</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="o">&lt;</span><span class="n">model_constructor</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p>Here is an exhaustive list of all lifetime model constructors that can be used in Relife :</p>
+<p>Lifetime models are objects that answer to basic probility functions of the survival analysis.
+They are imported from the</p>
 <p class="rubric">Lifetime distributions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
@@ -529,18 +531,6 @@ data like parameters, other nested models, etc.</p>
 </tbody>
 </table>
 </div>
-<p>Here is a quick example that instanciates a <code class="docutils literal notranslate"><span class="pre">Weibull</span></code> distribution and computes the survival function.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span> <span class="c1"># shape = 3.47, rate = 0.01</span>
-<span class="go"># sf is np.float64, ie. a scalar</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">)</span>
-<span class="go"># sf is np.array of shape (2,), 2 points for 1 asset</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sf_1d</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">]))</span>
-<span class="go"># sf is np.array of (2, 3), 3 points for 2 assets</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sf_2d</span> <span class="o">=</span> <span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">,</span> <span class="mf">30.</span><span class="p">],</span> <span class="p">[</span><span class="mf">30.</span><span class="p">,</span> <span class="mf">40.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">]]))</span>
-</pre></div>
-</div>
 <p class="rubric">Lifetime regression</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
@@ -553,29 +543,6 @@ data like parameters, other nested models, etc.</p>
 </tbody>
 </table>
 </div>
-<p>Here is a quick example that instanciates a <code class="docutils literal notranslate"><span class="pre">ProportionalHazard</span></code> regression from the same <code class="docutils literal notranslate"><span class="pre">Weibull</span></code> distribution (see above).
-The regression has 3 coefficients.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProportionalHazard</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span> <span class="c1"># shape = 3.47, rate = 0.01</span>
-<span class="go"># 3 coefficients</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">regression</span> <span class="o">=</span> <span class="n">ProportionalHazard</span><span class="p">(</span><span class="n">weibull</span><span class="p">,</span> <span class="n">coefficients</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">))</span>
-
-<span class="go"># 1 value per covar</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">59.</span><span class="p">,</span> <span class="mf">9.3</span><span class="p">])</span>
-<span class="go"># sf is np.float64, ie. a scalar</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
-
-<span class="go"># 2 values per covar, meaning two assets</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">covar_2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">59.</span><span class="p">,</span> <span class="mf">9.3</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">64.</span><span class="p">,</span> <span class="mf">5.6</span><span class="p">]])</span>
-<span class="go"># sf is np.array of shape (2, 1), 1 point for 2 assets</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sf_2d</span> <span class="o">=</span> <span class="n">regression</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">covar_2d</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Note that the example above uses Numpy broadcasting. It is a core functionnality of ReLife. For more explanations and pratical
-examples about broadcasting in ReLife, please read Broadcasting in ReLife.</p>
 <p class="rubric">Conditional lifetime models</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
@@ -588,15 +555,14 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.</p>
 </tbody>
 </table>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span><span class="p">,</span> <span class="n">Weibull</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProportionalHazard</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">left_truncated_weibull</span> <span class="o">=</span> <span class="n">LeftTruncated</span><span class="p">(</span><span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">))</span>
-
-<span class="go"># sf is np.float64, ie. a scalar</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">left_truncated_weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="mf">20.</span><span class="p">)</span>
-</pre></div>
+<p class="rubric">Base class</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="base_class/relife.lifetime_model.ParametricLifetimeModel.html#relife.lifetime_model.ParametricLifetimeModel" title="relife.lifetime_model.ParametricLifetimeModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricLifetimeModel</span></code></a></p></td>
+<td><p>Base class for lifetime model.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
 <section id="non-parametric-lifetime-models">
@@ -617,19 +583,6 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.</p>
 </div>
 </section>
 </section>
-<section id="frozen-models">
-<h2>Frozen models<a class="headerlink" href="#frozen-models" title="Link to this heading">#</a></h2>
-<p class="rubric">Frozen parametric lifetime models</p>
-<p>Frozen lifetime models share the same properties as lifetime models, but any additional arguments to time are frozen.
-This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
-These models are important in ReLife because other objects expect frozen-like lifetime models.
-It is specifically the case of policy objects. To freeze a lifetime model, just call <code class="docutils literal notranslate"><span class="pre">.freeze_args(*args)</span></code> on the model instance where <code class="docutils literal notranslate"><span class="pre">*args</span></code> are
-additional arguments required by the model.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">LifetimeDistribution</span></code> objects can’t be frozen as time is the only variable.</p>
-</div>
-</section>
 <section id="stochastic-processes">
 <h2>Stochastic processes<a class="headerlink" href="#stochastic-processes" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
@@ -649,8 +602,6 @@ additional arguments required by the model.</p>
 </section>
 <section id="maintenance-policies">
 <h2>Maintenance policies<a class="headerlink" href="#maintenance-policies" title="Link to this heading">#</a></h2>
-<p>These are the prefered functions to instanciate a maintenance policy object. There are basic factories that parse
-the given model type and cost stucture and return the corresponding maintenance policy object.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="policy/relife.policy.age_replacement_policy.html#relife.policy.age_replacement_policy" title="relife.policy.age_replacement_policy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">age_replacement_policy</span></code></a></p></td>
@@ -662,8 +613,6 @@ the given model type and cost stucture and return the corresponding maintenance 
 </tbody>
 </table>
 </div>
-<p>These are the lower-level constructors of each maintenance policies implemented in ReLife. You can use them in addition
-to the above functions.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy" title="relife.policy.AgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgeReplacementPolicy</span></code></a></p></td>
@@ -767,9 +716,6 @@ Otherwise, you can skip this part of the API. It presents base constructors for 
 <tr class="row-odd"><td><p><a class="reference internal" href="base_class/relife.lifetime_model.ParametricLifetimeModel.html#relife.lifetime_model.ParametricLifetimeModel" title="relife.lifetime_model.ParametricLifetimeModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricLifetimeModel</span></code></a></p></td>
 <td><p>Base class for lifetime model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="base_class/relife.lifetime_model.NonParametricLifetimeModel.html#relife.lifetime_model.NonParametricLifetimeModel" title="relife.lifetime_model.NonParametricLifetimeModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NonParametricLifetimeModel</span></code></a></p></td>
-<td><p></p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -806,7 +752,6 @@ Otherwise, you can skip this part of the API. It presents base constructors for 
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-parametric-lifetime-models">Non parametric lifetime models</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#frozen-models">Frozen models</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stochastic-processes">Stochastic processes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-policies">Maintenance policies</a><ul class="nav section-nav flex-column">
 </ul>

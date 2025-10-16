@@ -445,7 +445,6 @@
             <span class="p">)</span>
     <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span>
 
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time_shape</span><span class="p">,</span> <span class="n">covar_shape</span><span class="p">):</span>
     <span class="c1"># time_shape : (), (n,) or (m, n)</span>
     <span class="c1"># covar_shape : (), (nb_coef,) or (m, nb_coef)</span>
@@ -517,7 +516,7 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">g</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Jacobian of the covariates effect.</span>
 <span class="sd">        If covar.shape : () or (nb_coef,) =&gt; out.shape : (nb_coef,)</span>
@@ -535,13 +534,7 @@
 
 <span class="k">class</span><span class="w"> </span><span class="nc">LifetimeRegression</span><span class="p">(</span><span class="n">FittableParametricLifetimeModel</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for regression model.</span>
-
-<span class="sd">    At least one positional covar arg and 0 or more additional args (variable number)</span>
-<span class="sd">    see : https://peps.python.org/pep-0646/#unpacking-unbounded-tuple-types*</span>
-
-<span class="sd">    Note:</span>
-<span class="sd">    LifetimeRegression does not preserve generic : at the moment, additional args are supposed to be always float | NDArray[np.float64]</span>
+<span class="sd">    Base class for lifetime regression.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">coefficients</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,)):</span>
@@ -551,7 +544,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the coefficients values of the covariate effect.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Coefficients of the regression.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -561,7 +554,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">nb_coef</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of coefficients.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of coefficients.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -569,7 +562,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">nb_params</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The survival function.</span>
 
@@ -581,17 +574,15 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">isf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The inverse survival function.</span>
 
@@ -603,8 +594,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -612,9 +601,9 @@
 <span class="sd">            Function values at each given probability value(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cumulative_hazard_rate</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">probability</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>  <span class="c1"># avoid division by zero</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative density function.</span>
 
@@ -626,17 +615,15 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The probility density function.</span>
 
@@ -648,17 +635,15 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The percent point function.</span>
 
@@ -670,17 +655,15 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given probability value(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span><span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The mean residual life.</span>
 
@@ -692,17 +675,15 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mrl</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mrl</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">ls_integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ls_integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Lebesgue-Stieltjes integration.</span>
 
@@ -717,8 +698,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        deg : int, default 10</span>
 <span class="sd">            Degree of the polynomials interpolation</span>
 
@@ -727,9 +706,9 @@
 <span class="sd">        np.ndarray</span>
 <span class="sd">            Lebesgue-Stieltjes integral of func from `a` to `b`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        n-th order moment</span>
 
@@ -740,16 +719,14 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">moment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The mean.</span>
 
@@ -758,16 +735,14 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The variance.</span>
 
@@ -776,16 +751,14 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The median.</span>
 
@@ -794,20 +767,17 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">,</span>
         <span class="n">covar</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -821,8 +791,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        asarray : bool, default is False</span>
 
 <span class="sd">        Returns</span>
@@ -833,14 +801,12 @@
 <span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
 <span class="sd">            tuple when ``asarray`` is False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">jac</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span>
-        <span class="p">)</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The jacobian of the cumulative density function.</span>
 
@@ -852,8 +818,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        asarray : bool, default is False</span>
 
 <span class="sd">        Returns</span>
@@ -864,12 +828,12 @@
 <span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
 <span class="sd">            tuple when ``asarray`` is False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">jac</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">jac_sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">jac_sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The jacobian of the probability density function.</span>
 
@@ -881,8 +845,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        asarray : bool, default is False</span>
 
 <span class="sd">        Returns</span>
@@ -893,9 +855,9 @@
 <span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
 <span class="sd">            tuple when ``asarray`` is False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span>
-        <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span> <span class="n">covar</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span>
@@ -904,7 +866,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">covar</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -920,8 +881,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        nb_assets : int, optional</span>
 <span class="sd">            If nb_assets is not None, 2d arrays of samples are generated.</span>
 <span class="sd">        return_event : bool, default is False</span>
@@ -939,7 +898,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="p">,</span>
-            <span class="o">*</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+            <span class="n">covar</span><span class="p">,</span>
             <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span>
             <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span>
@@ -947,14 +906,14 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_initial_params</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">_CovarEffect</span><span class="p">(</span>
-            <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># TODO : np.asarray(covar).shape</span>
+            <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">)</span>  <span class="c1"># changes params structure depending on number of covar</span>
         <span class="n">param0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="n">param0</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">_get_initial_params</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">departure</span><span class="o">=</span><span class="kc">None</span>
+            <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="kc">None</span>
         <span class="p">)</span>  <span class="c1"># recursion in case of PPH(AFT(...))</span>
         <span class="k">return</span> <span class="n">param0</span>
 
@@ -979,7 +938,7 @@
         <span class="n">covar</span><span class="p">,</span>
         <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">optimizer_options</span><span class="p">,</span>
+        <span class="n">optimizer_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimation of the regression parameters from lifetime data.</span>
@@ -995,7 +954,7 @@
 <span class="sd">            Boolean indicators tagging lifetime values as right censored or complete.</span>
 <span class="sd">        entry : ndarray of float (1d), default is None</span>
 <span class="sd">            Left truncations applied to lifetime values.</span>
-<span class="sd">        **options</span>
+<span class="sd">        optimizer_options</span>
 <span class="sd">            Extra arguments used by `scipy.minimize`. Default values are:</span>
 <span class="sd">                - `method` : `&quot;L-BFGS-B&quot;`</span>
 <span class="sd">                - `contraints` : `()`</span>
@@ -1016,37 +975,35 @@
 <span class="sd">        format that allows to pass other information as left-censored or interval-censored values. In this case,</span>
 <span class="sd">        `event` is not needed as 2d-array encodes right-censored values by itself.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">optimizer_options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit_from_interval_censored_data</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_from_interval_censored_lifetimes</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time_inf</span><span class="p">,</span>
         <span class="n">time_sup</span><span class="p">,</span>
         <span class="n">covar</span><span class="p">,</span>
         <span class="n">entry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">optimizer_options</span><span class="p">,</span>
+        <span class="n">optimizer_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_from_interval_censored_data</span><span class="p">(</span>
-            <span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">optimizer_options</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_from_interval_censored_lifetimes</span><span class="p">(</span>
+            <span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">freeze_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Freeze regression covar and other arguments into the object data.</span>
+<span class="sd">        Freeze regression covar.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        FrozenParametricModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ProportionalHazard">
@@ -1104,7 +1061,7 @@
 
 <div class="viewcode-block" id="ProportionalHazard.hf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.hf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The hazard function.</span>
 
@@ -1116,20 +1073,18 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ProportionalHazard.chf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.chf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative hazard function.</span>
 
@@ -1141,20 +1096,18 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ProportionalHazard.ichf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.ichf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inverse cumulative hazard function.</span>
 
@@ -1167,22 +1120,18 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given cumulative hazard rate(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span>
-            <span class="n">cumulative_hazard_rate</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="ProportionalHazard.dhf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.dhf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The derivative of the hazard function.</span>
 
@@ -1194,20 +1143,18 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.float64 or np.ndarray</span>
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ProportionalHazard.jac_hf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_hf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The jacobian of the hazard function.</span>
 
@@ -1219,8 +1166,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        asarray : bool, default is False</span>
 
 <span class="sd">        Returns</span>
@@ -1242,9 +1187,9 @@
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">jac_g</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, 1)</span>
 
-        <span class="n">baseline_hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
+        <span class="n">baseline_hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
         <span class="c1"># p == baseline.nb_params</span>
-        <span class="n">baseline_jac_hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
+        <span class="n">baseline_jac_hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
             <span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_hf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
         <span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
@@ -1265,7 +1210,7 @@
 
 <div class="viewcode-block" id="ProportionalHazard.jac_chf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_chf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The jacobian of the cumulative hazard function.</span>
 
@@ -1277,8 +1222,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        asarray : bool, default is False</span>
 
 <span class="sd">        Returns</span>
@@ -1299,9 +1242,9 @@
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">jac_g</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, 1)</span>
-        <span class="n">baseline_chf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
+        <span class="n">baseline_chf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
         <span class="c1">#  p == baseline.nb_params</span>
-        <span class="n">baseline_jac_chf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
+        <span class="n">baseline_jac_chf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
             <span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_chf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
         <span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
@@ -1377,7 +1320,7 @@
 
 <div class="viewcode-block" id="AcceleratedFailureTime.hf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.hf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The hazard function.</span>
 
@@ -1389,8 +1332,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1398,12 +1339,12 @@
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime.chf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.chf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative hazard function.</span>
 
@@ -1415,8 +1356,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1424,12 +1363,12 @@
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime.ichf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.ichf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inverse cumulative hazard function.</span>
 
@@ -1442,8 +1381,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1451,13 +1388,13 @@
 <span class="sd">            Function values at each given cumulative hazard rate(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span>
-            <span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span>
+            <span class="n">cumulative_hazard_rate</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime.dhf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.dhf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The derivative of the hazard function.</span>
 
@@ -1469,8 +1406,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1478,12 +1413,12 @@
 <span class="sd">            Function values at each given time(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
 
 
 <div class="viewcode-block" id="AcceleratedFailureTime.jac_hf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_hf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The jacobian of the hazard function.</span>
 
@@ -1495,8 +1430,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        asarray : bool, default is False</span>
 
 <span class="sd">        Returns</span>
@@ -1518,9 +1451,9 @@
         <span class="n">jac_g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">jac_g</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, 1)</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="n">g</span>  <span class="c1"># (m, n)</span>
         <span class="c1"># p == baseline.nb_params</span>
-        <span class="n">baseline_jac_hf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
-        <span class="n">baseline_hf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
-        <span class="n">baseline_dhf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
+        <span class="n">baseline_jac_hf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
+        <span class="n">baseline_hf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
+        <span class="n">baseline_dhf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_hf_t0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, n)</span>
 
         <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
@@ -1543,7 +1476,7 @@
 
 <div class="viewcode-block" id="AcceleratedFailureTime.jac_chf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_chf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The jacobian of the cumulative hazard function.</span>
 
@@ -1555,8 +1488,6 @@
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
 <span class="sd">        asarray : bool, default is False</span>
 
 <span class="sd">        Returns</span>
@@ -1580,9 +1511,9 @@
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="n">g</span>  <span class="c1">#  (m, n)</span>
         <span class="c1"># p == baseline.nb_params</span>
         <span class="n">baseline_jac_chf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span>
-            <span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span>
+            <span class="n">t0</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>  <span class="c1"># (p, m, n)</span>
-        <span class="n">baseline_hf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1">#  (m, n)</span>
+        <span class="n">baseline_hf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>  <span class="c1">#  (m, n)</span>
         <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
             <span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_hf_t0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
         <span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>

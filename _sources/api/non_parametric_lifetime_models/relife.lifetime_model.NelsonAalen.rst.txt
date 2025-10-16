@@ -27,7 +27,4 @@ NelsonAalen
         
             ~NelsonAalen.fit
         
-        
-            ~NelsonAalen.fit_interval_censored_data
-        
     

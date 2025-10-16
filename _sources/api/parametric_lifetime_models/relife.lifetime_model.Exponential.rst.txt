@@ -34,7 +34,7 @@ Exponential
             ~Exponential.fit
         
         
-            ~Exponential.fit_from_interval_censored_data
+            ~Exponential.fit_from_interval_censored_lifetimes
         
         
             ~Exponential.hf

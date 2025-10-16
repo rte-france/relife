@@ -383,6 +383,9 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -434,7 +437,6 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -536,7 +538,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.chf" title="relife.lifetime_model.LeftTruncatedModel.chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></a></p></td>
 <td><p>The cumulative hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.freeze_args" title="relife.lifetime_model.LeftTruncatedModel.freeze_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze_args</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.freeze" title="relife.lifetime_model.LeftTruncatedModel.freeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></a></p></td>
 <td><p>Freeze conditional age values and other arguments into the object data.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.LeftTruncatedModel.hf" title="relife.lifetime_model.LeftTruncatedModel.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
@@ -634,8 +636,8 @@ as only one age per asset can be given</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.freeze_args">
-<span class="sig-name descname"><span class="pre">freeze_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.freeze_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.freeze_args" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.freeze">
+<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.freeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.freeze" title="Link to this definition">#</a></dt>
 <dd><p>Freeze conditional age values and other arguments into the object data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1076,7 +1078,7 @@ as only one age per asset can be given</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.cdf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.cdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.chf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.chf()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.freeze_args"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.freeze_args()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.freeze"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.freeze()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.hf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.hf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.ichf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.ichf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.LeftTruncatedModel.isf"><code class="docutils literal notranslate"><span class="pre">LeftTruncatedModel.isf()</span></code></a></li>

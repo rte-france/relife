@@ -34,10 +34,10 @@ AcceleratedFailureTime
             ~AcceleratedFailureTime.fit
         
         
-            ~AcceleratedFailureTime.fit_from_interval_censored_data
+            ~AcceleratedFailureTime.fit_from_interval_censored_lifetimes
         
         
-            ~AcceleratedFailureTime.freeze_args
+            ~AcceleratedFailureTime.freeze
         
         
             ~AcceleratedFailureTime.hf

@@ -383,6 +383,9 @@
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -434,7 +437,6 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -529,7 +531,7 @@ hazard function <a class="reference internal" href="#r21ad2c257af0-1" id="id1">[
 </dd>
 <dt><strong>fitting_results</strong><span class="classifier">FittingResults, default is None</span></dt><dd><p>An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</p>
 </dd>
-<dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients" title="relife.lifetime_model.AcceleratedFailureTime.coefficients"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coefficients</span></code></a></dt><dd><p>Get the coefficients values of the covariate effect.</p>
+<dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients" title="relife.lifetime_model.AcceleratedFailureTime.coefficients"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coefficients</span></code></a></dt><dd><p>Coefficients of the regression.</p>
 </dd>
 <dt><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.nb_params" title="relife.lifetime_model.AcceleratedFailureTime.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></dt><dd><p>Number of parameters.</p>
 </dd>
@@ -572,11 +574,11 @@ analysis of failure time data. John Wiley &amp; Sons.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.fit" title="relife.lifetime_model.AcceleratedFailureTime.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
 <td><p>Estimation of the regression parameters from lifetime data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_data</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_lifetimes</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.freeze_args" title="relife.lifetime_model.AcceleratedFailureTime.freeze_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze_args</span></code></a></p></td>
-<td><p>Freeze regression covar and other arguments into the object data.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.freeze" title="relife.lifetime_model.AcceleratedFailureTime.freeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></a></p></td>
+<td><p>Freeze regression covar.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="relife.lifetime_model.AcceleratedFailureTime.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
 <td><p>The hazard function.</p></td>
@@ -637,7 +639,7 @@ analysis of failure time data. John Wiley &amp; Sons.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.cdf">
-<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.cdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.cdf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -647,8 +649,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -663,7 +663,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.chf">
-<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.chf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.chf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -673,8 +673,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -690,7 +688,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.coefficients">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coefficients</span></span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients" title="Link to this definition">#</a></dt>
-<dd><p>Get the coefficients values of the covariate effect.</p>
+<dd><p>Coefficients of the regression.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -702,7 +700,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.dhf">
-<span class="sig-name descname"><span class="pre">dhf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.dhf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.dhf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dhf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.dhf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.dhf" title="Link to this definition">#</a></dt>
 <dd><p>The derivative of the hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -712,8 +710,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -728,7 +724,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">optimizer_options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.fit" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.fit" title="Link to this definition">#</a></dt>
 <dd><p>Estimation of the regression parameters from lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -742,7 +738,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 </dd>
 <dt><strong>entry</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
 </dd>
-<dt><strong>**options</strong></dt><dd><dl class="simple">
+<dt><strong>optimizer_options</strong></dt><dd><dl class="simple">
 <dt>Extra arguments used by <cite>scipy.minimize</cite>. Default values are:</dt><dd><ul class="simple">
 <li><p><cite>method</cite> : <cite>“L-BFGS-B”</cite></p></li>
 <li><p><cite>contraints</cite> : <cite>()</cite></p></li>
@@ -771,16 +767,14 @@ format that allows to pass other information as left-censored or interval-censor
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.freeze_args">
-<span class="sig-name descname"><span class="pre">freeze_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.freeze_args" title="Link to this definition">#</a></dt>
-<dd><p>Freeze regression covar and other arguments into the object data.</p>
+<dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.freeze">
+<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.freeze" title="Link to this definition">#</a></dt>
+<dd><p>Freeze regression covar.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -794,7 +788,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.hf">
-<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="Link to this definition">#</a></dt>
 <dd><p>The hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -804,8 +798,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -820,7 +812,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.ichf">
-<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.ichf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ichf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.ichf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ichf" title="Link to this definition">#</a></dt>
 <dd><p>Inverse cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -830,8 +822,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -846,7 +836,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.isf">
-<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.isf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.isf" title="Link to this definition">#</a></dt>
 <dd><p>The inverse survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -856,8 +846,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -872,7 +860,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_cdf">
-<span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_cdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_cdf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -882,8 +870,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 <dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
@@ -902,7 +888,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_chf">
-<span class="sig-name descname"><span class="pre">jac_chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.jac_chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_chf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.jac_chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_chf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -912,8 +898,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 <dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
@@ -932,7 +916,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_hf">
-<span class="sig-name descname"><span class="pre">jac_hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.jac_hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_hf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.jac_hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_hf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -942,8 +926,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 <dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
@@ -962,7 +944,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_pdf">
-<span class="sig-name descname"><span class="pre">jac_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_pdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_pdf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the probability density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -972,8 +954,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 <dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
@@ -992,7 +972,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_sf">
-<span class="sig-name descname"><span class="pre">jac_sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_sf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_sf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1002,8 +982,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 <dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
@@ -1022,7 +1000,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.ls_integrate">
-<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ls_integrate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ls_integrate" title="Link to this definition">#</a></dt>
 <dd><p>Lebesgue-Stieltjes integration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1035,8 +1013,6 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 <dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation</p>
 </dd>
@@ -1053,15 +1029,13 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.mean">
-<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.mean" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.mean" title="Link to this definition">#</a></dt>
 <dd><p>The mean.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1075,15 +1049,13 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.median">
-<span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.median" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.median" title="Link to this definition">#</a></dt>
 <dd><p>The median.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1097,7 +1069,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.moment">
-<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.moment" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.moment" title="Link to this definition">#</a></dt>
 <dd><p>n-th order moment</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1106,8 +1078,6 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1121,7 +1091,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.mrl">
-<span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.mrl" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.mrl" title="Link to this definition">#</a></dt>
 <dd><p>The mean residual life.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1131,8 +1101,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1148,7 +1116,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.nb_coef">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_coef</span></span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.nb_coef" title="Link to this definition">#</a></dt>
-<dd><p>The number of coefficients.</p>
+<dd><p>Number of coefficients.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1206,7 +1174,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.pdf">
-<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.pdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.pdf" title="Link to this definition">#</a></dt>
 <dd><p>The probility density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1216,8 +1184,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1238,7 +1204,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.ppf">
-<span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ppf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ppf" title="Link to this definition">#</a></dt>
 <dd><p>The percent point function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1248,8 +1214,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1264,7 +1228,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.rvs">
-<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.rvs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.rvs" title="Link to this definition">#</a></dt>
 <dd><p>Random variable sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1273,8 +1237,6 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 <dt><strong>nb_assets</strong><span class="classifier">int, optional</span></dt><dd><p>If nb_assets is not None, 2d arrays of samples are generated.</p>
 </dd>
@@ -1298,7 +1260,7 @@ the time values followed by event values, entry values or both.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.sf">
-<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.sf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.sf" title="Link to this definition">#</a></dt>
 <dd><p>The survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1308,8 +1270,6 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1324,15 +1284,13 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.var">
-<span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.var" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.var" title="Link to this definition">#</a></dt>
 <dd><p>The variance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
 Otherwise it must be a ndarray of shape <code class="docutils literal notranslate"><span class="pre">(nb_coef,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1377,7 +1335,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.coefficients"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.coefficients</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.dhf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.dhf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.fit"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.fit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.freeze_args"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.freeze_args()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.freeze"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.freeze()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.hf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.hf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.ichf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.ichf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.isf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.isf()</span></code></a></li>

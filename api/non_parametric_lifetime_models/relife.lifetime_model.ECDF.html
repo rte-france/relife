@@ -381,6 +381,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
@@ -432,7 +435,6 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.lifetime_model.NonParametricLifetimeModel.html">NonParametricLifetimeModel</a></li>
 </ul>
 </div>
 </nav></div>
@@ -508,10 +510,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ECDF.fit" title="relife.lifetime_model.ECDF.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
 <td><p>Compute the non-parametric estimations with respect to lifetime data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_interval_censored_data</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ECDF.sf" title="relife.lifetime_model.ECDF.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ECDF.sf" title="relife.lifetime_model.ECDF.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
 <td><p>The survival functions estimated values</p></td>
 </tr>
 </tbody>
@@ -544,11 +543,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">ndarray (1d or 2d)</span></dt><dd><p>Observed lifetime values.</p>
-</dd>
-<dt><strong>event</strong><span class="classifier">ndarray of boolean values (1d), default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
-</dd>
-<dt><strong>entry</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
+<dt><strong>time</strong><span class="classifier">ndarray</span></dt><dd><p>Observed lifetime values.</p>
 </dd>
 </dl>
 </dd>
