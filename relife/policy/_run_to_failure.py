@@ -76,7 +76,7 @@ class OneCycleRunToFailurePolicy(ReplacementPolicy):
                 period_before_discounting=self.period_before_discounting,
             )
         return _OneCycleExpectedCosts(
-            LeftTruncatedModel(self.baseline_model).freeze_args(self.current_ages),
+            LeftTruncatedModel(self.baseline_model).freeze(self.current_ages),
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
             period_before_discounting=self.period_before_discounting,
@@ -158,7 +158,7 @@ class RunToFailurePolicy(ReplacementPolicy):
             self.baseline_model,
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
-            first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze_args(self.current_ages),
+            first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze(self.current_ages),
         )
 
     @property

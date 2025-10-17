@@ -83,7 +83,7 @@ def regression(request):
 )
 def frozen_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return request.param.freeze_args(covar)
+    return request.param.freeze(covar)
 
 
 @pytest.fixture(
@@ -91,7 +91,7 @@ def frozen_regression(request):
     ids=lambda distri: f"FrozenAgeReplacementModel({distri.__class__.__name__})",
 )
 def frozen_ar_distribution(request):
-    return AgeReplacementModel(request.param).freeze_args(request.param.isf(0.75))
+    return AgeReplacementModel(request.param).freeze(request.param.isf(0.75))
 
 
 @pytest.fixture(
@@ -100,7 +100,7 @@ def frozen_ar_distribution(request):
 )
 def frozen_ar_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return AgeReplacementModel(request.param).freeze_args(request.param.isf(0.75, covar), covar)
+    return AgeReplacementModel(request.param).freeze(request.param.isf(0.75, covar), covar)
 
 
 ########################################################################################################################

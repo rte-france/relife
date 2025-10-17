@@ -170,13 +170,13 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
             raise ValueError("ar must be set or optimized")
         if self.current_ages is None:
             return _OneCycleExpectedCosts(
-                AgeReplacementModel(self.baseline_model).freeze_args(self.tr),
+                AgeReplacementModel(self.baseline_model).freeze(self.tr),
                 AgeReplacementReward(self.cf, self.cp, self.tr),
                 discounting_rate=self.discounting_rate,
                 period_before_discounting=self.period_before_discounting,
             )
         return _OneCycleExpectedCosts(
-            AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze_args(self.tr, self.current_ages),
+            AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(self.tr, self.current_ages),
             AgeReplacementReward(self.cf, self.cp, self.tr),
             discounting_rate=self.discounting_rate,
             period_before_discounting=self.period_before_discounting,
@@ -398,15 +398,15 @@ class AgeReplacementPolicy(ReplacementPolicy):
             raise ValueError("ar must be set or optimized")
         if self.current_ages is None:
             return RenewalRewardProcess(
-                AgeReplacementModel(self.baseline_model).freeze_args(self.ar),
+                AgeReplacementModel(self.baseline_model).freeze(self.ar),
                 AgeReplacementReward(self.cf, self.cp, self.ar),
                 discounting_rate=self.discounting_rate,
             )
         return RenewalRewardProcess(
-            AgeReplacementModel(self.baseline_model).freeze_args(self.ar),
+            AgeReplacementModel(self.baseline_model).freeze(self.ar),
             AgeReplacementReward(self.cf, self.cp, self.ar),
             discounting_rate=self.discounting_rate,
-            first_lifetime_model=AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze_args(
+            first_lifetime_model=AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(
                 self.tr1, self.current_ages
             ),
             first_reward=AgeReplacementReward(self.cf, self.cp, self.tr1),
