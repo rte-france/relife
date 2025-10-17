@@ -1,11 +1,16 @@
 def is_frozen(model):
-    # local import to avoid circular import
+    """
+    Checks if model is frozen.
+    """
     from relife.base import FrozenParametricModel
 
     return isinstance(model, FrozenParametricModel)
 
 
 def is_lifetime_model(model):
+    """
+    Checks if model is a lifetime model.
+    """
     # local import to avoid circular import
     from relife.lifetime_model import ParametricLifetimeModel
 
@@ -15,6 +20,9 @@ def is_lifetime_model(model):
 
 
 def is_non_homogeneous_poisson_process(model):
+    """
+    Checks if model is a non-homogeneous Poisson process.
+    """
     # local import to avoid circular import
     from relife.stochastic_process import NonHomogeneousPoissonProcess
 

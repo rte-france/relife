@@ -18,6 +18,29 @@ from ._base import ReplacementPolicy, _OneCycleExpectedCosts
 
 
 def age_replacement_policy(baseline_model, cost_structure, one_cycle=False, **kwargs):
+    """
+    Creates a preventive age replacement policy.
+
+    Parameters
+    ----------
+    baseline_model : parametric model
+        Parametric model required by the policy.
+    cost_structure : dict of costs
+        Dictionnary containing the cost values (float or 1d-array) and their corresponding names (either cf, cp or cr).
+    one_cycle : bool, default False
+        If True, returns the one cycle variation of the policy.
+    **kwargs
+        Extra arguments required by the policy (a0, ar, discounting_rate, etc.)
+
+    Returns
+    -------
+    Policy corresponding to ``baseline_model`` and ``cost_structure``.
+
+    Raises
+    ------
+    ValueError
+        If ``baseline_model`` or ``cost_structure`` does not have a corresponding policy.
+    """
     if is_non_homogeneous_poisson_process(baseline_model):
         try:
             cr = cost_structure["cr"]
@@ -58,8 +81,8 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
         Costs of preventive replacements
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    current_ages : float or 1darray, optional
-        Current ages of the assets. If it is given, left truncations of ``current_ages`` will
+    a0 : float or 1darray, optional
+        Current ages of the assets. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
@@ -74,19 +97,19 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
     """
 
     def __init__(
-        self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, current_ages=None, ar=None
+        self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, a0=None, ar=None
     ):
         super().__init__(
             lifetime_model,
             cost_structure={"cf": reshape_1d_arg(cf), "cp": reshape_1d_arg(cp)},
             discounting_rate=discounting_rate,
         )
-        self._current_ages = reshape_1d_arg(current_ages) if current_ages is not None else current_ages
+        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
         self.ar = ar
         self.period_before_discounting = period_before_discounting
 
     @property
-    def current_ages(self):
+    def a0(self):
         """Current ages of the assets.
 
         Returns
@@ -94,9 +117,9 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
         np.ndarray
         """
         # _a0 is (m, 1) but exposed cf is (m,)
-        if self._current_ages is None:
-            return self._current_ages
-        return flatten_if_possible(self._current_ages)
+        if self._a0 is None:
+            return self._a0
+        return flatten_if_possible(self._a0)
 
     @property
     def cf(self):
@@ -147,8 +170,8 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
             value = reshape_1d_arg(value)
             self._ar = value
             self._tr = None
-            if self.current_ages is not None:
-                self._tr = np.maximum(value - self._current_ages, 0)
+            if self.a0 is not None:
+                self._tr = np.maximum(value - self._a0, 0)
         else:
             self._ar = None
 
@@ -160,7 +183,7 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
         -------
         np.ndarray
         """
-        if self.current_ages is not None:
+        if self.a0 is not None:
             return flatten_if_possible(self._tr)
         return self.ar
 
@@ -168,7 +191,7 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
     def _expected_costs(self):
         if self.ar is None:
             raise ValueError("ar must be set or optimized")
-        if self.current_ages is None:
+        if self.a0 is None:
             return _OneCycleExpectedCosts(
                 AgeReplacementModel(self.baseline_model).freeze(self.tr),
                 AgeReplacementReward(self.cf, self.cp, self.tr),
@@ -176,7 +199,7 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
                 period_before_discounting=self.period_before_discounting,
             )
         return _OneCycleExpectedCosts(
-            AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(self.tr, self.current_ages),
+            AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(self.tr, self.a0),
             AgeReplacementReward(self.cf, self.cp, self.tr),
             discounting_rate=self.discounting_rate,
             period_before_discounting=self.period_before_discounting,
@@ -203,7 +226,7 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
 
         if np.any(self.tr == 0):
             warnings.warn(
-                "Some assets has already been replaced for the first cycle (where tr is 0). For these assets, consider adjusting ar values to be greater than current_ages"
+                "Some assets has already been replaced for the first cycle (where tr is 0). For these assets, consider adjusting ar values to be greater than a0"
             )
 
         ar = self.ar.copy()
@@ -226,7 +249,7 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
 
         if np.any(self.tr == 0):
             warnings.warn(
-                "Some assets has already been replaced for the first cycle (where tr is 0). For these assets, consider adjusting ar values to be greater than current_ages"
+                "Some assets has already been replaced for the first cycle (where tr is 0). For these assets, consider adjusting ar values to be greater than a0"
             )
 
         ar = self.ar.copy()
@@ -292,8 +315,8 @@ class AgeReplacementPolicy(ReplacementPolicy):
         Costs of preventive replacements
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    current_ages : float or 1darray, optional
-        Current ages of the assets. If it is given, left truncations of ``current_ages`` will
+    a0 : float or 1darray, optional
+        Current ages of the assets. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
@@ -306,17 +329,17 @@ class AgeReplacementPolicy(ReplacementPolicy):
         Reliability, 1000-1008.
     """
 
-    def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, current_ages=None, ar=None):
+    def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, a0=None, ar=None):
         super().__init__(
             lifetime_model,
             cost_structure={"cf": reshape_1d_arg(cf), "cp": reshape_1d_arg(cp)},
             discounting_rate=discounting_rate,
         )
-        self._current_ages = reshape_1d_arg(current_ages) if current_ages is not None else current_ages
+        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
         self.ar = ar
 
     @property
-    def current_ages(self):
+    def a0(self):
         """Current ages of the assets.
 
         Returns
@@ -324,9 +347,9 @@ class AgeReplacementPolicy(ReplacementPolicy):
         np.ndarray
         """
         # _a0 is (m, 1) but exposed cf is (m,)
-        if self._current_ages is None:
-            return self._current_ages
-        return flatten_if_possible(self._current_ages)
+        if self._a0 is None:
+            return self._a0
+        return flatten_if_possible(self._a0)
 
     @property
     def cp(self):
@@ -365,7 +388,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
         -------
         np.ndarray
         """
-        if self.current_ages is not None:
+        if self.a0 is not None:
             return flatten_if_possible(self._tr1)
         return self.ar
 
@@ -387,8 +410,8 @@ class AgeReplacementPolicy(ReplacementPolicy):
             value = reshape_1d_arg(value)
             self._ar = value
             self._tr1 = None
-            if self.current_ages is not None:
-                self._tr1 = np.maximum(value - self._current_ages, 0)
+            if self.a0 is not None:
+                self._tr1 = np.maximum(value - self._a0, 0)
         else:
             self._ar = None
 
@@ -396,7 +419,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
     def _stochastic_process(self):
         if self.ar is None:
             raise ValueError("ar must be set or optimized")
-        if self.current_ages is None:
+        if self.a0 is None:
             return RenewalRewardProcess(
                 AgeReplacementModel(self.baseline_model).freeze(self.ar),
                 AgeReplacementReward(self.cf, self.cp, self.ar),
@@ -407,7 +430,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
             AgeReplacementReward(self.cf, self.cp, self.ar),
             discounting_rate=self.discounting_rate,
             first_lifetime_model=AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(
-                self.tr1, self.current_ages
+                self.tr1, self.a0
             ),
             first_reward=AgeReplacementReward(self.cf, self.cp, self.tr1),
         )
@@ -430,7 +453,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
         timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)
         if np.any(self.tr1 == 0):
             warnings.warn(
-                "Some assets has already been replaced for the first cycle (where tr1 is 0). For these assets, consider adjusting ar values to be greater than current_ages"
+                "Some assets has already been replaced for the first cycle (where tr1 is 0). For these assets, consider adjusting ar values to be greater than a0"
             )
         if eeac.ndim == 2:
             eeac[np.where(np.atleast_1d(self.tr1) == 0)] = np.nan
@@ -444,7 +467,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
         asymptotic_eeac = self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
         if np.any(self.tr1 == 0):
             warnings.warn(
-                "Some assets has already been replaced for the first cycle (where tr1 is 0). For these assets, consider adjusting ar values to be greater than current_ages"
+                "Some assets has already been replaced for the first cycle (where tr1 is 0). For these assets, consider adjusting ar values to be greater than a0"
             )
         if asymptotic_eeac.ndim == 1:
             asymptotic_eeac[np.where(np.atleast_1d(self.tr1) == 0)] = np.nan
@@ -472,7 +495,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
             1.0,
             1.0,
             ar=self.ar,
-            current_ages=self.current_ages,
+            a0=self.a0,
             discounting_rate=0.0,
         )
         timeline, total_cost = copied_policy.expected_net_present_value(nb_years, nb_years + 1)  # equiv to np.arange
@@ -487,7 +510,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
                 1.0,
                 0.0,
                 ar=self.ar,
-                current_ages=self.current_ages,
+                a0=self.a0,
                 discounting_rate=0.0,
             )
             _, total_cost = copied_policy.expected_net_present_value(nb_years, nb_years + 1)  # equiv to np.arange

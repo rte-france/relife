@@ -1,10 +1,7 @@
 Basics
 ======
 
-.. contents::
-    :local:
-
-The section will help you understand basic commands and math concepts to begin with ReLife.
+The section will help you understand basic commands of ReLife and its usage workflow.
 
 A starter example
 -------------------
@@ -16,30 +13,27 @@ A starter example
 
 The figure above represents the four elementary steps of ReLife's workflow (for left to right) :
 
-1. You first need to collect failure data
-2. Then, you generally fit a lifetime model. Note that all ReLife models are not necessarilly lifetime models. It can be stochastic processes too
-3. From the obtained model, you create a policy. It is generally an age replacement policy (but it may vary too). With this kind of policy you can find a optimal age of replacement that minimize the annual costs for this maintenance strategy
-4. Finally, you can project consequences (e.g. compute the expected number of annual replacements)
-
-The next parts provide ReLife command examples for each of these steps
+1. You collect failure data.
+2. You fit a lifetime model from the data.
+3. You create a maintenance policy (preventive age replacement or run-to-failure).
+4. You can project the consequences of the policy (e.g. the expected number of annual replacements).
 
 Data collection
 ^^^^^^^^^^^^^^^
 
-In real life, you may have collected your own data but ReLife also provides built-in datasets so that you can start learning ReLife. For this example,
+ReLife provides built-in datasets so that you can start using the library and understand data structures. For this example,
 we will use the *power transformer dataset*. If you don't know what a power transformer is, you can look at `the decicated Wikipedia page <https://en.wikipedia.org/wiki/Transformer>`_
-To load this dataset, you must import the function ``load_power_transformer``
 
 .. code-block:: python
 
     >>> from relife.data import load_power_transformer
     >>> data = load_power_transformer()
 
-Here ``data`` is a `structured array <https://numpy.org/doc/stable/user/basics.rec.html>`_ object that contains three fields :
+Here ``data`` is a `structured array <https://numpy.org/doc/stable/user/basics.rec.html>`_ that contains three fields :
 
-- ``time`` : the observed lifetime values
-- ``event`` : the event indicators tagging each observations as complete (``True``) or censored (``False``)
-- ``entry`` : the left truncation values
+- ``time`` : the observed lifetime values.
+- ``event`` : boolean values indicating if the event occured during the observation window.
+- ``entry`` : the ages of the assets at the beginning of the observation window.
 
 .. code-block:: python
 
@@ -54,7 +48,7 @@ Here ``data`` is a `structured array <https://numpy.org/doc/stable/user/basics.
 Lifetime model estimation
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-From the obtained data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.
+From the data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.
 
 .. code-block:: python
 
@@ -75,7 +69,7 @@ You can quickly plot the estimated survival function
 
 .. image:: images/kaplan_meier.png
 
-You can also fit a simple parametric lifetime model : a Weibull lifetime distribution, and plot the two survival functions obtained in one graph
+Then, you can fit a parametric lifetime model and plot the two survival functions obtained in one graph.
 
 .. code-block:: python
 
@@ -89,7 +83,7 @@ You can also fit a simple parametric lifetime model : a Weibull lifetime distrib
     >>> print(weibull.params_names, weibull.params)
     ('shape', 'rate') [3.46597396 0.0122785 ]
 
-Note that this object holds ``params`` values and that the ``fit`` has modified them inplace. You can quickly visualize probability functions plot, like the survival function.
+Note that this object holds ``params`` values and the ``fit`` method has modified them inplace.
 
 .. code-block:: python
 
@@ -101,14 +95,14 @@ Note that this object holds ``params`` values and that the ``fit`` has modifie
 Maintenance policy optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now let's consider that we want the study an age replacement policy. You need to know :
+Let's consider that we want the study an age replacement policy. You need to choose :
 
-- the cost of a preventive replacement :math:`c_p`
-- the cost of an unexpected failure :math:`c_f`
-- the current ages of your assets
+- costs of a preventive replacement :math:`c_p`
+- costs of an unexpected failure :math:`c_f`
 
-For this example, we will fix :math:`c_p` at 3 millions of euros and :math:`c_f` at 11 millions of euros. For the sake of the illustration, we
-will sample 1000 age values for a binomial distribution to represent the current ages of the assets. So here, we consider **a fleet of 1000 assets**.
+For this example, we will set :math:`c_p` at 3 millions of euros and :math:`c_f` at 11 millions of euros.
+Note that this cost structure also takes into account any undesirable consequences of the asset replacement and that :math:`c_f` is higher than :math:`c_p`.
+We sample 1000 ages from a binomial distribution to represent the current ages of a flit of 1000 assets.
 
 .. code-block:: python
 
@@ -117,7 +111,8 @@ will sample 1000 age values for a binomial distribution to represent the current
     >>> cf = 11. # cost of failure
     >>> a0 = np.random.binomial(60, 0.5, 1000) # asset ages
 
-Now you can use these values with the previous lifetime model to optimize an age replacement policy
+
+We can use these values with the previous lifetime model to optimize an age replacement policy
 
 .. code-block:: python
 
@@ -130,8 +125,8 @@ Now you can use these values with the previous lifetime model to optimize an age
           discounting_rate=0.04,
         ).optimize()
 
-The obtained object encapsulates optimal ages of replacement in one array of 1000 values (because we considered 1000 assets). These data are stored in ``ar``. One can also get the time before the first replacement
-by requesting `first_cycle_tr`. Note here, that the optimal ages of replacement are the same for each asset because the costs are the same for each of them (but you can also pass arrays of cost values if you want).
+The obtained object encapsulates optimal ages of replacement ``ar`` in one array of 1000 values (because we considered 1000 assets). We can also get the time before the first replacement
+by requesting ``tr1``. Here, note that the optimal ages of replacement are the same for each asset because the costs are the same for each of them (but you can also pass arrays of cost values if you want).
 
 .. code-block:: python
 
@@ -146,15 +141,15 @@ by requesting `first_cycle_tr`. Note here, that the optimal ages of replacement 
 Projection of consequences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now that we have optimized ages of replacement, we can project the consequences of this strategy.
-For instance, you can be interested in seeing the expected number of replacements and number of failures for the next 170 years.
+We can project the consequences of our policy, e.g. the expected number of replacements and number of failures for the next 170 years.
 
 .. code-block:: python
 
     >>> nb_years = 170
     >>> timeline, nb_replacements, nb_failures = policy.annual_number_of_replacements(nb_years, upon_failure=True)
 
-To do that, ReLife solves the renewal equation. The returned objects are arrays of with 170 values, one value for each upcoming years.
+
+To do that, ReLife solves **the renewal equation**. The returned objects are arrays of with 170 values, one value for each upcoming years.
 
 .. code-block:: python
 
@@ -165,8 +160,8 @@ To do that, ReLife solves the renewal equation. The returned objects are arrays 
     >>> print(nb_failures.shape)
     (170,)
 
-Here, ReLife does not offer built-in plot functionnalities. But of course, you can use `Matplotlib <https://matplotlib.org/>`_ code to represent these values in one graph.
 
+Here, ReLife does not offer built-in plot functionnalities. But of course, you can use `Matplotlib <https://matplotlib.org/>`_ code to represent these values in one graph.
 
 .. code-block:: python
 

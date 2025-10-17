@@ -7,13 +7,11 @@ import numpy as np
 __all__ = ["ParametricModel", "FrozenParametricModel"]
 
 
-# MAYBE, custom array container can be used here
-# https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
 class _Parameters:
     """
-    Dict-like tree structured parameters.
+    Dict-like tree structured of parameters.
 
-    Every ``ParametricModel`` are composed of a ``Parameters`` instance.
+    Every ``ParametricModel`` are composed of a ``_Parameters`` instance.
     """
 
     def __init__(self, **kwargs):
@@ -89,9 +87,7 @@ class _Parameters:
 
 class ParametricModel:
     """
-    Base class to create a parametric_model.
-
-    Any parametric model must inherit from `ParametricModel`.
+    Base class of every parametric models in ReLife.
     """
 
     def __init__(self, **kwparams):
@@ -169,6 +165,12 @@ class ParametricModel:
 
 
 class FrozenParametricModel(ParametricModel):
+    """
+    Class of every frozen parametric models.
+
+    Frozen models encapsulate additional arguments values allowing to request the object without
+    giving them.
+    """
     def __init__(self, model, *args):
         super().__init__()
         if np.any(np.isnan(model.params)):

@@ -20,13 +20,13 @@ __all__ = [
 
 
 class ParametricLifetimeModel(ParametricModel, ABC):
-    r"""Base class for lifetime model.
+    r"""Base class for parametric lifetime models in ReLife.
 
-    This class defines the structure for creating lifetime model. It is a blueprint
-    for implementing lifetime model expecting a variadic set of arguments.
-    It expects implemantation of hazard functions (``hf``), cumulative hazard functions (``chf``),
-    probability density function (``pdf``) and survival function (``sf``).
-    Other functions are implemented by default but can be overridden by derived classes.
+    This class is a blueprint for implementing parametric lifetime models.
+    The interface is generic and can define a variadic set of arguments.
+    It expects implementation of the hazard function (``hf``), the cumulative hazard function (``chf``),
+    the probability density function (``pdf``) and the survival function (``sf``).
+    Other functions are implemented by default but can be overridden by the derived classes.
 
     Note:
         The abstract methods also provides a default implementation. One may not have to implement
@@ -37,10 +37,6 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         chf: Abstract method to compute the cumulative hazard function.
         sf: Abstract method to compute the survival function.
         pdf: Abstract method to compute the probability density function.
-
-    Raises:
-        NotImplementedError: Raised when an abstract method or feature in this
-        class has not been implemented in a derived class.
     """
 
     @abstractmethod

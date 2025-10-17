@@ -9,6 +9,29 @@ from ._base import ReplacementPolicy, _OneCycleExpectedCosts
 
 
 def run_to_failure_policy(baseline_model, cf, one_cycle=False, **kwargs):
+    """
+    Creates a run-to-failure policy.
+
+    Parameters
+    ----------
+    baseline_model : parametric model
+        Parametric model required by the policy.
+    cf : float or 1d-array
+        Cost of failure.
+    one_cycle : bool, default False
+        If True, returns the one cycle variation of the policy.
+    **kwargs
+        Extra arguments required by the policy (a0, discounting_rate, etc.)
+
+    Returns
+    -------
+    Policy corresponding to ``baseline_model`` and ``cost_structure``.
+
+    Raises
+    ------
+    ValueError
+        If ``baseline_model`` or ``cost_structure`` does not have a corresponding policy.
+    """
     if is_lifetime_model(baseline_model):
         if one_cycle:
             return OneCycleRunToFailurePolicy(baseline_model, cf, **kwargs)
@@ -28,18 +51,18 @@ class OneCycleRunToFailurePolicy(ReplacementPolicy):
         Costs of failures
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    current_ages : float or 1darray, optional
+    a0 : float or 1darray, optional
         Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
     """
 
-    def __init__(self, lifetime_model, cf, discounting_rate=0.0, current_ages=None, period_before_discounting=1.0):
+    def __init__(self, lifetime_model, cf, discounting_rate=0.0, a0=None, period_before_discounting=1.0):
         super().__init__(lifetime_model, cost_structure={"cf": reshape_1d_arg(cf)}, discounting_rate=discounting_rate)
-        self._current_ages = reshape_1d_arg(current_ages) if current_ages is not None else current_ages
+        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
         self.period_before_discounting = period_before_discounting
 
     @property
-    def current_ages(self):
+    def a0(self):
         """Current ages of the assets.
 
         Returns
@@ -47,9 +70,9 @@ class OneCycleRunToFailurePolicy(ReplacementPolicy):
         np.ndarray
         """
         # _a0 is (m, 1) but exposed cf is (m,)
-        if self._current_ages is None:
-            return self._current_ages
-        return flatten_if_possible(self._current_ages)
+        if self._a0 is None:
+            return self._a0
+        return flatten_if_possible(self._a0)
 
     @property
     def cf(self):
@@ -68,7 +91,7 @@ class OneCycleRunToFailurePolicy(ReplacementPolicy):
 
     @property
     def _expected_costs(self):
-        if self.current_ages is None:
+        if self.a0 is None:
             return _OneCycleExpectedCosts(
                 self.baseline_model,
                 RunToFailureReward(self.cf),
@@ -76,7 +99,7 @@ class OneCycleRunToFailurePolicy(ReplacementPolicy):
                 period_before_discounting=self.period_before_discounting,
             )
         return _OneCycleExpectedCosts(
-            LeftTruncatedModel(self.baseline_model).freeze(self.current_ages),
+            LeftTruncatedModel(self.baseline_model).freeze(self.a0),
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
             period_before_discounting=self.period_before_discounting,
@@ -118,7 +141,7 @@ class RunToFailurePolicy(ReplacementPolicy):
         Costs of failures
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    current_ages : float or 1darray, optional
+    a0 : float or 1darray, optional
         Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
 
@@ -129,12 +152,12 @@ class RunToFailurePolicy(ReplacementPolicy):
         the Engineering and Informational Sciences, 22(1), 53-74.
     """
 
-    def __init__(self, lifetime_model, cf, discounting_rate=0.0, current_ages=None):
+    def __init__(self, lifetime_model, cf, discounting_rate=0.0, a0=None):
         super().__init__(lifetime_model, cost_structure={"cf": reshape_1d_arg(cf)}, discounting_rate=discounting_rate)
-        self._current_ages = reshape_1d_arg(current_ages) if current_ages is not None else current_ages
+        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
 
     @property
-    def current_ages(self):
+    def a0(self):
         """Current ages of the assets.
 
         Returns
@@ -142,13 +165,13 @@ class RunToFailurePolicy(ReplacementPolicy):
         np.ndarray
         """
         # _a0 is (m, 1) but exposed cf is (m,)
-        if self._current_ages is None:
-            return self._current_ages
-        return flatten_if_possible(self._current_ages)
+        if self._a0 is None:
+            return self._a0
+        return flatten_if_possible(self._a0)
 
     @property
     def _stochastic_process(self):
-        if self.current_ages is None:
+        if self.a0 is None:
             return RenewalRewardProcess(
                 self.baseline_model,
                 RunToFailureReward(self.cf),
@@ -158,7 +181,7 @@ class RunToFailurePolicy(ReplacementPolicy):
             self.baseline_model,
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
-            first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze(self.current_ages),
+            first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze(self.a0),
         )
 
     @property

@@ -34,7 +34,7 @@ class RunToFailureReward(Reward):
     Parameters
     ----------
     cf : float or 1darray
-        The cost(s) of failure
+        The cost of failure.
 
     Attributes
     ----------
@@ -57,9 +57,9 @@ class AgeReplacementReward(Reward):
     Parameters
     ----------
     cf : float or 1darray
-        The cost(s) of failure
+        The cost of failure.
     cp : float or 1darray
-        The cost(s) of preventive replacement
+        The cost of preventive replacement.
 
     Attributes
     ----------
@@ -89,6 +89,14 @@ class Discounting(ABC):
 
 
 class ExponentialDiscounting(Discounting):
+    """
+    Exponential discounting.
+
+    Parameters
+    ----------
+    rate : float
+        The discounting rate
+    """
     def __init__(self, rate=0.0):
         self.rate = rate
 
