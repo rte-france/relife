@@ -5,7 +5,7 @@ This section provides comprehensive details about the exposed ReLife API.
 ReLife is structured into different modules, each with a clear and specific role.
 We divided the API documentation close to the same logic.
 
-.. currentmodule:: relife
+.. currentmodule:: relife.base
 
 .. autosummary::
     :toctree: base_class
@@ -23,15 +23,19 @@ Parametric lifetime models
 
 .. currentmodule:: relife.lifetime_model
 
-Lifetime models are objects that answer to basic probility functions of the survival analysis.
-They are imported from the
+.. autosummary::
+    :toctree: parametric_lifetime_models
+    :template: class_template.rst
+    :caption: Parametric lifetime models
+    :nosignatures:
+
+    ParametricLifetimeModel
 
 .. rubric:: Lifetime distributions
 
 .. autosummary::
     :toctree: parametric_lifetime_models
     :template: class_template.rst
-    :caption: Parametric lifetime models
     :nosignatures:
 
     Exponential
@@ -60,14 +64,6 @@ They are imported from the
     LeftTruncatedModel
     AgeReplacementModel
 
-.. rubric:: Base class
-
-.. autosummary::
-    :toctree: base_class
-    :template: class_template.rst
-    :nosignatures:
-
-    ParametricLifetimeModel
 
 Non parametric lifetime models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -165,40 +161,20 @@ Various utilities to help with development.
     :caption: Utils
     :nosignatures:
 
+    ~reshape_1d_arg
     ~get_args_nb_assets
     ~is_frozen
     ~is_lifetime_model
     ~is_non_homogeneous_poisson_process
-    ~filter_nonetype_args
-    ~reshape_1d_arg
 
-
-Base classes
-------------
-
-.. warning::
-
-    The interfaces presented below might interest you only if you want to understand how ReLife is implemented (contributions, suggestions, spotted errors, etc.)
-    Otherwise, you can skip this part of the API. It presents base constructors for all estimators.
-
-.. rubric:: Parametric models
-
-.. currentmodule:: relife.base
+.. currentmodule:: relife.utils.quadrature
 
 .. autosummary::
-    :toctree: base_class
-    :template: class_template.rst
-    :caption: Base classes
+    :toctree: routines
+    :template: function_template.rst
     :nosignatures:
 
-    ParametricModel
+    ~legendre_quadrature
+    ~laguerre_quadrature
+    ~unweighted_laguerre_quadrature
 
-.. currentmodule:: relife
-
-.. autosummary::
-    :toctree: base_class
-    :template: class_template.rst
-    :nosignatures:
-
-    ~lifetime_model.ParametricLifetimeModel
-    ~lifetime_model.NonParametricLifetimeModel

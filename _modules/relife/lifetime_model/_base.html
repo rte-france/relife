@@ -53,7 +53,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="2.1.3" />
   </head>
   
   
@@ -126,7 +126,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-</div>
+2.1.3</div>
     
   </div>
   
@@ -433,15 +433,15 @@
 
 
 <div class="viewcode-block" id="ParametricLifetimeModel">
-<a class="viewcode-back" href="../../../api/base_class/relife.lifetime_model.ParametricLifetimeModel.html#relife.lifetime_model.ParametricLifetimeModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricLifetimeModel.html#relife.lifetime_model.ParametricLifetimeModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParametricLifetimeModel</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Base class for lifetime model.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Base class for parametric lifetime models in ReLife.</span>
 
-<span class="sd">    This class defines the structure for creating lifetime model. It is a blueprint</span>
-<span class="sd">    for implementing lifetime model expecting a variadic set of arguments.</span>
-<span class="sd">    It expects implemantation of hazard functions (``hf``), cumulative hazard functions (``chf``),</span>
-<span class="sd">    probability density function (``pdf``) and survival function (``sf``).</span>
-<span class="sd">    Other functions are implemented by default but can be overridden by derived classes.</span>
+<span class="sd">    This class is a blueprint for implementing parametric lifetime models.</span>
+<span class="sd">    The interface is generic and can define a variadic set of arguments.</span>
+<span class="sd">    It expects implementation of the hazard function (``hf``), the cumulative hazard function (``chf``),</span>
+<span class="sd">    the probability density function (``pdf``) and the survival function (``sf``).</span>
+<span class="sd">    Other functions are implemented by default but can be overridden by the derived classes.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        The abstract methods also provides a default implementation. One may not have to implement</span>
@@ -452,10 +452,6 @@
 <span class="sd">        chf: Abstract method to compute the cumulative hazard function.</span>
 <span class="sd">        sf: Abstract method to compute the survival function.</span>
 <span class="sd">        pdf: Abstract method to compute the probability density function.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        NotImplementedError: Raised when an abstract method or feature in this</span>
-<span class="sd">        class has not been implemented in a derived class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@abstractmethod</span>
@@ -777,7 +773,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, RTE.
+      © Copyright 2007 - 2025, RTE-SAGA (Apache 2.0 License).
       <br/>
     
   </p>

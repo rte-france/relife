@@ -1,9 +1,6 @@
 For developpers
 ===============
 
-.. contents::
-    :local:
-
 How to contribute
 -----------------
 

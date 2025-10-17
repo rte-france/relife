@@ -56,7 +56,7 @@
     <link rel="prev" title="&lt;no title&gt;" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="2.1.3" />
   </head>
   
   
@@ -129,7 +129,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-</div>
+2.1.3</div>
     
   </div>
   
@@ -414,56 +414,33 @@
                   
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<nav class="contents local" id="contents">
-<ul class="simple">
-<li><p><a class="reference internal" href="#linux-users-debian-based" id="id3">Linux users (Debian based)</a></p></li>
-<li><p><a class="reference internal" href="#windows-users" id="id4">Windows users</a></p></li>
-<li><p><a class="reference internal" href="#from-source" id="id5">From source</a></p></li>
-</ul>
-</nav>
 <p>ReLife is a python package and it is uploaded on the <a class="reference external" href="https://pypi.org/">Python Package Index (PyPi)</a>. To install ReLife locally make
-sure :</p>
-<ul class="simple">
-<li><p>Python <strong>3.11 (or newer)</strong> is installed on your machine. For Linux users with a Debian based distribution, an appropriate version of Python is already installed if your OS is up-to-date. For Windows users, please go to <a class="reference external" href="https://www.python.org/">python.org</a>, read the documentation and install the appropriate Python version.</p></li>
-<li><p>You created a new python virtual environment (e.g, relife). For Linux users, you may need to install <code class="docutils literal notranslate"><span class="pre">python3.**-venv</span></code> (where <code class="docutils literal notranslate"><span class="pre">**</span></code> corresponds to your python version). If you don’t know what a Python virtual environment is, please go to <a class="reference external" href="https://docs.python.org/">docs.python.org</a>, read and learn. You’re about to use a Python package so you must know the very basics of Python, including virtual environments.</p></li>
-</ul>
-<section id="linux-users-debian-based">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Linux users (Debian based)</a><a class="headerlink" href="#linux-users-debian-based" title="Link to this heading">#</a></h2>
-<p>Create and activate the virtual environment :</p>
+sure to have Python <strong>3.11 (or newer)</strong> installed on your machine.</p>
+<p><strong>Optional but recommended :</strong> create and activate a virtual environment.</p>
+<p>For Linux users :</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python3</span><span class="o">.**</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;/</span><span class="n">relife</span>
 <span class="n">source</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;/</span><span class="n">relife</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
 </pre></div>
 </div>
-<p>Then, install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a> :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">relife</span>
-</pre></div>
-</div>
-</section>
-<section id="windows-users">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Windows users</a><a class="headerlink" href="#windows-users" title="Link to this heading">#</a></h2>
-<p>Create and activate the virtual environment :</p>
+<p>For Windows users :</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">py</span> <span class="o">-</span><span class="mf">3.</span><span class="o">**</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;</span>\<span class="n">relife</span>
 <span class="o">.</span>\<span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;</span>\<span class="n">relife</span>\<span class="n">Scripts</span>\<span class="n">activate</span>
 </pre></div>
 </div>
-<p>Install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">relife</span>
+<p>Install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a> :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">relife</span>
 </pre></div>
 </div>
-</section>
-<section id="from-source">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">From source</a><a class="headerlink" href="#from-source" title="Link to this heading">#</a></h2>
-<p>To install ReLife from source, go to <a class="reference external" href="https://github.com/rte-france/relife">relife repository</a>. Clone the codebase and install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a>.</p>
+<p><strong>From source :</strong> to install ReLife from source, go to <a class="reference external" href="https://github.com/rte-france/relife">relife repository</a>. Clone the codebase and install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">rte</span><span class="o">-</span><span class="n">france</span><span class="o">/</span><span class="n">relife</span><span class="o">.</span><span class="n">git</span>
 <span class="n">cd</span> <span class="n">relife</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
 </pre></div>
 </div>
-<p>As a contributor, you may want to install optional dependencies (type checking, documentation builder, etc.). You can use this command instead :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;.[dev]&quot;</span>
+<p>As a contributor, you’ll need optional development dependencies (type checker, documentation builder, etc.). Use this command instead :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;.[dev]&quot;</span>
 </pre></div>
 </div>
-</section>
 </section>
 
 
@@ -480,20 +457,6 @@ sure :</p>
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linux-users-debian-based">Linux users (Debian based)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#windows-users">Windows users</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#from-source">From source</a></li>
-</ul>
-  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
@@ -529,7 +492,7 @@ sure :</p>
 
   <p class="copyright">
     
-      © Copyright 2025, RTE.
+      © Copyright 2007 - 2025, RTE-SAGA (Apache 2.0 License).
       <br/>
     
   </p>

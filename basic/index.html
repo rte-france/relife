@@ -58,7 +58,7 @@
     <link rel="prev" title="Installation" href="../installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="2.1.3" />
   </head>
   
   
@@ -131,7 +131,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-</div>
+2.1.3</div>
     
   </div>
   
@@ -416,23 +416,9 @@
                   
   <section id="basics">
 <h1>Basics<a class="headerlink" href="#basics" title="Link to this heading">#</a></h1>
-<nav class="contents local" id="contents">
-<ul class="simple">
-<li><p><a class="reference internal" href="#a-starter-example" id="id3">A starter example</a></p>
-<ul>
-<li><p><a class="reference internal" href="#data-collection" id="id4">Data collection</a></p></li>
-<li><p><a class="reference internal" href="#lifetime-model-estimation" id="id5">Lifetime model estimation</a></p></li>
-<li><p><a class="reference internal" href="#maintenance-policy-optimization" id="id6">Maintenance policy optimization</a></p></li>
-<li><p><a class="reference internal" href="#projection-of-consequences" id="id7">Projection of consequences</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#relife-and-numpy" id="id8">ReLife and Numpy</a></p></li>
-<li><p><a class="reference internal" href="#variables-dimensions" id="id9">Variables dimensions</a></p></li>
-</ul>
-</nav>
-<p>The section will help you understand basic commands and math concepts to begin with ReLife.</p>
+<p>The section will help you understand basic commands of ReLife and its usage workflow.</p>
 <section id="a-starter-example">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">A starter example</a><a class="headerlink" href="#a-starter-example" title="Link to this heading">#</a></h2>
+<h2>A starter example<a class="headerlink" href="#a-starter-example" title="Link to this heading">#</a></h2>
 <figure class="align-center" id="id1">
 <img alt="../_images/relife_workflow.png" src="../_images/relife_workflow.png" />
 <figcaption>
@@ -441,26 +427,24 @@
 </figure>
 <p>The figure above represents the four elementary steps of ReLife’s workflow (for left to right) :</p>
 <ol class="arabic simple">
-<li><p>You first need to collect failure data</p></li>
-<li><p>Then, you generally fit a lifetime model. Note that all ReLife models are not necessarilly lifetime models. It can be stochastic processes too</p></li>
-<li><p>From the obtained model, you create a policy. It is generally an age replacement policy (but it may vary too). With this kind of policy you can find a optimal age of replacement that minimize the annual costs for this maintenance strategy</p></li>
-<li><p>Finally, you can project consequences (e.g. compute the expected number of annual replacements)</p></li>
+<li><p>You collect failure data.</p></li>
+<li><p>You fit a lifetime model from the data.</p></li>
+<li><p>You create a maintenance policy (preventive age replacement or run-to-failure).</p></li>
+<li><p>You can project the consequences of the policy (e.g. the expected number of annual replacements).</p></li>
 </ol>
-<p>The next parts provide ReLife command examples for each of these steps</p>
 <section id="data-collection">
-<h3><a class="toc-backref" href="#id4" role="doc-backlink">Data collection</a><a class="headerlink" href="#data-collection" title="Link to this heading">#</a></h3>
-<p>In real life, you may have collected your own data but ReLife also provides built-in datasets so that you can start learning ReLife. For this example,
-we will use the <em>power transformer dataset</em>. If you don’t know what a power transformer is, you can look at <a class="reference external" href="https://en.wikipedia.org/wiki/Transformer">the decicated Wikipedia page</a>
-To load this dataset, you must import the function <code class="docutils literal notranslate"><span class="pre">load_power_transformer</span></code></p>
+<h3>Data collection<a class="headerlink" href="#data-collection" title="Link to this heading">#</a></h3>
+<p>ReLife provides built-in datasets so that you can start using the library and understand data structures. For this example,
+we will use the <em>power transformer dataset</em>. If you don’t know what a power transformer is, you can look at <a class="reference external" href="https://en.wikipedia.org/wiki/Transformer">the decicated Wikipedia page</a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_power_transformer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">load_power_transformer</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Here <code class="docutils literal notranslate"><span class="pre">data</span></code> is a <a class="reference external" href="https://numpy.org/doc/stable/user/basics.rec.html">structured array</a> object that contains three fields :</p>
+<p>Here <code class="docutils literal notranslate"><span class="pre">data</span></code> is a <a class="reference external" href="https://numpy.org/doc/stable/user/basics.rec.html">structured array</a> that contains three fields :</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">time</span></code> : the observed lifetime values</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">event</span></code> : the event indicators tagging each observations as complete (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or censored (<code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">entry</span></code> : the left truncation values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time</span></code> : the observed lifetime values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">event</span></code> : boolean values indicating if the event occured during the observation window.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">entry</span></code> : the ages of the assets at the beginning of the observation window.</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])</span>
 <span class="go">[34.3 45.1 53.2 ... 30.  30.  30. ]</span>
@@ -472,8 +456,8 @@ To load this dataset, you must import the function <code class="docutils literal
 </div>
 </section>
 <section id="lifetime-model-estimation">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">Lifetime model estimation</a><a class="headerlink" href="#lifetime-model-estimation" title="Link to this heading">#</a></h3>
-<p>From the obtained data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.</p>
+<h3>Lifetime model estimation<a class="headerlink" href="#lifetime-model-estimation" title="Link to this heading">#</a></h3>
+<p>From the data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">KaplanMeier</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span> <span class="o">=</span> <span class="n">KaplanMeier</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
@@ -489,7 +473,7 @@ To load this dataset, you must import the function <code class="docutils literal
 </pre></div>
 </div>
 <img alt="../_images/kaplan_meier.png" src="../_images/kaplan_meier.png" />
-<p>You can also fit a simple parametric lifetime model : a Weibull lifetime distribution, and plot the two survival functions obtained in one graph</p>
+<p>Then, you can fit a parametric lifetime model and plot the two survival functions obtained in one graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
@@ -501,7 +485,7 @@ To load this dataset, you must import the function <code class="docutils literal
 <span class="go">(&#39;shape&#39;, &#39;rate&#39;) [3.46597396 0.0122785 ]</span>
 </pre></div>
 </div>
-<p>Note that this object holds <code class="docutils literal notranslate"><span class="pre">params</span></code> values and that the <code class="docutils literal notranslate"><span class="pre">fit</span></code> has modified them inplace. You can quickly visualize probability functions plot, like the survival function.</p>
+<p>Note that this object holds <code class="docutils literal notranslate"><span class="pre">params</span></code> values and the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method has modified them inplace.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">sf</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">sf</span><span class="p">()</span>
 </pre></div>
@@ -509,22 +493,22 @@ To load this dataset, you must import the function <code class="docutils literal
 <img alt="../_images/kaplan_meier_and_weibull.png" src="../_images/kaplan_meier_and_weibull.png" />
 </section>
 <section id="maintenance-policy-optimization">
-<h3><a class="toc-backref" href="#id6" role="doc-backlink">Maintenance policy optimization</a><a class="headerlink" href="#maintenance-policy-optimization" title="Link to this heading">#</a></h3>
-<p>Now let’s consider that we want the study an age replacement policy. You need to know :</p>
+<h3>Maintenance policy optimization<a class="headerlink" href="#maintenance-policy-optimization" title="Link to this heading">#</a></h3>
+<p>Let’s consider that we want the study an age replacement policy. You need to choose :</p>
 <ul class="simple">
-<li><p>the cost of a preventive replacement <span class="math notranslate nohighlight">\(c_p\)</span></p></li>
-<li><p>the cost of an unexpected failure <span class="math notranslate nohighlight">\(c_f\)</span></p></li>
-<li><p>the current ages of your assets</p></li>
+<li><p>costs of a preventive replacement <span class="math notranslate nohighlight">\(c_p\)</span></p></li>
+<li><p>costs of an unexpected failure <span class="math notranslate nohighlight">\(c_f\)</span></p></li>
 </ul>
-<p>For this example, we will fix <span class="math notranslate nohighlight">\(c_p\)</span> at 3 millions of euros and <span class="math notranslate nohighlight">\(c_f\)</span> at 11 millions of euros. For the sake of the illustration, we
-will sample 1000 age values for a binomial distribution to represent the current ages of the assets. So here, we consider <strong>a fleet of 1000 assets</strong>.</p>
+<p>For this example, we will set <span class="math notranslate nohighlight">\(c_p\)</span> at 3 millions of euros and <span class="math notranslate nohighlight">\(c_f\)</span> at 11 millions of euros.
+Note that this cost structure also takes into account any undesirable consequences of the asset replacement and that <span class="math notranslate nohighlight">\(c_f\)</span> is higher than <span class="math notranslate nohighlight">\(c_p\)</span>.
+We sample 1000 ages from a binomial distribution to represent the current ages of a flit of 1000 assets.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cp</span> <span class="o">=</span> <span class="mf">3.</span> <span class="c1"># cost of preventive replacement</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="mf">11.</span> <span class="c1"># cost of failure</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span> <span class="c1"># asset ages</span>
 </pre></div>
 </div>
-<p>Now you can use these values with the previous lifetime model to optimize an age replacement policy</p>
+<p>We can use these values with the previous lifetime model to optimize an age replacement policy</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.policy</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgeReplacementPolicy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">policy</span> <span class="o">=</span> <span class="n">AgeReplacementPolicy</span><span class="p">(</span>
 <span class="go">      weibull,</span>
@@ -535,8 +519,8 @@ will sample 1000 age values for a binomial distribution to represent the current
 <span class="go">    ).optimize()</span>
 </pre></div>
 </div>
-<p>The obtained object encapsulates optimal ages of replacement in one array of 1000 values (because we considered 1000 assets). These data are stored in <code class="docutils literal notranslate"><span class="pre">ar</span></code>. One can also get the time before the first replacement
-by requesting <cite>first_cycle_tr</cite>. Note here, that the optimal ages of replacement are the same for each asset because the costs are the same for each of them (but you can also pass arrays of cost values if you want).</p>
+<p>The obtained object encapsulates optimal ages of replacement <code class="docutils literal notranslate"><span class="pre">ar</span></code> in one array of 1000 values (because we considered 1000 assets). We can also get the time before the first replacement
+by requesting <code class="docutils literal notranslate"><span class="pre">tr1</span></code>. Here, note that the optimal ages of replacement are the same for each asset because the costs are the same for each of them (but you can also pass arrays of cost values if you want).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal ages of replacement (per asset)&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">.</span><span class="n">ar</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
 <span class="go">Optimal ages of replacement (per asset) [59.19751205 59.19751205 59.19751205 59.19751205 59.19751205]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Current asset ages&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">.</span><span class="n">a0</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
@@ -547,14 +531,13 @@ by requesting <cite>first_cycle_tr</cite>. Note here, that the optimal ages of r
 </div>
 </section>
 <section id="projection-of-consequences">
-<h3><a class="toc-backref" href="#id7" role="doc-backlink">Projection of consequences</a><a class="headerlink" href="#projection-of-consequences" title="Link to this heading">#</a></h3>
-<p>Now that we have optimized ages of replacement, we can project the consequences of this strategy.
-For instance, you can be interested in seeing the expected number of replacements and number of failures for the next 170 years.</p>
+<h3>Projection of consequences<a class="headerlink" href="#projection-of-consequences" title="Link to this heading">#</a></h3>
+<p>We can project the consequences of our policy, e.g. the expected number of replacements and number of failures for the next 170 years.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nb_years</span> <span class="o">=</span> <span class="mi">170</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">timeline</span><span class="p">,</span> <span class="n">nb_replacements</span><span class="p">,</span> <span class="n">nb_failures</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">annual_number_of_replacements</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">upon_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To do that, ReLife solves the renewal equation. The returned objects are arrays of with 170 values, one value for each upcoming years.</p>
+<p>To do that, ReLife solves <strong>the renewal equation</strong>. The returned objects are arrays of with 170 values, one value for each upcoming years.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">timeline</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(170,)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nb_replacements</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -581,7 +564,7 @@ For instance, you can be interested in seeing the expected number of replacement
 </section>
 </section>
 <section id="relife-and-numpy">
-<h2><a class="toc-backref" href="#id8" role="doc-backlink">ReLife and Numpy</a><a class="headerlink" href="#relife-and-numpy" title="Link to this heading">#</a></h2>
+<h2>ReLife and Numpy<a class="headerlink" href="#relife-and-numpy" title="Link to this heading">#</a></h2>
 <p>ReLife is built using <a class="reference external" href="https://numpy.org/">NumPy</a>, a fundamental Python library for numerical computing.
 While you don’t need to be a NumPy expert, understanding its basics will help since ReLife often requires data input of type <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
 <p>There are 3 standard representations of data in ReLife :</p>
@@ -621,7 +604,7 @@ assets.</strong></p>
 The output shape is consistent to the input.</p>
 </section>
 <section id="variables-dimensions">
-<h2><a class="toc-backref" href="#id9" role="doc-backlink">Variables dimensions</a><a class="headerlink" href="#variables-dimensions" title="Link to this heading">#</a></h2>
+<h2>Variables dimensions<a class="headerlink" href="#variables-dimensions" title="Link to this heading">#</a></h2>
 <p>Some Numpy data passed to ReLife functions cannot have any number of dimension. They try to correspond to a coherent math representation.</p>
 <p><strong>ReLife does not control the dimension and the shapes or your data</strong>. We believe that the user is responsible and must know what he’s doing.
 That’s why <strong>you must be carefull to the way you encode your data in Numpy objects</strong>. In this section, we provide a currated list of all possible encodings per input data and their possible shapes.</p>
@@ -730,7 +713,7 @@ That’s why <strong>you must be carefull to the way you encode your data in Num
 
   <p class="copyright">
     
-      © Copyright 2025, RTE.
+      © Copyright 2007 - 2025, RTE-SAGA (Apache 2.0 License).
       <br/>
     
   </p>
