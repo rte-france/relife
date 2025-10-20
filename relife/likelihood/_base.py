@@ -1,27 +1,29 @@
-from __future__ import annotations
-
+import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional, TypeVar, Union
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy import stats
 from scipy.optimize import approx_fprime
 
-from relife.base import ParametricModel
-
-
 class Likelihood(ABC):
-    model: ParametricModel
-    data: Any
 
-    def __init__(self, model, data):
-        self.model = model
-        self.data = data
+    def __init__(self, model):
+        # deep copy model to have independent variation of params
+        self.model = copy.deepcopy(model)
+
+    @property
+    def params(self):
+        return self.model.params
+
+    @params.setter
+    def params(self, value):
+        self.model.params = value
 
     @abstractmethod
-    def negative_log(self, params: NDArray[np.float64]) -> np.float64:
+    def negative_log(self, params):
         """
         Negative log likelihood.
 
@@ -37,19 +39,23 @@ class Likelihood(ABC):
         """
 
     @abstractmethod
-    def maximum_likelihood_estimation(self, **kwargs: Any) -> FittingResults: ...
+    def maximum_likelihood_estimation(self, **optimizer_options):
+        """
+        Finds the parameter values that maximize the likelihood.
+    
+        Parameters
+        ----------
+        **optimizer_options
+            Extra arguments used by `scipy.minimize`
+    
+        Returns
+        -------
+        FittingResults
+            The fitting results.
+        """
 
 
-L = TypeVar(
-    "L", bound=Union["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
-)  # maybe other likelihood in the future
-
-
-def hessian_cs(
-    likelihood: L,
-    params: NDArray[np.float64],
-    eps: float = 1e-6,
-) -> NDArray[np.float64]:
+def _hessian_cs(likelihood, params, eps):
     size = params.size
     hess = np.empty((size, size))
     u = eps * 1j * np.eye(size)
@@ -64,11 +70,7 @@ def hessian_cs(
     return hess
 
 
-def hessian_2point(
-    likelihood: L,
-    params: NDArray[np.float64],
-    eps: float = 1e-6,
-) -> NDArray[np.float64]:
+def _hessian_2point(likelihood, params, eps = 1e-6):
     size = params.size
     hess = np.empty((size, size))
     for i in range(size):
@@ -80,24 +82,17 @@ def hessian_2point(
     return hess
 
 
-M = TypeVar(
-    "M",
-    bound=Union["LifetimeDistribution", "LifetimeRegression", "MinimumDistribution"],
-)
 
-
-def approx_hessian(
-    likelihood: L, params: NDArray[np.float64], eps: float = 1e-6
-) -> NDArray[np.float64]:
-    def hessian_scheme(model: M):
+def approx_hessian(likelihood, params, eps= 1e-6):
+    def hessian_scheme(model):
         from relife.lifetime_model import Gamma
         from relife.lifetime_model.regression import LifetimeRegression
 
         if isinstance(model, LifetimeRegression):
             return hessian_scheme(model.baseline)
         if isinstance(model, Gamma):
-            return hessian_2point
-        return hessian_cs
+            return _hessian_2point
+        return _hessian_cs
 
     return hessian_scheme(likelihood.model)(likelihood, params, eps=eps)
 
@@ -114,7 +109,7 @@ class FittingResults:
         repr=False
     )  #: Negative log likelihood value at optimal parameters values
 
-    covariance_matrix: Optional[NDArray[np.floating[Any]]] = field(
+    covariance_matrix: Optional[NDArray[np.float64]] = field(
         repr=False, default=None
     )  #: Covariance matrix (computed as the inverse of the Hessian matrix).
 

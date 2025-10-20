@@ -1,6 +1,5 @@
 from ._base import (
     FittableParametricLifetimeModel,
-    NonParametricLifetimeModel,
     ParametricLifetimeModel,
 )
 from .conditional_model import (
@@ -26,7 +25,6 @@ from .regression import (
 
 __all__ = [
     "ParametricLifetimeModel",
-    "NonParametricLifetimeModel",
     "FittableParametricLifetimeModel",
     "LifetimeDistribution",
     "Exponential",
@@ -44,5 +42,4 @@ __all__ = [
     "ECDF",
     "KaplanMeier",
     "NelsonAalen",
-    "Turnbull",
 ]

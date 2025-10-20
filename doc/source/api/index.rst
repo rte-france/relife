@@ -2,7 +2,18 @@ API
 ===
 
 This section provides comprehensive details about the exposed ReLife API.
-ReLife is structured into different modules, each with a clear and specific role. We divided the API documentation close to the same logic.
+ReLife is structured into different modules, each with a clear and specific role.
+We divided the API documentation close to the same logic.
+
+.. currentmodule:: relife.base
+
+.. autosummary::
+    :toctree: base_class
+    :template: class_template.rst
+    :caption: Base classes
+    :nosignatures:
+
+    ParametricModel
 
 Lifetime models
 ---------------
@@ -12,24 +23,19 @@ Parametric lifetime models
 
 .. currentmodule:: relife.lifetime_model
 
-Lifetime models are objects whose exposed interface can answer basic probility functions of the survival analysis. In
-object-oriented programming, one must not see them as a group of probability functions solely : it also encapsulates
-data like parameters, other nested models, etc.
+.. autosummary::
+    :toctree: parametric_lifetime_models
+    :template: class_template.rst
+    :caption: Parametric lifetime models
+    :nosignatures:
 
-Lifetime models are imported like this :
-
-.. code-block:: python
-
-    from relife.lifetime_model import <model_constructor>
-
-Here is an exhaustive list of all lifetime model constructors that can be used in Relife :
+    ParametricLifetimeModel
 
 .. rubric:: Lifetime distributions
 
 .. autosummary::
     :toctree: parametric_lifetime_models
     :template: class_template.rst
-    :caption: Parametric lifetime models
     :nosignatures:
 
     Exponential
@@ -37,20 +43,6 @@ Here is an exhaustive list of all lifetime model constructors that can be used i
     Gompertz
     Gamma
     LogLogistic
-
-Here is a quick example that instanciates a ``Weibull`` distribution and computes the survival function.
-
-.. code-block:: python
-
-    >>> import numpy as np
-    >>> from relife.lifetime_model import Weibull
-    >>> weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
-    # sf is np.float64, ie. a scalar
-    >>> sf = weibull.sf(10.)
-    # sf is np.array of shape (2,), 2 points for 1 asset
-    >>> sf_1d = weibull.sf(np.array([10., 20.]))
-    # sf is np.array of (2, 3), 3 points for 2 assets
-    >>> sf_2d = weibull.sf(np.array([[10., 20., 30.], [30., 40., 50.]]))
 
 .. rubric:: Lifetime regression
 
@@ -62,32 +54,6 @@ Here is a quick example that instanciates a ``Weibull`` distribution and compute
     ProportionalHazard
     AcceleratedFailureTime
 
-Here is a quick example that instanciates a ``ProportionalHazard`` regression from the same ``Weibull`` distribution (see above).
-The regression has 3 coefficients.
-
-.. code-block:: python
-
-    >>> import numpy as np
-    >>> from relife.lifetime_model import Weibull
-    >>> from relife.lifetime_model import ProportionalHazard
-
-    >>> weibull = Weibull(3.47, 0.01) # shape = 3.47, rate = 0.01
-    # 3 coefficients
-    >>> regression = ProportionalHazard(weibull, coefficients=(0.2, 0.01, 0.4))
-
-    # 1 value per covar
-    >>> covar = np.array([3., 59., 9.3])
-    # sf is np.float64, ie. a scalar
-    >>> sf = regression.sf(10., covar)
-
-    # 2 values per covar, meaning two assets
-    >>> covar_2d = np.array([[3., 59., 9.3], [2., 64., 5.6]])
-    # sf is np.array of shape (2, 1), 1 point for 2 assets
-    >>> sf_2d = regression.sf(10., covar_2d)
-
-Note that the example above uses Numpy broadcasting. It is a core functionnality of ReLife. For more explanations and pratical
-examples about broadcasting in ReLife, please read Broadcasting in ReLife.
-
 .. rubric:: Conditional lifetime models
 
 .. autosummary::
@@ -97,43 +63,6 @@ examples about broadcasting in ReLife, please read Broadcasting in ReLife.
 
     LeftTruncatedModel
     AgeReplacementModel
-
-.. code-block:: python
-
-    >>> import numpy as np
-    >>> from relife.lifetime_model import LeftTruncatedModel, Weibull
-    >>> from relife.lifetime_model import ProportionalHazard
-
-    >>> left_truncated_weibull = LeftTruncated(Weibull(3.47, 0.01))
-
-    # sf is np.float64, ie. a scalar
-    >>> sf = left_truncated_weibull.sf(10., a0=20.)
-
-.. rubric:: Frozen parametric lifetime models
-
-.. currentmodule:: relife.lifetime_model
-
-Frozen lifetime models share the same properties as lifetime models, but any additional arguments to time are frozen.
-This means that the values of these arguments are stored within the model and cannot be set as arguments in a method request.
-These models are important in ReLife because other objects expect frozen-like lifetime models: any lifetime model that has only time as a method argument.
-It is specifically the case of policy objects. To freeze a lifetime model, just call ``.freeze(*args)`` on the model instance where ``*args`` are
-required additional arguments of the model.
-
-.. note::
-
-    ``LifetimeDistribution`` objects can't be frozen as time is the only variable needed for these objects.
-
-
-.. rubric:: Frozen lifetime regression
-
-.. autosummary::
-    :toctree: parametric_lifetime_models
-    :template: class_template.rst
-    :nosignatures:
-
-    FrozenLifetimeRegression
-    FrozenLeftTruncatedModel
-    FrozenAgeReplacementModel
 
 
 Non parametric lifetime models
@@ -148,23 +77,6 @@ Non parametric lifetime models
     KaplanMeier
     NelsonAalen
     ECDF
-    Turnbull
-
-Built-in dataset
-----------------
-
-.. currentmodule:: relife.data
-
-.. autosummary::
-    :toctree: data
-    :template: function_template.rst
-    :caption: Built-in datasets
-    :nosignatures:
-
-    ~load_circuit_breaker
-    ~load_insulator_string
-    ~load_power_transformer
-
 
 Stochastic processes
 --------------------
@@ -181,6 +93,31 @@ Stochastic processes
     RenewalRewardProcess
     NonHomogeneousPoissonProcess
 
+Maintenance policies
+--------------------
+
+.. currentmodule:: relife.policy
+
+.. autosummary::
+    :toctree: policy
+    :caption: Maintenance policies
+    :template: function_template.rst
+    :nosignatures:
+
+    age_replacement_policy
+    run_to_failure_policy
+
+.. autosummary::
+    :toctree: policy
+    :template: class_template.rst
+    :nosignatures:
+
+    AgeReplacementPolicy
+    OneCycleAgeReplacementPolicy
+    RunToFailurePolicy
+    OneCycleRunToFailurePolicy
+    NonHomogeneousPoissonAgeReplacementPolicy
+
 Economy
 -------
 
@@ -194,73 +131,50 @@ Economy
 
     RunToFailureReward
     AgeReplacementReward
+    ExponentialDiscounting
 
-Maintenance policies
---------------------
+Built-in dataset
+----------------
 
-
-.. currentmodule:: relife.policy
+.. currentmodule:: relife.data
 
 .. autosummary::
-    :toctree: policy
-    :template: class_template.rst
-    :caption: Maintenance policies
+    :toctree: data
+    :template: function_template.rst
+    :caption: Built-in datasets
     :nosignatures:
 
-    AgeReplacementPolicy
-    OneCycleAgeReplacementPolicy
-    RunToFailurePolicy
-    OneCycleRunToFailurePolicy
-    NonHomogeneousPoissonAgeReplacementPolicy
+    ~load_circuit_breaker
+    ~load_insulator_string
+    ~load_power_transformer
 
+Utils
+-----
 
-Routines
---------
+Various utilities to help with development.
 
-.. currentmodule:: relife
+.. currentmodule:: relife.utils
 
 .. autosummary::
     :toctree: routines
     :template: function_template.rst
-    :caption: Routines
+    :caption: Utils
     :nosignatures:
 
+    ~reshape_1d_arg
+    ~get_args_nb_assets
     ~is_frozen
     ~is_lifetime_model
-    ~is_stochastic_process
+    ~is_non_homogeneous_poisson_process
 
-
-Base classes
-------------
-
-.. warning::
-
-    The interfaces presented below might interest you only if you want to understand how ReLife is implemented (contributions, suggestions, spotted errors, etc.)
-    Otherwise, you can skip this part of the API
-
-.. rubric:: Parametric models
-
-.. currentmodule:: relife
+.. currentmodule:: relife.utils.quadrature
 
 .. autosummary::
-    :toctree: base_class
-    :template: class_template.rst
-    :caption: Base classes
+    :toctree: routines
+    :template: function_template.rst
     :nosignatures:
 
-    ParametricModel
-    ~lifetime_model.ParametricLifetimeModel
-    ~lifetime_model.FrozenParametricLifetimeModel
-    ~lifetime_model.NonParametricLifetimeModel
+    ~legendre_quadrature
+    ~laguerre_quadrature
+    ~unweighted_laguerre_quadrature
 
-.. rubric:: Policies
-
-.. currentmodule:: relife.policy
-
-.. autosummary::
-    :toctree: base_class
-    :template: class_template.rst
-    :nosignatures:
-
-    BaseAgeReplacementPolicy
-    BaseOneCycleAgeReplacementPolicy

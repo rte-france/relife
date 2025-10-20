@@ -41,7 +41,7 @@ class TestOneCycleAgeReplacementPolicy:
             pytest.skip("Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)")
         eps = 1e-2
         policy = OneCycleAgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate).optimize()
-        policy1 = OneCycleAgeReplacementPolicy(
+        suboptimal_policy1 = OneCycleAgeReplacementPolicy(
             distribution,
             cf,
             cp,
@@ -49,7 +49,7 @@ class TestOneCycleAgeReplacementPolicy:
             period_before_discounting=0.1,
             ar=policy.ar + eps,
         )
-        policy0 = OneCycleAgeReplacementPolicy(
+        suboptimal_policy2 = OneCycleAgeReplacementPolicy(
             distribution,
             cf,
             cp,
@@ -58,9 +58,11 @@ class TestOneCycleAgeReplacementPolicy:
             ar=policy.ar - eps,
         )
         assert np.all(
-            policy1.asymptotic_expected_equivalent_annual_cost() > policy.asymptotic_expected_equivalent_annual_cost()
+            suboptimal_policy1.asymptotic_expected_equivalent_annual_cost()
+            > policy.asymptotic_expected_equivalent_annual_cost()
         ) and np.all(
-            policy0.asymptotic_expected_equivalent_annual_cost() > policy.asymptotic_expected_equivalent_annual_cost()
+            suboptimal_policy2.asymptotic_expected_equivalent_annual_cost()
+            > policy.asymptotic_expected_equivalent_annual_cost()
         )
 
 
@@ -99,13 +101,17 @@ class TestAgeReplacementPolicy:
             pytest.skip("Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)")
         eps = 1e-2
         policy = AgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate).optimize()
-        ar = policy.ar
-
-        policy1 = AgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate, ar=ar + eps)
-        policy0 = AgeReplacementPolicy(distribution, cf, cp, discounting_rate=discounting_rate, ar=ar - eps)
+        suboptimal_policy1 = AgeReplacementPolicy(
+            distribution, cf, cp, discounting_rate=discounting_rate, ar=policy.ar + eps
+        )
+        suboptimal_policy2 = AgeReplacementPolicy(
+            distribution, cf, cp, discounting_rate=discounting_rate, ar=policy.ar - eps
+        )
 
         assert np.all(
-            policy1.asymptotic_expected_equivalent_annual_cost() > policy.asymptotic_expected_equivalent_annual_cost()
+            suboptimal_policy1.asymptotic_expected_equivalent_annual_cost()
+            > policy.asymptotic_expected_equivalent_annual_cost()
         ) and np.all(
-            policy0.asymptotic_expected_equivalent_annual_cost() > policy.asymptotic_expected_equivalent_annual_cost()
+            suboptimal_policy2.asymptotic_expected_equivalent_annual_cost()
+            > policy.asymptotic_expected_equivalent_annual_cost()
         )

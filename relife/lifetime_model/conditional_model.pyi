@@ -156,7 +156,7 @@ class AgeReplacementModel(
         *args: _Any_Number,
         deg: int = 10,
     ) -> _Any_Numpy_Number: ...
-    def freeze_args(
+    def freeze(
         self, ar: _Any_Number, *args: _Any_Number
     ) -> FrozenParametricModel[
         ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]
@@ -297,7 +297,7 @@ class LeftTruncatedModel(
         *args: _Any_Number,
         deg: int = 10,
     ) -> _Any_Numpy_Number: ...
-    def freeze_args(
+    def freeze(
         self, ar: _Any_Number, *args: _Any_Number
     ) -> FrozenParametricModel[
         ParametricLifetimeModel[_Any_Number, *tuple[_Any_Number, ...]]

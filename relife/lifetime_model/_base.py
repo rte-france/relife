@@ -3,36 +3,29 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import Bounds, newton
 
-from relife.base import FrozenParametricModel, ParametricModel
-from relife.likelihood.default_lifetime_likelihood import (
-    DefaultLifetimeLikelihood,
-)
-from relife.likelihood.interval_lifetime_likelihood import (
-    IntervalLifetimeLikelihood,
-)
-from relife.quadrature import (
-    broadcast_bounds,
+from relife.utils.quadrature import (
     legendre_quadrature,
-    unweighted_laguerre_quadrature,
+    unweighted_laguerre_quadrature
 )
+from relife.base import ParametricModel
+from relife.likelihood import DefaultLifetimeLikelihood, IntervalLifetimeLikelihood
 
 from ._plot import PlotParametricLifetimeModel
 
 __all__ = [
     "ParametricLifetimeModel",
     "FittableParametricLifetimeModel",
-    "NonParametricLifetimeModel",
 ]
 
 
 class ParametricLifetimeModel(ParametricModel, ABC):
-    r"""Base class for lifetime model.
+    r"""Base class for parametric lifetime models in ReLife.
 
-    This class defines the structure for creating lifetime model. It is a blueprint
-    for implementing lifetime model expecting a variadic set of arguments.
-    It expects implemantation of hazard functions (``hf``), cumulative hazard functions (``chf``),
-    probability density function (``pdf``) and survival function (``sf``).
-    Other functions are implemented by default but can be overridden by derived classes.
+    This class is a blueprint for implementing parametric lifetime models.
+    The interface is generic and can define a variadic set of arguments.
+    It expects implementation of the hazard function (``hf``), the cumulative hazard function (``chf``),
+    the probability density function (``pdf``) and the survival function (``sf``).
+    Other functions are implemented by default but can be overridden by the derived classes.
 
     Note:
         The abstract methods also provides a default implementation. One may not have to implement
@@ -43,10 +36,6 @@ class ParametricLifetimeModel(ParametricModel, ABC):
         chf: Abstract method to compute the cumulative hazard function.
         sf: Abstract method to compute the survival function.
         pdf: Abstract method to compute the probability density function.
-
-    Raises:
-        NotImplementedError: Raised when an abstract method or feature in this
-        class has not been implemented in a derived class.
     """
 
     @abstractmethod
@@ -178,7 +167,10 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             x = np.asarray(x)
             fx = func(x)
-            if fx.shape[-len(x.shape) :] != x.shape:
+
+            try:
+                np.broadcast_shapes(fx.shape[-len(x.shape) :], x.shape)
+            except ValueError:
                 raise ValueError(
                     f"""
                     func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
@@ -202,7 +194,7 @@ class ParametricLifetimeModel(ParametricModel, ABC):
             # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
             return fx * pdf
 
-        arr_a, arr_b = broadcast_bounds(a, b)  # (), (n,) or (m, n)
+        arr_a, arr_b = np.broadcast_arrays(a, b)  # (), (n,) or (m, n)
         if np.any(arr_a > arr_b):
             raise ValueError("Bound values a must be lower than values of b")
 
@@ -331,13 +323,3 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
-
-
-class NonParametricLifetimeModel(ABC):
-    @abstractmethod
-    def fit(self, time, event=None, entry=None): ...
-
-    @abstractmethod
-    def fit_interval_censored_data(
-        self, time_inf, time_sup, *args, entry=None, **optimizer_options
-    ): ...

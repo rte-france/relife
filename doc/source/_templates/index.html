@@ -1,5 +1,4 @@
-{% extends "layout.html" %}
-{% set title = 'relife: asset management in Python' %}
+{% extends "!layout.html" %}
 
 {% block docs_navbar %}
 <div class="container-fluid px-0 vw-100">
@@ -16,7 +15,7 @@
                            style="background-color: rgb(50, 164, 220); color: white;">
                             Download
                         </a>
-                        <span class="text-muted">2.1.0 release</span>
+                        <span class="text-muted">{{ version }} release</span>
                     </div>
                 </div>
             </div>
@@ -33,17 +32,12 @@
                                style="background-color: rgb(50, 164, 220); color: white;">
                                 Download
                             </a>
-                            <span class="text-muted">2.0.0 release</span>
+                            <span class="text-muted">{{ version }} release</span>
                         </div>
                     </div>
 
                     <div class="mx-4" style="flex: 1;">
-                        <p class="mb-2 fs-6">ReLife is an <b>open source</b> Python library for <b>asset management</b> based on reliability theory and lifetime data analysis. It gathers functionnalities from:</p>
-                        <ul class="fs-6">
-                            <li>Survival analysis</li>
-                            <li>Reliability theory</li>
-                            <li>Renewal theory</li>
-                        </ul>
+                        <p class="mb-2 fs-6">ReLife is an <b>open source</b> Python library to guide decision making in <b>asset management</b>. It is based on the <b>reliability theory</b></p>
                     </div>
 
                     <div>
@@ -160,7 +154,7 @@
                     <div class="sd-col d-flex">
                         <div class="sd-card bg-white w-100">
                             <div class="sd-card-body p-2" style="display: block;">
-                                <h6 class="sd-card-title" style="margin-top: 0;">Statiscal expertise</h6>
+                                <h6 class="sd-card-title" style="margin-top: 0;">Statistical expertise</h6>
                                 <p style="text-align: left; margin-bottom: 0;">ReLife implements statistical models of reliability and renewal theory</p>
                             </div>
                         </div>

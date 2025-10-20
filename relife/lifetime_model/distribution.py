@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 
-from relife.quadrature import laguerre_quadrature, legendre_quadrature
+from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
 
@@ -266,7 +266,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         """
         return super().ls_integrate(func, a, b, deg=deg)
 
-    def _get_initial_params(self, time, event=None, entry=None, departure=None):
+    def _get_initial_params(self, time, event=None, entry=None):
         param0 = np.ones(self.nb_params, dtype=np.float64)
         param0[-1] = 1 / np.median(time)
         self.params = param0
@@ -278,7 +278,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             np.full(self.nb_params, np.inf),
         )
 
-    def fit(self, time, event=None, entry=None, **options):
+    def fit(self, time, event=None, entry=None, optimizer_options=None):
         """
         Estimation of the distribution parameters from lifetime data.
 
@@ -290,7 +290,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : ndarray of float (1d), default is None
             Left truncations applied to lifetime values.
-        **options
+        optimizer_options : dict, default is None
             Extra arguments used by `scipy.minimize`. Default values are:
                 - `method` : `"L-BFGS-B"`
                 - `contraints` : `()`
@@ -311,17 +311,17 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         format that allows to pass other information as left-censored or interval-censored values. In this case,
         `event` is not needed as 2d-array encodes right-censored values by itself.
         """
-        return super().fit(time, event=event, entry=entry, **options)
+        return super().fit(time, event=event, entry=entry, optimizer_options=optimizer_options)
 
-    def fit_from_interval_censored_data(
+    def fit_from_interval_censored_lifetimes(
         self,
         time_inf,
         time_sup,
         entry=None,
-        **optimizer_options,
+        optimizer_options=None,
     ):
-        return super().fit_from_interval_censored_data(
-            time_inf, time_sup, entry=entry, **optimizer_options
+        return super().fit_from_interval_censored_lifetimes(
+            time_inf, time_sup, entry=entry, optimizer_options=None
         )
 
 
@@ -990,7 +990,7 @@ class Gompertz(LifetimeDistribution):
         """
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
-    def _get_initial_params(self, time, event=None, entry=None, departure=None):
+    def _get_initial_params(self, time, event=None, entry=None):
         param0 = np.empty(self.nb_params, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(time))
         shape = np.exp(-rate * np.mean(time))
@@ -1609,10 +1609,10 @@ class MinimumDistribution(FittableParametricLifetimeModel):
         return self.baseline._get_params_bounds()
 
     def _get_initial_params(
-        self, time, n, *args, event=None, entry=None, departure=None
+        self, time, n, *args, event=None, entry=None
     ):
         return self.baseline._get_initial_params(
-            time, *args, event=None, entry=None, departure=None
+            time, *args, event=None, entry=None
         )
 
     def fit(
@@ -1622,7 +1622,6 @@ class MinimumDistribution(FittableParametricLifetimeModel):
         *args,
         event=None,
         entry=None,
-        departure=None,
         optimizer_options=None,
     ):
         return super().fit(
@@ -1630,6 +1629,23 @@ class MinimumDistribution(FittableParametricLifetimeModel):
             *(n, *args),
             event=event,
             entry=entry,
-            departure=departure,
+            optimizer_options=optimizer_options,
+        )
+
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time_inf,
+        time_sup,
+        n,
+        *args,
+        event=None,
+        entry=None,
+        optimizer_options=None,
+    ):
+        return super().fit_from_interval_censored_lifetimes(
+            time_inf,
+            time_sup,
+            *(n, *args),
+            entry=entry,
             optimizer_options=optimizer_options,
         )

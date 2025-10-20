@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 def load_power_transformer() -> NDArray[np.void]:
     r"""
-    Load power transformer dataset containing observed lifetimes and left truncations values.
+    Load example dataset of power transformers lifetimes.
 
     Examples
     --------
@@ -39,7 +39,7 @@ def load_power_transformer() -> NDArray[np.void]:
 
 def load_insulator_string() -> NDArray[np.void]:
     r"""
-    Load insulator string dataset containing observed lifetimes, left truncations values and covariates
+    Load example dataset of insulator string lifetimes with covariates.
 
     Examples
     --------
@@ -95,7 +95,7 @@ def load_insulator_string() -> NDArray[np.void]:
 
 def load_circuit_breaker() -> NDArray[np.void]:
     r"""
-    Load circuit breaker dataset containing observed lifetimes and left truncations values
+    Load example dataset of circuit breaker lifetimes.
 
     Examples
     --------

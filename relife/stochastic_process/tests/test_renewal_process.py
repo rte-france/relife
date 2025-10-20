@@ -59,7 +59,7 @@ class TestDistribution:
         n = 100
         renewal_process = RenewalProcess(distribution)
         for i in range(n):
-            lifetime_data = renewal_process.generate_lifetime_data(10 * q3, t0=0, size=10000)
+            lifetime_data = renewal_process.generate_failure_data(10000, 10 * q3, t0=0)
             try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
                 distribution.fit(**lifetime_data)
             except RuntimeError:

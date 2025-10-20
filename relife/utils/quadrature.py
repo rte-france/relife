@@ -80,7 +80,9 @@ def legendre_quadrature(
     u = p * x + m  # (deg,) or (deg, n) or (deg, m, n)
     v = p * w  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(u.shape) :] != u.shape:
+    try:
+        np.broadcast_shapes(fvalues.shape[-len(u.shape) :], u.shape)
+    except ValueError:
         raise ValueError(
             f"""
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
@@ -109,7 +111,9 @@ def laguerre_quadrature(
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
+    try:
+        np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
+    except ValueError:
         # func est une fonction réel univariée et pas multivariée
         raise ValueError(
             f"""
@@ -143,7 +147,9 @@ def unweighted_laguerre_quadrature(
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
+    try:
+        np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
+    except ValueError:
         raise ValueError(
             f"""
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).

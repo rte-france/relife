@@ -4,16 +4,14 @@ from typing import Self
 
 import numpy as np
 
-__all__ = ["get_nb_assets", "is_frozen", "ParametricModel", "FrozenParametricModel"]
+__all__ = ["ParametricModel", "FrozenParametricModel"]
 
 
-# MAYBE, custom array container can be used here
-# https://numpy.org/doc/stable/user/basics.dispatch.html#writing-custom-array-containers
 class _Parameters:
     """
-    Dict-like tree structured parameters.
+    Dict-like tree structured of parameters.
 
-    Every ``ParametricModel`` are composed of a ``Parameters`` instance.
+    Every ``ParametricModel`` are composed of a ``_Parameters`` instance.
     """
 
     def __init__(self, **kwargs):
@@ -89,9 +87,7 @@ class _Parameters:
 
 class ParametricModel:
     """
-    Base class to create a parametric_model.
-
-    Any parametric model must inherit from `ParametricModel`.
+    Base class of every parametric models in ReLife.
     """
 
     def __init__(self, **kwparams):
@@ -169,17 +165,18 @@ class ParametricModel:
 
 
 class FrozenParametricModel(ParametricModel):
+    """
+    Class of every frozen parametric models.
+
+    Frozen models encapsulate additional arguments values allowing to request the object without
+    giving them.
+    """
     def __init__(self, model, *args):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
         self.unfrozen_model = model  # setted as a baseline model
-        self._nb_assets = get_nb_assets(*args)
         self._args = list(args)
-
-    @property
-    def nb_assets(self):
-        return self._nb_assets
 
     @property
     def args(self):
@@ -211,23 +208,6 @@ class FrozenParametricModel(ParametricModel):
         if inspect.ismethod(attr):
             return wrapper
         return attr
-
-
-def get_nb_assets(*args):
-    if not bool(args):
-        return 1
-    args_2d = tuple((np.atleast_2d(arys) for arys in args))
-
-    try:
-        broadcast_shape = np.broadcast_shapes(*(ary.shape for ary in args_2d))
-        nb_assets = broadcast_shape[0]
-    except ValueError:
-        raise ValueError("Given args have incompatible shapes")
-    return nb_assets
-
-
-def is_frozen(model):
-    return isinstance(model, FrozenParametricModel)
 
 
 # see sklearn/base.py : return unfitted ParametricModel

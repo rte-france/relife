@@ -1,3 +1,10 @@
 from ._base import FittingResults, Likelihood, approx_hessian
-from .default_lifetime_likelihood import DefaultLifetimeLikelihood
-from .interval_lifetime_likelihood import IntervalLifetimeLikelihood
+from ._lifetime_likelihood import DefaultLifetimeLikelihood, IntervalLifetimeLikelihood
+
+__all__ = [
+    "FittingResults",
+    "Likelihood",
+    "approx_hessian",
+    "DefaultLifetimeLikelihood",
+    "IntervalLifetimeLikelihood"
+]

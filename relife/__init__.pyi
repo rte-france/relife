@@ -1,10 +1,8 @@
 from lifetime_model import is_lifetime_model
 
-from .base import (
-    get_nb_assets,
-    is_frozen,
-)
+from relife.utils._array_api import get_args_nb_assets
+from relife.utils._model_checks import is_frozen
 
 # from relife.stochastic_process import is_stochastic_process
 
-__all__ = ["get_nb_assets", "is_frozen", "is_lifetime_model"]
+__all__ = ["is_lifetime_model"]

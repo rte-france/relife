@@ -1,9 +1,4 @@
-from relife.economic import AgeReplacementReward, RunToFailureReward, cost
-
-
-def test_cost(cf, cp, expected_out_shape):
-    cost_arr = cost(cf=cf, cp=cp)
-    assert cost_arr["cf"].shape == expected_out_shape(cf=cf, cp=cp)
+from relife.economic import AgeReplacementReward, RunToFailureReward
 
 
 def test_run_to_failure_reward(time, cf, expected_out_shape):
