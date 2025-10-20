@@ -284,11 +284,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
 
         Parameters
         ----------
-        time : ndarray (1d or 2d)
+        time : 1d array
             Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
+        event : 1d array of bool, default is None
             Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
+        entry : 1d array, default is None
             Left truncations applied to lifetime values.
         optimizer_options : dict, default is None
             Extra arguments used by `scipy.minimize`. Default values are:
@@ -304,12 +304,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         -------
         Self
             The current object with the estimated parameters setted inplace.
-
-        Notes
-        -----
-        Supported lifetime observations format is either 1d-array or 2d-array. 2d-array is more advanced
-        format that allows to pass other information as left-censored or interval-censored values. In this case,
-        `event` is not needed as 2d-array encodes right-censored values by itself.
         """
         return super().fit(time, event=event, entry=entry, optimizer_options=optimizer_options)
 
@@ -320,6 +314,36 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         entry=None,
         optimizer_options=None,
     ):
+        """
+        Estimation of the distribution parameters from interval censored lifetime data.
+
+        Parameters
+        ----------
+        time_inf : 1d array
+            Observed lifetime lower bounds.
+        time_sup : 1d array
+            Observed lifetime upper bounds.
+        entry : 1d array, default is None
+            Left truncations applied to lifetime values.
+        optimizer_options : dict, default is None
+            Extra arguments used by `scipy.minimize`. Default values are:
+                - `method` : `"L-BFGS-B"`
+                - `contraints` : `()`
+                - `tol` : `None`
+                - `callback` : `None`
+                - `options` : `None`
+                - `bounds` : `self.params_bounds`
+                - `x0` : `self.init_params`
+
+        Notes
+        -----
+        Where `time_inf == time_sup`, lifetimes are complete.
+
+        Returns
+        -------
+        Self
+            The current object with the estimated parameters setted inplace.
+        """
         return super().fit_from_interval_censored_lifetimes(
             time_inf, time_sup, entry=entry, optimizer_options=None
         )

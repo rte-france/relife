@@ -303,7 +303,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         self.fitting_results = fitting_results
         return self
 
-    def fit_from_interval_censored_data(
+    def fit_from_interval_censored_lifetimes(
         self,
         time_inf,
         time_sup,
