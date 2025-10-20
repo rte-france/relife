@@ -8,10 +8,15 @@
 # theme used : https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/index.html
 
 import os
+from packaging import version
+from importlib import metadata
+from datetime import datetime
 
-project = "relife_doc"
-copyright = "2025, RTE"
+
+project = "relife"
 author = "RTE-SAGA"
+copyright = f"2007 - {datetime.now().year}, {author} (Apache 2.0 License)"
+version = version.parse(metadata.version("relife")).base_version
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -59,7 +64,7 @@ else:
     mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 #########################################################################################
 
-templates_path = ["_templates"]  # toto
+templates_path = ["_templates"]
 exclude_patterns = [
     "_*",
     "user_guide/_*",
@@ -73,8 +78,9 @@ exclude_patterns = [
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_title = "ReLife"  # sidebar title
+html_title = "ReLife documentation"  # sidebar title
 html_logo = "_static/small_relife.gif"
+html_favicon = "_static/relife_favicon.png"
 html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 

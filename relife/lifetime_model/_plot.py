@@ -34,7 +34,15 @@ def plot_prob_function(
         yl = np.clip(y - z * se, ci_bounds[0], ci_bounds[1])
         yu = np.clip(y + z * se, ci_bounds[0], ci_bounds[1])
         step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
-        ax.fill_between(x, yl, yu, facecolors=[ax.lines[-1].get_color()], step=step, alpha=0.25, label="IC-95%")
+        ax.fill_between(
+            x,
+            yl,
+            yu,
+            facecolors=[ax.lines[-1].get_color()],
+            step=step,
+            alpha=0.25,
+            label="IC-95%",
+        )
     if label is not None:
         ax.legend()
     return ax
@@ -47,7 +55,13 @@ class PlotParametricLifetimeModel(Generic[*Args]):
     def __init__(self, model: ParametricLifetimeModel[*Args]):
         self.model = model
 
-    def _plot(self, fname: str, *args: *Args, ci_bounds: Optional[tuple[float, float]] = None, **kwargs) -> Axes:
+    def _plot(
+        self,
+        fname: str,
+        *args: *Args,
+        ci_bounds: Optional[tuple[float, float]] = None,
+        **kwargs,
+    ) -> Axes:
         end_time = kwargs.pop("end_time", None)
         if end_time is None:
             end_time = np.squeeze(self.model.isf(1e-3, *args))  # () or (m,)
@@ -57,13 +71,18 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         jac_f = getattr(self.model, "jac_" + fname, None)
         y = f(timeline, *args)
         se = None
-        if getattr(self.model, "fitting_results", None) is not None and jac_f is not None:
+        if (
+            getattr(self.model, "fitting_results", None) is not None
+            and jac_f is not None
+        ):
             se = zeros_like(timeline)
             se[..., 1:] = self.model.fitting_results.se_estimation_function(
                 jac_f(timeline[..., 1:], *args, asarray=True)
             )
         label = kwargs.pop("label", f"{self.model.__class__.__name__}" + f".{fname}")
-        ax = plot_prob_function(timeline, y, se=se, ci_bounds=ci_bounds, label=label, **kwargs)
+        ax = plot_prob_function(
+            timeline, y, se=se, ci_bounds=ci_bounds, label=label, **kwargs
+        )
         return ax
 
     def sf(self, *args: *Args, **kwargs) -> Axes:
@@ -121,12 +140,27 @@ class PlotNonParametricLifetimeModel:
     def __init__(self, model: NonParametricLifetimeModel):
         self.model = model
 
-    def plot(self, fname: str, plot_se: bool = True, ci_bounds=(0.0, 1.0), drawstyle="steps-post", **kwargs) -> Axes:
+    def plot(
+        self,
+        fname: str,
+        plot_se: bool = True,
+        ci_bounds=(0.0, 1.0),
+        drawstyle="steps-post",
+        **kwargs,
+    ) -> Axes:
         label = kwargs.pop("label", f"{self.model.__class__.__name__}" + f".{fname}")
         res = getattr(self.model, fname)(se=plot_se)
         se = None if not plot_se else res[-1]
         timeline, y = res[:2]
-        ax = plot_prob_function(timeline, y, se=se, ci_bounds=ci_bounds, label=label, drawstyle=drawstyle, **kwargs)
+        ax = plot_prob_function(
+            timeline,
+            y,
+            se=se,
+            ci_bounds=ci_bounds,
+            label=label,
+            drawstyle=drawstyle,
+            **kwargs,
+        )
         return ax
 
 

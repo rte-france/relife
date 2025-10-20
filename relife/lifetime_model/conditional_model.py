@@ -1,17 +1,10 @@
 import numpy as np
 
-from relife.lifetime_model import FrozenParametricLifetimeModel, ParametricLifetimeModel
-from relife import get_nb_assets
+from relife.base import FrozenParametricModel
+from relife.lifetime_model import ParametricLifetimeModel
+from relife.utils import get_args_nb_assets, is_frozen, reshape_1d_arg
 
-
-def reshape_ar_or_a0(name: str, value):
-    value = np.asarray(value)  # in shape : (), (m,) or (m, 1)
-    if value.ndim > 2 or (value.ndim == 2 and value.shape[-1] != 1):
-        raise ValueError(f"Incorrect {name} shape. Got {value.shape}. Expected (), (m,) or (m, 1)")
-    if value.ndim == 1:
-        value = value.reshape(-1, 1)
-    return value  # out shape: () or (m, 1)
-
+__all__ = ["AgeReplacementModel", "LeftTruncatedModel"]
 
 class AgeReplacementModel(ParametricLifetimeModel):
     # noinspection PyUnresolvedReferences
@@ -59,7 +52,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
     def hf(self, time, ar, *args):
@@ -82,7 +75,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
     def cdf(self, time, ar, *args):
@@ -105,7 +98,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return super().cdf(time, *(ar, *args))
 
     def chf(self, time, ar, *args):
@@ -128,7 +121,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     def isf(self, probability, ar, *args):
@@ -151,7 +144,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given probability value(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     def ichf(
@@ -180,7 +173,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given cumulative hazard rate(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
     def pdf(self, time, ar, *args):
@@ -203,7 +196,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     def mrl(self, time, ar, *args):
@@ -226,7 +219,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         ub = np.array(np.inf)
         # ar.shape == (m, 1)
         mask = time >= ar  # (m, 1) or (m, n)
@@ -234,9 +227,9 @@ class AgeReplacementModel(ParametricLifetimeModel):
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
             ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
-        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
-            time, ar, *args
-        )  # () or (n,) or (m, n)
+        mu = self.ls_integrate(
+            lambda x: x - time, time, ub, ar, *args, deg=10
+        ) / self.sf(time, ar, *args)  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
@@ -260,7 +253,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given probability value(s).
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return self.isf(1 - probability, ar, *args)
 
     # def cdf(self, time, ar, *args):
@@ -283,10 +276,19 @@ class AgeReplacementModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    def rvs(self, size, ar, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size,
+        ar,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         """
         Random variable sampling.
 
@@ -318,9 +320,9 @@ class AgeReplacementModel(ParametricLifetimeModel):
         -----
         If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         if nb_assets is None:
-            nb_assets = get_nb_assets(ar, *args)
+            nb_assets = get_args_nb_assets(ar, *args)
             if nb_assets == 1:
                 nb_assets = None
         baseline_rvs = self.baseline.rvs(
@@ -374,10 +376,12 @@ class AgeReplacementModel(ParametricLifetimeModel):
         np.ndarray
             Lebesgue-Stieltjes integral of func from `a` to `b`.
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
-        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+        return integration + np.where(
+            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
+        )
 
     def moment(self, n, ar, *args):
         """
@@ -396,7 +400,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return self.ls_integrate(
             lambda x: x**n,
             0,
@@ -422,7 +426,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return self.moment(1, ar, *args)
 
     def var(self, ar, *args):
@@ -441,7 +445,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        ar = reshape_ar_or_a0("ar", ar)
+        ar = reshape_1d_arg(ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     def freeze(self, ar, *args):
@@ -458,10 +462,9 @@ class AgeReplacementModel(ParametricLifetimeModel):
 
         Returns
         -------
-        FrozenAgeReplacementModel
+        FrozenParametricModel
         """
-        ar = reshape_ar_or_a0("ar", ar)
-        return FrozenAgeReplacementModel(self, ar, *args)
+        return FrozenParametricModel(self, ar, *args)
 
 
 class LeftTruncatedModel(ParametricLifetimeModel):
@@ -512,7 +515,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().sf(time, a0, *args)
 
     def pdf(self, time, a0, *args):
@@ -535,7 +538,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().pdf(time, a0, *args)
 
     def isf(self, probability, a0, *args):
@@ -559,7 +562,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             Function values at each given probability value(s).
         """
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
     def chf(self, time, a0, *args):
@@ -582,7 +585,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
     def cdf(self, time, a0, *args):
@@ -605,7 +608,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().cdf(time, *(a0, *args))
 
     def hf(self, time, a0, *args):
@@ -628,7 +631,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return self.baseline.hf(a0 + time, *args)
 
     def ichf(self, cumulative_hazard_rate, a0, *args):
@@ -652,10 +655,19 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given cumulative hazard rate(s).
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
-    def rvs(self, size, a0, *args, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self,
+        size,
+        a0,
+        *args,
+        nb_assets=None,
+        return_event=False,
+        return_entry=False,
+        seed=None,
+    ):
         """
         Random variable sampling.
 
@@ -683,9 +695,9 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
             the time values followed by event values, entry values or both.
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         if nb_assets is None:
-            nb_assets = get_nb_assets(a0, *args)
+            nb_assets = get_args_nb_assets(a0, *args)
             if nb_assets == 1:
                 nb_assets = None
         super_rvs = super().rvs(
@@ -698,24 +710,26 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         )
         time = super_rvs[0] if isinstance(super_rvs, tuple) else super_rvs
         complete_ages = time + a0
-        output = [time,] # at least time in output
+        output = [
+            time,
+        ]  # at least time in output
         if return_event:
-            event = super_rvs[1] # event always at index 1
+            event = super_rvs[1]  # event always at index 1
             # reconstruct event for AgeReplacementModel c omposition as super skips this info
             if isinstance(self.baseline, AgeReplacementModel):
-                ar = reshape_ar_or_a0("ar", args[0])
+                ar = reshape_1d_arg(args[0])
                 event = np.where(complete_ages < ar, event, ~event)
-            if isinstance(self.baseline, FrozenAgeReplacementModel):
-                ar = reshape_ar_or_a0("ar", self.baseline.args[0])
+            if is_frozen(self.baseline):
+                ar = reshape_1d_arg(self.baseline.args[0])
                 event = np.where(complete_ages < ar, event, ~event)
             output.append(event)
         if return_entry:
-            output[0] = complete_ages # don't return residual ages
-            entry = super_rvs[-1] # entry always at last index
+            output[0] = complete_ages  # don't return residual ages
+            entry = super_rvs[-1]  # entry always at last index
             entry = np.broadcast_to(a0, entry.shape).copy()
             output.append(entry)
         if len(output) > 1:
-            return tuple(output) # return tuple, not list
+            return tuple(output)  # return tuple, not list
         return output[0]
 
     def ls_integrate(self, func, a, b, a0, *args, deg=10):
@@ -743,7 +757,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.ndarray
             Lebesgue-Stieltjes integral of func from `a` to `b`.
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
 
     def mean(self, a0, *args):
@@ -762,7 +776,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().mean(*(a0, *args))
 
     def median(self, a0, *args):
@@ -781,7 +795,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().median(*(a0, *args))
 
     def var(self, a0, *args):
@@ -800,7 +814,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().var(*(a0, *args))
 
     def moment(self, n: int, a0, *args):
@@ -821,7 +835,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         -------
         np.float64 or np.ndarray
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().moment(n, *(a0, *args))
 
     def mrl(self, time, a0, *args):
@@ -844,7 +858,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().mrl(time, *(a0, *args))
 
     def ppf(self, probability, a0, *args):
@@ -872,7 +886,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         The ``ppf`` is the inverse of :py:meth:`~LeftTruncatedModel.cdf`.
 
         """
-        a0 = reshape_ar_or_a0("a0", a0)
+        a0 = reshape_1d_arg(a0)
         return super().ppf(probability, *(a0, *args))
 
     def freeze(self, a0, *args):
@@ -891,86 +905,4 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         -------
         FrozenLeftTruncatedModel
         """
-        a0 = reshape_ar_or_a0("a0", a0)
-        return FrozenLeftTruncatedModel(self, a0, *args)
-
-
-class FrozenAgeReplacementModel(FrozenParametricLifetimeModel):
-    r"""
-    Frozen age replacement model.
-
-    Parameters
-    ----------
-    model : AgeReplacementModel
-        Any age replacement model.
-    ar : float or np.ndarray
-        Age of replacement values to be frozen.
-    *args : float or np.ndarray
-        Additional arguments needed by the model to be frozen.
-
-    Attributes
-    ----------
-    unfrozen_model : AgeReplacementModel
-        The unfrozen age replacement model.
-    args : tuple of float or np.ndarray
-        All the frozen arguments given and necessary to compute model functions.
-    nb_assets : int
-        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
-        interest an user.
-
-    Warnings
-    --------
-    The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
-    """
-
-    def __init__(self, model, ar, *args):
-        super().__init__(model, *(ar, *args))
-
-    @property
-    def ar(self):
-        return self.args[0]
-
-    @ar.setter
-    def ar(self, value):
-        self.args = (value,) + self.args[1:]
-
-
-class FrozenLeftTruncatedModel(FrozenParametricLifetimeModel):
-    r"""
-    Frozen left truncated model.
-
-    Parameters
-    ----------
-    model : LeftTruncatedModel
-        Any left truncated model.
-    a0 : float or np.ndarray
-        Conditional age values to be frozen.
-    *args : float or np.ndarray
-        Additional arguments needed by the model to be frozen.
-
-
-    Attributes
-    ----------
-    unfrozen_model : LeftTruncatedModel
-        The unfrozen left truncated model.
-    args : tuple of float or np.ndarray
-        All the frozen arguments given and necessary to compute model functions.
-    nb_assets : int
-        Number of assets passed in frozen arguments. The data is mainly used to control numpy broadcasting and may not
-        interest an user.
-
-    Warnings
-    --------
-    The recommanded way to instanciate a frozen model is by using``freeze`` factory function.
-    """
-
-    def __init__(self, model, a0, *args):
-        super().__init__(model, *(a0, *args))
-
-    @property
-    def a0(self):
-        return self.args[0]
-
-    @a0.setter
-    def a0(self, value):
-        self.args = (value,) + self.args[1:]
+        return FrozenParametricModel(self, a0, *args)

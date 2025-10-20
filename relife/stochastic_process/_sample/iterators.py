@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import Iterator, Optional
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -11,14 +9,7 @@ from typing_extensions import override
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import (
     Exponential,
-    FrozenAgeReplacementModel,
-    FrozenLeftTruncatedModel,
 )
-from relife.lifetime_model.distribution import LifetimeDistribution
-from relife.lifetime_model.regression import FrozenLifetimeRegression
-
-if TYPE_CHECKING:
-    from relife.stochastic_process import RenewalRewardProcess
 
 
 class CountDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -175,10 +166,7 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
 
     def __init__(
         self,
-        process: RenewalRewardProcess[
-            LifetimeDistribution | FrozenLifetimeRegression | FrozenAgeReplacementModel | FrozenLeftTruncatedModel,
-            Reward,
-        ],
+        process,
         nb_samples: int,
         tf: float,
         t0: float = 0.0,

@@ -2,14 +2,22 @@ from abc import ABC
 
 import numpy as np
 from scipy.optimize import Bounds, newton
-from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv, polygamma
+from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 
-from relife.data import LifetimeData
-from relife.likelihood import LikelihoodFromLifetimes
-from relife.quadrature import laguerre_quadrature, legendre_quadrature
+from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
-from .regression import LifetimeRegression
+
+__all__ = [
+    "LifetimeDistribution",
+    "Gompertz",
+    "Weibull",
+    "Gamma",
+    "LogLogistic",
+    "EquilibriumDistribution",
+    "Exponential",
+    "MinimumDistribution",
+]
 
 
 class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
@@ -203,7 +211,9 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             return np.unstack(jac)
         return jac
 
-    def rvs(self, size, *, nb_assets=None, return_event=False, return_entry=False, seed=None):
+    def rvs(
+        self, size, *, nb_assets=None, return_event=False, return_entry=False, seed=None
+    ):
         """
         Random variable sampling.
 
@@ -226,7 +236,13 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
             the time values followed by event values, entry values or both.
         """
-        return super().rvs(size, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed)
+        return super().rvs(
+            size,
+            nb_assets=nb_assets,
+            return_event=return_event,
+            return_entry=return_entry,
+            seed=seed,
+        )
 
     def ls_integrate(self, func, a, b, deg=10):
         """
@@ -250,7 +266,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         """
         return super().ls_integrate(func, a, b, deg=deg)
 
-    def _get_initial_params(self, time, event=None, entry=None, departure=None):
+    def _get_initial_params(self, time, event=None, entry=None):
         param0 = np.ones(self.nb_params, dtype=np.float64)
         param0[-1] = 1 / np.median(time)
         self.params = param0
@@ -262,7 +278,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             np.full(self.nb_params, np.inf),
         )
 
-    def fit(self, time, *, event=None, entry=None, departure=None, **options):
+    def fit(self, time, event=None, entry=None, optimizer_options=None):
         """
         Estimation of the distribution parameters from lifetime data.
 
@@ -274,9 +290,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : ndarray of float (1d), default is None
             Left truncations applied to lifetime values.
-        departure : ndarray of float (1d), default is None
-            Right truncations applied to lifetime values.
-        **options
+        optimizer_options : dict, default is None
             Extra arguments used by `scipy.minimize`. Default values are:
                 - `method` : `"L-BFGS-B"`
                 - `contraints` : `()`
@@ -297,7 +311,18 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
         format that allows to pass other information as left-censored or interval-censored values. In this case,
         `event` is not needed as 2d-array encodes right-censored values by itself.
         """
-        return super().fit(time, event=event, entry=entry, departure=departure, **options)
+        return super().fit(time, event=event, entry=entry, optimizer_options=optimizer_options)
+
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time_inf,
+        time_sup,
+        entry=None,
+        optimizer_options=None,
+    ):
+        return super().fit_from_interval_censored_lifetimes(
+            time_inf, time_sup, entry=entry, optimizer_options=None
+        )
 
 
 class Exponential(LifetimeDistribution):
@@ -345,7 +370,7 @@ class Exponential(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -556,7 +581,7 @@ class Weibull(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -566,7 +591,7 @@ class Weibull(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -583,7 +608,9 @@ class Weibull(LifetimeDistribution):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self.shape * self.rate * (self.rate * np.asarray(time)) ** (self.shape - 1)
+        return (
+            self.shape * self.rate * (self.rate * np.asarray(time)) ** (self.shape - 1)
+        )
 
     def chf(self, time):
         """
@@ -682,7 +709,9 @@ class Weibull(LifetimeDistribution):
             tuple when ``asarray`` is False.
         """
         jac = (
-            self.rate * (self.rate * time) ** (self.shape - 1) * (1 + self.shape * np.log(self.rate * time)),
+            self.rate
+            * (self.rate * time) ** (self.shape - 1)
+            * (1 + self.shape * np.log(self.rate * time)),
             self.shape**2 * (self.rate * time) ** (self.shape - 1),
         )
         if asarray:
@@ -732,7 +761,12 @@ class Weibull(LifetimeDistribution):
             Function values at each given time(s).
         """
         time = np.asarray(time)
-        return self.shape * (self.shape - 1) * self.rate**2 * (self.rate * time) ** (self.shape - 2)
+        return (
+            self.shape
+            * (self.shape - 1)
+            * self.rate**2
+            * (self.rate * time) ** (self.shape - 2)
+        )
 
 
 class Gompertz(LifetimeDistribution):
@@ -785,7 +819,7 @@ class Gompertz(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -795,7 +829,7 @@ class Gompertz(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -956,7 +990,7 @@ class Gompertz(LifetimeDistribution):
         """
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
-    def _get_initial_params(self, time, event=None, entry=None, departure=None):
+    def _get_initial_params(self, time, event=None, entry=None):
         param0 = np.empty(self.nb_params, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(time))
         shape = np.exp(-rate * np.mean(time))
@@ -1011,7 +1045,9 @@ class Gamma(LifetimeDistribution):
         return gammaincc(self.shape, x) * gamma(self.shape)
 
     def _jac_uppergamma_shape(self, x):
-        return laguerre_quadrature(lambda s: np.log(s) * s ** (self.shape - 1), x, deg=100)
+        return laguerre_quadrature(
+            lambda s: np.log(s) * s ** (self.shape - 1), x, deg=100
+        )
 
     @property
     def shape(self):  # optional but better for clarity and type checking
@@ -1021,7 +1057,7 @@ class Gamma(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -1031,7 +1067,7 @@ class Gamma(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -1127,7 +1163,11 @@ class Gamma(LifetimeDistribution):
         x = self.rate * time
         y = x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2
         jac = (
-            y * ((self.rate * np.log(x) * self._uppergamma(x)) - self.rate * self._jac_uppergamma_shape(x)),
+            y
+            * (
+                (self.rate * np.log(x) * self._uppergamma(x))
+                - self.rate * self._jac_uppergamma_shape(x)
+            ),
             y * ((self.shape - x) * self._uppergamma(x) + x**self.shape * np.exp(-x)),
         )
         if asarray:
@@ -1247,7 +1287,7 @@ class LogLogistic(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("shape")
+        return self._params["shape"]
 
     @property
     def rate(self):  # optional but better for clarity and type checking
@@ -1257,7 +1297,7 @@ class LogLogistic(LifetimeDistribution):
         -------
         float
         """
-        return self._params.get_param_value("rate")
+        return self._params["rate"]
 
     def hf(self, time):
         """
@@ -1305,7 +1345,9 @@ class LogLogistic(LifetimeDistribution):
         """
         b = np.pi / self.shape
         if self.shape <= 1:
-            raise ValueError(f"Expectancy only defined for shape > 1: shape = {self.shape}")
+            raise ValueError(
+                f"Expectancy only defined for shape > 1: shape = {self.shape}"
+            )
         return b / (self.rate * np.sin(b))
 
     def var(self):
@@ -1318,7 +1360,9 @@ class LogLogistic(LifetimeDistribution):
         """
         b = np.pi / self.shape
         if self.shape <= 2:
-            raise ValueError(f"Variance only defined for shape > 2: shape = {self.shape}")
+            raise ValueError(
+                f"Variance only defined for shape > 2: shape = {self.shape}"
+            )
         return (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
 
     def ichf(self, cumulative_hazard_rate):
@@ -1360,7 +1404,8 @@ class LogLogistic(LifetimeDistribution):
         jac = (
             (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
             * (1 + x**self.shape + self.shape * np.log(self.rate * time)),
-            (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2) * (self.shape**2 / self.rate),
+            (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
+            * (self.shape**2 / self.rate),
         )
         if asarray:
             return np.stack(jac)
@@ -1430,8 +1475,8 @@ class EquilibriumDistribution(ParametricLifetimeModel):
 
     Parameters
     ----------
-    baseline : BaseLifetimeModel
-        Underlying lifetime core.
+    baseline : any parametric lifetime model
+        Lifetime model.
 
     References
     ----------
@@ -1444,7 +1489,9 @@ class EquilibriumDistribution(ParametricLifetimeModel):
         self.baseline = baseline
 
     def cdf(self, time, *args):
-        return legendre_quadrature(lambda x: self.baseline.sf(x, *args), 0, time) / self.baseline.mean(*args)
+        return legendre_quadrature(
+            lambda x: self.baseline.sf(x, *args), 0, time
+        ) / self.baseline.mean(*args)
 
     def sf(self, time, *args):
         return 1 - self.cdf(time, *args)
@@ -1473,7 +1520,7 @@ class EquilibriumDistribution(ParametricLifetimeModel):
         return self.isf(np.exp(-cumulative_hazard_rate), *args)
 
 
-class MinimumDistribution(ParametricLifetimeModel):
+class MinimumDistribution(FittableParametricLifetimeModel):
     r"""Series structure of n identical and independent components.
 
     The hazard function of the system is given by:
@@ -1483,6 +1530,11 @@ class MinimumDistribution(ParametricLifetimeModel):
         h(t) = n \cdot  h_0(t)
 
     where :math:`h_0` is the baseline hazard function of the components.
+
+    Parameters
+    ----------
+    baseline : lifetime distribution or regression
+        Lifetime model.
 
     Examples
     --------
@@ -1501,7 +1553,6 @@ class MinimumDistribution(ParametricLifetimeModel):
     def __init__(self, baseline):
         super().__init__()
         self.baseline = baseline
-        self.fitting_results = None
 
     def sf(self, time, n, *args):
         return super().sf(time)
@@ -1533,7 +1584,10 @@ class MinimumDistribution(ParametricLifetimeModel):
         return n * self.baseline.jac_hf(time, *args, asarray=asarray)
 
     def jac_sf(self, time, n, *args, asarray=False):
-        jac_chf, sf = self.jac_chf(time, n, *args, asarray=True), self.sf(time)
+        jac_chf, sf = (
+            self.jac_chf(time, n, *args, asarray=True),
+            self.sf(time, n, *args),
+        )
         jac = -jac_chf * sf
         if not asarray:
             return np.unstack(jac)
@@ -1556,6 +1610,16 @@ class MinimumDistribution(ParametricLifetimeModel):
     def ls_integrate(self, func, a, b, n, *args, deg: int = 10):
         return super().ls_integrate(func, a, b, n, *args, deg=deg)
 
+    def _get_params_bounds(self):
+        return self.baseline._get_params_bounds()
+
+    def _get_initial_params(
+        self, time, n, *args, event=None, entry=None
+    ):
+        return self.baseline._get_initial_params(
+            time, *args, event=None, entry=None
+        )
+
     def fit(
         self,
         time,
@@ -1563,15 +1627,30 @@ class MinimumDistribution(ParametricLifetimeModel):
         *args,
         event=None,
         entry=None,
-        departure=None,
-        **kwargs,
+        optimizer_options=None,
     ):
-        # initialize params structure (number of parameters in params tree)
-        if isinstance(self.baseline, LifetimeRegression):
-            self.baseline._init_params(args[0], *args[1:])
-        lifetime_data: LifetimeData = LifetimeData(time, event=event, entry=entry, departure=departure, args=(n, *args))
-        likelihood = LikelihoodFromLifetimes(self, lifetime_data)
-        fitting_results = likelihood.maximum_likelihood_estimation(**kwargs)
-        self.params = fitting_results.optimal_params
-        self.fitting_results = fitting_results
-        return self
+        return super().fit(
+            time,
+            *(n, *args),
+            event=event,
+            entry=entry,
+            optimizer_options=optimizer_options,
+        )
+
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time_inf,
+        time_sup,
+        n,
+        *args,
+        event=None,
+        entry=None,
+        optimizer_options=None,
+    ):
+        return super().fit_from_interval_censored_lifetimes(
+            time_inf,
+            time_sup,
+            *(n, *args),
+            entry=entry,
+            optimizer_options=optimizer_options,
+        )

@@ -1,65 +1,33 @@
-from __future__ import annotations
-
-from typing import Generic, Optional, TypedDict, TypeVar
+from abc import ABC, abstractmethod
 
 import numpy as np
-from numpy.typing import NDArray
 
-from relife.economic import ExponentialDiscounting, Reward, cost
-from relife.lifetime_model import (
-    FrozenAgeReplacementModel,
-    FrozenLeftTruncatedModel,
-)
-from relife.lifetime_model.distribution import LifetimeDistribution
-from relife.lifetime_model.regression import FrozenLifetimeRegression
-from relife.stochastic_process import RenewalRewardProcess
-from relife.stochastic_process._sample.data import RenewalRewardProcessSample
-
-M = TypeVar("M", LifetimeDistribution, FrozenLifetimeRegression, FrozenAgeReplacementModel, FrozenLeftTruncatedModel)
-R = TypeVar("R", bound=Reward)
+from relife.economic import ExponentialDiscounting
 
 
-class LifetimeFitArg(TypedDict):
-    time: NDArray[np.float64]
-    event: NDArray[np.bool_]
-    entry: NDArray[np.float64]
-    args: tuple[NDArray[np.float64], ...]
+def _make_timeline(tf, nb_steps):
+    timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
 
 
-class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
+class _OneCycleExpectedCosts:
 
     def __init__(
         self,
-        lifetime_model: M,
-        reward: R,
-        discounting_rate: float = 0.0,
-        period_before_discounting: float = 1.0,
+        lifetime_model,
+        reward,
+        discounting_rate=0.0,
+        period_before_discounting=1.0,
     ) -> None:
-        self.cost = cost
         self.reward = reward
         self.discounting = ExponentialDiscounting(discounting_rate)
         if period_before_discounting <= 0:
             raise ValueError("The period_before_discounting must be greater than 0")
         self.period_before_discounting = period_before_discounting
         self.lifetime_model = lifetime_model
-        self.count_data = None
 
-    @property
-    def discounting_rate(self):
-        return self.discounting.rate
-
-    def _make_timeline(self, tf: float, nb_steps: int) -> NDArray[np.float64]:
-        # tile is necessary to ensure broadcasting of the operations
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
-            timeline = np.tile(timeline, (self.reward.size, 1))
-        return timeline  # (nb_steps,) or (m, nb_steps)w
-
-    def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline = self._make_timeline(tf, nb_steps)
+    def expected_net_present_value(self, tf, nb_steps):
+        timeline = _make_timeline(tf, nb_steps)
         etc = self.lifetime_model.ls_integrate(
             lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
             np.zeros_like(timeline),
@@ -70,7 +38,7 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
             return timeline[0, :], etc  # (nb_steps,) and (m, nb_steps)
         return timeline, etc  # (nb_steps,) and (nb_steps,)
 
-    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+    def asymptotic_expected_net_present_value(self):
         # reward partial expectation
         return np.squeeze(
             self.lifetime_model.ls_integrate(
@@ -78,12 +46,10 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
             )
         )  # () or (m,)
 
-    def _expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def _expected_equivalent_annual_cost(self, timeline):
 
         # timeline : (nb_steps,) or (m, nb_steps)
-        def f(x: float | NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        def f(x):
             # avoid zero division + 1e-6
             return (
                 self.reward.conditional_expectation(x)
@@ -106,82 +72,34 @@ class BaseOneCycleAgeReplacementPolicy(Generic[M, R]):
         q0 = np.broadcast_to(q0, integral.shape)  # (nb_steps,) or (m, nb_steps)
         integral = np.where(mask, q0, q0 + integral)
         if timeline.ndim == 2:
-            return timeline[0, :], integral  # (nb_steps,) and (m, nb_steps)
-        return timeline, integral  # (nb_steps,) and (nb_steps,)
+            return timeline[0, :], np.squeeze(integral)  # (nb_steps,) and (m, nb_steps)
+        return timeline, np.squeeze(integral)  # (nb_steps,) and (nb_steps,)
 
-    def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline = self._make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
+    def expected_equivalent_annual_cost(self, tf, nb_steps):
+        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
         return self._expected_equivalent_annual_cost(timeline)  # (nb_steps,) or (m, nb_steps)
 
-    def asymptotic_expected_equivalent_annual_cost(
-        self,
-    ) -> NDArray[np.float64]:
-        timeline = np.array(np.inf)
-        args_nb_assets = getattr(self.lifetime_model, "args_nb_assets", 1)  #  default 1 for LifetimeDistribution case
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
-            timeline = np.tile(timeline, (self.reward.size, 1))
-        # timeline : () or (m, 1)
+    def asymptotic_expected_equivalent_annual_cost(self):
+        timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
         return np.squeeze(self._expected_equivalent_annual_cost(timeline)[-1])  # () or (m,)
 
 
-# TODO : generic of generic
-class BaseAgeReplacementPolicy(Generic[M, R]):
+class ReplacementPolicy(ABC):
 
-    def __init__(self, stochastic_process: RenewalRewardProcess[M, R]):
-        self.stochastic_process = stochastic_process
+    def __init__(
+        self,
+        baseline_model,
+        cost_structure,
+        discounting_rate=0.0,
+    ):
+        self.baseline_model = baseline_model
+        self.discounting_rate = discounting_rate
+        self._cost_structure = cost_structure  # hidden, contains reshaped cost arrays
 
-    @property
-    def discounting_rate(self):
-        return self.stochastic_process.discounting_rate
-
-    @discounting_rate.setter
-    def discounting_rate(self, value: float) -> None:
-        self.stochastic_process.discounting_rate = value
-
-    def expected_nb_replacements(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    @abstractmethod
+    def expected_net_present_value(self, tf, nb_steps, total_sum=False):
         r"""
-        The expected number of replacements.
-
-        It is computed  by solving the renewal equation:
-
-        .. math::
-
-            m(t) = F_1(t) + \int_0^t m(t-x) \mathrm{d}F(x)
-
-        where:
-
-        - :math:`m` is the renewal function,
-        - :math:`F` is the cumulative distribution function of the underlying
-          lifetime model,
-        - :math:`F_1` is the cumulative distribution function of the underlying
-          lifetime model for the fist renewal in the case of a delayed renewal
-          process.
-
-
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The expected number of replacements will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the expected number of replacements
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected number of replacements and its corresponding values at each
-            step of the timeline.
-        """
-        return self.stochastic_process.renewal_function(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
-
-    def expected_total_cost(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        r"""
-        The expected total cost.
-
-        It is computed by solving the renewal equation and is given by:
+        The expected net present value.
 
         .. math::
 
@@ -190,143 +108,97 @@ class BaseAgeReplacementPolicy(Generic[M, R]):
         where :
 
         - :math:`t` is the time
-        - :math:`X_i \sim F` are :math:`n` random variable lifetimes, *i.i.d.*, of cumulative distribution :math:`F`.
-        - :math:`Z_t` is the random variable reward at each time :math:`t`.
-        - :math:`\delta` is the discounting rate.
+        - :math:`X_1 \sim F` is the random lifetime of the first asset
+        - :math:`Z_t` are the random costs at each time :math:`t`
+        - :math:`\delta` is the discounting rate
+
+        It is computed by solving the renewal equation.
 
         Parameters
         ----------
         tf : float
-            Time horizon. The expected total cost will be computed up until this calendar time.
+            The final time.
         nb_steps : int
-            The number of steps used to compute the expected total cost
+            The number of steps used to discretized the time.
+        total_sum : bool, default False
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
         tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected total cost and its corresponding values at each
-            step of the timeline.
+            A tuple containing the timeline and the computed values.
         """
-        return self.stochastic_process.expected_total_reward(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
-    def asymptotic_expected_total_cost(self) -> NDArray[np.float64]:
+    @abstractmethod
+    def asymptotic_expected_net_present_value(self, total_sum=False):
         r"""
-        The asymtotic expected total cost
+        The asymtotic expected net present value.
 
         .. math::
 
             \lim_{t\to\infty} z(t)
 
-        where :math:`z(t)` is the expected total cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_total_cost` for more details.
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
         ndarray
-            The asymptotic expected total cost values
+            The asymptotic expected values.
         """
-        return self.stochastic_process.asymptotic_expected_total_reward()  # () or (m, 1)
 
-    def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    @abstractmethod
+    def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
         r"""
         The expected equivalent annual cost.
 
         .. math::
 
-            \text{EEAC}(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
+            q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
 
         where :
 
-        - :math:`t` is the time
-        - :math:`z(t)` is the expected_total_cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_total_cost` for more details.`.
+        - :math:`t` is the time.
+        - :math:`z(t)` is the expected net present value at time :math:`t`.
         - :math:`\delta` is the discounting rate.
 
         Parameters
         ----------
         tf : float
-            Time horizon. The expected equivalent annual cost will be computed up until this calendar time.
+            The final time.
         nb_steps : int
-            The number of steps used to compute the expected equivalent annual cost
+            The number of steps used to discretized the time.
+        total_sum : bool, default False
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
         tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected annual cost and its corresponding values at each
-            step of the timeline.
+            A tuple containing the timeline and the computed values.
         """
-        return self.stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
 
-    def asymptotic_expected_equivalent_annual_cost(self) -> NDArray[np.float64]:
+    @abstractmethod
+    def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
         r"""
-        The asymtotic expected equivalent annual cost
+        The asymtotic expected equivalent annual cost.
 
         .. math::
 
-            \lim_{t\to\infty} \text{EEAC}(t)
+            \lim_{t\to\infty} q(t)
 
-        where :math:`\text{EEAC}(t)` is the expected equivalent annual cost at :math:`t`. See :py:meth:`~AgeReplacementPolicy.expected_equivalent_annual_cost` for more details.
+        Parameters
+        ----------
+        total_sum : bool, default False
+            If True, returns the total sum over the first axis of the result. If the policy data encodes several
+            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
         ndarray
-            The asymptotic expected equivalent annual cost
+            The asymptotic expected values.
         """
-        return self.stochastic_process.asymptotic_expected_equivalent_annual_worth()  # () or (m, 1)
-
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        seed: Optional[int] = None,
-    ) -> RenewalRewardProcessSample:
-        """Renewal data sampling.
-
-        This function will sample data and encapsulate them in an object.
-
-        Parameters
-        ----------
-        size : int
-            The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
-        seed : int, optional
-            Random seed, by default None.
-
-        """
-
-        return self.stochastic_process.sample(tf, t0, size, seed)
-
-    def generate_lifetime_data(
-        self,
-        size: int,
-        tf: float,
-        t0: float = 0.0,
-        seed: Optional[int] = None,
-    ) -> LifetimeFitArg:
-        """Generate lifetime data
-
-        This function will generate lifetime data that can be used to fit a lifetime model.
-
-        Parameters
-        ----------
-        size : int
-            The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        seed : int, optional
-            Random seed, by default None.
-
-        Returns
-        -------
-        A dict of time, event, entry and args (covariates)
-
-        """
-        return self.stochastic_process.generate_lifetime_data(tf, t0, size, seed)

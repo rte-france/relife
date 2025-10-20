@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx
 
-from relife.quadrature import laguerre_quadrature, legendre_quadrature
+from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 
 def test_laguerre_quadrature(integration_bound_a):

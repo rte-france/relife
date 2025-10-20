@@ -1,46 +1,48 @@
 from __future__ import annotations
 
 from typing import (
-    TYPE_CHECKING,
     Callable,
     Optional,
+    Union,
     overload,
 )
 
 import numpy as np
 from numpy.typing import NDArray
 
+__all__ = ["legendre_quadrature", "laguerre_quadrature", "unweighted_laguerre_quadrature", "broadcast_bounds"]
+
 
 @overload
-def check_and_broadcast_bounds(
+def broadcast_bounds(
     a: float | NDArray[np.float64],
     b: None = None,
 ) -> NDArray[np.float64]: ...
 
 
 @overload
-def check_and_broadcast_bounds(
+def broadcast_bounds(
     a: float | NDArray[np.float64],
     b: float | NDArray[np.float64],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
 
 
-def check_and_broadcast_bounds(
+def _control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
+    arr = np.asarray(bound, dtype=np.float64)
+    if np.any(arr < 0):
+        raise ValueError("Bound values of the integral can't be lower than 0")
+    if arr.ndim > 2:
+        raise ValueError("Bound the integral can't have more than 2 dimensions")
+    return arr
+
+
+def broadcast_bounds(
     a: float | NDArray[np.float64],
     b: Optional[float | NDArray[np.float64]] = None,
-) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
-
-    def control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
-        arr = np.asarray(bound, dtype=np.float64)
-        if np.any(arr < 0):
-            raise ValueError("Bound values of the integral can't be lower than 0")
-        if arr.ndim > 2:
-            raise ValueError("Bound the integral can't have more than 2 dimensions")
-        return arr
-
-    a = control_shape(a)
+) -> Union[NDArray[np.float64], tuple[NDArray[np.float64], NDArray[np.float64]]]:
+    a = _control_shape(a)
     if b is not None:
-        b = control_shape(b)
+        b = _control_shape(b)
         try:
             a, b = np.broadcast_arrays(a, b)
             return a.copy(), b.copy()
@@ -55,7 +57,7 @@ def legendre_quadrature(
     b: float | NDArray[np.float64],
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:
-    r"""Numerical integration of `func` over the interval `[a,b]`
+    r"""Numerical integration of :math:`f(x)` over the interval :math:`[a,b]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     a can be zero
@@ -63,7 +65,7 @@ def legendre_quadrature(
 
     a, b shapes can be either 0d (float like), 1d or 2d
     """
-    arr_a, arr_b = check_and_broadcast_bounds(a, b)  # () or (n,) or (m, n)
+    arr_a, arr_b = broadcast_bounds(a, b)  # () or (n,) or (m, n)
     quad = np.polynomial.legendre.leggauss(deg)  # (deg,)
     x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
     w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
@@ -78,7 +80,9 @@ def legendre_quadrature(
     u = p * x + m  # (deg,) or (deg, n) or (deg, m, n)
     v = p * w  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(u.shape) :] != u.shape:
+    try:
+        np.broadcast_shapes(fvalues.shape[-len(u.shape) :], u.shape)
+    except ValueError:
         raise ValueError(
             f"""
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
@@ -94,20 +98,22 @@ def laguerre_quadrature(
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:
-    r"""Numerical integration of `func * exp(-x)` over the interval `[a, inf]`
+    r"""Numerical integration of :math:`f(x) * exp(-x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     It must handle at least 3 dimensions.
     a can be zero with ndim <= 2.
     """
-    arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
+    arr_a = broadcast_bounds(a)  # () or (n,) or (m, n)
     quad = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
     w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
+    try:
+        np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
+    except ValueError:
         # func est une fonction réel univariée et pas multivariée
         raise ValueError(
             f"""
@@ -127,7 +133,7 @@ def unweighted_laguerre_quadrature(
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:
-    r"""Numerical integration of `func` over the interval `[a, inf]`
+    r"""Numerical integration of :math:`f(x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     It must handle at least 3 dimensions.
@@ -135,13 +141,15 @@ def unweighted_laguerre_quadrature(
     """
 
     quad = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    arr_a = check_and_broadcast_bounds(a)  # () or (n,) or (m, n)
+    arr_a = broadcast_bounds(a)  # () or (n,) or (m, n)
     x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
     w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
-    if fvalues.shape[-len(shifted_x.shape) :] != shifted_x.shape:
+    try:
+        np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
+    except ValueError:
         raise ValueError(
             f"""
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).

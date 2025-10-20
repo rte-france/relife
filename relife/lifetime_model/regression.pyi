@@ -5,7 +5,8 @@ from typing import (
     Literal,
     Optional,
     Self,
-    overload, Union,
+    Union,
+    overload,
 )
 
 import numpy as np
@@ -13,378 +14,341 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife import ParametricModel as ParametricModel
-from relife._typing import _B, _X, _Y, _Xs
-from relife.lifetime_model import (
-    FittableParametricLifetimeModel,
-    FrozenParametricLifetimeModel,
+from relife._typing import (
+    _Any_Number,
+    _Any_Numpy_Bool,
+    _Any_Numpy_Number,
+    _NumpyArray_OfBool,
+    _NumpyArray_OfNumber,
 )
-from relife.likelihood import FittingResults as FittingResults
+from relife.base import FrozenParametricModel, ParametricModel
 
-def broadcast_time_covar(time: _X, covar: _X) -> tuple[_X, _X]: ...
-def broadcast_time_covar_shapes(
-    time_shape: tuple[()] | tuple[int] | tuple[int, int], covar_shape: tuple[()] | tuple[int] | tuple[int, int]
+from .distribution import LifetimeDistribution
+from ._base import FittableParametricLifetimeModel
+
+__all__ = ["LifetimeRegression", "AcceleratedFailureTime", "ProportionalHazard"]
+
+def _broadcast_time_covar(
+    time: _Any_Number, covar: _Any_Number
+) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
+def _broadcast_time_covar_shapes(
+    time_shape: tuple[()] | tuple[int] | tuple[int, int],
+    covar_shape: tuple[()] | tuple[int] | tuple[int, int],
 ) -> tuple[()] | tuple[int] | tuple[int, int]: ...
 
-class LifetimeRegression(FittableParametricLifetimeModel[*tuple[_X, *_Xs]], ABC):
-    fitting_results = Optional[FittingResults]
-    covar_effect: CovarEffect
-    baseline: FittableParametricLifetimeModel[*_Xs]
 
-    def __init__(
-        self,
-        baseline: FittableParametricLifetimeModel[*_Xs],
-        coefficients: tuple[Optional[float], ...] = (None,),
-    ) -> None: ...
-    def _get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        *args: *_Xs,
-        event: Optional[NDArray[np.bool_]] = None,
-        entry: Optional[NDArray[np.float64]] = None,
-        departure: Optional[NDArray[np.float64]] = None,
-    ) -> NDArray[np.float64]: ...
-    def _get_params_bounds(self) -> Bounds: ...
+class LifetimeRegression(FittableParametricLifetimeModel[_Any_Number], ABC):
+    covar_effect: _CovarEffect
+    baseline: LifetimeDistribution
+
+    def __init__(self, baseline: LifetimeDistribution, coefficients: tuple[Optional[float], ...] = (None,),) -> None: ...
     @property
     def coefficients(self) -> NDArray[np.float64]: ...
     @property
     def nb_coef(self) -> int: ...
     @override
-    def sf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def sf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def pdf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def pdf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def isf(self, probability: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def isf(
-        self,
-        probability: _X,
-        covar: _X,
-        *args: *_Xs,
-    ) -> _Y: ...
+    def cdf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def cdf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def ppf(self, probability: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def ppf(
-        self,
-        probability: _X,
-        covar: _X,
-        *args: *_Xs,
-    ) -> _Y: ...
+    def mrl(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def mrl(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def mean(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def mean(self, covar: _X, *args: *_Xs) -> _Y: ...
+    def var(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def var(self, covar: _X, *args: *_Xs) -> _Y: ...
-    @override
-    def median(self, covar: _X, *args: *_Xs) -> _Y: ...
+    def median(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
     def ls_integrate(
         self,
-        func: Callable[[_X], _Y],
-        a: _X,
-        b: _X,
-        covar: _X,
-        *args: *_Xs,
+        func: Callable[[_Any_Number], _Any_Numpy_Number],
+        a: _Any_Number,
+        b: _Any_Number,
+        covar: _Any_Number,
         deg: int = 10,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     @overload
     def jac_sf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_sf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_sf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_cdf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_cdf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_cdf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_pdf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_pdf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_pdf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _X,
-        *args: *_Xs,
+        covar: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> _Y: ...
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
+    ) -> _Any_Numpy_Number: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _X,
-        *args: *_Xs,
+        covar: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[False] = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _B]: ...
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
+    ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool]: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _X,
-        *args: *_Xs,
+        covar: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[False] = False,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _Y]: ...
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
+    ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Number]: ...
     @overload
     def rvs(
         self,
         size: int,
-        covar: _X,
-        *args: *_Xs,
+        covar: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: Literal[True] = True,
         return_entry: Literal[True] = True,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> tuple[_Y, _B, _Y]: ...
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
+    ) -> tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]: ...
     def rvs(
         self,
         size: int,
-        covar: _X,
-        *args: *_Xs,
+        covar: _Any_Number,
         nb_assets: Optional[int] = None,
         return_event: bool = False,
         return_entry: bool = False,
-        seed: Optional[Union[int, np.random.Generator, np.random.BitGenerator, np.random.RandomState]] = None
-    ) -> _Y | tuple[_Y, _Y] | tuple[_Y, _B] | tuple[_Y, _B, _Y]: ...
-    def fit(
+        seed: Optional[
+            Union[
+                int, np.random.Generator, np.random.BitGenerator, np.random.RandomState
+            ]
+        ] = None,
+    ) -> (
+        _Any_Numpy_Number
+        | tuple[_Any_Numpy_Number, _Any_Numpy_Number]
+        | tuple[_Any_Numpy_Number, _Any_Numpy_Bool]
+        | tuple[_Any_Numpy_Number, _Any_Numpy_Bool, _Any_Numpy_Number]
+    ): ...
+    def _get_params_bounds(self) -> Bounds: ...
+    def _get_initial_params(
         self,
         time: NDArray[np.float64],
         covar: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        departure: NDArray[np.float64] | None = None,
-        **options: Any,
+        event: Optional[NDArray[np.bool_]] = None,
+        entry: Optional[NDArray[np.float64]] = None,
+    ) -> NDArray[np.float64]: ...
+    @override
+    def fit(
+        self,
+        time: _NumpyArray_OfNumber,
+        covar: _Any_Number,
+        event: Optional[_NumpyArray_OfBool] = None,
+        entry: Optional[_NumpyArray_OfNumber] = None,
+        optimizer_options: Optional[dict[str, Any]] = None,
     ) -> Self: ...
-    def freeze(self, covar: _X, *args: *_Xs) -> FrozenLifetimeRegression[*_Xs]: ...
+    @override
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time: _NumpyArray_OfNumber,
+        covar: _Any_Number,
+        event: Optional[_NumpyArray_OfBool] = None,
+        entry: Optional[_NumpyArray_OfNumber] = None,
+        optimizer_options: Optional[dict[str, Any]] = None,
+    ) -> Self: ...
+    def freeze(
+        self, covar: _Any_Number
+    ) -> FrozenParametricModel[
+        FittableParametricLifetimeModel[_Any_Number]
+    ]: ...
 
-class ProportionalHazard(LifetimeRegression[*_Xs]):
-    def hf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
-    def chf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+class ProportionalHazard(LifetimeRegression):
+    def hf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def chf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: _X,
-        covar: _X,
-        *args: *_Xs,
-    ) -> _Y: ...
-    def dhf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def ichf(self, cumulative_hazard_rate: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def dhf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_hf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_chf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_chf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, covar: _X, *args: *_Xs) -> _Y: ...
+    def moment(self, n: int, covar: _Any_Number) -> _Any_Numpy_Number: ...
 
-class AcceleratedFailureTime(LifetimeRegression[*_Xs]):
-    def hf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
-    def chf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+class AcceleratedFailureTime(LifetimeRegression):
+    def hf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def chf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: _X,
-        covar: _X,
-        *args: *_Xs,
-    ) -> _Y: ...
-    def dhf(self, time: _X, covar: _X, *args: *_Xs) -> _Y: ...
+    def ichf(self, cumulative_hazard_rate: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
+    def dhf(self, time: _Any_Number, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
     def jac_hf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_hf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_hf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @overload
     def jac_chf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[False] = False,
-    ) -> tuple[_Y, ...]: ...
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
     def jac_chf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: Literal[True] = True,
-    ) -> _Y: ...
+    ) -> _Any_Numpy_Number: ...
     def jac_chf(
         self,
-        time: _X,
-        covar: _X,
-        *args: *_Xs,
+        time: _Any_Number,
+        covar: _Any_Number,
         asarray: bool = True,
-    ) -> tuple[_Y, ...] | _Y: ...
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...
     @override
-    def moment(self, n: int, covar: _X, *args: *_Xs) -> _Y: ...
+    def moment(self, n: int, covar: _Any_Number) -> _Any_Numpy_Number: ...
 
-class CovarEffect(ParametricModel):
+class _CovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[Optional[None], ...] = (None,)) -> None: ...
     @property
     def nb_coef(self) -> int: ...
-    def g(self, covar: _X) -> _Y: ...
+    def g(self, covar: _Any_Number) -> _Any_Numpy_Number: ...
     @overload
-    def jac_g(self, covar: _X, *, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
+    def jac_g(
+        self, covar: _Any_Number, asarray: Literal[False] = False
+    ) -> tuple[_Any_Numpy_Number, ...]: ...
     @overload
-    def jac_g(self, covar: _X, *, asarray: Literal[True] = True) -> _Y: ...
-    def jac_g(self, covar: _X, *, asarray: Literal[True] = True) -> tuple[_Y, ...] | _Y: ...
-
-class FrozenLifetimeRegression(FrozenParametricLifetimeModel[*tuple[_X, *_Xs]]):
-    unfrozen_model: LifetimeRegression[*_Xs]
-    args: tuple[_X, *_Xs]
-
-    def __init__(self, model: LifetimeRegression[*_Xs], covar: _X, *args: *_Xs) -> None: ...
-    @override
-    def unfreeze(self) -> LifetimeRegression[*_Xs]: ...
-    @property
-    def nb_coef(self) -> int: ...
-    @property
-    def covar(self) -> _X: ...
-    # noinspection PyUnresolvedReferences
-    @covar.setter
-    def covar(self, value: _X) -> None: ...
-    def dhf(self, time: _X, *args: *_Xs) -> _Y: ...
-    @overload
-    def jac_hf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
-    @overload
-    def jac_hf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
-    def jac_hf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...
-    @overload
-    def jac_chf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
-    @overload
-    def jac_chf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
-    def jac_chf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...
-    @overload
-    def jac_sf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
-    @overload
-    def jac_sf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
-    def jac_sf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...
-    @overload
-    def jac_pdf(self, time: _X, asarray: Literal[False] = False) -> tuple[_Y, ...]: ...
-    @overload
-    def jac_pdf(self, time: _X, asarray: Literal[True] = True) -> _Y: ...
-    def jac_pdf(self, time: _X, asarray: bool = True) -> tuple[_Y, ...] | _Y: ...
+    def jac_g(
+        self, covar: _Any_Number, asarray: Literal[True] = True
+    ) -> _Any_Numpy_Number: ...
+    def jac_g(
+        self, covar: _Any_Number, asarray: Literal[True] = True
+    ) -> tuple[_Any_Numpy_Number, ...] | _Any_Numpy_Number: ...

@@ -1,7 +1,7 @@
 import numpy as np
 from pytest import approx
 
-from relife import ParametricModel
+from relife.base import ParametricModel
 
 
 class ModelA(ParametricModel):

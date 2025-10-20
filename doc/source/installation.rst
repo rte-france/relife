@@ -1,60 +1,41 @@
 Installation
 ============
 
-.. contents::
-    :local:
+ReLife is a Python package. It is uploaded on the `Python Package Index (PyPi) <https://pypi.org/>`_. Before you install ReLife, make
+sure Python **3.11 (or newer)** is installed.
 
-ReLife is a python package and it is uploaded on the `Python Package Index (PyPi) <https://pypi.org/>`_. To install ReLife locally make
-sure :
-
-* Python **3.11 (or newer)** is installed on your machine. For Linux users with a Debian based distribution, an appropriate version of Python is already installed if your OS is up-to-date. For Windows users, please go to `python.org <https://www.python.org/>`_, read the documentation and install the appropriate Python version.
-* You created a new python virtual environment (e.g, relife). For Linux users, you may need to install ``python3.**-venv`` (where ``**`` corresponds to your python version). If you don't know what a Python virtual environment is, please go to `docs.python.org <https://docs.python.org/>`_, read and learn. You're about to use a Python package so you must know the very basics of Python, including virtual environments.
-
-Linux users (Debian based)
---------------------------
-
-Create and activate the virtual environment :
+Install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#pip>`_ :
 
 .. code-block::
 
-    /usr/bin/python3.** -m venv <venv_location>/relife
-    source <venv_location>/relife/bin/activate
+    $ python -m pip install relife
 
-Then, install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#pip>`_ :
+**Optional but recommended :** create and activate a virtual environment before.
 
-.. code-block::
-
-    pip install relife
-
-Windows users
--------------
-
-Create and activate the virtual environment :
+For Linux users :
 
 .. code-block::
 
-    py -3.** -m venv <venv_location>\relife
-    .\<venv_location>\relife\Scripts\activate
+    $ /usr/bin/python3.** -m venv <venv_location>/relife
+    $ source <venv_location>/relife/bin/activate
 
-Install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#pip>`_:
-
-.. code-block::
-
-    pip install relife
-
-From source
------------
-
-To install ReLife from source, go to `relife repository <https://github.com/rte-france/relife>`_. Clone the codebase and install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#pip>`_.
+For Windows users :
 
 .. code-block::
 
-    git clone https://github.com/rte-france/relife.git
-    cd relife
-    pip install .
+    $ py -3.** -m venv <venv_location>\relife
+    $ .\<venv_location>\relife\Scripts\activate
 
-As a contributor, you may want to install optional dependencies (type checking, documentation builder, etc.). You can use this command instead :
+**From source :** to install ReLife from source, go to the `ReLife repository <https://github.com/rte-france/relife>`_. Clone the codebase and install ReLife with `pip <https://packaging.python.org/en/latest/key_projects/#pip>`_.
 
 .. code-block::
 
-    pip install -e ".[dev]"
+    $ git clone https://github.com/rte-france/relife.git
+    $ cd relife
+    $ python -m pip install .
+
+For contributors, optional development dependencies (type checker, documentation builder, etc.) are available. Use this command instead :
+
+.. code-block::
+
+    $ python -m pip install -e ".[dev]"

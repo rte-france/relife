@@ -1,23 +1,25 @@
 import copy
 
 import numpy as np
-from numpy.typing import NDArray
-from typing_extensions import override
 
-from relife.economic import (
-    ExponentialDiscounting,
-    Reward,
-)
-from relife.stochastic_process.renewal_equations import (
+from relife.base import ParametricModel
+from relife.economic import ExponentialDiscounting, Reward
+from relife.lifetime_model import LeftTruncatedModel
+from relife.stochastic_process._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
+from relife.utils import is_frozen
 
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
-from .base import StochasticProcess
 
 
-class RenewalProcess(StochasticProcess):
+def _make_timeline(tf, nb_steps):
+    timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
+
+
+class RenewalProcess(ParametricModel):
     # noinspection PyUnresolvedReferences
     """Renewal process.
 
@@ -46,33 +48,10 @@ class RenewalProcess(StochasticProcess):
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
 
-    def _make_timeline(self, tf, nb_steps):
-        # tile is necessary to ensure broadcasting of the operations
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        return timeline  # (nb_steps,) or (m, nb_steps)
-
     def renewal_function(self, tf, nb_steps):
         r"""The renewal function.
 
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The renewal function will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the renewal function.
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the renewal function and its corresponding values at each
-            step of the timeline.
-
-        Notes
-        -----
-        The expected total number of renewals is computed  by solving the
+        The renewal function gives the expected total number of renewals. It is computed  by solving the
         renewal equation:
 
         .. math::
@@ -81,12 +60,24 @@ class RenewalProcess(StochasticProcess):
 
         where:
 
-        - :math:`m` is the renewal function,
+        - :math:`m` is the renewal function.
         - :math:`F` is the cumulative distribution function of the underlying
-          lifetime model,
+          lifetime model.
         - :math:`F_1` is the cumulative distribution function of the underlying
           lifetime model for the fist renewal in the case of a delayed renewal
           process.
+
+        Parameters
+        ----------
+        tf : float
+            The final time.
+        nb_steps : int
+            The number of steps used to discretized the time.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline and the computed values.
 
         References
         ----------
@@ -95,35 +86,18 @@ class RenewalProcess(StochasticProcess):
             Sons.
         """
 
-        timeline = self._make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
         renewal_function = renewal_equation_solver(
             timeline,
             self.lifetime_model,
             self.lifetime_model.cdf if self.first_lifetime_model is None else self.first_lifetime_model.cdf,
         )
-        if timeline.ndim == 2:
-            return timeline[0, :], renewal_function
-        return timeline, renewal_function
+        return np.squeeze(timeline), np.squeeze(renewal_function)
 
     def renewal_density(self, tf, nb_steps):
         r"""The renewal density.
 
-        Parameters
-        ----------
-        tf : float
-            Time horizon. The renewal density will be computed up until this calendar time.
-        nb_steps : int
-            The number of steps used to compute the renewal density.
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline used to compute the renewal density and its corresponding values at each
-            step of the timeline.
-
-        Notes
-        -----
-        The renewal density is the derivative of the renewal function with
+        The renewal density corresponds to the derivative of the renewal function with
         respect to time. It is computed by solving the renewal equation:
 
         .. math::
@@ -132,12 +106,24 @@ class RenewalProcess(StochasticProcess):
 
         where:
 
-        - :math:`\mu` is the renewal function,
+        - :math:`\mu` is the renewal function.
         - :math:`F` is the cumulative distribution function of the underlying
-          lifetime model,
+          lifetime model.
         - :math:`f_1` is the probability density function of the underlying
           lifetime model for the fist renewal in the case of a delayed renewal
           process.
+
+        Parameters
+        ----------
+        tf : float
+            The final time.
+        nb_steps : int
+            The number of steps used to discretized the time.
+
+        Returns
+        -------
+        tuple of two ndarrays
+            A tuple containing the timeline and the computed values.
 
         References
         ----------
@@ -145,15 +131,13 @@ class RenewalProcess(StochasticProcess):
             Theory: Models, Statistical Methods, and Applications. John Wiley &
             Sons.
         """
-        timeline = self._make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         renewal_density = renewal_equation_solver(
             timeline,
             self.lifetime_model,
             self.lifetime_model.pdf if self.first_lifetime_model is None else self.first_lifetime_model.pdf,
         )
-        if timeline.ndim == 2:
-            return timeline[0, :], renewal_density
-        return timeline, renewal_density
+        return np.squeeze(timeline), np.squeeze(renewal_density)
 
     def sample(self, size, tf, t0=0.0, seed=None):
         """Renewal data sampling.
@@ -206,13 +190,12 @@ class RenewalProcess(StochasticProcess):
         from ._sample import RenewalProcessIterable
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
-            from relife.lifetime_model import FrozenLeftTruncatedModel
-
-            if (
-                isinstance(self.first_lifetime_model, FrozenLeftTruncatedModel)
-                and self.first_lifetime_model.unfreeze() == self.lifetime_model
-            ):
-                pass
+            if is_frozen(self.first_lifetime_model):
+                if (
+                    isinstance(self.first_lifetime_model.unfrozen_model, LeftTruncatedModel)
+                    and self.first_lifetime_model.unfrozen_model.baseline == self.lifetime_model
+                ):
+                    pass
             else:
                 raise ValueError(
                     f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
@@ -283,26 +266,7 @@ class RenewalRewardProcess(RenewalProcess):
 
     @discounting_rate.setter
     def discounting_rate(self, value):
-        """
-        The discounting rate value setter
-
-        Parameters
-        ----------
-        value : float
-            The new discounting rate value to be set
-        """
         self.discounting.rate = value
-
-    @override
-    def _make_timeline(self, tf, nb_steps):
-        # tile is necessary to ensure broadcasting of the operations
-        timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-        args_nb_assets = getattr(self.lifetime_model, "nb_assets", 1)  # default 1 for LifetimeDistribution case
-        if args_nb_assets > 1:
-            timeline = np.tile(timeline, (args_nb_assets, 1))
-        elif self.reward.ndim == 2:  # elif because we consider that if m > 1 in frozen_model, in reward it is 1 or m
-            timeline = np.tile(timeline, (self.reward.size, 1))
-        return timeline  # (nb_steps,) or (m, nb_steps)
 
     def expected_total_reward(self, tf, nb_steps):
         r"""The expected total reward.
@@ -316,11 +280,11 @@ class RenewalRewardProcess(RenewalProcess):
 
         where:
 
-        - :math:`z` is the expected total reward,
+        - :math:`z` is the expected total reward.
         - :math:`F` is the cumulative distribution function of the underlying
-          lifetime model,
-        - :math:`X` the interarrival random variable,
-        - :math:`Y` the associated reward,
+          lifetime model.
+        - :math:`X` the interarrival random variable.
+        - :math:`Y` the associated reward.
         - :math:`D` the exponential discount factor.
 
         If the renewal reward process is delayed, the expected total reward is
@@ -333,26 +297,26 @@ class RenewalRewardProcess(RenewalProcess):
 
         where:
 
-        - :math:`z_1` is the expected total reward with delay,
+        - :math:`z_1` is the expected total reward with delay.
         - :math:`F_1` is the cumulative distribution function of the lifetime
-          model for the first renewal,
-        - :math:`X_1` the interarrival random variable of the first renewal,
-        - :math:`Y_1` the associated reward of the first renewal,
+          model for the first renewal.
+        - :math:`X_1` the interarrival random variable of the first renewal.
+        - :math:`Y_1` the associated reward of the first renewal.
 
         Parameters
         ----------
         tf : float
-            Time horizon. The expected total reward will be computed up until this calendar time.
+            The final time.
         nb_steps : int
-            The number of steps used to compute the expected total reward.
+            The number of steps used to discretized the time.
 
         Returns
         -------
         tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected total reward and its corresponding values at each
-            step of the timeline.
+            A tuple containing the timeline and the computed values.
+
         """
-        timeline = self._make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
+        timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         z = renewal_equation_solver(
             timeline,
             self.lifetime_model,
@@ -377,9 +341,7 @@ class RenewalRewardProcess(RenewalProcess):
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
-        if timeline.ndim == 2:
-            return timeline[0, :], z  # (nb_steps,) and (m, nb_steps)
-        return timeline, z  # (nb_steps,) and (nb_steps, )
+        return np.squeeze(timeline), np.squeeze(z)  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_reward(self):
         r"""Asymptotic expected total reward.
@@ -392,8 +354,8 @@ class RenewalRewardProcess(RenewalProcess):
 
         where:
 
-        - :math:`X` the interarrival random variable,
-        - :math:`Y` the associated reward,
+        - :math:`X` the interarrival random variable.
+        - :math:`Y` the associated reward.
         - :math:`D` the exponential discount factor.
 
         If the renewal reward process is delayed, the asymptotic expected total
@@ -405,8 +367,8 @@ class RenewalRewardProcess(RenewalProcess):
 
         where:
 
-        - :math:`X_1` the interarrival random variable of the first renewal,
-        - :math:`Y_1` the associated reward of the first renewal,
+        - :math:`X_1` the interarrival random variable of the first renewal.
+        - :math:`Y_1` the associated reward of the first renewal.
 
         Returns
         -------
@@ -445,15 +407,14 @@ class RenewalRewardProcess(RenewalProcess):
         Parameters
         ----------
         tf : float
-            Time horizon. The expected equivalent annual worth will be computed up until this calendar time.
+            The final time.
         nb_steps : int
-            The number of steps used to compute the expected equivalent annual worth.
+            The number of steps used to discretized the time.
 
         Returns
         -------
         tuple of two ndarrays
-            A tuple containing the timeline used to compute the expected equivalent annual worth and its corresponding values at each
-            step of the timeline.
+            A tuple containing the timeline and the computed values.
         """
         timeline, z = self.expected_total_reward(
             tf, nb_steps
@@ -469,17 +430,15 @@ class RenewalRewardProcess(RenewalProcess):
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
-        if timeline.ndim == 2:
-            return timeline[0, :], eeac  # (nb_steps,) and (m, nb_steps)
-        return timeline, eeac  # (nb_steps,) and (nb_steps)
+        return np.squeeze(timeline), np.squeeze(eeac)  # (nb_steps,) and (nb_steps) or (m, nb_steps)
 
-    def asymptotic_expected_equivalent_annual_worth(self) -> NDArray[np.float64]:
+    def asymptotic_expected_equivalent_annual_worth(self):
         """Asymptotic expected equivalent annual worth.
 
         Returns
         -------
         ndarray
-            The assymptotic expected equivalent annual worth
+            The assymptotic expected equivalent annual worth.
         """
         if self.discounting_rate == 0.0:
             return np.squeeze(
@@ -488,7 +447,6 @@ class RenewalRewardProcess(RenewalProcess):
             )  # () or (m,)
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
-    @override
     def sample(self, size, tf, t0=0.0, seed=None):
         from ._sample import RenewalProcessIterable
 

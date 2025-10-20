@@ -1,12 +1,11 @@
 import numpy as np
 
-from relife.data import LifetimeData, NHPPData
-from relife.likelihood import LikelihoodFromLifetimes
+from relife.base import FrozenParametricModel, ParametricModel
+from relife.data import NHPPData
+from relife.likelihood import DefaultLifetimeLikelihood
 
-from .base import FrozenStochasticProcess, StochasticProcess
 
-
-class NonHomogeneousPoissonProcess(StochasticProcess):
+class NonHomogeneousPoissonProcess(ParametricModel):
     """
     Non-homogeneous Poisson process.
     """
@@ -65,9 +64,9 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
 
         Returns
         -------
-        FrozenNonHomogeneousPoissonProcess
+        FrozenParametricModel
         """
-        return FrozenNonHomogeneousPoissonProcess(self, *args)
+        return FrozenParametricModel(self, *args)
 
     def sample(self, size, tf, *args, t0=0.0, seed=None):
         """Renewal data sampling.
@@ -174,7 +173,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         assets_ids=None,
         first_ages=None,
         last_ages=None,
-        model_args=None,
+        lifetime_model_args=None,
         **options,
     ):
         """
@@ -192,7 +191,7 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
         last_ages : 1D array of float, optional
             Array of float containing the ages of each asset at the end of the observation period. If set, ``assets_ids`` is needed and its length
             must equal the size of ``last_ages``.
-        model_args : tuple of np.ndarray, optional
+        lifetime_model_args : tuple of np.ndarray, optional
             Additional arguments needed by the model. If set, ``assets_ids`` is needed.
             For 1D array, the size must equal the length of ``assets_ids``. For 2D array (e.g. covar of regression),
             the length of first axis must equal the length of ``assets_ids``.
@@ -235,30 +234,14 @@ class NonHomogeneousPoissonProcess(StochasticProcess):
             events_assets_ids,
             first_ages=first_ages,
             last_ages=last_ages,
-            model_args=model_args,
+            model_args=lifetime_model_args,
             assets_ids=assets_ids,
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
         self.lifetime_model._get_initial_params(time, *args, event=event, entry=entry)
-        lifetime_data = LifetimeData(time, event=event, entry=entry, args=args)
-        likelihood = LikelihoodFromLifetimes(self.lifetime_model, lifetime_data)
+        likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event,entry=entry)
         fitting_results = likelihood.maximum_likelihood_estimation(**options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
-
-
-class FrozenNonHomogeneousPoissonProcess(FrozenStochasticProcess):
-
-    def intensity(self, time):
-        return self.unfrozen_model.intensity(time, *self.args)
-
-    def cumulative_intensity(self, time):
-        return self.unfrozen_model.cumulative_intensity(time, *self.args)
-
-    def sample(self, size, tf, t0=0.0, nb_assets=None, seed=None):
-        return self.unfrozen_model.sample(size, tf, *self.args, t0=t0, nb_assets=nb_assets, seed=seed)
-
-    def generate_failure_data(self, size, tf, t0=0.0, nb_assets=None, seed=None):
-        return self.unfrozen_model.generate_failure_data(size, tf, t0=t0, nb_assets=nb_assets, seed=seed, *self.args)

@@ -3,7 +3,7 @@ from pytest import approx
 from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model import AcceleratedFailureTime, ProportionalHazard, Weibull
-from relife.lifetime_model.regression import CovarEffect
+from relife.lifetime_model.regression import _CovarEffect
 
 
 def expected_shape(**kwargs):
@@ -41,38 +41,62 @@ def test_covar_effect():
     => jac_g : (nb_coef, m, 1)
     """
 
-    covar_effect = CovarEffect(coefficients=(2.4, 5.5))
+    covar_effect = _CovarEffect(coefficients=(2.4, 5.5))
     z1 = np.array([1, 2, 3])
     z2 = np.array([0.8, 0.7, 0.5])
-    assert covar_effect.g(np.column_stack((z1, z2))) == approx(np.exp(2.4 * z1 + 5.5 * z2).reshape(-1, 1))
-    assert covar_effect.jac_g(np.column_stack((z1, z2)))[0] == approx((z1 * np.exp(2.4 * z1 + 5.5 * z2)).reshape(-1, 1))
-    assert covar_effect.jac_g(np.column_stack((z1, z2)))[1] == approx((z2 * np.exp(2.4 * z1 + 5.5 * z2)).reshape(-1, 1))
+    assert covar_effect.g(np.column_stack((z1, z2))) == approx(
+        np.exp(2.4 * z1 + 5.5 * z2).reshape(-1, 1)
+    )
+    assert covar_effect.jac_g(np.column_stack((z1, z2)))[0] == approx(
+        (z1 * np.exp(2.4 * z1 + 5.5 * z2)).reshape(-1, 1)
+    )
+    assert covar_effect.jac_g(np.column_stack((z1, z2)))[1] == approx(
+        (z2 * np.exp(2.4 * z1 + 5.5 * z2)).reshape(-1, 1)
+    )
 
     assert covar_effect.g(np.ones(covar_effect.nb_coef)).shape == ()
     assert covar_effect.g(np.ones((1, covar_effect.nb_coef))).shape == (1, 1)
     assert covar_effect.g(np.ones((10, covar_effect.nb_coef))).shape == (10, 1)
 
-    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef,)
-    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (covar_effect.nb_coef,)
-    assert covar_effect.jac_g(np.ones((1, covar_effect.nb_coef)), asarray=True).shape == (covar_effect.nb_coef, 1, 1)
-    assert covar_effect.jac_g(np.ones((10, covar_effect.nb_coef)), asarray=True).shape == (covar_effect.nb_coef, 10, 1)
+    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (
+        covar_effect.nb_coef,
+    )
+    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (
+        covar_effect.nb_coef,
+    )
+    assert covar_effect.jac_g(
+        np.ones((1, covar_effect.nb_coef)), asarray=True
+    ).shape == (covar_effect.nb_coef, 1, 1)
+    assert covar_effect.jac_g(
+        np.ones((10, covar_effect.nb_coef)), asarray=True
+    ).shape == (covar_effect.nb_coef, 10, 1)
 
 
 def test_rvs(regression, covar, rvs_size, rvs_nb_assets):
-    assert regression.rvs(rvs_size, covar, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
-        rvs_size, nb_assets=rvs_nb_assets, covar=covar
+    assert regression.rvs(
+        rvs_size, covar, nb_assets=rvs_nb_assets
+    ).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
+    assert all(
+        arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
+        for arr in regression.rvs(
+            rvs_size, covar, nb_assets=rvs_nb_assets, return_event=True
+        )
     )
     assert all(
         arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
-        for arr in regression.rvs(rvs_size, covar, nb_assets=rvs_nb_assets, return_event=True)
+        for arr in regression.rvs(
+            rvs_size, covar, nb_assets=rvs_nb_assets, return_entry=True
+        )
     )
     assert all(
         arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
-        for arr in regression.rvs(rvs_size, covar, nb_assets=rvs_nb_assets, return_entry=True)
-    )
-    assert all(
-        arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
-        for arr in regression.rvs(rvs_size, covar, nb_assets=rvs_nb_assets, return_event=True, return_entry=True)
+        for arr in regression.rvs(
+            rvs_size,
+            covar,
+            nb_assets=rvs_nb_assets,
+            return_event=True,
+            return_entry=True,
+        )
     )
 
 
@@ -97,17 +121,25 @@ def test_pdf(regression, time, covar):
 
 
 def test_ppf(regression, probability, covar):
-    assert regression.ppf(probability, covar).shape == expected_shape(time=probability, covar=covar)
+    assert regression.ppf(probability, covar).shape == expected_shape(
+        time=probability, covar=covar
+    )
 
 
 def test_ichf(regression, probability, covar):
-    assert regression.ichf(probability, covar).shape == expected_shape(time=probability, covar=covar)
+    assert regression.ichf(probability, covar).shape == expected_shape(
+        time=probability, covar=covar
+    )
 
 
 def test_isf(regression, probability, covar):
-    assert regression.isf(probability, covar).shape == expected_shape(time=probability, covar=covar)
+    assert regression.isf(probability, covar).shape == expected_shape(
+        time=probability, covar=covar
+    )
     assert regression.isf(np.full(probability.shape, 0.5), covar) == approx(
-        np.broadcast_to(regression.median(covar), expected_shape(time=probability, covar=covar))
+        np.broadcast_to(
+            regression.median(covar), expected_shape(time=probability, covar=covar)
+        )
     )
 
 
@@ -116,45 +148,54 @@ def test_dhf(regression, time, covar):
 
 
 def test_jac_sf(regression, time, covar):
-    assert regression.jac_sf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
+    assert regression.jac_sf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_hf(regression, time, covar):
-    assert regression.jac_hf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
+    assert regression.jac_hf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_chf(regression, time, covar):
-    assert regression.jac_chf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
+    assert regression.jac_chf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_cdf(regression, time, covar):
-    assert regression.jac_cdf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
+    assert regression.jac_cdf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_pdf(regression, time, covar):
-    assert regression.jac_pdf(time, covar, asarray=True).shape == (regression.nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
+    assert regression.jac_pdf(time, covar, asarray=True).shape == (
+        regression.nb_params,
+    ) + expected_shape(time=time, covar=covar)
 
 
 def test_ls_integrate(regression, integration_bound_a, integration_bound_b, covar):
     # integral_a^b dF(x)
-    integration = regression.ls_integrate(np.ones_like, integration_bound_a, integration_bound_b, covar, deg=100)
-    assert integration.shape == expected_shape(a=integration_bound_a, b=integration_bound_b, covar=covar)
+    integration = regression.ls_integrate(
+        np.ones_like, integration_bound_a, integration_bound_b, covar, deg=100
+    )
+    assert integration.shape == expected_shape(
+        a=integration_bound_a, b=integration_bound_b, covar=covar
+    )
     assert integration == approx(
-        regression.cdf(integration_bound_b, covar) - regression.cdf(integration_bound_a, covar)
+        regression.cdf(integration_bound_b, covar)
+        - regression.cdf(integration_bound_a, covar)
     )
     # integral_0^inf x*dF(x)
     integration = regression.ls_integrate(
-        lambda x: x, np.zeros_like(integration_bound_a), np.full_like(integration_bound_b, np.inf), covar, deg=100
+        lambda x: x,
+        np.zeros_like(integration_bound_a),
+        np.full_like(integration_bound_b, np.inf),
+        covar,
+        deg=100,
     )
     assert integration == approx(
         np.broadcast_to(

@@ -1,22 +1,13 @@
 For developpers
 ===============
 
-.. contents::
-    :local:
-
-How to contribute
------------------
-
-This section gives you intructions and guidelines to help you contribute to ReLife.
-
 .. note::
 
     The content of this section is under continuous improvement as the project gathers more contributors. It is highly inspired by `Scikit-Learn <https://scikit-learn.org/dev/developers/contributing.html#ways-to-contribute>`_ and `Scipy <https://scipy.github.io/devdocs/dev/index.html>`_ contributing documentation.
     We highly encourage new comers to read these documentations if ours do not answer their questions.
 
-
 Local repository set up
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 Clone ReLife repository.
 
@@ -39,7 +30,7 @@ Add the ``upstream`` remote to synchronize your local repo to the ReLife repo.
 
 
 Development workflow
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 The development is done a specific branch called ``develop/<relife-version>``. From this development branch, open a new branch to develop your feature :
 
@@ -83,7 +74,7 @@ Please follow and use these standard acronyms to start your commit messages :
 
 
 Opening a pull request
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 If you want to submit your work, open a pull request to merge your ``origin/my-new-feature`` branch to ``upstream/develop/<relife-version>``.
 Before a PR can be merged, it needs to be approved by 1 core developer.
@@ -138,11 +129,8 @@ won't accept any modifications that would be too subjective, e.g. *because you t
     At the end, we expect this static type checking will get the overall code base quality in the right direction.
 
 
-Documentation style
--------------------
-
-Build the doc locally
-^^^^^^^^^^^^^^^^^^^^^
+About the documentation
+-----------------------
 
 To build the documentation locally run the following commands :
 
@@ -163,12 +151,9 @@ Then go to `http://localhost:8000 <http://localhost:8000>`_
 .. warning::
 
     Using Sphinx for the first time is frustrating. It is easy to get tons of errors as they are cumulative. Read the Sphinx
-    documentation carefully and **be carefull** about unwanted blank lines or missing spaces in reST directives.
+    documentation and **be carefull** about unwanted blank lines or missing spaces in reST directives.
 
-Note of Numpy style
-^^^^^^^^^^^^^^^^^^^
-
-The following documentation is built with `PyData Sphinx Theme <https://pydata-sphinx-theme.readthedocs.io/en/stable/>`_ and uses the
+The documentation is built with `PyData Sphinx Theme <https://pydata-sphinx-theme.readthedocs.io/en/stable/>`_ and uses the
 NumPy documentation style. Here are important points to have in mind if you want to **contribute to the documentation** :
 
 * Read the `NumPy documentation style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_
