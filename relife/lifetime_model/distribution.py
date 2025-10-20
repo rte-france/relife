@@ -1475,8 +1475,8 @@ class EquilibriumDistribution(ParametricLifetimeModel):
 
     Parameters
     ----------
-    baseline : BaseLifetimeModel
-        Underlying lifetime core.
+    baseline : any parametric lifetime model
+        Lifetime model.
 
     References
     ----------
@@ -1530,6 +1530,11 @@ class MinimumDistribution(FittableParametricLifetimeModel):
         h(t) = n \cdot  h_0(t)
 
     where :math:`h_0` is the baseline hazard function of the components.
+
+    Parameters
+    ----------
+    baseline : lifetime distribution or regression
+        Lifetime model.
 
     Examples
     --------

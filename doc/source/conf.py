@@ -78,8 +78,9 @@ exclude_patterns = [
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_title = "ReLife"  # sidebar title
+html_title = "ReLife documentation"  # sidebar title
 html_logo = "_static/small_relife.gif"
+html_favicon = "_static/relife_favicon.png"
 html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 

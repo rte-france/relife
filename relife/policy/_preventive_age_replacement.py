@@ -34,7 +34,8 @@ def age_replacement_policy(baseline_model, cost_structure, one_cycle=False, **kw
 
     Returns
     -------
-    Policy corresponding to ``baseline_model`` and ``cost_structure``.
+    Policy
+        Policy corresponding to the ``baseline_model`` and the ``cost_structure``.
 
     Raises
     ------
@@ -64,9 +65,13 @@ def age_replacement_policy(baseline_model, cost_structure, one_cycle=False, **kw
 class OneCycleAgeReplacementPolicy(ReplacementPolicy):
     r"""One-cyle age replacement policy.
 
-    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced
-    upon failure with cost :math:`c_f`. ``OneCycleAgeReplacementPolicy`` differs from ``AgeReplacementPolicy``
-    because only one cycle of replacement is considered.
+    Asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced
+    upon failure with cost :math:`c_f`.
+
+    .. note::
+
+        ``OneCycleAgeReplacementPolicy`` differs from ``AgeReplacementPolicy``
+        because only one cycle of replacement is considered.
 
     The object's methods require the ``ar`` attribute to be set either at the instanciation
     or by calling the ``optimize`` method. Otherwise, an error will be raised.
@@ -87,6 +92,12 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
         and access to the rest of the object interface.
+
+    Attributes
+    ----------
+    cf
+    cp
+    ar
 
     References
     ----------
@@ -298,9 +309,8 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
 class AgeReplacementPolicy(ReplacementPolicy):
     r"""Age replacement policy.
 
-    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced
-    upon failure with cost :math:`c_f`. ``AgeReplacementPolicy`` differs from ``OneCycleAgeReplacementPolicy``
-    because a infinite cycle of replacement is considered.
+    Asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced
+    upon failure with cost :math:`c_f`.
 
     The object's methods require the ``ar`` attribute to be set either at the instanciation
     or by calling the ``optimize`` method. Otherwise, an error will be raised.
@@ -321,6 +331,12 @@ class AgeReplacementPolicy(ReplacementPolicy):
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
         and access to the rest of the object interface.
+
+    Attributes
+    ----------
+    cf
+    cp
+    ar
 
     References
     ----------
@@ -619,6 +635,12 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     ar : float or 1darray, optional
         Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
         and access to the rest of the object interface.
+
+    Attributes
+    ----------
+    cp
+    cr
+    ar
     """
 
     def __init__(self, nhpp, cr, cp, discounting_rate=0.0, ar=None):

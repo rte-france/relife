@@ -57,7 +57,7 @@ def legendre_quadrature(
     b: float | NDArray[np.float64],
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:
-    r"""Numerical integration of `func` over the interval `[a,b]`
+    r"""Numerical integration of :math:`f(x)` over the interval :math:`[a,b]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     a can be zero
@@ -98,7 +98,7 @@ def laguerre_quadrature(
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:
-    r"""Numerical integration of `func * exp(-x)` over the interval `[a, inf]`
+    r"""Numerical integration of :math:`f(x) * exp(-x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     It must handle at least 3 dimensions.
@@ -133,7 +133,7 @@ def unweighted_laguerre_quadrature(
     a: float | NDArray[np.float64] = 0.0,
     deg: int = 10,
 ) -> np.float64 | NDArray[np.float64]:
-    r"""Numerical integration of `func` over the interval `[a, inf]`
+    r"""Numerical integration of :math:`f(x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
     It must handle at least 3 dimensions.

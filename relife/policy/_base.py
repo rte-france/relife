@@ -101,10 +101,6 @@ class ReplacementPolicy(ABC):
         r"""
         The expected net present value.
 
-        The net present value is commonly computed with a time discrete formula.
-        It has a continuous variation where cash flows are time dependant.
-        From a random perspective, one can compute its expected value called :math:`z(t)`.
-
         .. math::
 
             z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
@@ -137,7 +133,11 @@ class ReplacementPolicy(ABC):
     @abstractmethod
     def asymptotic_expected_net_present_value(self, total_sum=False):
         r"""
-        The asymtotic expected net present value :math:`\lim_{t\to\infty} z(t)`.
+        The asymtotic expected net present value.
+
+        .. math::
+
+            \lim_{t\to\infty} z(t)
 
         Parameters
         ----------
@@ -155,10 +155,6 @@ class ReplacementPolicy(ABC):
     def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
         r"""
         The expected equivalent annual cost.
-
-        The equivalent annual cost corresponds to the value of the constant cash flow that
-        leads to the same net present value. It is generally used to compare investment projects of unequal lifespans.
-        It has a continuous variation and from a random perspective, one can compute its expected value called :math:`q(t)`.
 
         .. math::
 
@@ -189,7 +185,11 @@ class ReplacementPolicy(ABC):
     @abstractmethod
     def asymptotic_expected_equivalent_annual_cost(self, total_sum=False):
         r"""
-        The asymtotic expected equivalent annual cost, :math:`\lim_{t\to\infty} q(t)`.
+        The asymtotic expected equivalent annual cost.
+
+        .. math::
+
+            \lim_{t\to\infty} q(t)
 
         Parameters
         ----------

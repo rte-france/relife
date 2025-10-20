@@ -96,6 +96,8 @@ Stochastic processes
 Maintenance policies
 --------------------
 
+Convenient functions to instanciate a policy based on the given model and cost structure.
+
 .. currentmodule:: relife.policy
 
 .. autosummary::
@@ -106,6 +108,8 @@ Maintenance policies
 
     age_replacement_policy
     run_to_failure_policy
+
+Lower-level policy classes that can be used in addition to the above functions.
 
 .. autosummary::
     :toctree: policy
@@ -166,6 +170,9 @@ Various utilities to help with development.
     ~is_frozen
     ~is_lifetime_model
     ~is_non_homogeneous_poisson_process
+
+Quadrature utilities used a many computations. We don't use Scipy quadrature implementations as, to our knowledge, they don't
+support automatic broadcasting of 2D bounds.
 
 .. currentmodule:: relife.utils.quadrature
 

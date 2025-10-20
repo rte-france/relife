@@ -25,7 +25,8 @@ def run_to_failure_policy(baseline_model, cf, one_cycle=False, **kwargs):
 
     Returns
     -------
-    Policy corresponding to ``baseline_model`` and ``cost_structure``.
+    Policy
+        Policy corresponding to the ``baseline_model`` and the ``cost_structure``.
 
     Raises
     ------
@@ -43,6 +44,13 @@ def run_to_failure_policy(baseline_model, cf, one_cycle=False, **kwargs):
 class OneCycleRunToFailurePolicy(ReplacementPolicy):
     r"""One cyle run-to-failure policy.
 
+    Asset is replaced upon failure with cost :math:`c_f`.
+
+    .. note::
+
+        ``OneCycleRunToFailurePolicy`` differs from ``RunToFailurePolicy``
+        because only one cycle of replacement is considered.
+
     Parameters
     ----------
     lifetime_model : any lifetime distribution or frozen lifetime model
@@ -54,6 +62,10 @@ class OneCycleRunToFailurePolicy(ReplacementPolicy):
     a0 : float or 1darray, optional
         Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
+
+    Attributes
+    ----------
+    cf
     """
 
     def __init__(self, lifetime_model, cf, discounting_rate=0.0, a0=None, period_before_discounting=1.0):
@@ -133,6 +145,8 @@ class OneCycleRunToFailurePolicy(ReplacementPolicy):
 class RunToFailurePolicy(ReplacementPolicy):
     r"""Run-to-failure renewal policy.
 
+    Asset is replaced upon failure with cost :math:`c_f`.
+
     Parameters
     ----------
     lifetime_model : any lifetime distribution or frozen lifetime model
@@ -144,6 +158,10 @@ class RunToFailurePolicy(ReplacementPolicy):
     a0 : float or 1darray, optional
         Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
+
+    Attributes
+    ----------
+    cf
 
     References
     ----------
