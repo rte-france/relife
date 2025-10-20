@@ -34,9 +34,6 @@ Gamma
             ~Gamma.fit
         
         
-            ~Gamma.fit_from_interval_censored_data
-        
-        
             ~Gamma.fit_from_interval_censored_lifetimes
         
         

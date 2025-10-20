@@ -34,9 +34,6 @@ Weibull
             ~Weibull.fit
         
         
-            ~Weibull.fit_from_interval_censored_data
-        
-        
             ~Weibull.fit_from_interval_censored_lifetimes
         
         
