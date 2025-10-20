@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>relife.lifetime_model.distribution &#8212; ReLife</title>
+    <title>relife.lifetime_model.distribution &#8212; ReLife documentation</title>
   
   
   
@@ -49,6 +49,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/relife/lifetime_model/distribution';</script>
     <script src="../../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -119,8 +120,8 @@
       
     
     
-    <img src="../../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -2035,8 +2036,8 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    baseline : BaseLifetimeModel</span>
-<span class="sd">        Underlying lifetime core.</span>
+<span class="sd">    baseline : any parametric lifetime model</span>
+<span class="sd">        Lifetime model.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -2090,6 +2091,11 @@
 <span class="sd">        h(t) = n \cdot  h_0(t)</span>
 
 <span class="sd">    where :math:`h_0` is the baseline hazard function of the components.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    baseline : lifetime distribution or regression</span>
+<span class="sd">        Lifetime model.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>

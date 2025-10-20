@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>relife.lifetime_model.regression &#8212; ReLife</title>
+    <title>relife.lifetime_model.regression &#8212; ReLife documentation</title>
   
   
   
@@ -49,6 +49,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/relife/lifetime_model/regression';</script>
     <script src="../../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -119,8 +120,8 @@
       
     
     
-    <img src="../../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -446,8 +447,10 @@
     <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time_shape</span><span class="p">,</span> <span class="n">covar_shape</span><span class="p">):</span>
-    <span class="c1"># time_shape : (), (n,) or (m, n)</span>
-    <span class="c1"># covar_shape : (), (nb_coef,) or (m, nb_coef)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    time_shape : (), (n,) or (m, n)</span>
+<span class="sd">    covar_shape : (), (nb_coef,) or (m, nb_coef)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">match</span> <span class="p">[</span><span class="n">time_shape</span><span class="p">,</span> <span class="n">covar_shape</span><span class="p">]:</span>
         <span class="k">case</span><span class="w"> </span><span class="p">[(),</span> <span class="p">()]</span> <span class="o">|</span> <span class="p">[(),</span> <span class="p">(</span><span class="k">_</span><span class="p">,)]:</span>
             <span class="k">return</span> <span class="p">()</span>

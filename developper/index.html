@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>For developpers &#8212; ReLife</title>
+    <title>For developpers &#8212; ReLife documentation</title>
   
   
   
@@ -50,6 +50,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'developper/index';</script>
     <script src="../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="unweighted_laguerre_quadrature" href="../api/routines/relife.utils.quadrature.unweighted_laguerre_quadrature.html" />
@@ -121,8 +122,8 @@
       
     
     
-    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -413,16 +414,13 @@
                   
   <section id="for-developpers">
 <h1>For developpers<a class="headerlink" href="#for-developpers" title="Link to this heading">#</a></h1>
-<section id="how-to-contribute">
-<h2>How to contribute<a class="headerlink" href="#how-to-contribute" title="Link to this heading">#</a></h2>
-<p>This section gives you intructions and guidelines to help you contribute to ReLife.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The content of this section is under continuous improvement as the project gathers more contributors. It is highly inspired by <a class="reference external" href="https://scikit-learn.org/dev/developers/contributing.html#ways-to-contribute">Scikit-Learn</a> and <a class="reference external" href="https://scipy.github.io/devdocs/dev/index.html">Scipy</a> contributing documentation.
 We highly encourage new comers to read these documentations if ours do not answer their questions.</p>
 </div>
 <section id="local-repository-set-up">
-<h3>Local repository set up<a class="headerlink" href="#local-repository-set-up" title="Link to this heading">#</a></h3>
+<h2>Local repository set up<a class="headerlink" href="#local-repository-set-up" title="Link to this heading">#</a></h2>
 <p>Clone ReLife repository.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:YourLogin/rte-france/relife.git
 $ cd relife
@@ -438,7 +436,7 @@ $ cd relife
 </div>
 </section>
 <section id="development-workflow">
-<h3>Development workflow<a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h3>
+<h2>Development workflow<a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h2>
 <p>The development is done a specific branch called <code class="docutils literal notranslate"><span class="pre">develop/&lt;relife-version&gt;</span></code>. From this development branch, open a new branch to develop your feature :</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout develop/&lt;relife-version&gt;
 $ git checkout -b my-new-feature
@@ -472,7 +470,7 @@ $ git merge develop/&lt;relife-version&gt;
 </div>
 </section>
 <section id="opening-a-pull-request">
-<h3>Opening a pull request<a class="headerlink" href="#opening-a-pull-request" title="Link to this heading">#</a></h3>
+<h2>Opening a pull request<a class="headerlink" href="#opening-a-pull-request" title="Link to this heading">#</a></h2>
 <p>If you want to submit your work, open a pull request to merge your <code class="docutils literal notranslate"><span class="pre">origin/my-new-feature</span></code> branch to <code class="docutils literal notranslate"><span class="pre">upstream/develop/&lt;relife-version&gt;</span></code>.
 Before a PR can be merged, it needs to be approved by 1 core developer.
 An incomplete contribution – where you expect to do more work before receiving
@@ -508,7 +506,6 @@ refer to our Documentation style guidelines. Run Sphinx locally before.</p>
 the core team of ReLife. More specifically, it is a work in progress that will be done through
 stubfiles gradually.</p>
 </section>
-</section>
 <section id="about-conception">
 <h2>About conception<a class="headerlink" href="#about-conception" title="Link to this heading">#</a></h2>
 <p>If you want to adress conception problem, you’re welcome. <strong>But these issues must be carefully motivated and well justified</strong>. More precisely, we
@@ -520,10 +517,8 @@ This work is done in addition to feature enhancements and progress at its own pa
 At the end, we expect this static type checking will get the overall code base quality in the right direction.</p>
 </div>
 </section>
-<section id="documentation-style">
-<h2>Documentation style<a class="headerlink" href="#documentation-style" title="Link to this heading">#</a></h2>
-<section id="build-the-doc-locally">
-<h3>Build the doc locally<a class="headerlink" href="#build-the-doc-locally" title="Link to this heading">#</a></h3>
+<section id="about-the-documentation">
+<h2>About the documentation<a class="headerlink" href="#about-the-documentation" title="Link to this heading">#</a></h2>
 <p>To build the documentation locally run the following commands :</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd doc
 $ make html
@@ -540,17 +535,13 @@ $ python -m http.server -d build/html/
 <p>Using Sphinx for the first time is frustrating. It is easy to get tons of errors as they are cumulative. Read the Sphinx
 documentation and <strong>be carefull</strong> about unwanted blank lines or missing spaces in reST directives.</p>
 </div>
-</section>
-<section id="note-of-numpy-style">
-<h3>Note of Numpy style<a class="headerlink" href="#note-of-numpy-style" title="Link to this heading">#</a></h3>
-<p>The following documentation is built with <a class="reference external" href="https://pydata-sphinx-theme.readthedocs.io/en/stable/">PyData Sphinx Theme</a> and uses the
+<p>The documentation is built with <a class="reference external" href="https://pydata-sphinx-theme.readthedocs.io/en/stable/">PyData Sphinx Theme</a> and uses the
 NumPy documentation style. Here are important points to have in mind if you want to <strong>contribute to the documentation</strong> :</p>
 <ul class="simple">
 <li><p>Read the <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a></p></li>
 <li><p>Classes documentation .rst files are generated using <a class="reference external" href="https://jinja.palletsprojects.com/en/stable/">Jinja2</a> template engine. The template is written in <code class="docutils literal notranslate"><span class="pre">class_template.rst</span></code> of the <code class="docutils literal notranslate"><span class="pre">doc/source/_templates</span></code>. A guide to Jinja2 templating is given in <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html">Sphinx autosummary documentation</a>. Basically, one can catch usefull variables like <code class="docutils literal notranslate"><span class="pre">methods</span></code> and create nice autosummary tables inside an <code class="docutils literal notranslate"><span class="pre">autoclass</span></code>. We chose this style because it creates very clean and comprehension interface documentation of the class.</p></li>
 <li><p>Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are <strong>inherited</strong>. One must reference them manually in the object class under the <code class="docutils literal notranslate"><span class="pre">Attributes</span></code> field of the docstring.  As it is mentionned in <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a>, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug… ignore or disable it at the statement level.</p></li>
 </ul>
-</section>
 </section>
 </section>
 
@@ -577,18 +568,11 @@ NumPy documentation style. Here are important points to have in mind if you want
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-contribute">How to contribute</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#local-repository-set-up">Local repository set up</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#development-workflow">Development workflow</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a pull request</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-repository-set-up">Local repository set up</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-workflow">Development workflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a pull request</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#about-conception">About conception</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-style">Documentation style</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-doc-locally">Build the doc locally</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#note-of-numpy-style">Note of Numpy style</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#about-the-documentation">About the documentation</a></li>
 </ul>
   </nav></div>
 

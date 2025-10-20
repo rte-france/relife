@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>RunToFailurePolicy &#8212; ReLife</title>
+    <title>RunToFailurePolicy &#8212; ReLife documentation</title>
   
   
   
@@ -52,6 +52,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/policy/relife.policy.RunToFailurePolicy';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="OneCycleRunToFailurePolicy" href="relife.policy.OneCycleRunToFailurePolicy.html" />
@@ -124,8 +125,8 @@
       
     
     
-    <img src="../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -504,6 +505,7 @@
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">RunToFailurePolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy" title="Link to this definition">#</a></dt>
 <dd><p>Run-to-failure renewal policy.</p>
+<p>Asset is replaced upon failure with cost <span class="math notranslate nohighlight">\(c_f\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -515,6 +517,12 @@
 </dd>
 <dt><strong>a0</strong><span class="classifier">float or 1darray, optional</span></dt><dd><p>Current ages of the assets, by default 0 for each asset. If it is given, left truncations of <code class="docutils literal notranslate"><span class="pre">a0</span></code> will
 be take into account for the first cycle.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference internal" href="#relife.policy.RunToFailurePolicy.cf" title="relife.policy.RunToFailurePolicy.cf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cf</span></code></a></dt><dd><p>Cost of failure.</p>
 </dd>
 </dl>
 </dd>
@@ -532,10 +540,10 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></code></a></p></td>
-<td><p>The asymtotic expected equivalent annual cost, <span class="math notranslate nohighlight">\(\lim_{t\to\infty} q(t)\)</span>.</p></td>
+<td><p>The asymtotic expected equivalent annual cost.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value" title="relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asymptotic_expected_net_present_value</span></code></a></p></td>
-<td><p>The asymtotic expected net present value <span class="math notranslate nohighlight">\(\lim_{t\to\infty} z(t)\)</span>.</p></td>
+<td><p>The asymtotic expected net present value.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_equivalent_annual_cost</span></code></a></p></td>
 <td><p>The expected equivalent annual cost.</p></td>
@@ -565,7 +573,9 @@ the Engineering and Informational Sciences, 22(1), 53-74.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
 <span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
-<dd><p>The asymtotic expected equivalent annual cost, <span class="math notranslate nohighlight">\(\lim_{t\to\infty} q(t)\)</span>.</p>
+<dd><p>The asymtotic expected equivalent annual cost.</p>
+<div class="math notranslate nohighlight">
+\[\lim_{t\to\infty} q(t)\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -586,7 +596,9 @@ assets, this option allows to return the sum result on the flit rather than call
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value">
 <span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
-<dd><p>The asymtotic expected net present value <span class="math notranslate nohighlight">\(\lim_{t\to\infty} z(t)\)</span>.</p>
+<dd><p>The asymtotic expected net present value.</p>
+<div class="math notranslate nohighlight">
+\[\lim_{t\to\infty} z(t)\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -621,9 +633,6 @@ assets, this option allows to return the sum result on the flit rather than call
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost">
 <span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The expected equivalent annual cost.</p>
-<p>The equivalent annual cost corresponds to the value of the constant cash flow that
-leads to the same net present value. It is generally used to compare investment projects of unequal lifespans.
-It has a continuous variation and from a random perspective, one can compute its expected value called <span class="math notranslate nohighlight">\(q(t)\)</span>.</p>
 <div class="math notranslate nohighlight">
 \[q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
 <p>where :</p>
@@ -657,9 +666,6 @@ assets, this option allows to return the sum result on the flit rather than call
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.expected_net_present_value">
 <span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
 <dd><p>The expected net present value.</p>
-<p>The net present value is commonly computed with a time discrete formula.
-It has a continuous variation where cash flows are time dependant.
-From a random perspective, one can compute its expected value called <span class="math notranslate nohighlight">\(z(t)\)</span>.</p>
 <div class="math notranslate nohighlight">
 \[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
 <p>where :</p>

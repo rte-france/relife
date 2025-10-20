@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; ReLife</title>
+    <title>Installation &#8212; ReLife documentation</title>
   
   
   
@@ -50,6 +50,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'installation';</script>
     <script src="_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Basics" href="basic/index.html" />
@@ -122,8 +123,8 @@
       
     
     
-    <img src="_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -414,31 +415,31 @@
                   
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<p>ReLife is a python package and it is uploaded on the <a class="reference external" href="https://pypi.org/">Python Package Index (PyPi)</a>. To install ReLife locally make
-sure to have Python <strong>3.11 (or newer)</strong> installed on your machine.</p>
-<p><strong>Optional but recommended :</strong> create and activate a virtual environment.</p>
+<p>ReLife is a Python package. It is uploaded on the <a class="reference external" href="https://pypi.org/">Python Package Index (PyPi)</a>. Before you install ReLife, make
+sure Python <strong>3.11 (or newer)</strong> is installed.</p>
+<p>Install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a> :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m pip install relife
+</pre></div>
+</div>
+<p><strong>Optional but recommended :</strong> create and activate a virtual environment before.</p>
 <p>For Linux users :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python3</span><span class="o">.**</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;/</span><span class="n">relife</span>
-<span class="n">source</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;/</span><span class="n">relife</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ /usr/bin/python3.** -m venv &lt;venv_location&gt;/relife
+$ source &lt;venv_location&gt;/relife/bin/activate
 </pre></div>
 </div>
 <p>For Windows users :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">py</span> <span class="o">-</span><span class="mf">3.</span><span class="o">**</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;</span>\<span class="n">relife</span>
-<span class="o">.</span>\<span class="o">&lt;</span><span class="n">venv_location</span><span class="o">&gt;</span>\<span class="n">relife</span>\<span class="n">Scripts</span>\<span class="n">activate</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ py -3.** -m venv &lt;venv_location&gt;\relife
+$ .\&lt;venv_location&gt;\relife\Scripts\activate
 </pre></div>
 </div>
-<p>Install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a> :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">relife</span>
+<p><strong>From source :</strong> to install ReLife from source, go to the <a class="reference external" href="https://github.com/rte-france/relife">ReLife repository</a>. Clone the codebase and install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/rte-france/relife.git
+$ cd relife
+$ python -m pip install .
 </pre></div>
 </div>
-<p><strong>From source :</strong> to install ReLife from source, go to <a class="reference external" href="https://github.com/rte-france/relife">relife repository</a>. Clone the codebase and install ReLife with <a class="reference external" href="https://packaging.python.org/en/latest/key_projects/#pip">pip</a>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">rte</span><span class="o">-</span><span class="n">france</span><span class="o">/</span><span class="n">relife</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">relife</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
-</pre></div>
-</div>
-<p>As a contributor, you’ll need optional development dependencies (type checker, documentation builder, etc.). Use this command instead :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;.[dev]&quot;</span>
+<p>For contributors, optional development dependencies (type checker, documentation builder, etc.) are available. Use this command instead :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m pip install -e &quot;.[dev]&quot;
 </pre></div>
 </div>
 </section>

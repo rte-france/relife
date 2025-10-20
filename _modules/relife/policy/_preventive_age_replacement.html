@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>relife.policy._preventive_age_replacement &#8212; ReLife</title>
+    <title>relife.policy._preventive_age_replacement &#8212; ReLife documentation</title>
   
   
   
@@ -49,6 +49,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/relife/policy/_preventive_age_replacement';</script>
     <script src="../../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -119,8 +120,8 @@
       
     
     
-    <img src="../../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -449,7 +450,8 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Policy corresponding to ``baseline_model`` and ``cost_structure``.</span>
+<span class="sd">    Policy</span>
+<span class="sd">        Policy corresponding to the ``baseline_model`` and the ``cost_structure``.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -482,9 +484,13 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">OneCycleAgeReplacementPolicy</span><span class="p">(</span><span class="n">ReplacementPolicy</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One-cyle age replacement policy.</span>
 
-<span class="sd">    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced</span>
-<span class="sd">    upon failure with cost :math:`c_f`. ``OneCycleAgeReplacementPolicy`` differs from ``AgeReplacementPolicy``</span>
-<span class="sd">    because only one cycle of replacement is considered.</span>
+<span class="sd">    Asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced</span>
+<span class="sd">    upon failure with cost :math:`c_f`.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        ``OneCycleAgeReplacementPolicy`` differs from ``AgeReplacementPolicy``</span>
+<span class="sd">        because only one cycle of replacement is considered.</span>
 
 <span class="sd">    The object&#39;s methods require the ``ar`` attribute to be set either at the instanciation</span>
 <span class="sd">    or by calling the ``optimize`` method. Otherwise, an error will be raised.</span>
@@ -505,6 +511,12 @@
 <span class="sd">    ar : float or 1darray, optional</span>
 <span class="sd">        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values</span>
 <span class="sd">        and access to the rest of the object interface.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cf</span>
+<span class="sd">    cp</span>
+<span class="sd">    ar</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -734,9 +746,8 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">AgeReplacementPolicy</span><span class="p">(</span><span class="n">ReplacementPolicy</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Age replacement policy.</span>
 
-<span class="sd">    With this policy, the asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced</span>
-<span class="sd">    upon failure with cost :math:`c_f`. ``AgeReplacementPolicy`` differs from ``OneCycleAgeReplacementPolicy``</span>
-<span class="sd">    because a infinite cycle of replacement is considered.</span>
+<span class="sd">    Asset is replaced at a fixed age :math:`a_r` with cost :math:`c_p` or it is replaced</span>
+<span class="sd">    upon failure with cost :math:`c_f`.</span>
 
 <span class="sd">    The object&#39;s methods require the ``ar`` attribute to be set either at the instanciation</span>
 <span class="sd">    or by calling the ``optimize`` method. Otherwise, an error will be raised.</span>
@@ -757,6 +768,12 @@
 <span class="sd">    ar : float or 1darray, optional</span>
 <span class="sd">        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values</span>
 <span class="sd">        and access to the rest of the object interface.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cf</span>
+<span class="sd">    cp</span>
+<span class="sd">    ar</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -1082,6 +1099,12 @@
 <span class="sd">    ar : float or 1darray, optional</span>
 <span class="sd">        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values</span>
 <span class="sd">        and access to the rest of the object interface.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cp</span>
+<span class="sd">    cr</span>
+<span class="sd">    ar</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nhpp</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>laguerre_quadrature &#8212; ReLife</title>
+    <title>laguerre_quadrature &#8212; ReLife documentation</title>
   
   
   
@@ -48,8 +48,11 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/routines/relife.utils.quadrature.laguerre_quadrature';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="unweighted_laguerre_quadrature" href="relife.utils.quadrature.unweighted_laguerre_quadrature.html" />
@@ -122,8 +125,8 @@
       
     
     
-    <img src="../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -501,7 +504,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="relife.utils.quadrature.laguerre_quadrature">
 <span class="sig-prename descclassname"><span class="pre">relife.utils.quadrature.</span></span><span class="sig-name descname"><span class="pre">laguerre_quadrature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/utils/quadrature.html#laguerre_quadrature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.utils.quadrature.laguerre_quadrature" title="Link to this definition">#</a></dt>
-<dd><p>Numerical integration of <cite>func * exp(-x)</cite> over the interval <cite>[a, inf]</cite></p>
+<dd><p>Numerical integration of <span class="math notranslate nohighlight">\(f(x) * exp(-x)\)</span> over the interval <span class="math notranslate nohighlight">\([a, \infty]\)</span></p>
 <p><cite>func</cite> must accept (deg,), (deg, n) or (deg, m, n) array shapes
 It must handle at least 3 dimensions.
 a can be zero with ndim &lt;= 2.</p>

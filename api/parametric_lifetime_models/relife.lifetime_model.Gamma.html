@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Gamma &#8212; ReLife</title>
+    <title>Gamma &#8212; ReLife documentation</title>
   
   
   
@@ -52,6 +52,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/parametric_lifetime_models/relife.lifetime_model.Gamma';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="LogLogistic" href="relife.lifetime_model.LogLogistic.html" />
@@ -124,8 +125,8 @@
       
     
     
-    <img src="../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -562,61 +563,64 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.fit" title="relife.lifetime_model.Gamma.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
 <td><p>Estimation of the distribution parameters from lifetime data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_lifetimes</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_data</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.hf" title="relife.lifetime_model.Gamma.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_lifetimes</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.hf" title="relife.lifetime_model.Gamma.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
 <td><p>The hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.ichf" title="relife.lifetime_model.Gamma.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.ichf" title="relife.lifetime_model.Gamma.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
 <td><p>Inverse cumulative hazard function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.isf" title="relife.lifetime_model.Gamma.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.isf" title="relife.lifetime_model.Gamma.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
 <td><p>The inverse survival function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_cdf" title="relife.lifetime_model.Gamma.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_cdf" title="relife.lifetime_model.Gamma.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative density function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_chf" title="relife.lifetime_model.Gamma.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_chf" title="relife.lifetime_model.Gamma.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_hf" title="relife.lifetime_model.Gamma.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_hf" title="relife.lifetime_model.Gamma.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
 <td><p>The jacobian of the hazard function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_pdf" title="relife.lifetime_model.Gamma.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_pdf" title="relife.lifetime_model.Gamma.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
 <td><p>The jacobian of the probability density function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_sf" title="relife.lifetime_model.Gamma.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.jac_sf" title="relife.lifetime_model.Gamma.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
 <td><p>The jacobian of the survival function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.ls_integrate" title="relife.lifetime_model.Gamma.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.ls_integrate" title="relife.lifetime_model.Gamma.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
 <td><p>Lebesgue-Stieltjes integration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.mean" title="relife.lifetime_model.Gamma.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.mean" title="relife.lifetime_model.Gamma.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
 <td><p>The mean of the distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.median" title="relife.lifetime_model.Gamma.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.median" title="relife.lifetime_model.Gamma.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
 <td><p>The median.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.moment" title="relife.lifetime_model.Gamma.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.moment" title="relife.lifetime_model.Gamma.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
 <td><p>n-th order moment</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.mrl" title="relife.lifetime_model.Gamma.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.mrl" title="relife.lifetime_model.Gamma.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
 <td><p>The mean residual life function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.pdf" title="relife.lifetime_model.Gamma.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.pdf" title="relife.lifetime_model.Gamma.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
 <td><p>The probability density function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.ppf" title="relife.lifetime_model.Gamma.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.ppf" title="relife.lifetime_model.Gamma.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
 <td><p>The percent point function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.rvs" title="relife.lifetime_model.Gamma.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.rvs" title="relife.lifetime_model.Gamma.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
 <td><p>Random variable sampling.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.sf" title="relife.lifetime_model.Gamma.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.sf" title="relife.lifetime_model.Gamma.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
 <td><p>The survival function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.var" title="relife.lifetime_model.Gamma.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gamma.var" title="relife.lifetime_model.Gamma.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
 <td><p>The variance of the distribution.</p></td>
 </tr>
 </tbody>

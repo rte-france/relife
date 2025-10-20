@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Basics &#8212; ReLife</title>
+    <title>Basics &#8212; ReLife documentation</title>
   
   
   
@@ -52,6 +52,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'basic/index';</script>
     <script src="../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="User guide" href="../user/index.html" />
@@ -124,8 +125,8 @@
       
     
     
-    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -416,9 +417,6 @@
                   
   <section id="basics">
 <h1>Basics<a class="headerlink" href="#basics" title="Link to this heading">#</a></h1>
-<p>The section will help you understand basic commands of ReLife and its usage workflow.</p>
-<section id="a-starter-example">
-<h2>A starter example<a class="headerlink" href="#a-starter-example" title="Link to this heading">#</a></h2>
 <figure class="align-center" id="id1">
 <img alt="../_images/relife_workflow.png" src="../_images/relife_workflow.png" />
 <figcaption>
@@ -433,7 +431,7 @@
 <li><p>You can project the consequences of the policy (e.g. the expected number of annual replacements).</p></li>
 </ol>
 <section id="data-collection">
-<h3>Data collection<a class="headerlink" href="#data-collection" title="Link to this heading">#</a></h3>
+<h2>Data collection<a class="headerlink" href="#data-collection" title="Link to this heading">#</a></h2>
 <p>ReLife provides built-in datasets so that you can start using the library and understand data structures. For this example,
 we will use the <em>power transformer dataset</em>. If you don’t know what a power transformer is, you can look at <a class="reference external" href="https://en.wikipedia.org/wiki/Transformer">the decicated Wikipedia page</a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_power_transformer</span>
@@ -456,7 +454,7 @@ we will use the <em>power transformer dataset</em>. If you don’t know what a p
 </div>
 </section>
 <section id="lifetime-model-estimation">
-<h3>Lifetime model estimation<a class="headerlink" href="#lifetime-model-estimation" title="Link to this heading">#</a></h3>
+<h2>Lifetime model estimation<a class="headerlink" href="#lifetime-model-estimation" title="Link to this heading">#</a></h2>
 <p>From the data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">KaplanMeier</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">kaplan_meier</span> <span class="o">=</span> <span class="n">KaplanMeier</span><span class="p">()</span>
@@ -493,7 +491,7 @@ we will use the <em>power transformer dataset</em>. If you don’t know what a p
 <img alt="../_images/kaplan_meier_and_weibull.png" src="../_images/kaplan_meier_and_weibull.png" />
 </section>
 <section id="maintenance-policy-optimization">
-<h3>Maintenance policy optimization<a class="headerlink" href="#maintenance-policy-optimization" title="Link to this heading">#</a></h3>
+<h2>Maintenance policy optimization<a class="headerlink" href="#maintenance-policy-optimization" title="Link to this heading">#</a></h2>
 <p>Let’s consider that we want the study an age replacement policy. You need to choose :</p>
 <ul class="simple">
 <li><p>costs of a preventive replacement <span class="math notranslate nohighlight">\(c_p\)</span></p></li>
@@ -531,7 +529,7 @@ by requesting <code class="docutils literal notranslate"><span class="pre">tr1</
 </div>
 </section>
 <section id="projection-of-consequences">
-<h3>Projection of consequences<a class="headerlink" href="#projection-of-consequences" title="Link to this heading">#</a></h3>
+<h2>Projection of consequences<a class="headerlink" href="#projection-of-consequences" title="Link to this heading">#</a></h2>
 <p>We can project the consequences of our policy, e.g. the expected number of replacements and number of failures for the next 170 years.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nb_years</span> <span class="o">=</span> <span class="mi">170</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">timeline</span><span class="p">,</span> <span class="n">nb_replacements</span><span class="p">,</span> <span class="n">nb_failures</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">annual_number_of_replacements</span><span class="p">(</span><span class="n">nb_years</span><span class="p">,</span> <span class="n">upon_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -563,86 +561,6 @@ by requesting <code class="docutils literal notranslate"><span class="pre">tr1</
 <img alt="../_images/number_of_replacements.png" src="../_images/number_of_replacements.png" />
 </section>
 </section>
-<section id="relife-and-numpy">
-<h2>ReLife and Numpy<a class="headerlink" href="#relife-and-numpy" title="Link to this heading">#</a></h2>
-<p>ReLife is built using <a class="reference external" href="https://numpy.org/">NumPy</a>, a fundamental Python library for numerical computing.
-While you don’t need to be a NumPy expert, understanding its basics will help since ReLife often requires data input of type <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
-<p>There are 3 standard representations of data in ReLife :</p>
-<ul class="simple">
-<li><p>If you want to pass a scalar value, then use a <code class="docutils literal notranslate"><span class="pre">float</span></code></p></li>
-<li><p>If you want to pass a vector of <span class="math notranslate nohighlight">\(\mathbb{R}^n\)</span>, i.e. <span class="math notranslate nohighlight">\(n\)</span> values for one asset, then use a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code></p></li>
-<li><p>If you want to pass a matrix of <span class="math notranslate nohighlight">\(\mathbb{R}^{m\times n}\)</span>, i.e. <span class="math notranslate nohighlight">\(n\)</span> values for <span class="math notranslate nohighlight">\(m\)</span> assets, then use a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code></p></li>
-</ul>
-<p><strong>Broadcasting examples</strong></p>
-<p>Here we create a very simple lifetime model (a lifetime distribution) called Weibull. To demonstrate input/output logic, we will begin with a <code class="docutils literal notranslate"><span class="pre">float</span></code> input. Here
-we want to compute <span class="math notranslate nohighlight">\(P(T &gt; 40)\)</span>, the survival function evaluated in 40.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span> <span class="o">=</span> <span class="n">Weibull</span><span class="p">(</span><span class="mf">3.47</span><span class="p">,</span> <span class="mf">0.012</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="mf">40.</span><span class="p">)</span>
-<span class="go">np.float64(0.9246627462729304)</span>
-</pre></div>
-</div>
-<p>The output has the same number of dimension than the input. It is a float-like object called <code class="docutils literal notranslate"><span class="pre">np.float64</span></code> that is compatible
-with the NumPy interface. For instance, this object can answer to <code class="docutils literal notranslate"><span class="pre">.ndim</span></code> and <code class="docutils literal notranslate"><span class="pre">.shape</span></code> requests. Here it would be <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">()</span></code>.</p>
-<p>Now, imagine that you want to compute not only <span class="math notranslate nohighlight">\(P(T &gt; 40)\)</span>, but also <span class="math notranslate nohighlight">\(P(T &gt; 50)\)</span> and <span class="math notranslate nohighlight">\(P(T &gt; 60)\)</span>. Because ReLife is built on NumPy, it benefits from
-a concept called <a class="reference external" href="https://numpy.org/doc/stable/user/basics.broadcasting.html">broadcasting</a>. It provides a way to vectorize operations so that the three evaluations of the survival function
-are computed in parallel. To do that, you need to pass a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> that encapsulate all your input values.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">40.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">,</span> <span class="mf">60.</span><span class="p">]))</span> <span class="c1"># 1d array of shape (3,)</span>
-<span class="go">array([0.92466275, 0.84375201, 0.72625935])</span>
-</pre></div>
-</div>
-<p>Note that the input is a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of 1 dimension with a shape of <code class="docutils literal notranslate"><span class="pre">(3,)</span></code>. The output is consistent to the input and has the same shape. This logic is extended <strong>until
-two dimensions</strong>. With ReLife, asset managers may be interested to compute values on a fleet of assets. In this scenario, it is sometimes usefull to <strong>pass several values per
-assets.</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">weibull</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">40.</span><span class="p">,</span> <span class="mf">50.</span><span class="p">,</span> <span class="mf">60.</span><span class="p">],</span> <span class="p">[</span><span class="mf">42.</span><span class="p">,</span> <span class="mf">55.</span><span class="p">,</span> <span class="mf">68.</span><span class="p">]]))</span> <span class="c1"># 2d array of shape (2, 3)</span>
-<span class="go">array([[0.92466275, 0.84375201, 0.72625935],</span>
-<span class="go">       [0.91139796, 0.78939177, 0.61029328]])</span>
-</pre></div>
-</div>
-<p>Note that the input is a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of 2 dimensions with a shape of <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">3)</span></code>. Each row <strong>is like a vector of values for each assets</strong>. Here the number of assets is 2.
-The output shape is consistent to the input.</p>
-</section>
-<section id="variables-dimensions">
-<h2>Variables dimensions<a class="headerlink" href="#variables-dimensions" title="Link to this heading">#</a></h2>
-<p>Some Numpy data passed to ReLife functions cannot have any number of dimension. They try to correspond to a coherent math representation.</p>
-<p><strong>ReLife does not control the dimension and the shapes or your data</strong>. We believe that the user is responsible and must know what he’s doing.
-That’s why <strong>you must be carefull to the way you encode your data in Numpy objects</strong>. In this section, we provide a currated list of all possible encodings per input data and their possible shapes.</p>
-<div class="pst-scrollable-table-container"><table class="table" id="id2">
-<caption><span class="caption-text">Numpy encodings</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
-<thead>
-<tr class="row-odd"><th class="head"><p>name</p></th>
-<th class="head"><p>shape</p></th>
-<th class="head"><p>dim</p></th>
-<th class="head"><p>details</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code></p></td>
-<td><p>0, 1 or 2</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of values and <code class="docutils literal notranslate"><span class="pre">m</span></code> is the number of assets</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a0</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">()</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code></p></td>
-<td><p>0 or 1</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ar</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">()</span></code> or <code class="docutils literal notranslate"><span class="pre">(n,)</span></code></p></td>
-<td><p>0 or 1</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">covar</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(k,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">k)</span></code></p></td>
-<td><p>0, 1 or 2</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">k</span></code> is the number of regression coefficients</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-</section>
 
 
                 </article>
@@ -667,15 +585,10 @@ That’s why <strong>you must be carefull to the way you encode your data in Num
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-starter-example">A starter example</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-collection">Data collection</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lifetime-model-estimation">Lifetime model estimation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-policy-optimization">Maintenance policy optimization</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-of-consequences">Projection of consequences</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife-and-numpy">ReLife and Numpy</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables-dimensions">Variables dimensions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-collection">Data collection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lifetime-model-estimation">Lifetime model estimation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-policy-optimization">Maintenance policy optimization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-of-consequences">Projection of consequences</a></li>
 </ul>
   </nav></div>
 

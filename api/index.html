@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API &#8212; ReLife</title>
+    <title>API &#8212; ReLife documentation</title>
   
   
   
@@ -52,10 +52,11 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/index';</script>
     <script src="../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="ParametricModel" href="base_class/relife.base.ParametricModel.html" />
-    <link rel="prev" title="Age replacement policy" href="../user/policies.html" />
+    <link rel="prev" title="Lifetime regressions" href="../user/lifetime_regressions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.1.3" />
@@ -124,8 +125,8 @@
       
     
     
-    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -603,6 +604,7 @@ We divided the API documentation close to the same logic.</p>
 </section>
 <section id="maintenance-policies">
 <h2>Maintenance policies<a class="headerlink" href="#maintenance-policies" title="Link to this heading">#</a></h2>
+<p>Convenient functions to instanciate a policy based on the given model and cost structure.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="policy/relife.policy.age_replacement_policy.html#relife.policy.age_replacement_policy" title="relife.policy.age_replacement_policy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">age_replacement_policy</span></code></a></p></td>
@@ -614,6 +616,7 @@ We divided the API documentation close to the same logic.</p>
 </tbody>
 </table>
 </div>
+<p>Lower-level policy classes that can be used in addition to the above functions.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy" title="relife.policy.AgeReplacementPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgeReplacementPolicy</span></code></a></p></td>
@@ -692,16 +695,18 @@ We divided the API documentation close to the same logic.</p>
 </tbody>
 </table>
 </div>
+<p>Quadrature utilities used a many computations. We don’t use Scipy quadrature implementations as, to our knowledge, they don’t
+support automatic broadcasting of 2D bounds.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="routines/relife.utils.quadrature.legendre_quadrature.html#relife.utils.quadrature.legendre_quadrature" title="relife.utils.quadrature.legendre_quadrature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">legendre_quadrature</span></code></a></p></td>
-<td><p>Numerical integration of <cite>func</cite> over the interval <cite>[a,b]</cite></p></td>
+<td><p>Numerical integration of <span class="math notranslate nohighlight">\(f(x)\)</span> over the interval <span class="math notranslate nohighlight">\([a,b]\)</span></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="routines/relife.utils.quadrature.laguerre_quadrature.html#relife.utils.quadrature.laguerre_quadrature" title="relife.utils.quadrature.laguerre_quadrature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">laguerre_quadrature</span></code></a></p></td>
-<td><p>Numerical integration of <cite>func * exp(-x)</cite> over the interval <cite>[a, inf]</cite></p></td>
+<td><p>Numerical integration of <span class="math notranslate nohighlight">\(f(x) * exp(-x)\)</span> over the interval <span class="math notranslate nohighlight">\([a, \infty]\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="routines/relife.utils.quadrature.unweighted_laguerre_quadrature.html#relife.utils.quadrature.unweighted_laguerre_quadrature" title="relife.utils.quadrature.unweighted_laguerre_quadrature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unweighted_laguerre_quadrature</span></code></a></p></td>
-<td><p>Numerical integration of <cite>func</cite> over the interval <cite>[a, inf]</cite></p></td>
+<td><p>Numerical integration of <span class="math notranslate nohighlight">\(f(x)\)</span> over the interval <span class="math notranslate nohighlight">\([a, \infty]\)</span></p></td>
 </tr>
 </tbody>
 </table>

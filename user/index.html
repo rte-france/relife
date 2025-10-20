@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User guide &#8212; ReLife</title>
+    <title>User guide &#8212; ReLife documentation</title>
   
   
   
@@ -52,9 +52,10 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user/index';</script>
     <script src="../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Lifetime models" href="lifetime_model.html" />
+    <link rel="next" title="About NumPy" href="about_numpy.html" />
     <link rel="prev" title="Basics" href="../basic/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -124,8 +125,8 @@
       
     
     
-    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife - Home"/>
-    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
   
   
 </a></div>
@@ -368,9 +369,12 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="lifetime_model.html">Lifetime models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="stochastic_processes.html">Stochastic processes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="policies.html">Age replacement policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about_numpy.html">About NumPy</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models.html">Non-parametric lifetime models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_distributions.html">Lifetime distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_regressions.html">Lifetime regressions</a></li>
 </ul>
 </div>
 </nav></div>
@@ -430,25 +434,25 @@
                   
   <section id="user-guide">
 <h1>User guide<a class="headerlink" href="#user-guide" title="Link to this heading">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>More examples will be given soon. For now, look at the API section of the documentation.</p>
+</div>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="lifetime_model.html">Lifetime models</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_model.html#Non-parametric-lifetime-models">Non parametric lifetime models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_model.html#Lifetime-distribution-models">Lifetime distribution models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lifetime_model.html#Lifetime-regression-models">Lifetime regression models</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="stochastic_processes.html">Stochastic processes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="stochastic_processes.html#Renewal-process">Renewal process</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="policies.html">Age replacement policy</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="policies.html#Consequences-with-optimal-age-replacement">Consequences with optimal age replacement</a></li>
-<li class="toctree-l2"><a class="reference internal" href="policies.html#Consequences-with-a-priori-age-replacement-fixed-at-25-years">Consequences with <em>a priori</em> age replacement fixed at 25 years</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="about_numpy.html">About NumPy</a></li>
 </ul>
 </div>
+<section id="lifetime-models">
+<h2>Lifetime models<a class="headerlink" href="#lifetime-models" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models.html">Non-parametric lifetime models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_distributions.html">Lifetime distributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lifetime_regressions.html">Lifetime regressions</a></li>
+</ul>
+</div>
+</section>
 </section>
 
 
@@ -465,6 +469,18 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lifetime-models">Lifetime models</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">

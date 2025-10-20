@@ -1,11 +1,6 @@
 Basics
 ======
 
-The section will help you understand basic commands of ReLife and its usage workflow.
-
-A starter example
--------------------
-
 .. figure:: images/relife_workflow.png
     :align: center
 
@@ -19,7 +14,7 @@ The figure above represents the four elementary steps of ReLife's workflow (for 
 4. You can project the consequences of the policy (e.g. the expected number of annual replacements).
 
 Data collection
-^^^^^^^^^^^^^^^
+---------------
 
 ReLife provides built-in datasets so that you can start using the library and understand data structures. For this example,
 we will use the *power transformer dataset*. If you don't know what a power transformer is, you can look at `the decicated Wikipedia page <https://en.wikipedia.org/wiki/Transformer>`_
@@ -46,7 +41,7 @@ Here ``data`` is a `structured array <https://numpy.org/doc/stable/user/basics.
 
 
 Lifetime model estimation
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 From the data you can fit a lifetime model. It may be a good idea to start with a non-parametric model like a Kaplan-Meier estimator.
 
@@ -93,7 +88,7 @@ Note that this object holds ``params`` values and the ``fit`` method has modif
 .. image:: images/kaplan_meier_and_weibull.png
 
 Maintenance policy optimization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 Let's consider that we want the study an age replacement policy. You need to choose :
 
@@ -139,7 +134,7 @@ by requesting ``tr1``. Here, note that the optimal ages of replacement are the s
 
 
 Projection of consequences
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 We can project the consequences of our policy, e.g. the expected number of replacements and number of failures for the next 170 years.
 
@@ -178,89 +173,3 @@ Here, ReLife does not offer built-in plot functionnalities. But of course, you c
     >>> plt.show()
 
 .. image:: images/number_of_replacements.png
-
-
-ReLife and Numpy
-----------------
-
-ReLife is built using `NumPy <https://numpy.org/>`_, a fundamental Python library for numerical computing.
-While you don't need to be a NumPy expert, understanding its basics will help since ReLife often requires data input of type ``np.ndarray``
-
-There are 3 standard representations of data in ReLife :
-
-- If you want to pass a scalar value, then use a ``float``
-- If you want to pass a vector of :math:`\mathbb{R}^n`, i.e. :math:`n` values for one asset, then use a ``np.ndarray`` of shape ``(n,)``
-- If you want to pass a matrix of :math:`\mathbb{R}^{m\times n}`, i.e. :math:`n` values for :math:`m` assets, then use a ``np.ndarray`` of shape ``(n,)``
-
-**Broadcasting examples**
-
-Here we create a very simple lifetime model (a lifetime distribution) called Weibull. To demonstrate input/output logic, we will begin with a ``float`` input. Here
-we want to compute :math:`P(T > 40)`, the survival function evaluated in 40.
-
-.. code-block:: python
-
-    >>> from relife.lifetime_model import Weibull
-    >>> weibull = Weibull(3.47, 0.012)
-    >>> weibull.sf(40.)
-    np.float64(0.9246627462729304)
-
-
-
-The output has the same number of dimension than the input. It is a float-like object called ``np.float64`` that is compatible
-with the NumPy interface. For instance, this object can answer to ``.ndim`` and ``.shape`` requests. Here it would be ``0`` and ``()``.
-
-Now, imagine that you want to compute not only :math:`P(T > 40)`, but also :math:`P(T > 50)` and :math:`P(T > 60)`. Because ReLife is built on NumPy, it benefits from
-a concept called `broadcasting <https://numpy.org/doc/stable/user/basics.broadcasting.html>`_. It provides a way to vectorize operations so that the three evaluations of the survival function
-are computed in parallel. To do that, you need to pass a ``np.ndarray`` that encapsulate all your input values.
-
-.. code-block:: python
-
-    >>> import numpy as np
-    >>> weibull.sf(np.array([40., 50., 60.])) # 1d array of shape (3,)
-    array([0.92466275, 0.84375201, 0.72625935])
-
-Note that the input is a ``np.ndarray`` of 1 dimension with a shape of ``(3,)``. The output is consistent to the input and has the same shape. This logic is extended **until
-two dimensions**. With ReLife, asset managers may be interested to compute values on a fleet of assets. In this scenario, it is sometimes usefull to **pass several values per
-assets.**
-
-.. code-block:: python
-
-    >>> weibull.sf(np.array([[40., 50., 60.], [42., 55., 68.]])) # 2d array of shape (2, 3)
-    array([[0.92466275, 0.84375201, 0.72625935],
-           [0.91139796, 0.78939177, 0.61029328]])
-
-Note that the input is a ``np.ndarray`` of 2 dimensions with a shape of ``(2, 3)``. Each row **is like a vector of values for each assets**. Here the number of assets is 2.
-The output shape is consistent to the input.
-
-Variables dimensions
---------------------
-
-Some Numpy data passed to ReLife functions cannot have any number of dimension. They try to correspond to a coherent math representation.
-
-**ReLife does not control the dimension and the shapes or your data**. We believe that the user is responsible and must know what he's doing.
-That's why **you must be carefull to the way you encode your data in Numpy objects**. In this section, we provide a currated list of all possible encodings per input data and their possible shapes.
-
-.. list-table:: Numpy encodings
-    :header-rows: 1
-
-    * - name
-      - shape
-      - dim
-      - details
-    * - ``time``
-      - ``()``, ``(n,)`` or ``(m, n)``
-      - 0, 1 or 2
-      - ``n`` is the number of values and ``m`` is the number of assets
-    * - ``a0``
-      - ``()`` or ``(n,)``
-      - 0 or 1
-      -
-    * - ``ar``
-      - ``()`` or ``(n,)``
-      - 0 or 1
-      -
-    * - ``covar``
-      - ``()``, ``(k,)`` or ``(m, k)``
-      - 0, 1 or 2
-      - ``k`` is the number of regression coefficients
-
