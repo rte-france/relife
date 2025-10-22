@@ -115,7 +115,7 @@ class RenewalProcessIterator(CountDataIterator):
         # time may be ar if model is AgeReplacementModel, then event is False
         # for first_cycle, model_entry may not be zero
         time, event, model_entry = self.lifetime_model.rvs(
-            size=self.timeline.shape[1],
+            self.timeline.shape[1],
             nb_assets=self.timeline.shape[0],
             return_event=True,
             return_entry=True,
@@ -135,7 +135,7 @@ class RenewalProcessIterator(CountDataIterator):
         event[self.mask["just_crossed_tf"]] = False
 
         # compute t0 left truncations
-        if self.replacement_cycle == 0:
+        if self.replacement_cycle == 0 and np.any(model_entry != 0):
             entry = np.where(self.mask["just_crossed_t0"], model_entry, 0.0)
         else:
             entry = np.where(self.mask["just_crossed_t0"], time - (self.timeline - self.t0), 0.0)
