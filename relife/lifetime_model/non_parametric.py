@@ -173,6 +173,7 @@ class KaplanMeier:
         self._sf["timeline"] = np.insert(timeline, 0, 0)
         self._sf["estimation"] = np.insert(sf, 0, 1)
         self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
+        return self
 
     def sf(self, se = False):
         """
@@ -280,6 +281,7 @@ class NelsonAalen:
         self._chf["timeline"] = np.insert(timeline, 0, 0)
         self._chf["estimation"] = np.insert(chf, 0, 0)
         self._chf["se"] = np.insert(np.sqrt(var), 0, 0)
+        return self
 
     def chf(self, se = False):
         """
