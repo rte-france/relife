@@ -287,10 +287,15 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
 
         discounting = ExponentialDiscounting(self.discounting_rate)
 
-        # here we want to use 2D cp/cf to ensure broadcasting
         x0 = np.minimum(
             self._cost_structure["cp"] / (self._cost_structure["cf"] - self._cost_structure["cp"]), 1
         )  # () or (m, 1)
+
+        # if costs are floats, x0 is float. BUT, baseline_model can have many assets
+        # x0 must have the same shape than eq(x0) (see scipy.newton doc)
+        _sf_x0 = self.baseline_model.sf(x0) # gives us the shape, thus nb_assets
+        if _sf_x0.ndim == 2 and x0.ndim == 0:
+           x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
         def eq(a):  # () or (m, 1)
             return (
@@ -549,6 +554,12 @@ class AgeReplacementPolicy(ReplacementPolicy):
         """
         discounting = ExponentialDiscounting(self.discounting_rate)
         x0 = np.minimum(self._cost_structure["cp"] / (self._cost_structure["cf"] - self._cost_structure["cp"]), 1)
+
+        # if costs are floats, x0 is float. BUT, baseline_model can have many assets
+        # x0 must have the same shape than eq(x0) (see scipy.newton doc)
+        _sf_x0 = self.baseline_model.sf(x0)  # gives us the shape, thus nb_assets
+        if _sf_x0.ndim == 2 and x0.ndim == 0:
+           x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
         def eq(a):  # () or (m, 1)
             f = legendre_quadrature(
