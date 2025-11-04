@@ -13,7 +13,9 @@ class CountDataSample:
     tf: float
     struct_array: NDArray[np.void]
 
-    def select(self, sample_id: Optional[int] = None, asset_id: Optional[int] = None) -> CountDataSample:
+    def select(
+        self, sample_id: Optional[int] = None, asset_id: Optional[int] = None
+    ) -> CountDataSample:
         mask: NDArray[np.bool_] = np.ones_like(self.struct_array, dtype=np.bool_)
         if sample_id is not None:
             mask = mask & np.isin(self.struct_array["sample_id"], sample_id)
@@ -53,9 +55,10 @@ class CountDataSample:
 
 @dataclass
 class RenewalProcessSample(CountDataSample):
-
     @staticmethod
-    def _nb_events(selection: RenewalProcessSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def _nb_events(
+        selection: RenewalProcessSample,
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         sort = np.argsort(selection.struct_array["timeline"])
         timeline = selection.struct_array["timeline"][sort]
         counts = selection.struct_array["event"][sort]
@@ -65,11 +68,15 @@ class RenewalProcessSample(CountDataSample):
         counts[timeline == selection.tf] = 0
         return timeline, np.cumsum(counts)
 
-    def nb_events(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def nb_events(
+        self, sample_id: int, asset_id: int = 0
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(sample_id=sample_id, asset_id=asset_id)
         return RenewalProcessSample._nb_events(selection)
 
-    def mean_nb_events(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def mean_nb_events(
+        self, asset_id: int = 0
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(asset_id=asset_id)
         timeline, counts = RenewalProcessSample._nb_events(selection)
         nb_sample = len(np.unique(selection.struct_array["sample_id"]))
@@ -78,9 +85,10 @@ class RenewalProcessSample(CountDataSample):
 
 @dataclass
 class RenewalRewardProcessSample(RenewalProcessSample):
-
     @staticmethod
-    def _total_rewards(selection: RenewalRewardProcessSample) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def _total_rewards(
+        selection: RenewalRewardProcessSample,
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         sort = np.argsort(selection.struct_array["timeline"])
         timeline = selection.struct_array["timeline"][sort]
         reward = selection.struct_array["reward"][sort]
@@ -91,11 +99,15 @@ class RenewalRewardProcessSample(RenewalProcessSample):
 
         return timeline, np.cumsum(reward)
 
-    def total_rewards(self, sample_id: int, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def total_rewards(
+        self, sample_id: int, asset_id: int = 0
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(sample_id=sample_id, asset_id=asset_id)
         return RenewalRewardProcessSample._total_rewards(selection)
 
-    def mean_total_rewards(self, asset_id: int = 0) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def mean_total_rewards(
+        self, asset_id: int = 0
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(asset_id=asset_id)
         timeline, rewards = RenewalRewardProcessSample._nb_events(selection)
         nb_sample = len(np.unique(selection.struct_array["sample_id"]))

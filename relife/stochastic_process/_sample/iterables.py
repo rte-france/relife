@@ -60,9 +60,13 @@ def age_of_renewal_process_sampler(
 
     while np.any(timeline < t):
         if replacement_cycle == 0 and first_lifetime_model is not None:
-            time, entry = first_lifetime_model.rvs((nb_assets, nb_samples), return_entry=True, seed=seed)
+            time, entry = first_lifetime_model.rvs(
+                (nb_assets, nb_samples), return_entry=True, seed=seed
+            )
         else:
-            time, entry = lifetime_model.rvs((nb_assets, nb_samples), return_entry=True, seed=seed)
+            time, entry = lifetime_model.rvs(
+                (nb_assets, nb_samples), return_entry=True, seed=seed
+            )
         replacement_cycle += 1
         residual_time = time - entry
         timeline += residual_time
@@ -74,7 +78,6 @@ def age_of_renewal_process_sampler(
 
 
 class RenewalProcessIterable(CountDataIterable):
-
     def __init__(
         self,
         process,
@@ -95,11 +98,21 @@ class RenewalProcessIterable(CountDataIterable):
 
         if isinstance(self.process, RenewalProcess):
             return RenewalProcessIterator(
-                self.process, self.size, self.tf, t0=self.t0, nb_assets=self.nb_assets, seed=self.seed
+                self.process,
+                self.size,
+                self.tf,
+                t0=self.t0,
+                nb_assets=self.nb_assets,
+                seed=self.seed,
             )
         else:
             return RenewalRewardProcessIterator(
-                self.process, self.size, self.tf, t0=self.t0, nb_assets=self.nb_assets, seed=self.seed
+                self.process,
+                self.size,
+                self.tf,
+                t0=self.t0,
+                nb_assets=self.nb_assets,
+                seed=self.seed,
             )
 
 
@@ -121,5 +134,10 @@ class NonHomogeneousPoissonProcessIterable(CountDataIterable):
 
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(
-            self.process, self.size, self.tf, t0=self.t0, nb_assets=self.nb_assets, seed=self.seed
+            self.process,
+            self.size,
+            self.tf,
+            t0=self.t0,
+            nb_assets=self.nb_assets,
+            seed=self.seed,
         )
