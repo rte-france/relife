@@ -25,19 +25,17 @@ if TYPE_CHECKING:
 Args = TypeVarTuple("Args")
 
 
-class CountDataIterable(Iterable[NDArray[np.void]], ABC):
+class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def __init__(
         self,
-        size: int,
+        nb_samples: int,
         tf: float,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
     ):
-        self.size = size
         self.tf = tf
         self.t0 = t0
-        self.nb_assets = nb_assets
+        self.nb_samples = nb_samples
         self.seed = seed
 
     @abstractmethod
@@ -77,67 +75,56 @@ def age_of_renewal_process_sampler(
     return np.squeeze(age_process)
 
 
-class RenewalProcessIterable(CountDataIterable):
+class RenewalProcessIterable(StochasticDataIterable):
     def __init__(
         self,
         process,
-        size: int,
+        nb_samples: int,
         tf: float,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
     ):
-        super().__init__(size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
-        # TODO : control and broadcast size here !
+        super().__init__(nb_samples, tf, t0=t0, seed=seed)
         self.process = process
-        if nb_assets is None:
-            self.nb_assets = getattr(process.lifetime_model, "nb_assets", 1)
 
     def __iter__(self) -> RenewalProcessIterator:
         from relife.stochastic_process import RenewalProcess
 
         if isinstance(self.process, RenewalProcess):
             return RenewalProcessIterator(
-                self.process,
-                self.size,
-                self.tf,
+                process=self.process,
+                tf=self.tf,
                 t0=self.t0,
-                nb_assets=self.nb_assets,
+                nb_samples=self.nb_samples,
                 seed=self.seed,
             )
         else:
             return RenewalRewardProcessIterator(
-                self.process,
-                self.size,
-                self.tf,
+                process=self.process,
+                nb_samples=self.nb_samples,
+                tf=self.tf,
                 t0=self.t0,
-                nb_assets=self.nb_assets,
                 seed=self.seed,
             )
 
 
-class NonHomogeneousPoissonProcessIterable(CountDataIterable):
+class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
     def __init__(
         self,
         process,
-        size: int,
+        nb_samples: int,
         tf: float,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
         seed: Optional[int] = None,
     ):
-        super().__init__(size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
-        # TODO : control and broadcast size here !
+        super().__init__(nb_samples, tf, t0=t0, seed=seed)
         self.process = process
-        if nb_assets is None:
-            self.nb_assets = getattr(process, "nb_assets", 1)
 
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(
-            self.process,
-            self.size,
-            self.tf,
+            process=self.process,
+            nb_samples=self.nb_samples,
+            tf=self.tf,
             t0=self.t0,
-            nb_assets=self.nb_assets,
             seed=self.seed,
         )
