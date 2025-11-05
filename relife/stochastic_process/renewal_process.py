@@ -139,21 +139,19 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    def sample(self, nb_samples, tf, t0=0.0, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
+        nb_samples : int
             The size of the desired sample
         tf : float
             Time at the end of the observation.
         t0 : float, default 0
             Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
         seed : int, optional
             Random seed, by default None.
 
@@ -161,7 +159,7 @@ class RenewalProcess(ParametricModel):
 
         from ._sample import RenewalProcessIterable
 
-        iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)
+        iterable = RenewalProcessIterable(self, nb_samples, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return RenewalProcessSample(t0, tf, struct_array)

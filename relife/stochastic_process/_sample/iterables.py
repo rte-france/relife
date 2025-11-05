@@ -13,7 +13,7 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from .iterators import (
-    CountDataIterator,
+    StochasticDataIterator,
     NonHomogeneousPoissonProcessIterator,
     RenewalProcessIterator,
     RenewalRewardProcessIterator,
@@ -40,7 +40,7 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
 
     @abstractmethod
     @override
-    def __iter__(self) -> CountDataIterator: ...
+    def __iter__(self) -> StochasticDataIterator: ...
 
 
 def age_of_renewal_process_sampler(

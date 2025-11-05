@@ -10,7 +10,7 @@ from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import (
     Exponential,
 )
-from relife.relife.lifetime_model.conditional_model import LeftTruncatedModel
+from relife.lifetime_model.conditional_model import LeftTruncatedModel
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -171,12 +171,12 @@ class RenewalProcessIterator(StochasticDataIterator):
         t0: float = 0.0,
         seed: Optional[int] = None,
     ):
-        lifetime_model_args = getattr(self.process.lifetime_model, "args", None)
+        lifetime_model_args = getattr(process.lifetime_model, "args", None)
         lifetime_model_nb_assets = (
             len(lifetime_model_args[0]) if lifetime_model_args else 1
         )
 
-        first_lifetime_model_args = getattr(self.process.lifetime_model, "args", None)
+        first_lifetime_model_args = getattr(process.first_lifetime_model, "args", None)
         first_lifetime_model_nb_assets = (
             len(first_lifetime_model_args[0]) if first_lifetime_model_args else 1
         )
@@ -215,7 +215,7 @@ class RenewalProcessIterator(StochasticDataIterator):
 
         # Generate new values with ages = 0
         time, event, entry = self.lifetime_model.rvs(
-            size=self.get_rvs_size(args_size),
+            self.get_rvs_size(args_size),
             return_event=True,
             return_entry=True,
             seed=self.seed,
