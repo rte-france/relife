@@ -11,6 +11,7 @@ from relife.lifetime_model import (
     Exponential,
 )
 from relife.lifetime_model.conditional_model import LeftTruncatedModel
+from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -270,16 +271,19 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         t0: float = 0.0,
         seed=None,
     ):
-        args = getattr(self.lifetime_model, "args", ())
+        args = getattr(process.lifetime_model, "args", ())
         nb_assets = len(args[0]) if args else 1
 
-        broadcasted_args = list(np.repeat(arg, self.nb_samples, axis=0) for arg in args)
-        broadcasted_process = process.lifetime_model.unfreeze().freeze(
-            *broadcasted_args
-        )
+        if args:
+            broadcasted_args = list(np.repeat(arg, nb_samples, axis=0) for arg in args)
+            broadcasted_model = process.lifetime_model.unfreeze().freeze(
+                *broadcasted_args
+            )
+        else:
+            broadcasted_model = process.lifetime_model
 
         super().__init__(
-            process=broadcasted_process,
+            process=NonHomogeneousPoissonProcess(broadcasted_model),
             nb_assets=nb_assets,
             nb_samples=nb_samples,
             tf=tf,
@@ -289,15 +293,27 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
 
     def sample_step(self):
         args = getattr(self.process.lifetime_model, "args", ())
-        args_size = args[0].shape[0] if args else None
 
         ages = self.asset_ages.copy().reshape(-1, 1)
-        truncated_lifetime_model = LeftTruncatedModel(
-            self.lifetime_model.unfreeze()
-        ).freeze(ages, *args)
+
+        unfrozen_model = (
+            self.process.lifetime_model.unfreeze()
+            if args
+            else self.process.lifetime_model
+        )
+        truncated_lifetime_model = LeftTruncatedModel(unfrozen_model).freeze(
+            ages, *args
+        )
+
+        truncated_lifetime_model_args = getattr(truncated_lifetime_model, "args", ())
+        args_size = (
+            truncated_lifetime_model_args[0].shape[0]
+            if truncated_lifetime_model_args
+            else None
+        )
 
         time, event, entry = truncated_lifetime_model.rvs(
-            size=self.get_rvs_size(args_size),
+            self.get_rvs_size(args_size),
             return_event=True,
             return_entry=True,
             seed=self.seed,

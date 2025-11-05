@@ -68,14 +68,14 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         """
         return FrozenParametricModel(self, *args)
 
-    def sample(self, size, tf, *args, t0=0.0, seed=None):
+    def sample(self, nb_samples, tf, *args, t0=0.0, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
+        nb_samples : int
             The size of the desired sample
         *args : float or np.ndarray
             Additional arguments needed by the model.
@@ -94,7 +94,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         )
 
         frozen_nhpp = self.freeze(*args)
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, seed=seed)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return NonHomogeneousPoissonProcessSample(t0, tf, struct_array)
