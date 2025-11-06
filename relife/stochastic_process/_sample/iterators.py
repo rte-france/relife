@@ -11,23 +11,30 @@ from relife.lifetime_model.conditional_model import LeftTruncatedModel
 from relife.stochastic_process import NonHomogeneousPoissonProcess
 
 
-def get_args_size(lifetime_model) -> int:
+def get_args_shape(lifetime_model) -> int:
+    """Helper function to get the args shape of a lifetime_model (number of assets)"""
     lifetime_model_args = getattr(lifetime_model, "args", ())
 
     set_nb_assets = {arg.shape[0] for arg in lifetime_model_args}
 
     if len(set_nb_assets) > 1:
-        # A commenter
-        raise ValueError
+        raise ValueError(
+            f"All args should have the same shape along first axis. Got shapes : {set_nb_assets}"
+        )
 
     if len(set_nb_assets) == 0:
-        # A commenter
+        # If no args were found, consider a unique asset
         return 1
 
     return set_nb_assets.pop()
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
+    """Abstract class for all stochastic processes iterator.
+    Used to build the structarrays, get the shapes, iterate through steps and identify the observation window.
+    Abstract method is sample_next_step, that is unique for each stochastic process.
+    """
+
     def __init__(
         self,
         process,
@@ -48,12 +55,12 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
         self.seed = np.random.default_rng(seed)
 
-        # Assets timeline restarts at 0 when a replacement is done.
-        # Used to identify the current age of the asset
+        # Assets ages restart at 0 when replacements are done.
+        # Used to identify the current ages of the assets in the process
         self.asset_ages = np.zeros(sample_size, dtype=np.float64)
 
-        # Full timeline never restarts
-        # Used to identify the observation window
+        # Full timeline never restarts, sums at each iteration
+        # Used to identify current time for the observer
         self.timeline = np.zeros(sample_size, dtype=np.float64)
 
         self._crossed_t0_counter = np.zeros(sample_size, dtype=np.uint32)
@@ -73,6 +80,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         )
 
     def update_mask(self) -> None:
+        """Update mask to keep track of the observed and non observed events"""
         self._crossed_t0_counter[self.timeline > self.t0] += 1
         self._crossed_tf_counter[self.timeline > self.tf] += 1
         self.mask["just_crossed_t0"] = self._crossed_t0_counter == 1
@@ -83,6 +91,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         )
 
     def get_base_structarray(self) -> NDArray[np.void]:
+        """Construct the struct array to return"""
         observed_index = np.where(self.mask["observed_step"])[0]
 
         asset_id = observed_index // self.nb_samples
@@ -106,6 +115,9 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         return struct_array
 
     def get_rvs_size(self, args_size: int) -> Tuple[int]:
+        """Helper function, get the size that we should pass to rvs function depending on the args of the model used to sample.
+        A lifetime_model random variable sampling called with size=n will sample n values for each asset in its args.
+        """
         if args_size is None or args_size == 1:
             return self.nb_assets * self.nb_samples
 
@@ -120,22 +132,26 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
     @abstractmethod
     def sample_step(self):
+        """Abstract method to implement in child classes"""
         raise NotImplementedError
 
     def apply_observation_window(self, time, event, entry) -> NDArray[np.void]:
+        """Apply the conditioning observations windows to the sampled values"""
+
         residual_time = time - entry
 
+        # Timeline increases by residual time
         self.timeline += residual_time
         self.update_mask()
 
-        # compute tf right censorings
+        # Replace times that exceeds tf with right censorings at tf
         time = np.where(
             self.mask["just_crossed_tf"], time - (self.timeline - self.tf), time
         )
         self.timeline[self.mask["just_crossed_tf"]] = self.tf
         event[self.mask["just_crossed_tf"]] = False
 
-        # compute t0 left truncations
+        # Replace entries to take account of the left truncation at t0
         entry = np.where(
             self.mask["just_crossed_t0"], time - (self.timeline - self.t0), entry
         )
@@ -157,11 +173,13 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         return struct_arr
 
     def step(self) -> NDArray[np.void]:
+        """Sample one step, apply observation window and return the struct array"""
         time, event, entry = self.sample_step()
         struct_arr = self.apply_observation_window(time, event, entry)
         return struct_arr
 
     def __next__(self) -> NDArray[np.void]:
+        """function to iterate"""
         if not np.all(self.mask["crossed_tf"]):
             struct_arr = self.step()
             while (
@@ -183,16 +201,17 @@ class RenewalProcessIterator(StochasticDataIterator):
         t0: float = 0.0,
         seed: Optional[int] = None,
     ):
-        lifetime_model_nb_assets = get_args_size(process.lifetime_model)
-        first_lifetime_model_nb_assets = get_args_size(process.first_lifetime_model)
+        lifetime_model_nb_assets = get_args_shape(process.lifetime_model)
+        first_lifetime_model_nb_assets = get_args_shape(process.first_lifetime_model)
 
         if (
             lifetime_model_nb_assets != 1
             and first_lifetime_model_nb_assets != 1
             and lifetime_model_nb_assets != first_lifetime_model_nb_assets
         ):
-            # A commenter
-            raise ValueError
+            raise ValueError(
+                f"Args of the first_lifetime_model and lifetime_model should have coherent shapes. Got {first_lifetime_model_nb_assets, lifetime_model_nb_assets}"
+            )
 
         nb_assets = max(lifetime_model_nb_assets, first_lifetime_model_nb_assets)
 
@@ -215,7 +234,7 @@ class RenewalProcessIterator(StochasticDataIterator):
         return self.process.lifetime_model
 
     def sample_step(self):
-        args_size = get_args_size(self.lifetime_model)
+        args_size = get_args_shape(self.lifetime_model)
 
         # Generate new values with ages = 0
         time, event, entry = self.lifetime_model.rvs(
@@ -274,8 +293,10 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         t0: float = 0.0,
         seed=None,
     ):
+        # All samples for each assets is considered individually in an NHPP
+        # We use a LeftTruncatedModel to sample according to current age
+        # We need all samples and assets in 1D, so we must broadcast the original model to repeat its args
         broadcasted_model = process.lifetime_model
-
         args = getattr(process.lifetime_model, "args", None)
         if args:
             broadcasted_args = list(np.repeat(arg, nb_samples, axis=0) for arg in args)
@@ -283,7 +304,7 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
                 *broadcasted_args
             )
 
-        nb_assets = get_args_size(process.lifetime_model)
+        nb_assets = get_args_shape(process.lifetime_model)
 
         super().__init__(
             process=NonHomogeneousPoissonProcess(broadcasted_model),
@@ -295,6 +316,9 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         )
 
     def sample_step(self):
+        # Apply a Left truncation based on current ages on the model
+        # We need to unfreeze, use a LeftTruncatedModel and freeze with ages and args
+
         args = getattr(self.process.lifetime_model, "args", ())
         unfrozen_model = (
             self.process.lifetime_model.unfreeze()
@@ -307,7 +331,9 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
             ages, *args
         )
 
-        args_size = get_args_size(truncated_lifetime_model)
+        # Sample using this truncation
+
+        args_size = get_args_shape(truncated_lifetime_model)
 
         time, event, entry = truncated_lifetime_model.rvs(
             self.get_rvs_size(args_size),
