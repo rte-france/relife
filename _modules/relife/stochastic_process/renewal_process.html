@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.1" />
+  <meta name="docsearch:version" content="2.2.0" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.1</div>
+2.2.0</div>
     
   </div>
   
@@ -563,21 +563,19 @@
 
 <div class="viewcode-block" id="RenewalProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
 
 <span class="sd">        This function will sample data and encapsulate them in an object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        size : int</span>
+<span class="sd">        nb_samples : int</span>
 <span class="sd">            The size of the desired sample</span>
 <span class="sd">        tf : float</span>
 <span class="sd">            Time at the end of the observation.</span>
 <span class="sd">        t0 : float, default 0</span>
 <span class="sd">            Time at the beginning of the observation.</span>
-<span class="sd">        size : int or tuple of 2 int</span>
-<span class="sd">            Size of the sample</span>
 <span class="sd">        seed : int, optional</span>
 <span class="sd">            Random seed, by default None.</span>
 
@@ -585,7 +583,7 @@
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcessIterable</span>
 
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">RenewalProcessSample</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
