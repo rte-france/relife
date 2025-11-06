@@ -409,6 +409,8 @@ class AgeReplacementPolicy(ReplacementPolicy):
         -------
         np.ndarray
         """
+        if self._ar is None:
+            return None
         if self.a0 is not None:
             return flatten_if_possible(self._tr1)
         return self.ar
