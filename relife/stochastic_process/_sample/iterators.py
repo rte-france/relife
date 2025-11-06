@@ -234,11 +234,11 @@ class RenewalProcessIterator(StochasticDataIterator):
         return self.process.lifetime_model
 
     def sample_step(self):
-        args_size = get_args_shape(self.lifetime_model)
+        args_shape = get_args_shape(self.lifetime_model)
 
         # Generate new values with ages = 0
         time, event, entry = self.lifetime_model.rvs(
-            self.get_rvs_size(args_size),
+            self.get_rvs_size(args_shape),
             return_event=True,
             return_entry=True,
             seed=self.seed,
@@ -333,10 +333,10 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
 
         # Sample using this truncation
 
-        args_size = get_args_shape(truncated_lifetime_model)
+        args_shape = get_args_shape(truncated_lifetime_model)
 
         time, event, entry = truncated_lifetime_model.rvs(
-            self.get_rvs_size(args_size),
+            self.get_rvs_size(args_shape),
             return_event=True,
             return_entry=True,
             seed=self.seed,
