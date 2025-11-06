@@ -563,19 +563,21 @@
 
 <div class="viewcode-block" id="RenewalProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
 
 <span class="sd">        This function will sample data and encapsulate them in an object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
+<span class="sd">        size : int</span>
 <span class="sd">            The size of the desired sample</span>
 <span class="sd">        tf : float</span>
 <span class="sd">            Time at the end of the observation.</span>
 <span class="sd">        t0 : float, default 0</span>
 <span class="sd">            Time at the beginning of the observation.</span>
+<span class="sd">        size : int or tuple of 2 int</span>
+<span class="sd">            Size of the sample</span>
 <span class="sd">        seed : int, optional</span>
 <span class="sd">            Random seed, by default None.</span>
 
@@ -583,7 +585,7 @@
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcessIterable</span>
 
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">RenewalProcessSample</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
@@ -591,7 +593,7 @@
 
 <div class="viewcode-block" id="RenewalProcess.generate_failure_data">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.generate_failure_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate lifetime data</span>
 
 <span class="sd">        This function will generate lifetime data that can be used to fit a lifetime model.</span>
@@ -604,6 +606,8 @@
 <span class="sd">            Time at the end of the observation.</span>
 <span class="sd">        t0 : float, default 0</span>
 <span class="sd">            Time at the beginning of the observation.</span>
+<span class="sd">        nb_assets : int, optional</span>
+<span class="sd">            Number of assets.</span>
 <span class="sd">        seed : int, optional</span>
 <span class="sd">            Random seed, by default None.</span>
 
@@ -625,14 +629,14 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous.&quot;</span>
                 <span class="p">)</span>
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
 
         <span class="n">nb_assets</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;asset_id&quot;</span><span class="p">]))</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="n">args_2d</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())))</span>
-        <span class="n">broadcasted_args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">(</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args_2d</span><span class="p">))</span>
-        <span class="n">tuple_args_arr</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;asset_id&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">broadcasted_args</span><span class="p">))</span>
+        <span class="c1"># broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))</span>
+        <span class="n">tuple_args_arr</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;asset_id&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args_2d</span><span class="p">))</span>
 
         <span class="n">returned_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>

@@ -720,10 +720,15 @@
 
         <span class="n">discounting</span> <span class="o">=</span> <span class="n">ExponentialDiscounting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
 
-        <span class="c1"># here we want to use 2D cp/cf to ensure broadcasting</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]),</span> <span class="mi">1</span>
         <span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
+
+        <span class="c1"># if costs are floats, x0 is float. BUT, baseline_model can have many assets</span>
+        <span class="c1"># x0 must have the same shape than eq(x0) (see scipy.newton doc)</span>
+        <span class="n">_sf_x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="c1"># gives us the shape, thus nb_assets</span>
+        <span class="k">if</span> <span class="n">_sf_x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+           <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="n">_sf_x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">eq</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>  <span class="c1"># () or (m, 1)</span>
             <span class="k">return</span> <span class="p">(</span>
@@ -841,6 +846,8 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">flatten_if_possible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tr1</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ar</span>
@@ -1003,6 +1010,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">discounting</span> <span class="o">=</span> <span class="n">ExponentialDiscounting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># if costs are floats, x0 is float. BUT, baseline_model can have many assets</span>
+        <span class="c1"># x0 must have the same shape than eq(x0) (see scipy.newton doc)</span>
+        <span class="n">_sf_x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>  <span class="c1"># gives us the shape, thus nb_assets</span>
+        <span class="k">if</span> <span class="n">_sf_x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+           <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="n">_sf_x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">eq</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>  <span class="c1"># () or (m, 1)</span>
             <span class="n">f</span> <span class="o">=</span> <span class="n">legendre_quadrature</span><span class="p">(</span>
