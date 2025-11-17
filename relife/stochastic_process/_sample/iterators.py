@@ -282,13 +282,16 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         # All samples for each assets is considered individually in an NHPP
         # We use a LeftTruncatedModel to sample according to current age
         # We need all samples and assets in 1D, so we must broadcast the original model to repeat its args
+
+        nb_assets = get_lifetime_model_nb_assets(process.lifetime_model)
+
         broadcasted_model = process.lifetime_model
         args = getattr(process.lifetime_model, "args", None)
         if args:
             broadcasted_args = list(np.repeat(arg, nb_samples, axis=0) for arg in args)
-            broadcasted_model.args = broadcasted_args
-
-        nb_assets = get_lifetime_model_nb_assets(broadcasted_model)
+            broadcasted_model.args = (
+                broadcasted_args  # TODO: problem with in-place modification
+            )
 
         super().__init__(
             process=NonHomogeneousPoissonProcess(broadcasted_model),
