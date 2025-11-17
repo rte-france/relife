@@ -2,6 +2,7 @@ from ._array_api import (
     flatten_if_possible,
     get_args_nb_assets,
     reshape_1d_arg,
+    get_lifetime_model_nb_assets
 )
 from ._model_checks import (
     is_frozen,
@@ -16,4 +17,5 @@ __all__ = [
     "is_non_homogeneous_poisson_process",
     "reshape_1d_arg",
     "flatten_if_possible",
+    "get_lifetime_model_nb_assets",
 ]

@@ -10,23 +10,7 @@ from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model.conditional_model import LeftTruncatedModel
 from relife.stochastic_process import NonHomogeneousPoissonProcess
 
-
-def get_args_shape(lifetime_model) -> int:
-    """Helper function to get the args shape of a lifetime_model (number of assets)"""
-    lifetime_model_args = getattr(lifetime_model, "args", ())
-
-    set_nb_assets = {arg.shape[0] for arg in lifetime_model_args}
-
-    if len(set_nb_assets) > 1:
-        raise ValueError(
-            f"All args should have the same shape along first axis. Got shapes : {set_nb_assets}"
-        )
-
-    if len(set_nb_assets) == 0:
-        # If no args were found, consider a unique asset
-        return 1
-
-    return set_nb_assets.pop()
+from relife.utils import get_args_nb_assets, get_lifetime_model_nb_assets
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -201,8 +185,10 @@ class RenewalProcessIterator(StochasticDataIterator):
         t0: float = 0.0,
         seed: Optional[int] = None,
     ):
-        lifetime_model_nb_assets = get_args_shape(process.lifetime_model)
-        first_lifetime_model_nb_assets = get_args_shape(process.first_lifetime_model)
+        lifetime_model_nb_assets = get_lifetime_model_nb_assets(process.lifetime_model)
+        first_lifetime_model_nb_assets = get_lifetime_model_nb_assets(
+            process.first_lifetime_model
+        )
 
         if (
             lifetime_model_nb_assets != 1
@@ -234,11 +220,11 @@ class RenewalProcessIterator(StochasticDataIterator):
         return self.process.lifetime_model
 
     def sample_step(self):
-        args_shape = get_args_shape(self.lifetime_model)
+        args_size = get_lifetime_model_nb_assets(self.lifetime_model)
 
         # Generate new values with ages = 0
         time, event, entry = self.lifetime_model.rvs(
-            self.get_rvs_size(args_shape),
+            self.get_rvs_size(args_size),
             return_event=True,
             return_entry=True,
             seed=self.seed,
@@ -253,7 +239,7 @@ class RenewalProcessIterator(StochasticDataIterator):
         return time, event, entry
 
 
-class RenewalRewardProcessIterator(StochasticDataIterator):
+class RenewalRewardProcessIterator(RenewalProcessIterator):
     reward: Reward
     discounting: ExponentialDiscounting
 
@@ -300,11 +286,9 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         args = getattr(process.lifetime_model, "args", None)
         if args:
             broadcasted_args = list(np.repeat(arg, nb_samples, axis=0) for arg in args)
-            broadcasted_model = process.lifetime_model.unfreeze().freeze(
-                *broadcasted_args
-            )
+            broadcasted_model.args = broadcasted_args
 
-        nb_assets = get_args_shape(process.lifetime_model)
+        nb_assets = get_lifetime_model_nb_assets(broadcasted_model)
 
         super().__init__(
             process=NonHomogeneousPoissonProcess(broadcasted_model),
@@ -317,26 +301,18 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
 
     def sample_step(self):
         # Apply a Left truncation based on current ages on the model
-        # We need to unfreeze, use a LeftTruncatedModel and freeze with ages and args
-
-        args = getattr(self.process.lifetime_model, "args", ())
-        unfrozen_model = (
-            self.process.lifetime_model.unfreeze()
-            if args
-            else self.process.lifetime_model
-        )
 
         ages = self.asset_ages.copy().reshape(-1, 1)
-        truncated_lifetime_model = LeftTruncatedModel(unfrozen_model).freeze(
-            ages, *args
-        )
+        truncated_lifetime_model = LeftTruncatedModel(
+            self.process.lifetime_model
+        ).freeze(ages)
 
         # Sample using this truncation
 
-        args_shape = get_args_shape(truncated_lifetime_model)
+        args_size = get_lifetime_model_nb_assets(truncated_lifetime_model)
 
         time, event, entry = truncated_lifetime_model.rvs(
-            self.get_rvs_size(args_shape),
+            self.get_rvs_size(args_size),
             return_event=True,
             return_entry=True,
             seed=self.seed,
