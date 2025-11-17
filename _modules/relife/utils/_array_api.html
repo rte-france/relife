@@ -472,6 +472,16 @@
         <span class="k">return</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="n">broadcast_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_lifetime_model_nb_assets</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the number of assets of a frozen like lifetime_model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())</span>
+    <span class="n">reshaped_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span> <span class="c1"># TODO: won&#39;t work with covar with 1 asset</span>
+    <span class="k">return</span> <span class="n">get_args_nb_assets</span><span class="p">(</span><span class="o">*</span><span class="n">reshaped_args</span><span class="p">)</span>
 </pre></div>
 
                 </article>
