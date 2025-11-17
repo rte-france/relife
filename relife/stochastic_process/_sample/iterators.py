@@ -10,7 +10,7 @@ from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model.conditional_model import LeftTruncatedModel
 from relife.stochastic_process import NonHomogeneousPoissonProcess
 
-from relife.utils import get_args_nb_assets, get_lifetime_model_nb_assets
+from relife.utils import get_lifetime_model_nb_assets
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -41,7 +41,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
         # Assets ages restart at 0 when replacements are done.
         # Used to identify the current ages of the assets in the process
-        self.asset_ages = np.zeros(sample_size, dtype=np.float64)
+        self.ages = np.zeros(sample_size, dtype=np.float64)
 
         # Full timeline never restarts, sums at each iteration
         # Used to identify current time for the observer
@@ -305,7 +305,7 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
     def sample_step(self):
         # Apply a Left truncation based on current ages on the model
 
-        ages = self.asset_ages.copy().reshape(-1, 1)
+        ages = self.ages.copy().reshape(-1, 1)
         truncated_lifetime_model = LeftTruncatedModel(
             self.process.lifetime_model
         ).freeze(ages)
@@ -326,8 +326,8 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         entry = entry.reshape(self.timeline.shape)
 
         # Update asset ages
-        self.asset_ages += time - entry
+        self.ages += time - entry
         # If no events (replacement), restarts asset timeline for next step
-        self.asset_ages[~event] = 0
+        self.ages[~event] = 0
 
         return time, event, entry
