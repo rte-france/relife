@@ -289,9 +289,9 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         args = getattr(process.lifetime_model, "args", None)
         if args:
             broadcasted_args = list(np.repeat(arg, nb_samples, axis=0) for arg in args)
-            broadcasted_model.args = (
-                broadcasted_args  # TODO: problem with in-place modification
-            )
+            broadcasted_model = broadcasted_model.unfreeze().freeze(
+                *broadcasted_args
+            )  # TODO: use a copy method of parametric models
 
         super().__init__(
             process=NonHomogeneousPoissonProcess(broadcasted_model),
