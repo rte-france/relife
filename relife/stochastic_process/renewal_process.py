@@ -11,7 +11,7 @@ from relife.stochastic_process._renewal_equations import (
 )
 from relife.utils import is_frozen
 
-from ._sample import RenewalProcessSample, RenewalRewardProcessSample
+from ._sample import StochasticDataSample, StochasticRewardDataSample
 
 
 def _make_timeline(tf, nb_steps):
@@ -162,7 +162,7 @@ class RenewalProcess(ParametricModel):
         iterable = RenewalProcessIterable(self, nb_samples, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
-        return RenewalProcessSample(t0, tf, struct_array)
+        return StochasticDataSample(t0, tf, struct_array)
 
     def generate_failure_data(self, size, tf, t0=0.0, nb_assets=None, seed=None):
         """Generate lifetime data
@@ -453,4 +453,4 @@ class RenewalRewardProcess(RenewalProcess):
         iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
-        return RenewalRewardProcessSample(t0, tf, struct_array)
+        return StochasticRewardDataSample(t0, tf, struct_array)

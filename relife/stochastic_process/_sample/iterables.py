@@ -43,38 +43,6 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def __iter__(self) -> StochasticDataIterator: ...
 
 
-def age_of_renewal_process_sampler(
-    lifetime_model,
-    nb_samples: int,
-    t: float,
-    nb_assets: int = 1,
-    first_lifetime_model: Optional = None,
-    seed: Optional[int] = None,
-):
-    timeline = np.zeros((nb_assets, nb_samples), dtype=np.float64)
-    just_crossed_t = np.zeros_like(timeline, dtype=np.uint32)
-    age_process = np.zeros_like(timeline, dtype=np.float64)
-    replacement_cycle = 0
-
-    while np.any(timeline < t):
-        if replacement_cycle == 0 and first_lifetime_model is not None:
-            time, entry = first_lifetime_model.rvs(
-                (nb_assets, nb_samples), return_entry=True, seed=seed
-            )
-        else:
-            time, entry = lifetime_model.rvs(
-                (nb_assets, nb_samples), return_entry=True, seed=seed
-            )
-        replacement_cycle += 1
-        residual_time = time - entry
-        timeline += residual_time
-        just_crossed_t[timeline > t] += 1
-        age_process = np.where(just_crossed_t == 1, time - (timeline - t), age_process)
-        if seed is not None:
-            seed += 1
-    return np.squeeze(age_process)
-
-
 class RenewalProcessIterable(StochasticDataIterable):
     def __init__(
         self,

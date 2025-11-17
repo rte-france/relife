@@ -52,12 +52,9 @@ class StochasticDataSample:
     def entry(self) -> NDArray[np.float64]:
         return self.struct_array["entry"]
 
-
-@dataclass
-class RenewalProcessSample(StochasticDataSample):
     @staticmethod
     def _nb_events(
-        selection: RenewalProcessSample,
+        selection: StochasticDataSample,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         sort = np.argsort(selection.struct_array["timeline"])
         timeline = selection.struct_array["timeline"][sort]
@@ -72,22 +69,22 @@ class RenewalProcessSample(StochasticDataSample):
         self, sample_id: int, asset_id: int = 0
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(sample_id=sample_id, asset_id=asset_id)
-        return RenewalProcessSample._nb_events(selection)
+        return StochasticDataSample._nb_events(selection)
 
     def mean_nb_events(
         self, asset_id: int = 0
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(asset_id=asset_id)
-        timeline, counts = RenewalProcessSample._nb_events(selection)
+        timeline, counts = StochasticDataSample._nb_events(selection)
         nb_sample = len(np.unique(selection.struct_array["sample_id"]))
         return timeline, counts / nb_sample
 
 
 @dataclass
-class RenewalRewardProcessSample(RenewalProcessSample):
+class StochasticRewardDataSample(StochasticDataSample):
     @staticmethod
     def _total_rewards(
-        selection: RenewalRewardProcessSample,
+        selection: StochasticRewardDataSample,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         sort = np.argsort(selection.struct_array["timeline"])
         timeline = selection.struct_array["timeline"][sort]
@@ -103,15 +100,12 @@ class RenewalRewardProcessSample(RenewalProcessSample):
         self, sample_id: int, asset_id: int = 0
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(sample_id=sample_id, asset_id=asset_id)
-        return RenewalRewardProcessSample._total_rewards(selection)
+        return StochasticRewardDataSample._total_rewards(selection)
 
     def mean_total_rewards(
         self, asset_id: int = 0
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         selection = self.select(asset_id=asset_id)
-        timeline, rewards = RenewalRewardProcessSample._nb_events(selection)
+        timeline, rewards = StochasticRewardDataSample._nb_events(selection)
         nb_sample = len(np.unique(selection.struct_array["sample_id"]))
         return timeline, rewards / nb_sample
-
-
-NonHomogeneousPoissonProcessSample = RenewalProcessSample
