@@ -125,13 +125,18 @@ class TestAgeReplacementDistribution:
         renewal_process = RenewalProcess(
             frozen_ar_distribution, first_lifetime_model=EquilibriumDistribution(frozen_ar_distribution)
         )
-        q1 = frozen_ar_distribution.ppf(0.25)
-        q3 = frozen_ar_distribution.ppf(0.75)
-        sample = renewal_process.sample(100, 10 * q3, t0=q1)
+        ar = frozen_ar_distribution.args[0]
+        n_assets = 1 if isinstance(ar,float) else ar.shape[0]
+        n_samples=10
+        t0 = frozen_ar_distribution.ppf(0.25)
+        tf = 10*frozen_ar_distribution.ppf(0.75)
+        sample = renewal_process.sample(n_samples, tf, t0)
 
-        # check all times are bounded by the age of replacement
-        # add a small constant for numerical approximations
-        np.testing.assert_array_less(sample.time,frozen_ar_distribution.args[0] +  1e-5)
+        # Check that all times are less than ar for each asset
+        for i in range(n_assets):
+            ar_asset = ar if isinstance(ar,float) else ar[i]
+            select_asset = sample.select(asset_id=i)
+            np.testing.assert_array_less(select_asset.time,ar_asset +  1e-5)
 
 
 
@@ -141,8 +146,8 @@ class TestLeftTruncatedDistribution:
         renewal_process = RenewalProcess(
             distribution, first_lifetime_model=first_lifetime_model
         )
-        q3 = distribution.ppf(0.75)
-        sample = renewal_process.sample(100, 10 * q3, t0=0)
+        tf = 10 * distribution.ppf(0.75)
+        sample = renewal_process.sample(100, tf)
 
         # check first entries are a0 for each sample
         for i in range(100):
@@ -255,9 +260,10 @@ class TestAgeReplacementRegression:
         renewal_process = RenewalProcess(
             frozen_ar_regression, first_lifetime_model=EquilibriumDistribution(frozen_ar_regression)
         )
-        q1 = frozen_ar_regression.ppf(0.25).max()
-        q3 = frozen_ar_regression.ppf(0.75).min()
-        sample = renewal_process.sample(100, 10 * q3, t0=q1)
+        t0 = frozen_ar_regression.ppf(0.25).min()
+        tf = 10* frozen_ar_regression.ppf(0.75).max()
+        n_samples=10
+        sample = renewal_process.sample(n_samples, tf, t0)
 
         # check all times are bounded by the age of replacement
         # add a small constant for numerical approximations
