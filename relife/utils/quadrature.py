@@ -1,33 +1,9 @@
-from __future__ import annotations
-
-from typing import (
-    Callable,
-    Optional,
-    Union,
-    overload,
-)
-
 import numpy as np
-from numpy.typing import NDArray
 
 __all__ = ["legendre_quadrature", "laguerre_quadrature", "unweighted_laguerre_quadrature", "broadcast_bounds"]
 
 
-@overload
-def broadcast_bounds(
-    a: float | NDArray[np.float64],
-    b: None = None,
-) -> NDArray[np.float64]: ...
-
-
-@overload
-def broadcast_bounds(
-    a: float | NDArray[np.float64],
-    b: float | NDArray[np.float64],
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
-
-
-def _control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
+def _control_shape(bound):
     arr = np.asarray(bound, dtype=np.float64)
     if np.any(arr < 0):
         raise ValueError("Bound values of the integral can't be lower than 0")
@@ -36,10 +12,7 @@ def _control_shape(bound: float | NDArray[np.float64]) -> NDArray[np.float64]:
     return arr
 
 
-def broadcast_bounds(
-    a: float | NDArray[np.float64],
-    b: Optional[float | NDArray[np.float64]] = None,
-) -> Union[NDArray[np.float64], tuple[NDArray[np.float64], NDArray[np.float64]]]:
+def broadcast_bounds(a, b=None):
     a = _control_shape(a)
     if b is not None:
         b = _control_shape(b)
@@ -51,12 +24,7 @@ def broadcast_bounds(
     return a
 
 
-def legendre_quadrature(
-    func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
-    a: float | NDArray[np.float64],
-    b: float | NDArray[np.float64],
-    deg: int = 10,
-) -> np.float64 | NDArray[np.float64]:
+def legendre_quadrature(func, a, b, deg=10):
     r"""Numerical integration of :math:`f(x)` over the interval :math:`[a,b]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -93,11 +61,7 @@ def legendre_quadrature(
     return np.sum(v * fvalues, axis=-v.ndim)  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
-def laguerre_quadrature(
-    func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
-    a: float | NDArray[np.float64] = 0.0,
-    deg: int = 10,
-) -> np.float64 | NDArray[np.float64]:
+def laguerre_quadrature(func, a, deg=10):
     r"""Numerical integration of :math:`f(x) * exp(-x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -128,11 +92,7 @@ def laguerre_quadrature(
     )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
-def unweighted_laguerre_quadrature(
-    func: Callable[[float | NDArray[np.float64]], np.float64 | NDArray[np.float64]],
-    a: float | NDArray[np.float64] = 0.0,
-    deg: int = 10,
-) -> np.float64 | NDArray[np.float64]:
+def unweighted_laguerre_quadrature(func, a=0.0, deg=10):
     r"""Numerical integration of :math:`f(x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes

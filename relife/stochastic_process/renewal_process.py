@@ -1,22 +1,35 @@
 import copy
+from typing import Optional, TypedDict
 
 import numpy as np
+from numpy.typing import NDArray
+from typing_extensions import override
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
-from relife.lifetime_model import LeftTruncatedModel
-from relife.stochastic_process._renewal_equations import (
+from relife.lifetime_model import (
+    LeftTruncatedModel,
+)
+from relife.typing import AnyParametricLifetimeModel, Seed
+from relife.utils import is_frozen
+
+from ._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
-from relife.utils import is_frozen
-
 from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 
 
-def _make_timeline(tf, nb_steps):
+def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
     timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
     return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
+
+
+class LifetimeFitArgs(TypedDict):
+    time: NDArray[np.floating]
+    event: NDArray[np.bool_]
+    entry: NDArray[np.floating]
+    args: tuple[NDArray[np.floating], ...]
 
 
 class RenewalProcess(ParametricModel):
@@ -43,12 +56,19 @@ class RenewalProcess(ParametricModel):
     params_names
     """
 
-    def __init__(self, lifetime_model, first_lifetime_model=None):
+    lifetime_model: AnyParametricLifetimeModel[()]
+    first_lifetime_model: Optional[AnyParametricLifetimeModel[()]]
+
+    def __init__(
+        self,
+        lifetime_model: AnyParametricLifetimeModel[()],
+        first_lifetime_model: Optional[AnyParametricLifetimeModel[()]] = None,
+    ) -> None:
         super().__init__()
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
 
-    def renewal_function(self, tf, nb_steps):
+    def renewal_function(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The renewal function.
 
         The renewal function gives the expected total number of renewals. It is computed  by solving the
@@ -94,7 +114,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
 
-    def renewal_density(self, tf, nb_steps):
+    def renewal_density(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The renewal density.
 
         The renewal density corresponds to the derivative of the renewal function with
@@ -139,7 +159,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Optional[Seed] = None) -> RenewalProcessSample:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -166,7 +186,9 @@ class RenewalProcess(ParametricModel):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return RenewalProcessSample(t0, tf, struct_array)
 
-    def generate_failure_data(self, size, tf, t0=0.0, nb_assets=None, seed=None):
+    def generate_failure_data(
+        self, size: int, tf: float, t0: float = 0.0, seed: Optional[Seed] = None
+    ) -> LifetimeFitArgs:
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
@@ -208,7 +230,7 @@ class RenewalProcess(ParametricModel):
 
         nb_assets = int(np.max(struct_array["asset_id"])) + 1
         args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ())))
-        # broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
+        # broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
         tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"], axis=0) for arg in args_2d))
 
         returned_dict = {
@@ -252,25 +274,37 @@ class RenewalRewardProcess(RenewalProcess):
     params
     params_names
     """
+    lifetime_model: AnyParametricLifetimeModel[()]
+    first_lifetime_model: Optional[AnyParametricLifetimeModel[()]]
+    reward: Reward
+    first_reward: Reward
+    discounting: ExponentialDiscounting
 
-    def __init__(self, lifetime_model, reward, discounting_rate=0.0, first_lifetime_model=None, first_reward=None):
+    def __init__(
+        self,
+        lifetime_model: AnyParametricLifetimeModel[()],
+        reward: Reward,
+        discounting_rate: float = 0.0,
+        first_lifetime_model: Optional[AnyParametricLifetimeModel[()]] = None,
+        first_reward: Optional[Reward] = None,
+    ) -> None:
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else copy.deepcopy(reward)
         self.discounting = ExponentialDiscounting(discounting_rate)
 
     @property
-    def discounting_rate(self):
+    def discounting_rate(self) -> float:
         """
         The discounting rate value
         """
         return self.discounting.rate
 
     @discounting_rate.setter
-    def discounting_rate(self, value):
+    def discounting_rate(self, value: float) -> None:
         self.discounting.rate = value
 
-    def expected_total_reward(self, tf, nb_steps):
+    def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The expected total reward.
 
         The renewal equation solved to compute the expected reward is:
@@ -325,7 +359,7 @@ class RenewalRewardProcess(RenewalProcess):
             lambda t: self.lifetime_model.ls_integrate(
                 lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
                 np.zeros_like(t),
-                t,
+                np.asarray(t),
                 deg=15,
             ),  # reward partial expectation
             discounting=self.discounting,
@@ -338,14 +372,14 @@ class RenewalRewardProcess(RenewalProcess):
                 lambda t: self.first_lifetime_model.ls_integrate(
                     lambda x: self.first_reward.conditional_expectation(x) * self.discounting.factor(x),
                     np.zeros_like(t),
-                    t,
+                    np.asarray(t),
                     deg=15,
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
         return np.squeeze(timeline), np.squeeze(z)  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
-    def asymptotic_expected_total_reward(self):
+    def asymptotic_expected_total_reward(self) -> np.float64 | NDArray[np.float64]:
         r"""Asymptotic expected total reward.
 
         The asymptotic expected total reward is:
@@ -378,26 +412,42 @@ class RenewalRewardProcess(RenewalProcess):
             The assymptotic expected total reward of the process.
         """
         lf = self.lifetime_model.ls_integrate(
-            lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
+            lambda x: self.discounting.factor(x), np.float64(0.0), np.asarray(np.inf), deg=100
         )  # () or (m, 1)
         if self.discounting_rate == 0.0:
             return np.full_like(np.squeeze(lf), np.inf)
-        ly = self.lifetime_model.ls_integrate(
-            lambda x: self.discounting.factor(x) * self.reward.conditional_expectation(x), 0.0, np.inf, deg=100
+        ly = np.asarray(
+            self.lifetime_model.ls_integrate(
+                lambda x: self.discounting.factor(x) * self.reward.conditional_expectation(x),
+                np.float64(0.0),
+                np.asarray(np.inf),
+                deg=100,
+            ),
+            dtype=float,
         )
         z = ly / (1 - lf)  # () or (m, 1)
         if self.first_lifetime_model is not None:
-            lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100)
-            ly1 = self.first_lifetime_model.ls_integrate(
-                lambda x: self.discounting.factor(x) * self.first_reward.conditional_expectation(x),
-                0.0,
-                np.inf,
-                deg=100,
+            lf1 = np.asarray(
+                self.first_lifetime_model.ls_integrate(
+                    lambda x: self.discounting.factor(x), np.float64(0.0), np.asarray(np.inf), deg=100
+                ),
+                dtype=float,
+            )
+            ly1 = np.asarray(
+                self.first_lifetime_model.ls_integrate(
+                    lambda x: self.discounting.factor(x) * self.first_reward.conditional_expectation(x),
+                    np.float64(0.0),
+                    np.asarray(np.inf),
+                    deg=100,
+                ),
+                dtype=float,
             )
             z = ly1 + z * lf1  # () or (m, 1)
         return np.squeeze(z)  # () or (m,)
 
-    def expected_equivalent_annual_worth(self, tf, nb_steps):
+    def expected_equivalent_annual_worth(
+        self, tf: float, nb_steps: int
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         """Expected equivalent annual worth.
 
         Gives the equivalent annual worth of the expected total reward of the
@@ -426,15 +476,15 @@ class RenewalRewardProcess(RenewalProcess):
             af = np.tile(af, (z.shape[0], 1))  # (m, nb_steps)
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
         if self.first_lifetime_model is not None:
-            q0 = self.first_reward.conditional_expectation(0.0) * self.first_lifetime_model.pdf(0.0)
+            q0 = self.first_reward.conditional_expectation(np.asarray(0.0)) * self.first_lifetime_model.pdf(0.0)
         else:
-            q0 = self.reward.conditional_expectation(0.0) * self.lifetime_model.pdf(0.0)
+            q0 = self.reward.conditional_expectation(np.asarray(0.0)) * self.lifetime_model.pdf(0.0)
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
         return np.squeeze(timeline), np.squeeze(eeac)  # (nb_steps,) and (nb_steps) or (m, nb_steps)
 
-    def asymptotic_expected_equivalent_annual_worth(self):
+    def asymptotic_expected_equivalent_annual_worth(self) -> np.float64 | NDArray[np.float64]:
         """Asymptotic expected equivalent annual worth.
 
         Returns
@@ -444,12 +494,18 @@ class RenewalRewardProcess(RenewalProcess):
         """
         if self.discounting_rate == 0.0:
             return np.squeeze(
-                self.lifetime_model.ls_integrate(lambda x: self.reward.conditional_expectation(x), 0.0, np.inf, deg=100)
+                np.asarray(
+                    self.lifetime_model.ls_integrate(
+                        lambda x: self.reward.conditional_expectation(x), np.float64(0.0), np.asarray(np.inf), deg=100
+                    ),
+                    dtype=float,
+                )
                 / self.lifetime_model.mean()
             )  # () or (m,)
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    @override
+    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Optional[Seed] = None) -> RenewalRewardProcessSample:
         from ._sample import RenewalProcessIterable
 
         iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)

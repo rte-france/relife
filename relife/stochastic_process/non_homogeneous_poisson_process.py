@@ -1,21 +1,35 @@
+from __future__ import annotations
+
+from typing import Any, Generic, Optional, Self, Sequence, TypeVarTuple
+
 import numpy as np
+from numpy.typing import NDArray
 
 from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
-from relife.likelihood import DefaultLifetimeLikelihood
+from relife.lifetime_model import FittableParametricLifetimeModel
+from relife.likelihood import DefaultLifetimeLikelihood, FittingResults
+from relife.typing import AnyFloat, NumpyFloat
+
+Ts = TypeVarTuple("Ts")
+
+__all__ = ["NonHomogeneousPoissonProcess", "FrozenNonHomogeneousPoissonProcess"]
 
 
-class NonHomogeneousPoissonProcess(ParametricModel):
+class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
     """
     Non-homogeneous Poisson process.
     """
 
-    def __init__(self, lifetime_model):
+    lifetime_model: FittableParametricLifetimeModel[*Ts]
+    fitting_results: Optional[FittingResults]
+
+    def __init__(self, lifetime_model: FittableParametricLifetimeModel[*Ts]):
         super().__init__()
         self.lifetime_model = lifetime_model
         self.fitting_results = None
 
-    def intensity(self, time, *args):
+    def intensity(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The intensity function of the process.
 
@@ -34,7 +48,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         """
         return self.lifetime_model.hf(time, *args)
 
-    def cumulative_intensity(self, time, *args):
+    def cumulative_intensity(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The cumulative intensity function of the process.
 
@@ -53,7 +67,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         """
         return self.lifetime_model.chf(time, *args)
 
-    def freeze(self, *args):
+    def freeze(self, *args: *Ts) -> FrozenNonHomogeneousPoissonProcess[*Ts]:
         """
         Freeze any arguments required by the process into the object data.
 
@@ -66,9 +80,17 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         -------
         FrozenParametricModel
         """
-        return FrozenParametricModel(self, *args)
+        return FrozenNonHomogeneousPoissonProcess(self, *args)
 
-    def sample(self, size, tf, *args, t0=0.0, seed=None):
+    def sample(
+        self,
+        size: int,
+        tf: float,
+        *args: *Ts,
+        t0: float = 0.0,
+        nb_assets: Optional[int] = None,
+        seed: Optional[int] = None,
+    ):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -99,7 +121,15 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return NonHomogeneousPoissonProcessSample(t0, tf, struct_array)
 
-    def generate_failure_data(self, size, tf, *args, t0=0.0, seed=None):
+    def generate_failure_data(
+        self,
+        size: int,
+        tf: float,
+        *args: *Ts,
+        t0: float = 0.0,
+        nb_assets: Optional[int] = None,
+        seed: Optional[int] = None,
+    ):
         """Generate failure data
 
         This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
@@ -168,14 +198,14 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
     def fit(
         self,
-        ages_at_events,
-        events_assets_ids,
-        assets_ids=None,
-        first_ages=None,
-        last_ages=None,
-        lifetime_model_args=None,
-        **options,
-    ):
+        ages_at_events: NDArray[np.float64],
+        events_assets_ids: Sequence[str] | NDArray[np.int64],
+        first_ages: Optional[NDArray[np.float64]] = None,
+        last_ages: Optional[NDArray[np.float64]] = None,
+        lifetime_model_args: Optional[tuple[*Ts]] = None,
+        assets_ids: Optional[Sequence[str] | NDArray[np.int64]] = None,
+        **options: Any,
+    ) -> Self:
         """
         Estimation of the process parameters from recurrent failure data.
 
@@ -240,8 +270,113 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         time, event, entry, args = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
         self.lifetime_model._get_initial_params(time, *args, event=event, entry=entry)
-        likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event,entry=entry)
+        likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event, entry=entry)
         fitting_results = likelihood.maximum_likelihood_estimation(**options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
+
+
+class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoissonProcess[*Ts], *Ts]):
+    """
+    Non-homogeneous Poisson process.
+    """
+
+    _unfrozen_model: NonHomogeneousPoissonProcess[*Ts]
+    _args: tuple[*Ts]
+
+    def __init__(self, model: NonHomogeneousPoissonProcess[*Ts], *args: *Ts) -> None:
+        super().__init__(model, *args)
+
+    def intensity(self, time: AnyFloat) -> NumpyFloat:
+        """
+        The intensity function of the process.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        return self._unfrozen_model.intensity(time, *self._args)
+
+    def cumulative_intensity(self, time: AnyFloat) -> NumpyFloat:
+        """
+        The cumulative intensity function of the process.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
+
+        Returns
+        -------
+        np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        return self._unfrozen_model.cumulative_intensity(time, *self._args)
+
+    def sample(
+        self,
+        size: int,
+        tf: float,
+        *,
+        t0: float = 0.0,
+        nb_assets: Optional[int] = None,
+        seed: Optional[int] = None,
+    ):
+        """Renewal data sampling.
+
+        This function will sample data and encapsulate them in an object.
+
+        Parameters
+        ----------
+        size : int
+            The size of the desired sample
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        seed : int, optional
+            Random seed, by default None.
+
+        """
+        return self._unfrozen_model.sample(size, tf, *self._args, t0=t0, nb_assets=nb_assets, seed=seed)
+
+    def generate_failure_data(
+        self,
+        size: int,
+        tf: float,
+        *,
+        t0: float = 0.0,
+        nb_assets: Optional[int] = None,
+        seed: Optional[int] = None,
+    ):
+        """Generate failure data
+
+        This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
+
+        Parameters
+        ----------
+        size : int
+            The size of the desired sample
+        tf : float
+            Time at the end of the observation.
+        t0 : float, default 0
+            Time at the beginning of the observation.
+        seed : int, optional
+            Random seed, by default None.
+
+        Returns
+        -------
+        A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids
+        """
+        return self._unfrozen_model.generate_failure_data(size, tf, *self._args, t0=t0, nb_assets=nb_assets, seed=seed)

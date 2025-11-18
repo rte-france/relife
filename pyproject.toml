@@ -62,8 +62,14 @@ line-length = 120
 [tool.isort]
 profile = 'black'
 
-[tool.mypy]
-plugins = "numpy.typing.mypy_plugin" # needed to type hing nympy
+# gradual typing : strict mode is activated for modules
+[tool.pyright]
+reportAny = false
+reportExplicitAny = false
+strict = [
+    "relife/lifetime_model/**",
+	"relife/likelihood/**",
+]
 
 [[tool.mypy.overrides]]
 module = [
