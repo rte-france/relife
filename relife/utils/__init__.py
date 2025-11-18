@@ -16,4 +16,5 @@ __all__ = [
     "is_non_homogeneous_poisson_process",
     "reshape_1d_arg",
     "flatten_if_possible",
+    "get_lifetime_model_nb_assets",
 ]

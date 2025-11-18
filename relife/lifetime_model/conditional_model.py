@@ -719,7 +719,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             if isinstance(self.baseline, AgeReplacementModel):
                 ar = reshape_1d_arg(args[0])
                 event = np.where(complete_ages < ar, event, ~event)
-            if is_frozen(self.baseline):
+            if is_frozen(self.baseline) and isinstance(self.baseline.unfreeze(), AgeReplacementModel):
                 ar = reshape_1d_arg(self.baseline.args[0])
                 event = np.where(complete_ages < ar, event, ~event)
             output.append(event)
