@@ -55,73 +55,32 @@ class StochasticDataSample:
     @property
     def entry(self) -> NDArray[np.float64]:
         return self.struct_array["entry"]
+    
 
-    def get_count_observation(self, tf: float, nb_steps: int) -> NDArray[np.int64]:
-        """
-        Count the increasing number of observations made for each asset x sample  on a given time range.
-        Build a 2D Matrix with samples and assets on first axis and observation times in second axis.
-        """
+    def get_matrix_events(self)->NDArray[np.bool_]:
+        index_in_rows = self.asset_id*self.nb_samples + self.sample_id
+        unique_index, row_index = np.unique(index_in_rows,return_inverse=True)
 
-        return self.get_count_event(tf, nb_steps) + self.get_count_preventive_renewal(
-            tf, nb_steps
-        )
+        unique_timeline, col_timeline = np.unique(self.timeline,return_inverse=True)
 
-    def get_count_event(self, tf: float, nb_steps: int) -> NDArray[np.int64]:
-        """
-        Count the increasing number of observed events for each asset x sample  on a given time range.
-        Build a 2D Matrix with samples and assets on first axis and observation times in second axis.
-        """
-        time_linspace = np.linspace(0, tf, nb_steps)
-        count_event_matrix = np.zeros(
-            (self.nb_samples * self.nb_assets, time_linspace.shape[0])
-        )
+        M = np.zeros((len(unique_index),len(unique_timeline)),dtype=bool)
+        M[row_index,col_timeline] = self.event
 
-        for i, asset_id in enumerate(set(self.asset_id)):
-            for j, sample_id in enumerate(set(self.sample_id)):
-                index_row = i * self.nb_samples + j
-                events_matrix = (
-                    self.select(
-                        sample_id=sample_id, asset_id=asset_id
-                    ).timeline.reshape(-1, 1)
-                    <= time_linspace
-                )
-                events_matrix *= self.select(
-                    sample_id=sample_id, asset_id=asset_id
-                ).event.reshape(-1, 1)
-                count_event_matrix[index_row] = events_matrix.sum(axis=0)
+        return M
+    
+    def get_matrix_preventive_renewals(self)->NDArray[np.bool_]:
+        index_in_rows = self.asset_id*self.nb_samples + self.sample_id
+        unique_index, row_index = np.unique(index_in_rows,return_inverse=True)
 
-        return count_event_matrix
+        unique_timeline, col_timeline = np.unique(self.timeline,return_inverse=True)
 
-    def get_count_preventive_renewal(
-        self, tf: float, nb_steps: int
-    ) -> NDArray[np.int64]:
-        """
-        Count the increasing number of preventive renewal made for each asset x sample  on a given time range.
-        Build a 2D Matrix with samples and assets on first axis and observation times in second axis.
-        """
-        time_linspace = np.linspace(0, tf, nb_steps)
-        count_preventive_renewal_matrix = np.zeros(
-            (self.nb_samples * self.nb_assets, time_linspace.shape[0])
-        )
+        M = np.zeros((len(unique_index),len(unique_timeline)),dtype=bool)
+        M[row_index,col_timeline] = ~self.event
 
-        for i, asset_id in enumerate(set(self.asset_id)):
-            for j, sample_id in enumerate(set(self.sample_id)):
-                index_row = i * self.nb_samples + j
-                events_matrix = (
-                    self.select(
-                        sample_id=sample_id, asset_id=asset_id
-                    ).timeline.reshape(-1, 1)
-                    <= time_linspace
-                )
-                events_matrix *= ~self.select(
-                    sample_id=sample_id, asset_id=asset_id
-                ).event.reshape(-1, 1)
-                count_preventive_renewal_matrix[index_row] = events_matrix.sum(axis=0)
+        # Last observation isn't a renewal, end of observation
+        M[:,-1] = False
 
-        count_preventive_renewal_matrix[:, -1] -= (
-            1  # end of observation window isn't a renewal
-        )
-        return count_preventive_renewal_matrix
+        return M
 
     def get_sample_ids(self) -> NDArray[np.int64]:
         """
@@ -136,6 +95,13 @@ class StochasticDataSample:
         """
 
         return np.repeat(np.array(list(set(self.asset_id))), self.nb_samples)
+    
+    def get_timeline(self) -> NDArray[np.float64]:
+        """
+        Get the 1D array of timeline along the second axis for methods that return a 2D matrix
+        """
+
+        return np.unique(self.timeline)
 
 
 @dataclass
