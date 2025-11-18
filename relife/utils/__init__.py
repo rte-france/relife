@@ -2,7 +2,6 @@ from ._array_api import (
     flatten_if_possible,
     get_args_nb_assets,
     reshape_1d_arg,
-    get_lifetime_model_nb_assets
 )
 from ._model_checks import (
     is_frozen,

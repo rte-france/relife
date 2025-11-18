@@ -8,9 +8,30 @@ from typing_extensions import override
 
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model.conditional_model import LeftTruncatedModel
+from relife.lifetime_model.distribution import (
+    EquilibriumDistribution,
+    MinimumDistribution,
+)
 from relife.stochastic_process import NonHomogeneousPoissonProcess
+from relife.utils import get_args_nb_assets, reshape_1d_arg
 
-from relife.utils import get_lifetime_model_nb_assets
+
+# Place this method here since can't import form relife.lifetime_model in relife.utils
+def get_lifetime_model_nb_assets(lifetime_model):
+    """
+    Gets the number of assets of a frozen like lifetime_model.
+    """
+
+    if isinstance(lifetime_model, EquilibriumDistribution) or isinstance(
+        lifetime_model, MinimumDistribution
+    ):
+        return get_lifetime_model_nb_assets(lifetime_model.baseline)
+
+    args = getattr(lifetime_model, "args", ())
+    reshaped_args = (
+        reshape_1d_arg(arg) for arg in args
+    )  # TODO: won't work with covar with 1 asset
+    return get_args_nb_assets(*reshaped_args)
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):

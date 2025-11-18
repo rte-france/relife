@@ -5,6 +5,7 @@ import numpy as np
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import LeftTruncatedModel
+from relife.utils._array_api import reshape_1d_arg
 from relife.stochastic_process._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
@@ -164,21 +165,19 @@ class RenewalProcess(ParametricModel):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return StochasticDataSample(t0, tf, struct_array)
 
-    def generate_failure_data(self, size, tf, t0=0.0, nb_assets=None, seed=None):
+    def generate_failure_data(self, nb_samples, tf, t0=0.0,seed=None):
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
 
         Parameters
         ----------
-        size : int
+        nb_samples : int
             The size of the desired sample
         tf : float
             Time at the end of the observation.
         t0 : float, default 0
             Time at the beginning of the observation.
-        nb_assets : int, optional
-            Number of assets.
         seed : int, optional
             Random seed, by default None.
 
@@ -200,13 +199,11 @@ class RenewalProcess(ParametricModel):
                 raise ValueError(
                     f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
-        iterable = RenewalProcessIterable(self, size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
+        iterable = RenewalProcessIterable(self, nb_samples, tf, t0=t0, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
-        nb_assets = int(np.max(struct_array["asset_id"])) + 1
-        args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ())))
-        # broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
+        args_2d = tuple((np.atleast_2d(reshape_1d_arg(arg)) for arg in getattr(self.lifetime_model, "args", ())))
         tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"], axis=0) for arg in args_2d))
 
         returned_dict = {

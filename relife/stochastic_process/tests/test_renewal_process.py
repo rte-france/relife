@@ -61,13 +61,12 @@ class TestDistribution:
         for i in range(n):
             lifetime_data = renewal_process.generate_failure_data(10000, 10 * q3, t0=0)
             try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
-                distribution.fit(**lifetime_data)
+                distribution.fit(lifetime_data['time'],lifetime_data['event'],lifetime_data['entry'])
             except RuntimeError:
                 continue
             ic = distribution.fitting_results.IC
             # params found are within params IC
-            print("expected params :", expected_params)
-            print("IC95 :", ic)
+            print(f"i: {i}")
             if np.all(expected_params.reshape(-1, 1) >= ic[:, [0]]) and np.all(
                 expected_params.reshape(-1, 1) <= ic[:, [1]]
             ):
@@ -120,6 +119,20 @@ class TestAgeReplacementDistribution:
         assert z0.shape == (200,)
         assert z.shape == (n, 200)
         assert z0 == approx(z.sum(axis=0), rel=1e-4)
+
+    def test_sampling(self, frozen_ar_distribution):
+        renewal_process = RenewalProcess(
+            frozen_ar_distribution, first_lifetime_model=EquilibriumDistribution(frozen_ar_distribution)
+        )
+        q1 = frozen_ar_distribution.ppf(0.25)
+        q3 = frozen_ar_distribution.ppf(0.75)
+        sample = renewal_process.sample(100, 10 * q3, t0=q1)
+
+        # check all times are bounded by the age of replacement
+        # add a small constant for numerical approximations
+        np.testing.assert_array_less(sample.time,frozen_ar_distribution.args[0] +  1e-5)
+
+
 
 
 class TestRegression:
@@ -218,3 +231,17 @@ class TestAgeReplacementRegression:
         )
         assert z.shape == (n, 200)
         assert z0 == approx(n * z, rel=1e-4)
+
+    def test_sampling(self, frozen_ar_regression):
+        renewal_process = RenewalProcess(
+            frozen_ar_regression, first_lifetime_model=EquilibriumDistribution(frozen_ar_regression)
+        )
+        q1 = frozen_ar_regression.ppf(0.25).max()
+        q3 = frozen_ar_regression.ppf(0.75).min()
+        sample = renewal_process.sample(100, 10 * q3, t0=q1)
+
+        # check all times are bounded by the age of replacement
+        # add a small constant for numerical approximations
+        for i in range(frozen_ar_regression.args[0].shape[0]):
+            times = sample.select(asset_id=i).time
+            np.testing.assert_array_less(times,frozen_ar_regression.args[0][i].item() +  1e-5)

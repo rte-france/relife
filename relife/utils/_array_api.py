@@ -21,6 +21,7 @@ def reshape_1d_arg(arg):
         raise ValueError("args can't be more than 2d")
     return arg
 
+
 def flatten_if_possible(value):
     """
     Flatten array-like object when possible.
@@ -38,6 +39,7 @@ def flatten_if_possible(value):
         return value.flatten()
     return value
 
+
 def get_args_nb_assets(*args):
     """
     Gets the number of assets encoded in args.
@@ -52,13 +54,3 @@ def get_args_nb_assets(*args):
     if len(broadcast_shape) == 0:
         return 1
     return broadcast_shape[0]
-
-
-def get_lifetime_model_nb_assets(lifetime_model):
-    """
-    Gets the number of assets of a frozen like lifetime_model.
-    """
-
-    args = getattr(lifetime_model, "args", ())
-    reshaped_args = (reshape_1d_arg(arg) for arg in args) # TODO: won't work with covar with 1 asset
-    return get_args_nb_assets(*reshaped_args)
