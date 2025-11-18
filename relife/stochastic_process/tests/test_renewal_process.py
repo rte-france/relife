@@ -4,6 +4,7 @@ from pytest import approx
 
 from relife.economic import RunToFailureReward
 from relife.lifetime_model import EquilibriumDistribution
+from relife.lifetime_model.conditional_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 
@@ -131,6 +132,24 @@ class TestAgeReplacementDistribution:
         # check all times are bounded by the age of replacement
         # add a small constant for numerical approximations
         np.testing.assert_array_less(sample.time,frozen_ar_distribution.args[0] +  1e-5)
+
+
+
+class TestLeftTruncatedDistribution:
+    def test_sampling(self, distribution, a0):
+        first_lifetime_model = LeftTruncatedModel(distribution).freeze(a0)
+        renewal_process = RenewalProcess(
+            distribution, first_lifetime_model=first_lifetime_model
+        )
+        q3 = distribution.ppf(0.75)
+        sample = renewal_process.sample(100, 10 * q3, t0=0)
+
+        # check first entries are a0 for each sample
+        for i in range(100):
+            select_sample = sample.select(sample_id=i)
+            first_entries = select_sample.entry[select_sample.entry > 0].reshape(a0.shape)
+            np.testing.assert_equal(first_entries,a0)
+
 
 
 
