@@ -107,9 +107,7 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
         220(1), 21-29
     """
 
-    def __init__(
-        self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, a0=None, ar=None
-    ):
+    def __init__(self, lifetime_model, cf, cp, discounting_rate=0.0, period_before_discounting=1.0, a0=None, ar=None):
         super().__init__(
             lifetime_model,
             cost_structure={"cf": reshape_1d_arg(cf), "cp": reshape_1d_arg(cp)},
@@ -291,11 +289,11 @@ class OneCycleAgeReplacementPolicy(ReplacementPolicy):
             self._cost_structure["cp"] / (self._cost_structure["cf"] - self._cost_structure["cp"]), 1
         )  # () or (m, 1)
 
-        # if costs are floats, x0 is float. BUT, baseline_model can have many assets
-        # x0 must have the same shape than eq(x0) (see scipy.newton doc)
-        _sf_x0 = self.baseline_model.sf(x0) # gives us the shape, thus nb_assets
+        # if costs are floats, x0 is float. BUT, baseline_model can have many assets
+        # x0 must have the same shape than eq(x0) (see scipy.newton doc)
+        _sf_x0 = self.baseline_model.sf(x0)  # gives us the shape, thus nb_assets
         if _sf_x0.ndim == 2 and x0.ndim == 0:
-           x0 = np.tile(x0, (_sf_x0.shape[0], 1))
+            x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
         def eq(a):  # () or (m, 1)
             return (
@@ -452,9 +450,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
             AgeReplacementModel(self.baseline_model).freeze(self.ar),
             AgeReplacementReward(self.cf, self.cp, self.ar),
             discounting_rate=self.discounting_rate,
-            first_lifetime_model=AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(
-                self.tr1, self.a0
-            ),
+            first_lifetime_model=AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(self.tr1, self.a0),
             first_reward=AgeReplacementReward(self.cf, self.cp, self.tr1),
         )
 
@@ -557,11 +553,11 @@ class AgeReplacementPolicy(ReplacementPolicy):
         discounting = ExponentialDiscounting(self.discounting_rate)
         x0 = np.minimum(self._cost_structure["cp"] / (self._cost_structure["cf"] - self._cost_structure["cp"]), 1)
 
-        # if costs are floats, x0 is float. BUT, baseline_model can have many assets
-        # x0 must have the same shape than eq(x0) (see scipy.newton doc)
+        # if costs are floats, x0 is float. BUT, baseline_model can have many assets
+        # x0 must have the same shape than eq(x0) (see scipy.newton doc)
         _sf_x0 = self.baseline_model.sf(x0)  # gives us the shape, thus nb_assets
         if _sf_x0.ndim == 2 and x0.ndim == 0:
-           x0 = np.tile(x0, (_sf_x0.shape[0], 1))
+            x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
         def eq(a):  # () or (m, 1)
             f = legendre_quadrature(
@@ -609,7 +605,7 @@ class AgeReplacementPolicy(ReplacementPolicy):
         """
         return self._stochastic_process.generate_failure_data(tf, t0, size, seed)
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    def sample(self, size, time_window, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -618,18 +614,14 @@ class AgeReplacementPolicy(ReplacementPolicy):
         ----------
         size : int
             The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
+        time_window : tuple of two floats
+            Time window in which data are sampled
         seed : int, optional
             Random seed, by default None.
 
         """
 
-        return self._stochastic_process.sample(tf, t0, size, seed)
+        return self._stochastic_process.sample(size, time_window, seed=seed)
 
 
 class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):

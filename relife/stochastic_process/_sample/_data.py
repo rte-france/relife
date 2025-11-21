@@ -9,20 +9,25 @@ from numpy.typing import NDArray
 
 @dataclass
 class StochasticDataSample:
-    t0: float
-    tf: float
+    time_window: tuple[float, float]
     struct_array: NDArray[np.void]
 
-    def select(
-        self, sample_id: Optional[int] = None, asset_id: Optional[int] = None
-    ) -> StochasticDataSample:
+    @property
+    def t0(self):
+        return self.time_window[0]
+
+    @property
+    def tf(self):
+        return self.time_window[1]
+
+    def select(self, sample_id: Optional[int] = None, asset_id: Optional[int] = None) -> StochasticDataSample:
         mask: NDArray[np.bool_] = np.ones_like(self.struct_array, dtype=np.bool_)
         if sample_id is not None:
             mask = mask & np.isin(self.struct_array["sample_id"], sample_id)
         if asset_id is not None:
             mask = mask & np.isin(self.struct_array["asset_id"], asset_id)
         struct_subarray = self.struct_array[mask].copy()
-        return replace(self, t0=self.t0, tf=self.tf, struct_array=struct_subarray)
+        return replace(self, time_window=self.time_window, struct_array=struct_subarray)
 
     @property
     def nb_assets(self) -> int:
@@ -55,30 +60,29 @@ class StochasticDataSample:
     @property
     def entry(self) -> NDArray[np.float64]:
         return self.struct_array["entry"]
-    
 
-    def get_matrix_events(self)->NDArray[np.bool_]:
-        index_in_rows = self.asset_id*self.nb_samples + self.sample_id
-        unique_index, row_index = np.unique(index_in_rows,return_inverse=True)
+    def get_matrix_events(self) -> NDArray[np.bool_]:
+        index_in_rows = self.asset_id * self.nb_samples + self.sample_id
+        unique_index, row_index = np.unique(index_in_rows, return_inverse=True)
 
-        unique_timeline, col_timeline = np.unique(self.timeline,return_inverse=True)
+        unique_timeline, col_timeline = np.unique(self.timeline, return_inverse=True)
 
-        M = np.zeros((len(unique_index),len(unique_timeline)),dtype=bool)
-        M[row_index,col_timeline] = self.event
+        M = np.zeros((len(unique_index), len(unique_timeline)), dtype=bool)
+        M[row_index, col_timeline] = self.event
 
         return M
-    
-    def get_matrix_preventive_renewals(self)->NDArray[np.bool_]:
-        index_in_rows = self.asset_id*self.nb_samples + self.sample_id
-        unique_index, row_index = np.unique(index_in_rows,return_inverse=True)
 
-        unique_timeline, col_timeline = np.unique(self.timeline,return_inverse=True)
+    def get_matrix_preventive_renewals(self) -> NDArray[np.bool_]:
+        index_in_rows = self.asset_id * self.nb_samples + self.sample_id
+        unique_index, row_index = np.unique(index_in_rows, return_inverse=True)
 
-        M = np.zeros((len(unique_index),len(unique_timeline)),dtype=bool)
-        M[row_index,col_timeline] = ~self.event
+        unique_timeline, col_timeline = np.unique(self.timeline, return_inverse=True)
+
+        M = np.zeros((len(unique_index), len(unique_timeline)), dtype=bool)
+        M[row_index, col_timeline] = ~self.event
 
         # Last observation isn't a renewal, end of observation
-        M[:,-1] = False
+        M[:, -1] = False
 
         return M
 
@@ -95,7 +99,7 @@ class StochasticDataSample:
         """
 
         return np.repeat(np.array(list(set(self.asset_id))), self.nb_samples)
-    
+
     def get_timeline(self) -> NDArray[np.float64]:
         """
         Get the 1D array of timeline along the second axis for methods that return a 2D matrix
@@ -116,22 +120,15 @@ class StochasticRewardDataSample(StochasticDataSample):
         Build a 2D Matrix with samples and assets on first axis and observation times in second axis.
         """
         time_linspace = np.linspace(0, tf, nb_steps)
-        count_reward_matrix = np.zeros(
-            (self.nb_samples * self.nb_assets, time_linspace.shape[0])
-        )
+        count_reward_matrix = np.zeros((self.nb_samples * self.nb_assets, time_linspace.shape[0]))
 
         for i, asset_id in enumerate(set(self.asset_id)):
             for j, sample_id in enumerate(set(self.sample_id)):
                 index_row = i * self.nb_samples + j
                 events_matrix = (
-                    self.select(
-                        sample_id=sample_id, asset_id=asset_id
-                    ).timeline.reshape(-1, 1)
-                    <= time_linspace
+                    self.select(sample_id=sample_id, asset_id=asset_id).timeline.reshape(-1, 1) <= time_linspace
                 )
-                events_matrix *= self.select(
-                    sample_id=sample_id, asset_id=asset_id
-                ).reward.reshape(-1, 1)
+                events_matrix *= self.select(sample_id=sample_id, asset_id=asset_id).reward.reshape(-1, 1)
                 count_reward_matrix[index_row] = events_matrix.sum(axis=0)
 
         return count_reward_matrix

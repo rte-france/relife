@@ -60,9 +60,9 @@ class TestDistribution:
         n = 100
         renewal_process = RenewalProcess(distribution)
         for i in range(n):
-            lifetime_data = renewal_process.generate_failure_data(10000, 10 * q3, t0=0)
+            lifetime_data = renewal_process.generate_failure_data(10000, (0.0, 10 * q3))
             try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
-                distribution.fit(lifetime_data['time'],lifetime_data['event'],lifetime_data['entry'])
+                distribution.fit(lifetime_data["time"], lifetime_data["event"], lifetime_data["entry"])
             except RuntimeError:
                 continue
             ic = distribution.fitting_results.IC
@@ -126,37 +126,31 @@ class TestAgeReplacementDistribution:
             frozen_ar_distribution, first_lifetime_model=EquilibriumDistribution(frozen_ar_distribution)
         )
         ar = frozen_ar_distribution.args[0]
-        n_assets = 1 if isinstance(ar,float) else ar.shape[0]
-        n_samples=10
+        n_assets = 1 if isinstance(ar, float) else ar.shape[0]
+        n_samples = 10
         t0 = frozen_ar_distribution.ppf(0.25)
-        tf = 10*frozen_ar_distribution.ppf(0.75)
-        sample = renewal_process.sample(n_samples, tf, t0)
+        tf = 10 * frozen_ar_distribution.ppf(0.75)
+        sample = renewal_process.sample(n_samples, (t0, tf))
 
         # Check that all times are less than ar for each asset
         for i in range(n_assets):
-            ar_asset = ar if isinstance(ar,float) else ar[i]
+            ar_asset = ar if isinstance(ar, float) else ar[i]
             select_asset = sample.select(asset_id=i)
-            np.testing.assert_array_less(select_asset.time,ar_asset +  1e-5)
-
+            np.testing.assert_array_less(select_asset.time, ar_asset + 1e-5)
 
 
 class TestLeftTruncatedDistribution:
     def test_sampling(self, distribution, a0):
         first_lifetime_model = LeftTruncatedModel(distribution).freeze(a0)
-        renewal_process = RenewalProcess(
-            distribution, first_lifetime_model=first_lifetime_model
-        )
+        renewal_process = RenewalProcess(distribution, first_lifetime_model=first_lifetime_model)
         tf = 10 * distribution.ppf(0.75)
-        sample = renewal_process.sample(100, tf)
+        sample = renewal_process.sample(100, (0.0, tf))
 
         # check first entries are a0 for each sample
         for i in range(100):
             select_sample = sample.select(sample_id=i)
             first_entries = select_sample.entry[select_sample.entry > 0].reshape(a0.shape)
-            np.testing.assert_equal(first_entries,a0)
-
-
-
+            np.testing.assert_equal(first_entries, a0)
 
 
 class TestRegression:
@@ -261,12 +255,12 @@ class TestAgeReplacementRegression:
             frozen_ar_regression, first_lifetime_model=EquilibriumDistribution(frozen_ar_regression)
         )
         t0 = frozen_ar_regression.ppf(0.25).min()
-        tf = 10* frozen_ar_regression.ppf(0.75).max()
-        n_samples=10
-        sample = renewal_process.sample(n_samples, tf, t0)
+        tf = 10 * frozen_ar_regression.ppf(0.75).max()
+        n_samples = 10
+        sample = renewal_process.sample(n_samples, (t0, tf))
 
         # check all times are bounded by the age of replacement
         # add a small constant for numerical approximations
         for i in range(frozen_ar_regression.args[0].shape[0]):
             times = sample.select(asset_id=i).time
-            np.testing.assert_array_less(times,frozen_ar_regression.args[0][i].item() +  1e-5)
+            np.testing.assert_array_less(times, frozen_ar_regression.args[0][i].item() + 1e-5)
