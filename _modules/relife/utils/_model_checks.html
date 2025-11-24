@@ -412,9 +412,13 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.utils._model_checks</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">._array_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">reshape_1d_arg</span><span class="p">,</span> <span class="n">get_args_nb_assets</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
 <div class="viewcode-block" id="is_frozen">
 <a class="viewcode-back" href="../../../api/routines/relife.utils.is_frozen.html#relife.utils.is_frozen">[docs]</a>
-<span></span><span class="k">def</span><span class="w"> </span><span class="nf">is_frozen</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_frozen</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks if model is frozen.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -452,6 +456,42 @@
         <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="p">,</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_model_nb_assets</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the number of assets stored by a model (frozen or not).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricModel</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">EquilibriumDistribution</span><span class="p">,</span> <span class="n">MinimumDistribution</span><span class="p">,</span> <span class="n">LifetimeRegression</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonHomogeneousPoissonProcess</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcess</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">EquilibriumDistribution</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">MinimumDistribution</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RenewalProcess</span><span class="p">):</span>
+        <span class="n">lifetime_model_nb_assets</span> <span class="o">=</span> <span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">first_lifetime_model_nb_assets</span> <span class="o">=</span> <span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">lifetime_model_nb_assets</span><span class="p">,</span> <span class="n">first_lifetime_model_nb_assets</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lifetime_model_nb_assets</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">FrozenParametricModel</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="p">,</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">unfrozen_model</span><span class="p">,</span> <span class="n">LifetimeRegression</span><span class="p">):</span>
+            <span class="c1"># specific covar reshape</span>
+            <span class="n">reshaped_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+            <span class="n">reshaped_args</span> <span class="o">+=</span> <span class="p">[</span><span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reshaped_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">get_args_nb_assets</span><span class="p">(</span><span class="o">*</span><span class="n">reshaped_args</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mi">1</span>
 </pre></div>
 
                 </article>

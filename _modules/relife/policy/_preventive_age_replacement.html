@@ -526,9 +526,7 @@
 <span class="sd">        220(1), 21-29</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">period_before_discounting</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">cp</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">period_before_discounting</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">lifetime_model</span><span class="p">,</span>
             <span class="n">cost_structure</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cf&quot;</span><span class="p">:</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">cf</span><span class="p">),</span> <span class="s2">&quot;cp&quot;</span><span class="p">:</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">cp</span><span class="p">)},</span>
@@ -724,11 +722,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]),</span> <span class="mi">1</span>
         <span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
 
-        <span class="c1"># if costs are floats, x0 is float. BUT, baseline_model can have many assets</span>
-        <span class="c1"># x0 must have the same shape than eq(x0) (see scipy.newton doc)</span>
-        <span class="n">_sf_x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="c1"># gives us the shape, thus nb_assets</span>
+        <span class="c1"># if costs are floats, x0 is float. BUT, baseline_model can have many assets</span>
+        <span class="c1"># x0 must have the same shape than eq(x0) (see scipy.newton doc)</span>
+        <span class="n">_sf_x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>  <span class="c1"># gives us the shape, thus nb_assets</span>
         <span class="k">if</span> <span class="n">_sf_x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-           <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="n">_sf_x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="n">_sf_x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">eq</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>  <span class="c1"># () or (m, 1)</span>
             <span class="k">return</span> <span class="p">(</span>
@@ -889,9 +887,7 @@
             <span class="n">AgeReplacementModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="p">)</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">),</span>
             <span class="n">AgeReplacementReward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ar</span><span class="p">),</span>
             <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
-            <span class="n">first_lifetime_model</span><span class="o">=</span><span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="p">))</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">tr1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a0</span>
-            <span class="p">),</span>
+            <span class="n">first_lifetime_model</span><span class="o">=</span><span class="n">AgeReplacementModel</span><span class="p">(</span><span class="n">LeftTruncatedModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="p">))</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tr1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a0</span><span class="p">),</span>
             <span class="n">first_reward</span><span class="o">=</span><span class="n">AgeReplacementReward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tr1</span><span class="p">),</span>
         <span class="p">)</span>
 
@@ -1011,11 +1007,11 @@
         <span class="n">discounting</span> <span class="o">=</span> <span class="n">ExponentialDiscounting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">)</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="c1"># if costs are floats, x0 is float. BUT, baseline_model can have many assets</span>
-        <span class="c1"># x0 must have the same shape than eq(x0) (see scipy.newton doc)</span>
+        <span class="c1"># if costs are floats, x0 is float. BUT, baseline_model can have many assets</span>
+        <span class="c1"># x0 must have the same shape than eq(x0) (see scipy.newton doc)</span>
         <span class="n">_sf_x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>  <span class="c1"># gives us the shape, thus nb_assets</span>
         <span class="k">if</span> <span class="n">_sf_x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-           <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="n">_sf_x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="n">_sf_x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">eq</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>  <span class="c1"># () or (m, 1)</span>
             <span class="n">f</span> <span class="o">=</span> <span class="n">legendre_quadrature</span><span class="p">(</span>
@@ -1069,7 +1065,7 @@
 
 <div class="viewcode-block" id="AgeReplacementPolicy.sample">
 <a class="viewcode-back" href="../../../api/policy/relife.policy.AgeReplacementPolicy.html#relife.policy.AgeReplacementPolicy.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
 
 <span class="sd">        This function will sample data and encapsulate them in an object.</span>
@@ -1078,18 +1074,14 @@
 <span class="sd">        ----------</span>
 <span class="sd">        size : int</span>
 <span class="sd">            The size of the desired sample.</span>
-<span class="sd">        tf : float</span>
-<span class="sd">            Time at the end of the observation.</span>
-<span class="sd">        t0 : float, default 0</span>
-<span class="sd">            Time at the beginning of the observation.</span>
-<span class="sd">        size : int or tuple of 2 int</span>
-<span class="sd">            Size of the sample</span>
+<span class="sd">        time_window : tuple of two floats</span>
+<span class="sd">            Time window in which data are sampled</span>
 <span class="sd">        seed : int, optional</span>
 <span class="sd">            Random seed, by default None.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_process</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_process</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span></div>
 </div>
 
 
