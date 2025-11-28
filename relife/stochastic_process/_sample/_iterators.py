@@ -67,7 +67,9 @@ class _StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         if not np.all(self._time_window_mask["crossed_tf"]):
             time, event, entry = self.sample_time_event_entry()
             struct_arr = self._collect_time_window_observations(time, event, entry)
-            while struct_arr.size == 0:  # skip cycles while arrays are empty (if t0 != 0.)
+            while (
+                struct_arr.size == 0
+            ):  # skip cycles while arrays are empty (if t0 != 0.)
                 time, event, entry = self.sample_time_event_entry()
                 struct_arr = self._collect_time_window_observations(time, event, entry)
                 if np.all(self._time_window_mask["crossed_tf"]):
@@ -78,11 +80,17 @@ class _StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
     def _collect_time_window_observations(self, time, event, entry) -> NDArray[np.void]:
         """Collect observed time, event, entry inside during the time window"""
         if time.ndim > 1:
-            raise ValueError(f"sample_time_event_entry must return 1d entry. Got {time.ndim} dim for time")
+            raise ValueError(
+                f"sample_time_event_entry must return 1d entry. Got {time.ndim} dim for time"
+            )
         if event.ndim > 1:
-            raise ValueError(f"sample_time_event_entry must return 1d entry. Got {event.ndim} dim for event")
+            raise ValueError(
+                f"sample_time_event_entry must return 1d entry. Got {event.ndim} dim for event"
+            )
         if entry.ndim > 1:
-            raise ValueError(f"sample_time_event_entry must return 1d entry. Got {entry.ndim} dim for entry")
+            raise ValueError(
+                f"sample_time_event_entry must return 1d entry. Got {entry.ndim} dim for entry"
+            )
 
         residual_time = time - entry
 
@@ -91,12 +99,20 @@ class _StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         self._update_time_window_mask()
 
         # Replace times that exceeds tf with right censorings at tf
-        time = np.where(self._time_window_mask["just_crossed_tf"], time - (self.timeline - self.tf), time)
+        time = np.where(
+            self._time_window_mask["just_crossed_tf"],
+            time - (self.timeline - self.tf),
+            time,
+        )
         self.timeline[self._time_window_mask["just_crossed_tf"]] = self.tf
         event[self._time_window_mask["just_crossed_tf"]] = False
 
         # Replace entries to take account of the left truncation at t0
-        entry = np.where(self._time_window_mask["just_crossed_t0"], time - (self.timeline - self.t0), entry)
+        entry = np.where(
+            self._time_window_mask["just_crossed_t0"],
+            time - (self.timeline - self.t0),
+            entry,
+        )
 
         self.replacement_cycle += 1
 
@@ -145,14 +161,19 @@ class _StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
         struct_array["asset_id"] = asset_id.astype(np.uint32)
         struct_array["sample_id"] = sample_id.astype(np.uint32)
-        struct_array["timeline"] = self.timeline[self._time_window_mask["observed_step"]]
+        struct_array["timeline"] = self.timeline[
+            self._time_window_mask["observed_step"]
+        ]
         return struct_array
 
 
 class _RenewalProcessIterator(_StochasticDataIterator):
     @property
     def lifetime_model(self):
-        if self.replacement_cycle == 0 and self.process.first_lifetime_model is not None:
+        if (
+            self.replacement_cycle == 0
+            and self.process.first_lifetime_model is not None
+        ):
             return self.process.first_lifetime_model
         return self.process.lifetime_model
 
@@ -196,7 +217,9 @@ class _RenewalRewardProcessIterator(_RenewalProcessIterator):
         nb_assets: int = 1,
         seed: Optional[int] = None,
     ):
-        super().__init__(process, nb_samples, time_window, nb_assets=nb_assets, seed=seed)
+        super().__init__(
+            process, nb_samples, time_window, nb_assets=nb_assets, seed=seed
+        )
         self.reward = self.process.reward
         self.discounting = self.process.discounting
 
@@ -207,7 +230,8 @@ class _RenewalRewardProcessIterator(_RenewalProcessIterator):
         return rfn.append_fields(
             struct_array,
             "reward",
-            self.reward.sample(struct_array["time"]) * self.discounting.factor(struct_array["timeline"]),
+            self.reward.sample(struct_array["time"])
+            * self.discounting.factor(struct_array["timeline"]),
             np.float64,
             usemask=False,
             asrecarray=False,
@@ -223,13 +247,18 @@ class _NonHomogeneousPoissonProcessIterator(_StochasticDataIterator):
         nb_assets: int = 1,
         seed=None,
     ):
-        super().__init__(process, nb_samples, time_window, nb_assets=nb_assets, seed=seed)
+        super().__init__(
+            process, nb_samples, time_window, nb_assets=nb_assets, seed=seed
+        )
         # Here, all samples for each assets are considered individually because of the usage of LeftTruncatedModel
         # We need all samples and assets in 1D so we must broadcast the original lifetime model to repeat its args
         if is_frozen(self.process.lifetime_model):
-            broadcasted_args = list(np.repeat(arg, self.nb_samples, axis=0) for arg in self.process.lifetime_model.args)
-            self._expanded_lifetime_model = self.process.lifetime_model.unfreeze().freeze(
-                *broadcasted_args
+            broadcasted_args = list(
+                np.repeat(arg, self.nb_samples, axis=0)
+                for arg in self.process.lifetime_model.args
+            )
+            self._expanded_lifetime_model = (
+                self.process.lifetime_model.unfreeze().freeze(*broadcasted_args)
             )  # TODO: use a copy method of parametric models
         else:
             self._expanded_lifetime_model = self.process.lifetime_model

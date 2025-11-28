@@ -39,15 +39,33 @@ class TestAgeReplacementDistribution:
 class TestRegression:
 
     def test_sampling(self, frozen_regression):
-        renewal_process = NonHomogeneousPoissonProcess(frozen_regression)
+        nhpp = NonHomogeneousPoissonProcess(frozen_regression)
         n_assets = frozen_regression.args[0].shape[0]
         t0 = frozen_regression.ppf(0.25).min()
         tf = frozen_regression.ppf(0.95).min()
         n_samples = 10
-        sample = renewal_process.sample(n_samples, (t0, tf))
+        sample = nhpp.sample(n_samples, (t0, tf))
 
         # Check NHPP proprerty for each sample and each asset
         for i in range(n_assets):
             for j in range(n_samples):
                 select_sample = sample.select(asset_id=i, sample_id=j)
                 np.testing.assert_equal(select_sample.time[:-1], select_sample.entry[1:])
+
+
+class TestAgeReplacementRegression:
+
+    def test_sampling(self, frozen_ar_regression):
+        nhpp = NonHomogeneousPoissonProcess(
+            frozen_ar_regression
+        )
+        t0 = frozen_ar_regression.ppf(0.25).min()
+        tf = 10 * frozen_ar_regression.ppf(0.75).max()
+        n_samples = 10
+        sample = nhpp.sample(n_samples, (t0, tf))
+
+        # check all times are bounded by the age of replacement
+        # add a small constant for numerical approximations
+        for i in range(frozen_ar_regression.args[0].shape[0]):
+            times = sample.select(asset_id=i).time
+            np.testing.assert_array_less(times, frozen_ar_regression.args[0][i].item() + 1e-5)
