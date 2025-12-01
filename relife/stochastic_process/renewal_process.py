@@ -173,8 +173,8 @@ class RenewalProcess(ParametricModel):
 
         iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
-        return StochasticDataSample(time_window, struct_array)
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
+        return StochasticDataSample(time_window=time_window,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples,_struct_array=struct_array)
 
     def generate_failure_data(self, nb_samples, time_window, seed=None):
         """Generate lifetime data
@@ -453,10 +453,10 @@ class RenewalRewardProcess(RenewalProcess):
             )  # () or (m,)
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
-    def sample(self, size, time_window, seed=None):
+    def sample(self, nb_samples, time_window, seed=None):
         from ._sample import RenewalProcessIterable
 
-        iterable = RenewalProcessIterable(self, size, time_window, seed=seed)
+        iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
-        return StochasticRewardDataSample(time_window, struct_array)
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
+        return StochasticDataSample(time_window=time_window,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples,_struct_array=struct_array)

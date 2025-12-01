@@ -135,8 +135,8 @@ class TestAgeReplacementDistribution:
         # Check that all times are less than ar for each asset
         for i in range(n_assets):
             ar_asset = ar if isinstance(ar, float) else ar[i]
-            select_asset = sample.select(asset_id=i)
-            np.testing.assert_array_less(select_asset.time, ar_asset + 1e-5)
+            select_asset = sample._select_from_struct(asset_id=i)
+            np.testing.assert_array_less(select_asset["time"], ar_asset + 1e-5)
 
 
 class TestLeftTruncatedDistribution:
@@ -148,8 +148,8 @@ class TestLeftTruncatedDistribution:
 
         # check first entries are a0 for each sample
         for i in range(100):
-            select_sample = sample.select(sample_id=i)
-            first_entries = select_sample.entry[select_sample.entry > 0].reshape(a0.shape)
+            select_sample = sample._select_from_struct(sample_id=i)
+            first_entries = select_sample["entry"][select_sample["entry"] > 0].reshape(a0.shape)
             np.testing.assert_equal(first_entries, a0)
 
 
@@ -262,5 +262,5 @@ class TestAgeReplacementRegression:
         # check all times are bounded by the age of replacement
         # add a small constant for numerical approximations
         for i in range(frozen_ar_regression.args[0].shape[0]):
-            times = sample.select(asset_id=i).time
+            times = sample._select_from_struct(asset_id=i)["time"]
             np.testing.assert_array_less(times, frozen_ar_regression.args[0][i].item() + 1e-5)
