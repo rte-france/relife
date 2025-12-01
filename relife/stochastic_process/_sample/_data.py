@@ -61,11 +61,11 @@ class StochasticDataSample:
         if sample_id is None:
             sample_id = np.arange(self.nb_samples)
 
-        sample_id = np.asarray(sample_id)
-        asset_id = np.asarray(asset_id)
-
-        nb_assets = 1 if (np.asarray(asset_id).ndim==0) else np.asarray(asset_id).shape[0]
-        nb_samples = 1 if (np.asarray(sample_id).ndim==0) else np.asarray(asset_id).shape[0]
+        asset_id = np.atleast_1d(asset_id)
+        sample_id = np.atleast_1d(sample_id)
+        
+        nb_assets = asset_id.shape[0]
+        nb_samples = sample_id.shape[0]
         
         mask = (asset_id[None,:]*self.nb_samples + sample_id[:,None]).flatten()
         
