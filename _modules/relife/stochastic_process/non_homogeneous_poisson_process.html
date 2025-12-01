@@ -417,6 +417,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricModel</span><span class="p">,</span> <span class="n">ParametricModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">NHPPData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.likelihood</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultLifetimeLikelihood</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils._model_checks</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_nb_assets</span>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess">
@@ -518,8 +519,8 @@
         <span class="n">frozen_nhpp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="n">iterable</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcessIterable</span><span class="p">(</span><span class="n">frozen_nhpp</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">StochasticDataSample</span><span class="p">(</span><span class="n">time_window</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">StochasticDataSample</span><span class="p">(</span><span class="n">time_window</span><span class="o">=</span><span class="n">time_window</span><span class="p">,</span><span class="n">nb_assets</span><span class="o">=</span><span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">frozen_nhpp</span><span class="p">),</span><span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_samples</span><span class="p">,</span><span class="n">_struct_array</span><span class="o">=</span><span class="n">struct_array</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.generate_failure_data">
@@ -548,7 +549,7 @@
 
         <span class="n">iterable</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcessIterable</span><span class="p">(</span><span class="n">frozen_nhpp</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
 
         <span class="n">first_ages_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;entry&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterable</span><span class="o">.</span><span class="n">t0</span><span class="p">)</span>
         <span class="n">last_ages_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterable</span><span class="o">.</span><span class="n">tf</span><span class="p">)</span>
@@ -717,7 +718,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

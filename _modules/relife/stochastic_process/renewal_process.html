@@ -597,8 +597,8 @@
 
         <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">StochasticDataSample</span><span class="p">(</span><span class="n">time_window</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">StochasticDataSample</span><span class="p">(</span><span class="n">time_window</span><span class="o">=</span><span class="n">time_window</span><span class="p">,</span><span class="n">nb_assets</span><span class="o">=</span><span class="n">get_model_nb_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span><span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_samples</span><span class="p">,</span><span class="n">_struct_array</span><span class="o">=</span><span class="n">struct_array</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RenewalProcess.generate_failure_data">
@@ -898,13 +898,13 @@
 
 <div class="viewcode-block" id="RenewalRewardProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcessIterable</span>
 
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;nb_renewal&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">StochasticRewardDataSample</span><span class="p">(</span><span class="n">time_window</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">StochasticDataSample</span><span class="p">(</span><span class="n">time_window</span><span class="o">=</span><span class="n">time_window</span><span class="p">,</span><span class="n">nb_assets</span><span class="o">=</span><span class="n">get_model_nb_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span><span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_samples</span><span class="p">,</span><span class="n">_struct_array</span><span class="o">=</span><span class="n">struct_array</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
@@ -951,7 +951,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>
