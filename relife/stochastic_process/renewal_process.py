@@ -3,7 +3,7 @@ import copy
 import numpy as np
 
 from relife.base import ParametricModel
-from relife.economic import ExponentialDiscounting, Reward
+from relife.economic import ExponentialDiscounting
 from relife.lifetime_model import LeftTruncatedModel
 from relife.stochastic_process._sample._data import build_data_sample_from_iterable
 from relife.stochastic_process._renewal_equations import (
@@ -11,8 +11,6 @@ from relife.stochastic_process._renewal_equations import (
     renewal_equation_solver,
 )
 from relife.utils import get_model_nb_assets, is_frozen, reshape_1d_arg
-
-from ._sample import StochasticDataSample, StochasticRewardDataSample
 
 
 def _make_timeline(tf, nb_steps):

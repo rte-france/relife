@@ -5,7 +5,7 @@ from collections.abc import Mapping
 
 import numpy as np
 
-from relife.relife.stochastic_process._sample._iterables import StochasticDataIterable
+from relife.stochastic_process._sample._iterables import StochasticDataIterable
 
 
 def build_data_sample_from_iterable(
