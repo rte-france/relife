@@ -1,61 +1,80 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
 from typing import Optional, Union, List
+from collections.abc import Mapping
 
 import numpy as np
-from numpy.typing import NDArray
+
+from relife.relife.stochastic_process._sample._iterables import StochasticDataIterable
 
 
-@dataclass
-class StochasticDataSample:
-    time_window: tuple[float, float]
-    nb_assets: int
-    nb_samples: int
-    _struct_array: NDArray[np.void]
+def build_data_sample_from_iterable(
+    iterable: StochasticDataIterable,
+    nb_assets: int,
+    nb_samples: int,
+    time_window: tuple[float, float],
+    is_reward: bool = False,
+) -> StochasticDataSample:
+    struct_array = np.concatenate(tuple(iterable))
+    struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
-    timeline : NDArray[np.float64] = None
-    events: NDArray[np.bool_] = None
-    preventive_renewals : NDArray[np.bool_] = None
+    # assets x samples are placed on axis 0
+    index_in_rows = struct_array["asset_id"] * nb_samples + struct_array["sample_id"]
+    unique_index, row_index = np.unique(index_in_rows, return_inverse=True)
 
-    _row_index: NDArray[np.int64] = None
-    _col_timeline: NDArray[np.int64] = None
+    # unique values of timeline on axis 1
+    timeline, col_timeline = np.unique(struct_array["timeline"], return_inverse=True)
 
-    def __post_init__(self):
+    zero_matrix = np.zeros((nb_assets * nb_samples, timeline.size), dtype=bool)
 
-        # assets x samples are placed on axis 0
-        index_in_rows = self._struct_array["asset_id"] * self.nb_samples + self._struct_array["sample_id"]
-        unique_index, self._row_index = np.unique(index_in_rows, return_inverse=True)
+    # 2D matrix of booleans to indicate observed events
+    events = zero_matrix.copy()
+    events[row_index, col_timeline] = struct_array["event"]
 
-        # unique values of timeline on axis 1
-        self.timeline, self._col_timeline = np.unique(self._struct_array["timeline"], return_inverse=True)
+    # 2D matrix of booleans to indicate preventive renewals
+    preventive_renewals = zero_matrix.copy()
+    preventive_renewals[row_index, col_timeline] = ~struct_array["event"]
+    preventive_renewals[:, -1] = False
 
-        # 2D matrix of booleans to indicate observed events
-        self.events = np.zeros(
-            (self.nb_assets * self.nb_samples, self.timeline.size), dtype=bool
-        )
-        self.events[self._row_index, self._col_timeline] = self._struct_array["event"]
+    data = {"events": events, "preventive_renewals": preventive_renewals}
 
-        # 2D matrix of booleans to indicate preventive renewals
-        self.preventive_renewals = np.zeros(
-            (self.nb_assets * self.nb_samples, self.timeline.size), dtype=bool
-        )
-        self.preventive_renewals[self._row_index, self._col_timeline] = ~self._struct_array["event"]
-        self.preventive_renewals[:, -1] = False
+    if is_reward:
+        rewards = zero_matrix.copy().astype(float)
+        rewards[row_index, col_timeline] = struct_array["reward"]
+        data["rewards"] = rewards
 
-    def _select_with_mask(self, mask)-> StochasticDataSample:
-        """
-        Take sub-matrix on specific assets and samples using a mask
-        """
-        return replace(self, events=self.events[mask], preventive_renewals=self.preventive_renewals[mask])
+    return StochasticDataSample(
+        time_window=time_window, nb_assets=nb_assets, nb_samples=nb_samples, data=data
+    )
+
+
+class StochasticDataSample(Mapping):
+    def __init__(
+        self,
+        time_window: tuple[float, float],
+        nb_assets: int,
+        nb_samples: int,
+        data: dict,
+    ):
+        self.time_window = time_window
+        self.nb_assets = nb_assets
+        self.nb_samples = nb_samples
+        self._data = data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
 
     def select(
-        self, sample_id: Optional[Union[int|List[int]]] = None, asset_id: Optional[Union[int|List[int]]] = None
+        self,
+        sample_id: Optional[Union[int | List[int]]] = None,
+        asset_id: Optional[Union[int | List[int]]] = None,
     ) -> StochasticDataSample:
-        """
-        Focus on specific assets and samples. Return a truncated StochasticDataSample.
-        """
-
         if asset_id is None:
             asset_id = np.arange(self.nb_assets)
         if sample_id is None:
@@ -63,38 +82,17 @@ class StochasticDataSample:
 
         asset_id = np.atleast_1d(asset_id)
         sample_id = np.atleast_1d(sample_id)
-        
-        nb_assets = asset_id.shape[0]
-        nb_samples = sample_id.shape[0]
-        
-        mask = (asset_id[None,:]*self.nb_samples + sample_id[:,None]).flatten()
-        
-        return replace(self._select_with_mask(mask),nb_assets=nb_assets,nb_samples=nb_samples)
-    
-    def _select_from_struct(self, sample_id: Optional[Union[int|List[int]]] = None, asset_id: Optional[Union[int|List[int]]] = None):
-        """
-        Select the samples and assets in the struct array. Used for dev and tests only.
-        """
-        mask: NDArray[np.bool_] = np.ones_like(self._struct_array, dtype=np.bool_)
-        if sample_id is not None:
-            mask = mask & np.isin(self._struct_array["sample_id"], sample_id)
-        if asset_id is not None:
-            mask = mask & np.isin(self._struct_array["asset_id"], asset_id)
-        return self._struct_array[mask].copy()
 
+        new_nb_assets = asset_id.shape[0]
+        new_nb_samples = sample_id.shape[0]
 
+        mask = (asset_id[None, :] * self.nb_samples + sample_id[:, None]).flatten()
 
-@dataclass
-class StochasticRewardDataSample(StochasticDataSample):
-    rewards: NDArray[np.float64] = None
+        new_data = {key: value[mask] for key, value in self._data.items()}
 
-    def __post__init__(self):
-        super().__post__init__()
-
-        self.rewards = np.zeros(
-            (self.nb_assets * self.nb_samples, self.timeline.size), dtype=float
+        return StochasticDataSample(
+            time_window=self.time_window,
+            nb_assets=new_nb_assets,
+            nb_samples=new_nb_samples,
+            data=new_data,
         )
-        self.rewards[self._row_index,self._col_timeline] = self._struct_array["reward"]
-
-    def _select_with_mask(self, mask)->StochasticRewardDataSample:
-        return replace(self, events=self.events[mask], preventive_renewals=self.preventive_renewals[mask], rewards=self.rewards[mask])

@@ -3,6 +3,7 @@ import numpy as np
 from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
 from relife.likelihood import DefaultLifetimeLikelihood
+from relife.stochastic_process._sample._data import build_data_sample_from_iterable
 from relife.utils._model_checks import get_model_nb_assets
 
 
@@ -91,9 +92,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
         frozen_nhpp = self.freeze(*args)
         iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples, time_window, seed=seed)
-        struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
-        return StochasticDataSample(time_window=time_window,nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples,_struct_array=struct_array)
+        return build_data_sample_from_iterable(iterable=iterable,time_window=time_window,nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
 
     def generate_failure_data(self, size, time_window, *args, seed=None):
         """Generate failure data
