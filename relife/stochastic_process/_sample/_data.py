@@ -4,6 +4,7 @@ from typing import Optional, Union, List
 from collections.abc import Mapping
 
 import numpy as np
+from numpy.typing import NDArray
 
 from relife.stochastic_process._sample._iterables import StochasticDataIterable
 
@@ -44,7 +45,7 @@ def build_data_sample_from_iterable(
         data["rewards"] = rewards
 
     return StochasticDataSample(
-        time_window=time_window, nb_assets=nb_assets, nb_samples=nb_samples, data=data
+        time_window=time_window, nb_assets=nb_assets, nb_samples=nb_samples, data=data, struct_array=struct_array
     )
 
 
@@ -55,11 +56,13 @@ class StochasticDataSample(Mapping):
         nb_assets: int,
         nb_samples: int,
         data: dict,
+        struct_array: NDArray
     ):
         self.time_window = time_window
         self.nb_assets = nb_assets
         self.nb_samples = nb_samples
         self._data = data
+        self._struct_array = struct_array
 
     def __getitem__(self, key):
         return self._data[key]
@@ -75,6 +78,10 @@ class StochasticDataSample(Mapping):
         sample_id: Optional[Union[int | List[int]]] = None,
         asset_id: Optional[Union[int | List[int]]] = None,
     ) -> StochasticDataSample:
+        """
+        Focus on specific assets and samples. Return a truncated StochasticDataSample.
+        """
+        
         if asset_id is None:
             asset_id = np.arange(self.nb_assets)
         if sample_id is None:
@@ -96,3 +103,14 @@ class StochasticDataSample(Mapping):
             nb_samples=new_nb_samples,
             data=new_data,
         )
+
+    def _select_from_struct(self, sample_id: Optional[Union[int|List[int]]] = None, asset_id: Optional[Union[int|List[int]]] = None):
+        """
+        Method used for dev and tests
+        """
+        mask: NDArray[np.bool_] = np.ones_like(self._struct_array, dtype=np.bool_)
+        if sample_id is not None:
+            mask = mask & np.isin(self._struct_array["sample_id"], sample_id)
+        if asset_id is not None:
+            mask = mask & np.isin(self._struct_array["asset_id"], asset_id)
+        return self._struct_array[mask].copy()
