@@ -384,18 +384,18 @@ class RenewalRewardProcess(RenewalProcess):
             return np.full_like(np.squeeze(lf), np.inf)
         ly = self.lifetime_model.ls_integrate(
             lambda x: self.discounting.factor(x) * self.reward.conditional_expectation(x), 0.0, np.inf, deg=100
-        )
-        z = ly / (1 - lf)  # () or (m, 1)
+        ) # () or (m, 1)
+        z = np.squeeze(ly / (1 - lf))  # () or (m,)
         if self.first_lifetime_model is not None:
-            lf1 = self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100)
-            ly1 = self.first_lifetime_model.ls_integrate(
+            lf1 = np.squeeze(self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100)) # () or (m,)
+            ly1 = np.squeeze(self.first_lifetime_model.ls_integrate(
                 lambda x: self.discounting.factor(x) * self.first_reward.conditional_expectation(x),
                 0.0,
                 np.inf,
                 deg=100,
-            )
-            z = ly1 + z * lf1  # () or (m, 1)
-        return np.squeeze(z)  # () or (m,)
+            )) # () or (m,)
+            z = ly1 + z * lf1  # () or (m,)
+        return z  # () or (m,)
 
     def expected_equivalent_annual_worth(self, tf, nb_steps):
         """Expected equivalent annual worth.
@@ -447,7 +447,7 @@ class RenewalRewardProcess(RenewalProcess):
                 self.lifetime_model.ls_integrate(lambda x: self.reward.conditional_expectation(x), 0.0, np.inf, deg=100)
                 / self.lifetime_model.mean()
             )  # () or (m,)
-        return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
+        return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m,)
 
     def sample(self, size, tf, t0=0.0, seed=None):
         from ._sample import RenewalProcessIterable
