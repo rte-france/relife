@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Union, List
+from typing import Optional, Union, Sequence
 from collections.abc import Mapping
 
 import numpy as np
@@ -45,8 +45,15 @@ def build_data_sample_from_iterable(
         data["rewards"] = rewards
 
     return StochasticDataSample(
-        time_window=time_window, nb_assets=nb_assets, nb_samples=nb_samples, data=data, struct_array=struct_array
+        time_window=time_window,
+        nb_assets=nb_assets,
+        nb_samples=nb_samples,
+        data=data,
+        struct_array=struct_array,
     )
+
+
+IntArrayLike = Union[int, Sequence[int], NDArray[np.int_]]
 
 
 class StochasticDataSample(Mapping):
@@ -56,7 +63,7 @@ class StochasticDataSample(Mapping):
         nb_assets: int,
         nb_samples: int,
         data: dict,
-        struct_array: NDArray
+        struct_array: NDArray,
     ):
         self.time_window = time_window
         self.nb_assets = nb_assets
@@ -75,13 +82,13 @@ class StochasticDataSample(Mapping):
 
     def select(
         self,
-        sample_id: Optional[Union[int | List[int]]] = None,
-        asset_id: Optional[Union[int | List[int]]] = None,
+        sample_id: Optional[IntArrayLike] = None,
+        asset_id: Optional[IntArrayLike] = None,
     ) -> StochasticDataSample:
         """
         Focus on specific assets and samples. Return a truncated StochasticDataSample.
         """
-        
+
         if asset_id is None:
             asset_id = np.arange(self.nb_assets)
         if sample_id is None:
@@ -104,7 +111,11 @@ class StochasticDataSample(Mapping):
             data=new_data,
         )
 
-    def _select_from_struct(self, sample_id: Optional[Union[int|List[int]]] = None, asset_id: Optional[Union[int|List[int]]] = None):
+    def _get_from_struct(
+        self,
+        sample_id: Optional[IntArrayLike] = None,
+        asset_id: Optional[IntArrayLike] = None,
+    ):
         """
         Method used for dev and tests
         """

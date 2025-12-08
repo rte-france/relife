@@ -3,7 +3,7 @@ import numpy as np
 from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
 from relife.likelihood import DefaultLifetimeLikelihood
-from relife.stochastic_process._sample._data import build_data_sample_from_iterable
+from relife.stochastic_process._sample._data import StochasticDataSample, build_data_sample_from_iterable
 from relife.utils._model_checks import get_model_nb_assets
 
 
@@ -70,7 +70,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         """
         return FrozenParametricModel(self, *args)
 
-    def sample(self, nb_samples, time_window, *args, seed=None):
+    def sample(self, nb_samples, time_window, *args, seed=None) -> StochasticDataSample:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
