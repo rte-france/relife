@@ -1,0 +1,29 @@
+name: Linux tests
+on:
+  push:
+    branches:
+      - main
+      - hotfix/**
+      - develop/**
+  pull_request:
+    branches:
+      - main
+      - hotfix/**
+      - develop/**
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: | # dev version with sphinx 
+          pip install ".[dev]" 
+
+      - name: Running pytest
+        run: pytest relife

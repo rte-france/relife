@@ -1,15 +1,17 @@
 name: Build and deploy Github pages
-on: [push]
+on:
+  push:
+    branches:
+      - main
 permissions:
   contents: write
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Install Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -19,13 +21,14 @@ jobs:
         with:
           pandoc-version: '3.1.11'
 
-      - name : Install Python dependencies
+      - name: Install Python dependencies
         run: | # dev version with sphinx 
           pip install ".[dev]" 
 
       - name: Build Sphinx Doc
         run: |
-          sphinx-build -M html ./doc/source ./doc/build -Ea
+          cd doc
+          make html
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
