@@ -16,7 +16,6 @@ maintainers = [
 ]
 description = "ReLife is an open source Python library for asset management based on reliability theory."
 readme = "README.md"
-:wa
 requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
