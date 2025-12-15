@@ -21,10 +21,10 @@ jobs:
         run: | # dev version with sphinx 
           pip install ".[dev]" 
 
-      # - name: Install Pandoc
-      #   uses: r-lib/actions/setup-pandoc@v2
-      #   with:
-      #     pandoc-version: '3.1.11'
+      - name: Install Pandoc # needed by a sphinx extension used
+        uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.1.11'
       
       - name: Build Sphinx Doc
         run: |
