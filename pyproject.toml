@@ -5,10 +5,10 @@ build-backend = "setuptools.build_meta"
 # to build and publish : https://packaging.python.org/en/latest/tutorials/packaging-projects/
 # about version management : https://packaging.python.org/en/latest/discussions/single-source-version/#single-source-version
 
-[tool.setuptools_scm]
-# https://setuptools-scm.readthedocs.io/en/latest/extending/#version-number-construction
-# to avoid auto incrementation of version based on the latest git tag
-version_scheme = "no-guess-dev"
+#[tool.setuptools_scm]
+## https://setuptools-scm.readthedocs.io/en/latest/extending/#version-number-construction
+## to avoid auto incrementation of version based on the latest git tag
+#version_scheme = "no-guess-dev"
 
 [project]
 name = "relife"
