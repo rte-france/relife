@@ -3,28 +3,29 @@ on:
   push:
     branches:
       - main
+      - hotfix/**
 permissions:
   contents: write
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
-      - name: Install Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
-        with:
-          pandoc-version: '3.1.11'
-
-      - name: Install Python dependencies
+      - name: Install ReLife in dev mode
         run: | # dev version with sphinx 
           pip install ".[dev]" 
 
+      # - name: Install Pandoc
+      #   uses: r-lib/actions/setup-pandoc@v2
+      #   with:
+      #     pandoc-version: '3.1.11'
+      
       - name: Build Sphinx Doc
         run: |
           cd doc

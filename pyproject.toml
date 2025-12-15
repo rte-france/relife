@@ -56,6 +56,7 @@ dev = [
     "nbsphinx >= 0.9.7",
     "myst-parser >= 4.0.1",
     "jupyterlab >= 4.3.5",
+	"setuptools-scm >= 8.0.0",
 ]
 
 [tool.black]
