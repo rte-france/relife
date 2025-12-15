@@ -68,9 +68,10 @@ Please follow and use these standard acronyms to start your commit messages :
     MAINT: maintenance commit (refactoring, typos, etc.)
     REV: revert an earlier commit
     STY: style fix (PEP8, reformat, etc.)
-    TYP : typing
+    TYP: typing
     TEST: addition or modification of tests
     REL: related to releasing ReLife
+    CI: related to CI
 
 
 Opening a pull request

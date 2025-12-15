@@ -57,7 +57,7 @@
     <link rel="prev" title="RenewalRewardProcess" href="relife.stochastic_process.RenewalRewardProcess.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.2.3" />
   </head>
   
   
@@ -130,7 +130,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.0</div>
+2.2.3</div>
     
   </div>
   
@@ -629,7 +629,7 @@ containing the unique ids corresponding to each values contained in <code class=
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data">
-<span class="sig-name descname"><span class="pre">generate_failure_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_window</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.generate_failure_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">generate_failure_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.generate_failure_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data" title="Link to this definition">#</a></dt>
 <dd><p>Generate failure data</p>
 <p>This function will generate failure data that can be used to fit a non-homogeneous Poisson process.</p>
 <dl class="field-list simple">
@@ -637,7 +637,9 @@ containing the unique ids corresponding to each values contained in <code class=
 <dd class="field-odd"><dl class="simple">
 <dt><strong>size</strong><span class="classifier">int</span></dt><dd><p>The size of the desired sample</p>
 </dd>
-<dt><strong>time_window</strong><span class="classifier">tuple of two floats</span></dt><dd><p>Time window in which failure data are sampled</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
+</dd>
+<dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
 </dd>
 <dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
 </dd>
@@ -722,17 +724,19 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.stochastic_process.NonHomogeneousPoissonProcess.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_window</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.sample" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.sample" title="Link to this definition">#</a></dt>
 <dd><p>Renewal data sampling.</p>
 <p>This function will sample data and encapsulate them in an object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>nb_samples</strong><span class="classifier">int</span></dt><dd><p>The number of samples</p>
-</dd>
-<dt><strong>time_window</strong><span class="classifier">tuple of two floats</span></dt><dd><p>Time window in which data are sampled</p>
+<dt><strong>size</strong><span class="classifier">int</span></dt><dd><p>The size of the desired sample</p>
 </dd>
 <dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+</dd>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
+</dd>
+<dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
 </dd>
 <dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
 </dd>

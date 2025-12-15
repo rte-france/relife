@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.2.3" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.0</div>
+2.2.3</div>
     
   </div>
   
@@ -830,6 +830,8 @@
         <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
         <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">func</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">integration</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">integration</span> <span class="o">=</span> <span class="n">integration</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">integration</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
             <span class="n">b</span> <span class="o">==</span> <span class="n">ar</span><span class="p">,</span> <span class="n">func</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mi">0</span>
         <span class="p">)</span></div>
@@ -1209,7 +1211,7 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">AgeReplacementModel</span><span class="p">):</span>
                 <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">is_frozen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">unfreeze</span><span class="p">(),</span> <span class="n">AgeReplacementModel</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_frozen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">):</span>
                 <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
             <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
