@@ -91,8 +91,8 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         from ._sample import NonHomogeneousPoissonProcessIterable, StochasticDataSample
 
         frozen_nhpp = self.freeze(*args)
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples, time_window, seed=seed)
-        return build_data_sample_from_iterable(iterable=iterable,time_window=time_window,nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples,time_window=time_window, seed=seed)
+        return build_data_sample_from_iterable(iterable=iterable,nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
 
     def generate_failure_data(self, size, time_window, *args, seed=None):
         """Generate failure data

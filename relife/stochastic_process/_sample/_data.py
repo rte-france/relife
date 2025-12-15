@@ -13,7 +13,6 @@ def build_data_sample_from_iterable(
     iterable: StochasticDataIterable,
     nb_assets: int,
     nb_samples: int,
-    time_window: tuple[float, float],
     is_reward: bool = False,
 ) -> StochasticDataSample:
     struct_array = np.concatenate(tuple(iterable))
@@ -45,7 +44,7 @@ def build_data_sample_from_iterable(
         data["rewards"] = rewards
 
     return StochasticDataSample(
-        time_window=time_window, nb_assets=nb_assets, nb_samples=nb_samples, data=data
+        timeline=timeline, nb_assets=nb_assets, nb_samples=nb_samples, data=data
     )
 
 
@@ -55,12 +54,12 @@ IntArrayLike = Union[int, Sequence[int], NDArray[np.int_]]
 class StochasticDataSample(Mapping):
     def __init__(
         self,
-        time_window: tuple[float, float],
         nb_assets: int,
         nb_samples: int,
+        timeline: NDArray,
         data: dict,
     ):
-        self.time_window = time_window
+        self.timeline = timeline
         self.nb_assets = nb_assets
         self.nb_samples = nb_samples
         self._data = data
@@ -99,7 +98,7 @@ class StochasticDataSample(Mapping):
         new_data = {key: value[mask] for key, value in self._data.items()}
 
         return StochasticDataSample(
-            time_window=self.time_window,
+            timeline=self.timeline,
             nb_assets=new_nb_assets,
             nb_samples=new_nb_samples,
             data=new_data,

@@ -171,7 +171,7 @@ class RenewalProcess(ParametricModel):
         from ._sample import RenewalProcessIterable
 
         iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
-        return build_data_sample_from_iterable(iterable=iterable,time_window=time_window,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples)
+        return build_data_sample_from_iterable(iterable=iterable,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples)
 
     def generate_failure_data(self, nb_samples, time_window, seed=None):
         """Generate lifetime data
@@ -453,5 +453,5 @@ class RenewalRewardProcess(RenewalProcess):
     def sample(self, nb_samples, time_window, seed=None):
         from ._sample import RenewalProcessIterable
 
-        iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
-        return build_data_sample_from_iterable(iterable=iterable,time_window=time_window,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples, is_reward=True)
+        iterable = RenewalProcessIterable(self, nb_samples, time_window=time_window, seed=seed)
+        return build_data_sample_from_iterable(iterable=iterable,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples, is_reward=True)
