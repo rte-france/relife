@@ -3,6 +3,8 @@ import numpy as np
 from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
 from relife.likelihood import DefaultLifetimeLikelihood
+from relife.stochastic_process._sample._data import StochasticDataSample, build_data_sample_from_iterable
+from relife.utils._model_checks import get_model_nb_assets
 
 
 class NonHomogeneousPoissonProcess(ParametricModel):
@@ -68,38 +70,31 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         """
         return FrozenParametricModel(self, *args)
 
-    def sample(self, size, tf, *args, t0=0.0, seed=None):
+    def sample(self, nb_samples, time_window, *args, seed=None) -> StochasticDataSample:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample
+        nb_samples : int
+            The number of samples
+        time_window : tuple of two floats
+            Time window in which data are sampled
         *args : float or np.ndarray
             Additional arguments needed by the model.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
         seed : int, optional
             Random seed, by default None.
 
         """
 
-        from ._sample import (
-            NonHomogeneousPoissonProcessIterable,
-            NonHomogeneousPoissonProcessSample,
-        )
+        from ._sample import NonHomogeneousPoissonProcessIterable, StochasticDataSample
 
         frozen_nhpp = self.freeze(*args)
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, seed=seed)
-        struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
-        return NonHomogeneousPoissonProcessSample(t0, tf, struct_array)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples,time_window=time_window, seed=seed)
+        return build_data_sample_from_iterable(iterable=iterable,nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
 
-    def generate_failure_data(self, size, tf, *args, t0=0.0, seed=None):
+    def generate_failure_data(self, size, time_window, *args, seed=None):
         """Generate failure data
 
         This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
@@ -108,10 +103,8 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         ----------
         size : int
             The size of the desired sample
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
+        time_window : tuple of two floats
+            Time window in which failure data are sampled
         seed : int, optional
             Random seed, by default None.
 
@@ -123,12 +116,12 @@ class NonHomogeneousPoissonProcess(ParametricModel):
 
         frozen_nhpp = self.freeze(*args)
 
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, seed=seed)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
-        first_ages_index = np.nonzero(struct_array["entry"] == t0)
-        last_ages_index = np.nonzero(struct_array["age"] == tf)
+        first_ages_index = np.nonzero(struct_array["entry"] == iterable.t0)
+        last_ages_index = np.nonzero(struct_array["age"] == iterable.tf)
 
         event_index = np.nonzero(struct_array["event"])
 
@@ -240,7 +233,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         time, event, entry, args = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
         self.lifetime_model._get_initial_params(time, *args, event=event, entry=entry)
-        likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event,entry=entry)
+        likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event, entry=entry)
         fitting_results = likelihood.maximum_likelihood_estimation(**options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results

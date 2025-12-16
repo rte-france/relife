@@ -21,6 +21,7 @@ def reshape_1d_arg(arg):
         raise ValueError("args can't be more than 2d")
     return arg
 
+
 def flatten_if_possible(value):
     """
     Flatten array-like object when possible.
@@ -37,6 +38,7 @@ def flatten_if_possible(value):
     if value.ndim != 0:
         return value.flatten()
     return value
+
 
 def get_args_nb_assets(*args):
     """

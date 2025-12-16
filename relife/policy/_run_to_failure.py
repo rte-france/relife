@@ -241,7 +241,7 @@ class RunToFailurePolicy(ReplacementPolicy):
             return np.sum(asymptotic_eeac)
         return asymptotic_eeac
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    def sample(self, size, time_window, seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -250,14 +250,12 @@ class RunToFailurePolicy(ReplacementPolicy):
         ----------
         size : int
             The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
+        time_window : tuple of two floats
+            Time window in which data are sampled
         size : int or tuple of 2 int
             Size of the sample
         seed : int, optional
             Random seed, by default None.
 
         """
-        return self._stochastic_process.sample(tf, t0, size, seed)
+        return self._stochastic_process.sample(size, time_window, seed=seed)

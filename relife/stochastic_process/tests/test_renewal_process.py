@@ -4,6 +4,7 @@ from pytest import approx
 
 from relife.economic import RunToFailureReward
 from relife.lifetime_model import EquilibriumDistribution
+from relife.lifetime_model.conditional_model import LeftTruncatedModel
 from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 
@@ -59,15 +60,14 @@ class TestDistribution:
         n = 100
         renewal_process = RenewalProcess(distribution)
         for i in range(n):
-            lifetime_data = renewal_process.generate_failure_data(10000, 10 * q3, t0=0)
+            lifetime_data = renewal_process.generate_failure_data(10000, (0.0, 10 * q3))
             try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
-                distribution.fit(**lifetime_data)
+                distribution.fit(lifetime_data["time"], lifetime_data["event"], lifetime_data["entry"])
             except RuntimeError:
                 continue
             ic = distribution.fitting_results.IC
             # params found are within params IC
-            print("expected params :", expected_params)
-            print("IC95 :", ic)
+            print(f"i: {i}")
             if np.all(expected_params.reshape(-1, 1) >= ic[:, [0]]) and np.all(
                 expected_params.reshape(-1, 1) <= ic[:, [1]]
             ):
