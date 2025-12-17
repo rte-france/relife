@@ -37,6 +37,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         self._args = args
         self._complete_time_args = tuple(arg[np.flatnonzero(event)] for arg in args)
         self._nonzero_entry_args = tuple(arg[np.flatnonzero(entry)] for arg in args)
+        self._nb_observations = len(time)
 
     def _time_contrib(self):
         return np.sum(self.model.chf(self._time, *self._args))
@@ -154,7 +155,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         hessian = approx_hessian(self, optimal_params)
         covariance_matrix = np.linalg.pinv(hessian)
         return FittingResults(
-            len(self._time),
+            self._nb_observations,
             optimal_params,
             neg_log_likelihood,
             covariance_matrix=covariance_matrix,
@@ -302,12 +303,12 @@ class IntervalLifetimeLikelihood(Likelihood):
         )
         return sum(x for x in jac_contributions if x is not None)  # (p,)
 
-    def maximum_likelihood_estimation(self, **optimizer_options):
+    def maximum_likelihood_estimation(self, **optimizer_options) -> FittingResults:
         minimize_kwargs = {
             "method": optimizer_options.get("method", "L-BFGS-B"),
             "constraints": optimizer_options.get("constraints", ()),
             "bounds": optimizer_options.get("bounds", None),
-            "x0": optimizer_options.get("x0", self.model.params),
+            "x0": optimizer_options.get("x0", self.params),
         }
         optimizer = minimize(
             self.negative_log,
