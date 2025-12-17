@@ -213,7 +213,6 @@ class Likelihood(ABC):
             Jacobian of the negative log likelihood value
         """
 
-    @abstractmethod
     def maximum_likelihood_estimation(self, **optimizer_options) -> FittingResults:
         """
         Finds the parameter values that maximize the likelihood.
