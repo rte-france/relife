@@ -282,6 +282,16 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
     @abstractmethod
     def jac_pdf(self, time, *args, asarray=True): ...
 
+    def _fit(self, likelihood, optimizer_options=None):
+        if optimizer_options is None:
+            optimizer_options = {}
+        if "bounds" not in optimizer_options:
+            optimizer_options["bounds"] = self._get_params_bounds()
+        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+        self.params = fitting_results.optimal_params
+        self.fitting_results = fitting_results
+        return self
+
     def fit(
         self,
         time,
@@ -294,14 +304,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         likelihood = DefaultLifetimeLikelihood(
             self, time, *args, event=event, entry=entry
         )
-        if optimizer_options is None:
-            optimizer_options = {}
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self._get_params_bounds()
-        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
-        self.params = fitting_results.optimal_params
-        self.fitting_results = fitting_results
-        return self
+        return self._fit(likelihood=likelihood, optimizer_options=optimizer_options)
 
     def fit_from_interval_censored_lifetimes(
         self,
@@ -315,11 +318,5 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         likelihood = IntervalLifetimeLikelihood(
             self, time_inf, time_sup, *args, entry=entry
         )
-        if optimizer_options is None:
-            optimizer_options = {}
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self._get_params_bounds()
-        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
-        self.params = fitting_results.optimal_params
-        self.fitting_results = fitting_results
-        return self
+        return self._fit(likelihood=likelihood, optimizer_options=optimizer_options)
+
