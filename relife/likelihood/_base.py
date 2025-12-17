@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 from scipy import stats
-from scipy.optimize import approx_fprime
+from scipy.optimize import approx_fprime, minimize
 
 
 def _hessian_cs(likelihood, params, eps):
@@ -172,6 +172,13 @@ class Likelihood(ABC):
     def params(self, value):
         self.model.params = value
 
+    @property
+    @abstractmethod
+    def nb_observations(self):
+        """
+        Define the number of observations as attribute
+        """
+
     @abstractmethod
     def negative_log(self, params):
         """
@@ -189,7 +196,25 @@ class Likelihood(ABC):
         """
 
     @abstractmethod
-    def maximum_likelihood_estimation(self, **optimizer_options):
+    def jac_negative_log(self, params):
+        """
+        Jacobian of the negative log likelihood.
+
+        The jacobian (here gradient) is computed with respect to parameters
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which the jacobian is evaluated
+
+        Returns
+        -------
+        ndarray
+            Jacobian of the negative log likelihood value
+        """
+
+    @abstractmethod
+    def maximum_likelihood_estimation(self, **optimizer_options) -> FittingResults:
         """
         Finds the parameter values that maximize the likelihood.
 
@@ -203,3 +228,32 @@ class Likelihood(ABC):
         FittingResults
             The fitting results.
         """
+        minimize_kwargs = {
+            "method": optimizer_options.get("method", "L-BFGS-B"),
+            "constraints": optimizer_options.get("constraints", ()),
+            "bounds": optimizer_options.get("bounds", None),
+            "x0": optimizer_options.get("x0", self.params),
+        }
+        optimizer = minimize(
+            self.negative_log,
+            minimize_kwargs.pop("x0"),
+            jac=(
+                self.jac_negative_log
+                if minimize_kwargs["method"]
+                not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
+                else None
+            ),
+            **minimize_kwargs,
+        )
+        optimal_params = np.copy(optimizer.x)
+        neg_log_likelihood = np.copy(
+            optimizer.fun
+        )  # neg_log_likelihood value at optimal
+        hessian = approx_hessian(self, optimal_params)
+        covariance_matrix = np.linalg.pinv(hessian)
+        return FittingResults(
+            self.nb_observations,
+            optimal_params,
+            neg_log_likelihood,
+            covariance_matrix=covariance_matrix,
+        )

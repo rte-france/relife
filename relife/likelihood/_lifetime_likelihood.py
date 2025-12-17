@@ -1,8 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import minimize
 
-from ._base import Likelihood, FittingResults, approx_hessian
+from ._base import Likelihood
 from relife.utils import reshape_1d_arg
 
 def _args_reshape(*args):
@@ -38,6 +37,10 @@ class DefaultLifetimeLikelihood(Likelihood):
         self._complete_time_args = tuple(arg[np.flatnonzero(event)] for arg in args)
         self._nonzero_entry_args = tuple(arg[np.flatnonzero(entry)] for arg in args)
         self._nb_observations = len(time)
+
+    @property
+    def nb_observations(self):
+        return self._nb_observations
 
     def _time_contrib(self):
         return np.sum(self.model.chf(self._time, *self._args))
@@ -130,37 +133,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         )
         return sum(x for x in jac_contributions if x is not None)  # (p,)
 
-    def maximum_likelihood_estimation(self, **optimizer_options) -> FittingResults:
-        minimize_kwargs = {
-            "method": optimizer_options.get("method", "L-BFGS-B"),
-            "constraints": optimizer_options.get("constraints", ()),
-            "bounds": optimizer_options.get("bounds", None),
-            "x0": optimizer_options.get("x0", self.params),
-        }
-        optimizer = minimize(
-            self.negative_log,
-            minimize_kwargs.pop("x0"),
-            jac=(
-                self.jac_negative_log
-                if minimize_kwargs["method"]
-                not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
-                else None
-            ),
-            **minimize_kwargs,
-        )
-        optimal_params = np.copy(optimizer.x)
-        neg_log_likelihood = np.copy(
-            optimizer.fun
-        )  # neg_log_likelihood value at optimal
-        hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.pinv(hessian)
-        return FittingResults(
-            self._nb_observations,
-            optimal_params,
-            neg_log_likelihood,
-            covariance_matrix=covariance_matrix,
-        )
-
 
 class IntervalLifetimeLikelihood(Likelihood):
     def __init__(
@@ -197,6 +169,9 @@ class IntervalLifetimeLikelihood(Likelihood):
         )
         self._nonzero_entry_args = tuple(arg[(entry > 0).squeeze()] for arg in args)
 
+    @property
+    def nb_observations(self):
+        return self._nb_observations
 
     def _complete_time_contrib(self):
         if len(self._complete_time == 0):
@@ -302,34 +277,3 @@ class IntervalLifetimeLikelihood(Likelihood):
             self._jac_entry_contrib(),
         )
         return sum(x for x in jac_contributions if x is not None)  # (p,)
-
-    def maximum_likelihood_estimation(self, **optimizer_options) -> FittingResults:
-        minimize_kwargs = {
-            "method": optimizer_options.get("method", "L-BFGS-B"),
-            "constraints": optimizer_options.get("constraints", ()),
-            "bounds": optimizer_options.get("bounds", None),
-            "x0": optimizer_options.get("x0", self.params),
-        }
-        optimizer = minimize(
-            self.negative_log,
-            minimize_kwargs.pop("x0"),
-            jac=(
-                self.jac_negative_log
-                if minimize_kwargs["method"]
-                not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
-                else None
-            ),
-            **minimize_kwargs,
-        )
-        optimal_params = np.copy(optimizer.x)
-        neg_log_likelihood = np.copy(
-            optimizer.fun
-        )  # neg_log_likelihood value at optimal
-        hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.pinv(hessian)
-        return FittingResults(
-            self._nb_observations,
-            optimal_params,
-            neg_log_likelihood,
-            covariance_matrix=covariance_matrix,
-        )
