@@ -478,7 +478,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         ar = reshape_1d_arg(ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
-        return integration + np.where(b == ar, func(np.asarray(ar)) * self.baseline.sf(ar, *args), 0)
+        if func(ar).ndim == 2 and integration.ndim == 1:
+            integration = integration.reshape(-1, 1)
+        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
 
     @override
     def moment(self, n: int, ar: AnyFloat, *args: *Ts) -> NumpyFloat:

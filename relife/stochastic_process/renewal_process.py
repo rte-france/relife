@@ -416,34 +416,24 @@ class RenewalRewardProcess(RenewalProcess):
         )  # () or (m, 1)
         if self.discounting_rate == 0.0:
             return np.full_like(np.squeeze(lf), np.inf)
-        ly = np.asarray(
-            self.lifetime_model.ls_integrate(
-                lambda x: self.discounting.factor(x) * self.reward.conditional_expectation(x),
-                np.float64(0.0),
-                np.asarray(np.inf),
-                deg=100,
-            ),
-            dtype=float,
-        )
-        z = ly / (1 - lf)  # () or (m, 1)
+        ly = self.lifetime_model.ls_integrate(
+            lambda x: self.discounting.factor(x) * self.reward.conditional_expectation(x), 0.0, np.inf, deg=100
+        )  # () or (m, 1)
+        z = np.squeeze(ly / (1 - lf))  # () or (m,)
         if self.first_lifetime_model is not None:
-            lf1 = np.asarray(
-                self.first_lifetime_model.ls_integrate(
-                    lambda x: self.discounting.factor(x), np.float64(0.0), np.asarray(np.inf), deg=100
-                ),
-                dtype=float,
-            )
-            ly1 = np.asarray(
+            lf1 = np.squeeze(
+                self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100)
+            )  # () or (m,)
+            ly1 = np.squeeze(
                 self.first_lifetime_model.ls_integrate(
                     lambda x: self.discounting.factor(x) * self.first_reward.conditional_expectation(x),
-                    np.float64(0.0),
-                    np.asarray(np.inf),
+                    0.0,
+                    np.inf,
                     deg=100,
-                ),
-                dtype=float,
-            )
-            z = ly1 + z * lf1  # () or (m, 1)
-        return np.squeeze(z)  # () or (m,)
+                )
+            )  # () or (m,)
+            z = ly1 + z * lf1  # () or (m,)
+        return z  # () or (m,)
 
     def expected_equivalent_annual_worth(
         self, tf: float, nb_steps: int
@@ -502,7 +492,7 @@ class RenewalRewardProcess(RenewalProcess):
                 )
                 / self.lifetime_model.mean()
             )  # () or (m,)
-        return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
+        return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m,)
 
     @override
     def sample(self, size: int, tf: float, t0: float = 0.0, seed: Optional[Seed] = None) -> RenewalRewardProcessSample:
