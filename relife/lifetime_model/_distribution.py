@@ -1,10 +1,14 @@
 """Lifetime distributions."""
 
+from __future__ import annotations
+
 from abc import ABC
 from typing import (
+    Any,
     Callable,
     Literal,
     Self,
+    TypeAlias,
     TypeVarTuple,
     final,
     overload,
@@ -19,7 +23,10 @@ from typing_extensions import override
 from relife.typing import AnyFloat, NumpyBool, NumpyFloat, ScipyMinimizeOptions, Seed
 from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
-from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
+from ._base import (
+    FittableParametricLifetimeModel,
+    ParametricLifetimeModel,
+)
 
 __all__: list[str] = [
     "Gompertz",
@@ -426,20 +433,18 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().ls_integrate(func, a, b, deg=deg)
 
     @override
-    def _get_initial_params(
+    def get_initial_params(
         self,
         time: NDArray[np.float64],
-        *,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
         param0 = np.ones(self.nb_params, dtype=np.float64)
         param0[-1] = 1 / np.median(time)
-        self.params = param0
         return param0
 
+    @property
     @override
-    def _get_params_bounds(self) -> Bounds:
+    def params_bounds(self) -> Bounds:
         return Bounds(
             np.full(self.nb_params, np.finfo(float).resolution),
             np.full(self.nb_params, np.inf),
@@ -449,37 +454,13 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     def fit(
         self,
         time: NDArray[np.float64],
-        *,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         optimizer_options: ScipyMinimizeOptions | None = None,
     ) -> Self:
-        """
-        Estimation of the distribution parameters from lifetime data.
-
-        Parameters
-        ----------
-        time : 1d array
-            Observed lifetime values.
-        event : 1d array of bool, default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : 1d array, default is None
-            Left truncations applied to lifetime values.
-        optimizer_options : dict, default is None
-            Extra arguments used by `scipy.minimize`. Default values are:
-                - `method` : `"L-BFGS-B"`
-                - `contraints` : `()`
-                - `tol` : `None`
-                - `callback` : `None`
-                - `options` : `None`
-                - `bounds` : `self.params_bounds`
-                - `x0` : `self.init_params`
-
-        Returns
-        -------
-        Self
-            The current object with the estimated parameters setted inplace.
-        """
+        if model_args is not None:
+            raise ValueError("LifetimeDistribution does not expect additional arguments in model_args")
         return super().fit(time, event=event, entry=entry, optimizer_options=optimizer_options)
 
     @override
@@ -487,40 +468,12 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         self,
         time_inf: NDArray[np.float64],
         time_sup: NDArray[np.float64],
-        *,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
         optimizer_options: ScipyMinimizeOptions | None = None,
     ) -> Self:
-        """
-        Estimation of the distribution parameters from interval censored lifetime data.
-
-        Parameters
-        ----------
-        time_inf : 1d array
-            Observed lifetime lower bounds.
-        time_sup : 1d array
-            Observed lifetime upper bounds.
-        entry : 1d array, default is None
-            Left truncations applied to lifetime values.
-        optimizer_options : dict, default is None
-            Extra arguments used by `scipy.minimize`. Default values are:
-                - `method` : `"L-BFGS-B"`
-                - `contraints` : `()`
-                - `tol` : `None`
-                - `callback` : `None`
-                - `options` : `None`
-                - `bounds` : `self.params_bounds`
-                - `x0` : `self.init_params`
-
-        Notes
-        -----
-        Where `time_inf == time_sup`, lifetimes are complete.
-
-        Returns
-        -------
-        Self
-            The current object with the estimated parameters setted inplace.
-        """
+        if model_args is not None:
+            raise ValueError("LifetimeDistribution does not expect additional arguments in model_args")
         return super().fit_from_interval_censored_lifetimes(
             time_inf, time_sup, entry=entry, optimizer_options=optimizer_options
         )
@@ -991,7 +944,7 @@ class Weibull(LifetimeDistribution):
             self.shape**2 * (self.rate * time) ** (self.shape - 1),
         )
         if asarray:
-            return np.stack(jac, dtype=np.float64)
+            return np.stack(jac)
         return jac
 
     @overload
@@ -1102,7 +1055,7 @@ class Gompertz(LifetimeDistribution):
     rate
     """
 
-    def __init__(self, shape: float | None = None, rate: Optional[float] = None):
+    def __init__(self, shape: float | None = None, rate: float | None = None):
         super().__init__(shape=shape, rate=rate)
 
     @property
@@ -1336,12 +1289,10 @@ class Gompertz(LifetimeDistribution):
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
     @override
-    def _get_initial_params(
+    def get_initial_params(
         self,
         time: NDArray[np.float64],
-        *,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
 
         param0 = np.empty(self.nb_params, dtype=np.float64)
@@ -1978,8 +1929,11 @@ class EquilibriumDistribution(ParametricLifetimeModel[*Ts]):
         return self.isf(np.exp(-cumulative_hazard_rate), *args)
 
 
+AnyInt: TypeAlias = int | np.int64 | NDArray[np.int64]
+
+
 @final
-class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
+class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
     r"""Series structure of n identical and independent components.
 
     The hazard function of the system is given by:
@@ -2016,39 +1970,39 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
         self.baseline = baseline
 
     @override
-    def sf(self, time: AnyFloat, n: int, *args: *Ts) -> NumpyFloat:
+    def sf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
         return super().sf(time, *(n, *args))
 
     @override
-    def pdf(self, time: AnyFloat, n: int, *args: *Ts) -> NumpyFloat:
+    def pdf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
         return super().pdf(time, *(n, *args))
 
     @override
-    def hf(self, time: AnyFloat, n: int, *args: *Ts) -> NumpyFloat:
+    def hf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
         return n * self.baseline.hf(time, *args)
 
     @override
-    def chf(self, time: AnyFloat, n: int, *args: *Ts) -> NumpyFloat:
+    def chf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
         return n * self.baseline.chf(time, *args)
 
     @override
     def ichf(
         self,
         cumulative_hazard_rate: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
     ) -> NumpyFloat:
-        return self.baseline.ichf(cumulative_hazard_rate / n, *args)
+        return self.baseline.ichf(cumulative_hazard_rate / float(n), *args)
 
     @override
-    def dhf(self, time: AnyFloat, n: int, *args: *Ts) -> NumpyFloat:
+    def dhf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
         return n * self.baseline.dhf(time, *args)
 
     @overload
     def jac_chf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[False],
     ) -> tuple[NumpyFloat, ...]: ...
@@ -2056,23 +2010,25 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
     def jac_chf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[True],
     ) -> NumpyFloat: ...
     @overload
     def jac_chf(
-        self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = True
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_chf(self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = True) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_chf(
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
+    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
         return n * self.baseline.jac_chf(time, *args, asarray=asarray)
 
     @overload
     def jac_hf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[False],
     ) -> tuple[NumpyFloat, ...]: ...
@@ -2080,23 +2036,25 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
     def jac_hf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[True],
     ) -> NumpyFloat: ...
     @overload
     def jac_hf(
-        self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = True
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_hf(self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = True) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_hf(
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
+    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
         return n * self.baseline.jac_chf(time, *args, asarray=asarray)
 
     @overload
     def jac_sf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[False],
     ) -> tuple[NumpyFloat, ...]: ...
@@ -2104,16 +2062,18 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
     def jac_sf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[True],
     ) -> NumpyFloat: ...
     @overload
     def jac_sf(
-        self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = True
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_sf(self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = False) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_sf(
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = False
+    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
         jac_chf, sf = (
             self.jac_chf(time, n, *args, asarray=True),
             self.sf(time, n, *args),
@@ -2127,7 +2087,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
     def jac_cdf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[False],
     ) -> tuple[NumpyFloat, ...]: ...
@@ -2135,15 +2095,17 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
     def jac_cdf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[True],
     ) -> NumpyFloat: ...
     @overload
     def jac_cdf(
-        self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = True
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    def jac_cdf(self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = False) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_cdf(
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = False
+    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
         jac = -self.jac_sf(time, n, *args, asarray=True)
         if not asarray:
             return np.unstack(jac)
@@ -2153,7 +2115,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
     def jac_pdf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[False],
     ) -> tuple[NumpyFloat, ...]: ...
@@ -2161,16 +2123,18 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
     def jac_pdf(
         self,
         time: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         asarray: Literal[True],
     ) -> NumpyFloat: ...
     @overload
     def jac_pdf(
-        self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = True
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_pdf(self, time: AnyFloat, n: int, *args: *Ts, asarray: bool = False) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_pdf(
+        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = False
+    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
         jac_hf, hf = self.jac_hf(time, n, *args, asarray=True), self.hf(time, n, *args)
         jac_sf, sf = self.jac_sf(time, n, *args, asarray=True), self.sf(time, n, *args)
         jac = jac_hf * sf + jac_sf * hf
@@ -2184,59 +2148,49 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[int, *Ts]]):
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
         a: AnyFloat,
         b: AnyFloat,
-        n: int,
+        n: AnyInt,
         *args: *Ts,
         deg: int = 10,
     ) -> NumpyFloat:
         return super().ls_integrate(func, a, b, n, *args, deg=deg)
 
+    @property
     @override
-    def _get_params_bounds(self) -> Bounds:
-        return self.baseline._get_params_bounds()
+    def params_bounds(self) -> Bounds:
+        return self.baseline.params_bounds
 
     @override
-    def _get_initial_params(
+    def get_initial_params(
         self,
         time: NDArray[np.float64],
-        n: int,
-        *args: *Ts,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
-        return self.baseline._get_initial_params(time, *args, event=None, entry=None)
+        return self.baseline.get_initial_params(time, model_args=model_args)
 
     @override
     def fit(
         self,
         time: NDArray[np.float64],
-        n: int,
-        *args: *Ts,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         optimizer_options: ScipyMinimizeOptions | None = None,
     ) -> Self:
-        return super().fit(
-            time,
-            *(n, *args),
-            event=event,
-            entry=entry,
-            optimizer_options=optimizer_options,
-        )
+        if model_args is None:
+            raise ValueError("MinimumDistribution expects at least one additional argument in model_args")
+        return super().fit(time, model_args=model_args, event=event, entry=entry, optimizer_options=optimizer_options)
 
     @override
     def fit_from_interval_censored_lifetimes(
         self,
         time_inf: NDArray[np.float64],
         time_sup: NDArray[np.float64],
-        n: int,
-        *args: *Ts,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
         optimizer_options: ScipyMinimizeOptions | None = None,
     ) -> Self:
+        if model_args is None:
+            raise ValueError("MinimumDistribution expects at least one additional argument in model_args")
         return super().fit_from_interval_censored_lifetimes(
-            time_inf,
-            time_sup,
-            *(n, *args),
-            entry=entry,
-            optimizer_options=optimizer_options,
+            time_inf, time_sup, model_args=model_args, entry=entry, optimizer_options=optimizer_options
         )

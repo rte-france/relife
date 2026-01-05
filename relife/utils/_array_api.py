@@ -16,12 +16,14 @@ E = TypeVar("E", bound=np.generic, covariant=True)
 
 
 @overload
+def reshape_1d_arg(arg: int) -> np.float64: ...
+@overload
 def reshape_1d_arg(arg: float) -> np.float64: ...
 @overload
 def reshape_1d_arg(arg: bool | np.bool_) -> np.bool: ...
 @overload
 def reshape_1d_arg(arg: NDArray[E]) -> NDArray[E]: ...
-def reshape_1d_arg(arg: float | bool | np.bool | NDArray[E]) -> np.float64 | np.bool | NDArray[E]:
+def reshape_1d_arg(arg: int | float | bool | np.bool | NDArray[E]) -> np.float64 | np.bool | NDArray[E]:
     """
     Reshapes ReLife arguments that are expected to be 0d or 1d.
 
@@ -34,15 +36,14 @@ def reshape_1d_arg(arg: float | bool | np.bool | NDArray[E]) -> np.float64 | np.
     np.float64 or (m, 1) shaped array
         Reshaped array used to ensure broadcasting compatibility in computations.
     """
-    if isinstance(arg, float):  # np.float64 is float
+    if isinstance(arg, (int, float)):  # np.float64 is float
         return np.float64(arg)
     if isinstance(arg, (bool, np.bool)):
         return np.bool(arg)
-    if not isinstance(arg, np.ndarray):
-        raise ValueError("expected float, bool or np.ndarray")
+    if arg.ndim == 1:
+        arg = np.atleast_1d(arg).reshape(-1, 1)
     if arg.ndim > 2:
         raise ValueError("arg can't be more than 2d")
-    arg = np.atleast_1d(arg).reshape(-1, 1)
     return arg
 
 

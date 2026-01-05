@@ -6,31 +6,28 @@ This module contains two parametric lifetime regressions.
 ProportionalHazard is not Cox regression (Cox is semiparametric).
 """
 
+from __future__ import annotations
+
 from abc import ABC
-from typing import TYPE_CHECKING
+from typing import Any, Callable, Literal, Self, final
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import Bounds
+from typing_extensions import overload, override
 
 from relife.base import ParametricModel
+from relife.typing import (
+    AnyFloat,
+    NumpyBool,
+    NumpyFloat,
+    ScipyMinimizeOptions,
+    Seed,
+)
 
 from ._base import FittableParametricLifetimeModel
 from ._distribution import LifetimeDistribution
 from ._frozen import FrozenParametricLifetimeModel
-
-if TYPE_CHECKING:
-    from typing import Callable, Literal, Self, final
-
-    from numpy.typing import NDArray
-    from typing_extensions import overload, override
-
-    from relife.typing import (
-        AnyFloat,
-        NumpyBool,
-        NumpyFloat,
-        ScipyMinimizeOptions,
-        Seed,
-    )
 
 __all__: list[str] = ["AcceleratedFailureTime", "ProportionalHazard"]
 
@@ -686,128 +683,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
             seed=seed,
         )
 
-    @override
-    def _get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        covar: AnyFloat,
-        *,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-    ) -> NDArray[np.float64]:
-        self.covar_effect = CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
-        )  # changes params structure depending on number of covar
-        param0 = np.zeros_like(self.params, dtype=np.float64)
-        param0[-self.baseline.params.size :] = self.baseline._get_initial_params(
-            time, event=None, entry=None
-        )  # recursion in case of PPH(AFT(...))
-        return param0
-
-    @override
-    def _get_params_bounds(self) -> Bounds:
-        lb = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, -np.inf),
-                self.baseline._get_params_bounds().lb,  # baseline has _params_bounds according to typing
-            )
-        )
-        ub = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, np.inf),
-                self.baseline._get_params_bounds().ub,
-            )
-        )
-        return Bounds(lb, ub)
-
-    @override
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        covar: AnyFloat,
-        *,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
-    ) -> Self:
-        """
-        Estimation of the regression parameters from lifetime data.
-
-        Parameters
-        ----------
-        time : 1d array
-            Observed lifetime values.
-        covar : 1d or 2d array
-            Covariates values. 1d array is valid if the regression has one coefficient.
-            Otherwise it must be an 2d array of shape ``(m, nb_coef)``.
-        event : 1d array of bool, default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : 1d array, default is None
-            Left truncations applied to lifetime values.
-        optimizer_options : dict, default is None
-            Extra arguments used by `scipy.minimize`. Default values are:
-                - `method` : `"L-BFGS-B"`
-                - `contraints` : `()`
-                - `tol` : `None`
-                - `callback` : `None`
-                - `options` : `None`
-                - `bounds` : `self.params_bounds`
-                - `x0` : `self.init_params`
-
-        Returns
-        -------
-        Self
-            The current object with the estimated parameters setted inplace.
-        """
-        return super().fit(time, covar, event=event, entry=entry, optimizer_options=optimizer_options)
-
-    @override
-    def fit_from_interval_censored_lifetimes(
-        self,
-        time_inf: NDArray[np.float64],
-        time_sup: NDArray[np.float64],
-        covar: AnyFloat,
-        *,
-        entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
-    ) -> Self:
-        """
-        Estimation of the regression parameters from interval censored lifetime data.
-
-        Parameters
-        ----------
-        time_inf : 1d array
-            Observed lifetime lower bounds.
-        time_sup : 1d array
-            Observed lifetime upper bounds.
-        covar : 1d or 2d array
-            Covariates values. 1d array is valid if the regression has one coefficient.
-            Otherwise it must be an 2d array of shape ``(m, nb_coef)``.
-        entry : 1d array, default is None
-            Left truncations applied to lifetime values.
-        optimizer_options : dict, default is None
-            Extra arguments used by `scipy.minimize`. Default values are:
-                - `method` : `"L-BFGS-B"`
-                - `contraints` : `()`
-                - `tol` : `None`
-                - `callback` : `None`
-                - `options` : `None`
-                - `bounds` : `self.params_bounds`
-                - `x0` : `self.init_params`
-
-        Notes
-        -----
-        Where `time_inf == time_sup`, lifetimes are complete.
-
-        Returns
-        -------
-        Self
-            The current object with the estimated parameters setted inplace.
-        """
-        return super().fit_from_interval_censored_lifetimes(
-            time_inf, time_sup, covar, entry=entry, optimizer_options=optimizer_options
-        )
-
     def freeze(self, covar: AnyFloat) -> FrozenParametricLifetimeModel[AnyFloat]:
         """
         Freeze regression covar.
@@ -823,6 +698,71 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         FrozenParametricModel
         """
         return FrozenParametricLifetimeModel(self, covar)
+
+    @property
+    @override
+    def params_bounds(self) -> Bounds:
+        lb = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, -np.inf),
+                self.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, np.inf),
+                self.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
+
+    @override
+    def get_initial_params(
+        self,
+        time: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+    ) -> NDArray[np.float64]:
+        if model_args is None:
+            raise ValueError
+        covar = model_args[0]
+        self.covar_effect = CovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
+        )  # changes params structure depending on number of covar
+        param0 = np.zeros_like(self.params, dtype=np.float64)
+        param0[-self.baseline.params.size :] = self.baseline.get_initial_params(time)
+        return param0
+
+    @override
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
+        optimizer_options: ScipyMinimizeOptions | None = None,
+    ) -> Self:
+        if model_args is None:
+            raise ValueError("LifetimeRegression expects covar but model_args is None")
+        return super().fit(time, model_args=model_args, event=event, entry=entry, optimizer_options=optimizer_options)
+
+    @override
+    def fit_from_interval_censored_lifetimes(
+        self,
+        time_inf: NDArray[np.float64],
+        time_sup: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        entry: NDArray[np.float64] | None = None,
+        optimizer_options: ScipyMinimizeOptions | None = None,
+    ) -> Self:
+        if model_args is None:
+            raise ValueError("LifetimeRegression expects covar but model_args is None")
+        covar = model_args[0]
+        self.covar_effect = CovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
+        )  # changes params structure depending on number of covar
+        return super().fit_from_interval_censored_lifetimes(
+            time_inf, time_sup, model_args=model_args, entry=entry, optimizer_options=optimizer_options
+        )
 
 
 @final

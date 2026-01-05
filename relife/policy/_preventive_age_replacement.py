@@ -1,3 +1,4 @@
+# pyright: basic
 from __future__ import annotations
 
 import warnings
@@ -19,7 +20,6 @@ from relife.stochastic_process.non_homogeneous_poisson_process import (
 )
 from relife.typing import (
     AnyFloat,
-    AnyLifetimeDistribution,
     AnyParametricLifetimeModel,
     NumpyFloat,
 )
@@ -192,7 +192,8 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
     def ar(self, value: Optional[AnyFloat]) -> None:
         if value is not None:
             self._ar = reshape_1d_arg(value)
-        self._ar = None
+        else:
+            self._ar = None
 
     @property
     def tr1(self) -> Optional[NumpyFloat]:
@@ -329,10 +330,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
             self.ar = np.where(self.tr1 == 0, np.inf, self.ar)
             timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(tf, nb_steps)
             if eeac.ndim == 2:  # more than one asset
-                if self.ar == np.inf:
-                    eeac = np.array(np.nan)
-                else:
-                    eeac[np.where(self.ar == np.inf)[0], :] = np.nan
+                eeac[np.where(self.ar == np.inf)[0], :] = np.nan
             if eeac.ndim == 1 and self.ar == np.inf:
                 eeac.fill(np.nan)
             self.ar = ar
@@ -393,8 +391,8 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         if _sf_x0.ndim == 2 and x0.ndim == 0:
             x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
-        def eq(a: NDArray[np.float64]) -> np.float64:
-            return np.sum(
+        def eq(a: NDArray[np.float64]) -> NDArray[np.float64]:
+            return (
                 discounting.factor(a)
                 / discounting.annuity_factor(a)
                 * (
@@ -403,7 +401,8 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
                 )
             )
 
-        self.ar = newton(eq, x0)  # () or (m, 1)
+        # no idea on how to type eq
+        self.ar = newton(eq, x0)  # () or (m, 1) # pyright:ignore
         return self
 
 
@@ -525,10 +524,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
                 "Some assets has already been replaced for the first cycle (where tr1 is 0). For these assets, consider adjusting ar values to be greater than a0"
             )
         if asymptotic_eeac.ndim == 1:
-            if self.tr1 == 0.0:
-                asymptotic_eeac = np.float64(0.0)
-            elif self.tr1.ndim > 0:
-                asymptotic_eeac[np.where(self.tr1 == 0)] = np.nan
+            asymptotic_eeac[np.where(self.tr1 == 0)] = np.nan
         if asymptotic_eeac.ndim == 0 and self.tr1 == 0:
             asymptotic_eeac = np.array(np.nan)
         if total_sum:
@@ -598,7 +594,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         if _sf_x0.ndim == 2 and x0.ndim == 0:
             x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
-        def eq(a: NDArray[np.float64]) -> np.float64:  # () or (m, 1)
+        def eq(a: NDArray[np.float64]) -> NDArray[np.float64]:  # () or (m, 1)
             f = legendre_quadrature(
                 lambda x: discounting.factor(x) * self.baseline_model.sf(x),
                 0,
@@ -609,18 +605,17 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
                 0,
                 a,
             )
-            return np.sum(
-                (
-                    discounting.factor(a)
-                    * (
-                        (self._cost_structure["cf"] - self._cost_structure["cp"]) * (self.baseline_model.hf(a) * f - g)
-                        - self._cost_structure["cp"]
-                    )
-                    / f**2
+            return (
+                discounting.factor(a)
+                * (
+                    (self._cost_structure["cf"] - self._cost_structure["cp"]) * (self.baseline_model.hf(a) * f - g)
+                    - self._cost_structure["cp"]
                 )
+                / f**2
             )
 
-        self.ar = newton(eq, x0)  # () or (m, 1)
+        # no idea on how to type eq properly
+        self.ar = newton(eq, x0)  # () or (m, 1)  # pyright: ignore
         return self
 
     def generate_failure_data(self, size, tf, t0=0.0, seed=None):

@@ -1,4 +1,4 @@
-import numpy as np
+# pyright: basic
 import pytest
 
 from relife.lifetime_model import Exponential

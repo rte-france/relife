@@ -1,9 +1,14 @@
+from typing import Callable, overload
+
 import numpy as np
+from numpy.typing import NDArray
+
+from relife.typing import AnyFloat, NumpyFloat
 
 __all__ = ["legendre_quadrature", "laguerre_quadrature", "unweighted_laguerre_quadrature", "broadcast_bounds"]
 
 
-def _control_shape(bound):
+def _control_shape(bound: AnyFloat) -> NDArray[np.float64]:
     arr = np.asarray(bound, dtype=np.float64)
     if np.any(arr < 0):
         raise ValueError("Bound values of the integral can't be lower than 0")
@@ -12,7 +17,13 @@ def _control_shape(bound):
     return arr
 
 
-def broadcast_bounds(a, b=None):
+@overload
+def broadcast_bounds(a: AnyFloat) -> NDArray[np.float64]: ...
+@overload
+def broadcast_bounds(a: AnyFloat, b: AnyFloat) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
+def broadcast_bounds(
+    a: AnyFloat, b: AnyFloat | None = None
+) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
     a = _control_shape(a)
     if b is not None:
         b = _control_shape(b)
@@ -24,7 +35,9 @@ def broadcast_bounds(a, b=None):
     return a
 
 
-def legendre_quadrature(func, a, b, deg=10):
+def legendre_quadrature(
+    func: Callable[[NDArray[np.float64]], NDArray[np.float64]], a: AnyFloat, b: AnyFloat, deg: int = 10
+) -> NumpyFloat:
     r"""Numerical integration of :math:`f(x)` over the interval :math:`[a,b]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -35,8 +48,9 @@ def legendre_quadrature(func, a, b, deg=10):
     """
     arr_a, arr_b = broadcast_bounds(a, b)  # () or (n,) or (m, n)
     quad = np.polynomial.legendre.leggauss(deg)  # (deg,)
-    x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
-    w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
+    x, w = quad
+    x = np.expand_dims(x, axis=tuple(range(1, arr_a.ndim + 1)))  # (deg,), (deg, 1) or (deg, 1, 1)
+    w = np.expand_dims(w, axis=tuple(range(1, arr_a.ndim + 1)))  # (deg,), (deg, 1) or (deg, 1, 1)
 
     if np.any(arr_b == np.inf):
         raise ValueError("Bound values of Legendre quadrature must be finite")
@@ -49,7 +63,7 @@ def legendre_quadrature(func, a, b, deg=10):
     v = p * w  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(u)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     try:
-        np.broadcast_shapes(fvalues.shape[-len(u.shape) :], u.shape)
+        _ = np.broadcast_shapes(fvalues.shape[-len(u.shape) :], u.shape)
     except ValueError:
         raise ValueError(
             f"""
@@ -61,7 +75,9 @@ def legendre_quadrature(func, a, b, deg=10):
     return np.sum(v * fvalues, axis=-v.ndim)  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
-def laguerre_quadrature(func, a, deg=10):
+def laguerre_quadrature(
+    func: Callable[[NDArray[np.float64]], NDArray[np.float64]], a: AnyFloat, deg: int = 10
+) -> NumpyFloat:
     r"""Numerical integration of :math:`f(x) * exp(-x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -70,13 +86,14 @@ def laguerre_quadrature(func, a, deg=10):
     """
     arr_a = broadcast_bounds(a)  # () or (n,) or (m, n)
     quad = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
-    w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
+    x, w = quad
+    x = np.expand_dims(x, axis=tuple(range(1, arr_a.ndim + 1)))  # (deg,), (deg, 1) or (deg, 1, 1)
+    w = np.expand_dims(w, axis=tuple(range(1, arr_a.ndim + 1)))  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     try:
-        np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
+        _ = np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
     except ValueError:
         # func est une fonction réel univariée et pas multivariée
         raise ValueError(
@@ -92,7 +109,9 @@ def laguerre_quadrature(func, a, deg=10):
     )  # (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)
 
 
-def unweighted_laguerre_quadrature(func, a=0.0, deg=10):
+def unweighted_laguerre_quadrature(
+    func: Callable[[NDArray[np.float64]], NDArray[np.float64]], a: AnyFloat, deg: int = 10
+):
     r"""Numerical integration of :math:`f(x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -100,15 +119,16 @@ def unweighted_laguerre_quadrature(func, a=0.0, deg=10):
     a can be zero with ndim <= 2.
     """
 
-    quad = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     arr_a = broadcast_bounds(a)  # () or (n,) or (m, n)
-    x = quad[0].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
-    w = quad[1].reshape((-1,) + (1,) * arr_a.ndim)  # (deg,), (deg, 1) or (deg, 1, 1)
+    quad = np.polynomial.laguerre.laggauss(deg)  # (deg,)
+    x, w = quad
+    x = np.expand_dims(x, axis=tuple(range(1, arr_a.ndim + 1)))  # (deg,), (deg, 1) or (deg, 1, 1)
+    w = np.expand_dims(w, axis=tuple(range(1, arr_a.ndim + 1)))  # (deg,), (deg, 1) or (deg, 1, 1)
 
     shifted_x = x + arr_a  # (deg,) or (deg, n) or (deg, m, n)
     fvalues = func(shifted_x)  # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
     try:
-        np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
+        _ = np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
     except ValueError:
         raise ValueError(
             f"""

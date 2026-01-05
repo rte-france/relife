@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Generic, Literal, TypeVar, Unpack
+from typing import TYPE_CHECKING, Literal, Unpack
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,17 +11,16 @@ from scipy import stats
 from scipy.optimize import approx_fprime
 from typing_extensions import override
 
+from relife.base import ParametricModel
+
 if TYPE_CHECKING:
-    from relife.base import ParametricModel
     from relife.typing import ScipyMinimizeOptions
 
-M = TypeVar("M", bound=ParametricModel)
 
+class Likelihood(ABC):
+    model: ParametricModel
 
-class Likelihood(ABC, Generic[M]):
-    model: M
-
-    def __init__(self, model: M) -> None:
+    def __init__(self, model: ParametricModel) -> None:
         # deep copy model to have independent variation of params
         self.model = copy.deepcopy(model)
 
@@ -66,7 +65,7 @@ class Likelihood(ABC, Generic[M]):
         """
 
 
-class DifferentiableLikelihood(Likelihood[M], ABC):
+class DifferentiableLikelihood(Likelihood, ABC):
     @abstractmethod
     def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
         """
@@ -87,7 +86,7 @@ class DifferentiableLikelihood(Likelihood[M], ABC):
 
 
 def _hessian_scheme(
-    likelihood: DifferentiableLikelihood[M],
+    likelihood: DifferentiableLikelihood,
     params: NDArray[np.float64],
     method: Literal["2point", "cs"] = "cs",
     eps: float = 1e-6,
@@ -116,11 +115,12 @@ def _hessian_scheme(
 
 
 def approx_hessian(
-    likelihood: DifferentiableLikelihood[M],
+    likelihood: DifferentiableLikelihood,
     params: NDArray[np.float64],
     eps: float = 1e-6,
 ) -> NDArray[np.float64]:
-    from relife.lifetime_model import Gamma, LifetimeRegression
+    from relife.lifetime_model import Gamma
+    from relife.lifetime_model._regression import LifetimeRegression
 
     if isinstance(likelihood.model, LifetimeRegression):
         if isinstance(likelihood.model.baseline, Gamma):

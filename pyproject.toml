@@ -72,11 +72,13 @@ profile = 'black'
 
 # gradual typing : strict mode is activated for modules
 [tool.pyright]
-reportAny = false
+reportAny = false # needed for basedpyright
 reportExplicitAny = false
 strict = [
     "relife/lifetime_model/**",
 	"relife/likelihood/**",
+	"relife/base.py",
+	"relife/utils/quadrature.py",
 ]
 
 [[tool.mypy.overrides]]

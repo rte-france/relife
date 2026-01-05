@@ -5,7 +5,7 @@ from pytest import approx
 from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model import AcceleratedFailureTime, ProportionalHazard, Weibull
-from relife.lifetime_model.regression import _CovarEffect
+from relife.lifetime_model._regression import CovarEffect
 
 
 def expected_shape(**kwargs):
@@ -43,7 +43,7 @@ def test_covar_effect():
     => jac_g : (nb_coef, m, 1)
     """
 
-    covar_effect = _CovarEffect(coefficients=(2.4, 5.5))
+    covar_effect = CovarEffect(coefficients=(2.4, 5.5))
     z1 = np.array([1, 2, 3])
     z2 = np.array([0.8, 0.7, 0.5])
     assert covar_effect.g(np.column_stack((z1, z2))) == approx(np.exp(2.4 * z1 + 5.5 * z2).reshape(-1, 1))
@@ -189,13 +189,13 @@ def test_aft_pph_weibull_eq(insulator_string_data):
     )
     weibull_aft = AcceleratedFailureTime(Weibull()).fit(
         insulator_string_data["time"],
-        covar_data,
+        model_args=covar_data,
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
     )
     weibull_pph = ProportionalHazard(Weibull()).fit(
         insulator_string_data["time"],
-        covar_data,
+        model_args=covar_data,
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
     )

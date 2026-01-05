@@ -1,15 +1,17 @@
+# pyright: basic
 from __future__ import annotations
 
-from typing import Any, Generic, Optional, Self, Sequence, TypeVarTuple
+from typing import Any, Generic, Self, Sequence, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from relife.base import FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
-from relife.lifetime_model import FittableParametricLifetimeModel
-from relife.likelihood import DefaultLifetimeLikelihood, FittingResults
-from relife.typing import AnyFloat, NumpyFloat
+from relife.lifetime_model._base import FittableParametricLifetimeModel
+from relife.likelihood import DefaultLifetimeLikelihood
+from relife.likelihood._base import FittingResults
+from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
 
 Ts = TypeVarTuple("Ts")
 
@@ -22,7 +24,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
     """
 
     lifetime_model: FittableParametricLifetimeModel[*Ts]
-    fitting_results: Optional[FittingResults]
+    fitting_results: FittingResults | None
 
     def __init__(self, lifetime_model: FittableParametricLifetimeModel[*Ts]):
         super().__init__()
@@ -88,8 +90,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         tf: float,
         *args: *Ts,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         """Renewal data sampling.
 
@@ -127,8 +128,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         tf: float,
         *args: *Ts,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         """Generate failure data
 
@@ -200,11 +200,11 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         self,
         ages_at_events: NDArray[np.float64],
         events_assets_ids: Sequence[str] | NDArray[np.int64],
-        first_ages: Optional[NDArray[np.float64]] = None,
-        last_ages: Optional[NDArray[np.float64]] = None,
-        lifetime_model_args: Optional[tuple[*Ts]] = None,
-        assets_ids: Optional[Sequence[str] | NDArray[np.int64]] = None,
-        **options: Any,
+        first_ages: NDArray[np.float64] | None = None,
+        last_ages: NDArray[np.float64] | None = None,
+        lifetime_model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        assets_ids: Sequence[str] | NDArray[np.int64] | None = None,
+        optimizer_options: ScipyMinimizeOptions | None = None,
     ) -> Self:
         """
         Estimation of the process parameters from recurrent failure data.
@@ -271,7 +271,9 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         # noinspection PyProtectedMember
         self.lifetime_model._get_initial_params(time, *args, event=event, entry=entry)
         likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event, entry=entry)
-        fitting_results = likelihood.maximum_likelihood_estimation(**options)
+        if optimizer_options is None:
+            optimizer_options = {}
+        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
@@ -330,8 +332,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         tf: float,
         *,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         """Renewal data sampling.
 
@@ -349,7 +350,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
             Random seed, by default None.
 
         """
-        return self._unfrozen_model.sample(size, tf, *self._args, t0=t0, nb_assets=nb_assets, seed=seed)
+        return self._unfrozen_model.sample(size, tf, *self._args, t0=t0, seed=seed)
 
     def generate_failure_data(
         self,
@@ -357,8 +358,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         tf: float,
         *,
         t0: float = 0.0,
-        nb_assets: Optional[int] = None,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         """Generate failure data
 
@@ -379,4 +379,4 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         -------
         A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids
         """
-        return self._unfrozen_model.generate_failure_data(size, tf, *self._args, t0=t0, nb_assets=nb_assets, seed=seed)
+        return self._unfrozen_model.generate_failure_data(size, tf, *self._args, t0=t0, seed=seed)

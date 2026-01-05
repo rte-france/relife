@@ -1,3 +1,5 @@
+"""Base classes for all parametric models."""
+
 from __future__ import annotations
 
 import inspect
@@ -6,9 +8,7 @@ from typing import (
     Any,
     Generic,
     Iterator,
-    Optional,
     Self,
-    TypeAlias,
     TypeVar,
     TypeVarTuple,
     final,
@@ -16,8 +16,7 @@ from typing import (
 
 import numpy as np
 from numpy.typing import NDArray
-
-from .typing import AnyFloat
+from typing_extensions import override
 
 __all__ = ["ParametricModel", "FrozenParametricModel"]
 
@@ -30,13 +29,13 @@ class _Parameters:
     Every ``ParametricModel`` are composed of a ``_Parameters`` instance.
     """
 
-    parent: Optional[Self]
+    parent: Self | None
     _leaves: dict[str, _Parameters]
     _mapping: dict[str, float]
     _all_values: tuple[float, ...]
     _all_names: tuple[str, ...]
 
-    def __init__(self, **kwargs: Optional[float]) -> None:
+    def __init__(self, **kwargs: float | None) -> None:
         self.parent = None
         self._leaves = {}
         self._mapping = {}
@@ -67,7 +66,7 @@ class _Parameters:
         self._leaves[leaf_name] = leaf
         self.update_tree()  # update _names and _values
 
-    def set_all_values(self, values: tuple[Optional[float], ...]) -> None:
+    def set_all_values(self, values: tuple[float | None, ...]) -> None:
         """set values of all tree"""
         if len(values) != self.size:
             raise ValueError(f"Expected {self.size} values but got {len(values)}")
@@ -115,7 +114,7 @@ class ParametricModel:
     _params: _Parameters
     _baseline_models: dict[str, ParametricModel]
 
-    def __init__(self, **kwparams: Optional[float]) -> None:
+    def __init__(self, **kwparams: float | None) -> None:
         self._params = _Parameters(**kwparams)
         self._baseline_models = {}
 
@@ -170,13 +169,14 @@ class ParametricModel:
         """
         return self._params.size
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         if name in self.__dict__:
             return self.__dict__[name]
         if name in super().__getattribute__("_baseline_models"):
             return super().__getattribute__("_baseline_models").get(name)
         raise AttributeError(f"{type(self).__name__} has no attribute named {name}")
 
+    @override
     def __setattr__(self, name: str, value: Any):
         # automatically add params of new baseline model
         if isinstance(value, ParametricModel):
@@ -221,6 +221,7 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     def unfreeze(self) -> _ParametricModel_T:
         return self._unfrozen_model
 
+    @override
     def __getattr__(self, key: str) -> Any:
         frozen_type = self._unfrozen_model.__class__.__name__
         if key == "fit":

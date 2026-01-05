@@ -1,5 +1,7 @@
+# pyright: basic
+
 import copy
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -57,12 +59,12 @@ class RenewalProcess(ParametricModel):
     """
 
     lifetime_model: AnyParametricLifetimeModel[()]
-    first_lifetime_model: Optional[AnyParametricLifetimeModel[()]]
+    first_lifetime_model: AnyParametricLifetimeModel[()] | None
 
     def __init__(
         self,
         lifetime_model: AnyParametricLifetimeModel[()],
-        first_lifetime_model: Optional[AnyParametricLifetimeModel[()]] = None,
+        first_lifetime_model: AnyParametricLifetimeModel[()] | None = None,
     ) -> None:
         super().__init__()
         self.lifetime_model = lifetime_model
@@ -159,7 +161,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Optional[Seed] = None) -> RenewalProcessSample:
+    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> RenewalProcessSample:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -186,9 +188,7 @@ class RenewalProcess(ParametricModel):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
         return RenewalProcessSample(t0, tf, struct_array)
 
-    def generate_failure_data(
-        self, size: int, tf: float, t0: float = 0.0, seed: Optional[Seed] = None
-    ) -> LifetimeFitArgs:
+    def generate_failure_data(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> LifetimeFitArgs:
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
@@ -275,7 +275,7 @@ class RenewalRewardProcess(RenewalProcess):
     params_names
     """
     lifetime_model: AnyParametricLifetimeModel[()]
-    first_lifetime_model: Optional[AnyParametricLifetimeModel[()]]
+    first_lifetime_model: AnyParametricLifetimeModel[()] | None
     reward: Reward
     first_reward: Reward
     discounting: ExponentialDiscounting
@@ -285,8 +285,8 @@ class RenewalRewardProcess(RenewalProcess):
         lifetime_model: AnyParametricLifetimeModel[()],
         reward: Reward,
         discounting_rate: float = 0.0,
-        first_lifetime_model: Optional[AnyParametricLifetimeModel[()]] = None,
-        first_reward: Optional[Reward] = None,
+        first_lifetime_model: AnyParametricLifetimeModel[()] | None = None,
+        first_reward: Reward | None = None,
     ) -> None:
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
@@ -495,7 +495,7 @@ class RenewalRewardProcess(RenewalProcess):
         return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m,)
 
     @override
-    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Optional[Seed] = None) -> RenewalRewardProcessSample:
+    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> RenewalRewardProcessSample:
         from ._sample import RenewalProcessIterable
 
         iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)

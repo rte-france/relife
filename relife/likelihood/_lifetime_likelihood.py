@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from copy import copy
 from typing import TYPE_CHECKING, Any, Unpack, final
 
@@ -6,21 +8,20 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds, minimize
 from typing_extensions import override
 
+from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.utils import reshape_1d_arg
 
 from ._base import DifferentiableLikelihood, FittingResults, approx_hessian
 
 if TYPE_CHECKING:
-    from relife.lifetime_model._base import FittableParametricLifetimeModel
     from relife.typing import ScipyMinimizeOptions
 
 __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
 
 
 @final
-class DefaultLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLifetimeModel[*tuple[NDArray[Any], ...]]]):
+class DefaultLifetimeLikelihood(DifferentiableLikelihood):
 
-    model: FittableParametricLifetimeModel[*tuple[NDArray[Any], ...]]
     _nb_observations: int
     _time: NDArray[np.float64]
     _complete_time: NDArray[np.float64]
@@ -31,9 +32,9 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLifet
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel[*tuple[NDArray[Any], ...]],
+        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
         time: NDArray[np.float64],
-        *args: NDArray[Any],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
     ):
@@ -41,7 +42,12 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLifet
         time = reshape_1d_arg(time)
         event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
         entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time, dtype=np.float64)
-        args = tuple((reshape_1d_arg(arg) for arg in args))
+        if isinstance(model_args, tuple):
+            args = tuple((reshape_1d_arg(arg) for arg in model_args))
+        elif isinstance(model_args, np.ndarray):
+            args = (reshape_1d_arg(model_args),)
+        elif model_args is None:
+            args = ()
         sizes = [len(x) for x in (time, event, entry, *args)]
         if len(set(sizes)) != 1:
             raise ValueError(
@@ -130,10 +136,7 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLifet
 
         Parameters
         ----------
-        params : ndarray
-            Parameters values on which the jacobian is evaluated
-
-        Returns
+        params : ndarray Parameters values on which the jacobian is evaluated Returns
         -------
         ndarray
             Jacobian of the negative log likelihood value
@@ -144,11 +147,7 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLifet
             self._jac_event_contrib(),
             self._jac_entry_contrib(),
         )
-        jac = np.zeros(self.params.size)
-        for j in jac_contributions:
-            if j is not None:
-                jac += j
-        return jac  # (p,)
+        return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
     @override
     def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
@@ -181,8 +180,7 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLifet
 
 
 @final
-class IntervalLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLifetimeModel[*tuple[NDArray[Any], ...]]]):
-    model: FittableParametricLifetimeModel[*tuple[NDArray[Any], ...]]
+class IntervalLifetimeLikelihood(DifferentiableLikelihood):
     _nb_observations: int
     _complete_time: NDArray[np.float64]
     _censored_time_lower_bound: NDArray[np.float64]
@@ -194,17 +192,24 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLife
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel[*tuple[NDArray[Any], ...]],
+        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
         time_inf: NDArray[np.float64],
         time_sup: NDArray[np.float64],
-        *args: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
+        params0: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
         entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time_inf, dtype=np.float64)
-        args = tuple((reshape_1d_arg(arg) for arg in args))
+        if isinstance(model_args, tuple):
+            args = tuple((reshape_1d_arg(arg) for arg in model_args))
+        elif isinstance(model_args, np.ndarray):
+            args = (reshape_1d_arg(model_args),)
+        elif model_args is None:
+            args = ()
+
         sizes = [len(x) for x in (time_inf, time_sup, entry, *args)]
         if len(set(sizes)) != 1:
             raise ValueError(
@@ -327,11 +332,7 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood[FittableParametricLife
             self._jac_complete_time_contrib(),
             self._jac_entry_contrib(),
         )
-        jac = np.zeros(self.params.size)
-        for j in jac_contributions:
-            if j is not None:
-                jac += j
-        return jac  # (p,)
+        return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
     @override
     def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:

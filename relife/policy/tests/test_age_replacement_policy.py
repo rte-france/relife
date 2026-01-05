@@ -1,3 +1,4 @@
+# pyright:basic
 import numpy as np
 import pytest
 

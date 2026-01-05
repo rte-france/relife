@@ -1,8 +1,11 @@
 """Base classes for all parametric lifetime models."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Generic,
     Literal,
@@ -16,9 +19,12 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds, newton
 
 from relife.base import ParametricModel
-from relife.likelihood import (
-    DefaultLifetimeLikelihood,
-    IntervalLifetimeLikelihood,
+from relife.typing import (
+    AnyFloat,
+    NumpyBool,
+    NumpyFloat,
+    ScipyMinimizeOptions,
+    Seed,
 )
 from relife.utils.quadrature import legendre_quadrature, unweighted_laguerre_quadrature
 
@@ -26,14 +32,6 @@ from ._plot import PlotParametricLifetimeModel
 
 if TYPE_CHECKING:
     from relife.likelihood._base import FittingResults
-    from relife.typing import (
-        AnyFloat,
-        NumpyBool,
-        NumpyFloat,
-        ScipyMinimizeOptions,
-        Seed,
-    )
-
 
 Ts = TypeVarTuple("Ts")
 
@@ -127,22 +125,24 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def isf(self, probability: AnyFloat, *args: *Ts) -> NumpyFloat:
 
-        def func(x: NDArray[np.float64]) -> np.float64:
-            return np.sum(self.sf(x, *args) - probability)
+        def func(x: NDArray[np.float64]) -> NumpyFloat:
+            return self.sf(x, *args) - probability
 
-        return newton(
-            func,
+        # no idea on how to type func
+        return newton(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
+            func,  # pyright: ignore[reportArgumentType]
             x0=np.zeros_like(probability),
             args=args,
         )
 
     def ichf(self, cumulative_hazard_rate: AnyFloat, *args: *Ts) -> NumpyFloat:
 
-        def func(x: NDArray[np.float64]) -> np.float64:
-            return np.sum(self.chf(x, *args) - cumulative_hazard_rate)
+        def func(x: NDArray[np.float64]) -> NumpyFloat:
+            return self.chf(x, *args) - cumulative_hazard_rate
 
-        return newton(
-            func,
+        # no idea on how to type func
+        return newton(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
+            func,  # pyright: ignore[reportArgumentType]
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
@@ -236,7 +236,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             return time, event, entry
 
     @property
-    def plot(self) -> PlotParametricLifetimeModel:
+    def plot(  # pyright: ignore[reportUnknownParameterType]
+        self,
+    ) -> PlotParametricLifetimeModel:  # pyright: ignore[reportMissingTypeArgument]
         """Provides access to plotting functionnalities"""
         return PlotParametricLifetimeModel(self)
 
@@ -337,22 +339,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     def __init__(self, **kwparams: float | None):
         super().__init__(**kwparams)
         self.fitting_results = None
-
-    @abstractmethod
-    def _get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        *args: *Ts,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-    ) -> NDArray[np.float64]: ...
-
-    @abstractmethod
-    def _get_params_bounds(self) -> Bounds:
-        return Bounds(
-            np.full(self.nb_params, np.finfo(float).resolution),
-            np.full(self.nb_params, np.inf),
-        )
 
     @overload
     def jac_hf(
@@ -470,39 +456,122 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     @abstractmethod
     def dhf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat: ...
 
+    @abstractmethod
+    def get_initial_params(
+        self,
+        time: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+    ) -> NDArray[np.float64]:
+        """Get the inital params values used in 'fit'.
+        To change this value, pass 'x0' in 'optimizer_options' of 'fit'.
+        """
+
+    @property
+    @abstractmethod
+    def params_bounds(self) -> Bounds:
+        """Parameters bounds"""
+
+    @abstractmethod
     def fit(
         self,
         time: NDArray[np.float64],
-        *args: *Ts,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         optimizer_options: ScipyMinimizeOptions | None = None,
     ) -> Self:
-        self.params = self._get_initial_params(time, *args, event=event, entry=entry)
-        likelihood = DefaultLifetimeLikelihood(self, time, *args, event=event, entry=entry)
+        """
+        Estimation of the distribution parameters from lifetime data.
+
+        Parameters
+        ----------
+        time : 1d array
+            Observed lifetime values.
+        model_args : any ndarray or tuple of ndarray, default is None
+            Any additional arguments required by the model.
+        event : 1d array of bool, default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : 1d array, default is None
+            Left truncations applied to lifetime values.
+        optimizer_options : dict, default is None
+            Extra arguments used by `scipy.minimize`. Default values are:
+                - `method` : `"L-BFGS-B"`
+                - `contraints` : `()`
+                - `tol` : `None`
+                - `callback` : `None`
+                - `options` : `None`
+                - `bounds` : `self.params_bounds`
+                - `x0` : `self.init_params`
+
+        Returns
+        -------
+        Self
+            The current object with the estimated parameters setted inplace.
+        """
+        from relife.likelihood import DefaultLifetimeLikelihood
+
+        self.params = self.get_initial_params(  # pyright: ignore[reportUnannotatedClassAttribute]
+            time, model_args=model_args
+        )
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self._get_params_bounds()
+            optimizer_options["bounds"] = self.params_bounds
+        likelihood = DefaultLifetimeLikelihood(self, time, model_args=model_args, event=event, entry=entry)
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
 
+    @abstractmethod
     def fit_from_interval_censored_lifetimes(
         self,
         time_inf: NDArray[np.float64],
         time_sup: NDArray[np.float64],
-        *args: *Ts,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
         optimizer_options: ScipyMinimizeOptions | None = None,
     ) -> Self:
-        self.params = self._get_initial_params(time_sup, *args, entry=entry)
-        likelihood = IntervalLifetimeLikelihood(self, time_inf, time_sup, *args, entry=entry)
+        """
+        Estimation of the distribution parameters from interval censored lifetime data.
+
+        Parameters
+        ----------
+        time_inf : 1d array
+            Observed lifetime lower bounds.
+        time_sup : 1d array
+            Observed lifetime upper bounds.
+        model_args : any ndarray or tuple of ndarray, default is None
+            Any additional arguments required by the model.
+        entry : 1d array, default is None
+            Left truncations applied to lifetime values.
+        optimizer_options : dict, default is None
+            Extra arguments used by `scipy.minimize`. Default values are:
+                - `method` : `"L-BFGS-B"`
+                - `contraints` : `()`
+                - `tol` : `None`
+                - `callback` : `None`
+                - `options` : `None`
+                - `bounds` : `self.params_bounds`
+                - `x0` : `self.init_params`
+
+        Notes
+        -----
+        Where `time_inf == time_sup`, lifetimes are complete.
+
+        Returns
+        -------
+        Self
+            The current object with the estimated parameters setted inplace.
+        """
+        from relife.likelihood import IntervalLifetimeLikelihood
+
+        self.params = self.get_initial_params(time_sup, model_args=model_args)
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self._get_params_bounds()
+            optimizer_options["bounds"] = self.params_bounds
+        likelihood = IntervalLifetimeLikelihood(self, time_inf, time_sup, entry=entry)
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results

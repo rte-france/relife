@@ -445,8 +445,8 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: NumpyFloat,
-        b: NumpyFloat,
+        a: AnyFloat,
+        b: AnyFloat,
         ar: AnyFloat,
         *args: *Ts,
         deg: int = 10,
@@ -908,11 +908,12 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             return tuple(output)  # return tuple, not list
         return output[0]
 
+    @override
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: NumpyFloat,
-        b: NumpyFloat,
+        a: AnyFloat,
+        b: AnyFloat,
         a0: AnyFloat,
         *args: *Ts,
         deg: int = 10,

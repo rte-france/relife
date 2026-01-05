@@ -1,12 +1,9 @@
 """Additional types used in the codebase for type checking."""
 
 from typing import (
-    TYPE_CHECKING,
-    Any,
     Callable,
     Literal,
     Protocol,
-    TypeAlias,
     TypeVarTuple,
     overload,
 )
@@ -14,14 +11,10 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
-if TYPE_CHECKING:
-    from relife.lifetime_model._distribution import LifetimeDistribution
-    from relife.lifetime_model._frozen import FrozenParametricLifetimeModel
-
 from ._random import Seed
 from ._scalars import AnyFloat, NumpyBool, NumpyFloat
 
-__all__ = ["AnyParametricLifetimeModel", "AnyLifetimeDistribution"]
+__all__ = ["AnyParametricLifetimeModel"]
 
 Ts = TypeVarTuple("Ts")
 
@@ -29,9 +22,9 @@ Ts = TypeVarTuple("Ts")
 class AnyParametricLifetimeModel(Protocol[*Ts]):
     """
     Structural type for any parametric lifetime model.
-    It is particularly needed where an argument can expect both
-    ParametricLifetimeModel[*Ts] and FrozenParametricLifetimeModel[*Ts]
-    whereas both interface are different (the first expects args but the second
+    It is particularly needed where an parameter can expect
+    ParametricLifetimeModel[*Ts] or FrozenParametricLifetimeModel[*Ts]
+    Their interfaces are different (the first expects args but the second
     doesn't). See conditional_model.py.
     """
 
@@ -125,6 +118,3 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     def mean(self, *args: *Ts) -> NumpyFloat: ...
     def var(self, *args: *Ts) -> NumpyFloat: ...
     def mrl(self, time: AnyFloat, *args: *Ts) -> NumpyFloat: ...
-
-
-AnyLifetimeDistribution: TypeAlias = FrozenParametricLifetimeModel[*tuple[Any, ...]] | LifetimeDistribution
