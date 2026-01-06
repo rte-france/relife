@@ -300,7 +300,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         entry=None,
         optimizer_options=None,
     ):
-        self.params = self._get_initial_params(time, *args, event=event, entry=entry)
         likelihood = DefaultLifetimeLikelihood(
             self, time, *args, event=event, entry=entry
         )
@@ -314,7 +313,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel, ABC):
         entry=None,
         optimizer_options=None,
     ):
-        self.params = self._get_initial_params(time_sup, *args, entry=entry)  # TODO
         likelihood = IntervalLifetimeLikelihood(
             self, time_inf, time_sup, *args, entry=entry
         )

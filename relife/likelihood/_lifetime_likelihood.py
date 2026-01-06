@@ -19,6 +19,7 @@ def _args_reshape(*args):
 class DefaultLifetimeLikelihood(Likelihood):
     def __init__(self, model, time, *args, event = None, entry = None):
         super().__init__(model)
+        self.params = self.model._get_initial_params(time, *args, event=event, entry=entry)
 
         time = reshape_1d_arg(time)
         event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
@@ -144,6 +145,7 @@ class IntervalLifetimeLikelihood(Likelihood):
         entry = None,
     ):
         super().__init__(model)
+        self.params = self.model._get_initial_params(time_sup, *args, entry=entry)
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
         entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time_inf, dtype=np.float64)
