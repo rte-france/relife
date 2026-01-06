@@ -269,14 +269,10 @@ class LifetimeDistribution(FittableParametricLifetimeModel, ABC):
     def _get_initial_params(self, time, event=None, entry=None):
         param0 = np.ones(self.nb_params, dtype=np.float64)
         param0[-1] = 1 / np.median(time)
-        self.params = param0
         return param0
 
     def _get_params_bounds(self):
-        return Bounds(
-            np.full(self.nb_params, np.finfo(float).resolution),
-            np.full(self.nb_params, np.inf),
-        )
+        return super()._get_params_bounds()
 
     def fit(self, time, event=None, entry=None, optimizer_options=None):
         """

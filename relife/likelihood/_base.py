@@ -6,53 +6,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 from scipy import stats
-from scipy.optimize import approx_fprime
-
-class Likelihood(ABC):
-
-    def __init__(self, model):
-        # deep copy model to have independent variation of params
-        self.model = copy.deepcopy(model)
-
-    @property
-    def params(self):
-        return self.model.params
-
-    @params.setter
-    def params(self, value):
-        self.model.params = value
-
-    @abstractmethod
-    def negative_log(self, params):
-        """
-        Negative log likelihood.
-
-        Parameters
-        ----------
-        params : ndarray
-            Parameters values on which likelihood is evaluated
-
-        Returns
-        -------
-        float
-            Negative log likelihood value
-        """
-
-    @abstractmethod
-    def maximum_likelihood_estimation(self, **optimizer_options):
-        """
-        Finds the parameter values that maximize the likelihood.
-    
-        Parameters
-        ----------
-        **optimizer_options
-            Extra arguments used by `scipy.minimize`
-    
-        Returns
-        -------
-        FittingResults
-            The fitting results.
-        """
+from scipy.optimize import approx_fprime, minimize
 
 
 def _hessian_cs(likelihood, params, eps):
@@ -101,7 +55,7 @@ def approx_hessian(likelihood, params, eps= 1e-6):
 class FittingResults:
     """Fitting results of the parametric_model core."""
 
-    nb_obversations: int  #: Number of observations (samples)
+    nb_observations: int  #: Number of observations (samples)
     optimal_params: NDArray[np.float64] = field(
         repr=False
     )  #: Optimal parameters values
@@ -129,10 +83,10 @@ class FittingResults:
         self.AIC = float(2 * nb_params + 2 * self.neg_log_likelihood)
         self.AICc = float(
             self.AIC
-            + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1)
+            + 2 * nb_params * (nb_params + 1) / (self.nb_observations - nb_params - 1)
         )
         self.BIC = float(
-            np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
+            np.log(self.nb_observations) * nb_params + 2 * self.neg_log_likelihood
         )
 
         self.se = None
@@ -140,7 +94,7 @@ class FittingResults:
             self.se = np.sqrt(np.diag(self.covariance_matrix))
             self.IC = self.optimal_params.reshape(-1, 1) + stats.norm.ppf(
                 (0.05, 0.95)
-            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_obversations)  # (p, 2)
+            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_observations)  # (p, 2)
 
     def se_estimation_function(
         self, jac_f: NDArray[np.float64]
@@ -202,3 +156,103 @@ class FittingResults:
                 value_str = f"{value:.6g}" if isinstance(value, float) else str(value)
             lines.append(f"{name:<{max_name_length}} : {value_str}")
         return "\n".join(lines)
+
+
+class Likelihood(ABC):
+
+    def __init__(self, model):
+        #  deep copy model to have independent variation of params
+        self.model = copy.deepcopy(model)
+
+    @property
+    def params(self):
+        return self.model.params
+
+    @params.setter
+    def params(self, value):
+        self.model.params = value
+
+    @property
+    @abstractmethod
+    def nb_observations(self):
+        """
+        Define the number of observations as attribute
+        """
+
+    @abstractmethod
+    def negative_log(self, params):
+        """
+        Negative log likelihood.
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which likelihood is evaluated
+
+        Returns
+        -------
+        float
+            Negative log likelihood value
+        """
+
+    @abstractmethod
+    def jac_negative_log(self, params):
+        """
+        Jacobian of the negative log likelihood.
+
+        The jacobian (here gradient) is computed with respect to parameters
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which the jacobian is evaluated
+
+        Returns
+        -------
+        ndarray
+            Jacobian of the negative log likelihood value
+        """
+
+    def maximum_likelihood_estimation(self, **optimizer_options) -> FittingResults:
+        """
+        Finds the parameter values that maximize the likelihood.
+
+        Parameters
+        ----------
+        **optimizer_options
+            Extra arguments used by `scipy.minimize`
+
+        Returns
+        -------
+        FittingResults
+            The fitting results.
+        """
+        minimize_kwargs = {
+            "method": optimizer_options.get("method", "L-BFGS-B"),
+            "constraints": optimizer_options.get("constraints", ()),
+            "bounds": optimizer_options.get("bounds", None),
+            "x0": optimizer_options.get("x0", self.params),
+        }
+        optimizer = minimize(
+            self.negative_log,
+            minimize_kwargs.pop("x0"),
+            jac=(
+                self.jac_negative_log
+                if minimize_kwargs["method"]
+                not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
+                else None
+            ),
+            **minimize_kwargs,
+        )
+        optimal_params = np.copy(optimizer.x)
+        neg_log_likelihood = np.copy(
+            optimizer.fun
+        )  # neg_log_likelihood value at optimal
+        hessian = approx_hessian(self, optimal_params)
+        covariance_matrix = np.linalg.pinv(hessian)
+        return FittingResults(
+            self.nb_observations,
+            optimal_params,
+            neg_log_likelihood,
+            covariance_matrix=covariance_matrix,
+        )
