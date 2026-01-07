@@ -5,6 +5,15 @@ from relife.lifetime_model.regression import _CovarEffect
 from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
 
 
+SCIPY_MINIMIZE_ORDER_2_ALGO = [
+    "Newton-CG",
+    "dogleg",
+    "trust-ncg",
+    "trust-krylov",
+    "trust-exact",
+    "trust-constr"
+]
+
 class CoxBaseline:
     """
     Class for Cox non-parametric baseline
@@ -105,6 +114,10 @@ class Cox:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
             optimizer_options["bounds"] = self._get_params_bounds()
+        if "method" not in optimizer_options:
+            optimizer_options["method"] = "trust-exact"
+        if optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO:
+            optimizer_options["hess"] = likelihood.hess_negative_log
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results

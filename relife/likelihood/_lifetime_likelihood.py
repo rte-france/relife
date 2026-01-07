@@ -282,7 +282,7 @@ class IntervalLifetimeLikelihood(Likelihood):
 
 
 class PartialLifetimeLikelihood(Likelihood):
-    """TODO"""
+    """TODO: Comment. Should I keep it here ?"""
 
     def __init__(self, model, time, covar, event = None, entry = None):
         super().__init__(model)
@@ -298,7 +298,7 @@ class PartialLifetimeLikelihood(Likelihood):
             )
 
         (
-            _,    # uncensored sorted untied times
+            ordered_event_time,    # uncensored sorted untied times
             ordered_event_index,
             self._event_count,
         ) = np.unique(
@@ -306,8 +306,26 @@ class PartialLifetimeLikelihood(Likelihood):
             return_index=True,
             return_counts=True,
         )
+        # here risk_set is mask array on time
+        # left truncated & right censored
+        self._risk_set = np.logical_and(
+            (
+                    np.vstack([entry] * len(ordered_event_time))
+                    < np.hstack([ordered_event_time[:, None]] * len(time))
+            ),
+            (
+                    np.hstack([ordered_event_time[:, None]] * len(time))
+                    <= np.vstack([time] * len(ordered_event_time))
+            ),
+        )
+
+        self._death_set = np.vstack([time * event] * len(ordered_event_time)) == np.hstack(
+            [ordered_event_time[:, None]] * len(time)
+        )
+
         self._covar = covar
         self._ordered_event_covar = covar[event == 1][ordered_event_index]
+
         self._nb_observations = len(time)
 
         if (self._event_count > 3).any():
@@ -352,12 +370,232 @@ class PartialLifetimeLikelihood(Likelihood):
         elif method.lower() == "breslow":
             self.method = method
             self._compute_s_j()
-            self.discount_rates = None
-            self.discount_rates_mask = None
+            self._discount_rates = None
+            self._discount_rates_mask = None
         elif method.lower() == "cox":
             self.method = method
-            self.s_j = None
-            self.discount_rates = None
-            self.discount_rates_mask = None
+            self._s_j = None
+            self._discount_rates = None
+            self._discount_rates_mask = None
         else:
             raise ValueError(f"method allowed are efron, breslow or cox. Not {method}")
+
+    def _compute_s_j(self) -> None:
+        """s_j : [m, p]"""
+        self._s_j = np.dot(self._death_set, self._covar)
+
+    def _compute_efron_discount_rates(self) -> None:
+        """
+        discount_rates : [m, max(event_count)] or [m, max(event_count)]
+        discount_rates_mask : [m, max(event_count)] or [m, max(event_count)]
+        """
+
+        self._discount_rates = (
+                np.vstack([np.arange(self._event_count.max())] * len(self._event_count))
+                / self._event_count[:, None]
+        )
+        self._discount_rates_mask = np.where(self._discount_rates < 1, 1, 0)
+
+    def _psi(self, on: str = "risk", order: int = 0) -> np.ndarray:
+        r"""Psi formula used for likelihood computations
+
+        Args:
+            on (str, optional): "risk" or "death". Defaults to "risk". If "death", sum is applied on death set.
+            order (int, optional): order derivatives with respect to beta. Defaults to 0.
+
+        Returns:
+            np.ndarray: psi formulation
+            If order 0, shape [m, 1]
+            If order 1, shape [m, p]
+            If order 2, shape [m, p, p]
+        """
+        if on == "risk":
+            i_set = self._risk_set
+        elif on == "death":
+            i_set = self._death_set
+        else:
+            raise ValueError(f"'on' allowed values are 'risk' and 'death', not {on}")
+
+        if order == 0:
+            # shape [m]
+            return np.dot(i_set, self.model.covar_effect.g(self._covar))
+        elif order == 1:
+            # shape [m, p]
+            return np.dot(i_set, self._covar * self.model.covar_effect.g(self._covar))
+        elif order == 2:
+            # shape [m, p, p]
+            return np.tensordot(
+                i_set[:, :None],
+                self._covar[:, None]
+                * self._covar[:, :, None]
+                * self.model.covar_effect.g(self._covar)[:, :, None],
+                axes=1,
+            )
+
+    def _psi_efron(self, order: int = 0) -> np.ndarray:
+        """Psi formula for Efron method
+
+        Args:
+            order (int, optional): order derivatives with respect to beta. Defaults to 0.
+
+        Returns:
+            np.ndarray: psi formulation for Efron method
+            If order 0, shape [m, max(d_j)]
+            If order 1, shape [m, max(d_j), p]
+            If order 2, shape [m, max(d_j), p, p]
+        """
+
+        if order == 0:
+            # shape [m, max(d_j)]
+            return (
+                    self._psi() * self._discount_rates_mask
+                    - self._psi(on="death")
+                    * self._discount_rates
+                    * self._discount_rates_mask
+            )
+        elif order == 1:
+            # shape [m, max(d_j), p]
+            return (
+                    self._psi(order=1)[:, None, :]
+                    * self._discount_rates_mask[:, :, None]
+                    - self._psi(on="death", order=1)[:, None, :]
+                    * (self._discount_rates * self._discount_rates_mask)[:, :, None]
+            )
+        elif order == 2:
+            # shape [m, max(d_j), p, p]
+            return (
+                    self._psi(order=2)[:, None, :]
+                    * self._discount_rates_mask[:, :, None, None]
+                    - self._psi(on="death", order=2)[:, None, :]
+                    * (self._discount_rates * self._discount_rates_mask)[:, :, None, None]
+            )
+
+    def negative_log(
+            self,
+            params: NDArray[np.float64],
+        ) -> float:
+        """Compute negative log partial likelihood depending on method used (cox, breslow or efron)
+
+        Returns:
+            float : negative log partial likelihood at beta
+        """
+        self.params = params  # changes model params
+
+        if self.method == "cox":
+            return -(
+                    np.log(self.model.covar_effect.g(self._ordered_event_covar)).sum()
+                    - np.log(self._psi()).sum()
+            )
+        elif self.method == "breslow":
+            return -(
+                    np.log(self.model.covar_effect.g(self._s_j)).sum()
+                    - (self._event_count[:, None] * np.log(self._psi())).sum()
+            )
+        elif self.method == "efron":
+            # .sum(axis=1, keepdims=True) --> sum on alpha to d_j
+            # .sum() --> sum on j
+            # using where in np.log allows to avoid 0. masked elements
+            m = self._psi_efron()
+            neg_L_efron = -(
+                    np.log(self.model.covar_effect.g(self._s_j)).sum()
+                    - np.log(m, out=np.zeros_like(m), where=(m != 0))
+                    .sum(axis=1, keepdims=True)
+                    .sum()
+            )
+            return neg_L_efron
+
+    def jac_negative_log(
+            self,
+            params: NDArray[np.float64],
+        ) -> np.ndarray:
+        """Compute Jacobian of the negative log partial likelihood depending on method used (cox, breslow or efron)
+
+        Returns:
+            np.ndarray: jacobian vector
+        """
+        self.params = params  # changes model params
+
+        if self.method == "cox":
+            return -(
+                    self._ordered_event_covar.sum(axis=0)
+                    - (self._psi(order=1) / self._psi()).sum(axis=0)
+            )
+        elif self.method == "breslow":
+            return -(
+                    self._s_j.sum(axis=0)
+                    - (
+                            self._event_count[:, None]
+                            * (self._psi(order=1) / self._psi())
+                    ).sum(axis=0)
+            )
+        elif self.method == "efron":
+            # .sum(axis=1) --> sum on alpha to d_j
+            # .sum(axis=0) --> sum on j
+            # using where in np.divide allows to avoid 0. masked elements
+            a = self._psi_efron(order=1)
+            b = self._psi_efron()[:, :, None]
+            return -(
+                    self._s_j.sum(axis=0)
+                    - np.divide(a, b, out=np.zeros_like(a), where=(b != 0))
+                    .sum(axis=1)
+                    .sum(axis=0)
+            )
+
+    def hess_negative_log(
+            self,
+            params: NDArray[np.float64],
+        ) -> np.ndarray:
+        """Compute Hessian of the negative log partial likelihood depending on method used (cox, breslow or efron)
+
+        Returns:
+            np.ndarray: hessian matrix
+        """
+        self.params = params  # changes model params
+
+        if self.method == "cox" or self.method == "breslow":
+            psi_order_0 = self._psi()
+            psi_order_1 = self._psi(order=1)
+
+            hessian_part_1 = self._psi(order=2) / psi_order_0[:, :, None]
+            # print("hessian_part_1 [d, p, p]:", hessian_part_1.shape)
+
+            hessian_part_2 = (psi_order_1 / psi_order_0)[:, None] * (
+                    psi_order_1 / psi_order_0
+            )[:, :, None]
+            # print("hessian_part_2 [d, p, p]:", hessian_part_2.shape)
+
+            if self.method == "cox":
+                return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
+            elif self.method == "breslow":
+                return (self._event_count[:, None, None] * hessian_part_1).sum(
+                    axis=0
+                ) - (self._event_count[:, None, None] * hessian_part_2).sum(axis=0)
+
+        elif self.method == "efron":
+            psi_order_0 = self._psi_efron()
+            psi_order_1 = self._psi_efron(order=1)
+
+            # .sum(axis=1) --> sum on alpha to d_j
+            # using where in np.divide allows to avoid 0. masked elements
+            a = self._psi_efron(order=2)
+            b = psi_order_0[:, :, None, None]
+            hessian_part_1 = np.divide(a, b, out=np.zeros_like(a), where=(b != 0)).sum(
+                axis=1
+            )
+
+            # .sum(axis=1) --> sum on alpha to d_j
+            # using where in np.divide allows to avoid 0. masked elements
+            b = psi_order_0[:, :, None]
+            hessian_part_2 = (
+                    np.divide(
+                        psi_order_1, b, out=np.zeros_like(psi_order_1), where=(b != 0)
+                    )[:, :, None, :]
+                    * (
+                        np.divide(
+                            psi_order_1, b, out=np.zeros_like(psi_order_1), where=(b != 0)
+                        )
+                    )[:, :, :, None]
+            )
+            hessian_part_2 = hessian_part_2.sum(axis=1)
+
+            return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)

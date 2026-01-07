@@ -36,16 +36,22 @@ def _hessian_2point(likelihood, params, eps = 1e-6):
     return hess
 
 
+def _hessian_cox(likelihood, params, eps = 1e-6):
+    return likelihood.hess_negative_log(params)
+
 
 def approx_hessian(likelihood, params, eps= 1e-6):
     def hessian_scheme(model):
         from relife.lifetime_model import Gamma
         from relife.lifetime_model.regression import LifetimeRegression
+        from relife.lifetime_model.semi_parametric import Cox
 
         if isinstance(model, LifetimeRegression):
             return hessian_scheme(model.baseline)
         if isinstance(model, Gamma):
             return _hessian_2point
+        if isinstance(model, Cox):
+            return _hessian_cox
         return _hessian_cs
 
     return hessian_scheme(likelihood.model)(likelihood, params, eps=eps)
@@ -228,11 +234,12 @@ class Likelihood(ABC):
             The fitting results.
         """
         minimize_kwargs = {
-            "method": optimizer_options.get("method", "L-BFGS-B"),
-            "constraints": optimizer_options.get("constraints", ()),
-            "bounds": optimizer_options.get("bounds", None),
-            "x0": optimizer_options.get("x0", self.params),
+            "method": optimizer_options.pop("method", "L-BFGS-B"),
+            "constraints": optimizer_options.pop("constraints", ()),
+            "bounds": optimizer_options.pop("bounds", None),
+            "x0": optimizer_options.pop("x0", self.params),
         }
+        minimize_kwargs.update(optimizer_options)
         optimizer = minimize(
             self.negative_log,
             minimize_kwargs.pop("x0"),
