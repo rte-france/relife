@@ -16,23 +16,23 @@ Some explanations might be missing until we finish the documentation properly, s
 **From PyPi**
 
 ```bash
-pip install relife
+$ pip install relife
 ```
 
 **From source**
 
 ```bash
-git clone https://github.com/rte-france/relife.git
-cd relife
-pip install .
+$ git clone https://github.com/rte-france/relife.git
+$ cd relife
+$ pip install .
 ```
 
 **For developpers**
 
 ```bash
-git clone https://github.com/rte-france/relife.git
-cd relife
-pip install -e ".[dev]"
+$ git clone https://github.com/rte-france/relife.git
+$ cd relife
+$ pip install -e ".[dev]"
 ```
 
 ## Citing
