@@ -17,7 +17,7 @@ authors = [
 	{name = "Thomas Guillon", email="thomas.guillon@rte-france.com"},
 ]
 maintainers = [
-	{name = "William Grison"},
+	{name = "William Grison", email="william.grison@rte-france.com"},
 ]
 description = "ReLife is an open source Python library for asset management based on reliability theory."
 readme = "README.md"
